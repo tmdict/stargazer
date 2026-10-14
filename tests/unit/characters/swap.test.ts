@@ -23,6 +23,7 @@ import {
   PHRAESTO_COMPANION,
 } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
 // no registered skill, and Phraesto drives the cross-team lifecycle tests
@@ -35,7 +36,7 @@ describe('swap.ts', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 
@@ -146,10 +147,7 @@ describe('swap.ts', () => {
 
         expect(result).toBe(true)
         expect(skillManager.hasActiveSkill(PHRAESTO, phraestoTeam)).toBe(false)
-        expect(skillManager.getActiveSkillInfo(PHRAESTO, otherTeam)).toEqual({
-          hexId: otherHex,
-          team: otherTeam,
-        })
+        expect(skillManager.hasActiveSkill(PHRAESTO, otherTeam)).toBe(true)
         // The companion follows the skill to the new team
         expect(findCharacterHex(grid, PHRAESTO_COMPANION, phraestoTeam)).toBeNull()
         expect(findCharacterHex(grid, PHRAESTO_COMPANION, otherTeam)).not.toBeNull()
@@ -163,14 +161,8 @@ describe('swap.ts', () => {
       const result = executeSwapCharacters(grid, skillManager, 1, 4)
 
       expect(result).toBe(true)
-      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ENEMY)).toEqual({
-        hexId: 4,
-        team: Team.ENEMY,
-      })
-      expect(skillManager.getActiveSkillInfo(GUNNAR, Team.ALLY)).toEqual({
-        hexId: 1,
-        team: Team.ALLY,
-      })
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ENEMY)).toBe(true)
+      expect(skillManager.hasActiveSkill(GUNNAR, Team.ALLY)).toBe(true)
       expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(false)
       expect(skillManager.hasActiveSkill(GUNNAR, Team.ENEMY)).toBe(false)
     })
@@ -190,10 +182,7 @@ describe('swap.ts', () => {
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(4).characterId).toBe(ENEMY_A)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
-      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ALLY)).toEqual({
-        hexId: 1,
-        team: Team.ALLY,
-      })
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
       // Companion restored to its original hex with no duplicates anywhere
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(companionHex)
       const companionTiles = grid

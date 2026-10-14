@@ -15,7 +15,7 @@ interface PickerState {
   activeMode: TeamModeKey
   match: VariantMatch
   sourceId: string | null
-  wouldReplace: boolean
+  hasContent: boolean
 }
 
 let teardown: (() => void) | undefined
@@ -34,7 +34,7 @@ const mountPicker = async (overrides: Partial<PickerState> = {}) => {
     activeMode: '5v5',
     match: 'sl',
     sourceId: null,
-    wouldReplace: true,
+    hasContent: true,
     ...overrides,
   })
   const selected = vi.fn<(choice: TeamVariantChoice) => void>()
@@ -73,7 +73,7 @@ describe('TeamVariantPicker', () => {
   })
 
   it('switches in one click when the boards hold nothing', async () => {
-    const { selected } = await mountPicker({ wouldReplace: false })
+    const { selected } = await mountPicker({ hasContent: false })
     segment('Default').click()
     expect(selected).toHaveBeenCalledWith('default')
   })

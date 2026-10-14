@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile, removeFromTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const HIMMEL = 112
 const HIMMEL_HEX = 9 // neighbors: {4, 6, 7, 12, 13, 16}
@@ -28,14 +28,14 @@ describe('himmel class-trio highlighting', () => {
     team: Team.ALLY,
     characterId: HIMMEL,
     skillManager,
-    lookups: { classOf },
+    lookups: { ...NO_LOOKUPS, classOf },
   })
 
   const himmel = () => getCharacterSkill(HIMMEL)!
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     placeOnTile(grid, HIMMEL_HEX, HIMMEL, Team.ALLY)
   })
 

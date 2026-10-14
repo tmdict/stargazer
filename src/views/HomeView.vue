@@ -180,9 +180,8 @@ const handleTabChange = (tab: string) => {
   applyTabResets(tab)
 }
 
-// Switches the displayed arena; shared by the Map Editor tab and the ArenaDropdown.
 const handleMapChange = (mapKey: string) => {
-  gridStore.switchMap(mapKey)
+  gridStore.moveToMap(mapKey)
 }
 
 // Browser back/forward (and the push above) change the query; mirror it onto the

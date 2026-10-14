@@ -36,7 +36,6 @@ import {
   TEAM_MODES,
   TEAM_VARIANTS,
   type TeamModeKey,
-  type TeamVariantChoice,
 } from '@/lib/teams/modes'
 import { canonicalTeamData, teamContentKey, type SavedTeam } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
@@ -122,8 +121,9 @@ const { activeMode, variant } = teamsRestore
 
 const canWrap = computed(() => !isSheet.value && TEAM_MODES[activeMode.value].canWrap)
 
-// A type switch rebuilds every board, so it confirms whenever one holds anything.
-const variantWouldReplace = computed(() => grids.boardsHaveContent())
+// A type switch moves heroes off the tiles their new maps lack, so it confirms
+// whenever a board holds anything.
+const boardsHaveContent = computed(() => grids.boardsHaveContent())
 
 // The Save button's target and the unsaved-changes indicator. Both sides of
 // the dirty compare are content keys (canonical, viewer state stripped, and
@@ -181,14 +181,9 @@ const handleNewTeam = () => {
 }
 
 // The pending name belongs to the boards an import filled, not to the slot of
-// another mode nor to the fresh boards a type switch builds.
+// another mode.
 const handleSwitchMode = (mode: TeamModeKey) => {
   teamsRestore.switchMode(mode)
-  pendingName.value = null
-}
-
-const handleSelectVariant = (choice: TeamVariantChoice) => {
-  teamsRestore.switchVariant(choice)
   pendingName.value = null
 }
 
@@ -300,7 +295,7 @@ const handleCopyLink = () => {
                 :characters="gameDataStore.characters"
                 :active-mode="activeMode"
                 :variant
-                :variant-would-replace
+                :boards-have-content
                 :info
                 :source-id="teamsRestore.sourceId.value"
                 :source-name="sourceTeam?.name ?? null"
@@ -310,7 +305,7 @@ const handleCopyLink = () => {
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="handleSwitchMode"
-                @select-variant="handleSelectVariant"
+                @select-variant="teamsRestore.switchVariant"
                 @new-team="handleNewTeam"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"

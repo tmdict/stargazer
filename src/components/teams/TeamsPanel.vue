@@ -86,7 +86,7 @@ watch(liftedHexId, (id) => {
 
 // Preset selection retargets the active board's map.
 const handleArenaSelected = (mapKey: string) => {
-  gridStore.switchMap(mapKey)
+  gridStore.moveToMap(mapKey)
 }
 </script>
 

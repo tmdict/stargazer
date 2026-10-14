@@ -125,17 +125,20 @@ const SKILL = {
             </span>
           </li>
           <li>
-            <span>
-              <b>载入</b>可以把已保存阵容的一方放回棋盘，敌我两边都行。
-              <span class="help-inline-btn"><IconImagePlus :size="13" /></span>
-              可以从对战截图导入整场对局。
-            </span>
+            <span> <b>载入</b>可以把已保存阵容的一方放回棋盘，敌我两边都行。 </span>
+          </li>
+          <li>
+            <span> 在<b>阵容</b>标签页的搜索框里输入英雄名，就能找出用到这位英雄的阵容。 </span>
           </li>
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
         <li>在<b>阵容</b>标签页里，点阵容名称即可重命名。</li>
-        <li>可以按名称或英雄搜索保存的阵容。</li>
+        <li>从搜索框下方的列表里选中英雄，就只显示把他们放在同一方的阵容。也可以搜阵容名称。</li>
+        <li>
+          <span class="help-inline-btn"><IconImagePlus :size="13" /></span>
+          可以从对战截图导入整场对局。
+        </li>
         <li>保存的阵容存在你的浏览器里，用<b>导出</b>可以备份成文件。</li>
       </ul>
     </div>

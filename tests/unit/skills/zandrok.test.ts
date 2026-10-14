@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 const ZANDROK = 88
 
@@ -17,6 +17,7 @@ describe('zandrok wedge boundary lines', () => {
     team: Team.ALLY,
     characterId: ZANDROK,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const sOf = (hexId: number) => grid.getHexById(hexId).s
@@ -40,7 +41,7 @@ describe('zandrok wedge boundary lines', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   // Zandrok on cell 4 (s = 0): the band is s in [-2, 2]. The high edge runs the s=2

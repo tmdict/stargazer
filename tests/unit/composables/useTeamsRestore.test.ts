@@ -134,26 +134,37 @@ describe('useTeamsRestore', () => {
     expect(threeAfter.boards[0]!.c).toEqual([[3, 13, Team.ALLY]])
   })
 
-  it('switchVariant rebuilds every board on the chosen list and detaches provenance', async () => {
+  it('switchVariant moves every board onto the chosen list, keeping heroes and provenance', async () => {
     const { restore, grids, character } = createHarness()
     restore.initialize(null)
     restore.sourceId.value = 'team-sl'
     grids.setActive(0)
     character.placeCharacterOnHex(1, 11, Team.ALLY)
-    await nextTick()
+    // Board 1 stands on arena2, board 2 on arena3: ally tile 2 is on arena1
+    // too, ally tile 21 is not.
+    grids.setActive(1)
+    character.placeCharacterOnHex(2, 12, Team.ALLY)
+    grids.setActive(2)
+    character.placeCharacterOnHex(21, 13, Team.ALLY)
 
     restore.switchVariant('default')
-    expect(grids.contexts).toHaveLength(5)
     expect(currentMaps(grids)).toEqual(Array<string>(5).fill(DEFAULT_MAP_KEY))
     expect(restore.variant.value).toBe('default')
-    expect(restore.sourceId.value).toBeNull()
+    expect(restore.sourceId.value).toBe('team-sl')
+    await nextTick()
     const slot = readEnvelope('5v5')
-    expect(slot.sourceId).toBeNull()
-    expect(decodeBoards(slot.data).boards.every((b) => !b.c)).toBe(true)
+    expect(slot.sourceId).toBe('team-sl')
+    const boards = decodeBoards(slot.data).boards
+    expect(boards[0]!.c).toEqual([[1, 11, Team.ALLY]])
+    expect(boards[1]!.c).toEqual([[2, 12, Team.ALLY]])
+    const [moved] = boards[2]!.c!
+    expect(moved!.slice(1)).toEqual([13, Team.ALLY])
+    expect(moved![0]).not.toBe(21)
 
     restore.switchVariant('sl')
     expect(currentMaps(grids)).toEqual(TEAM_VARIANTS.sl.maps)
     expect(restore.variant.value).toBe('sl')
+    expect(decodeBoards(restore.snapshot()).boards[1]!.c).toEqual([[2, 12, Team.ALLY]])
   })
 
   it('never writes the old slot after its flush nor the new slot before the baseline', async () => {

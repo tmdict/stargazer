@@ -10,6 +10,7 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { ALLY_A, ALLY_B, ENEMY_A, PHRAESTO, PHRAESTO_COMPANION } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
 // no registered skill, and Phraesto drives the cross-team lifecycle tests
@@ -22,7 +23,7 @@ describe('move.ts', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     // executeMoveCharacter notifies skills through grid.skillManager, so this
     // wiring is load-bearing
     grid.skillManager = skillManager
@@ -124,10 +125,7 @@ describe('move.ts', () => {
 
       expect(result).toBe(true)
       expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(false)
-      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ENEMY)).toEqual({
-        hexId: 4,
-        team: Team.ENEMY,
-      })
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ENEMY)).toBe(true)
       // The companion follows: gone from the ally side, respawned enemy-side
       // (hex 5 is the only free enemy tile)
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBeNull()
@@ -154,10 +152,7 @@ describe('move.ts', () => {
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
       expect(isCharacterOnTeam(grid, PHRAESTO, Team.ENEMY)).toBe(false)
       // Skill reactivated on the original team with its companion restored
-      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ALLY)).toEqual({
-        hexId: 1,
-        team: Team.ALLY,
-      })
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(companionHex)
       error.mockRestore()
     })

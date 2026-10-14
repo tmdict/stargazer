@@ -19,10 +19,10 @@ import {
   type CharacterDropPayload,
   type GridContext,
 } from '@/composables/useGridContext'
-import type { AttrRecord } from '@/lib/characters/attributes'
 import {
   canPlaceCharacterOnTile,
   findTeamSynergyHex,
+  getAllAvailableTilesForTeam,
   getAvailableTeamSize,
   getCharacter,
   getCharacterTeam,
@@ -33,7 +33,7 @@ import {
   isCompanionUnitId,
   resolvePlacement,
 } from '@/lib/characters/character'
-import { repositionCompanions } from '@/lib/characters/companion'
+import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { resolveReplacement } from '@/lib/characters/place'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
@@ -41,9 +41,15 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
-import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
+import {
+  sideLoadBoard,
+  type SideLoadBoard,
+  type SideLoadPlan,
+  type SideLoadUnit,
+} from '@/lib/teams/sideLoad'
 import type { BoardLineup, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
+import { serializeGridState } from '@/utils/gridStateSerializer'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { useRosters } from './rosters'
 
@@ -71,6 +77,13 @@ export interface SideLoadOptions {
   // 'all': saved board i onto live board i; 'active': a single-board record
   // onto the active board.
   scope: 'all' | 'active'
+}
+
+// One team's units and artifact, held while their board is swapped or moved
+// to another map.
+interface CapturedSide {
+  team: Team
+  side: SideLoadBoard
 }
 
 export const useGrids = defineStore('grids', () => {
@@ -368,83 +381,176 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
-  // A board's directly-placed lineup: the main characters with their upgrade
-  // attrs, dropping skill-derived units (companions, faction phantimals) since
-  // those re-derive from the lineup.
-  const collectMainUnits = (
+  /* The placement every lineup move shares (the Load menu, the board swap, a
+   * map change): a unit stands on its own hex when the board gives that hex
+   * to `dest`, else on a random free tile that no other unit of the side
+   * keeps. `invert` 180-rotates every hex. Units page-wide uniqueness already
+   * claims, or with no tile left, are skipped and counted. */
+  const placeSide = (
     ctx: GridContext,
-  ): { characterId: number; team: Team; attrs: AttrRecord }[] =>
-    getTilesWithCharacters(ctx.grid)
-      .filter(
-        (tile) =>
-          tile.characterId !== undefined &&
-          tile.team !== undefined &&
-          !isCompanionUnitId(tile.characterId) &&
-          !isPhantimalId(tile.characterId),
-      )
-      .map((tile) => ({
-        characterId: tile.characterId!,
-        team: tile.team!,
-        attrs: ctx.getAttrs(tile.team!, tile.characterId!),
-      }))
-
-  const applyArtifacts = (
-    ctx: GridContext,
-    artifacts: { ally: number | null; enemy: number | null },
-  ): void => {
-    for (const team of [Team.ALLY, Team.ENEMY]) {
-      const id = artifactSlot(artifacts, team)
-      if (id !== null) ctx.setArtifact(team, id)
-      else ctx.removeArtifact(team)
+    side: SideLoadBoard,
+    dest: Team,
+    invert = false,
+  ): { placed: number; skipped: number } => {
+    const ownHex = (unit: { hexId: number }): number | undefined => {
+      const hexId = invert
+        ? rotatedHexId(ctx.grid, unit.hexId)
+        : ctx.grid.getHexByIdOrUndefined(unit.hexId)?.getId()
+      return hexId !== undefined && canPlaceCharacterOnTile(ctx.grid, hexId, dest)
+        ? hexId
+        : undefined
     }
+    const kept = new Set<number>()
+    for (const unit of [...side.mains, ...side.companions, side.phantimal]) {
+      const hexId = unit ? ownHex(unit) : undefined
+      if (hexId !== undefined) kept.add(hexId)
+    }
+
+    /* Companions spawn on random tiles: each moves onto its own hex or, with
+     * that hex gone, off a hex the side keeps. A move is dropped when its
+     * target's occupant stays put, so no unit is ever evicted; that can close
+     * another move's target, hence the loop. */
+    const settleCompanions = (mainUnitId: number): void => {
+      const spare = getAllAvailableTilesForTeam(ctx.grid, dest)
+        .map((tile) => tile.hex.getId())
+        .filter((hexId) => !kept.has(hexId))
+      let moves = [...getCompanions(ctx.grid, mainUnitId, dest)].flatMap((companionId) => {
+        const saved = side.companions.find((companion) => companion.unitId === companionId)
+        const own = saved && ownHex(saved)
+        if (own !== undefined) return [{ companionId, hexId: own }]
+        const at = findCharacterHex(ctx.grid, companionId, dest)
+        if (at === null || !kept.has(at)) return []
+        const [hexId] = spare.splice(Math.floor(Math.random() * spare.length), 1)
+        return hexId === undefined ? [] : [{ companionId, hexId }]
+      })
+      let closed = true
+      while (closed) {
+        const moving = new Set(moves.map((move) => move.companionId))
+        const open = moves.filter(({ hexId }) => {
+          const occupant = getCharacter(ctx.grid, hexId)
+          return occupant === undefined || moving.has(occupant)
+        })
+        closed = open.length < moves.length
+        moves = open
+      }
+      if (moves.length > 0) repositionCompanions(ctx.grid, dest, moves)
+    }
+
+    let placed = 0
+    let skipped = 0
+    // An occupied own hex holds a unit this batch could not move off it;
+    // replacing would cascade-remove that unit, so the incomer goes random.
+    const land = (
+      unit: SideLoadUnit,
+      place: (hexId: number) => boolean,
+      autoPlace: () => boolean,
+    ): boolean => {
+      const hexId = ownHex(unit)
+      const landed =
+        (hexId !== undefined && !hasCharacter(ctx.grid, hexId) && place(hexId)) || autoPlace()
+      if (landed) {
+        placed++
+        settleCompanions(unit.unitId)
+      } else skipped++
+      return landed
+    }
+
+    for (const unit of side.mains) {
+      // Cleared boards can't conflict with a canonical record, but a crafted
+      // one can repeat a hero; active-board scope can also collide with the
+      // destination team of an untouched board.
+      if (isUsed(unit.unitId, dest)) {
+        skipped++
+        continue
+      }
+      const landed = land(
+        unit,
+        (hexId) => ctx.place(hexId, unit.unitId, dest),
+        () => ctx.autoPlace(unit.unitId, dest, kept),
+      )
+      if (landed && unit.attrs) ctx.setAttrs(dest, unit.unitId, unit.attrs)
+    }
+    // After the heroes: the faction check reads the lineup.
+    const phantimal = side.phantimal
+    if (phantimal) {
+      land(
+        phantimal,
+        (hexId) => ctx.placePhantimal(hexId, phantimal.unitId, dest),
+        () => ctx.autoPlacePhantimal(phantimal.unitId, dest, kept),
+      )
+    }
+    return { placed, skipped }
   }
 
-  // Exchange two boards' lineups (with upgrade attrs) and artifacts, keeping each
-  // unit/artifact's team (ally <-> ally, enemy <-> enemy). Only directly-placed
-  // mains move; companions, faction phantimals, and tile zones (e.g. Kulu's) are
-  // skill-derived, so clearing deactivates them on the source and autoPlace
-  // re-derives them on the destination. Nothing skill-driven is serialized or
-  // carried, so none is left stranded (no ghost zones, no orphaned companions).
-  // Placement picks random available tiles, so formations aren't preserved. The
-  // target board becomes active.
+  // Closes a batch of placements on a board: re-aligns the phantimal
+  // reconciler, so a lineup that deliberately has no phantimal doesn't gain
+  // one, and refreshes skill paint, which companion settling leaves stale.
+  const finishPlacing = (ctx: GridContext): void => {
+    ctx.seedPhantimalBaseline()
+    ctx.refreshSkills()
+  }
+
+  // Read through the serializer, so a board carries exactly what a saved team
+  // would.
+  const captureSides = (ctx: GridContext): CapturedSide[] => {
+    const state = serializeGridState(
+      ctx.grid.getAllTiles(),
+      ctx.artifacts.ally,
+      ctx.artifacts.enemy,
+      undefined,
+      ctx.getAttrs,
+    )
+    return [Team.ALLY, Team.ENEMY].map((team) => ({ team, side: sideLoadBoard(state, team, true) }))
+  }
+
+  // Onto a board with no units; each team's artifact slot ends as captured.
+  const placeSides = (ctx: GridContext, sides: CapturedSide[]): void => {
+    for (const { team, side } of sides) {
+      placeSide(ctx, side, team)
+      if (side.artifact !== null) ctx.setArtifact(team, side.artifact)
+      else ctx.removeArtifact(team)
+    }
+    finishPlacing(ctx)
+  }
+
+  /* Exchange two boards' lineups and artifacts. Every unit keeps its team,
+   * its upgrade record and, where the other board's map has it, its tile
+   * (placeSide). The target board becomes active. */
   const swapBoards = (sourceId: number, targetId: number): boolean => {
     if (sourceId === targetId) return false
     const source = contexts.value[sourceId]
     const target = contexts.value[targetId]
     if (!source || !target) return false
 
-    const fromSource = collectMainUnits(source)
-    const fromTarget = collectMainUnits(target)
-    const sourceArtifacts = { ...source.artifacts }
-    const targetArtifacts = { ...target.artifacts }
-
+    const fromSource = captureSides(source)
+    const fromTarget = captureSides(target)
     // Clear both before placing so a unit crossing boards never transiently
     // duplicates its pre-swap copy under page-wide per-team uniqueness.
     source.clearCharacters()
     target.clearCharacters()
-    // Re-seed each now-empty board's phantimal baseline so the post-placement
-    // reconcile reads the incoming lineup as a fresh qualifying transition and
-    // re-derives the phantimal, even when both boards ran the same faction.
-    source.seedPhantimalBaseline()
-    target.seedPhantimalBaseline()
-
-    // clearCharacters wiped both attrs maps, so restore each hero's record with it.
-    fromTarget.forEach((unit) => {
-      if (source.autoPlace(unit.characterId, unit.team)) {
-        source.setAttrs(unit.team, unit.characterId, unit.attrs)
-      }
-    })
-    fromSource.forEach((unit) => {
-      if (target.autoPlace(unit.characterId, unit.team)) {
-        target.setAttrs(unit.team, unit.characterId, unit.attrs)
-      }
-    })
-
-    applyArtifacts(source, targetArtifacts)
-    applyArtifacts(target, sourceArtifacts)
+    placeSides(source, fromTarget)
+    placeSides(target, fromSource)
 
     activeId.value = targetId
     return true
+  }
+
+  /* Move a board onto another map with everything on it: each unit keeps its
+   * tile where the new map has it (placeSide). False for an unknown map,
+   * which leaves the board as it was. */
+  const moveToMap = (ctx: GridContext, mapKey: string): boolean => {
+    const sides = captureSides(ctx)
+    if (!ctx.switchMap(mapKey)) return false
+    placeSides(ctx, sides)
+    return true
+  }
+
+  // Board i onto maps[i]; a board already on its map is left untouched.
+  const moveToMaps = (maps: readonly string[]): void => {
+    contexts.value.forEach((ctx, i) => {
+      const mapKey = maps[i]
+      if (mapKey !== undefined && mapKey !== ctx.currentMap) moveToMap(ctx, mapKey)
+    })
   }
 
   // The boards a side-load touches, shared by loadTeamSide and its read-only
@@ -462,21 +568,17 @@ export const useGrids = defineStore('grids', () => {
   const sideLoadWouldReplace = (dest: Team, scope: SideLoadOptions['scope']): boolean =>
     sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, dest))
 
-  // Read-only mirror of a full rebuild (New, the type switch): whether any
-  // board holds anything the rebuild would drop.
+  // Gates the type switch's confirm.
   const boardsHaveContent = (): boolean =>
     contexts.value.some((ctx) => [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)))
 
   /* Stamp a one-sided saved team (lib/teams/sideLoad) onto the live boards:
    * clear the destination side first via clearTeam (the dock's per-team wipe:
-   * skill cleanup, companion cascade, artifact), then place
-   * each unit on its saved hex, falling back to a random tile when the live
-   * map assigns that tile elsewhere or something already stands there.
-   * `invert` flips the destination team and 180-rotates every saved hex; scope
-   * 'active' targets only the active board (a 1v1 record loaded inside a
-   * multi-board mode). Units page-wide uniqueness already claims, and units
-   * with no landing tile at all, are skipped and counted. The other side,
-   * maps, and provenance are untouched. */
+   * skill cleanup, companion cascade, artifact), then place each board's side
+   * (placeSide). `invert` flips the destination team and 180-rotates every
+   * saved hex; scope 'active' targets only the active board (a 1v1 record
+   * loaded inside a multi-board mode). The other side, maps, and provenance
+   * are untouched. */
   const loadTeamSide = (
     plan: SideLoadPlan,
     { invert, scope }: SideLoadOptions,
@@ -491,83 +593,17 @@ export const useGrids = defineStore('grids', () => {
 
     for (const { ctx } of targets) ctx.clearTeam(dest)
 
-    const targetHexFor = (ctx: GridContext, unit: { hexId: number }): number | undefined =>
-      invert
-        ? rotatedHexId(ctx.grid, unit.hexId)
-        : ctx.grid.getHexByIdOrUndefined(unit.hexId)?.getId()
-
-    // Stamp only onto a free destination tile. An occupied one holds this
-    // load's own work (a placed main, or a skill-spawned companion the record
-    // couldn't settle); replacing would cascade-remove the whole earlier unit,
-    // so the incomer takes the random fallback instead.
-    const stampableHex = (ctx: GridContext, unit: { hexId: number }): number | undefined => {
-      const hexId = targetHexFor(ctx, unit)
-      if (hexId === undefined) return undefined
-      if (!canPlaceCharacterOnTile(ctx.grid, hexId, dest)) return undefined
-      return hasCharacter(ctx.grid, hexId) ? undefined : hexId
-    }
-
-    // Settle a just-placed main's skill-spawned companions onto their saved
-    // (rotated under invert) hexes, the same per-main pass the bulk restore
-    // runs: left at a random spawn tile, a companion could squat on a later
-    // unit's saved hex. A target that is off the destination zone or already
-    // taken (by anything but a sibling companion) leaves that companion at its
-    // spawn tile, so no unit is ever evicted.
-    const settleCompanions = (ctx: GridContext, board: SideLoadBoard, mainUnitId: number): void => {
-      const saved = board.companions.filter((companion) => companion.mainUnitId === mainUnitId)
-      if (saved.length === 0) return
-      const siblings = new Set(saved.map((companion) => companion.unitId))
-      const settle = saved.flatMap((companion) => {
-        const hexId = targetHexFor(ctx, companion)
-        if (hexId === undefined || !canPlaceCharacterOnTile(ctx.grid, hexId, dest)) return []
-        const occupant = getCharacter(ctx.grid, hexId)
-        if (occupant !== undefined && !siblings.has(occupant)) return []
-        return [{ companionId: companion.unitId, hexId }]
-      })
-      if (settle.length > 0) repositionCompanions(ctx.grid, dest, settle)
-    }
-
     let placed = 0
     let skipped = 0
     for (const { ctx, board } of targets) {
-      for (const unit of board.mains) {
-        // Cleared boards can't conflict with a canonical record, but a crafted
-        // one can repeat a hero; active-board scope can also collide with the
-        // destination team of an untouched board.
-        if (isUsed(unit.unitId, dest)) {
-          skipped++
-          continue
-        }
-        const hexId = stampableHex(ctx, unit)
-        const ok =
-          (hexId !== undefined && ctx.place(hexId, unit.unitId, dest)) ||
-          ctx.autoPlace(unit.unitId, dest)
-        if (!ok) {
-          skipped++
-          continue
-        }
-        placed++
-        if (unit.attrs) ctx.setAttrs(dest, unit.unitId, unit.attrs)
-        settleCompanions(ctx, board, unit.unitId)
-      }
-      if (board.phantimal) {
-        const hexId = stampableHex(ctx, board.phantimal)
-        const ok =
-          (hexId !== undefined && ctx.placePhantimal(hexId, board.phantimal.unitId, dest)) ||
-          ctx.autoPlacePhantimal(board.phantimal.unitId, dest)
-        if (ok) {
-          placed++
-          settleCompanions(ctx, board, board.phantimal.unitId)
-        } else skipped++
-      }
+      const result = placeSide(ctx, board, dest, invert)
+      placed += result.placed
+      skipped += result.skipped
       // Per-team artifact uniqueness spans boards; a crafted duplicate drops.
       if (board.artifact !== null && !isArtifactUsed(board.artifact, dest)) {
         ctx.setArtifact(dest, board.artifact)
       }
-      // Re-align the phantimal reconciler so a save that deliberately omits its
-      // phantimal doesn't get one auto-placed after this batch.
-      ctx.seedPhantimalBaseline()
-      ctx.refreshSkills()
+      finishPlacing(ctx)
     }
     deriveSynergy()
     return { placed, skipped }
@@ -624,10 +660,10 @@ export const useGrids = defineStore('grids', () => {
    * board to another never trips page-wide uniqueness against its own old
    * copy; each cleared board re-seeds its phantimal baseline so the reconcile
    * watcher derives the phantimal from the new lineup even when it is the one
-   * the old lineup had (the swapBoards idiom). Then every hero auto-places
-   * with its upgrade record and each side's artifact is set; a hero or
-   * artifact already used elsewhere on that team is skipped and counted.
-   * Unmapped boards, maps, and provenance are untouched. */
+   * the old lineup had. Then every hero auto-places with its upgrade record
+   * and each side's artifact is set; a hero or artifact already used elsewhere
+   * on that team is skipped and counted. Unmapped boards, maps, and provenance
+   * are untouched. */
   const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
     const targets = lineupTargets(plan)
     for (const { ctx } of targets) {
@@ -919,7 +955,6 @@ export const useGrids = defineStore('grids', () => {
     setActive,
     getContext,
     findPlacement,
-    isUsed,
     resolvePick,
     placePick,
     placeOnActive,
@@ -934,6 +969,8 @@ export const useGrids = defineStore('grids', () => {
     canDropArtifact,
     routeArtifactDrop,
     swapBoards,
+    moveToMap,
+    moveToMaps,
     sideLoadWouldReplace,
     boardsHaveContent,
     loadTeamSide,

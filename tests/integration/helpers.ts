@@ -5,6 +5,7 @@ import { Grid } from '@/lib/grid'
 import { MAPS } from '@/lib/maps'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
+import { NO_LOOKUPS } from '../unit/fixtures/skills'
 
 /**
  * Shared harness for the data-driven targeting suites. Fixtures record real
@@ -64,7 +65,7 @@ export function buildScenarioGrid(
 ): { grid: Grid; skillManager: SkillManager } {
   const map = MAPS[ROMAN_TO_ARENA[arena] ?? 'arena1']
   const grid = new Grid(undefined, map)
-  const skillManager = new SkillManager()
+  const skillManager = new SkillManager(NO_LOOKUPS)
   grid.skillManager = skillManager
 
   for (const hexId of targetHexIds) {

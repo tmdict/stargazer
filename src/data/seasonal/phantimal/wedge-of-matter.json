@@ -3,6 +3,7 @@
   "name": "wedge-of-matter",
   "season": 8,
   "range": 20,
+  "damage": "magic",
   "faction": "celestial",
   "qualifyingFactions": ["hypogean", "celestial"]
 }

@@ -22,6 +22,7 @@ const {
   highlight,
   arrow,
   origin,
+  ring,
 } = defineProps<{
   tokens?: readonly { slug: string; at: Cell }[]
   // Map editor tiles, in place of the row's usual fill.
@@ -31,6 +32,9 @@ const {
   arrow?: { from: Cell; to: Cell; kind: 'target' | 'move' }
   // Where a moved hero came from.
   origin?: Cell
+  // The hero a saved-team search picked: ringed, with the board's other heroes
+  // faded, or the whole board faded when it does not field the hero.
+  ring?: string
 }>()
 
 const gameData = useGameDataStore()
@@ -97,6 +101,8 @@ const placed = computed(() =>
   }),
 )
 
+const ringed = computed(() => placed.value.filter((token) => token.slug === ring))
+
 const originCenter = computed(() => (origin ? center(origin) : null))
 
 // Both ends stop at the token rings; the bend keeps it from reading as a tile
@@ -119,9 +125,24 @@ const arrowPath = computed(() => {
 </script>
 
 <template>
-  <svg class="help-board" viewBox="0 0 104.5 55" aria-hidden="true">
+  <svg
+    class="help-board"
+    :class="{ faded: ring !== undefined && ringed.length === 0 }"
+    viewBox="0 0 104.5 55"
+    aria-hidden="true"
+  >
     <defs>
       <clipPath :id="`${id}-clip`"><circle r="7.4" /></clipPath>
+      <filter
+        v-if="ringed.length"
+        :id="`${id}-ring-edge`"
+        x="-50%"
+        y="-50%"
+        width="200%"
+        height="200%"
+      >
+        <feGaussianBlur stdDeviation="0.9" />
+      </filter>
       <marker
         :id="`${id}-head`"
         viewBox="0 0 10 10"
@@ -169,6 +190,7 @@ const arrowPath = computed(() => {
     <g
       v-for="token in placed"
       :key="token.slug + token.at.join()"
+      :class="{ faded: ringed.length > 0 && token.slug !== ring }"
       :transform="`translate(${token.x} ${token.y})`"
     >
       <circle :r="RING" fill="#fff" />
@@ -191,6 +213,16 @@ const arrowPath = computed(() => {
         />
       </g>
     </g>
+    <template v-for="token in ringed" :key="`ring-${token.at.join()}`">
+      <circle
+        :cx="token.x"
+        :cy="token.y"
+        :r="RING + 0.4"
+        class="help-board-ring-edge"
+        :filter="`url(#${id}-ring-edge)`"
+      />
+      <circle :cx="token.x" :cy="token.y" :r="RING + 0.4" class="help-board-ring" />
+    </template>
     <path
       v-if="arrowPath && arrow"
       :d="arrowPath"
@@ -230,5 +262,21 @@ const arrowPath = computed(() => {
   stroke: var(--color-text-secondary);
   stroke-width: 1.2;
   stroke-dasharray: 2 1.6;
+}
+
+.faded {
+  opacity: 0.35;
+}
+
+.help-board-ring {
+  fill: none;
+  stroke: var(--color-warning);
+  stroke-width: 2.6;
+}
+
+.help-board-ring-edge {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 4.4;
 }
 </style>

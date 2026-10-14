@@ -4,7 +4,7 @@ import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 const EVIE = 113
 // Evie on 16 mirrors to enemy tile 30; the symmetrical tile and its neighbours
@@ -21,13 +21,14 @@ describe('evie symmetrical enemy-tile highlight', () => {
     team: Team.ALLY,
     characterId: EVIE,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const evie = () => getCharacterSkill(EVIE)!
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     placeOnTile(grid, EVIE_HEX, EVIE, Team.ALLY)
   })
 

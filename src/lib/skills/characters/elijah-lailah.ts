@@ -37,7 +37,7 @@ function twinState(ctx: SkillContext): {
   // One color for the borders and the line: companion color when the sandwiched
   // allies all share a faction (a lone ally counts), else skill color (also the
   // fallback when none are between).
-  const factions = new Set(allies.map((ally) => lookups?.factionOf?.(ally.characterId)))
+  const factions = new Set(allies.map((ally) => lookups.factionOf(ally.characterId)))
   const color = factions.size === 1 ? COMPANION_COLOR : SKILL_COLOR
 
   return { companionHexId, between, allies, color }

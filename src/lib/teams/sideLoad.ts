@@ -7,6 +7,10 @@
  * headless; grid concerns (invert mirroring, page-wide uniqueness, scope)
  * live in the store action that consumes the plan.
  *
+ * A plan's board (one side of one board) is also how the store carries a live
+ * board's units across a board swap or a map change, so every lineup move
+ * places through the same rule (grids.placeSide).
+ *
  * Reads the unit-bearing sections (c/s/y) plus u and a directly, a sibling of
  * the BOARD_CONTENT_KEYS contract in gridStateSerializer.ts: a new
  * unit-bearing GridState section must be handled here (and in preview.ts)
@@ -24,7 +28,7 @@ import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
+import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 export interface SideLoadUnit {
@@ -88,83 +92,86 @@ export function savedTeamSide(data: string): Team | null {
   return side
 }
 
-/* Null when the record isn't a one-sided team. Companions (every band) spawn
- * from their main's skill rather than placing directly, so they're carried as
- * settle targets, not mains. The synergy hero rides in `mains` under its band
- * id (place/autoPlace resolve it like any unit), included with its companions
- * only when the destination mode offers the Syn affordance. */
+/* One side of a serialized board. Companions (every band) spawn from their
+ * main's skill rather than placing directly, so they're carried as settle
+ * targets, not mains. The synergy hero rides in `mains` under its band id
+ * (place/autoPlace resolve it like any unit), included with its companions
+ * only when `allowSynergy`. */
+export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolean): SideLoadBoard {
+  const attrsByHero = new Map<number, AttrRecord>()
+  for (const [team, characterId, attrId, value] of board.u ?? []) {
+    if (team !== side || characterId === undefined || attrId === undefined || value === undefined)
+      continue
+    const record = attrsByHero.get(characterId) ?? {}
+    record[attrId] = value
+    attrsByHero.set(characterId, record)
+  }
+
+  const mains: SideLoadUnit[] = []
+  const companions: SideLoadCompanion[] = []
+  for (const [hexId, characterId, team] of board.c ?? []) {
+    if (team !== side || hexId === undefined || characterId === undefined) continue
+    // Only base and companion values are legal in c; a crafted phantimal- or
+    // synergy-band value would bypass placePhantimal's cap/faction gates and
+    // the mode's synergy strip (the codec has no validation pass).
+    if (characterId >= PHANTIMAL_ID_OFFSET) continue
+    if (isCompanionUnitId(characterId)) {
+      companions.push({
+        unitId: characterId,
+        hexId,
+        mainUnitId: characterId % COMPANION_ID_OFFSET,
+      })
+    } else {
+      const attrs = attrsByHero.get(characterId)
+      mains.push(attrs ? { unitId: characterId, hexId, attrs } : { unitId: characterId, hexId })
+    }
+  }
+  if (allowSynergy) {
+    for (const [hexId, localId, team] of board.y ?? []) {
+      if (team !== side || hexId === undefined || localId === undefined) continue
+      if (localId >= PHANTIMAL_ID_OFFSET) continue
+      if (localId >= COMPANION_ID_OFFSET) {
+        companions.push({
+          unitId: toSynergyId(localId),
+          hexId,
+          mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
+        })
+      } else {
+        mains.push({ unitId: toSynergyId(localId), hexId })
+      }
+    }
+  }
+
+  // One phantimal per team per board, so the side's first phantimal entry is
+  // its phantimal; entries with a companion index are its skill-spawned
+  // companions.
+  let phantimal: SideLoadUnit | null = null
+  for (const [hexId, localId, team] of board.s ?? []) {
+    if (team !== side || hexId === undefined || localId === undefined) continue
+    const { ownerLocal, index } = splitPhantimalBandLocal(localId)
+    if (index > 0) {
+      companions.push({
+        unitId: toPhantimalId(localId),
+        hexId,
+        mainUnitId: toPhantimalId(ownerLocal),
+      })
+    } else {
+      phantimal ??= { unitId: toPhantimalId(localId), hexId }
+    }
+  }
+
+  const artifact = (side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null
+  return { mains, companions, phantimal, artifact }
+}
+
+/* Null when the record isn't a one-sided team. The synergy hero and its
+ * companions are included only when the destination mode offers the Syn
+ * affordance. */
 export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoadPlan | null {
   const raw = decodeMultiGridStateFromUrl(data)
   if (!raw) return null
   const decoded = stripRetiredSeasonal(raw)
   const side = sideOfDecoded(decoded)
   if (side === null) return null
-
-  const boards = decoded.boards.map((board): SideLoadBoard => {
-    const attrsByHero = new Map<number, AttrRecord>()
-    for (const [team, characterId, attrId, value] of board.u ?? []) {
-      if (team !== side || characterId === undefined || attrId === undefined || value === undefined)
-        continue
-      const record = attrsByHero.get(characterId) ?? {}
-      record[attrId] = value
-      attrsByHero.set(characterId, record)
-    }
-
-    const mains: SideLoadUnit[] = []
-    const companions: SideLoadCompanion[] = []
-    for (const [hexId, characterId] of board.c ?? []) {
-      if (hexId === undefined || characterId === undefined) continue
-      // Only base and companion values are legal in c; a crafted phantimal- or
-      // synergy-band value would bypass placePhantimal's cap/faction gates and
-      // the mode's synergy strip (the codec has no validation pass).
-      if (characterId >= PHANTIMAL_ID_OFFSET) continue
-      if (isCompanionUnitId(characterId)) {
-        companions.push({
-          unitId: characterId,
-          hexId,
-          mainUnitId: characterId % COMPANION_ID_OFFSET,
-        })
-      } else {
-        const attrs = attrsByHero.get(characterId)
-        mains.push(attrs ? { unitId: characterId, hexId, attrs } : { unitId: characterId, hexId })
-      }
-    }
-    if (allowSynergy) {
-      for (const [hexId, localId] of board.y ?? []) {
-        if (hexId === undefined || localId === undefined) continue
-        if (localId >= PHANTIMAL_ID_OFFSET) continue
-        if (localId >= COMPANION_ID_OFFSET) {
-          companions.push({
-            unitId: toSynergyId(localId),
-            hexId,
-            mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
-          })
-        } else {
-          mains.push({ unitId: toSynergyId(localId), hexId })
-        }
-      }
-    }
-
-    // One phantimal per team per board, so the first phantimal entry is the
-    // board's; entries with a companion index are its skill-spawned companions.
-    let phantimal: SideLoadUnit | null = null
-    for (const [hexId, localId] of board.s ?? []) {
-      if (hexId === undefined || localId === undefined) continue
-      const { ownerLocal, index } = splitPhantimalBandLocal(localId)
-      if (index > 0) {
-        companions.push({
-          unitId: toPhantimalId(localId),
-          hexId,
-          mainUnitId: toPhantimalId(ownerLocal),
-        })
-      } else {
-        phantimal ??= { unitId: toPhantimalId(localId), hexId }
-      }
-    }
-
-    const artifact = (side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null
-    return { mains, companions, phantimal, artifact }
-  })
-
-  return { side, boards }
+  return { side, boards: decoded.boards.map((board) => sideLoadBoard(board, side, allowSynergy)) }
 }

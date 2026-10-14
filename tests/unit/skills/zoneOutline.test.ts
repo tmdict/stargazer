@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 // Callan (shield) and Satrana (sparks) share the radius-2 zone-outline skill,
 // differing only in color, so Callan stands in for both.
@@ -21,13 +21,14 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
     team: Team.ALLY,
     characterId: CALLAN,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const callan = () => getCharacterSkill(CALLAN)!
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   it('draws the 30-segment perimeter of a full 2-tile zone', () => {

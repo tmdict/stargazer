@@ -27,6 +27,7 @@ import { getRegisteredSkills } from '@/lib/skills/registry'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 interface ManagerSnapshot {
   targets: [string, unknown][]
@@ -72,6 +73,7 @@ const isAllyTile = (grid: Grid, hex: Hex): boolean =>
 const makeHarness = () => {
   const grid = new Grid()
   const sm = new SkillManager({
+    ...NO_LOOKUPS,
     factionOf: (id) => ['lightbearer', 'wilder', 'graveborn', 'mauler'][id % 4],
     classOf: (id) => ['tank', 'mage', 'warrior', 'support'][id % 4],
   })

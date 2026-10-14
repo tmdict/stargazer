@@ -64,7 +64,11 @@ export const useGridStore = defineStore('grid', () => {
       ? active().grid.getTileById(hexOrId)
       : active().grid.getTile(hexOrId)
 
+  // The bare rebuild: the board comes back empty (restores place into it).
   const switchMap = (mapKey: string): boolean => active().switchMap(mapKey)
+
+  // A map picked by the user: the board's units and artifacts come along.
+  const moveToMap = (mapKey: string): boolean => grids.moveToMap(active(), mapKey)
 
   const refreshSkills = (): void => active().refreshSkills()
 
@@ -93,6 +97,7 @@ export const useGridStore = defineStore('grid', () => {
     getTile,
     getAllTiles,
     switchMap,
+    moveToMap,
     refreshSkills,
     getCurrentMapConfig,
     updateBreakpoint,

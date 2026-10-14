@@ -22,7 +22,7 @@ function computeHighlights(ctx: SkillContext): TilePaint[] {
       rowDirection: ScanDirection.REARMOST,
       withinRowDirection: ScanDirection.FRONTMOST,
       maxDistance: 1,
-      filter: (characterId) => ctx.lookups?.classOf?.(characterId) === className,
+      filter: (characterId) => ctx.lookups.classOf(characterId) === className,
     })
     if (!target?.targetHexId) return [] // a required class is missing: skill does not fire
     tiles.push({ hexId: target.targetHexId, color: SKILL_COLORS.blue, fill: true })

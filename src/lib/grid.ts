@@ -70,10 +70,7 @@ export class Grid {
 
   skillManager?: SkillManager
 
-  readonly gridPreset: GridPreset
-
   constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
-    this.gridPreset = layout
     this.storage = new Map()
     iniGrid(layout).forEach((hex) => {
       this.storage.set(Grid.key(hex), { hex, state: State.DEFAULT })

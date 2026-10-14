@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* Segmented type picker beside the mode picker: Default plus the mode's named
    types (Supreme League, Guild Duel). The lit option is derived from the live
-   boards' maps, so hand-picked maps light nothing. Selecting rebuilds every
-   board on the chosen list, which drops their content, hence the two-step
-   confirm whenever a board holds anything. Hidden where there is nothing to
-   choose (1v1 has no named types). */
+   boards' maps, so hand-picked maps light nothing. Selecting moves every
+   board onto the chosen list's map; a hero keeps its tile only where the new
+   map has it, hence the two-step confirm whenever a board holds anything.
+   Hidden where there is nothing to choose (1v1 has no named types). */
 
 import { computed, watch } from 'vue'
 
@@ -18,14 +18,14 @@ import {
 } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { activeMode, match, sourceId, wouldReplace } = defineProps<{
+const { activeMode, match, sourceId, hasContent } = defineProps<{
   activeMode: TeamModeKey
   // The live boards' type; null = custom maps, nothing lit.
   match: VariantMatch
   // The saved team the boards came from; a change means they were replaced.
   sourceId: string | null
-  // Whether the rebuild would drop anything, gating the confirm.
-  wouldReplace: boolean
+  // Whether any board holds anything, gating the confirm.
+  hasContent: boolean
 }>()
 
 const emit = defineEmits<{
@@ -44,8 +44,8 @@ const choices = computed((): { key: TeamVariantChoice; label: string }[] => [
 
 // An armed click must not outlive the boards it was armed for: the key is
 // scoped to the mode, so arming Default on 5v5 can never confirm Default on
-// 3v3, and any board replacement (a switch, Load, New, import, or this
-// picker's own rebuild) disarms.
+// 3v3, and any change of the boards' mode, type or source (a switch, Load,
+// New, import, or this picker's own switch) disarms.
 const { armed, confirm, disarm } = useArmedConfirm()
 watch([() => activeMode, () => match, () => sourceId], disarm)
 
@@ -53,7 +53,7 @@ const armedKey = (choice: TeamVariantChoice): string => `${activeMode}:${choice}
 
 const select = (choice: TeamVariantChoice): void => {
   if (choice === match) return
-  if (wouldReplace && !confirm(armedKey(choice))) return
+  if (hasContent && !confirm(armedKey(choice))) return
   emit('selectVariant', choice)
 }
 </script>

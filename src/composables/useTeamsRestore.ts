@@ -10,8 +10,9 @@
  * the invariant that keeps per-mode state independent. All bulk state application
  * goes through urlState.restoreMultiFromEncodedState (never a bespoke loader): it
  * encapsulates per-board apply ordering, companion settling, cross-board dedupe,
- * and the phantimal baseline re-seed. New and the type switch are the one
- * exception: fresh boards on a chosen map list, built by rebuildOn.
+ * and the phantimal baseline re-seed. New is the one exception: fresh boards
+ * on a chosen map list. The type switch rebuilds nothing: it edits the live
+ * boards.
  */
 
 import { computed, ref } from 'vue'
@@ -151,29 +152,33 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     persistence.flush()
   }
 
-  /* Fresh boards on `maps` with provenance detached, so Save can no longer
-   * overwrite the team the boards came from (Clear stays content-only and
-   * keeps the tie). Shared by New and the type switch; the previous content is
-   * discarded, which is why the callers' controls confirm first. */
-  const rebuildOn = (maps: string[]): void => {
+  /* Moves every board whose map differs onto the chosen list's map, lineups
+   * included (grids.moveToMaps). Provenance stays, so the switch shows as
+   * unsaved changes to the team the boards came from. */
+  const switchVariant = (choice: TeamVariantChoice): void => {
+    grids.moveToMaps(variantMaps(activeMode.value, choice))
+    // The selected tile may not exist on its board's new map.
+    clearTargetHex()
+    clearLiftedHex()
+  }
+
+  /* File → New: fresh boards on the type the live boards match, or on the
+   * mode's initial type when their maps match nothing. Provenance detaches,
+   * so Save can no longer overwrite the team the boards came from (Clear
+   * stays content-only and keeps the tie); the previous content is discarded,
+   * which is why the control confirms first. */
+  const newTeam = (): void => {
+    const mode = activeMode.value
+    const match = variant.value
     persistence.setPaused(true)
-    grids.setGridCount(TEAM_MODES[activeMode.value].boardCount, maps)
+    grids.setGridCount(
+      TEAM_MODES[mode].boardCount,
+      match === null ? initialMaps(mode) : variantMaps(mode, match),
+    )
     afterRebuild()
     sourceId.value = null
     persistence.setPaused(false)
     persistence.flush()
-  }
-
-  const switchVariant = (choice: TeamVariantChoice): void => {
-    rebuildOn(variantMaps(activeMode.value, choice))
-  }
-
-  /* File → New: fresh boards on the type the live boards match, or on the
-   * mode's initial type when their maps match nothing. */
-  const newTeam = (): void => {
-    const mode = activeMode.value
-    const match = variant.value
-    rebuildOn(match === null ? initialMaps(mode) : variantMaps(mode, match))
   }
 
   /* Load a saved team as the active team. `source` becomes the provenance the

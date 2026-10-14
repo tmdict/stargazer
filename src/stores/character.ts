@@ -29,9 +29,6 @@ export const useCharacterStore = defineStore('character', () => {
 
   const clearAllCharacters = (): void => active().clearCharacters()
 
-  const moveCharacter = (fromHexId: number, toHexId: number, characterId: number): boolean =>
-    active().move(fromHexId, toHexId, characterId)
-
   const placePhantimalOnHex = (
     hexId: number,
     phantimalId: number,
@@ -53,7 +50,6 @@ export const useCharacterStore = defineStore('character', () => {
     placeCharacterOnHex,
     removeCharacterFromHex,
     clearAllCharacters,
-    moveCharacter,
     getTilesWithCharacters: getTilesWithCharactersStore,
     placePhantimalOnHex,
     autoPlacePhantimal,

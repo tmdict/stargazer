@@ -5,8 +5,15 @@
  */
 
 import type { Grid } from '@/lib/grid'
-import type { SkillContext, SkillManager } from '@/lib/skills/skill'
+import type { SkillContext, SkillLookups, SkillManager } from '@/lib/skills/skill'
 import type { Team } from '@/lib/types/team'
+
+// For skills that read no data-store fact; spread it to answer the one a test needs.
+export const NO_LOOKUPS: SkillLookups = {
+  factionOf: () => undefined,
+  classOf: () => undefined,
+  seasonalTargeting: () => false,
+}
 
 export function placeOnTile(grid: Grid, hexId: number, characterId: number, team: Team): void {
   const tile = grid.getTileById(hexId)
@@ -26,5 +33,5 @@ export function makeSkillContext(
   team: Team,
   characterId: number,
 ): SkillContext {
-  return { grid, hexId, team, characterId, skillManager: {} as SkillManager }
+  return { grid, hexId, team, characterId, skillManager: {} as SkillManager, lookups: NO_LOOKUPS }
 }

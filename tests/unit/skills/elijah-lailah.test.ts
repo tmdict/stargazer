@@ -4,7 +4,7 @@ import { addCompanionLink } from '@/lib/characters/companion'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile, removeFromTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const ELIJAH = 68
 // Cells 1, 4, 7, 10, 14 share a hex axis (q = -3), each one step apart.
@@ -24,7 +24,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     team: Team.ALLY,
     characterId: ELIJAH,
     skillManager,
-    lookups: { factionOf: (id) => factions.get(id) },
+    lookups: { ...NO_LOOKUPS, factionOf: (id) => factions.get(id) },
   })
 
   // Place the twins collinearly and link them, without the random companion spawn
@@ -43,7 +43,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     factions = new Map()
   })
 

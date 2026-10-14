@@ -3,5 +3,6 @@
   "name": "plague-creeper",
   "season": 8,
   "range": 20,
+  "damage": "magic",
   "faction": "graveborn"
 }

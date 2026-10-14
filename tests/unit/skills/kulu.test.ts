@@ -5,6 +5,7 @@ import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Kulu (80, Demolition Zone) paints a cosmetic per-team zone: tiles are tinted and
 // outlined but keep their state, so they stay placeable. The two zones overlap on
@@ -21,7 +22,7 @@ describe('kulu (Demolition Zone)', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 

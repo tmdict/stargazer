@@ -10,6 +10,7 @@ import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import RosterMenu from './RosterMenu.vue'
+import HelpLink from '@/components/ui/HelpLink.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
@@ -223,6 +224,7 @@ const {
             <IconEdit :size="14" />
           </button>
         </template>
+        <HelpLink class="roster-help" section="rosters" />
       </span>
       <!-- The Teams control bar's colors and order: New (danger) first, the
            library actions, the destructive Delete last. -->
@@ -484,6 +486,12 @@ const {
 
 .roster-name-input:focus {
   outline: none;
+}
+
+@media (max-width: 420px) {
+  :is(.rename-btn, .roster-name-input) + .roster-help {
+    display: none;
+  }
 }
 
 .file-input {

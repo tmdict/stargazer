@@ -17,6 +17,7 @@ import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
 import { TARGETING_ARENA, TARGETING_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Skill-less hero ids so placement exercises only the band rules.
 const HEROES = [601, 602, 603, 604, 605]
@@ -65,7 +66,7 @@ describe('synergy placement rules', () => {
 
   beforeEach(() => {
     grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-    sm = new SkillManager()
+    sm = new SkillManager(NO_LOOKUPS)
   })
 
   it('a synergy hero joins a full team', () => {
@@ -102,7 +103,7 @@ describe('resolvePlacement', () => {
 
   beforeEach(() => {
     grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-    sm = new SkillManager()
+    sm = new SkillManager(NO_LOOKUPS)
   })
 
   it('prefers the base id when it passes the gate', () => {
@@ -135,7 +136,7 @@ describe('resolveReplacement', () => {
 
   beforeEach(() => {
     grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-    sm = new SkillManager()
+    sm = new SkillManager(NO_LOOKUPS)
   })
 
   it('vacating a base hero frees its capacity slot', () => {
@@ -188,7 +189,7 @@ describe('synergy move and swap guards', () => {
 
   beforeEach(() => {
     grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-    sm = new SkillManager()
+    sm = new SkillManager(NO_LOOKUPS)
     executePlaceCharacter(grid, sm, 1, toSynergyId(601), Team.ALLY)
   })
 

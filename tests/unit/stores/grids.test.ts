@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { findCharacterHex, getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
+import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
@@ -24,10 +25,10 @@ import {
 } from '../fixtures/characters'
 
 /**
- * Tests for the grids store's cross-board actions: swapBoards, drop routing,
- * and loadTeamSide. Boards default to arena1 (ally spawns 1-10/12/13/16, enemy
- * spawns 30/33/34/36-45). Skills are code-registered, so Kulu/Phraesto behave
- * without loaded game data.
+ * Tests for the grids store's cross-board actions: swapBoards, moveToMap, drop
+ * routing, and loadTeamSide. Boards default to arena1 (ally spawns
+ * 1-10/12/13/16, enemy spawns 30/33/34/36-45). Skills are code-registered, so
+ * Kulu/Phraesto behave without loaded game data.
  */
 
 // (characterId, team) pairs on a board, order-independent (placement is random).
@@ -83,6 +84,19 @@ describe('useGrids.swapBoards', () => {
       { characterId: ALLY_A, team: Team.ALLY },
       { characterId: ENEMY_A, team: Team.ENEMY },
     ])
+  })
+
+  it('trades formations as they stand between boards on one map', () => {
+    const { grids, a, b } = setupBoards()
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a!.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    expect(b!.place(9, ALLY_B, Team.ALLY)).toBe(true)
+
+    grids.swapBoards(0, 1)
+
+    expect(findCharacterHex(b!.grid, ALLY_A, Team.ALLY)).toBe(1)
+    expect(findCharacterHex(b!.grid, ENEMY_A, Team.ENEMY)).toBe(40)
+    expect(findCharacterHex(a!.grid, ALLY_B, Team.ALLY)).toBe(9)
   })
 
   it('swaps each board artifacts, keeping the team side', () => {
@@ -143,6 +157,58 @@ describe('useGrids.swapBoards', () => {
     expect(destCompanion).toHaveLength(1)
     expect(destCompanion[0]!.team).toBe(Team.ALLY)
   })
+})
+
+describe('useGrids.moveToMap', () => {
+  it('carries a board onto another map, each unit on its own tile where the map has it', () => {
+    const { grids, a: ctx } = setupBoards(1)
+    expect(ctx.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    ctx.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 3)
+    expect(ctx.place(9, ALLY_B, Team.ALLY)).toBe(true)
+    expect(ctx.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    expect(ctx.placePhantimal(4, toPhantimalId(1), Team.ALLY)).toBe(true)
+    ctx.setArtifact(Team.ALLY, 3)
+
+    // arena2 has ally tiles 1 and 4 and enemy tile 40; 9 is no ally tile there.
+    expect(grids.moveToMap(ctx, 'arena2')).toBe(true)
+
+    expect(ctx.currentMap).toBe('arena2')
+    expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).toBe(1)
+    expect(ctx.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(3)
+    expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
+    expect(findCharacterHex(ctx.grid, ENEMY_A, Team.ENEMY)).toBe(40)
+    expect(ctx.artifacts.ally).toBe(3)
+    const moved = findCharacterHex(ctx.grid, ALLY_B, Team.ALLY)
+    expect(moved).not.toBeNull()
+    expect([1, 4, 9]).not.toContain(moved)
+  })
+
+  // One case per tile the random fallback and the companion spawn can come up
+  // with: the result must not depend on which one it is. Units place in tile
+  // order (10, 13, 16, 2 here), so ALLY_A's fallback and the companion's spawn
+  // are both drawn while tiles 16 and 2 still stand free.
+  it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])(
+    'a unit whose tile is gone never takes a tile another unit keeps (random pick %i of 10)',
+    (pick) => {
+      vi.spyOn(Math, 'random').mockReturnValue(pick / 10)
+      const { grids, a: ctx } = setupBoards(1)
+      expect(ctx.place(13, PHRAESTO, Team.ALLY)).toBe(true)
+      repositionCompanions(ctx.grid, Team.ALLY, [{ companionId: PHRAESTO_COMPANION, hexId: 12 }])
+      expect(ctx.place(10, ALLY_A, Team.ALLY)).toBe(true)
+      expect(ctx.place(16, ALLY_C, Team.ALLY)).toBe(true)
+      expect(ctx.place(2, ALLY_B, Team.ALLY)).toBe(true)
+
+      // arena3 has ally tiles 13, 16 and 2, and neither 10 nor 12.
+      expect(grids.moveToMap(ctx, 'arena3')).toBe(true)
+
+      expect(findCharacterHex(ctx.grid, PHRAESTO, Team.ALLY)).toBe(13)
+      expect(findCharacterHex(ctx.grid, ALLY_C, Team.ALLY)).toBe(16)
+      expect(findCharacterHex(ctx.grid, ALLY_B, Team.ALLY)).toBe(2)
+      expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).not.toBeNull()
+      expect(findCharacterHex(ctx.grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
+      expect(getTilesWithCharacters(ctx.grid)).toHaveLength(5)
+    },
+  )
 })
 
 describe('useGrids.routeArtifactDrop', () => {

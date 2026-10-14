@@ -13,6 +13,7 @@ import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
 import { COMPANION_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 describe('companion', () => {
   let grid: Grid
@@ -20,7 +21,7 @@ describe('companion', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, COMPANION_ARENA)
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   describe('isCompanionId', () => {

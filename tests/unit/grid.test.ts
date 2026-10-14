@@ -22,7 +22,6 @@ describe('Grid', () => {
     const grid = new Grid(SMALL_GRID, TEST_ARENA)
 
     expect(grid.getAllTiles()).toHaveLength(5)
-    expect(grid.gridPreset).toBe(SMALL_GRID)
 
     // Check states are applied from TEST_ARENA
     expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)

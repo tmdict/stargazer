@@ -3,5 +3,6 @@
   "name": "gervan",
   "season": 8,
   "range": 20,
+  "damage": "magic",
   "faction": "lightbearer"
 }

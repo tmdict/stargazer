@@ -17,7 +17,7 @@ import {
 } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { placeOnTile, removeFromTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../fixtures/skills'
 
 // Test-only local ids no season uses, so the mechanics stay covered whatever
 // the season's phantimals.
@@ -32,7 +32,7 @@ registerSkill(createSpiritMarkSkill(15, 'test-front', 'front'))
 describe('phantimal Spirit Mark skills', () => {
   let grid: Grid
   let skillManager: SkillManager
-  const lookups: SkillLookups = { seasonalTargeting: () => true }
+  const lookups: SkillLookups = { ...NO_LOOKUPS, seasonalTargeting: () => true }
 
   const ctx = (hexId: number, characterId: number, team = Team.ALLY): SkillContext => ({
     grid,
@@ -51,7 +51,7 @@ describe('phantimal Spirit Mark skills', () => {
   it('paints nothing while the phantimal targeting is switched off', () => {
     placeOnTile(grid, 23, BEHIND_MARK, Team.ALLY)
     placeOnTile(grid, 16, 100, Team.ALLY)
-    const off: SkillContext = { ...ctx(23, BEHIND_MARK), lookups: {} }
+    const off: SkillContext = { ...ctx(23, BEHIND_MARK), lookups: NO_LOOKUPS }
 
     getCharacterSkill(BEHIND_MARK)!.onActivate(off)
     expect(skillManager.getTileColorModifier(16)).toBeUndefined()
@@ -163,7 +163,7 @@ describe('season 8', () => {
 
   it('wedge of matter brings wedge of power, which holds no team slot', () => {
     const grid = new Grid()
-    const skillManager = new SkillManager()
+    const skillManager = new SkillManager(NO_LOOKUPS)
     expect(executePlaceCharacter(grid, skillManager, 16, WEDGE_OF_MATTER, Team.ALLY)).toBe(true)
     expect(findCharacterHex(grid, WEDGE_OF_POWER, Team.ALLY)).not.toBeNull()
     expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
@@ -172,7 +172,7 @@ describe('season 8', () => {
   describe('wedge marks, with targeting on', () => {
     let grid: Grid
     let skillManager: SkillManager
-    const lookups: SkillLookups = { seasonalTargeting: () => true }
+    const lookups: SkillLookups = { ...NO_LOOKUPS, seasonalTargeting: () => true }
 
     // Raw placement with a hand-made link, so both wedges stand on known hexes
     // (hex 4 ally front chain: 9 > 6 > 7; hex 23 behind: 16).
