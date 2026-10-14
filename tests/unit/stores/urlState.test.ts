@@ -160,9 +160,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     // hex can only be reached through the restore's locate-and-move branch
     // (16/13 are free ally spawns; pick one the companion didn't land on).
     const companionHexId = [16, 13].find((id) => id !== spawnHexId)!
-    expect(source.character.moveCharacter(spawnHexId, companionHexId, PHRAESTO_COMPANION)).toBe(
-      true,
-    )
+    expect(useGrids().active!.move(spawnHexId, companionHexId, PHRAESTO_COMPANION)).toBe(true)
 
     const encoded = encodeStores(source)
     const expected = snapshotTiles(source.grid)
@@ -194,7 +192,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       .find((t) => t.characterId === PHRAESTO_COMPANION)!
       .hex.getId()
     expect(spawnHexId).not.toBe(1)
-    expect(source.character.moveCharacter(spawnHexId, 1, PHRAESTO_COMPANION)).toBe(true)
+    expect(useGrids().active!.move(spawnHexId, 1, PHRAESTO_COMPANION)).toBe(true)
     const encoded = encodeStores(source)
 
     const restored = createStores()
@@ -388,6 +386,7 @@ describe('synergy restore', () => {
       name: 'test-phantimal',
       season: 7,
       range: 2,
+      damage: 'physical',
       faction: 'wilder',
     }
     const mockGameData = (): void => {

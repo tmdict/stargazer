@@ -7,12 +7,13 @@ import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 describe('skill', () => {
   let skillManager: SkillManager
 
   beforeEach(() => {
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   describe('SkillManager', () => {
@@ -49,7 +50,7 @@ describe('skill', () => {
         // same color. Moving the teammate off 40 makes Cassadee unpaint it mid-sweep,
         // after Evie already repainted; the refcount keeps Evie's outline alive.
         const arena = new Grid()
-        const sm = new SkillManager()
+        const sm = new SkillManager(NO_LOOKUPS)
         arena.skillManager = sm
         expect(executePlaceCharacter(arena, sm, 9, 113, Team.ALLY)).toBe(true)
         expect(sm.getTileColorModifier(40)).toBeDefined()

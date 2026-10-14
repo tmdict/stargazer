@@ -141,9 +141,10 @@ const SKILL = {
           <li>
             <span>
               <b>Load</b> puts one side of a saved team back on the grids, on either side.
-              <span class="help-inline-btn"><IconImagePlus :size="13" /></span> imports a match from
-              screenshots.
             </span>
+          </li>
+          <li>
+            <span> In <b>Saved</b>, type a hero's name to find the teams that use that hero. </span>
           </li>
         </ol>
       </div>
@@ -152,7 +153,14 @@ const SKILL = {
           In <b>Saved</b>, <span class="help-mouse">click</span
           ><span class="help-touch">tap</span> a team's name to rename it.
         </li>
-        <li>Search saved teams by name or by hero.</li>
+        <li>
+          Pick heroes from the list under the search box to see only the teams that field them
+          together. A team's name works too.
+        </li>
+        <li>
+          <span class="help-inline-btn"><IconImagePlus :size="13" /></span> imports a match from
+          screenshots.
+        </li>
         <li>Saved teams stay in your browser. <b>Export</b> makes a backup file.</li>
       </ul>
     </div>

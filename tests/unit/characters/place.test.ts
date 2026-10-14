@@ -20,6 +20,7 @@ import {
   PHRAESTO_COMPANION,
 } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
 // no registered skill, and Phraesto drives the lifecycle tests because his
@@ -32,7 +33,7 @@ describe('place.ts', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 
@@ -105,10 +106,7 @@ describe('place.ts', () => {
       const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(true)
-      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ALLY)).toEqual({
-        hexId: 1,
-        team: Team.ALLY,
-      })
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
       expect(getMaxTeamSize(grid, Team.ALLY)).toBe(6)
     })
@@ -150,10 +148,7 @@ describe('place.ts', () => {
       expect(grid.getTileById(1).characterId).toBe(GUNNAR)
       expect(isCharacterOnTeam(grid, GUNNAR, Team.ALLY)).toBe(true)
       expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
-      expect(skillManager.getActiveSkillInfo(GUNNAR, Team.ALLY)).toEqual({
-        hexId: 1,
-        team: Team.ALLY,
-      })
+      expect(skillManager.hasActiveSkill(GUNNAR, Team.ALLY)).toBe(true)
       error.mockRestore()
     })
 

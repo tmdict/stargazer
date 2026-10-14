@@ -12,6 +12,7 @@ import { useGrids } from '@/stores/grids'
 import { loadCharacters } from '@/utils/dataLoader'
 import { serializeGridState } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/utils/urlStateManager'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Default map (arena1) ally tiles, used for real placement-path tests.
 const ALLY_TILES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -82,7 +83,7 @@ describe('placeholder placement rules', () => {
     performPlace(grid, 40, hero.id, Team.ENEMY)
     performPlace(grid, 42, PLACEHOLDER.id, Team.ENEMY)
 
-    expect(executeSwapCharacters(grid, new SkillManager(), ALLY_TILES[0]!, 40)).toBe(true)
+    expect(executeSwapCharacters(grid, new SkillManager(NO_LOOKUPS), ALLY_TILES[0]!, 40)).toBe(true)
 
     expect(grid.getTileById(40).characterId).toBe(PLACEHOLDER.id)
     expect(grid.getTileById(ALLY_TILES[0]!).characterId).toBe(hero.id)
@@ -110,7 +111,7 @@ describe('placeholder store exemptions', () => {
     setActivePinia(createPinia())
   })
 
-  it('never reports placeholders as used and dedupe keeps their copies', () => {
+  it('never counts placeholders as used and dedupe keeps their copies', () => {
     const grids = useGrids()
     grids.setGridCount(2)
     const [a, b] = grids.contexts
@@ -118,7 +119,7 @@ describe('placeholder store exemptions', () => {
     expect(a!.place(ALLY_TILES[1]!, PLACEHOLDER.id, Team.ALLY)).toBe(true)
     expect(b!.place(ALLY_TILES[0]!, PLACEHOLDER.id, Team.ALLY)).toBe(true)
 
-    expect(grids.isUsed(PLACEHOLDER.id, Team.ALLY)).toBe(false)
+    expect(grids.resolvePick(b!, PLACEHOLDER.id, Team.ALLY)).toBe(PLACEHOLDER.id)
 
     grids.dedupeCharacters()
     expect(a!.grid.getTileById(ALLY_TILES[0]!).characterId).toBe(PLACEHOLDER.id)

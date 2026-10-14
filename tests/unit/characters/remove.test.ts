@@ -18,6 +18,7 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { ALLY_A, ENEMY_A, PHRAESTO, PHRAESTO_COMPANION } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
 // no registered skill; Phraesto's companion spawn makes skill teardown
@@ -29,7 +30,7 @@ describe('remove.ts', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 

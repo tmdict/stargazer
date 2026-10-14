@@ -15,13 +15,12 @@ export { hasCompanionSkill, hasSkill }
 // Resolvers for data-store facts a skill may need about any grid unit, keyed by
 // characterId (companion -> main character, phantimal -> seasonal). Injected as one
 // bag so a new fact is added in a single place rather than threaded through the
-// SkillManager constructor and every SkillContext. Each is optional so hand-built
-// test contexts can supply only what they read.
+// SkillManager constructor and every SkillContext.
 export interface SkillLookups {
-  factionOf?: (characterId: number) => string | undefined
-  classOf?: (characterId: number) => string | undefined
+  factionOf: (characterId: number) => string | undefined
+  classOf: (characterId: number) => string | undefined
   // Whether a phantimal's skill targeting is switched on in its data file.
-  seasonalTargeting?: (characterId: number) => boolean
+  seasonalTargeting: (characterId: number) => boolean
 }
 
 // SkillContext defined here (not registry.ts) to avoid circular dep, as it references SkillManager
@@ -31,7 +30,7 @@ export interface SkillContext {
   team: Team
   characterId: number
   skillManager: SkillManager
-  lookups?: SkillLookups
+  lookups: SkillLookups
 }
 
 // A tile a skill paints. `fill` routes the color to the cell-fill channel (a
@@ -115,9 +114,8 @@ export class SkillManager {
   // to re-derive from this non-reactive class.
   private targetVersion = 0
 
-  // Lookups are injected (that data lives in the data store, outside this pure lib);
-  // they default to empty so SkillManager stays constructible in isolation.
-  constructor(private readonly lookups: SkillLookups = {}) {}
+  // Lookups are injected: that data lives in the data store, outside this pure lib.
+  constructor(private readonly lookups: SkillLookups) {}
 
   private getSkillKey(characterId: number, team: Team): string {
     return `${characterId}-${team}`
@@ -131,19 +129,6 @@ export class SkillManager {
       if (info.characterId === characterId) return true
     }
     return false
-  }
-
-  getActiveSkillInfo(characterId: number, team?: Team): { hexId: number; team: Team } | undefined {
-    if (team !== undefined) {
-      const info = this.activeSkills[this.getSkillKey(characterId, team)]
-      return info ? { hexId: info.hexId, team: info.team } : undefined
-    }
-    for (const info of Object.values(this.activeSkills)) {
-      if (info.characterId === characterId) {
-        return { hexId: info.hexId, team: info.team }
-      }
-    }
-    return undefined
   }
 
   activateCharacterSkill(characterId: number, hexId: number, team: Team, grid: Grid): boolean {

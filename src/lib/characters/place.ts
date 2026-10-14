@@ -159,15 +159,20 @@ export function resolveReplacement(
   return resolved === anchorId ? null : resolved
 }
 
+// `avoid` lists hexes held for units still to come: one is taken only when the
+// team has no other free tile.
 export function executeAutoPlaceCharacter(
   grid: Grid,
   skillManager: SkillManager,
   characterId: number,
   team: Team,
+  avoid?: ReadonlySet<number>,
 ): boolean {
   if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
 
-  const availableTiles = getAllAvailableTilesForTeam(grid, team)
+  const freeTiles = getAllAvailableTilesForTeam(grid, team)
+  const openTiles = avoid ? freeTiles.filter((tile) => !avoid.has(tile.hex.getId())) : freeTiles
+  const availableTiles = openTiles.length > 0 ? openTiles : freeTiles
   if (availableTiles.length == 0) return false
 
   const randomIndex = Math.floor(Math.random() * availableTiles.length)

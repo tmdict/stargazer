@@ -10,12 +10,12 @@ import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useUnitTooltipRows } from '@/composables/useUnitTooltipRows'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
-import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
@@ -29,8 +29,8 @@ const { phantimals, isDraggable = false } = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const gameDataStore = useGameDataStore()
 const grids = useGrids()
+const { traitRow, rangeRow } = useUnitTooltipRows()
 const { fillOrder, targetHexId, targetGridId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
 
@@ -123,11 +123,9 @@ const tooltipRows = computed(() => {
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
   return [
-    {
-      label: `${i18n.t('game.faction')}:`,
-      value: i18n.t(`game.${phantimal.faction}`),
-      icon: gameDataStore.getIcon(`faction-${phantimal.faction}`),
-    },
+    traitRow('faction', phantimal.faction),
+    traitRow('damage', phantimal.damage),
+    rangeRow(phantimal.range),
     {
       label: `${i18n.t('app.availability')}:`,
       value: i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT }),

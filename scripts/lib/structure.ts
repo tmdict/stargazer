@@ -10,8 +10,6 @@ import { perAppLocale } from './shared.ts'
 
 // The permanent artifacts hold ids 1-6; a season's set follows in feed order.
 const PRE_SEASON_COUNT = 6
-const MELEE_RANGE = 1
-const RANGED_RANGE = 20
 
 export type Json = Record<string, unknown>
 
@@ -94,12 +92,21 @@ export function phantimalStructure(
 ): Structure {
   const out: Structure = { data: {}, names: {}, problems: [] }
   for (const p of Object.values(en).sort((a, b) => a.slug.localeCompare(b.slug))) {
+    if (
+      !p.faction
+    ) {
+      out.problems.push(
+      )
+      continue
+    }
+    if (!damage) {
       out.problems.push(
       )
       continue
     }
     const generated: Json = {
       name: p.slug,
+      damage,
       faction: p.faction.toLowerCase(),
     }
     if (existing[p.slug]?.qualifyingFactions) {

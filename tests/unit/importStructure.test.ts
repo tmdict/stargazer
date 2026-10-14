@@ -57,7 +57,7 @@ describe('artifactStructure', () => {
 })
 
 describe('phantimalStructure', () => {
-  it('derives id, range and faction, with both factions for camp 5', () => {
+  it('derives id, range, damage and faction, with both factions for camp 5', () => {
     const out = phantimalStructure(
       {
         w: phantimal('w', 5, { faction: 'Celestial' }),
@@ -65,16 +65,22 @@ describe('phantimalStructure', () => {
       {},
     )
     expect(out.data).toEqual({
-      m: { id: 2, name: 'm', season: 8, range: 1, faction: 'wilder' },
+      m: { id: 2, name: 'm', season: 8, range: 1, damage: 'physical', faction: 'wilder' },
       w: {
         id: 5,
         name: 'w',
         season: 8,
         range: 20,
+        damage: 'magic',
         faction: 'celestial',
         qualifyingFactions: ['hypogean', 'celestial'],
       },
     })
+  })
+
+  it('reports an unmapped damage code and a feed without attack ranges', () => {
+    expect(odd.problems[0]).toContain('"NEW"')
+    expect(old.problems[0]).toContain('rebuild')
   })
 
   it('keeps curated fields and an existing qualifyingFactions', () => {
@@ -87,6 +93,7 @@ describe('phantimalStructure', () => {
       name: 'p',
       season: 8,
       range: 20,
+      damage: 'magic',
       faction: 'mauler',
       qualifyingFactions: ['mauler'],
       targeting: true,
@@ -96,6 +103,7 @@ describe('phantimalStructure', () => {
       'name',
       'season',
       'range',
+      'damage',
       'faction',
       'qualifyingFactions',
       'targeting',
