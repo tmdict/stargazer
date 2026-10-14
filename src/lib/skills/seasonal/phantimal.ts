@@ -48,7 +48,7 @@ function markTiles(ctx: SkillContext, direction: TargetDirection): TilePaint[] {
 const whenTargeting =
   (calculate: (ctx: SkillContext) => TilePaint[]) =>
   (ctx: SkillContext): TilePaint[] =>
-    ctx.lookups?.seasonalTargeting?.(ctx.characterId) ? calculate(ctx) : []
+    ctx.lookups.seasonalTargeting(ctx.characterId) ? calculate(ctx) : []
 
 export function createSpiritMarkSkill(
   localId: number,

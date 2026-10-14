@@ -63,7 +63,7 @@ Arrows take their color from the definition's `targetingColorModifier`, while li
 
 ## Lookups
 
-A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib. Each lookup is optional so hand-built test contexts supply only what they read.
+A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.
 
 `seasonalTargeting` reports whether a phantimal's data file sets `"targeting": true`. A Spirit Mark paints nothing while it is off, even with the Skills toggle on, so a mark can ship before its in-game unlock. Artifacts have no such switch ([Seasonal Content](./SEASONAL.md)).
 

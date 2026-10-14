@@ -47,8 +47,3 @@ export function useAttrLayerSelection(): {
 
   return { select, effectiveLayers, litChoice }
 }
-
-// Test-only: module singletons outlive test files.
-export function resetAttrLayerSelection(): void {
-  choice.value = ATTR_PARAGON
-}

@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { resetAttrLayerSelection, useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
+import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 
 const BOTH = [ATTR_PARAGON, ATTR_REFINEMENT]
 
 describe('useAttrLayerSelection', () => {
+  // The choice is one module-level value, so it outlives a test.
   beforeEach(() => {
-    resetAttrLayerSelection()
+    useAttrLayerSelection().select(ATTR_PARAGON)
   })
 
-  it('defaults to paragon and switches layers exclusively', () => {
+  it('switches layers exclusively', () => {
     const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
     expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
     expect(litChoice(BOTH)).toBe(ATTR_PARAGON)

@@ -1,0 +1,5 @@
+{
+  "en": "Use the battle stats screen shown after a match (each hero's damage dealt, healing and damage taken), one screenshot per map. Formation screenshots are not supported yet.",
+  "zh": "请使用对战结束后的战斗数据界面截图（列出每位英雄的造成伤害、治愈和承受伤害），每张地图一张。暂不支持布阵截图。",
+  "ko": "대전이 끝난 뒤 나오는 전투 데이터 화면(영웅별 입힌 대미지, 치료, 받은 대미지)의 스크린샷을 맵마다 한 장씩 사용하세요. 배치 화면 스크린샷은 아직 지원하지 않습니다."
+}

@@ -24,7 +24,8 @@ const phantimal = (slug: string, campSlot: number, extra: Partial<FeedPhantimal>
   slug,
   faction: 'Mauler',
   campSlot,
-  isMelee: false,
+  damageType: 'AP',
+  attackRange: 20,
   seasonType: 108,
   ...extra,
 })
@@ -65,25 +66,33 @@ describe('artifactStructure', () => {
 })
 
 describe('phantimalStructure', () => {
-  it('derives id, range and faction, with both factions for camp 5', () => {
+  it('derives id, range, damage and faction, with both factions for camp 5', () => {
     const out = phantimalStructure(
       {
-        m: phantimal('m', 2, { isMelee: true, faction: 'Wilder' }),
+        m: phantimal('m', 2, { damageType: 'AD', attackRange: 1, faction: 'Wilder' }),
         w: phantimal('w', 5, { faction: 'Celestial' }),
       },
       {},
     )
     expect(out.data).toEqual({
-      m: { id: 2, name: 'm', season: 8, range: 1, faction: 'wilder' },
+      m: { id: 2, name: 'm', season: 8, range: 1, damage: 'physical', faction: 'wilder' },
       w: {
         id: 5,
         name: 'w',
         season: 8,
         range: 20,
+        damage: 'magic',
         faction: 'celestial',
         qualifyingFactions: ['hypogean', 'celestial'],
       },
     })
+  })
+
+  it('reports an unmapped damage code and a feed without attack ranges', () => {
+    const odd = phantimalStructure({ p: phantimal('p', 3, { damageType: 'NEW' }) }, {})
+    expect(odd.problems[0]).toContain('"NEW"')
+    const old = phantimalStructure({ p: phantimal('p', 3, { attackRange: undefined }) }, {})
+    expect(old.problems[0]).toContain('rebuild')
   })
 
   it('keeps curated fields and an existing qualifyingFactions', () => {
@@ -96,6 +105,7 @@ describe('phantimalStructure', () => {
       name: 'p',
       season: 8,
       range: 20,
+      damage: 'magic',
       faction: 'mauler',
       qualifyingFactions: ['mauler'],
       targeting: true,
@@ -105,6 +115,7 @@ describe('phantimalStructure', () => {
       'name',
       'season',
       'range',
+      'damage',
       'faction',
       'qualifyingFactions',
       'targeting',

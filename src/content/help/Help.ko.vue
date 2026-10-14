@@ -142,8 +142,11 @@ const SKILL = {
           <li>
             <span>
               <b>불러오기</b>는 저장한 진형의 한쪽 진영을 맵의 원하는 진영에 다시 배치합니다.
-              <span class="help-inline-btn"><IconImagePlus :size="13" /></span> 버튼은 스크린샷에서
-              대전을 가져옵니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>저장 목록</b>에서 영웅 이름을 입력하면 그 영웅을 쓰는 진형을 찾을 수 있습니다.
             </span>
           </li>
         </ol>
@@ -153,7 +156,14 @@ const SKILL = {
           <b>저장 목록</b>에서 진형 이름을 <span class="help-mouse">클릭하면</span
           ><span class="help-touch">누르면</span> 이름을 바꿀 수 있습니다.
         </li>
-        <li>저장한 진형은 이름이나 영웅으로 검색할 수 있습니다.</li>
+        <li>
+          검색창 아래 목록에서 영웅을 선택하면 그 영웅들을 같은 진영에 함께 배치한 진형만
+          표시됩니다. 진형 이름으로도 검색할 수 있습니다.
+        </li>
+        <li>
+          <span class="help-inline-btn"><IconImagePlus :size="13" /></span> 버튼은 스크린샷에서
+          대전을 가져옵니다.
+        </li>
         <li>
           저장한 진형은 브라우저에 보관됩니다. <b>내보내기</b>로 백업 파일을 만들 수 있습니다.
         </li>

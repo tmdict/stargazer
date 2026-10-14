@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 const NIRU = 28
 const NIRU_HEX = 12 // neighbors: {6, 8, 9, 15, 16, 19}
@@ -18,6 +18,7 @@ describe('niru rear-row, front-of-row ally targeting', () => {
     team: Team.ALLY,
     characterId: NIRU,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const niru = () => getCharacterSkill(NIRU)!
@@ -25,7 +26,7 @@ describe('niru rear-row, front-of-row ally targeting', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     placeOnTile(grid, NIRU_HEX, NIRU, Team.ALLY)
   })
 

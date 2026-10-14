@@ -6,6 +6,7 @@ import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Ravion (90, Designated Duty) targets the 2 rearmost allies on his own team.
 // Rearmost follows the grid convention (findRearmostTarget): smallest hex IDs
@@ -18,7 +19,7 @@ describe('ravion (Designated Duty)', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 

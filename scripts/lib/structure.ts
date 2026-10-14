@@ -30,8 +30,8 @@ const SEASON_OFFSET = 100
 // counts for both factions.
 const DUAL_CAMP = 5
 const DUAL_FACTIONS = ['hypogean', 'celestial']
-const MELEE_RANGE = 1
-const RANGED_RANGE = 20
+// Feed damage codes → the phantimal files' damage values.
+export const DAMAGE_TYPE: Record<string, string> = { AD: 'physical', AP: 'magic' }
 
 export type Json = Record<string, unknown>
 
@@ -48,7 +48,8 @@ export interface FeedPhantimal {
   slug: string
   faction: string | null
   campSlot?: number
-  isMelee?: boolean
+  damageType?: string | null
+  attackRange?: number | null
   seasonType?: number
 }
 
@@ -125,9 +126,22 @@ export function phantimalStructure(
 ): Structure {
   const out: Structure = { data: {}, names: {}, problems: [] }
   for (const p of Object.values(en).sort((a, b) => a.slug.localeCompare(b.slug))) {
-    if (p.campSlot == null || p.isMelee == null || p.seasonType == null || !p.faction) {
+    if (
+      p.campSlot == null ||
+      p.damageType == null ||
+      p.attackRange == null ||
+      p.seasonType == null ||
+      !p.faction
+    ) {
       out.problems.push(
-        `${p.slug}: the feed has no campSlot/isMelee/seasonType/faction; rebuild it`,
+        `${p.slug}: the feed has no campSlot/damageType/attackRange/seasonType/faction; rebuild it`,
+      )
+      continue
+    }
+    const damage = DAMAGE_TYPE[p.damageType]
+    if (!damage) {
+      out.problems.push(
+        `${p.slug}: unmapped feed damage type "${p.damageType}" (add it to DAMAGE_TYPE)`,
       )
       continue
     }
@@ -135,7 +149,8 @@ export function phantimalStructure(
       id: p.campSlot,
       name: p.slug,
       season: p.seasonType - SEASON_OFFSET,
-      range: p.isMelee ? MELEE_RANGE : RANGED_RANGE,
+      range: p.attackRange,
+      damage,
       faction: p.faction.toLowerCase(),
     }
     if (p.campSlot === DUAL_CAMP) generated.qualifyingFactions = DUAL_FACTIONS

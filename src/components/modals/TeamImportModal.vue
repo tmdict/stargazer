@@ -218,6 +218,7 @@ const handleForgetLearned = (): void => {
   >
     <div class="import">
       <h1>{{ i18n.t('app.import-title') }}</h1>
+      <p class="note intro">{{ i18n.t('app.import-tip') }}</p>
       <div class="meta">
         <span class="meta-chip">
           {{ i18n.t(TEAM_MODES[activeMode].labelKey) }}
@@ -421,6 +422,12 @@ const handleForgetLearned = (): void => {
 
 .error {
   color: var(--import-bad);
+}
+
+.intro {
+  max-width: 42em;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .names {

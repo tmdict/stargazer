@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import TileSwatch from '@/components/grid/TileSwatch.vue'
+import HelpLink from '@/components/ui/HelpLink.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
@@ -55,7 +56,12 @@ const handleArenaSelected = (mapKey: string) => {
 <template>
   <div v-scroll-chain class="map-editor">
     <section class="map-section">
-      <h3 class="section-title">{{ i18n.t('app.editor') }}</h3>
+      <h3 class="section-title">
+        <span class="section-title-text">
+          {{ i18n.t('app.editor') }}
+          <HelpLink class="section-title-help" section="maps" />
+        </span>
+      </h3>
 
       <label class="editor-toggle">
         <input v-model="editorEnabled" type="checkbox" class="editor-toggle-checkbox" />
@@ -132,6 +138,17 @@ const handleArenaSelected = (mapKey: string) => {
 
 .map-section + .map-section .section-title {
   margin-bottom: 1.25rem;
+}
+
+.section-title-text {
+  position: relative;
+}
+
+.section-title-help {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .editor-toggle {

@@ -111,6 +111,7 @@ describe('characterStore phantimal faction rule', () => {
     name: 'aurelian',
     season: 7,
     range: 20,
+    damage: 'magic',
     faction: 'lightbearer',
   }
 

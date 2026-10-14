@@ -1,14 +1,15 @@
 // Phantimal locale-text importer.
 //
 // Split of ownership: the structural files (src/data/seasonal/phantimal/
-// <slug>.json: id, range, faction) are written by import:structure, which keeps
+// <slug>.json: id, range, damage, faction) are written by import:structure, which keeps
 // their ids stable within a season because ids are baked into share links. This
 // script owns only the localized content:
 //   src/locales/seasonal/phantimal/<slug>.json   {name, skills[].levels[]} app-locale maps
 //
 // Hand-written structure is linted against the feed: the slug sets must match
-// both ways and factions must agree, so a season rotation that forgets a
-// structural file (or leaves a stale one) fails the import loudly.
+// both ways and factions, ranges and damage types must agree, so a season
+// rotation that forgets a structural file (or leaves a stale one) fails the
+// import loudly.
 //
 // Usage:
 //   npm run import:phantimals                          # reads DATA_FEED_DIR/<feed>/phantimals.json
@@ -32,6 +33,7 @@ import {
   perAppLocale,
   writeTextIfChanged,
 } from './lib/shared.ts'
+import { DAMAGE_TYPE } from './lib/structure.ts'
 
 // ---------- paths ----------
 
@@ -46,6 +48,8 @@ interface PhantimalEntry {
   slug: string
   name: string | null
   faction: string | null
+  damageType?: string | null
+  attackRange?: number | null
   skills: { name: string | null; levels: { level: number; description: string | null }[] }[]
 }
 
@@ -129,6 +133,8 @@ async function main() {
     const structural = JSON.parse(await readFile(join(DATA_DIR, `${slug}.json`), 'utf8')) as {
       name?: string
       faction?: string
+      range?: number
+      damage?: string
     }
     // The locale dict and image lookups key on `name` matching the filename.
     if (structural.name !== slug) {
@@ -137,6 +143,14 @@ async function main() {
     const feedFaction = en[slug]!.faction?.toLowerCase() ?? null
     if (feedFaction && structural.faction !== feedFaction) {
       problems.push(`${slug}: faction "${structural.faction}" but the feed says "${feedFaction}"`)
+    }
+    const feedRange = en[slug]!.attackRange ?? null
+    if (feedRange !== null && structural.range !== feedRange) {
+      problems.push(`${slug}: range ${structural.range} but the feed says ${feedRange}`)
+    }
+    const feedDamage = DAMAGE_TYPE[en[slug]!.damageType ?? ''] ?? null
+    if (feedDamage && structural.damage !== feedDamage) {
+      problems.push(`${slug}: damage "${structural.damage}" but the feed says "${feedDamage}"`)
     }
   }
   for (const slug of structuralSlugs) {
