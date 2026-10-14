@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { CURRENT_SEASON } from '@/lib/seasonal'
-import { buildSideLoadPlan, savedTeamSide } from '@/lib/teams/sideLoad'
+import { buildSideLoadPlan, savedTeamSide, sideLoadBoard } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
@@ -135,6 +135,36 @@ describe('buildSideLoadPlan', () => {
     const plan = buildSideLoadPlan(encode(record), true)!
     expect(plan.side).toBe(Team.ENEMY)
     expect(plan.boards[0]!.artifact).toBe(9)
+  })
+})
+
+describe('sideLoadBoard', () => {
+  it("reads one team's units, levels and artifact from a board holding both teams", () => {
+    const board = {
+      c: [
+        [1, 11, Team.ALLY],
+        [3, 10011, Team.ALLY],
+        [40, 21, Team.ENEMY],
+      ],
+      s: [
+        [4, 1, Team.ALLY],
+        [41, 2, Team.ENEMY],
+      ],
+      u: [
+        [Team.ALLY, 11, 1, 3],
+        [Team.ENEMY, 21, 1, 2],
+      ],
+      a: [7, 9],
+    }
+    expect(sideLoadBoard(board, Team.ENEMY, true)).toEqual({
+      mains: [{ unitId: 21, hexId: 40, attrs: { 1: 2 } }],
+      companions: [],
+      phantimal: { unitId: toPhantimalId(2), hexId: 41 },
+      artifact: 9,
+    })
+    expect(sideLoadBoard(board, Team.ALLY, true).companions).toEqual([
+      { unitId: 10011, hexId: 3, mainUnitId: 11 },
+    ])
   })
 })
 

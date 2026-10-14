@@ -39,7 +39,7 @@ const items = computed((): DropdownItem[] =>
 
 const select = (label: string): void => {
   const map = quickMaps.value.find((m) => m.label === label)
-  if (map) gridStore.switchMap(map.key)
+  if (map) gridStore.moveToMap(map.key)
 }
 </script>
 

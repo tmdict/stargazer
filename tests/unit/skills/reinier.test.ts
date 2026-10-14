@@ -4,7 +4,7 @@ import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 import { Team } from '@/lib/types/team'
-import { placeOnTile, removeFromTile } from '../fixtures/skills'
+import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const REINIER = 31
 const REINIER_HEX = 23
@@ -21,13 +21,14 @@ describe('reinier tile highlighting', () => {
     team: Team.ALLY,
     characterId: REINIER,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const reinier = () => getCharacterSkill(REINIER)!
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     enemyHex = getSymmetricalHexId(grid, ALLY_HEX)!
     placeOnTile(grid, REINIER_HEX, REINIER, Team.ALLY)
     placeOnTile(grid, ALLY_HEX, 100, Team.ALLY)

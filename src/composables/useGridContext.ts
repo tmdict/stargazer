@@ -142,9 +142,9 @@ export interface GridContext {
   remove: (hexId: number) => boolean
   move: (fromHexId: number, toHexId: number, characterId: number) => boolean
   swap: (fromHexId: number, toHexId: number) => boolean
-  autoPlace: (characterId: number, team: Team) => boolean
+  autoPlace: (characterId: number, team: Team, avoid?: ReadonlySet<number>) => boolean
   placePhantimal: (hexId: number, phantimalId: number, team?: Team) => boolean
-  autoPlacePhantimal: (phantimalId: number, team: Team) => boolean
+  autoPlacePhantimal: (phantimalId: number, team: Team, avoid?: ReadonlySet<number>) => boolean
   phantimalCanJoinTeam: (phantimalId: number, team: Team) => boolean
   phantimalFactionCount: (phantimalId: number, team: Team) => number
   seedPhantimalBaseline: () => void
@@ -261,9 +261,9 @@ export function createGridContext(
     return ranges
   }
 
-  // A phantimal may only join a team that fields enough of its faction(s).
-  // With phantimal data unavailable (unit tests) the rule can't be evaluated and
-  // placement is allowed.
+  // A phantimal may only join a team that fields enough of its faction(s). An id
+  // with no data is retired content: it has no faction to count and is kept as a
+  // removable "?" (GridCharacters).
   const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean => {
     const phantimal = gameDataStore.getPhantimalById(phantimalId)
     if (!phantimal) return true
@@ -366,8 +366,8 @@ export function createGridContext(
     return true
   }
 
-  const autoPlace = (characterId: number, team: Team): boolean =>
-    executeAutoPlaceCharacter(grid, skillManager, characterId, team)
+  const autoPlace = (characterId: number, team: Team, avoid?: ReadonlySet<number>): boolean =>
+    executeAutoPlaceCharacter(grid, skillManager, characterId, team, avoid)
 
   const placePhantimal = (hexId: number, phantimalId: number, team: Team = Team.ALLY): boolean => {
     if (!phantimalCanJoinTeam(phantimalId, team)) return false
@@ -375,10 +375,14 @@ export function createGridContext(
     return place(hexId, phantimalId, team)
   }
 
-  const autoPlacePhantimal = (phantimalId: number, team: Team): boolean => {
+  const autoPlacePhantimal = (
+    phantimalId: number,
+    team: Team,
+    avoid?: ReadonlySet<number>,
+  ): boolean => {
     if (!phantimalCanJoinTeam(phantimalId, team)) return false
     clearTeamPhantimal(team)
-    return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team)
+    return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team, avoid)
   }
 
   // Same-board drop dispatch: grid-source drags move or swap, picker drops place

@@ -61,7 +61,6 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const persisted = ref(true)
 
   const count = computed(() => teams.value.length)
-  const atCap = computed(() => teams.value.length >= MAX_SAVED_TEAMS)
 
   const get = (id: string | null): SavedTeam | undefined =>
     id === null ? undefined : teams.value.find((team) => team.id === id)
@@ -164,7 +163,6 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     teams,
     persisted,
     count,
-    atCap,
     get,
     saveAsNew,
     update,

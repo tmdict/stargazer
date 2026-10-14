@@ -114,7 +114,6 @@ describe('useTeamLibrary', () => {
   it('enforces the cap on saveAsNew and duplicate', () => {
     seed(Array.from({ length: MAX_SAVED_TEAMS }, (_, i) => record(`id-${i}`, `Team ${i + 1}`)))
     const library = useTeamLibrary()
-    expect(library.atCap).toBe(true)
     expect(library.saveAsNew('1v1', CANONICAL_1V1)).toBeNull()
     expect(library.duplicate('id-0')).toBeNull()
     expect(library.count).toBe(MAX_SAVED_TEAMS)

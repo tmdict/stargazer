@@ -11,6 +11,7 @@ import {
 } from '@/lib/skills/utils/builders'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { NO_LOOKUPS } from '../../fixtures/skills'
 
 const CHARACTER_ID = 999
 const CASTER_HEX = 5
@@ -21,6 +22,7 @@ const buildContext = (grid: Grid, skillManager: SkillManager): SkillContext => (
   team: Team.ALLY,
   characterId: CHARACTER_ID,
   skillManager,
+  lookups: NO_LOOKUPS,
 })
 
 describe('createTargetingSkill', () => {
@@ -29,7 +31,7 @@ describe('createTargetingSkill', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   describe('with arrowType', () => {
@@ -121,7 +123,7 @@ describe('createTileHighlightSkill', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   const buildSkill = (calculateTarget: (ctx: SkillContext) => SkillTargetInfo | null) =>
@@ -187,7 +189,7 @@ describe('createCompanionSkill', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     grid.skillManager = skillManager
   })
 
@@ -206,6 +208,7 @@ describe('createCompanionSkill', () => {
     team: Team.ALLY,
     characterId: CHARACTER_ID,
     skillManager,
+    lookups: NO_LOOKUPS,
   })
 
   const companionTiles = () =>

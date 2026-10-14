@@ -16,6 +16,7 @@ import TeamLoadMenu from '@/components/teams/TeamLoadMenu.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
+import HelpLink from '@/components/ui/HelpLink.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
@@ -37,10 +38,10 @@ import { useI18nStore } from '@/stores/i18n'
 const { sourceName, dirty, pendingName } = defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
-  // The live boards' type (null = custom maps) and whether a type switch would
-  // drop anything, for the type picker and its confirm.
+  // The live boards' type (null = custom maps) and whether any board holds
+  // anything, for the type picker and its confirm.
   variant: VariantMatch
-  variantWouldReplace: boolean
+  boardsHaveContent: boolean
   // Effective grid-info visibility, derived by TeamsView from the shared pref.
   info: GridInfoView
   // Title-line and save-action state: source id and name (null = unsaved),
@@ -154,6 +155,7 @@ const {
             <IconEdit :size="14" />
           </button>
         </template>
+        <HelpLink class="title-help" section="teams" />
         <span
           v-if="titleStatus"
           class="team-title-status"
@@ -186,7 +188,7 @@ const {
           :active-mode
           :match="variant"
           :source-id
-          :would-replace="variantWouldReplace"
+          :has-content="boardsHaveContent"
           @select-variant="emit('selectVariant', $event)"
         />
       </template>
@@ -295,6 +297,10 @@ const {
   opacity: 1;
   color: var(--color-primary);
   background: var(--color-bg-tertiary);
+}
+
+.title-help {
+  margin-left: var(--spacing-sm);
 }
 
 /* Matches the title's type so entering/leaving edit mode doesn't shift the row. */

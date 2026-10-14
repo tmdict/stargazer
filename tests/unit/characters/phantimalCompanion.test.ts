@@ -48,6 +48,7 @@ import {
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
 import { ALLY_A, ALLY_B, ALLY_C, ENEMY_A, ENEMY_B } from '../fixtures/characters'
+import { NO_LOOKUPS } from '../fixtures/skills'
 
 const OWNER_LOCAL = 13
 const OWNER = toPhantimalId(OWNER_LOCAL)
@@ -112,7 +113,7 @@ describe('phantimal companion lifecycle', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
   })
 
   it('holds no team slot and leaves capacity untouched', () => {
@@ -174,7 +175,7 @@ describe('phantimal companion serialization', () => {
 
   beforeEach(() => {
     grid = new Grid()
-    skillManager = new SkillManager()
+    skillManager = new SkillManager(NO_LOOKUPS)
     executePlaceCharacter(grid, skillManager, 16, OWNER, Team.ALLY)
   })
 

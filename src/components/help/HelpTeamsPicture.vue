@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
+import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
+import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -13,12 +17,12 @@ import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import { useRouteLocale } from '@/composables/useRouteLocale'
-import { appLabel } from '@/utils/skillLabels'
+import { appLabel, curatedHeroName } from '@/utils/skillLabels'
 
 const lang = useRouteLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 
-const TEAM_NAME = 'S8 SL'
+const TEAM_NAME = 'Team 1'
 
 const BOARDS = [
   [
@@ -28,6 +32,11 @@ const BOARDS = [
   [{ slug: 'valen', at: [2, 2] as const }],
   [{ slug: 'rhys', at: [2, 3] as const }],
 ]
+
+const SEARCH_HERO = 'frieren'
+const searchHeroes = computed(() => [
+  { slug: SEARCH_HERO, label: curatedHeroName(SEARCH_HERO, lang.value) },
+])
 </script>
 
 <template>
@@ -37,10 +46,7 @@ const BOARDS = [
         <div class="help-mock-title">{{ TEAM_NAME }}</div>
         <div class="help-mock-bar centered">
           <TeamModePicker active-mode="5v5" />
-          <span class="help-seg">
-            <span>{{ label('default') }}</span
-            ><span class="on">{{ label('mode-sl') }}</span>
-          </span>
+          <TeamVariantPicker active-mode="5v5" match="sl" :source-id="null" :has-content="false" />
         </div>
         <div class="help-mock-bar centered">
           <span class="control-btn danger">
@@ -82,17 +88,16 @@ const BOARDS = [
     <template #to>
       <HelpMock :caption="label('saved')">
         <div class="help-mock-bar">
-          <span class="help-seg">
-            <span class="on">{{ label('all') }}</span
-            ><span>1v1</span><span>3v3</span><span>5v5</span>
-          </span>
-          <span class="help-seg"
-            ><span>{{ label('one-sided') }}</span></span
-          >
+          <SavedTeamsSearch
+            class="help-search"
+            model-value=""
+            :heroes="searchHeroes"
+            :suggestions="[]"
+          />
         </div>
         <div class="help-card">
           <span class="help-card-thumb">
-            <HelpBoard v-for="(tokens, i) in BOARDS" :key="i" :tokens />
+            <HelpBoard v-for="(tokens, i) in BOARDS" :key="i" :tokens :ring="SEARCH_HERO" />
           </span>
           <span class="help-card-name">{{ TEAM_NAME }} <IconEdit :size="11" /></span>
           <span class="help-card-tags"><span>5V5</span><span>SL</span></span>
@@ -117,28 +122,9 @@ const BOARDS = [
   text-align: center;
 }
 
-/* Copy of TeamVariantPicker. */
-.help-seg {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  background: var(--color-bg-secondary);
-  border: 2px solid var(--color-border-primary);
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.help-seg span {
-  white-space: nowrap;
-  padding: 5px 14px;
-  border-radius: 999px;
-}
-
-.help-seg span.on {
-  background: var(--color-primary);
-  color: #fff;
+.help-search {
+  flex: 1;
+  min-width: 0;
 }
 
 .help-boards {

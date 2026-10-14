@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import TooltipCard from './ui/TooltipCard.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
+import { useUnitTooltipRows } from '@/composables/useUnitTooltipRows'
 import { addedEnergy, ownEnergy } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
@@ -22,6 +23,7 @@ const { character, variant = 'detailed' } = defineProps<{
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
+const { traitRow, rangeRow } = useUnitTooltipRows()
 
 const formattedName = computed(() => characterDisplayName(i18n.t, character))
 
@@ -31,28 +33,16 @@ const formattedEnergy = computed(() => {
 })
 
 const rows = computed(() => [
-  {
-    label: `${i18n.t('game.faction')}:`,
-    value: i18n.t(`game.${character.faction}`),
-    icon: gameDataStore.getIcon(`faction-${character.faction}`),
-  },
-  {
-    label: `${i18n.t('game.class')}:`,
-    value: i18n.t(`game.${character.class}`),
-    icon: gameDataStore.getIcon(`class-${character.class}`),
-  },
-  {
-    label: `${i18n.t('game.damage')}:`,
-    value: i18n.t(`game.${character.damage}`),
-    icon: gameDataStore.getIcon(`damage-${character.damage}`),
-  },
+  traitRow('faction', character.faction),
+  traitRow('class', character.class),
+  traitRow('damage', character.damage),
   {
     label: `${i18n.t('game.energy')}:`,
     value: formattedEnergy.value,
     icon: gameDataStore.getIcon('initial-energy'),
     iconClass: 'energy-icon',
   },
-  { label: `${i18n.t('game.range')}:`, value: character.range },
+  rangeRow(character.range),
   { label: `${i18n.t('game.season')}:`, value: character.season },
 ])
 </script>
