@@ -42,7 +42,10 @@ const teamName = (id: string): string => {
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
 const NO_BREAK_SPACE = String.fromCodePoint(0xa0)
 const wrappable = (name: string): string =>
-  name.replace(/[/／]/g, `$&${ZERO_WIDTH_SPACE}`).replace(/ \+ /g, ` +${NO_BREAK_SPACE}`)
+  name
+    .replace(/[/／]/g, `$&${ZERO_WIDTH_SPACE}`)
+    .replace(/(\S)\+/g, `$1${ZERO_WIDTH_SPACE}+`)
+    .replace(/ \+ /g, ` +${NO_BREAK_SPACE}`)
 const edgeText = (counter: PvpCounter): string =>
   interpolate(label('ladder-edge'), {
     winner: teamName(counter.winner),
