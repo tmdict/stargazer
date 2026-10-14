@@ -9,7 +9,8 @@
 //   --samples    folder of PNG/JPEG screenshots (result screens, cropped or not)
 //   --truth      per-file cells (a1–a5, e1–e5: optional hero slug, p, r), optional maps,
 //                and artifacts ({ a: slug | null, e: slug | null })
-//                (default: truth.json beside the samples, when present)
+//                (default: truth.json beside the samples, when present); the check
+//                stops on a slug the current data lacks, such as a retired artifact
 //   --references read the frames, costume captures and seasonal icons from a local copy
 //                of the published img/ tree instead of the deployed image host
 //   --maps       how many maps each match had (default 5; 1 means no strip), checked
@@ -48,6 +49,22 @@ type Truth = Record<
     artifacts?: Partial<Record<'a' | 'e', string | null>>
   }
 >
+
+// A label naming a hero or artifact the current data lacks (a typo, or a retired
+// season's artifact) could never score as correct, so it stops the check instead.
+function unknownLabels(truth: Truth, heroes: Set<string>, artifacts: Set<string>): string[] {
+  const unknown: string[] = []
+  for (const [file, entry] of Object.entries(truth)) {
+    for (const [key, cell] of Object.entries(entry.cells ?? {})) {
+      if (cell.hero !== undefined && !heroes.has(cell.hero))
+        unknown.push(`${file} ${key}: hero ${cell.hero}`)
+    }
+    for (const [side, slug] of Object.entries(entry.artifacts ?? {})) {
+      if (slug != null && !artifacts.has(slug)) unknown.push(`${file} ${side}: artifact ${slug}`)
+    }
+  }
+  return unknown
+}
 
 function printReading(
   file: string,
@@ -148,6 +165,13 @@ async function main(): Promise<void> {
   const { names: heroNames, portraits } = await loadHeroes(source)
   const heroTable = buildImportHeroTable(portraits)
   const { names: artifactNames, icons } = await loadArtifacts(source)
+  const unknown = unknownLabels(truth, new Set(heroNames.values()), new Set(artifactNames.values()))
+  if (unknown.length) {
+    console.error(
+      `${truthFile} names what the current data lacks; correct or remove these labels:\n  ${unknown.join('\n  ')}`,
+    )
+    process.exit(1)
+  }
   const artifactTable = buildArtifactTable(icons)
   const costumes = portraits.filter((p) => p.costume).length
   console.log(
@@ -176,11 +200,14 @@ async function main(): Promise<void> {
     console.log(`  (${ms} ms)`)
   }
   const sum = (a: number[]): string => `${a.reduce((x, y) => x + y, 0)}/${a.length}`
-  if (tally.hero.length || tally.p.length || tally.r.length || tally.artifact.length) {
-    console.log(
-      `\nheroes ${sum(tally.hero)} (high confidence ${sum(tally.sure)}), paragon ${sum(tally.p)}, refinement ${sum(tally.r)}, artifacts ${sum(tally.artifact)}`,
-    )
-  }
+  // Only the fields the truth labels: an unlabelled one has nothing to score.
+  const scores = [
+    tally.hero.length ? `heroes ${sum(tally.hero)} (high confidence ${sum(tally.sure)})` : '',
+    tally.p.length ? `paragon ${sum(tally.p)}` : '',
+    tally.r.length ? `refinement ${sum(tally.r)}` : '',
+    tally.artifact.length ? `artifacts ${sum(tally.artifact)}` : '',
+  ].filter(Boolean)
+  if (scores.length) console.log(`\n${scores.join(', ')}`)
 }
 
 await main()

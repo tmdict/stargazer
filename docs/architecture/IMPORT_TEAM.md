@@ -220,7 +220,7 @@ The checker is the only regression check on real images and the first thing to r
 npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]
 ```
 
-Truth defaults to `truth.json` beside the samples. Cells `a1` to `a5` and `e1` to `e5` score hero, paragon and refinement separately, and every field is optional, since an omitted field is unreviewed. Artifacts score only where labelled, and a strip count that disagrees with `maps` is flagged.
+Truth defaults to `truth.json` beside the samples. Cells `a1` to `a5` and `e1` to `e5` score hero, paragon and refinement separately, and every field is optional, since an omitted field is unreviewed. Artifacts score only where labelled, and a strip count that disagrees with `maps` is flagged. Every hero and artifact slug must be in the current data, and the checker stops on one that is not, such as a retired season's artifact.
 
 ```json
 {
