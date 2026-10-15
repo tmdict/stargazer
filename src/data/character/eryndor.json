@@ -11,6 +11,7 @@
   "tags": {
     "debuff": [
       { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "ex": 3, "mods": ["single"] },
       { "awakening": 1, "mods": ["eryndor", "global"] }
     ]
   }

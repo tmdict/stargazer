@@ -10,6 +10,7 @@
   "season": 6,
   "tags": {
     "cheat-death": [{ "ex": 1, "mods": ["ally"] }],
+    "debuff": [{ "skill2": 1, "mods": ["eryndor", "single"] }],
     "special-target": [{ "ex": 1 }]
   }
 }

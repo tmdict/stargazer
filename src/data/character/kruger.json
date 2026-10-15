@@ -8,5 +8,11 @@
   "energy": [400],
   "range": 1,
   "season": 0,
-  "tags": {}
+  "tags": {
+    "debuff": [
+      { "ultimate": 1, "mods": ["eryndor", "single"] },
+      { "skill2": 1, "mods": ["eryndor", "single"] },
+      { "skill3": 1, "mods": ["single"] }
+    ]
+  }
 }

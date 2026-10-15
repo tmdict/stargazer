@@ -9,6 +9,10 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "debuff": [
+      { "awakening": 1, "mods": ["eryndor", "single"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ],
     "temp-buff": [
       { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
       { "ex": 3, "mods": ["aoe", "orion", "perseus"] }

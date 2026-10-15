@@ -9,6 +9,12 @@
   "range": 6,
   "season": 6,
   "tags": {
+    "debuff": [
+      { "skill2": 1, "mods": ["eryndor", "single"] },
+      { "skill3": 1, "mods": ["eryndor", "single"] },
+      { "mastery": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["single"] }
+    ],
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
     "energy-denial": [{ "skill3": 1 }, { "mastery": 1 }],
     "ult-denial": [{ "ex": 1 }, { "awakening": 1 }]
