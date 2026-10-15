@@ -176,8 +176,6 @@ const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? f
   height: auto;
 }
 
-/* Styled here, not on the SVG, for the reason BoardThumbnail's search marks
-   are: a card export captures the plain team. */
 .board-thumb.dimmed {
   opacity: 0.35;
 }

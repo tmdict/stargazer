@@ -7,7 +7,7 @@
    app's no-modal style: a two-step inline confirm that arms for a few seconds.
    User feedback (toasts) is fired here, not in the store. */
 
-import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
 import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
@@ -168,16 +168,7 @@ const handleDeleteAll = (): void => {
   report(i18n.t('app.teams-deleted'))
 }
 
-// The card's own thumbnail is the capture target: it already renders the
-// saved data faithfully, so exporting needs no board loading. Function refs
-// keyed by team id because a plain ref inside v-for binds as an array.
 const { copyToClipboard, downloadAsImage } = useThumbnailExport()
-const previewEls = new Map<string, HTMLElement>()
-const setPreviewEl = (id: string, instance: Element | ComponentPublicInstance | null): void => {
-  const el = instance instanceof Element ? instance : instance?.$el
-  if (el instanceof HTMLElement) previewEls.set(id, el)
-  else previewEls.delete(id)
-}
 
 // The team outlives the close so the modal's leave transition keeps its content.
 const previewedTeam = ref<SavedTeam | null>(null)
@@ -462,8 +453,6 @@ const actionTipText = computed((): string => {
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
       >
-        <!-- Export ref stays on TeamPreview: the capture target must exclude
-             this wrapper. -->
         <button
           type="button"
           class="preview-btn"
@@ -472,11 +461,7 @@ const actionTipText = computed((): string => {
           @click="openPreview(team)"
         >
           <MountOnVisible :estimated-height="estimatedPreviewHeight(team.mode)">
-            <TeamPreview
-              :team
-              :highlight-heroes="highlightHeroes"
-              :ref="(instance) => setPreviewEl(team.id, instance)"
-            />
+            <TeamPreview :team :highlight-heroes="highlightHeroes" />
           </MountOnVisible>
         </button>
 
@@ -536,7 +521,7 @@ const actionTipText = computed((): string => {
             class="card-btn icon"
             :title="i18n.t('app.copy')"
             :aria-label="i18n.t('app.copy')"
-            @click="copyToClipboard(previewEls.get(team.id))"
+            @click="copyToClipboard(team)"
           >
             <IconCopy :size="14" />
           </button>
@@ -545,7 +530,7 @@ const actionTipText = computed((): string => {
             class="card-btn icon"
             :title="i18n.t('app.download')"
             :aria-label="i18n.t('app.download')"
-            @click="downloadAsImage(previewEls.get(team.id), team.name)"
+            @click="downloadAsImage(team)"
           >
             <IconDownload :size="14" />
           </button>
