@@ -9,6 +9,7 @@
   "range": 6,
   "season": 7,
   "tags": {
+    "debuff": [{ "skill3": 1, "mods": ["single"] }],
     "summon": [{ "ultimate": 1 }, { "skill3": 1 }]
   }
 }

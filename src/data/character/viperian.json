@@ -9,7 +9,11 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "debuff": [{ "ultimate": 1, "mods": ["eryndor", "global"] }],
+    "debuff": [
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "ultimate": 1, "mods": ["eryndor", "single"] },
+      { "awakening": 2, "mods": ["eryndor", "single"] }
+    ],
     "energy-denial": [{ "ultimate": 1 }, { "skill3": 1 }]
   }
 }

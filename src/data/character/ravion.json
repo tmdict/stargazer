@@ -10,6 +10,7 @@
   "season": 4,
   "tags": {
     "cheat-death": [{ "ex": 3, "mods": ["ally", "self"] }],
+    "debuff": [{ "skill2": 1, "mods": ["eryndor", "single"] }],
     "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
     "temp-buff": [

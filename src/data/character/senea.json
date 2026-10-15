@@ -9,6 +9,7 @@
   "range": 20,
   "season": 8,
   "tags": {
-    "cheat-death": [{ "ex": 3, "mods": ["self"] }]
+    "cheat-death": [{ "ex": 3, "mods": ["self"] }],
+    "debuff": [{ "ultimate": 1, "mods": ["eryndor", "single"] }]
   }
 }

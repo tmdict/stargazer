@@ -9,6 +9,10 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "debuff": [
+      { "skill2": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["eryndor", "single"] }
+    ],
     "energy-denial": [{ "ex": 1 }]
   }
 }

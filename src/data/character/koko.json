@@ -9,6 +9,7 @@
   "range": 4,
   "season": 0,
   "tags": {
+    "debuff": [{ "skill3": 1, "mods": ["single"] }],
     "temp-buff": [
       { "ultimate": 1, "mods": ["global", "orion", "perseus"] },
       { "skill2": 1, "mods": ["orion", "perseus", "single"] },

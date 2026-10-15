@@ -9,6 +9,10 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "debuff": [
+      { "ex": 3, "mods": ["aoe", "eryndor"] },
+      { "awakening": 1, "mods": ["eryndor", "single"] }
+    ],
     "energy-denial": [{ "ultimate": 1 }],
     "special-target": [{ "skill2": 1 }]
   }

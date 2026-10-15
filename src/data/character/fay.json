@@ -9,6 +9,7 @@
   "range": 3,
   "season": 0,
   "tags": {
+    "debuff": [{ "skill3": 3, "mods": ["aoe", "eryndor"] }],
     "temp-buff": [
       { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
       { "skill3": 3, "mods": ["aoe", "opening", "orion", "perseus"] },
