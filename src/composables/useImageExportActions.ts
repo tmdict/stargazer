@@ -3,7 +3,7 @@ import { copyImageBlob } from '@/utils/clipboard'
 import { downloadBlob, timestampedName } from '@/utils/download'
 import { useToast } from './useToast'
 
-/* Shared copy/download wrappers for the image exporters (grid, card thumbnail,
+/* Shared copy/download wrappers for the image exporters (grid, saved team,
  * stitcher): they own the user feedback and the Safari user-activation
  * contract, so every exporter hands over its capture as a pending promise and
  * stays inside the click. */

@@ -494,9 +494,6 @@ const placedArtifacts = computed(() =>
 </template>
 
 <style scoped>
-/* The search marks get their stroke color and opacity only from this sheet:
-   the card export (useThumbnailExport) serializes the SVG without page
-   styles, so it captures the plain team. */
 .faded {
   opacity: 0.35;
 }

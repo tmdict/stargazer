@@ -1,18 +1,29 @@
+import { h, render } from 'vue'
+
+import TeamPreview from '@/components/teams/TeamPreview.vue'
+import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { canvasToBlob, loadImage } from '@/utils/image'
 import { useImageExportActions } from './useImageExportActions'
 
-/* Exports a saved-team card's thumbnail as a PNG. The preview is a row of
- * self-contained BoardThumbnail SVGs (the team drawn in presentation
- * attributes, internal clipPaths), so each board is serialized and rasterized
- * through an <img>, then drawn onto one canvas at the preview's own layout
- * positions. Page CSS does not travel with the serialized SVG, which is what
- * keeps the search marks (rings, fading) out of the export. A DOM snapshot
- * (useGridExport's html-to-image path) is deliberately avoided here: WebKit
- * fails to rasterize SVG content inside a foreignObject snapshot. */
+/* Exports a saved team as a PNG drawn the way the preview popup shows it: the
+ * popup's TeamPreview is rendered off-screen for each capture, so the image
+ * follows the popup's look. Its boards are self-contained BoardThumbnail SVGs
+ * (the team drawn in presentation attributes, internal clipPaths), so each
+ * board is serialized and rasterized through an <img>, then drawn onto one
+ * canvas at its layout position. A DOM snapshot (useGridExport's html-to-image
+ * path) is deliberately avoided here: WebKit fails to rasterize SVG content
+ * inside a foreignObject snapshot. */
 
-// The on-screen thumbnail is small; the scale brings a card export up to
-// full-grid resolution (the SVGs upscale losslessly).
-const CAPTURE_SCALE = 6
+// The popup's content width at its full 1000px, so the boards wrap as they do
+// there on a desktop window, whatever the device. The image crops to the
+// boards plus the margin.
+const FRAME_WIDTH = 934
+const MARGIN = 24
+// The popup panel's colour, opaque: the panel itself is translucent over the
+// page.
+const BACKGROUND = 'rgb(20, 20, 20)'
+// Keeps the portraits close to their source resolution.
+const CAPTURE_SCALE = 3
 
 // An SVG loaded through an <img> cannot reference external resources at all,
 // so portrait hrefs must become data: URLs before serialization. Portraits
@@ -54,6 +65,12 @@ async function rasterizeSvg(
   const clone = svg.cloneNode(true) as SVGSVGElement
   clone.setAttribute('width', `${width}`)
   clone.setAttribute('height', `${height}`)
+  // Non-scaling strokes are sized in screen pixels, so the enlarged image
+  // would draw them thinner than the popup does.
+  for (const el of clone.querySelectorAll('[vector-effect="non-scaling-stroke"]')) {
+    const stroke = Number(el.getAttribute('stroke-width') ?? 1)
+    el.setAttribute('stroke-width', `${stroke * CAPTURE_SCALE}`)
+  }
   await Promise.all(
     Array.from(clone.querySelectorAll('image')).map(async (image) => {
       const href = image.getAttribute('href')
@@ -69,49 +86,35 @@ async function rasterizeSvg(
   }
 }
 
-// The preview's on-screen backdrop is a translucent wash over ancestor
-// backgrounds, so the export composites the ancestor colors down to the first
-// opaque one; the result matches the page (and follows the theme).
-function backgroundLayers(el: HTMLElement): string[] {
-  const layers: string[] = []
-  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
-    const color = getComputedStyle(node).backgroundColor
-    const alpha = color.startsWith('rgba') ? Number(color.slice(5, -1).split(',')[3]) : 1
-    if (alpha === 0) continue
-    layers.unshift(color)
-    if (alpha >= 1) break
-  }
-  return layers
-}
-
-async function captureBoards(container: HTMLElement | undefined): Promise<Blob> {
-  if (!container) throw new Error('Capture target missing')
+async function captureBoards(container: HTMLElement): Promise<Blob> {
   const svgs = Array.from(container.querySelectorAll('svg'))
   if (svgs.length === 0) throw new Error('No boards to capture')
 
-  const bounds = container.getBoundingClientRect()
+  const rects = svgs.map((svg) => svg.getBoundingClientRect())
+  const left = Math.min(...rects.map((rect) => rect.left)) - MARGIN
+  const top = Math.min(...rects.map((rect) => rect.top)) - MARGIN
+  const right = Math.max(...rects.map((rect) => rect.right)) + MARGIN
+  const bottom = Math.max(...rects.map((rect) => rect.bottom)) + MARGIN
   const canvas = document.createElement('canvas')
-  canvas.width = Math.round(bounds.width * CAPTURE_SCALE)
-  canvas.height = Math.round(bounds.height * CAPTURE_SCALE)
+  canvas.width = Math.round((right - left) * CAPTURE_SCALE)
+  canvas.height = Math.round((bottom - top) * CAPTURE_SCALE)
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Failed to get canvas context')
 
-  for (const layer of backgroundLayers(container)) {
-    context.fillStyle = layer
-    context.fillRect(0, 0, canvas.width, canvas.height)
-  }
+  context.fillStyle = BACKGROUND
+  context.fillRect(0, 0, canvas.width, canvas.height)
 
   const boards = await Promise.all(
-    svgs.map(async (svg) => {
-      const rect = svg.getBoundingClientRect()
+    svgs.map(async (svg, index) => {
+      const rect = rects[index]!
       return {
         image: await rasterizeSvg(
           svg,
           Math.round(rect.width * CAPTURE_SCALE),
           Math.round(rect.height * CAPTURE_SCALE),
         ),
-        x: Math.round((rect.left - bounds.left) * CAPTURE_SCALE),
-        y: Math.round((rect.top - bounds.top) * CAPTURE_SCALE),
+        x: Math.round((rect.left - left) * CAPTURE_SCALE),
+        y: Math.round((rect.top - top) * CAPTURE_SCALE),
       }
     }),
   )
@@ -122,14 +125,26 @@ async function captureBoards(container: HTMLElement | undefined): Promise<Blob> 
   return canvasToBlob(canvas)
 }
 
+async function captureTeam(team: SavedTeam): Promise<Blob> {
+  const host = document.createElement('div')
+  host.style.cssText = `position: fixed; top: 0; left: -10000px; width: ${FRAME_WIDTH}px;`
+  document.body.append(host)
+  render(h(TeamPreview, { team, large: true }), host)
+  try {
+    return await captureBoards(host)
+  } finally {
+    render(null, host)
+    host.remove()
+  }
+}
+
 export function useThumbnailExport() {
   const { copyImage, downloadImage } = useImageExportActions()
 
-  const copyToClipboard = (container: HTMLElement | undefined): Promise<void> =>
-    copyImage(captureBoards(container))
+  const copyToClipboard = (team: SavedTeam): Promise<void> => copyImage(captureTeam(team))
 
-  const downloadAsImage = (container: HTMLElement | undefined, filePrefix: string): Promise<void> =>
-    downloadImage(captureBoards(container), filePrefix)
+  const downloadAsImage = (team: SavedTeam): Promise<void> =>
+    downloadImage(captureTeam(team), team.name)
 
   return { copyToClipboard, downloadAsImage }
 }

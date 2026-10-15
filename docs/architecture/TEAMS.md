@@ -135,7 +135,7 @@ The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. `grids.
 
 ## Thumbnails
 
-`BoardThumbnail` draws a board as an SVG from a record's decoded data, never from the live boards or a DOM capture, and it renders from the record's own `t` so a thumbnail shows exactly what Load produces. Card export serializes those SVGs onto a canvas, because WebKit fails to capture SVG content from the DOM. Hex shapes are cached per hex size, so a full library draws hundreds of boards from one set of polygons.
+`BoardThumbnail` draws a board as an SVG from a record's decoded data, never from the live boards or a DOM capture, and it renders from the record's own `t` so a thumbnail shows exactly what Load produces. A card's Copy and Download draw the team as the preview popup shows it, rendered off-screen, and serialize those SVGs onto a canvas, because WebKit fails to capture SVG content from the DOM. Hex shapes are cached per hex size, so a full library draws hundreds of boards from one set of polygons.
 
 ## Backup files
 

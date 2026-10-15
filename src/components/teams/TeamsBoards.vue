@@ -258,7 +258,7 @@ const {
   position: relative;
   display: inline-flex;
   align-items: center;
-  max-width: min(60vw, 480px);
+  max-width: max(min(60vw, 480px), calc(100% - 2 * 150px));
 }
 
 .team-title {
@@ -346,6 +346,9 @@ const {
 }
 
 @media (max-width: 768px) {
+  .team-title-wrap {
+    max-width: calc(100% - 2 * 24px);
+  }
   .team-title,
   .team-title-input {
     font-size: 1.05rem;
