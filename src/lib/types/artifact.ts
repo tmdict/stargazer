@@ -32,5 +32,6 @@ export interface ArtifactType {
   name: string
   season: number
   stats: ArtifactStats
+  tags?: readonly string[] // hero tag ids found anywhere in its effect text; absent = none
   team?: Team // Team assignment for placement
 }
