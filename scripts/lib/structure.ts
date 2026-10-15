@@ -31,6 +31,11 @@ export interface Structure {
   problems: string[]
 }
 
+// A file from another season is another unit under a reused slug: nothing
+// curated for it carries over, and its id binds nothing.
+const sameSeason = (generated: Json, existing: Json | undefined): Json | undefined =>
+  existing?.season === generated.season ? existing : undefined
+
 // Generated keys first, in the files' order; any other key an existing file
 // has (curated by hand, e.g. `targeting`) is kept after them.
 function withCurated(generated: Json, existing: Json | undefined): Json {
@@ -44,7 +49,7 @@ function withCurated(generated: Json, existing: Json | undefined): Json {
 // Ids are baked into share links: within one season an existing file's id
 // never changes, and a clash is left for a hand decision.
 function idProblem(slug: string, generated: Json, existing: Json | undefined): string | null {
-  if (!existing || existing.season !== generated.season || existing.id === generated.id) return null
+  if (!existing || existing.id === generated.id) return null
   return (
     `${slug}: the feed gives id ${String(generated.id)}, the file has ${String(existing.id)} ` +
     `in the same season; ids are in share links, so decide by hand`
@@ -69,9 +74,10 @@ export function artifactStructure(
       name: a.slug,
       stats,
     }
-    const problem = idProblem(a.slug, generated, existing[a.slug])
+    const prior = sameSeason(generated, existing[a.slug])
+    const problem = idProblem(a.slug, generated, prior)
     if (problem) out.problems.push(problem)
-    out.data[a.slug] = withCurated(generated, existing[a.slug])
+    out.data[a.slug] = withCurated(generated, prior)
     const unnamed = APP_LOCALES.filter((code) => !feeds[code][a.slug]?.name)
     if (unnamed.length > 0) {
       out.problems.push(`${a.slug}: the feed has no ${unnamed.join(' or ')} name`)
@@ -109,12 +115,11 @@ export function phantimalStructure(
       damage,
       faction: p.faction.toLowerCase(),
     }
-    if (existing[p.slug]?.qualifyingFactions) {
-      generated.qualifyingFactions = existing[p.slug]!.qualifyingFactions
-    }
-    const problem = idProblem(p.slug, generated, existing[p.slug])
+    const prior = sameSeason(generated, existing[p.slug])
+    if (prior?.qualifyingFactions) generated.qualifyingFactions = prior.qualifyingFactions
+    const problem = idProblem(p.slug, generated, prior)
     if (problem) out.problems.push(problem)
-    out.data[p.slug] = withCurated(generated, existing[p.slug])
+    out.data[p.slug] = withCurated(generated, prior)
   }
   return out
 }

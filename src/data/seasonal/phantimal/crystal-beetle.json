@@ -4,5 +4,6 @@
   "season": 8,
   "range": 1,
   "damage": "physical",
-  "faction": "mauler"
+  "faction": "mauler",
+  "tags": ["temp-buff"]
 }

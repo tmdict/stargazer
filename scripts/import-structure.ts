@@ -3,11 +3,11 @@
 //   src/data/seasonal/artifact/<slug>.json      {id, name, season, stats}
 //   src/locales/seasonal/artifact/<slug>.json   display names, one per app locale
 //   src/data/seasonal/phantimal/<slug>.json     {id, name, season, range, damage, faction, …}
-// The rules are in scripts/lib/structure.ts. Curated fields (a phantimal's
-// `targeting`, an existing `qualifyingFactions`) are kept, an id never changes
-// within a season, and files whose slug left the feed are removed. Text is the
-// other importers' job (import:seasonal), which lint these files against the
-// feed.
+// The rules are in scripts/lib/structure.ts. Within a season, curated fields
+// (`tags`, a phantimal's `targeting`, an existing `qualifyingFactions`) are
+// kept and an id never changes; files whose slug left the feed are removed.
+// Text is the other importers' job (import:seasonal), which lint these files
+// against the feed.
 //
 // Usage:
 //   npm run import:structure                          # reads DATA_FEED_DIR/<feed>/…
