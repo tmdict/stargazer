@@ -8,5 +8,10 @@
   "energy": [300],
   "range": 6,
   "season": 1,
-  "tags": {}
+  "tags": {
+    "debuff": [
+      { "ultimate": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 2, "mods": ["aoe", "eryndor"] }
+    ]
+  }
 }

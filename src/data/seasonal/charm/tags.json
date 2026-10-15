@@ -1,5 +1,7 @@
 {
   "ep8buffboost": { "temp-buff": { "tiers": [1, 2, 3, 4] } },
+  "ep8defrush": { "debuff": { "tiers": [3, 4], "mods": ["aoe", "eryndor"] } },
+  "ep8dot": { "debuff": { "tiers": [3, 4], "mods": ["eryndor", "single"] } },
   "ep8frontbuff": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "orion", "perseus"] } },
   "ep8heal": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } },
   "ep8shield": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } }

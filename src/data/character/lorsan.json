@@ -9,6 +9,10 @@
   "range": 5,
   "season": 3,
   "tags": {
+    "debuff": [
+      { "ultimate": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 2, "mods": ["single"] }
+    ],
     "temp-buff": [
       { "skill3": 1, "mods": ["orion", "perseus", "single"] },
       { "awakening": 2, "mods": ["orion", "perseus", "single"] }

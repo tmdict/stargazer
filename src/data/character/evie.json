@@ -11,6 +11,7 @@
   "tags": {
     "debuff": [
       { "skill2": 1, "mods": ["eryndor", "global"] },
+      { "skill2": 1, "mods": ["eryndor", "single"] },
       { "ex": 1, "mods": ["eryndor", "global"] }
     ],
     "dot": [{ "ultimate": 1, "mods": ["shadewing"] }],

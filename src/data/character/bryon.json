@@ -10,6 +10,7 @@
   "season": 0,
   "tags": {
     "cheat-death": [{ "ex": 2, "mods": ["self"] }],
+    "debuff": [{ "ultimate": 3, "mods": ["aoe", "eryndor"] }],
     "energy-denial": [{ "skill3": 1 }],
     "summon": [{ "ultimate": 1 }],
     "ult": [{ "ultimate": 1, "mods": ["opening"] }]

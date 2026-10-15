@@ -9,6 +9,10 @@
   "range": 8,
   "season": 7,
   "tags": {
+    "debuff": [
+      { "skill3": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["aoe", "eryndor"] }
+    ],
     "dot": [{ "skill3": 1, "mods": ["shadewing"] }],
     "ult-denial": [{ "skill2": 1 }, { "ex": 1 }]
   }

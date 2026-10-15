@@ -9,6 +9,7 @@
   "range": 1,
   "season": 7,
   "tags": {
+    "debuff": [{ "ultimate": 1, "mods": ["aoe"] }],
     "energy-denial": [{ "skill2": 1 }],
     "ult-denial": [{ "ultimate": 1 }]
   }

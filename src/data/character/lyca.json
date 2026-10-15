@@ -9,7 +9,10 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "debuff": [{ "skill3": 1, "mods": ["eryndor", "global"] }],
+    "debuff": [
+      { "skill3": 1, "mods": ["eryndor", "global"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ],
     "energy-battery": [{ "skill2": 1 }],
     "temp-buff": [{ "skill2": 1, "mods": ["global", "opening", "orion", "perseus"] }]
   }

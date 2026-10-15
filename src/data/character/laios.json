@@ -9,6 +9,7 @@
   "range": 1,
   "season": 5,
   "tags": {
+    "debuff": [{ "skill2": 1, "mods": ["aoe", "eryndor"] }],
     "energy-battery": [{ "skill3": 1 }],
     "summon": [{ "ultimate": 1 }],
     "temp-buff": [{ "skill3": 1, "mods": ["aoe", "orion", "perseus"] }]
