@@ -11,6 +11,7 @@ export interface PhantimalType {
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
   qualifyingFactions?: readonly string[] // factions counted toward the team requirement; default [faction]
   targeting?: boolean // seasonal skill targeting (Spirit Mark) is live in-game; absent = off
+  tags?: readonly string[] // hero tag ids found anywhere in its skill text; absent = none
 }
 
 // src/locales/seasonal/phantimal/<name>.json: full localized content.

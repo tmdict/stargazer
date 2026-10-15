@@ -4,5 +4,6 @@
   "season": 8,
   "range": 20,
   "damage": "magic",
-  "faction": "graveborn"
+  "faction": "graveborn",
+  "tags": ["debuff", "temp-buff"]
 }

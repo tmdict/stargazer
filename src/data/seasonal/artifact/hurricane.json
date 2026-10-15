@@ -6,5 +6,6 @@
     "hp": 23.9,
     "def": 44.9,
     "ranged-def": 18.2
-  }
+  },
+  "tags": ["temp-buff"]
 }
