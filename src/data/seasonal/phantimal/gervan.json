@@ -4,5 +4,6 @@
   "season": 8,
   "range": 20,
   "damage": "magic",
-  "faction": "lightbearer"
+  "faction": "lightbearer",
+  "tags": ["debuff"]
 }

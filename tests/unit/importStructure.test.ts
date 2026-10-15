@@ -95,7 +95,7 @@ describe('phantimalStructure', () => {
     expect(old.problems[0]).toContain('rebuild')
   })
 
-  it('keeps curated fields and an existing qualifyingFactions', () => {
+  it('keeps curated fields and an existing qualifyingFactions within a season', () => {
     const out = phantimalStructure(
       { p: phantimal('p', 3) },
       { p: { id: 3, name: 'p', season: 8, targeting: true, qualifyingFactions: ['mauler'] } },
@@ -120,5 +120,26 @@ describe('phantimalStructure', () => {
       'qualifyingFactions',
       'targeting',
     ])
+    const returning = phantimalStructure(
+      { p: phantimal('p', 3) },
+      {
+        p: {
+          id: 3,
+          name: 'p',
+          season: 7,
+          targeting: true,
+          tags: ['debuff'],
+          qualifyingFactions: ['mauler'],
+        },
+      },
+    )
+    expect(returning.data.p).toEqual({
+      id: 3,
+      name: 'p',
+      season: 8,
+      range: 20,
+      damage: 'magic',
+      faction: 'mauler',
+    })
   })
 })
