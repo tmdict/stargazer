@@ -8,5 +8,10 @@
   "energy": [0],
   "range": 1,
   "season": 0,
-  "tags": {}
+  "tags": {
+    "debuff": [
+      { "skill2": 1, "mods": ["single"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ]
+  }
 }

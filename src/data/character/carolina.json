@@ -8,5 +8,12 @@
   "energy": [0],
   "range": 4,
   "season": 0,
-  "tags": {}
+  "tags": {
+    "debuff": [
+      { "ultimate": 1, "mods": ["aoe", "eryndor"] },
+      { "skill2": 1, "mods": ["aoe", "eryndor"] },
+      { "ex": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ]
+  }
 }

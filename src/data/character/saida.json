@@ -10,6 +10,7 @@
   "season": 4,
   "tags": {
     "cheat-death": [{ "skill3": 1, "mods": ["self"] }],
+    "debuff": [{ "ex": 1, "mods": ["single"] }],
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
     "energy-denial": [{ "ultimate": 1 }]
   }

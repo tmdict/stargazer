@@ -9,15 +9,11 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "debuff": [{ "awakening": 1, "mods": ["eryndor", "global"] }],
-    "energy-denial": [
-      {
-        "skill3": 1
-      },
-      {
-        "ex": 1
-      }
+    "debuff": [
+      { "awakening": 1, "mods": ["eryndor", "global"] },
+      { "awakening": 2, "mods": ["aoe", "eryndor"] }
     ],
+    "energy-denial": [{ "skill3": 1 }, { "ex": 1 }],
     "summon": [{ "ex": 1 }]
   }
 }

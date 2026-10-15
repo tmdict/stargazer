@@ -12,7 +12,8 @@
     "cheat-death": [{ "ex": 1, "mods": ["self"] }],
     "debuff": [
       { "skill3": 1, "mods": ["eryndor", "global"] },
-      { "awakening": 1, "mods": ["global"] }
+      { "awakening": 1, "mods": ["global"] },
+      { "awakening": 1, "mods": ["aoe"] }
     ],
     "temp-buff": [{ "skill2": 1, "mods": ["aoe", "orion", "perseus"] }]
   }

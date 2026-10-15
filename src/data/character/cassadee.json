@@ -9,6 +9,7 @@
   "range": 3,
   "season": 0,
   "tags": {
+    "debuff": [{ "awakening": 1, "mods": ["aoe", "eryndor"] }],
     "special-target": [{ "skill3": 1 }]
   }
 }

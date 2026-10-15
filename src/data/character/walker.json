@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 2,
   "season": 0,
-  "tags": {}
+  "tags": {
+    "debuff": [{ "ex": 1, "mods": ["aoe", "eryndor"] }]
+  }
 }

@@ -9,6 +9,7 @@
   "range": 10,
   "season": 0,
   "tags": {
-    "cheat-death": [{ "skill3": 1, "mods": ["self"] }]
+    "cheat-death": [{ "skill3": 1, "mods": ["self"] }],
+    "debuff": [{ "ex": 1, "mods": ["aoe", "eryndor"] }]
   }
 }

@@ -8,5 +8,7 @@
   "energy": [300],
   "range": 4,
   "season": 3,
-  "tags": {}
+  "tags": {
+    "debuff": [{ "ex": 3, "mods": ["global"] }]
+  }
 }

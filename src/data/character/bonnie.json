@@ -9,6 +9,11 @@
   "range": 7,
   "season": 2,
   "tags": {
+    "debuff": [
+      { "skill2": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["eryndor", "single"] },
+      { "awakening": 1, "mods": ["single"] }
+    ],
     "dot": [{ "skill2": 1, "mods": ["shadewing"] }],
     "special-target": [{ "skill2": 1 }]
   }

@@ -9,6 +9,7 @@
   "range": 20,
   "season": 4,
   "tags": {
+    "debuff": [{ "awakening": 1, "mods": ["eryndor", "single"] }],
     "dot": [{ "awakening": 1, "mods": ["shadewing"] }],
     "summon": [{ "skill2": 1 }]
   }

@@ -9,6 +9,10 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "debuff": [
+      { "mastery": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["single"] }
+    ],
     "energy-battery": [{ "skill3": 4 }],
     "tile-effect": [{ "skill2": 1 }]
   }

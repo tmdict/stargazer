@@ -9,7 +9,10 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "debuff": [{ "awakening": 2, "mods": ["eryndor", "global"] }],
+    "debuff": [
+      { "skill2": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 2, "mods": ["eryndor", "global"] }
+    ],
     "energy-denial": [{ "awakening": 2 }],
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "ex": 1 }],

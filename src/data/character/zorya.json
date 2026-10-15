@@ -9,6 +9,7 @@
   "range": 2,
   "season": 6,
   "tags": {
-    "cheat-death": [{ "awakening": 1, "mods": ["self"] }]
+    "cheat-death": [{ "awakening": 1, "mods": ["self"] }],
+    "debuff": [{ "ex": 1, "mods": ["aoe", "eryndor"] }]
   }
 }

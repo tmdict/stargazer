@@ -10,7 +10,11 @@
   "season": 5,
   "tags": {
     "cheat-death": [{ "ex": 4, "mods": ["ally", "self"] }],
-    "debuff": [{ "ultimate": 1, "mods": ["eryndor", "global"] }],
+    "debuff": [
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "skill3": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ],
     "invincibility": [{ "ex": 4 }],
     "special-target": [{ "skill2": 1 }]
   }

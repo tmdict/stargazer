@@ -9,6 +9,7 @@
   "range": 20,
   "season": 6,
   "tags": {
+    "debuff": [{ "ultimate": 1, "mods": ["aoe", "eryndor"] }],
     "dot": [
       { "ultimate": 1, "mods": ["shadewing"] },
       { "awakening": 1, "mods": ["shadewing"] }

@@ -9,6 +9,10 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "debuff": [
+      { "skill2": 1, "mods": ["aoe", "eryndor"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ],
     "ult": [{ "ex": 1, "mods": ["opening"] }]
   }
 }

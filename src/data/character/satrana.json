@@ -9,6 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "debuff": [{ "skill3": 1, "mods": ["eryndor", "single"] }],
     "dot": [{ "skill3": 1, "mods": ["shadewing"] }],
     "tile-effect": [{ "skill3": 1 }]
   }

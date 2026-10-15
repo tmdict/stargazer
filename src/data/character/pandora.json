@@ -11,7 +11,9 @@
   "tags": {
     "debuff": [
       { "ultimate": 1, "mods": ["eryndor", "global"] },
-      { "ex": 1, "mods": ["eryndor", "global"] }
+      { "skill3": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["eryndor", "global"] },
+      { "ex": 1, "mods": ["eryndor", "single"] }
     ],
     "dot": [{ "ultimate": 1, "mods": ["shadewing"] }],
     "energy-battery": [{ "skill2": 1 }, { "skill3": 1 }],

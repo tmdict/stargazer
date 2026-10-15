@@ -9,6 +9,10 @@
   "range": 5,
   "season": 4,
   "tags": {
-    "debuff": [{ "ultimate": 1, "mods": ["eryndor", "global"] }]
+    "debuff": [
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "ultimate": 1, "mods": ["aoe", "eryndor"] },
+      { "skill2": 1, "mods": ["eryndor", "single"] }
+    ]
   }
 }

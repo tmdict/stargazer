@@ -9,6 +9,10 @@
   "range": 5,
   "season": 5,
   "tags": {
+    "debuff": [
+      { "skill3": 1, "mods": ["eryndor", "single"] },
+      { "ex": 1, "mods": ["eryndor", "single"] }
+    ],
     "special-target": [{ "ultimate": 1 }],
     "temp-buff": [{ "ultimate": 1, "mods": ["orion", "perseus", "single"] }]
   }

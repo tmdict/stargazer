@@ -9,7 +9,10 @@
   "range": 6,
   "season": 4,
   "tags": {
-    "debuff": [{ "ex": 1, "mods": ["global"] }],
+    "debuff": [
+      { "skill3": 1, "mods": ["aoe", "eryndor"] },
+      { "ex": 1, "mods": ["global"] }
+    ],
     "tile-effect": [{ "skill2": 1 }]
   }
 }
