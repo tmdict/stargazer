@@ -123,6 +123,21 @@ export function tagVocabulary(
   )
 }
 
+/** The pick with a modifier switched on, minus the picked modifiers no hero
+ * has on one effect with it. */
+export function addModifier(
+  pick: TagPick,
+  mod: string,
+  heroes: readonly { readonly tags: CharacterTags }[],
+): TagPick {
+  const mods = [mod]
+  for (const other of pick.mods) {
+    const candidate = { tag: pick.tag, mods: [...mods, other] }
+    if (heroes.some((hero) => matchesPick(hero.tags, candidate))) mods.push(other)
+  }
+  return { tag: pick.tag, mods: mods.sort() }
+}
+
 /** A tag as one menu entry or card: with its modifier when it is solo. */
 export function tagPick(tag: string, vocabulary: TagVocabulary): TagPick {
   const solo = vocabulary.get(tag)?.solo
@@ -138,13 +153,11 @@ export interface TagChip extends TagPick {
 
 /** A hero's chips: under each tag, one for the tag and one per modifier it
  * carries, those that match the same attachments merged into one ("Temp Buff
- * (Opening, Single Target)"). A synergy has no chip. With `pin`, only that
- * slot's attachments count, which gives the chips of one skill heading. */
-export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: TagPin): TagChip[] {
+ * (Opening, Single Target)"). A synergy has no chip. */
+export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary): TagChip[] {
   const chips: TagChip[] = []
   for (const [tag, { mods, synergies }] of vocabulary) {
-    const all = tags[tag] ?? []
-    const entries = pin ? all.filter((entry) => entry[pin] !== undefined) : all
+    const entries = tags[tag] ?? []
     if (entries.length === 0) continue
     // Keyed by the attachments matched; the tag alone matches them all.
     const every = entries.map((_, at) => at).join()
@@ -157,6 +170,26 @@ export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: 
     for (const [key, group] of groups) chips.push({ tag, mods: group, whole: key === every })
   }
   return chips
+}
+
+/** A skill heading's tags: each tag once, with every modifier its attachments
+ * in that slot carry, synergies aside ("Debuff (Single Target, Global)"). The
+ * modifiers may come from separate effects, so these are labels, never picks. */
+export function headingTags(
+  tags: CharacterTags,
+  vocabulary: TagVocabulary,
+  pin: TagPin,
+): TagPick[] {
+  const labels: TagPick[] = []
+  for (const [tag, { mods, synergies }] of vocabulary) {
+    const entries = (tags[tag] ?? []).filter((entry) => entry[pin] !== undefined)
+    if (entries.length === 0) continue
+    const carried = mods.filter(
+      (mod) => !synergies.includes(mod) && entries.some((entry) => entry.mods?.includes(mod)),
+    )
+    labels.push({ tag, mods: carried })
+  }
+  return labels
 }
 
 /** A filter's pick as a hero's chips read it: without its synergies, which
