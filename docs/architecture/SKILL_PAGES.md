@@ -88,7 +88,7 @@ Each attachment describes one effect and pins exactly one `{ slot: level }` or `
 
 `tagVocabulary` derives tags and modifiers from hero data; labels live in `src/locales/app/<key>.json`. A tag whose attachments all carry the same single modifier becomes one combined entry. Synergies are excluded from that rule because they describe a partner rather than the effect. Shared rules live in `src/lib/tags.ts`, independent of the data loader, for hero lists, skill chips and the [Mechanics guide](./GUIDE.md#mechanics-page).
 
-Within each tag, chips merge picks that match identical attachments, preserving activation by any represented pick. Slot headings use the same grouping within that slot. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text; direct skill-page links open unfiltered.
+Within each tag, chips merge picks that match identical attachments, preserving activation by any represented pick. A slot heading names each of its tags once, with the non-synergy modifiers of all its effects in that slot ("Debuff (Single Target, Global)"); heading labels are not picks. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text; direct skill-page links open unfiltered.
 
 Active chips combine as any-of and show matching slots or charms in full, accenting matching levels or tiers. A tagged upgrade cannot stand alone because its text depends on earlier levels. EX refinements have no tags and remain with their slot without accents.
 
