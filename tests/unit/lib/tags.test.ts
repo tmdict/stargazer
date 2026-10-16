@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  addModifier,
   chipActive,
   entryPin,
   fromTagQuery,
+  headingTags,
   heroChips,
   matchesPick,
   openingPicks,
@@ -12,7 +14,7 @@ import {
   toggleChip,
   toTagQuery,
 } from '@/lib/tags'
-import type { CharacterTags, TagPick, TagPin } from '@/lib/types/skill'
+import type { CharacterTags, TagPick } from '@/lib/types/skill'
 import { loadAppLocales, loadCharacters } from '@/utils/dataLoader'
 import { isHeroModifier } from '@/utils/tagData'
 
@@ -61,22 +63,22 @@ describe('skill text', () => {
 
 describe('chips', () => {
   const chip = (tag: string, whole: boolean, ...mods: string[]) => ({ tag, mods, whole })
-  const chipsOf = (tags: CharacterTags, pin?: TagPin) =>
-    heroChips(tags, tagVocabulary([{ tags }]), pin)
+  const chipsOf = (tags: CharacterTags) => heroChips(tags, tagVocabulary([{ tags }]))
 
   // The first effect is the hero's only opening and only single-target one.
-  const tags: CharacterTags = {
-    'temp-buff': [{ skill3: 1, mods: ['opening', 'single'] }, { ex: 1 }],
-  }
+  const effect = { skill3: 1, mods: ['opening', 'single'] }
+  const tags: CharacterTags = { 'temp-buff': [effect, { ex: 1 }] }
   const merged = chip('temp-buff', false, 'opening', 'single')
 
   it('shares one chip between the picks that match the same attachments', () => {
     expect(chipsOf(tags)).toEqual([chip('temp-buff', true), merged])
-    expect(chipsOf(tags, 'skill3')).toEqual([chip('temp-buff', true, 'opening', 'single')])
+    expect(chipsOf({ 'temp-buff': [effect] })).toEqual([
+      chip('temp-buff', true, 'opening', 'single'),
+    ])
   })
 
   it('lights a shared chip from any pick it stands for, and clears those picks with it', () => {
-    const [whole] = chipsOf(tags, 'skill3')
+    const [whole] = chipsOf({ 'temp-buff': [effect] })
     for (const picks of [[pick('temp-buff')], [pick('temp-buff', 'single')]]) {
       expect(chipActive(picks, whole!)).toBe(true)
       expect(toggleChip(picks, whole!)).toEqual([])
@@ -84,6 +86,46 @@ describe('chips', () => {
     expect(chipActive([pick('temp-buff')], merged)).toBe(false)
     expect(toggleChip([pick('temp-buff', 'opening', 'global')], merged)).toEqual([
       pick('temp-buff', 'global'),
+    ])
+  })
+})
+
+describe('modifiers', () => {
+  const heroes = [
+    {
+      tags: {
+        debuff: [
+          { skill2: 1, mods: ['eryndor', 'global'] },
+          { skill2: 1, mods: ['eryndor', 'single'] },
+        ],
+      },
+    },
+  ]
+
+  it('keeps the picked modifiers a new one shares an effect with and drops the rest', () => {
+    expect(addModifier(pick('debuff', 'global'), 'eryndor', heroes)).toEqual(
+      pick('debuff', 'eryndor', 'global'),
+    )
+    expect(addModifier(pick('debuff', 'eryndor', 'global'), 'single', heroes)).toEqual(
+      pick('debuff', 'eryndor', 'single'),
+    )
+  })
+})
+
+describe('skill headings', () => {
+  it('names each tag once, with the modifiers of every effect in the slot but no synergy', () => {
+    const tags: CharacterTags = {
+      debuff: [
+        { skill2: 1, mods: ['eryndor', 'global'] },
+        { skill2: 2, mods: ['eryndor', 'single'] },
+        { ex: 1, mods: ['aoe'] },
+      ],
+      dot: [{ skill2: 1 }],
+    }
+    const vocabulary = tagVocabulary([{ tags }], (mod) => mod === 'eryndor')
+    expect(headingTags(tags, vocabulary, 'skill2')).toEqual([
+      pick('debuff', 'single', 'global'),
+      pick('dot'),
     ])
   })
 })
