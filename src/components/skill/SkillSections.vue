@@ -10,6 +10,7 @@ import { ownEnergy } from '@/lib/mechanics'
 import {
   chipActive,
   chipPick,
+  headingTags,
   heroChips,
   pinnedLevels,
   toggleChip,
@@ -78,7 +79,7 @@ function clearChips() {
 // levels before it, so a tagged row is never shown alone.
 function applyChips(pin: TagPin) {
   const filter = usablePicks(tags, picks.value)
-  const slotTags = heroChips(tags, vocabulary, pin).map((chip) => tagPickLabel(chip, appLang.value))
+  const slotTags = headingTags(tags, vocabulary, pin).map((tag) => tagPickLabel(tag, appLang.value))
   const highlight = pinnedLevels(tags, filter, pin)
   return { slotTags, highlight, visible: filter.length === 0 || highlight.length > 0 }
 }

@@ -27,7 +27,7 @@ import {
   pickKey,
   type MechanicPick,
 } from '@/lib/mechanics'
-import { tagPick } from '@/lib/tags'
+import { addModifier, tagPick } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { TagPick } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
@@ -108,10 +108,9 @@ const chips = computed(() => {
   if (!pick || !info || info.solo) return []
   return info.mods.map((mod) => {
     const active = pick.mods.includes(mod)
-    const toggled = {
-      tag: pick.tag,
-      mods: active ? pick.mods.filter((m) => m !== mod) : [...pick.mods, mod].sort(),
-    }
+    const toggled = active
+      ? { tag: pick.tag, mods: pick.mods.filter((m) => m !== mod) }
+      : addModifier(pick, mod, pool)
     const matching = count(active ? pick : toggled)
     return {
       mod,
