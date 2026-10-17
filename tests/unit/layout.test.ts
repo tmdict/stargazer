@@ -106,6 +106,24 @@ describe('Layout', () => {
       expect(c[0]!.x - c[2]!.x).toBeGreaterThan(c[5]!.x - c[3]!.x)
     })
 
+    it('keeps arrow and line ends on a round ring once the container squashes', () => {
+      const squash = 0.5
+      const squashed = new Layout(POINTY, size, origin, false, 0, squash)
+      const radius = 4
+      const ends = (path: string) => path.match(/-?[\d.]+/g)!.map(Number)
+      // Screen distance from the center, after the container's vertical squash.
+      const onScreen = (dx: number, dy: number) => Math.hypot(dx, dy * squash)
+      // A column (straight down) and a row (straight across) of hexes.
+      for (const [from, to] of [
+        [new Hex(0, 0, 0), new Hex(-1, 2, -1)],
+        [new Hex(0, 0, 0), new Hex(2, 0, -2)],
+      ] as const) {
+        const [sx, sy] = ends(squashed.getLinePath(from, to, radius))
+        const c = squashed.hexToPixel(from)
+        expect(onScreen(sx! - c.x, sy! - c.y)).toBeCloseTo(radius)
+      }
+    })
+
     it('tilts after rotating, so the screen bottom stays nearest under invert', () => {
       const rotated = new Layout(POINTY, size, origin, true, tilt)
       for (const hex of [new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]) {

@@ -1,6 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
+import { PORTRAIT_RADIUS, standingLift } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 
@@ -41,9 +42,11 @@ export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   const arrowStyle = useArrowStyle()
 
   // Perspective stands the portraits above their tiles, so arrows between units
-  // are lifted to meet them.
+  // rise to the portrait centers.
   const layerTransform = computed(() =>
-    ctx.perspective ? `translate(0, ${-75 * gridStore.getHexScale()})` : '',
+    ctx.perspective
+      ? `translate(0, ${-standingLift(PORTRAIT_RADIUS * gridStore.getHexScale())})`
+      : '',
   )
 
   return { svgDimensions, arrowStyle, layerTransform }
