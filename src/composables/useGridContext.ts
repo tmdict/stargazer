@@ -119,6 +119,7 @@ export interface GridContext {
   layout: Layout
   visibleHexes: Hex[]
   cropHexes: Hex[]
+  drawnBounds: ViewBoxBounds
   viewBoxBounds: ViewBoxBounds
   charactersPlaced: number
   placements: Map<number, number>
@@ -508,26 +509,27 @@ export function createGridContext(
         .map((tile) => tile.hex)
     })
 
-    // The crop must also contain the ally artifact host cell, which renders in
-    // team view and can sit at the formation's edge on maps with a sparse
-    // front line.
+    // What the board draws also covers the artifact host cells beside the tiles,
+    // which sit a row outside the formation: both in the full view, and the ally
+    // one in team view, which hides the enemy slot.
     const cropHexes = computed<Hex[]>(() =>
       teamView.value
         ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY)]
-        : visibleHexes.value,
+        : [
+            ...visibleHexes.value,
+            artifactHostHex(grid, Team.ALLY),
+            artifactHostHex(grid, Team.ENEMY),
+          ],
     )
 
-    // Team view crops to the shown team's extent (cropHexes), padded for breathing
-    // room on the sides and bottom; the top pad also clears the perspective-mode
-    // character sprite stretch.
-    const viewBoxBounds = computed<ViewBoxBounds>(() => {
+    // The padded extent of what the board draws (cropHexes): breathing room on the
+    // sides and bottom, and a top pad that also clears the portraits standing above
+    // the far row in perspective. Team view crops to it, and the perspective view
+    // fits the board's box to it.
+    const drawnBounds = computed<ViewBoxBounds>(() => {
       const scale = hexSize.value.x / 40
-      const fullWidth = 600 * scale
-      const fullHeight = 600 * scale
-
-      if (!teamView.value || visibleHexes.value.length === 0) {
-        return { x: 0, y: 0, width: fullWidth, height: fullHeight }
-      }
+      const fullBox = { x: 0, y: 0, width: 600 * scale, height: 600 * scale }
+      if (visibleHexes.value.length === 0) return fullBox
 
       const hexRadius = hexSize.value.x
       let minX = Infinity
@@ -563,6 +565,12 @@ export function createGridContext(
       const x = minX - sidePad
       const width = maxX - minX + sidePad * 2
       return { x, y, width, height }
+    })
+
+    const viewBoxBounds = computed<ViewBoxBounds>(() => {
+      if (teamView.value) return drawnBounds.value
+      const scale = hexSize.value.x / 40
+      return { x: 0, y: 0, width: 600 * scale, height: 600 * scale }
     })
 
     const placements = computed(() => getCharacterPlacements(grid))
@@ -665,6 +673,7 @@ export function createGridContext(
       layout,
       visibleHexes,
       cropHexes,
+      drawnBounds,
       viewBoxBounds,
       placements,
       charactersPlaced,
