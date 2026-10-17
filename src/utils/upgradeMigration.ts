@@ -211,7 +211,7 @@ export function convertLegacyBoard(board: Record<string, unknown>): void {
     }
     if ((team !== 1 && team !== 2) || !Number.isInteger(characterId) || characterId < 1) continue
     if (!Number.isFinite(level)) continue
-    const value = clampAttr(1, level)
+    const value = clampAttr(1, level, characterId)
     // Last-wins includes a trailing default: the old format's sequential
     // setParagon ended wherever the final entry landed, zero included.
     if (value > 0) byHero.set(`${team}:${characterId}`, [team, characterId, 1, value])

@@ -5,17 +5,17 @@
  */
 export const SKILL_COLORS = {
   red: '#e57373', // galahad, hepler, satrana, zandrok
-  crimson: '#c83232', // phraesto (clone), talene
+  crimson: '#c83232', // natsu, phraesto (clone), talene
   rust: '#cd7169', // elijah-lailah (lailah)
   amber: '#ffa000', // aliceth, dunlingr
-  gold: '#fbc02d', // phantimal (spirit marks)
+  gold: '#fbc02d', // natsu, phantimal (spirit marks)
   green: '#98be5d', // bonnie, callan, daimon, isabella, nara, niru, silvina
   teal: '#6d9c86', // faramor, ravion, thador
   blue: '#0288d1', // cassadee, evie, himmel, hugin
   sky: '#51abcb', // elijah-lailah (elijah)
   steel: '#7badc4', // alna
   lavender: '#b0a8d0', // frieren
-  purple: '#9661f1', // gunnar, pandora, reinier, vala
+  purple: '#9661f1', // dunlingr, gunnar, pandora, reinier, vala
   orchid: '#a47fb8', // kulu (breakable tiles)
   slate: '#565b63', // kulu (demolition zone)
   white: '#ffffff', // phraesto

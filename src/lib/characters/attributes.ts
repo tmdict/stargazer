@@ -1,8 +1,8 @@
-/* Per-hero upgrade attribute registry: the single source of truth for every
- * levelled upgrade a hero carries (paragon, EX refinement, and whatever comes
- * next). Serialized as the GridState `u` section — uniform rows
- * [team, characterId, attrId, value] — and held in memory as per-hero records
- * keyed by attrId (useGridContext's attrs map).
+/* Per-hero attribute registry: the single source of truth for every value a
+ * placed hero carries beyond its position: the levelled upgrades (paragon, EX
+ * refinement) and the skill mode. Serialized as the GridState `u` section —
+ * uniform rows [team, characterId, attrId, value] — and held in memory as
+ * per-hero records keyed by attrId (useGridContext's attrs map).
  *
  * APPEND-ONLY: attrIds are never reused or renumbered; retiring an attribute
  * reserves its id forever. characterId 0 is reserved for future team-scoped
@@ -11,14 +11,16 @@
  * registry contract test pins both.
  */
 
+import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
 
 export const ATTR_PARAGON = 1
 export const ATTR_REFINEMENT = 2
+export const ATTR_SKILL_MODE = 3
 
 interface AttrConfig {
   id: number
-  // Locale key suffix (app.<name>) and stable code-facing name.
+  // Stable code-facing name. An upgrade's name is also its app locale key.
   name: string
   max: number
   default: number
@@ -27,7 +29,12 @@ interface AttrConfig {
 export const HERO_ATTRS: readonly AttrConfig[] = [
   { id: ATTR_PARAGON, name: 'paragon', max: 4, default: 0 },
   { id: ATTR_REFINEMENT, name: 'refinement', max: 4, default: 0 },
+  // The position in the hero's SKILL_MODES list; max is the field's limit.
+  { id: ATTR_SKILL_MODE, name: 'skill-mode', max: 15, default: 0 },
 ]
+
+// The levelled upgrades. Rosters store only these.
+export const UPGRADE_ATTRS: readonly number[] = [ATTR_PARAGON, ATTR_REFINEMENT]
 
 const BY_ID = new Map(HERO_ATTRS.map((attr) => [attr.id, attr]))
 
@@ -37,10 +44,15 @@ export const attrMax = (attrId: number): number => BY_ID.get(attrId)?.max ?? 0
 
 export const attrDefault = (attrId: number): number => BY_ID.get(attrId)?.default ?? 0
 
-export const clampAttr = (attrId: number, value: number): number => {
+/* A skill mode's range is the hero's own mode list, looked up by the exact id:
+ * a hero without one (and any companion or synergy id) clamps to the default,
+ * so its row drops. */
+export const clampAttr = (attrId: number, value: number, characterId: number): number => {
   const config = BY_ID.get(attrId)
   if (!config || !Number.isFinite(value)) return 0
-  return Math.min(Math.max(Math.round(value), 0), config.max)
+  const max =
+    attrId === ATTR_SKILL_MODE ? (SKILL_MODES[characterId]?.modes.length ?? 1) - 1 : config.max
+  return Math.min(Math.max(Math.round(value), 0), max)
 }
 
 /* One hero's attribute values, keyed by attrId; absent key = the attr's

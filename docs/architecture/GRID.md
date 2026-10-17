@@ -119,11 +119,11 @@ The flag is page state on `useGrids`, beside invert, because every board's layou
 
 ## Hero upgrade attributes
 
-`src/lib/characters/attributes.ts` defines every levelled upgrade a hero carries (paragon, EX refinement). Attribute ids are append-only because saved teams and links carry them. The link codec's 4-bit value field caps `max` at 15, and character id 0 is reserved for future team-wide rows.
+`src/lib/characters/attributes.ts` defines every per-hero attribute: the levelled upgrades (paragon, EX refinement) and the skill mode ([Skills](./SKILLS.md#skill-modes)). Attribute ids are append-only because saved teams and links carry them. The link codec's 4-bit value field caps `max` at 15, and character id 0 is reserved for future team-wide rows.
 
 Each board keeps one record per team and hero, keyed that way instead of by hex, so levels follow a hero across moves and each team tracks its copy separately. Records are sparse: a default value deletes its key, so an untouched board stores nothing. A record exists only while its real hero (`isRealHeroId`) stands on that side of the board. `setAttr` and `setAttrs` ignore anyone else, so a record can only be written once its hero is placed. Every operation that can take a hero off the board (remove, a replacing place, `clearTeam`, clearing, a map switch) prunes afterwards, so a hero that comes back starts at defaults. Companions and phantimals never hold a record, because they also leave the board through skills and the phantimal reconciler, which do not prune. Placeholders never hold one either, because copies repeat on a team and would share a key. A move or swap reads each record before the engine runs and writes it under the hero's new key, and a same-hero cross-team swap reads both records before writing either.
 
-`clampAttr` runs wherever values enter: `setAttr`, the link decoder and saved-team canonicalization. All three drop unknown attribute ids. Rows are sorted by `compareAttrRows` everywhere they are emitted, because unsaved-change checks and import dedupe compare bytes. The upgrade controls appear only for real heroes, and the serializer writes rows only for base heroes, so it never finds a placeholder record to write.
+`clampAttr` runs wherever values enter: `setAttr`, the link decoder and saved-team canonicalization. All three drop unknown attribute ids. It takes the hero id, because a skill mode's range is that hero's own mode list. Rows are sorted by `compareAttrRows` everywhere they are emitted, because unsaved-change checks and import dedupe compare bytes. The upgrade controls appear only for real heroes, and the serializer writes rows only for base heroes, so it never finds a placeholder record to write.
 
 ## Map editor
 

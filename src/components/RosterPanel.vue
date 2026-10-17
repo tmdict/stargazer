@@ -36,7 +36,7 @@ import {
   ATTR_REFINEMENT,
   attrDefault,
   attrMax,
-  HERO_ATTRS,
+  UPGRADE_ATTRS,
   type AttrRecord,
 } from '@/lib/characters/attributes'
 import { MAX_NAME_LENGTH } from '@/lib/names'
@@ -111,9 +111,7 @@ const removeShown = (): void => {
 }
 
 const layer = ref<AttrLayerChoice>(ATTR_PARAGON)
-const editLayers = computed(() =>
-  layer.value === 'all' ? HERO_ATTRS.map((attr) => attr.id) : [layer.value],
-)
+const editLayers = computed(() => (layer.value === 'all' ? UPGRADE_ATTRS : [layer.value]))
 
 const levelOf = (levels: AttrRecord, attrId: number): number =>
   levels[attrId] ?? attrDefault(attrId)

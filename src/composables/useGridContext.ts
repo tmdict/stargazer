@@ -231,7 +231,7 @@ export function createGridContext(
     if (!holdsAttrs(team, characterId)) return
     const key = attrKey(team, characterId)
     const record = { ...attrs.get(key) }
-    const clamped = clampAttr(attrId, value)
+    const clamped = clampAttr(attrId, value, characterId)
     if (clamped !== attrDefault(attrId)) record[attrId] = clamped
     else delete record[attrId]
     storeAttrs(key, record)
@@ -241,7 +241,7 @@ export function createGridContext(
     const next: AttrRecord = {}
     for (const [id, value] of Object.entries(record)) {
       const attrId = Number(id)
-      const clamped = clampAttr(attrId, value)
+      const clamped = clampAttr(attrId, value, characterId)
       if (clamped !== attrDefault(attrId)) next[attrId] = clamped
     }
     storeAttrs(attrKey(team, characterId), next)

@@ -5,8 +5,10 @@ import GridArrow from './grid/GridArrow.vue'
 import GridLine from './grid/GridLine.vue'
 import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
+import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import type { Hex } from '@/lib/hex'
 import { getCharacterSkill } from '@/lib/skills/skill'
+import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
 
 interface Props {
@@ -50,10 +52,16 @@ function parseSkillKey(key: string): { characterId: number; team: string } | nul
   }
 }
 
-// Only targeting skills (those with a targetingColorModifier) draw arrows.
+// Only targeting skills (those with a targetingColorModifier) draw arrows. A
+// hero with skill modes draws in the colour of the mode it is set to.
 function targetingColor(key: string): string | undefined {
   const parsed = parseSkillKey(key)
-  return parsed ? getCharacterSkill(parsed.characterId)?.targetingColorModifier : undefined
+  if (!parsed) return undefined
+  const { characterId } = parsed
+  const color = getCharacterSkill(characterId)?.targetingColorModifier
+  if (!color) return undefined
+  const mode = ctx.getAttr(Number(parsed.team) as Team, characterId, ATTR_SKILL_MODE)
+  return SKILL_MODES[characterId]?.modes[mode]?.color ?? color
 }
 
 const arrowsToRender = computed(() => {

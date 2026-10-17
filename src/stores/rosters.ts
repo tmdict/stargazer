@@ -120,7 +120,7 @@ export const useRosters = defineStore('rosters', () => {
       const heroes = { ...roster.heroes }
       for (const [heroId, levels] of Object.entries(changes)) {
         if (levels === null) delete heroes[heroId]
-        else heroes[heroId] = canonicalLevels(levels)
+        else heroes[heroId] = canonicalLevels(Number(heroId), levels)
       }
       roster.heroes = heroes
       roster.updatedAt = Date.now()
