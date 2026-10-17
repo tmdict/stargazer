@@ -19,7 +19,9 @@ const ctx = useGridContext()
 const ALLY_CURVE_SCALE = 1.5
 const ENEMY_CURVE_SCALE = 2.0
 
-const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(() => props.defaultSvgHeight)
+const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
+  () => props.defaultSvgHeight,
+)
 </script>
 
 <template>
@@ -32,6 +34,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(() => props.
     class="arrow-layer"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
+    :style="layerStyle"
   >
     <g :transform="layerTransform">
       <GridArrow
