@@ -1,5 +1,6 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
+import { useGridContext } from '@/composables/useGridContext'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 
@@ -28,11 +29,9 @@ export function useArrowStyle() {
  * Shared geometry and styling for the arrow overlay SVGs (normal targeting and
  * skill targeting), keeping both layers aligned to the grid and visually matched.
  */
-export function useArrowLayer(
-  showPerspective: MaybeRefOrGetter<boolean>,
-  defaultSvgHeight: MaybeRefOrGetter<number>,
-) {
+export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   const gridStore = useGridStore()
+  const ctx = useGridContext()
 
   const svgDimensions = computed(() => {
     const scale = gridStore.getHexScale()
@@ -44,7 +43,7 @@ export function useArrowLayer(
   // Perspective stands the portraits above their tiles, so arrows between units
   // are lifted to meet them.
   const layerTransform = computed(() =>
-    toValue(showPerspective) ? `translate(0, ${-75 * gridStore.getHexScale()})` : '',
+    ctx.perspective ? `translate(0, ${-75 * gridStore.getHexScale()})` : '',
   )
 
   return { svgDimensions, arrowStyle, layerTransform }

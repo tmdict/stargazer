@@ -13,6 +13,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
+import { PERSPECTIVE } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -25,8 +26,6 @@ const props = defineProps<{
   enemyArtifactId?: number | null
   // Gates the hover card only; placement interactions are unaffected.
   showHover: boolean
-  showPerspective?: boolean
-  scaleY?: number
   readonly?: boolean
   isMapEditorMode?: boolean
   // Force tap-to-sheet vs the desktop popup; omit to derive from grid scale.
@@ -113,9 +112,9 @@ const iconStyle = (center: { x: number; y: number }) => {
     left: `${center.x - containerSize / 2}px`,
     top: `${center.y - containerSize / 2}px`,
   }
-  if (props.showPerspective) {
+  if (ctx.perspective) {
     const verticalOffset = -70 * ctx.hexScale
-    styles.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY || 1.0})`
+    styles.transform = `translateY(${verticalOffset}px) scaleY(${1 / PERSPECTIVE.compression})`
   }
   return styles
 }
@@ -372,7 +371,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
         <ArtifactImage v-if="allyArtifact" :artifact="allyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
-      <div v-if="showPerspective" class="artifact-pointer" />
+      <div v-if="ctx.perspective" class="artifact-pointer" />
       <HoldRing v-if="holdingTeam === Team.ALLY" />
     </div>
 
@@ -399,7 +398,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
         <ArtifactImage v-if="enemyArtifact" :artifact="enemyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
-      <div v-if="showPerspective" class="artifact-pointer" />
+      <div v-if="ctx.perspective" class="artifact-pointer" />
       <HoldRing v-if="holdingTeam === Team.ENEMY" />
     </div>
 

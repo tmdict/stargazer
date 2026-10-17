@@ -216,7 +216,6 @@ const {
         :characters="characters"
         :info
         :show-skills="showSkills"
-        :show-perspective="showPerspective"
         :tap-mode="tapMode"
       />
     </BoardsRow>

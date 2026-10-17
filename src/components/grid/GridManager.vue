@@ -35,9 +35,6 @@ interface Props {
   // Map editor props
   isMapEditorMode: boolean
   selectedMapEditorState: State
-  // Perspective mode props
-  showPerspective: boolean
-  verticalScaleComp: number
   defaultSvgHeight: number
   // Debug props
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
@@ -249,7 +246,6 @@ defineExpose({
       :show-coordinates="info.coordinates"
       :is-map-editor-mode="isMapEditorMode"
       :selected-map-editor-state="selectedMapEditorState"
-      :show-perspective="showPerspective"
       :show-skills="showSkills"
       :readonly
     />
@@ -260,8 +256,6 @@ defineExpose({
       :ally-artifact-id="ctx.artifacts.ally"
       :enemy-artifact-id="ctx.artifacts.enemy"
       :show-hover="info.hover"
-      :show-perspective="showPerspective"
-      :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
       :tap-mode
@@ -272,18 +266,12 @@ defineExpose({
       :characters
       :show-hover="info.hover"
       :show-skills
-      :show-perspective="showPerspective"
-      :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
       :tap-mode
     />
 
-    <SkillTargeting
-      v-if="showSkills"
-      :show-perspective="showPerspective"
-      :default-svg-height="defaultSvgHeight"
-    />
+    <SkillTargeting v-if="showSkills" :default-svg-height="defaultSvgHeight" />
 
     <!-- Debug layer (Debug tab only). Capped like the tiles layer, or it
          widens the page on a screen narrower than the board. -->
@@ -300,11 +288,7 @@ defineExpose({
 
     <!-- Closest-target arrows: last in the stack so they stay readable over
          the pathfinding debug lines when the Debug tab shows both. -->
-    <GridArrows
-      v-if="info.targeting"
-      :show-perspective="showPerspective"
-      :default-svg-height="defaultSvgHeight"
-    />
+    <GridArrows v-if="info.targeting" :default-svg-height="defaultSvgHeight" />
   </div>
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

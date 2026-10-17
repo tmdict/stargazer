@@ -22,8 +22,6 @@ interface Props {
   // Map editor props
   isMapEditorMode?: boolean
   selectedMapEditorState?: State
-  // Perspective mode props
-  showPerspective: boolean
   // Debug props
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Constants
@@ -56,11 +54,6 @@ const liveContext = new Proxy({} as GridContext, {
   has: (_target, key) => Reflect.has(props.context, key),
 })
 provideGridContext(liveContext)
-
-// Vertical scale compensation - automatically inverse of grid compression when in perspective mode
-const verticalScaleComp = computed(() =>
-  props.showPerspective ? 1 / PERSPECTIVE.compression : 1.0,
-)
 
 // When team view is on, the team-view-clip wrapper sits inside the perspective wrapper:
 // it crops the grid to only the ally region in unscaled SVG coordinates, while the outer
@@ -107,7 +100,7 @@ const shiftStyle = computed(() => {
 <template>
   <div class="perspective-container">
     <div
-      :style="showPerspective ? { transform: `scaleY(${PERSPECTIVE.compression})` } : {}"
+      :style="context.perspective ? { transform: `scaleY(${PERSPECTIVE.compression})` } : {}"
       style="transform-origin: center; transition: transform 0.3s ease-out"
     >
       <div :style="clipStyle">
@@ -119,9 +112,7 @@ const shiftStyle = computed(() => {
             :show-skills
             :is-map-editor-mode
             :selected-map-editor-state
-            :show-perspective
             :debug-panel-ref
-            :vertical-scale-comp
             :default-svg-height
             :readonly
             :tap-mode

@@ -25,6 +25,7 @@ import {
 } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
+import { PERSPECTIVE } from '@/lib/layout'
 import { SKILL_MODES, type SkillMode, type SkillModeIcon } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -39,8 +40,6 @@ interface Props {
   // Gates the hover card only; placement interactions are unaffected.
   showHover: boolean
   showSkills: boolean
-  showPerspective: boolean
-  scaleY: number
   isMapEditorMode: boolean
   readonly?: boolean
   // Force tap-to-lift vs desktop click-to-remove; omit to derive from grid scale.
@@ -120,11 +119,11 @@ const hoverHint = computed(() =>
 // board's vertical squash the way sprites do.
 const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
   const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
-  const lift = props.showPerspective ? BASE_PERSPECTIVE_LIFT * ctx.hexScale : 0
+  const lift = ctx.perspective ? BASE_PERSPECTIVE_LIFT * ctx.hexScale : 0
   return {
     left: `${x + dx}px`,
-    top: `${y - lift + dy * props.scaleY}px`,
-    '--counter-scale-y': String(props.scaleY),
+    top: `${y - lift + dy * counterScaleY.value}px`,
+    '--counter-scale-y': String(counterScaleY.value),
   }
 }
 
@@ -183,6 +182,9 @@ const BASE_CHARACTER_OFFSET = 30
 const BASE_PERSPECTIVE_LIFT = 70
 const BASE_MODE_SIZE = 22
 
+// Undoes the board's perspective squash (GridContainer), so sprites stay round.
+const counterScaleY = computed(() => (ctx.perspective ? 1 / PERSPECTIVE.compression : 1))
+
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
   return {
@@ -228,9 +230,9 @@ const getCharacterStyle = (hexId: number) => {
     '--character-border-width': `${borderWidth}px`,
   }
 
-  if (props.showPerspective) {
+  if (ctx.perspective) {
     const verticalOffset = -BASE_PERSPECTIVE_LIFT * ctx.hexScale
-    baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY})`
+    baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${counterScaleY.value})`
     baseStyle.transformOrigin = 'center'
   }
 
@@ -463,7 +465,7 @@ const liftedMode = computed(() =>
           :style="getSkillBorderStyle(characterId, hexId)"
           draggable="false"
         />
-        <div v-if="showPerspective" class="character-pointer" />
+        <div v-if="ctx.perspective" class="character-pointer" />
         <HoldRing v-if="holdingHexId === hexId" />
       </div>
     </div>

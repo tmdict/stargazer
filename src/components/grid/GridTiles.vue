@@ -30,7 +30,6 @@ interface Props {
   showCoordinates: boolean
   isMapEditorMode: boolean
   selectedMapEditorState: State
-  showPerspective: boolean
   showSkills: boolean
   readonly?: boolean
 }
