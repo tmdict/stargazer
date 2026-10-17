@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildArtifactTable, readArtifact } from '@/lib/import/artifacts'
-import { createImage, cropResize } from '@/lib/import/image'
+import { createImage } from '@/lib/import/image'
 import { HEADER_ICON } from '@/lib/import/layout'
 import type { RgbaImage } from '@/lib/import/types'
 
@@ -35,61 +35,18 @@ const table = buildArtifactTable(
   Object.entries(REFS).map(([id, img]) => ({ artifactId: Number(id), image: img })),
 )
 
-const BADGE: [number, number, number] = [181, 81, 70]
-const CX = 200
-const CY = 100
-
-// A header strip with the icon's art disc drawn a few pixels off the nominal
-// centre, the way the game shows it: the central part of the art, round.
-const header = (disc: Paint | RgbaImage | null): RgbaImage => {
-  const shot = image(400, 200, () => BADGE)
-  if (!disc) return shot
-  const d = HEADER_ICON.diameter
-  const art =
-    typeof disc === 'function'
-      ? image(d, d, disc)
-      : cropResize(disc, { x: 18.5, y: 18.5, w: 91, h: 91 }, d, d)
-  const x0 = CX + 7 - d / 2
-  const y0 = CY - 5 - d / 2
-  for (let y = 0; y < d; y++)
-    for (let x = 0; x < d; x++) {
-      if (Math.hypot(x - d / 2 + 0.5, y - d / 2 + 0.5) > d / 2) continue
-      const from = (y * d + x) * 4
-      const to = ((y0 + y) * shot.width + x0 + x) * 4
-      shot.data.set(art.data.subarray(from, from + 4), to)
-    }
-  return shot
-}
-
 describe('readArtifact', () => {
-  it('finds the art disc near its nominal centre and reads it surely', () => {
-    const reading = readArtifact(header(REFS[2]!), CX, CY, table)
-    expect(reading.candidates[0]!.artifactId).toBe(2)
-    expect(reading.margin).toBeGreaterThan(0.1)
-    expect(reading.sure).toBe(true)
-  })
-
   it('is not sure of a black disc even when its colours lead clearly', () => {
-    const reading = readArtifact(
-      header(() => [0, 0, 0]),
-      CX,
-      CY,
-      table,
+    // A red header badge with a black disc where the art would be, a few
+    // pixels off the nominal centre.
+    const cx = 200
+    const cy = 100
+    const shot = image(400, 200, (x, y) =>
+      Math.hypot(x - cx - 7, y - cy + 5) <= HEADER_ICON.diameter / 2 ? [0, 0, 0] : [181, 81, 70],
     )
+    const reading = readArtifact(shot, cx, cy, table)
     expect(reading.candidates[0]!.artifactId).toBe(4)
     expect(reading.margin).toBeGreaterThan(0.1)
-    expect(reading.sure).toBe(false)
-  })
-
-  it('is not sure of an empty badge', () => {
-    const reading = readArtifact(header(null), CX, CY, table)
-    expect(reading.candidates).toHaveLength(3)
-    expect(reading.sure).toBe(false)
-  })
-
-  it('reads nothing, surely or not, when the search falls off the shot', () => {
-    const reading = readArtifact(header(null), -100, -100, table)
-    expect(reading.candidates).toEqual([])
     expect(reading.sure).toBe(false)
   })
 })

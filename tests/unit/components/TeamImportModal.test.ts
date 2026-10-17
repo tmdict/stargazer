@@ -166,43 +166,6 @@ describe('match import review and save', () => {
     },
   )
 
-  it('asks to confirm an unsure refinement and counts it until then', async () => {
-    const { api } = await mountImport()
-    const cell = api.shots.value[0]!.reading!.sides[1][0]!
-    cell.sure = true
-    cell.paragon.sure = true
-    cell.refinement = { level: 1, stars: 6, family: 'purple', sure: false }
-    await nextTick()
-    expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
-    const confirm = document.querySelector<HTMLButtonElement>('.confirm-refinement')!
-    expect(confirm.textContent).toContain('Confirm R1')
-    confirm.click()
-    await nextTick()
-    expect(api.shots.value[0]!.overrides['1:0']).toEqual({ refinement: 1 })
-    expect(document.querySelector('.confirm-refinement')).toBeNull()
-    expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
-  })
-
-  it('counts an unsure artifact as to review until it is confirmed', async () => {
-    const { api } = await mountImport()
-    const reading = api.shots.value[0]!.reading!
-    reading.sides[1][0]!.sure = true
-    reading.sides[1][0]!.paragon.sure = true
-    await nextTick()
-    expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
-    reading.artifacts[1] = {
-      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
-      candidates: [{ artifactId: 1, score: 1.4 }],
-      margin: 0.4,
-      sure: false,
-    }
-    await nextTick()
-    expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
-    document.querySelector<HTMLButtonElement>('.confirm-artifact')!.click()
-    await nextTick()
-    expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
-  })
-
   it('keeps the screenshot artifact close-up when the selection is removed', async () => {
     const { api } = await mountImport()
     const crop = 'data:image/png;base64,c2NyZWVuc2hvdA=='

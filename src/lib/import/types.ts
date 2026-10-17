@@ -55,7 +55,7 @@ export interface RefinementReading {
   level: number
   stars: number
   family: StarFamily
-  // The family's evidence is strong enough; R0 always is.
+  // The level's colour evidence is strong enough; for R0, the row has no pink tint.
   sure: boolean
 }
 

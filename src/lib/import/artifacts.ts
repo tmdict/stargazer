@@ -31,9 +31,7 @@ const SIZES = [-3, 0, 3]
 const REACH = 18
 const STEP = 3
 const COLOUR_WEIGHT = 1
-// Sure needs all three: the lead over the runner-up, the winner's correlation
-// part, and a crop with art in it (enough luminance spread, mostly not black).
-// The floors sit well under every correctly read icon measured on labelled
+// The floors sit under every correctly read icon measured on labelled
 // screenshots and above black, empty and icon-less crops.
 const SURE_MARGIN = 0.1
 const SHAPE_FLOOR = 0.34
