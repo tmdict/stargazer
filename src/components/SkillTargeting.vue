@@ -12,7 +12,6 @@ import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
 
 interface Props {
-  showPerspective: boolean
   defaultSvgHeight: number
 }
 
@@ -20,10 +19,7 @@ const props = defineProps<Props>()
 
 const ctx = useGridContext()
 
-const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
-  () => props.showPerspective,
-  () => props.defaultSvgHeight,
-)
+const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(() => props.defaultSvgHeight)
 
 const skillTargets = computed(() => ctx.skillTargets)
 

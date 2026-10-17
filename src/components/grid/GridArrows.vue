@@ -5,7 +5,6 @@ import { useGridContext } from '@/composables/useGridContext'
 import { Team } from '@/lib/types/team'
 
 interface Props {
-  showPerspective: boolean
   defaultSvgHeight: number
 }
 
@@ -20,10 +19,7 @@ const ctx = useGridContext()
 const ALLY_CURVE_SCALE = 1.5
 const ENEMY_CURVE_SCALE = 2.0
 
-const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
-  () => props.showPerspective,
-  () => props.defaultSvgHeight,
-)
+const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(() => props.defaultSvgHeight)
 </script>
 
 <template>

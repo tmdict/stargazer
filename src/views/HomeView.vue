@@ -299,7 +299,6 @@ const handleResetMap = () => {
             :show-skills="showSkills"
             :is-map-editor-mode="mapEditorActive"
             :selected-map-editor-state="selectedMapEditorState"
-            :show-perspective
             :debug-panel-ref
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />

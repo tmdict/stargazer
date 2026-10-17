@@ -131,6 +131,7 @@ export interface GridContext {
   hexScale: number
   teamView: boolean
   inverted: boolean
+  perspective: boolean
 
   // Per-board skill queries (each board has its own SkillManager)
   getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
@@ -583,6 +584,7 @@ export function createGridContext(
     const hexScale = computed(() => hexSize.value.x / 40)
     const teamViewActive = computed(() => teamView.value)
     const invertedActive = computed(() => inverted.value)
+    const perspectiveActive = computed(() => perspective.value)
 
     // Per-board skill-derived data, read by the tile / character / targeting layers.
     const colorModifiers = computed(() => skillManager.getColorModifiersByCharacterAndTeam())
@@ -663,6 +665,7 @@ export function createGridContext(
       hexScale,
       teamView: teamViewActive,
       inverted: invertedActive,
+      perspective: perspectiveActive,
       skillTargets,
       skillLines,
       getColorModifierForCharacter,

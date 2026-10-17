@@ -22,12 +22,11 @@ import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const { context, info, showSkills, showPerspective, tapMode } = defineProps<{
+const { context, info, showSkills, tapMode } = defineProps<{
   context: GridContext
   characters: readonly CharacterType[]
   info: GridInfoView
   showSkills: boolean
-  showPerspective: boolean
   // Mobile: tap a cell to target it for the picker sheet; desktop: the on-grid
   // popup. Driven by the page's breakpoint (the picker is a sheet at the same width).
   tapMode: boolean
@@ -54,7 +53,7 @@ const isSwapPending = computed(() => pendingId.value === context.id)
 // active ring (on .grid-board) or these action buttons (siblings). Mirrors the
 // single-grid copy/download.
 const boardImageOptions = () => ({
-  showPerspective,
+  showPerspective: context.perspective,
   target: `[data-grid-board-id="${context.id}"] .perspective-container`,
   filePrefix: 'team',
 })
@@ -75,7 +74,7 @@ const handleClear = (): void => {
     :data-grid-board-id="context.id"
     @pointerdown="grids.setActive(context.id)"
   >
-    <GridContainer :context :characters :info :show-skills :show-perspective :tap-mode />
+    <GridContainer :context :characters :info :show-skills :tap-mode />
 
     <template v-if="info.heroCard">
       <TeamPowerPanel :context :show-upgrades="info.upgrades" />
