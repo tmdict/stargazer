@@ -11,6 +11,20 @@ export const TEAM_ARROW_COLORS: Record<Team, string> = {
 }
 
 /**
+ * Stroke sizes shared by arrows and skill lines, so every layer draws them alike.
+ */
+export function useArrowStyle() {
+  const gridStore = useGridStore()
+  return computed(() => {
+    const scale = gridStore.getHexScale()
+    return {
+      strokeWidth: Math.max(2, 3 * scale),
+      arrowheadSize: Math.max(4, 6 * scale),
+    }
+  })
+}
+
+/**
  * Shared geometry and styling for the arrow overlay SVGs (normal targeting and
  * skill targeting), keeping both layers aligned to the grid and visually matched.
  */
@@ -25,15 +39,10 @@ export function useArrowLayer(
     return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale }
   })
 
-  const arrowStyle = computed(() => {
-    const scale = gridStore.getHexScale()
-    return {
-      strokeWidth: Math.max(2, 3 * scale),
-      arrowheadSize: Math.max(4, 6 * scale),
-    }
-  })
+  const arrowStyle = useArrowStyle()
 
-  // Perspective mode lifts the arrow layer to sit on the tilted grid.
+  // Perspective stands the portraits above their tiles, so arrows between units
+  // are lifted to meet them.
   const layerTransform = computed(() =>
     toValue(showPerspective) ? `translate(0, ${-75 * gridStore.getHexScale()})` : '',
   )

@@ -57,7 +57,7 @@ import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/charact
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { Layout, POINTY, type Point } from '@/lib/layout'
+import { Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
 import { artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
@@ -89,6 +89,7 @@ export interface GridContextGlobals {
   hexSize: Ref<Point>
   teamView: Ref<boolean>
   inverted: Ref<boolean>
+  perspective: Ref<boolean>
   // The Syn affordance; per-board drop handling resolves base-vs-copy with it.
   synergy?: Ref<boolean>
   // Team-view crop shared across boards so they stay the same size; null means
@@ -178,7 +179,7 @@ export function createGridContext(
   globals: GridContextGlobals,
 ): GridContext {
   const gameDataStore = useGameDataStore()
-  const { hexSize, teamView, inverted, sharedCrop } = globals
+  const { hexSize, teamView, inverted, perspective, sharedCrop } = globals
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
@@ -472,13 +473,20 @@ export function createGridContext(
   }
 
   const ctx = scope.run(() => {
-    // Invert renders the board rotated 180 degrees: the layout is rebuilt with
-    // the rotation flag, and every consumer (tiles, sprites, arrows, crops,
-    // hit-testing) follows it because they all derive from this computed.
+    // Invert renders the board rotated 180 degrees and perspective tilts it: the
+    // layout is rebuilt with both, and every consumer (tiles, sprites, arrows,
+    // crops, hit-testing) follows them because they all derive from this computed.
     const layout = computed(() => {
       const scale = hexSize.value.x / 40
-      const origin: Point = { x: 300 * scale, y: 300 * scale }
-      return new Layout(POINTY, hexSize.value, origin, inverted.value)
+      const tilt = perspective.value ? PERSPECTIVE.tilt : 0
+      const layoutAt = (originY: number) =>
+        new Layout(POINTY, hexSize.value, { x: 300 * scale, y: originY }, inverted.value, tilt)
+      // The tilt draws near rows larger than far ones, which lowers the board in its
+      // box until the near edge runs past the bottom; raising the origin by that
+      // drift centers the drawn board, as the flat one is.
+      const draft = layoutAt(0)
+      const ys = grid.keys().flatMap((hex) => draft.polygonCorners(hex).map((c) => c.y))
+      return layoutAt(300 * scale - (Math.min(...ys) + Math.max(...ys)) / 2)
     })
 
     // Team view always shows the ally team; under invert the same crop simply

@@ -38,7 +38,7 @@ Every hex is a cube coordinate `(q, r, s)` with `q + r + s = 0`, which the `Hex`
 
 ## Boards
 
-`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, Syn and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
+`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, perspective, Syn and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
 
 Placement operations refresh skill results themselves. Raw tile edits and companion settling do not, so their callers refresh once at the end.
 
@@ -110,6 +110,12 @@ The engine has one orientation. Ally holds the low hex ids and faces the high id
 Two surfaces still need to know about rotation. `GridCharacters` paints sprites by rendered y, since grid storage order matches only the unrotated view, and `GridArtifacts` works out which artifact cell sits at the screen bottom. `BoardThumbnail` and `GridSnippet` build their own layouts and always draw unrotated. The flag travels in links as a display flag ([URL Serialization](./URL_SERIALIZATION.md)).
 
 Rotating content is separate. `rotatedHexId` (`src/lib/grid.ts`) negates all three coordinates, and side-load uses it to mirror a saved formation onto the other team.
+
+## Perspective
+
+The perspective view (the Flat toggle unticked) draws the board the way the game's formation screen does: flattened, and leaning away from the viewer so lower rows are larger. `PERSPECTIVE` (`src/lib/layout.ts`) holds both numbers, measured from in-game formation captures. The squash (`compression`, the board's height over its width) is a CSS `scaleY` on the board's container, which sprites undo so portraits stay round. The lean (`tilt`) cannot be a CSS transform, since it is not affine and `getScreenCTM` could not invert it for hit-testing, so it lives in the `Layout` like rotation: each position scales by `1 / (1 - tilt × rows down in hex radii)` about the board center, after any rotation, so the bottom of the screen stays nearest under invert. Every surface that draws from the layout follows it, and `getScreenCTM` only has to undo the squash. Tilting alone would lower the board in its box, its near edge past the bottom, so the grid context raises the layout's origin until the drawn board is centered, as the flat one is. Portraits, artifact icons, and the arrows and center lines between units stand a fixed height above their tiles. Tile highlights and corner lines (zone and lane edges) are drawn with the tiles, beneath everything standing on them.
+
+The flag is page state on `useGrids`, beside invert, because every board's layout reads it. `useBreakpoint` hands it to its page and opens each page flat. Image export crops the empty space above and below to the first and last rows the capture draws in. Its background is transparent, so the crop keeps the portraits and arrows above the far row.
 
 ## Hero upgrade attributes
 

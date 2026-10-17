@@ -77,6 +77,45 @@ describe('Layout', () => {
     })
   })
 
+  describe('tilted layout (the perspective view)', () => {
+    const size = { x: 10, y: 10 }
+    const origin = { x: 300, y: 300 }
+    const tilt = 0.01
+    const flat = new Layout(POINTY, size, origin)
+    const tilted = new Layout(POINTY, size, origin, false, tilt)
+    const offset = (p: { x: number; y: number }) => ({ x: p.x - origin.x, y: p.y - origin.y })
+
+    it('scales each center about the origin by 1 / (1 - tilt * rows down)', () => {
+      for (const hex of [
+        new Hex(0, 0, 0),
+        new Hex(3, 0, -3),
+        new Hex(-1, 4, -3),
+        new Hex(2, -4, 2),
+      ]) {
+        const f = offset(flat.hexToPixel(hex))
+        const t = offset(tilted.hexToPixel(hex))
+        const depth = 1 - (tilt * f.y) / size.y
+        expect(t.x).toBeCloseTo(f.x / depth)
+        expect(t.y).toBeCloseTo(f.y / depth)
+      }
+    })
+
+    it("widens a hex's lower edge over its upper edge", () => {
+      // Pointy-top: corners 0 and 2 are the lower pair, 5 and 3 the upper.
+      const c = tilted.polygonCorners(new Hex(0, 2, -2))
+      expect(c[0]!.x - c[2]!.x).toBeGreaterThan(c[5]!.x - c[3]!.x)
+    })
+
+    it('tilts after rotating, so the screen bottom stays nearest under invert', () => {
+      const rotated = new Layout(POINTY, size, origin, true, tilt)
+      for (const hex of [new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]) {
+        const mirrored = new Hex(-hex.q, -hex.r, -hex.s)
+        expect(rotated.hexToPixel(hex).x).toBeCloseTo(tilted.hexToPixel(mirrored).x)
+        expect(rotated.hexToPixel(hex).y).toBeCloseTo(tilted.hexToPixel(mirrored).y)
+      }
+    })
+  })
+
   describe('getArrowPath', () => {
     const size = { x: 30, y: 30 }
     const origin = { x: 400, y: 300 }

@@ -98,6 +98,9 @@ export const useGrids = defineStore('grids', () => {
   // Renders every board rotated 180 degrees (the Invert toggle): a pure view
   // transform applied at the layout level, content stays canonical.
   const inverted = ref(false)
+  // The perspective view (the Flat toggle unticked): squashed by the container,
+  // tilted by the layout, so it is the same kind of view transform as invert.
+  const perspective = ref(false)
   // The Syn affordance. Never serialized or persisted: the placed unit is the
   // content, and deriveSynergy re-reads the boards after every restore path so
   // arriving state with a synergy unit lands with the box checked.
@@ -166,6 +169,7 @@ export const useGrids = defineStore('grids', () => {
         hexSize,
         teamView,
         inverted,
+        perspective,
         synergy,
         sharedCrop,
       }),
@@ -948,6 +952,7 @@ export const useGrids = defineStore('grids', () => {
     hexSizeMode,
     teamView,
     inverted,
+    perspective,
     synergy,
     deriveSynergy,
     setSynergy,

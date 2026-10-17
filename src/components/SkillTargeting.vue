@@ -7,7 +7,6 @@ import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import type { Hex } from '@/lib/hex'
 import { getCharacterSkill } from '@/lib/skills/skill'
-import { clipLaneBoundary } from '@/lib/skills/utils/line'
 import { Team } from '@/lib/types/team'
 
 interface Props {
@@ -90,24 +89,16 @@ const artifactArrowsToRender = computed(() =>
 )
 
 // Lines carry their own color, so (unlike arrows) they render for any skill, not just
-// targeting ones. A same-hex corner line is an exact tile edge (a zone-outline segment)
-// kept iff its tile is shown; a two-hex corner (lane-boundary) line spans the visible
-// cells of its lane and the adjacent lane it borders, so it runs edge to edge across
-// the shown region (the whole grid outside team view); a center line drops when either
-// end is cropped.
+// targeting ones. Only center lines are drawn here, since they join units and rise
+// with the portraits (layerTransform); SkillCornerLines draws corner lines on the
+// tiles. A center line drops when either end is cropped.
 const linesToRender = computed(() =>
   ctx.skillLines
-    .flatMap((line) => {
-      if (line.fromCorner === undefined || line.toCorner === undefined) {
-        return bothVisible(line.fromHexId, line.toHexId) ? [line] : []
-      }
-      if (line.fromHexId === line.toHexId) {
-        return visibleHexIds.value.has(line.fromHexId) ? [line] : []
-      }
-      const laneS = ctx.grid.getHexById(line.fromHexId).s
-      const clip = clipLaneBoundary(ctx.visibleHexes, laneS, line.fromCorner)
-      return clip ? [{ ...line, ...clip }] : []
-    })
+    .filter(
+      (line) =>
+        (line.fromCorner === undefined || line.toCorner === undefined) &&
+        bothVisible(line.fromHexId, line.toHexId),
+    )
     .map((line) => ({
       ...line,
       fromHex: ctx.grid.getHexById(line.fromHexId),
@@ -129,8 +120,6 @@ const linesToRender = computed(() =>
         :key="`line-${idx}`"
         :start-hex="line.fromHex"
         :end-hex="line.toHex"
-        :start-corner="line.fromCorner"
-        :end-corner="line.toCorner"
         :color="line.color"
         :stroke-width="arrowStyle.strokeWidth"
       />
@@ -159,10 +148,12 @@ const linesToRender = computed(() =>
 </template>
 
 <style scoped>
+/* Visible overflow: a lifted arrow to the far row rises above the box. */
 .skill-arrow-layer {
   position: absolute;
   top: 0;
   left: 0;
+  overflow: visible;
   pointer-events: none;
   z-index: var(--z-arrows);
 }

@@ -209,8 +209,9 @@ export function createTilePaintSkill(config: TilePaintSkillConfig): Skill {
 }
 
 /**
- * Decorates a skill with connection lines (drawn by SkillTargeting) computed by
- * `calculate`. The line analog of withTilePaint; clears on deactivate.
+ * Decorates a skill with connection lines (drawn by SkillTargeting and
+ * SkillCornerLines) computed by `calculate`. The line analog of withTilePaint;
+ * clears on deactivate.
  */
 export function withSkillLine(
   base: Skill,

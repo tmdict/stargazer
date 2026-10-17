@@ -38,8 +38,6 @@ import { useUrlStateStore } from '@/stores/urlState'
 import { serializeGridState } from '@/utils/gridStateSerializer'
 import { encodeGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
-// Perspective Mode Configuration
-const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
 const DEFAULT_SVG_HEIGHT = 600
 
 const gridStore = useGridStore()
@@ -263,14 +261,12 @@ const handleCopyLink = () => {
 const handleCopyImage = async () => {
   await copyToClipboard({
     showPerspective: showPerspective.value,
-    perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
   })
 }
 
 const handleDownload = async () => {
   await downloadAsImage({
     showPerspective: showPerspective.value,
-    perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
     filePrefix: 'team',
   })
 }
@@ -304,7 +300,6 @@ const handleResetMap = () => {
             :selected-map-editor-state="selectedMapEditorState"
             :show-perspective
             :debug-panel-ref
-            :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
           <template v-if="info.heroCard">

@@ -1,15 +1,19 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, toRef } from 'vue'
 
 import type { Breakpoint } from '@/stores/grid'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
 export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
   const gridStore = useGridStore()
+  const grids = useGrids()
   const { autoFlattenOnMobile = true } = options
 
   const currentBreakpoint = ref<Breakpoint>('desktop')
-  const showPerspective = ref(false)
+  // The boards' layouts read perspective from the grids store; each page opens flat.
+  grids.perspective = false
+  const showPerspective = toRef(grids, 'perspective')
 
   // matchMedia (not window.innerWidth) drives the breakpoint: it reflects the
   // live viewport even when innerWidth lags (e.g. DevTools emulation), and its
