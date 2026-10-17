@@ -29,8 +29,8 @@ export interface Point {
   y: number
 }
 
-// The game's formation camera, which the perspective view reproduces: the board's
-// height over its width (applied as a CSS squash) and its tilt (the Layout's).
+// The game's formation camera, which the perspective view reproduces: how much it
+// shortens the board vertically (a CSS squash) and its tilt (the Layout's).
 export const PERSPECTIVE = { compression: 0.606, tilt: 0.01 } as const
 
 export class Layout {

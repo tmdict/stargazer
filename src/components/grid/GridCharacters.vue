@@ -492,7 +492,7 @@ const liftedMode = computed(() =>
       :style="liftButtonStyle"
     >
       <button
-        v-if="liftedMode"
+        v-if="liftedMode && !readonly"
         type="button"
         class="lift-mode"
         :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"

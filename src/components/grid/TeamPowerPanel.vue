@@ -9,7 +9,7 @@ import type { GridContext } from '@/composables/useGridContext'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
-import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax, UPGRADE_ATTRS } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
@@ -71,7 +71,7 @@ const allyRivalryStat = computed(() =>
   ),
 )
 
-const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_REFINEMENT] : []))
+const visibleAttrIds = computed(() => (props.showUpgrades ? UPGRADE_ATTRS : []))
 
 // A hidden layer is never edited: taps act on the chosen layer restricted to
 // the visible ones (falling back to the visible layers), and with no layer
