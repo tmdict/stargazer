@@ -15,7 +15,7 @@ import {
   type ImportShot,
   type ShotError,
 } from '@/composables/useTeamImport'
-import { reviewStates, SIDES } from '@/lib/teams/teamImport'
+import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -43,12 +43,16 @@ const duplicated = (shot: ImportShot): boolean => {
   return mapIndex !== null && shots.some((s) => s !== shot && mapIndexOf(s) === mapIndex)
 }
 
-// Cells still to look at, as the review grid shows them: an edit settles its cell.
+// Cells and artifacts still to look at, as the review shows them: an edit
+// settles its cell or artifact.
 const reviewCount = (shot: ImportShot): number => {
   const reading = shot.reading
   if (!reading) return 0
   return SIDES.reduce(
-    (n, team) => n + reviewStates(reading, team, shot.overrides).filter((s) => s !== 'sure').length,
+    (n, team) =>
+      n +
+      reviewStates(reading, team, shot.overrides).filter((s) => s !== 'sure').length +
+      (artifactState(reading, team, shot.artifactOverrides) === 'review' ? 1 : 0),
     0,
   )
 }
