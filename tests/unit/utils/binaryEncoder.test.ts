@@ -347,9 +347,14 @@ describe('binaryEncoder', () => {
           [1, 11, 1, 17], // clamps to registry max
           [1, 12, 2, 3],
           [1, 12, 2, 0], // duplicate ending at default: row drops
+          [1, 57, 3, 9], // skill mode clamps to Dunlingr's last mode
+          [1, 12, 3, 1], // skill mode on a hero without modes drops
         ],
       }
-      expect(validateGridState(state).u).toEqual([[1, 11, 1, 4]])
+      expect(validateGridState(state).u).toEqual([
+        [1, 11, 1, 4],
+        [1, 57, 3, 1],
+      ])
       consoleSpy.mockRestore()
     })
 

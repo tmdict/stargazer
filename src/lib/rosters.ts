@@ -6,10 +6,11 @@
  * `heroes` maps a real hero id to its level record, the same sparse AttrRecord
  * boards keep (lib/characters/attributes), so a new upgrade attribute needs no
  * roster change. A key present means the hero is owned; `{}` is owned at
- * default levels. Records are canonical (ids ascending, unknown attributes
- * dropped, levels clamped, defaults omitted), so equal content is byte-equal. */
+ * default levels. Records are canonical (ids ascending, attributes other than
+ * UPGRADE_ATTRS dropped, levels clamped, defaults omitted), so equal content
+ * is byte-equal. A skill mode is board state, so a roster never holds one. */
 
-import { attrDefault, clampAttr, isKnownAttrId, type AttrRecord } from './characters/attributes'
+import { attrDefault, clampAttr, UPGRADE_ATTRS, type AttrRecord } from './characters/attributes'
 import { isRealHeroId } from './characters/character'
 import { mergeImport, readExportFile, type MergeResult } from './exportFile'
 import { sanitizeName } from './names'
@@ -31,13 +32,13 @@ export interface RostersExportFile {
   rosters: Roster[]
 }
 
-export function canonicalLevels(raw: unknown): AttrRecord {
+export function canonicalLevels(heroId: number, raw: unknown): AttrRecord {
   const levels: AttrRecord = {}
   if (typeof raw !== 'object' || raw === null) return levels
   for (const [id, value] of Object.entries(raw)) {
     const attrId = Number(id)
-    if (!isKnownAttrId(attrId) || typeof value !== 'number') continue
-    const clamped = clampAttr(attrId, value)
+    if (!UPGRADE_ATTRS.includes(attrId) || typeof value !== 'number') continue
+    const clamped = clampAttr(attrId, value, heroId)
     if (clamped !== attrDefault(attrId)) levels[attrId] = clamped
   }
   return levels
@@ -51,7 +52,7 @@ function canonicalHeroes(raw: unknown): Record<string, AttrRecord> | null {
   for (const [key, value] of Object.entries(raw)) {
     const heroId = Number(key)
     if (!Number.isInteger(heroId) || heroId < 1 || !isRealHeroId(heroId)) continue
-    heroes[heroId] = canonicalLevels(value)
+    heroes[heroId] = canonicalLevels(heroId, value)
   }
   return heroes
 }

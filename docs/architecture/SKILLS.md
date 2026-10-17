@@ -59,13 +59,41 @@ A tile has two paint channels, `tileColorModifiers` for the border and `tileFill
 
 Lines need no diff: `setSkillLines` replaces the instance's set outright and the renderer draws the flattened list. A `SkillLine` runs border to border between hex centers by default. With `fromCorner` and `toCorner` it runs between hex corners instead. On a single hex that is an exact tile edge, as `outlineEdges` and `zoneOutline` produce. Across two hexes it is a lane boundary that `SkillCornerLines` clips to the visible region (`clipLaneBoundary`).
 
-Arrows take their color from the definition's `targetingColorModifier`, while lines and paints carry their own color. Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. `SkillTargeting` draws arrows and center lines, which join units and stand above the portraits. `GridTiles` draws paints and, through `SkillCornerLines`, corner lines, which lie on the tiles beneath everything standing on them. All of them show only while the Skills toggle is on.
+Arrows take their color from the definition's `targetingColorModifier`, or from the hero's skill mode (below), while lines and paints carry their own color. Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. `SkillTargeting` draws arrows and center lines, which join units and stand above the portraits. `GridTiles` draws paints and, through `SkillCornerLines`, corner lines, which lie on the tiles beneath everything standing on them. All of them show only while the Skills toggle is on.
 
 ## Lookups
 
 A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.
 
 `seasonalTargeting` reports whether a phantimal's data file sets `"targeting": true`. A Spirit Mark paints nothing while it is off, even with the Skills toggle on, so a mark can ship before its in-game unlock. Artifacts have no such switch ([Seasonal Content](./SEASONAL.md)).
+
+## Skill modes
+
+Some heroes enter battle in one of several modes the player picks beforehand, such as Dunlingr's Bell of Order (Spellbind or Curelock) and Natsu's Lightning Fire Dragon Mode or Fire Dragon King Mode. `SKILL_MODES` (`src/lib/skills/skillModes.ts`) lists them per base hero id: an icon key, and per mode an app locale key for its game name and a `SKILL_COLORS` color.
+
+A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#hero-upgrade-attributes)), whose value is the mode's position in that list. Position 0 is the default and is never written, so content without modes is unchanged. Each list is append-only: a mode is never reordered or removed, and a new one goes at the end. The 4-bit value field allows 16 modes per hero. A value past a hero's last mode reads as the last mode, and a row for any id without an entry drops, including companion and synergy ids, since the lookup takes the exact id. Rosters never store a mode. A saved team with Valen at P4 and Dunlingr set to Curelock:
+
+```json
+{
+  "boards": [
+    {
+      "c": [
+        [13, 43, 1],
+        [16, 57, 1]
+      ],
+      "u": [
+        [1, 43, 1, 4],
+        [1, 57, 3, 1]
+      ],
+      "m": "arena1"
+    }
+  ],
+  "mode": "1v1",
+  "season": 8
+}
+```
+
+A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right. Both show only while the Skills toggle is on, and the button is in downloaded images. A mouse click on the button cycles the mode, and hovering names it. On a touch screen the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 

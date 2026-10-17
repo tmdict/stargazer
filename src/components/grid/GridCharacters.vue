@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
 import HoldRing from '../ui/HoldRing.vue'
+import IconBell from '../ui/IconBell.vue'
+import IconFlame from '../ui/IconFlame.vue'
 import IconInfo from '../ui/IconInfo.vue'
+import TooltipPopup from '../ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import {
   getCharacter,
   getCharacterTeam,
@@ -20,6 +25,7 @@ import {
 } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
+import { SKILL_MODES, type SkillMode, type SkillModeIcon } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -32,6 +38,7 @@ interface Props {
   characters: readonly CharacterType[]
   // Gates the hover card only; placement interactions are unaffected.
   showHover: boolean
+  showSkills: boolean
   showPerspective: boolean
   scaleY: number
   isMapEditorMode: boolean
@@ -107,20 +114,27 @@ const hoverHint = computed(() =>
     : undefined,
 )
 
-// Anchored to the lifted unit's visual top edge. Perspective lifts the sprite
-// and squashes it about its center (getCharacterStyle), so the edge moves too,
-// and the button undoes the board's vertical squash the way sprites do.
+// Places a control at a point on a sprite, (dx, dy) screen pixels from its
+// center. Perspective lifts the sprite and squashes it about its center
+// (getCharacterStyle), so the point moves too, and the control undoes the
+// board's vertical squash the way sprites do.
+const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
+  const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
+  const lift = props.showPerspective ? BASE_PERSPECTIVE_LIFT * ctx.hexScale : 0
+  return {
+    left: `${x + dx}px`,
+    top: `${y - lift + dy * props.scaleY}px`,
+    '--counter-scale-y': String(props.scaleY),
+  }
+}
+
+// Anchored to the lifted unit's visual top edge.
 const liftButtonStyle = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
   const unitId = getCharacter(ctx.grid, hexId)
   if (unitId === undefined || !inspectTargetOf(unitId)) return null
-  const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
-  const half = characterDimensions.value.size / 2
-  const top = props.showPerspective
-    ? y - BASE_PERSPECTIVE_LIFT * ctx.hexScale - half * props.scaleY
-    : y - half
-  return { left: `${x}px`, top: `${top}px`, '--counter-scale-y': String(props.scaleY) }
+  return spritePoint(hexId, 0, -characterDimensions.value.size / 2)
 })
 
 const getCharacterName = (characterId: number, hexId: number): string => {
@@ -167,6 +181,7 @@ const BASE_CHARACTER_SIZE = 60
 const BASE_CHARACTER_OFFSET = 30
 // How far perspective raises a sprite above its hex center.
 const BASE_PERSPECTIVE_LIFT = 70
+const BASE_MODE_SIZE = 22
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
@@ -174,6 +189,18 @@ const characterDimensions = computed(() => {
     size: BASE_CHARACTER_SIZE * scale,
     offset: BASE_CHARACTER_OFFSET * scale,
     borderWidth: Math.max(2, 3 * scale),
+  }
+})
+
+// The mode button reaches past its drawn badge, so a near miss lands on the
+// button rather than on the portrait, where a click removes the hero.
+const modeDimensions = computed(() => {
+  const size = Math.max(16, Math.round(BASE_MODE_SIZE * ctx.hexScale))
+  return {
+    size,
+    hit: Math.max(28, size + 12),
+    glyph: Math.round(size * 0.62),
+    border: size >= 20 ? 2 : 1.5,
   }
 })
 
@@ -318,6 +345,70 @@ const visiblePlacements = computed(() => {
       ctx.layout.hexToPixel(ctx.grid.getHexById(b)).y,
   )
 })
+
+const MODE_ICONS: Record<SkillModeIcon, Component> = { bell: IconBell, flame: IconFlame }
+
+interface ModeButton {
+  hexId: number
+  team: Team
+  characterId: number
+  icon: Component
+  mode: SkillMode
+  next: number
+}
+
+// Mode buttons show while the Skills toggle is on, like the arrows they colour.
+// The lookup takes the exact id: a synergy copy cannot hold a mode, because a
+// link's upgrade row cannot name its id.
+const modeButtons = computed(() =>
+  props.showSkills && !props.isMapEditorMode
+    ? visiblePlacements.value.flatMap(([hexId, characterId]): ModeButton[] => {
+        const entry = SKILL_MODES[characterId]
+        const team = getCharacterTeam(ctx.grid, hexId)
+        if (!entry || !team) return []
+        const position = ctx.getAttr(team, characterId, ATTR_SKILL_MODE)
+        const mode = entry.modes[position]
+        if (!mode) return []
+        const next = (position + 1) % entry.modes.length
+        return [{ hexId, team, characterId, icon: MODE_ICONS[entry.icon], mode, next }]
+      })
+    : [],
+)
+
+// On the portrait's rim at its upper right.
+const modeStyle = (hexId: number): Record<string, string> => {
+  const rim = (characterDimensions.value.size / 2) * Math.SQRT1_2
+  const { size, hit, border } = modeDimensions.value
+  return {
+    ...spritePoint(hexId, rim, -rim),
+    '--mode-size': `${size}px`,
+    '--mode-hit': `${hit}px`,
+    '--mode-border': `${border}px`,
+  }
+}
+
+const cycleMode = ({ team, characterId, next }: ModeButton): void =>
+  ctx.setAttr(team, characterId, ATTR_SKILL_MODE, next)
+
+const {
+  anchor: modeAnchor,
+  payload: modeHexId,
+  onMouseEnter: onModeEnter,
+  onMouseLeave: onModeLeave,
+  onTouchStart: onModeTouch,
+} = useHoverTooltip<number>()
+// Read live, so a click renames the open label.
+const hoveredMode = computed(
+  () => modeButtons.value.find((button) => button.hexId === modeHexId.value)?.mode,
+)
+
+// On touch the mode button only shows the mode and a tap on it reaches the
+// portrait, so the lifted hero's pill carries the control.
+const liftedMode = computed(() =>
+  liftButtonStyle.value
+    ? modeButtons.value.find((button) => button.hexId === liftedHexId.value)
+    : undefined,
+)
 </script>
 
 <template>
@@ -378,15 +469,50 @@ const visiblePlacements = computed(() => {
     </div>
 
     <button
-      v-if="liftButtonStyle && liftedHexId !== null"
+      v-for="button in modeButtons"
+      :key="`mode-${button.hexId}`"
       type="button"
-      class="lift-inspect capture-exclude"
-      :style="liftButtonStyle"
-      @click="inspectAt(liftedHexId)"
+      class="skill-mode"
+      :style="modeStyle(button.hexId)"
+      :disabled="readonly"
+      :aria-label="i18n.t(`app.${button.mode.name}`)"
+      @click="cycleMode(button)"
+      @mouseenter="onModeEnter($event, button.hexId)"
+      @mouseleave="onModeLeave"
+      @touchstart.passive="onModeTouch"
     >
-      <IconInfo :size="16" />
-      {{ i18n.t('app.skills') }}
+      <span class="skill-mode-badge" :style="{ backgroundColor: button.mode.color }">
+        <component :is="button.icon" :size="modeDimensions.glyph" />
+      </span>
     </button>
+
+    <div
+      v-if="liftButtonStyle && liftedHexId !== null"
+      class="lift-actions capture-exclude"
+      :style="liftButtonStyle"
+    >
+      <button
+        v-if="liftedMode"
+        type="button"
+        class="lift-mode"
+        :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"
+        @click="cycleMode(liftedMode)"
+      >
+        <span class="skill-mode-badge" :style="{ backgroundColor: liftedMode.mode.color }">
+          <component :is="liftedMode.icon" :size="11" />
+        </span>
+      </button>
+      <button type="button" class="lift-inspect" @click="inspectAt(liftedHexId)">
+        <IconInfo :size="16" />
+        {{ i18n.t('app.skills') }}
+      </button>
+    </div>
+
+    <Teleport to="body">
+      <TooltipPopup v-if="hoveredMode && modeAnchor" :target-element="modeAnchor" variant="simple">
+        <template #content>{{ i18n.t(`app.${hoveredMode.name}`) }}</template>
+      </TooltipPopup>
+    </Teleport>
 
     <CharacterTooltip
       v-if="hoveredEl && hoveredCharacter"
@@ -448,29 +574,112 @@ const visiblePlacements = computed(() => {
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));
 }
 
-.lift-inspect {
+.skill-mode {
+  position: absolute;
+  width: var(--mode-hit);
+  height: var(--mode-hit);
+  transform: translate(-50%, -50%) scaleY(var(--counter-scale-y));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: var(--z-board-controls);
+}
+
+.skill-mode:disabled {
+  pointer-events: none;
+}
+
+.skill-mode:focus-visible {
+  outline: none;
+}
+
+.skill-mode-badge {
+  width: var(--mode-size);
+  height: var(--mode-size);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--mode-border) solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.12s ease-out;
+}
+
+.skill-mode:focus-visible .skill-mode-badge {
+  transform: scale(1.25);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) {
+  .skill-mode:hover .skill-mode-badge {
+    transform: scale(1.25);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (pointer: coarse) {
+  .skill-mode {
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-mode-badge {
+    transition: none;
+  }
+}
+
+.lift-actions {
   position: absolute;
   transform: translate(-50%, calc(-100% - 8px * var(--counter-scale-y)))
     scaleY(var(--counter-scale-y));
   transform-origin: bottom;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px 4px 5px;
-  border: none;
   border-radius: 999px;
   background: var(--color-primary);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  z-index: var(--z-board-controls);
+}
+
+.lift-inspect,
+.lift-mode {
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+}
+
+.lift-inspect {
+  gap: 4px;
+  padding: 4px 10px 4px 5px;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-  pointer-events: auto;
-  cursor: pointer;
-  z-index: var(--z-board-controls);
 }
 
-.lift-inspect::after {
+.lift-mode {
+  --mode-size: 18px;
+  --mode-border: 1.5px;
+  padding: 3px 0 3px 3px;
+}
+
+.lift-actions::after {
   content: '';
   position: absolute;
   left: 50%;

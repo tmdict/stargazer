@@ -233,8 +233,8 @@ export function validateGridState(state: GridState): GridState {
   }
 
   // Upgrade rows dedupe last-wins with defaults dropped (charId 0 is the
-  // team-scope sentinel; values clamp to the registry range rather than
-  // dropping) — mirrors canonicalAttrRows, so a crafted link carrying
+  // team-scope sentinel; values clamp to the attr's range for that hero rather
+  // than dropping) — mirrors canonicalAttrRows, so a crafted link carrying
   // duplicate or zero rows can't burn the 63-row cap or persist junk through
   // the arena autosave's decode/re-encode.
   if (state.u && Array.isArray(state.u)) {
@@ -250,7 +250,7 @@ export function validateGridState(state: GridState): GridState {
         console.warn('Invalid upgrade entry:', entry)
         continue
       }
-      const value = clampAttr(attrId, entry[3] ?? 0)
+      const value = clampAttr(attrId, entry[3] ?? 0, charId)
       const key = `${team}:${charId}:${attrId}`
       if (value !== attrDefault(attrId)) byKey.set(key, [team, charId, attrId, value])
       else byKey.delete(key)
