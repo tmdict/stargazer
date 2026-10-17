@@ -35,7 +35,8 @@ function overrideForCapture(
 }
 
 interface ExportOptions {
-  showPerspective: boolean
+  // Crop the empty rows above and below what the image draws.
+  trim: boolean
   // Element to capture; defaults to the single grid's perspective container.
   // 5 v 5 passes the boards row to capture all five at once.
   target?: string
@@ -48,15 +49,14 @@ interface ExportOptions {
 const excludeMarkedChrome = (node: HTMLElement): boolean =>
   !node.classList?.contains('capture-exclude')
 
-// Room kept around the drawn content when a perspective capture is cropped, in
-// image pixels.
+// Room kept around the drawn content when a capture is trimmed, in image pixels.
 const CROP_MARGIN = 16
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
 
   /**
-   * Captures the grid as a PNG data URL, with optional perspective cropping
+   * Captures the grid as a PNG data URL, optionally trimmed to its drawn rows
    */
   const captureGrid = async (options: ExportOptions): Promise<string> => {
     const { toPng } = await import('html-to-image')
@@ -93,17 +93,18 @@ export function useGridExport() {
 
     try {
       const dataUrl = await capture(containerElement)
-      return options.showPerspective ? cropToDrawnRows(dataUrl) : dataUrl
+      return options.trim ? cropToDrawnRows(dataUrl) : dataUrl
     } finally {
       restoreBoards()
     }
   }
 
   /**
-   * Crops the perspective view's empty space above and below the board. The
-   * capture's background is transparent, so the first and last rows holding any
-   * pixel bound everything drawn: tiles, the portraits standing above the far row,
-   * and arrows reaching over them.
+   * Crops the empty space above and below what the capture draws: the room the
+   * perspective squash leaves, and the space of excluded chrome. The capture's
+   * background is transparent, so the first and last rows holding any pixel bound
+   * everything drawn: tiles, the portraits standing above the far row, and arrows
+   * reaching over them.
    */
   const cropToDrawnRows = async (dataUrl: string): Promise<string> => {
     const img = await loadImage(dataUrl)
