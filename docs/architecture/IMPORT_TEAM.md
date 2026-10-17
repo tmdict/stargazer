@@ -34,13 +34,13 @@ The plan is pure data. Readings plus overrides become a `TeamImportPlan` with no
 
 Each field of a reading comes from its own visual signal. The readers therefore stay separate, and a correction to one never moves another.
 
-| Reading        | Evidence                                           | Consequence                                                                    |
-| -------------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Hero           | face crop against portrait and learned descriptors | new face examples improve identity without touching any other reader           |
-| Paragon        | card frame against the six frame templates         | a wrong frame also displaces the face and star crops, so doubt covers the cell |
-| Refinement     | count and colour of the stars above the face       | independent of the hero descriptor                                             |
-| Artifact       | header icon against the artifact images            | margins are thin, so artifacts are always offered for review                   |
-| Map and result | strip ring and badges, Ally tab colour             | which board a shot fills is settled in review                                  |
+| Reading        | Evidence                                                                                              | Consequence                                                                                                                          |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Hero           | face crop against portrait and learned descriptors                                                    | new face examples improve identity without touching any other reader                                                                 |
+| Paragon        | card frame against the six frame templates, searched up to 12 px from where the anchor puts each card | a wrong frame also displaces the face and star crops, so doubt covers the cell                                                       |
+| Refinement     | count and colour of the stars above the face                                                          | independent of the hero descriptor; a refined reading on weak colour evidence, or an R0 row with a faint pink tint, waits for review |
+| Artifact       | the header icon's art disc against each artifact image's centre, by shape and colour                  | sure only with a clear lead, a good shape match and art in the crop; otherwise it waits for review                                   |
+| Map and result | strip ring and badges, Ally tab colour                                                                | which board a shot fills is settled in review                                                                                        |
 
 ## Pipeline
 
@@ -61,7 +61,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 ## Review
 
-`cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. Artifacts are reviewed beside the icon crop from the screenshot and do not count toward a card's review count.
+`cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), needs its refinement confirmed (hero and paragon settled but the star colour doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. `artifactState` treats each side's artifact the same way: settled once read surely or edited, otherwise counted in the card's review number, with the icon crop from the screenshot shown beside it.
 
 `useTeamImport` keeps its state at module level, so the modal can close and reopen without losing shots. Save as New clears them once the plan is handed over, and `TeamsView` calls `disposeTeamImport` when the page is left. The worker lives for one page visit. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
 
@@ -160,7 +160,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
               "sure": true,
               "box": { "x": 212, "y": 318, "w": 96, "h": 118 },
               "paragon": { "level": 4, "score": 0.88, "runnerUp": 0.41, "sure": true },
-              "refinement": { "level": 2, "stars": 2, "family": "gold" }
+              "refinement": { "level": 2, "stars": 6, "family": "gold", "sure": true }
             }
           ],
           "2": [
@@ -173,12 +173,12 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
               "sure": false,
               "box": { "x": 842, "y": 318, "w": 96, "h": 118 },
               "paragon": { "level": 0, "score": 0.52, "runnerUp": 0.49, "sure": false },
-              "refinement": { "level": 0, "stars": 0, "family": "white" }
+              "refinement": { "level": 0, "stars": 0, "family": "white", "sure": true }
             }
           ]
         },
         "artifacts": {
-          "1": { "candidates": [{ "artifactId": 3, "score": 0.93 }], "margin": 0.4 },
+          "1": { "candidates": [{ "artifactId": 3, "score": 1.52 }], "margin": 0.4, "sure": true },
           "2": null
         },
         "warnings": [{ "kind": "unrecognised", "side": 2, "row": 0 }]
@@ -193,22 +193,22 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 }
 ```
 
-| Field                              | Rule                                                                                                                                                                                                                                                   |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `app`, `kind`                      | Always `"stargazer"` and `"import-corrections"`: which Stargazer file this is.                                                                                                                                                                         |
-| `createdAt`                        | When the file was made, ISO 8601.                                                                                                                                                                                                                      |
-| `learnedIcons`                     | The learned faces, in the format above.                                                                                                                                                                                                                |
-| `source`                           | The screenshot's file name, size in bytes, and SHA-256 in hex. It identifies the file, never a face.                                                                                                                                                   |
-| `context`                          | The app's season, the board count of the Teams mode at export, and the width screenshots are scaled to before reading.                                                                                                                                 |
-| `predicted.mapIndex`, `mapCount`   | The map shown (from 0) and how many maps the match had, both `null` when the map strip was not found.                                                                                                                                                  |
-| `predicted.winner`                 | Who won this map (1 ally, 2 enemy), read from the Ally tab's colour, or `null`.                                                                                                                                                                        |
-| `predicted.mapResults`             | Who won each map on the strip, `null` where a result was cropped off.                                                                                                                                                                                  |
-| `predicted.sides`                  | Keyed `"1"` (ally) and `"2"` (enemy). A hero reading's `candidates` come best first; `margin` is the best score minus the runner-up's; `box` is the card in the scaled screenshot's pixels; `refinement.family` is `white`, `purple`, `gold` or `red`. |
-| `predicted.artifacts`              | Keyed like `sides`, each an artifact reading or `null`.                                                                                                                                                                                                |
-| `predicted.warnings`               | `{ "kind": "no-panel", "side" }`, `{ "kind": "no-strip" }` or `{ "kind": "unrecognised", "side", "row" }`.                                                                                                                                             |
-| `labels.cells`                     | The user's edits per hero cell, keyed `"<side>:<row>"`, each with any of `characterId`, `paragon` and `refinement`. A `characterId` of `null` means the cell was cleared.                                                                              |
-| `labels.artifacts`                 | Keyed by side: a corrected artifact id, or `null` for removed.                                                                                                                                                                                         |
-| `labels.mapIndex`, `labels.winner` | A corrected map or winner, present only when the user changed it.                                                                                                                                                                                      |
+| Field                              | Rule                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app`, `kind`                      | Always `"stargazer"` and `"import-corrections"`: which Stargazer file this is.                                                                                                                                                                                                                                |
+| `createdAt`                        | When the file was made, ISO 8601.                                                                                                                                                                                                                                                                             |
+| `learnedIcons`                     | The learned faces, in the format above.                                                                                                                                                                                                                                                                       |
+| `source`                           | The screenshot's file name, size in bytes, and SHA-256 in hex. It identifies the file, never a face.                                                                                                                                                                                                          |
+| `context`                          | The app's season, the board count of the Teams mode at export, and the width screenshots are scaled to before reading.                                                                                                                                                                                        |
+| `predicted.mapIndex`, `mapCount`   | The map shown (from 0) and how many maps the match had, both `null` when the map strip was not found.                                                                                                                                                                                                         |
+| `predicted.winner`                 | Who won this map (1 ally, 2 enemy), read from the Ally tab's colour, or `null`.                                                                                                                                                                                                                               |
+| `predicted.mapResults`             | Who won each map on the strip, `null` where a result was cropped off.                                                                                                                                                                                                                                         |
+| `predicted.sides`                  | Keyed `"1"` (ally) and `"2"` (enemy). A hero reading's `candidates` come best first; `margin` is the best score minus the runner-up's; `box` is the card in the scaled screenshot's pixels; `refinement.family` is `white`, `purple`, `gold` or `red`, and `refinement.sure` whether the review needs to ask. |
+| `predicted.artifacts`              | Keyed like `sides`, each an artifact reading or `null`: up to three `candidates` best first, `margin` between the first two, and whether the reading is `sure`.                                                                                                                                               |
+| `predicted.warnings`               | `{ "kind": "no-panel", "side" }`, `{ "kind": "no-strip" }` or `{ "kind": "unrecognised", "side", "row" }`.                                                                                                                                                                                                    |
+| `labels.cells`                     | The user's edits per hero cell, keyed `"<side>:<row>"`, each with any of `characterId`, `paragon` and `refinement`. A `characterId` of `null` means the cell was cleared.                                                                                                                                     |
+| `labels.artifacts`                 | Keyed by side: a corrected artifact id, or `null` for removed.                                                                                                                                                                                                                                                |
+| `labels.mapIndex`, `labels.winner` | A corrected map or winner, present only when the user changed it.                                                                                                                                                                                                                                             |
 
 A missing label means unreviewed, and `null` means an explicit removal. Learned descriptors carry no source image, so checking or regenerating one needs the original screenshots.
 
