@@ -16,6 +16,8 @@ interface Props {
   characterRadius?: number
   invertCurve?: boolean
   curveScale?: number
+  // In perspective, arc up through the air; artifact arrows keep the sideways bow.
+  arc?: boolean
   dashed?: boolean
   id: string
 }
@@ -24,6 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
   characterRadius: PORTRAIT_RADIUS,
   invertCurve: false,
   curveScale: 1,
+  arc: true,
   dashed: false,
 })
 
@@ -46,6 +49,7 @@ const pathData = computed(() =>
     props.characterRadius * ctx.hexScale,
     props.invertCurve,
     props.curveScale,
+    props.arc,
   ),
 )
 </script>
