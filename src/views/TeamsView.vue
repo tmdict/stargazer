@@ -257,10 +257,8 @@ onScopeDispose(() => {
 })
 
 // Capture all boards as one image (the full-width track, so boards scrolled
-// out of view are still included). The track also holds each board's hero
-// cards and buttons, which the image leaves out, so it is trimmed in either view.
+// out of view are still included).
 const boardCapture = {
-  trim: true,
   target: '.boards-track',
   filePrefix: 'teams',
 }

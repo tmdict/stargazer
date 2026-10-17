@@ -260,16 +260,11 @@ const handleCopyLink = () => {
 }
 
 const handleCopyImage = async () => {
-  await copyToClipboard({
-    trim: showPerspective.value,
-  })
+  await copyToClipboard()
 }
 
 const handleDownload = async () => {
-  await downloadAsImage({
-    trim: showPerspective.value,
-    filePrefix: 'team',
-  })
+  await downloadAsImage({ filePrefix: 'team' })
 }
 
 const handleMapEditorStateSelected = (state: State) => {
