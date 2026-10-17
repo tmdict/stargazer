@@ -1,3 +1,4 @@
+import { useGridStore } from '@/stores/grid'
 import { loadImage } from '@/utils/image'
 import { useImageExportActions } from './useImageExportActions'
 
@@ -35,8 +36,6 @@ function overrideForCapture(
 }
 
 interface ExportOptions {
-  // Crop the empty rows above and below what the image draws.
-  trim: boolean
   // Element to capture; defaults to the single grid's perspective container.
   // 5 v 5 passes the boards row to capture all five at once.
   target?: string
@@ -49,16 +48,25 @@ interface ExportOptions {
 const excludeMarkedChrome = (node: HTMLElement): boolean =>
   !node.classList?.contains('capture-exclude')
 
-// Room kept around the drawn content when a capture is trimmed, in image pixels.
-const CROP_MARGIN = 16
+// Room kept around the drawn content when a capture is trimmed, in CSS pixels on
+// a full-size board; it scales with the board, so every screen saves the same.
+const CROP_MARGIN = 8
+
+// Image pixels per CSS pixel on a full-size board: hero portraits are 180px-wide
+// sources shown 54px wide there, so this keeps their full detail. A smaller
+// board (a phone) scales up to match, so every screen saves the same image.
+const FULL_DETAIL_RATIO = 180 / 54
+// The largest canvas iOS Safari draws is 4096 x 4096; a capture stays under it.
+const MAX_EXPORT_PIXELS = 16_000_000
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
+  const gridStore = useGridStore()
 
   /**
-   * Captures the grid as a PNG data URL, optionally trimmed to its drawn rows
+   * Captures the grid as a PNG data URL, trimmed to what it draws
    */
-  const captureGrid = async (options: ExportOptions): Promise<string> => {
+  const captureGrid = async (options: ExportOptions = {}): Promise<string> => {
     const { toPng } = await import('html-to-image')
 
     // Get the capture target (default: the single grid's perspective container).
@@ -76,9 +84,14 @@ export function useGridExport() {
       background: 'transparent',
     })
 
+    const box = containerElement.getBoundingClientRect()
+    const pixelRatio = Math.min(
+      FULL_DETAIL_RATIO / gridStore.getHexScale(),
+      Math.sqrt(MAX_EXPORT_PIXELS / (box.width * box.height)),
+    )
     const toPngOptions = {
       quality: 1.0,
-      pixelRatio: 2,
+      pixelRatio,
       backgroundColor: 'transparent',
       filter: excludeMarkedChrome,
     }
@@ -93,20 +106,20 @@ export function useGridExport() {
 
     try {
       const dataUrl = await capture(containerElement)
-      return options.trim ? cropToDrawnRows(dataUrl) : dataUrl
+      return await cropToDrawn(dataUrl, CROP_MARGIN * gridStore.getHexScale() * pixelRatio)
     } finally {
       restoreBoards()
     }
   }
 
   /**
-   * Crops the empty space above and below what the capture draws: the room the
-   * perspective squash leaves, and the space of excluded chrome. The capture's
-   * background is transparent, so the first and last rows holding any pixel bound
-   * everything drawn: tiles, the portraits standing above the far row, and arrows
-   * reaching over them.
+   * Crops the empty space around what the capture draws: the room the perspective
+   * squash leaves, the space of excluded chrome, and the width of the board's area
+   * beyond the board. The capture's background is transparent, so the outermost
+   * rows and columns holding any pixel bound everything drawn: tiles, the portraits
+   * standing above the far row, and arrows reaching over them.
    */
-  const cropToDrawnRows = async (dataUrl: string): Promise<string> => {
+  const cropToDrawn = async (dataUrl: string, margin: number): Promise<string> => {
     const img = await loadImage(dataUrl)
 
     const canvas = document.createElement('canvas')
@@ -131,15 +144,29 @@ export function useGridExport() {
     let bottom = img.height
     while (!drawn(bottom - 1)) bottom--
 
-    const cropTop = Math.max(0, top - CROP_MARGIN)
-    const cropBottom = Math.min(img.height, bottom + CROP_MARGIN)
+    const drawnColumn = (x: number): boolean => {
+      for (let y = top; y < bottom; y++) {
+        if (data[(y * img.width + x) * 4 + 3]) return true
+      }
+      return false
+    }
+    let left = 0
+    while (!drawnColumn(left)) left++
+    let right = img.width
+    while (!drawnColumn(right - 1)) right--
+
+    const cropTop = Math.max(0, top - margin)
+    const cropBottom = Math.min(img.height, bottom + margin)
+    const cropLeft = Math.max(0, left - margin)
+    const cropRight = Math.min(img.width, right + margin)
+    canvas.width = cropRight - cropLeft
     canvas.height = cropBottom - cropTop
-    ctx.drawImage(img, 0, -cropTop)
+    ctx.drawImage(img, -cropLeft, -cropTop)
 
     return canvas.toDataURL('image/png', 1.0)
   }
 
-  const copyToClipboard = (options: ExportOptions): Promise<void> =>
+  const copyToClipboard = (options: ExportOptions = {}): Promise<void> =>
     copyImage(captureGrid(options).then(dataUrlToBlob))
 
   // Downloads go through a Blob: iPadOS Safari silently drops <a download>
