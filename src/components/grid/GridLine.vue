@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
 import type { Hex } from '@/lib/hex'
+import { PORTRAIT_RADIUS } from '@/lib/layout'
 
 interface Props {
   startHex: Hex
@@ -19,7 +20,13 @@ interface Props {
   endCorner?: number
 }
 
-const { startHex, endHex, characterRadius = 30, startCorner, endCorner } = defineProps<Props>()
+const {
+  startHex,
+  endHex,
+  characterRadius = PORTRAIT_RADIUS,
+  startCorner,
+  endCorner,
+} = defineProps<Props>()
 
 const ctx = useGridContext()
 

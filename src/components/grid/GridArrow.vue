@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
 import type { Hex } from '@/lib/hex'
+import { PORTRAIT_RADIUS } from '@/lib/layout'
 
 // Endpoints are hexes, not tile ids, so an arrow can start from an off-grid
 // artifact host cell as well as from a tile.
@@ -20,7 +21,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  characterRadius: 30,
+  characterRadius: PORTRAIT_RADIUS,
   invertCurve: false,
   curveScale: 1,
   dashed: false,
