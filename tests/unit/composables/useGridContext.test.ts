@@ -159,3 +159,27 @@ describe('createGridContext attr re-keying and clearing', () => {
     expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(4)
   })
 })
+
+/* The tilt draws near rows larger than far ones, which would lower the board in its
+ * 600-unit box (the tiles' and layers' svg height) until the near edge is clipped;
+ * the context centers the drawn board instead. */
+describe('createGridContext perspective layout', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it.each([false, true])('centers the tilted board in its box (inverted: %s)', (inverted) => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    grids.inverted = inverted
+    grids.perspective = true
+    const ctx = grids.active!
+    expect(ctx.layout.tilt).toBeGreaterThan(0)
+
+    const ys = ctx.grid.keys().flatMap((hex) => ctx.layout.polygonCorners(hex).map((c) => c.y))
+    const top = Math.min(...ys)
+    const bottom = Math.max(...ys)
+    expect(top).toBeGreaterThan(0)
+    expect(600 - bottom).toBeCloseTo(top, 6)
+  })
+})

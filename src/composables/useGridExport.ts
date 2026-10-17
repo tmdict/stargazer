@@ -36,7 +36,6 @@ function overrideForCapture(
 
 interface ExportOptions {
   showPerspective: boolean
-  perspectiveCompression?: number
   // Element to capture; defaults to the single grid's perspective container.
   // 5 v 5 passes the boards row to capture all five at once.
   target?: string
@@ -48,6 +47,10 @@ interface ExportOptions {
 // Power panel) is dropped from every image export.
 const excludeMarkedChrome = (node: HTMLElement): boolean =>
   !node.classList?.contains('capture-exclude')
+
+// Room kept around the drawn content when a perspective capture is cropped, in
+// image pixels.
+const CROP_MARGIN = 16
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
@@ -90,55 +93,47 @@ export function useGridExport() {
 
     try {
       const dataUrl = await capture(containerElement)
-
-      if (options.showPerspective) {
-        return cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
-      }
-
-      return dataUrl
+      return options.showPerspective ? cropToDrawnRows(dataUrl) : dataUrl
     } finally {
       restoreBoards()
     }
   }
 
   /**
-   * Crops image to remove empty space when in perspective mode
+   * Crops the perspective view's empty space above and below the board. The
+   * capture's background is transparent, so the first and last rows holding any
+   * pixel bound everything drawn: tiles, the portraits standing above the far row,
+   * and arrows reaching over them.
    */
-  const cropPerspectiveImage = async (
-    dataUrl: string,
-    compressionRatio: number,
-  ): Promise<string> => {
+  const cropToDrawnRows = async (dataUrl: string): Promise<string> => {
     const img = await loadImage(dataUrl)
 
     const canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
     const ctx = canvas.getContext('2d')
     if (!ctx) {
       throw new Error('Failed to get canvas context')
     }
+    ctx.drawImage(img, 0, 0)
 
-    // Calculate crop dimensions
-    // In perspective mode, content is compressed to compressionRatio height and centered
-    const cropRatio = (1 - compressionRatio) / 2
-    const cropTop = Math.max(0, Math.floor(img.height * cropRatio) - 100) // Reduce top crop by 100px for character profiles
-    const cropHeight = Math.min(
-      img.height - cropTop,
-      Math.floor(img.height * compressionRatio) + 100,
-    ) // Adjust height accordingly
+    const { data } = ctx.getImageData(0, 0, img.width, img.height)
+    const drawn = (y: number): boolean => {
+      for (let x = 0; x < img.width; x++) {
+        if (data[(y * img.width + x) * 4 + 3]) return true
+      }
+      return false
+    }
+    let top = 0
+    while (top < img.height && !drawn(top)) top++
+    if (top === img.height) return dataUrl
+    let bottom = img.height
+    while (!drawn(bottom - 1)) bottom--
 
-    canvas.width = img.width
-    canvas.height = cropHeight
-
-    ctx.drawImage(
-      img,
-      0,
-      cropTop, // Source x, y
-      img.width,
-      cropHeight, // Source width, height
-      0,
-      0, // Destination x, y
-      img.width,
-      cropHeight, // Destination width, height
-    )
+    const cropTop = Math.max(0, top - CROP_MARGIN)
+    const cropBottom = Math.min(img.height, bottom + CROP_MARGIN)
+    canvas.height = cropBottom - cropTop
+    ctx.drawImage(img, 0, -cropTop)
 
     return canvas.toDataURL('image/png', 1.0)
   }

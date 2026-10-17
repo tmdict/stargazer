@@ -7,8 +7,9 @@ import type { DisplayFlags } from '@/utils/gridStateSerializer'
 /**
  * Grid display state shared by the Arena and 5 v 5 views: the toggle flags
  * (serialized together as DisplayFlags for the share link + autosave) plus the
- * breakpoint-driven perspective. teamView/inverted are read from the grids store
- * (their single source of truth); the 5 v 5-only `wrap` is passed in. The owned
+ * breakpoint-driven perspective. teamView/inverted/perspective live in the grids
+ * store (their single source of truth), perspective reached through
+ * useBreakpoint; the 5 v 5-only `wrap` is passed in. The owned
  * breakpoint is re-exposed so callers needing responsive sizing share one
  * matchMedia instance rather than spinning up a second.
  */

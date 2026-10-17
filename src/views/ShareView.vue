@@ -57,7 +57,7 @@ useHead({
 
 // Breakpoint drives responsive sizing only (don't auto-flatten on mobile). Multi
 // pins the Teams board size per breakpoint; single is sized by useBreakpoint.
-const { currentBreakpoint } = useBreakpoint({ autoFlattenOnMobile: false })
+const { currentBreakpoint, showPerspective } = useBreakpoint({ autoFlattenOnMobile: false })
 const canWrap = computed(() => currentBreakpoint.value === 'desktop')
 const applyMultiSize = () => {
   if (isMultiBoard.value) grids.hexSize = teamsBoardSize(currentBreakpoint.value)
@@ -66,7 +66,6 @@ applyMultiSize()
 watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
-const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
 const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
 

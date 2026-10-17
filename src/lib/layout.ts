@@ -29,11 +29,16 @@ export interface Point {
   y: number
 }
 
+// The game's formation camera, which the perspective view reproduces: the board's
+// height over its width (applied as a CSS squash) and its tilt (the Layout's).
+export const PERSPECTIVE = { compression: 0.606, tilt: 0.01 } as const
+
 export class Layout {
   orientation: Orientation
   size: Point
   origin: Point
   rotated: boolean
+  tilt: number
 
   constructor(
     orientation: Orientation, // hex orientation (pointy-top or flat-top)
@@ -43,23 +48,41 @@ export class Layout {
     // Pure view transform: hexes keep their engine ids, only positions reflect,
     // so hit-testing against the same layout stays consistent by construction.
     rotated: boolean = false,
+    // The perspective view's lean away from the viewer: an offset from the origin
+    // scales by 1 / (1 - tilt * y), y in hex radii below the origin, so lower rows
+    // draw larger. Applied after rotation, so the bottom of the screen stays
+    // nearest. 0 draws the board flat.
+    tilt: number = 0,
   ) {
     this.orientation = orientation
     this.size = size
     this.origin = origin
     this.rotated = rotated
+    this.tilt = tilt
+  }
+
+  // A hex center's offset from the origin before the tilt.
+  private centerOffset(hex: Hex): Point {
+    const M = this.orientation
+    const sign = this.rotated ? -1 : 1
+    return {
+      x: (M.f0 * hex.q + M.f1 * hex.r) * this.size.x * sign,
+      y: (M.f2 * hex.q + M.f3 * hex.r) * this.size.y * sign,
+    }
+  }
+
+  // An offset from the origin to its drawn pixel, tilt applied.
+  private place(offset: Point): Point {
+    const depth = 1 - (this.tilt * offset.y) / this.size.y
+    return {
+      x: this.origin.x + offset.x / depth,
+      y: this.origin.y + offset.y / depth,
+    }
   }
 
   // Convert hex to pixel (center)
   hexToPixel(hex: Hex): Point {
-    const M = this.orientation
-    const sign = this.rotated ? -1 : 1
-    const x = (M.f0 * hex.q + M.f1 * hex.r) * this.size.x * sign
-    const y = (M.f2 * hex.q + M.f3 * hex.r) * this.size.y * sign
-    return {
-      x: x + this.origin.x,
-      y: y + this.origin.y,
-    }
+    return this.place(this.centerOffset(hex))
   }
 
   // Rotation negates the offset so corner index i keeps naming the same physical
@@ -73,16 +96,14 @@ export class Layout {
     }
   }
 
-  // Get the corner points of a hex as an array of Points
+  // Get the corner points of a hex as an array of Points. Each corner is tilted
+  // on its own, so a hex lower on the screen is drawn larger.
   polygonCorners(hex: Hex): Point[] {
-    const center = this.hexToPixel(hex)
+    const center = this.centerOffset(hex)
     const corners: Point[] = []
     for (let i = 0; i < 6; i++) {
       const offset = this.hexCornerOffset(i)
-      corners.push({
-        x: center.x + offset.x,
-        y: center.y + offset.y,
-      })
+      corners.push(this.place({ x: center.x + offset.x, y: center.y + offset.y }))
     }
     return corners
   }

@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useId, watchEffect } from 'vue'
 
 import TileHatchPatterns from './TileHatchPatterns.vue'
+import SkillCornerLines from '@/components/SkillCornerLines.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
@@ -502,6 +503,9 @@ onUnmounted(() => {
             :stroke-width="stroke.width"
           />
         </g>
+
+        <!-- Skill zone outlines and lane boundaries: on the tiles, so under the portraits -->
+        <SkillCornerLines v-if="showSkills" />
 
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
         <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">

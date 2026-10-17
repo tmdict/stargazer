@@ -108,7 +108,7 @@ export class SkillManager {
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Tiles each skill instance (characterId-team) has painted, for diff-based cleanup
   private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
-  // Connection lines each skill instance draws (rendered by SkillTargeting)
+  // Connection lines each skill instance draws (rendered by SkillTargeting and SkillCornerLines)
   private skillLines: Map<string, SkillLine[]> = new Map()
   // Bumped on every mutation the UI must see; the board's computeds read it
   // to re-derive from this non-reactive class.

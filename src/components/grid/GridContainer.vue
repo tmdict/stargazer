@@ -5,6 +5,7 @@ import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import { provideGridContext, type GridContext } from '@/composables/useGridContext'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
+import { PERSPECTIVE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 
@@ -26,7 +27,6 @@ interface Props {
   // Debug props
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Constants
-  perspectiveVerticalCompression?: number
   defaultSvgHeight?: number
   // Interaction control
   readonly?: boolean
@@ -38,7 +38,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   isMapEditorMode: false,
   selectedMapEditorState: State.DEFAULT,
-  perspectiveVerticalCompression: 0.55,
   defaultSvgHeight: 600,
   readonly: false,
   // Tri-state: keep an omitted tapMode as undefined (not the Boolean-prop default
@@ -60,7 +59,7 @@ provideGridContext(liveContext)
 
 // Vertical scale compensation - automatically inverse of grid compression when in perspective mode
 const verticalScaleComp = computed(() =>
-  props.showPerspective ? 1 / props.perspectiveVerticalCompression : 1.0,
+  props.showPerspective ? 1 / PERSPECTIVE.compression : 1.0,
 )
 
 // When team view is on, the team-view-clip wrapper sits inside the perspective wrapper:
@@ -110,7 +109,7 @@ const shiftStyle = computed(() => {
 <template>
   <div class="perspective-container">
     <div
-      :style="showPerspective ? { transform: `scaleY(${perspectiveVerticalCompression})` } : {}"
+      :style="showPerspective ? { transform: `scaleY(${PERSPECTIVE.compression})` } : {}"
       style="transform-origin: center; transition: transform 0.3s ease-out"
     >
       <div :style="clipStyle">
