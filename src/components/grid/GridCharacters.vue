@@ -108,7 +108,8 @@ const hoverHint = computed(() =>
 )
 
 // Anchored to the lifted unit's visual top edge. Perspective lifts the sprite
-// and squashes it about its center (getCharacterStyle), so the edge moves too.
+// and squashes it about its center (getCharacterStyle), so the edge moves too,
+// and the button undoes the board's vertical squash the way sprites do.
 const liftButtonStyle = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
@@ -119,7 +120,7 @@ const liftButtonStyle = computed(() => {
   const top = props.showPerspective
     ? y - BASE_PERSPECTIVE_LIFT * ctx.hexScale - half * props.scaleY
     : y - half
-  return { left: `${x}px`, top: `${top}px` }
+  return { left: `${x}px`, top: `${top}px`, '--counter-scale-y': String(props.scaleY) }
 })
 
 const getCharacterName = (characterId: number, hexId: number): string => {
@@ -173,8 +174,6 @@ const characterDimensions = computed(() => {
     size: BASE_CHARACTER_SIZE * scale,
     offset: BASE_CHARACTER_OFFSET * scale,
     borderWidth: Math.max(2, 3 * scale),
-    fontSize: Math.max(10, 14 * scale),
-    levelBadgeSize: Math.max(16, 20 * scale),
   }
 })
 
@@ -451,7 +450,9 @@ const visiblePlacements = computed(() => {
 
 .lift-inspect {
   position: absolute;
-  transform: translate(-50%, calc(-100% - 8px));
+  transform: translate(-50%, calc(-100% - 8px * var(--counter-scale-y)))
+    scaleY(var(--counter-scale-y));
+  transform-origin: bottom;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -466,6 +467,7 @@ const visiblePlacements = computed(() => {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
   pointer-events: auto;
   cursor: pointer;
+  z-index: var(--z-board-controls);
 }
 
 .lift-inspect::after {
