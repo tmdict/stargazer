@@ -261,13 +261,13 @@ const handleCopyLink = () => {
 
 const handleCopyImage = async () => {
   await copyToClipboard({
-    showPerspective: showPerspective.value,
+    trim: showPerspective.value,
   })
 }
 
 const handleDownload = async () => {
   await downloadAsImage({
-    showPerspective: showPerspective.value,
+    trim: showPerspective.value,
     filePrefix: 'team',
   })
 }
