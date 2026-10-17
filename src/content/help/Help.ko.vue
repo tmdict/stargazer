@@ -5,6 +5,7 @@ import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
@@ -338,6 +339,17 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>팬텀과 메아리도 영웅과 같은 방법으로 스킬을 볼 수 있습니다.</span>
+      </li>
+      <li>
+        <IconBell :size="18" />
+        <span>
+          던릴과 나츠처럼 전투 전에 모드를 고르는 영웅이 있습니다. <b>스킬</b>을 켜면 영웅 위의
+          버튼이 현재 모드를 보여 주고, 화살표도 그 모드의 색으로 바뀝니다.
+          <span class="help-mouse">버튼을 클릭하면 모드가 바뀝니다.</span>
+          <span class="help-touch"
+            >영웅을 누른 뒤 <b>스킬</b> 옆의 동그란 버튼을 누르면 모드가 바뀝니다.</span
+          >
+        </span>
       </li>
       <li>
         <IconLink :size="18" />

@@ -5,6 +5,7 @@ import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
@@ -328,6 +329,17 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>Phantimals and artifacts show their skills the same way heroes do.</span>
+      </li>
+      <li>
+        <IconBell :size="18" />
+        <span>
+          Some heroes pick a mode before battle, like Dunlingr and Natsu. With <b>Skills</b> on, a
+          button on the hero shows its mode and colors its arrows.
+          <span class="help-mouse">Click it to switch modes.</span>
+          <span class="help-touch"
+            >To switch, tap the hero, then the round button next to <b>Skills</b>.</span
+          >
+        </span>
       </li>
       <li>
         <IconLink :size="18" />
