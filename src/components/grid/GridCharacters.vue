@@ -402,8 +402,8 @@ const hoveredMode = computed(
   () => modeButtons.value.find((button) => button.hexId === modeHexId.value)?.mode,
 )
 
-// On touch the mode button only shows the mode and a tap on it reaches the
-// portrait, so the lifted hero's pill carries the control.
+// With no mouse or trackpad the mode button only shows the mode and a tap on it
+// reaches the portrait, so the lifted hero's pill carries the control.
 const liftedMode = computed(() =>
   liftButtonStyle.value
     ? modeButtons.value.find((button) => button.hexId === liftedHexId.value)
@@ -480,6 +480,7 @@ const liftedMode = computed(() =>
       @mouseenter="onModeEnter($event, button.hexId)"
       @mouseleave="onModeLeave"
       @touchstart.passive="onModeTouch"
+      @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
     >
       <span class="skill-mode-badge" :style="{ backgroundColor: button.mode.color }">
         <component :is="button.icon" :size="modeDimensions.glyph" />
@@ -628,7 +629,7 @@ const liftedMode = computed(() =>
   }
 }
 
-@media (pointer: coarse) {
+@media not all and (any-pointer: fine) {
   .skill-mode {
     pointer-events: none;
   }

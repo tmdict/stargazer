@@ -93,7 +93,7 @@ A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#he
 }
 ```
 
-A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right. Both show only while the Skills toggle is on, and the button is in downloaded images. On an editable board a mouse click on the button cycles the mode, and hovering names it; a read-only board only shows the mode. On a touch screen the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
+A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right. Both show only while the Skills toggle is on, and the button is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 
