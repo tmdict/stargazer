@@ -103,7 +103,7 @@ function printReading(
     if (topArtifact || expectedArtifact !== undefined) {
       const scores =
         artifact && topArtifact
-          ? ` ${topArtifact.score.toFixed(2)} lead ${artifact.margin.toFixed(2)}`
+          ? ` ${topArtifact.score.toFixed(2)} lead ${artifact.margin.toFixed(2)}${artifact.sure ? '' : ' review'}`
           : ''
       console.log(`  ${side(team)} artifact: ${artifactName ?? 'none'}${scores}${artifactVerdict}`)
     }
@@ -139,7 +139,7 @@ function printReading(
       }
       console.log(
         `  ${key} ${name.padEnd(14)} ${top ? top.score.toFixed(2) : ' -  '} lead ${cell.margin.toFixed(2)}${top?.learned ? ' learned' : ''}${top?.costume ? ' costume' : ''}${cell.sure ? '' : ' review'}` +
-          `  P${cell.paragon.level} (${cell.paragon.score.toFixed(2)}${cell.paragon.sure ? '' : ' check'})  R${cell.refinement.level} ${cell.refinement.family} ${cell.refinement.stars}★${verdict}`,
+          `  P${cell.paragon.level} (${cell.paragon.score.toFixed(2)}${cell.paragon.sure ? '' : ' check'})  R${cell.refinement.level} ${cell.refinement.family} ${cell.refinement.stars}★${cell.refinement.sure ? '' : ' check'}${verdict}`,
       )
     })
   }

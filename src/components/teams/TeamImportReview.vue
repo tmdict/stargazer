@@ -19,6 +19,7 @@ import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/types'
 import {
+  artifactState,
   cellArtifactId,
   cellCharacterId,
   overrideKey,
@@ -169,7 +170,7 @@ const artifactView = (team: Team): ArtifactView => {
   const edited = shot.artifactOverrides[team] !== undefined
   return {
     artifact: id === null ? null : (gameData.getArtifactById(id) ?? null),
-    sure: edited || (reading?.artifacts[team]?.margin ?? 0) >= 0.1,
+    sure: reading ? artifactState(reading, team, shot.artifactOverrides) === 'sure' : false,
     edited,
   }
 }
@@ -208,7 +209,7 @@ const closePickers = (event: MouseEvent): void => {
   artifactPicker.value = null
 }
 
-const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
+const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
   review: 'app.import-review',
   none: 'app.import-unrecognised',
   duplicate: 'app.picked-twice',
@@ -311,6 +312,14 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
               @click="emit('setLevel', shot.id, team, view.row, 'paragon', view.paragon)"
             >
               {{ i18n.t('app.import-confirm', { value: `P${view.paragon}` }) }}
+            </button>
+            <button
+              v-else-if="view.state === 'refinement'"
+              type="button"
+              class="cell-state review confirm-choice confirm-refinement"
+              @click="emit('setLevel', shot.id, team, view.row, 'refinement', view.refinement)"
+            >
+              {{ i18n.t('app.import-confirm', { value: `R${view.refinement}` }) }}
             </button>
             <span v-else-if="view.state !== 'sure'" class="cell-state" :class="view.state">
               {{ i18n.t(STATE_LABEL[view.state]) }}
@@ -502,7 +511,8 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
 }
 
 .cell.review,
-.cell.paragon {
+.cell.paragon,
+.cell.refinement {
   border-color: var(--import-warn);
   background: var(--import-warn-tint);
 }
