@@ -53,7 +53,6 @@ const isSwapPending = computed(() => pendingId.value === context.id)
 // active ring (on .grid-board) or these action buttons (siblings). Mirrors the
 // single-grid copy/download.
 const boardImageOptions = () => ({
-  trim: context.perspective,
   target: `[data-grid-board-id="${context.id}"] .perspective-container`,
   filePrefix: 'team',
 })
