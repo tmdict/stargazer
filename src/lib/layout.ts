@@ -93,6 +93,14 @@ export class Layout {
     this.squash = squash
   }
 
+  // Arrow and center-line paths are drawn in the arrow layers, which undo the
+  // board's squash (useArrowLayer) so strokes and arrowheads keep their shape. Their
+  // points come out with y times the squash, so they land where the squashed board
+  // shows them.
+  private upright(p: Point): string {
+    return `${p.x} ${p.y * this.squash}`
+  }
+
   // An offset along (dx, dy) that is `radius` long on screen once the
   // container's squash applies.
   private ringOffset(dx: number, dy: number, radius: number): Point {
@@ -167,7 +175,10 @@ export class Layout {
     // Same hex: draw a small self-loop.
     if (length === 0) {
       const offset = characterRadius || 10
-      return `M ${startCenter.x} ${startCenter.y - offset} Q ${startCenter.x + offset} ${startCenter.y} ${startCenter.x} ${startCenter.y + offset}`
+      const top = { x: startCenter.x, y: startCenter.y - offset }
+      const side = { x: startCenter.x + offset, y: startCenter.y }
+      const bottom = { x: startCenter.x, y: startCenter.y + offset }
+      return `M ${this.upright(top)} Q ${this.upright(side)} ${this.upright(bottom)}`
     }
 
     if (arc && this.squash < 1) {
@@ -224,7 +235,7 @@ export class Layout {
     const controlX = midX + normX * curvature
     const controlY = midY + normY * curvature
 
-    return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`
+    return `M ${this.upright(start)} Q ${this.upright({ x: controlX, y: controlY })} ${this.upright(end)}`
   }
 
   // In perspective an arrow is an arc in the air from portrait center to portrait
@@ -262,14 +273,16 @@ export class Layout {
     if (t0 >= t1) {
       const s = this.ringOffset(control.x - start.x, control.y - start.y, radius)
       const e = this.ringOffset(control.x - end.x, control.y - end.y, radius)
-      return `M ${start.x + s.x} ${start.y + s.y} Q ${control.x} ${control.y} ${end.x + e.x} ${end.y + e.y}`
+      const from = { x: start.x + s.x, y: start.y + s.y }
+      const to = { x: end.x + e.x, y: end.y + e.y }
+      return `M ${this.upright(from)} Q ${this.upright(control)} ${this.upright(to)}`
     }
     const from = at(t0)
     const to = at(t1)
     const mix = (1 - t0) * t1 + t0 * (1 - t1)
     const cx = (1 - t0) * (1 - t1) * start.x + mix * control.x + t0 * t1 * end.x
     const cy = (1 - t0) * (1 - t1) * start.y + mix * control.y + t0 * t1 * end.y
-    return `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`
+    return `M ${this.upright(from)} Q ${this.upright({ x: cx, y: cy })} ${this.upright(to)}`
   }
 
   // Straight border-to-border line between two hexes: pulled in by characterRadius
@@ -283,7 +296,9 @@ export class Layout {
     if (length === 0) return ''
 
     const ring = this.ringOffset(dx, dy, characterRadius)
-    return `M ${start.x + ring.x} ${start.y + ring.y} L ${end.x - ring.x} ${end.y - ring.y}`
+    const from = { x: start.x + ring.x, y: start.y + ring.y }
+    const to = { x: end.x - ring.x, y: end.y - ring.y }
+    return `M ${this.upright(from)} L ${this.upright(to)}`
   }
 
   // Straight line between two specific hex corners, with no border pullback: the

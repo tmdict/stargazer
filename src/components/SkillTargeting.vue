@@ -19,7 +19,9 @@ const props = defineProps<Props>()
 
 const ctx = useGridContext()
 
-const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(() => props.defaultSvgHeight)
+const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
+  () => props.defaultSvgHeight,
+)
 
 const skillTargets = computed(() => ctx.skillTargets)
 
@@ -117,6 +119,7 @@ const linesToRender = computed(() =>
     class="skill-arrow-layer"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
+    :style="layerStyle"
   >
     <g :transform="layerTransform">
       <GridLine

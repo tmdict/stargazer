@@ -111,16 +111,15 @@ describe('Layout', () => {
       const squashed = new Layout(POINTY, size, origin, false, 0, squash)
       const radius = 4
       const ends = (path: string) => path.match(/-?[\d.]+/g)!.map(Number)
-      // Screen distance from the center, after the container's vertical squash.
-      const onScreen = (dx: number, dy: number) => Math.hypot(dx, dy * squash)
       // A column (straight down) and a row (straight across) of hexes.
       for (const [from, to] of [
         [new Hex(0, 0, 0), new Hex(-1, 2, -1)],
         [new Hex(0, 0, 0), new Hex(2, 0, -2)],
       ] as const) {
+        // Paths come out upright, y already times the squash.
         const [sx, sy] = ends(squashed.getLinePath(from, to, radius))
         const c = squashed.hexToPixel(from)
-        expect(onScreen(sx! - c.x, sy! - c.y)).toBeCloseTo(radius)
+        expect(Math.hypot(sx! - c.x, sy! - c.y * squash)).toBeCloseTo(radius)
       }
     })
 
@@ -146,8 +145,9 @@ describe('Layout', () => {
           t > 0 && t < 1
             ? (1 - t) ** 2 * y0! + 2 * t * (1 - t) * cy! + t ** 2 * y2!
             : Math.min(y0!, y2!)
-        const higher = Math.min(arcing.hexToPixel(from).y, arcing.hexToPixel(to).y)
-        expect((higher - top) * squash).toBeLessThanOrEqual(radius + 1e-6)
+        // The path is upright (screen units); the centers need the squash.
+        const higher = Math.min(arcing.hexToPixel(from).y, arcing.hexToPixel(to).y) * squash
+        expect(higher - top).toBeLessThanOrEqual(radius + 1e-6)
         // It arcs up: the control point sits above the chord.
         expect(cy!).toBeLessThan((y0! + y2!) / 2)
       }
