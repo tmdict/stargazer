@@ -13,7 +13,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { PERSPECTIVE } from '@/lib/layout'
+import { PERSPECTIVE, STANDING_POINTER_HEIGHT, standingLift } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -100,9 +100,9 @@ const artifactDimensions = computed(() => {
   }
 })
 
-// Center the icon on its host cell. In perspective, lift it and counter-scale
-// vertically (the same transform GridCharacters applies) so it reads as an
-// isometric token standing in the cell while the cell beneath it compresses.
+// Center the icon on its host cell. In perspective it stands in the cell like a
+// portrait (the same transform GridCharacters applies): raised until its pointer
+// touches the cell's center, and counter-scaled while the cell beneath compresses.
 const iconStyle = (center: { x: number; y: number }) => {
   const { containerSize, borderWidth } = artifactDimensions.value
   const styles: Record<string, string | number> = {
@@ -113,7 +113,7 @@ const iconStyle = (center: { x: number; y: number }) => {
     top: `${center.y - containerSize / 2}px`,
   }
   if (ctx.perspective) {
-    const verticalOffset = -70 * ctx.hexScale
+    const verticalOffset = -standingLift(containerSize / 2)
     styles.transform = `translateY(${verticalOffset}px) scaleY(${1 / PERSPECTIVE.compression})`
   }
   return styles
@@ -277,7 +277,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 </script>
 
 <template>
-  <div class="grid-artifacts">
+  <div class="grid-artifacts" :style="{ '--standing-pointer': `${STANDING_POINTER_HEIGHT}px` }">
     <!-- Dashed border as a full hexagon beneath the tiles (z-index: -1): each
          rendered neighbor's solid border covers the shared edge, and the dash shows
          wherever no tile is drawn beside it (e.g. team view hides the neighbor). The
@@ -537,13 +537,13 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 /* Mirrors GridCharacters' .character-pointer: the isometric "foot" in perspective. */
 .artifact-pointer {
   position: absolute;
-  bottom: -8px;
+  bottom: calc(-1 * var(--standing-pointer));
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 8px solid #777;
+  border-top: var(--standing-pointer) solid #777;
 }
 </style>

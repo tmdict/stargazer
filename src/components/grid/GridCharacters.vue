@@ -25,7 +25,7 @@ import {
 } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
-import { PERSPECTIVE } from '@/lib/layout'
+import { PERSPECTIVE, PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT, standingLift } from '@/lib/layout'
 import { SKILL_MODES, type SkillMode, type SkillModeIcon } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -119,7 +119,7 @@ const hoverHint = computed(() =>
 // board's vertical squash the way sprites do.
 const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
   const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
-  const lift = ctx.perspective ? BASE_PERSPECTIVE_LIFT * ctx.hexScale : 0
+  const lift = ctx.perspective ? standingLift(characterDimensions.value.offset) : 0
   return {
     left: `${x + dx}px`,
     top: `${y - lift + dy * counterScaleY.value}px`,
@@ -176,10 +176,8 @@ const getCharacterColors = (characterId: number) => {
 }
 
 // Base character size (at 40px hex radius)
-const BASE_CHARACTER_SIZE = 60
-const BASE_CHARACTER_OFFSET = 30
-// How far perspective raises a sprite above its hex center.
-const BASE_PERSPECTIVE_LIFT = 70
+const BASE_CHARACTER_SIZE = 2 * PORTRAIT_RADIUS
+const BASE_CHARACTER_OFFSET = PORTRAIT_RADIUS
 const BASE_MODE_SIZE = 22
 
 // Undoes the board's perspective squash (GridContainer), so sprites stay round.
@@ -231,7 +229,7 @@ const getCharacterStyle = (hexId: number) => {
   }
 
   if (ctx.perspective) {
-    const verticalOffset = -BASE_PERSPECTIVE_LIFT * ctx.hexScale
+    const verticalOffset = -standingLift(offset)
     baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${counterScaleY.value})`
     baseStyle.transformOrigin = 'center'
   }
@@ -414,7 +412,7 @@ const liftedMode = computed(() =>
 </script>
 
 <template>
-  <div class="character-layer">
+  <div class="character-layer" :style="{ '--standing-pointer': `${STANDING_POINTER_HEIGHT}px` }">
     <div
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
@@ -724,13 +722,13 @@ const liftedMode = computed(() =>
 
 .character-pointer {
   position: absolute;
-  bottom: -8px;
+  bottom: calc(-1 * var(--standing-pointer));
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 8px solid #777;
+  border-top: var(--standing-pointer) solid #777;
 }
 </style>

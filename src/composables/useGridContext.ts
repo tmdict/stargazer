@@ -68,11 +68,11 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
-// Crop padding for team view, as multipliers on hexRadius. The top multiplier
-// covers the perspective-mode character sprite stretch in the worst case (topmost
-// ally hex). Re-tune if GridCharacters' vertical offset / scaleY changes; there
-// is no clean closed form due to the compound transforms.
-const CHARACTER_TOP_PAD_MULTIPLIER = 2.15
+// Crop padding for team view, as multipliers on hexRadius. In perspective the top
+// covers a portrait standing on the topmost ally tile with its mode bell; the
+// fixed-pixel pointer and bell take the most room on the smallest board (hex
+// radius 23). Re-tune if GridCharacters' standing geometry or bell size changes.
+const CHARACTER_TOP_PAD_MULTIPLIER = { flat: 2.15, perspective: 2.3 }
 const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
 // Horizontal crop is pure margin: character discs and artifact icons sit within
 // the hex polygon corners, so no sprite-clearance allowance is needed here.
@@ -480,8 +480,16 @@ export function createGridContext(
     const layout = computed(() => {
       const scale = hexSize.value.x / 40
       const tilt = perspective.value ? PERSPECTIVE.tilt : 0
+      const squash = perspective.value ? PERSPECTIVE.compression : 1
       const layoutAt = (originY: number) =>
-        new Layout(POINTY, hexSize.value, { x: 300 * scale, y: originY }, inverted.value, tilt)
+        new Layout(
+          POINTY,
+          hexSize.value,
+          { x: 300 * scale, y: originY },
+          inverted.value,
+          tilt,
+          squash,
+        )
       // The tilt draws near rows larger than far ones, which lowers the board in its
       // box until the near edge runs past the bottom; raising the origin by that
       // drift centers the drawn board, as the flat one is.
@@ -544,7 +552,8 @@ export function createGridContext(
         }
       }
 
-      const topPad = hexRadius * CHARACTER_TOP_PAD_MULTIPLIER
+      const topPad =
+        hexRadius * CHARACTER_TOP_PAD_MULTIPLIER[perspective.value ? 'perspective' : 'flat']
       const bottomPad = hexRadius * CHARACTER_BOTTOM_PAD_MULTIPLIER
       const sidePad = hexRadius * CROP_SIDE_PAD_MULTIPLIER
       // y may go negative: the clip wrapper turns a negative y into top padding,

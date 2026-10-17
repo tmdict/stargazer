@@ -33,12 +33,26 @@ export interface Point {
 // shortens the board vertically (a CSS squash) and its tilt (the Layout's).
 export const PERSPECTIVE = { compression: 0.606, tilt: 0.01 } as const
 
+// A portrait's radius at hex radius 40: sprites are twice this across, and the
+// arrows and lines between units end on this ring around each portrait.
+export const PORTRAIT_RADIUS = 30
+
+// A token standing on a tile in perspective (a portrait or an artifact icon)
+// points at the tile's center with a pointer this tall, in screen pixels.
+export const STANDING_POINTER_HEIGHT = 8
+
+// How far above its tile's center a standing token of this screen radius sits,
+// in board pixels before the squash, so that its pointer tip lands on the center.
+export const standingLift = (radius: number): number =>
+  (radius + STANDING_POINTER_HEIGHT) / PERSPECTIVE.compression
+
 export class Layout {
   orientation: Orientation
   size: Point
   origin: Point
   rotated: boolean
   tilt: number
+  squash: number
 
   constructor(
     orientation: Orientation, // hex orientation (pointy-top or flat-top)
@@ -53,12 +67,24 @@ export class Layout {
     // draw larger. Applied after rotation, so the bottom of the screen stays
     // nearest. 0 draws the board flat.
     tilt: number = 0,
+    // The vertical scale the board's container applies after the layout (the
+    // perspective squash). Ring offsets divide by it, so an arrow's end stays on
+    // a portrait's round rim on screen. 1 draws the board flat.
+    squash: number = 1,
   ) {
     this.orientation = orientation
     this.size = size
     this.origin = origin
     this.rotated = rotated
     this.tilt = tilt
+    this.squash = squash
+  }
+
+  // An offset along (dx, dy) that is `radius` long on screen once the
+  // container's squash applies.
+  private ringOffset(dx: number, dy: number, radius: number): Point {
+    const k = radius / Math.hypot(dx, dy * this.squash)
+    return { x: dx * k, y: dy * k }
   }
 
   // A hex center's offset from the origin before the tilt.
@@ -160,14 +186,18 @@ export class Layout {
     const cosA = Math.cos(tangentAngle)
     const sinA = Math.sin(tangentAngle)
 
-    const start = {
-      x: startCenter.x + (dirX * cosA + normX * sinA) * characterRadius,
-      y: startCenter.y + (dirY * cosA + normY * sinA) * characterRadius,
-    }
-    const end = {
-      x: endCenter.x + (-dirX * cosA + normX * sinA) * characterRadius,
-      y: endCenter.y + (-dirY * cosA + normY * sinA) * characterRadius,
-    }
+    const startRing = this.ringOffset(
+      dirX * cosA + normX * sinA,
+      dirY * cosA + normY * sinA,
+      characterRadius,
+    )
+    const endRing = this.ringOffset(
+      -dirX * cosA + normX * sinA,
+      -dirY * cosA + normY * sinA,
+      characterRadius,
+    )
+    const start = { x: startCenter.x + startRing.x, y: startCenter.y + startRing.y }
+    const end = { x: endCenter.x + endRing.x, y: endCenter.y + endRing.y }
 
     // Control point offset perpendicular from the chord midpoint.
     const midX = (start.x + end.x) / 2
@@ -188,13 +218,8 @@ export class Layout {
     const length = Math.sqrt(dx * dx + dy * dy)
     if (length === 0) return ''
 
-    const dirX = dx / length
-    const dirY = dy / length
-    const sx = start.x + dirX * characterRadius
-    const sy = start.y + dirY * characterRadius
-    const ex = end.x - dirX * characterRadius
-    const ey = end.y - dirY * characterRadius
-    return `M ${sx} ${sy} L ${ex} ${ey}`
+    const ring = this.ringOffset(dx, dy, characterRadius)
+    return `M ${start.x + ring.x} ${start.y + ring.y} L ${end.x - ring.x} ${end.y - ring.y}`
   }
 
   // Straight line between two specific hex corners, with no border pullback: the
