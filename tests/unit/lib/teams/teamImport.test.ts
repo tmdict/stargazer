@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
+  artifactState,
   buildTeamImportPlan,
   cellState,
   isBlockingIssue,
@@ -24,7 +25,7 @@ const hero = (characterId: number, paragon = 4, refinement = 0): HeroReading => 
   sure: true,
   descriptor: new Float32Array(1),
   paragon: { level: paragon, score: 0.7, runnerUp: 0.4, sure: true },
-  refinement: { level: refinement, stars: 6, family: 'white' },
+  refinement: { level: refinement, stars: 6, family: 'white', sure: true },
 })
 
 const reading = (
@@ -42,6 +43,7 @@ const reading = (
       card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
       candidates: [{ artifactId: 14, score: 0.4 }],
       margin: 0.1,
+      sure: true,
     },
     [Team.ENEMY]: null,
   },
@@ -263,6 +265,16 @@ describe('buildTeamImportPlan', () => {
 })
 
 describe('review state', () => {
+  it('asks to review an unsure artifact until it is edited, and never an absent one', () => {
+    const r = reading([5], [7])
+    expect(artifactState(r, Team.ALLY, {})).toBe('sure')
+    expect(artifactState(r, Team.ENEMY, {})).toBe('sure')
+    r.artifacts[Team.ALLY]!.sure = false
+    expect(artifactState(r, Team.ALLY, {})).toBe('review')
+    expect(artifactState(r, Team.ALLY, { [Team.ALLY]: 14 })).toBe('sure')
+    expect(artifactState(r, Team.ALLY, { [Team.ALLY]: null })).toBe('sure')
+  })
+
   it('needs both the hero and the paragon to be sure, and lets an edit settle each', () => {
     const cell = hero(1)
     expect(cellState(cell)).toBe('sure')
@@ -273,6 +285,17 @@ describe('review state', () => {
     cell.sure = false
     expect(cellState(cell)).toBe('review')
     expect(cellState(cell, { characterId: 9 })).toBe('sure')
+    expect(cellState(cell, { characterId: null })).toBe('sure')
+  })
+
+  it('asks about an unsure refinement last, and lets an edit settle it', () => {
+    const cell = hero(1, 4, 1)
+    cell.refinement.sure = false
+    expect(cellState(cell)).toBe('refinement')
+    expect(cellState(cell, { refinement: 1 })).toBe('sure')
+    cell.paragon.sure = false
+    expect(cellState(cell)).toBe('paragon')
+    expect(cellState(cell, { paragon: 4 })).toBe('refinement')
     expect(cellState(cell, { characterId: null })).toBe('sure')
   })
 

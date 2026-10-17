@@ -16,9 +16,11 @@ const FRAME_SCALES = [0.25, 0.265, 0.28] as const
 
 // Offsets tried around a column seed, and around the anchor for each card;
 // the card search is fine and covers every offset so a card's box does not
-// depend on where the anchor grid happened to fall.
+// depend on where the anchor grid happened to fall. A card can sit up to a
+// dozen pixels from where the anchor's pitch and frame scale put it, and a
+// narrower search then settles on a wrong frame size and level.
 const ANCHOR_SEARCH = { oy: [-60, 40], ox: [-16, 16], step: 4 } as const
-const CARD_SEARCH = { oy: [-6, 6], ox: [-4, 4], step: 1 } as const
+const CARD_SEARCH = { oy: [-12, 12], ox: [-4, 4], step: 1 } as const
 // Under a tab the column is searched more widely sideways, since a taller
 // phone puts it further from the panel's edge.
 export const TAB_ANCHOR_OX = [-16, 40] as const

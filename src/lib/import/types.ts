@@ -55,6 +55,8 @@ export interface RefinementReading {
   level: number
   stars: number
   family: StarFamily
+  // The family's evidence is strong enough; R0 always is.
+  sure: boolean
 }
 
 export interface HeroReading extends HeroIdentity {
@@ -69,10 +71,12 @@ export interface HeroReading extends HeroIdentity {
 }
 
 export interface ArtifactReading {
+  // The icon with its frame, for the review.
   card: RgbaImage
-
   candidates: { artifactId: number; score: number }[]
   margin: number
+  // A clear lead, a good shape match, and art in the crop.
+  sure: boolean
 }
 
 export type ImportWarning =
@@ -140,8 +144,11 @@ export interface HeroTable {
 }
 
 export interface ArtifactTable {
+  // One row per artifact: its id, the central art's shape vector and its
+  // colour histogram.
   ids: number[]
   vectors: Float32Array[]
+  colours: Float32Array[]
 }
 
 export interface LearnedIcon {

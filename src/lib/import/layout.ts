@@ -36,12 +36,14 @@ export const PANEL_GAP_RANGE = [620, 900] as const
 // cover the rest.
 export const ART_BOX = { x: 0.23, y: 0.2, w: 0.69, aspect: 36 / 48 } as const
 
-// The round artifact icon under each player name, relative to the ally
-// column anchor (the header sits a fixed distance above the first card).
+// The art disc of the round artifact icon under each player name: its
+// nominal centre relative to the ally column anchor, and its diameter. The
+// header's distance from the cards varies by a few pixels, which the
+// artifact search absorbs.
 export const HEADER_ICON: { dx: Record<Team, number>; dy: number; diameter: number } = {
-  dx: { [Team.ALLY]: 171, [Team.ENEMY]: 884 },
-  dy: -146,
-  diameter: 66,
+  dx: { [Team.ALLY]: 179, [Team.ENEMY]: 874 },
+  dy: -147,
+  diameter: 34,
 }
 
 // The Ally and Enemy tabs as landmarks: each is a solid orange or blue block

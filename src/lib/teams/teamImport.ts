@@ -125,19 +125,35 @@ export const cellArtifactId = (
   return reading.artifacts[team]?.candidates[0]?.artifactId ?? null
 }
 
-export type CellState = 'sure' | 'review' | 'paragon' | 'none' | 'duplicate'
+/* Whether a side's artifact still needs a look: settled once edited (a pick,
+ * a confirmation or a removal) or read surely; a side with no reading has
+ * nothing to check. */
+export const artifactState = (
+  reading: ScreenshotReading,
+  team: Team,
+  overrides: Partial<Record<Team, number | null>>,
+): 'sure' | 'review' => {
+  if (overrides[team] !== undefined) return 'sure'
+  const artifact = reading.artifacts[team]
+  return !artifact || artifact.sure ? 'sure' : 'review'
+}
+
+export type CellState = 'sure' | 'review' | 'paragon' | 'refinement' | 'none' | 'duplicate'
 
 /* The state the review shows for a cell. A cell removed in review has nothing
  * left to check; one nobody recognised or picked is `none`; otherwise the
- * hero and the paragon each stand once read surely or edited (a doubtful
- * frame match puts the whole card in doubt, levels included). */
+ * hero, the paragon and the refinement each stand once read surely or edited,
+ * asked about in that order (a doubtful frame match puts the whole card in
+ * doubt, levels included). */
 export const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
   if (override.characterId === null) return 'sure'
   if (override.characterId === undefined && !cell.recognised) return 'none'
   const heroSure = override.characterId !== undefined || cell.sure
   const paragonSure = override.paragon !== undefined || cell.paragon.sure
+  const refinementSure = override.refinement !== undefined || cell.refinement.sure
   if (!heroSure) return 'review'
-  return paragonSure ? 'sure' : 'paragon'
+  if (!paragonSure) return 'paragon'
+  return refinementSure ? 'sure' : 'refinement'
 }
 
 /* Every cell's state on one side; a hero on two of its cells marks both. */

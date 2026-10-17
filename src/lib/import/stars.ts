@@ -3,7 +3,14 @@
  * outer thirds of the frame's top (the centre crown never reaches there),
  * the count is the number of peaks across it, and the colour family comes
  * from the bright pixels at the peaks. Fewer than six stars cannot be
- * refined, so a short row is R0 whatever its colour. */
+ * refined, so a short row is R0 whatever its colour.
+ *
+ * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
+ * can add peaks at its ends and tint the colour toward a refined family, so
+ * a refined reading is sure only when its family's evidence is strong: a
+ * real refined row is one colour from end to end. R4 differs from R0 only by
+ * a faint pink tint, which a browser's resampling can halve, so R0 is sure
+ * only when the row has none. */
 
 import { hsvAt } from './image'
 import type { Rect, RefinementReading, RgbaImage, StarFamily } from './types'
@@ -13,6 +20,21 @@ const SEARCH_DEPTH = 0.24
 const BRIGHT = 0.78
 const PEAK_BRIGHT = 0.72
 const PEAK_MIN_DISTANCE = 6
+// Evidence a refined reading needs to be sure, about 85% of the weakest
+// correctly read row of each level on labelled screenshots: the purple share
+// (R1), colour strength and gold share (R2), red share (R3), and the share of
+// stars that carry the pink tint on their own (R4). An R0 row is sure under
+// a pink share of `r0Pink`: unrefined rows measure below 0.005, R4 rows above
+// 0.04.
+const SURE = {
+  purple: 0.58,
+  chroma: 0.29,
+  gold: 0.5,
+  red: 0.37,
+  pinkStars: 0.38,
+  r0Pink: 0.01,
+} as const
+const PINK = 0.03
 // Six stars span most of the frame width; four or fewer peaks is a short row
 // beyond doubt, five may be two merged stars, so only four gates.
 const SHORT_ROW = 4
@@ -78,6 +100,26 @@ const findPeaks = (shot: RgbaImage, band: Rect): number[] => {
   return peaks.map((i) => band.x + i)
 }
 
+/* The share of the row's stars whose own bright pixels carry the pink tint. */
+const pinkStarShare = (shot: RgbaImage, band: Rect, peaks: readonly number[]): number => {
+  let pink = 0
+  for (const p of peaks) {
+    let n = 0
+    let m = 0
+    for (let y = band.y; y < band.y + band.h; y++) {
+      for (let x = p - 4; x <= p + 4; x++) {
+        if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
+        const [h, s, v] = hsvAt(shot, x, y)
+        if (v < BRIGHT) continue
+        n++
+        if (s > 0.15 && h >= 300) m++
+      }
+    }
+    if (n && m / n >= PINK) pink++
+  }
+  return peaks.length ? pink / peaks.length : 0
+}
+
 export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
   const band = findBand(shot, box)
   const peaks = findPeaks(shot, band)
@@ -109,7 +151,7 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
   const magenta = share[10]! + share[11]!
 
   let family: StarFamily = 'white'
-  let level = magenta >= 0.03 ? 4 : 0
+  let level = magenta >= PINK ? 4 : 0
   if (chroma >= 0.25 && gold >= 0.4) {
     family = 'gold'
     level = 2
@@ -121,5 +163,15 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
     level = 1
   }
   if (stars <= SHORT_ROW) level = 0
-  return { level, stars, family }
+  const sure =
+    level === 1
+      ? purple >= SURE.purple
+      : level === 2
+        ? chroma >= SURE.chroma && gold >= SURE.gold
+        : level === 3
+          ? red >= SURE.red
+          : level === 4
+            ? pinkStarShare(shot, band, peaks) >= SURE.pinkStars
+            : magenta < SURE.r0Pink
+  return { level, stars, family, sure }
 }
