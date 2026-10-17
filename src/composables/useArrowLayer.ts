@@ -1,7 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
-import { PORTRAIT_RADIUS, standingLift } from '@/lib/layout'
+import { PERSPECTIVE, PORTRAIT_RADIUS, standingLift } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 
@@ -34,10 +34,19 @@ export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   const gridStore = useGridStore()
   const ctx = useGridContext()
 
+  // The layer undoes the board's perspective squash, as portraits do, so strokes
+  // and arrowheads keep their shape; the layout's arrow paths come out in these
+  // upright coordinates.
+  const squash = computed(() => (ctx.perspective ? PERSPECTIVE.compression : 1))
+
   const svgDimensions = computed(() => {
     const scale = gridStore.getHexScale()
-    return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale }
+    return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale * squash.value }
   })
+
+  const layerStyle = computed(() =>
+    ctx.perspective ? { transform: `scaleY(${1 / squash.value})`, transformOrigin: '0 0' } : {},
+  )
 
   const arrowStyle = useArrowStyle()
 
@@ -45,9 +54,9 @@ export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   // rise to the portrait centers.
   const layerTransform = computed(() =>
     ctx.perspective
-      ? `translate(0, ${-standingLift(PORTRAIT_RADIUS * gridStore.getHexScale())})`
+      ? `translate(0, ${-standingLift(PORTRAIT_RADIUS * gridStore.getHexScale()) * squash.value})`
       : '',
   )
 
-  return { svgDimensions, arrowStyle, layerTransform }
+  return { svgDimensions, layerStyle, arrowStyle, layerTransform }
 }
