@@ -124,6 +124,35 @@ describe('Layout', () => {
       }
     })
 
+    it('never arcs an arrow above the top of the portrait at its higher end', () => {
+      const squash = 0.6
+      const arcing = new Layout(POINTY, size, origin, false, tilt, squash)
+      const radius = 6
+      // Long pairs, where the rise would otherwise be largest: across a row, into
+      // the board, and on a slant.
+      for (const [from, to] of [
+        [new Hex(-3, 0, 3), new Hex(3, 0, -3)],
+        [new Hex(0, 3, -3), new Hex(0, -3, 3)],
+        [new Hex(-2, 3, -1), new Hex(3, -3, 0)],
+      ] as const) {
+        const [, y0, , cy, , y2] = arcing
+          .getArrowPath(from, to, radius)
+          .match(/-?[\d.]+/g)!
+          .map(Number)
+        // The top of the quadratic, then how far it sits above the higher end's
+        // center on screen.
+        const t = (y0! - cy!) / (y0! - 2 * cy! + y2!)
+        const top =
+          t > 0 && t < 1
+            ? (1 - t) ** 2 * y0! + 2 * t * (1 - t) * cy! + t ** 2 * y2!
+            : Math.min(y0!, y2!)
+        const higher = Math.min(arcing.hexToPixel(from).y, arcing.hexToPixel(to).y)
+        expect((higher - top) * squash).toBeLessThanOrEqual(radius + 1e-6)
+        // It arcs up: the control point sits above the chord.
+        expect(cy!).toBeLessThan((y0! + y2!) / 2)
+      }
+    })
+
     it('tilts after rotating, so the screen bottom stays nearest under invert', () => {
       const rotated = new Layout(POINTY, size, origin, true, tilt)
       for (const hex of [new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]) {
