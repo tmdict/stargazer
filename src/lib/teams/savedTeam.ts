@@ -61,7 +61,7 @@ const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
     ) {
       continue
     }
-    const clamped = clampAttr(attrId, value)
+    const clamped = clampAttr(attrId, value, characterId)
     if (clamped !== attrDefault(attrId)) {
       byKey.set(`${team}:${characterId}:${attrId}`, [team, characterId, attrId, clamped])
     } else {

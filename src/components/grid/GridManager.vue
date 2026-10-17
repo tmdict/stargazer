@@ -271,6 +271,7 @@ defineExpose({
     <GridCharacters
       :characters
       :show-hover="info.hover"
+      :show-skills
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"

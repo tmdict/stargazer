@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import { PLACEHOLDER_ID_OFFSET } from '@/lib/characters/placeholder'
 import { parseRostersImport, validateRoster, type Roster } from '@/lib/rosters'
 
@@ -24,6 +24,7 @@ describe('validateRoster', () => {
       heroes: {
         '43': { [ATTR_REFINEMENT]: 9, [ATTR_PARAGON]: 0, 99: 3 },
         '5': {},
+        '57': { [ATTR_SKILL_MODE]: 1 },
         [PLACEHOLDER_ID_OFFSET]: {},
         '0': {},
         abc: {},
@@ -33,12 +34,13 @@ describe('validateRoster', () => {
     expect(valid).toEqual({
       id: 'a',
       name: 'Main',
-      // Refinement clamps to its max; default and unknown levels drop.
-      heroes: { 5: {}, 43: { [ATTR_REFINEMENT]: 4 } },
+      // Refinement clamps to its max; default and unknown levels drop, and so
+      // does a skill mode, which is board state.
+      heroes: { 5: {}, 43: { [ATTR_REFINEMENT]: 4 }, 57: {} },
       createdAt: 1,
       updatedAt: 0,
     })
-    expect(JSON.stringify(valid!.heroes)).toBe('{"5":{},"43":{"2":4}}')
+    expect(JSON.stringify(valid!.heroes)).toBe('{"5":{},"43":{"2":4},"57":{}}')
     expect(validateRoster({ ...roster(), name: '  ' })).toBeNull()
     expect(validateRoster({ ...roster(), heroes: [] })).toBeNull()
   })

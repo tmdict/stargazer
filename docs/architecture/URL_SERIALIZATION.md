@@ -56,7 +56,7 @@ Synergy locals reuse the character field's id space (hero as its base id, a comp
 - Character and synergy local ids 1 to 65535, with at most 15 synergy entries.
 - Artifact ids 1 to 63 or null. An out-of-range id becomes null so the other side's artifact survives, and an `a` that is not a two-element array is dropped.
 - Phantimal entries L from 1 to 15, or `N × 10000 + L` with N from 1 to 3, at most 15 across both sections.
-- Upgrade rows with known attr ids only and character ids 0 to 65535. Values clamp to the registry range, duplicates keep the last row, default-valued rows drop (matching `canonicalAttrRows`), and at most 63 remain.
+- Upgrade rows with known attr ids only and character ids 0 to 65535. Values clamp to the attribute's range for that hero (a skill mode's range is the hero's mode list, so a row for a hero without modes drops), duplicates keep the last row, default-valued rows drop (matching `canonicalAttrRows`), and at most 63 remain.
 - Teams 1 or 2.
 
 A section left empty is omitted, which the decoder's zero-count rule relies on.
@@ -79,9 +79,9 @@ Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attr
 | Character id           | 16   | heroes and companions            | 65,535   | companion index N up to 6 for base ids below 5,536 |
 | Artifact id            | 6    | 6 permanent and 12 seasonal      | 63       | seasonal ids rotate, so the pool does not grow     |
 | Phantimal local id     | 4    | 5 per season                     | 15       | 1 to 12 usable, 13 to 15 reserved for tests        |
-| Attr id                | 6    | 2                                | 63       | 61 more upgrade kinds                              |
-| Attr value             | 4    | max level 4                      | 15       | level caps can rise to 15                          |
-| Upgrade rows per board | 6    | up to 20 (10 heroes × 2 attrs)   | 63       | 6 attrs per hero on a full board                   |
+| Attr id                | 6    | 3                                | 63       | 60 more attributes                                 |
+| Attr value             | 4    | max level 4, 2 skill modes       | 15       | level caps up to 15, 16 modes per hero             |
+| Upgrade rows per board | 6    | up to 24 (20 levels, 4 modes)    | 63       | 6 attrs per hero on a full board                   |
 
 Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types and upgrade kinds, level caps up to 15, up to 3 more display toggles, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
 
@@ -157,7 +157,7 @@ The payload is url-safe base64 (the same alphabet as links, no padding) of UTF-8
 | `c`         | `[hexId, characterId, team]`         | heroes and their skill companions; team 1 is ally, 2 is enemy                          |
 | `s`         | `[hexId, localId, team]`             | phantimals (local id L) and their companions (`N × 10000 + L`)                         |
 | `y`         | `[hexId, localId, team]`             | the synergy hero and its companions, ids as in `c`                                     |
-| `u`         | `[team, characterId, attrId, value]` | upgrade levels (attr 1 paragon, 2 EX refinement), sorted, default values left out      |
+| `u`         | `[team, characterId, attrId, value]` | hero attributes (1 paragon, 2 EX refinement, 3 skill mode), sorted, defaults left out  |
 | `a`         | `[allyArtifact, enemyArtifact]`      | artifact ids, `null` for none                                                          |
 | `m`         | a string                             | the board's map key                                                                    |
 
