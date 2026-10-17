@@ -5,6 +5,7 @@ import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
@@ -271,6 +272,14 @@ const SKILL = {
         >
       </li>
       <li><IconChevronRight :size="18" /><span>幻灵和神器也能像英雄一样查看技能。</span></li>
+      <li>
+        <IconBell :size="18" /><span
+          >有些英雄会在战斗前选择模式，例如顿里尔和纳兹。打开<b>技能</b>后，英雄身上的按钮会显示当前模式，箭头也会变成该模式的颜色。<span
+            class="help-mouse"
+            >点击按钮即可切换模式。</span
+          ><span class="help-touch">切换时先点英雄，再点<b>技能</b>旁边的圆形按钮。</span></span
+        >
+      </li>
       <li>
         <IconLink :size="18" /><span
           ><b>链接</b
