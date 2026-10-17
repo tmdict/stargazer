@@ -16,7 +16,7 @@ export interface SkillMode {
   color: string
 }
 
-export interface HeroSkillModes {
+interface HeroSkillModes {
   icon: SkillModeIcon
   modes: readonly SkillMode[]
 }

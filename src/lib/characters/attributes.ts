@@ -1,7 +1,7 @@
 /* Per-hero attribute registry: the single source of truth for every value a
  * placed hero carries beyond its position: the levelled upgrades (paragon, EX
- * refinement) and the skill mode. Serialized as the GridState `u` section —
- * uniform rows [team, characterId, attrId, value] — and held in memory as
+ * refinement) and the skill mode. Serialized as the GridState `u` section
+ * (uniform rows [team, characterId, attrId, value]) and held in memory as
  * per-hero records keyed by attrId (useGridContext's attrs map).
  *
  * APPEND-ONLY: attrIds are never reused or renumbered; retiring an attribute

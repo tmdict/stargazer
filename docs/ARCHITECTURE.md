@@ -43,7 +43,7 @@ Three exceptions are deliberate. `src/stores/grids.ts` imports `createGridContex
 
 `createGridContext` (`src/composables/useGridContext.ts`) builds one board: its `Grid`, its `SkillManager`, map, artifact slots, upgrade levels, derived values such as layout and closest targets, and the operations that change it. Its watchers run in their own effect scope, so disposing a board leaves nothing behind.
 
-`useGrids` (`src/stores/grids.ts`) holds the boards, which one is active, the settings every board shares (hex size, team view, invert), and the rules that span boards: a hero or artifact can appear once per team across the whole page, and a drop may move a unit between boards. The single-board stores (`useGridStore`, `useCharacterStore` and the others) forward to the active board, so Arena code never needs a board id. Board components read their own board with `useGridContext()`.
+`useGrids` (`src/stores/grids.ts`) holds the boards, which one is active, the settings every board shares (hex size, team view, invert, perspective), and the rules that span boards: a hero or artifact can appear once per team across the whole page, and a drop may move a unit between boards. The single-board stores (`useGridStore`, `useCharacterStore` and the others) forward to the active board, so Arena code never needs a board id. Board components read their own board with `useGridContext()`.
 
 ## From a tap to the screen
 

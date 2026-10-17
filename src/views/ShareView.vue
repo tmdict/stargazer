@@ -12,6 +12,7 @@ import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { SITE_ORIGIN } from '@/lib/site'
@@ -46,6 +47,10 @@ if (isMultiBoard.value) {
   if (grids.contexts.length !== 1) grids.setGridCount(1)
   grids.hexSizeMode = 'breakpoint'
 }
+// The viewer opens flat, and a lift made on the page that opened it would
+// otherwise stay on this read-only board, controls included.
+grids.perspective = false
+useSelectionState().clearLiftedHex()
 const activeContext = computed(() => grids.active!)
 
 // Set canonical link for share page
