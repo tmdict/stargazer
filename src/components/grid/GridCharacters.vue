@@ -117,23 +117,40 @@ const hoverHint = computed(() =>
 // center. Perspective lifts the sprite and squashes it about its center
 // (getCharacterStyle), so the point moves too, and the control undoes the
 // board's vertical squash the way sprites do.
-const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
+const spriteLayerPoint = (hexId: number, dx: number, dy: number): { x: number; y: number } => {
   const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const lift = ctx.perspective ? standingLift(characterDimensions.value.offset) : 0
-  return {
-    left: `${x + dx}px`,
-    top: `${y - lift + dy * counterScaleY.value}px`,
-    '--counter-scale-y': String(counterScaleY.value),
-  }
+  return { x: x + dx, y: y - lift + dy * counterScaleY.value }
 }
 
-// Anchored to the lifted unit's visual top edge.
-const liftButtonStyle = computed(() => {
+const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
+  const { x, y } = spriteLayerPoint(hexId, dx, dy)
+  return { left: `${x}px`, top: `${y}px`, '--counter-scale-y': String(counterScaleY.value) }
+}
+
+// The lift pill's gap from the sprite, and the room it takes above the sprite
+// (the gap plus about its height), in screen pixels.
+const LIFT_PILL_GAP = 8
+const LIFT_PILL_ROOM = LIFT_PILL_GAP + 24
+
+// Anchored to the lifted unit's visual top edge, or below the unit when it would
+// leave the band the board draws in (drawnBounds), where team view's crop would
+// cut it off.
+const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
   const unitId = getCharacter(ctx.grid, hexId)
   if (unitId === undefined || !inspectTargetOf(unitId)) return null
-  return spritePoint(hexId, 0, -characterDimensions.value.size / 2)
+  const half = characterDimensions.value.size / 2
+  const below = spriteLayerPoint(hexId, 0, -half - LIFT_PILL_ROOM).y < ctx.drawnBounds.y
+  const pointer = ctx.perspective ? STANDING_POINTER_HEIGHT : 0
+  return {
+    below,
+    style: {
+      ...spritePoint(hexId, 0, below ? half + pointer : -half),
+      '--lift-pill-gap': `${LIFT_PILL_GAP}px`,
+    },
+  }
 })
 
 const getCharacterName = (characterId: number, hexId: number): string => {
@@ -405,7 +422,7 @@ const hoveredMode = computed(
 // With no mouse or trackpad the mode button only shows the mode and a tap on it
 // reaches the portrait, so the lifted hero's pill carries the control.
 const liftedMode = computed(() =>
-  liftButtonStyle.value
+  liftPill.value
     ? modeButtons.value.find((button) => button.hexId === liftedHexId.value)
     : undefined,
 )
@@ -488,9 +505,10 @@ const liftedMode = computed(() =>
     </button>
 
     <div
-      v-if="liftButtonStyle && liftedHexId !== null"
+      v-if="liftPill && liftedHexId !== null"
       class="lift-actions capture-exclude"
-      :style="liftButtonStyle"
+      :class="{ below: liftPill.below }"
+      :style="liftPill.style"
     >
       <button
         v-if="liftedMode && !readonly"
@@ -643,7 +661,7 @@ const liftedMode = computed(() =>
 
 .lift-actions {
   position: absolute;
-  transform: translate(-50%, calc(-100% - 8px * var(--counter-scale-y)))
+  transform: translate(-50%, calc(-100% - var(--lift-pill-gap) * var(--counter-scale-y)))
     scaleY(var(--counter-scale-y));
   transform-origin: bottom;
   display: flex;
@@ -689,6 +707,20 @@ const liftedMode = computed(() =>
   border: 5px solid transparent;
   border-bottom: 0;
   border-top-color: var(--color-primary);
+}
+
+.lift-actions.below {
+  transform: translate(-50%, calc(var(--lift-pill-gap) * var(--counter-scale-y)))
+    scaleY(var(--counter-scale-y));
+  transform-origin: top;
+}
+
+.lift-actions.below::after {
+  top: -5px;
+  bottom: auto;
+  border: 5px solid transparent;
+  border-top: 0;
+  border-bottom-color: var(--color-primary);
 }
 
 .character-background {
