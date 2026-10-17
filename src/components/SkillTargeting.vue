@@ -146,6 +146,7 @@ const linesToRender = computed(() =>
         :color="TEAM_ARROW_COLORS[arrow.team]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
+        :arc="false"
       />
     </g>
   </svg>

@@ -5,6 +5,19 @@ const SQRT3 = Math.sqrt(3)
 // Constants for arrow path calculation
 const MAX_GRID_HALF_WIDTH = 200 // Approximate half-width of the grid
 const BASE_CURVATURE_FACTOR = 0.15 // Base curve amount as fraction of length
+// In perspective, an arrow's arc height per screen pixel of its length.
+const ARC_RISE = 0.3
+
+// The greatest arc height (screen pixels) that keeps the curve's top at or below
+// the top of the portrait at its higher end, `radius` above that end's center.
+// `dy` is how far the end sits below the start. For a quadratic whose control
+// point sits 2h above the chord's middle, the top is (d0 + 2h)^2 / 4h above the
+// start (d0 = -dy / 2); solving top <= limit for h gives the larger root below.
+function arcHeightLimit(dy: number, radius: number): number {
+  const d0 = -dy / 2
+  const room = radius - Math.min(0, dy) - d0
+  return (room + Math.sqrt(room * room - d0 * d0)) / 2
+}
 
 // Orientation matrix for hex-to-pixel conversion
 export interface Orientation {
@@ -141,6 +154,8 @@ export class Layout {
     characterRadius: number = 0,
     invertCurve: boolean = false,
     curveScale: number = 1,
+    // In perspective, arc up through the air rather than bow sideways.
+    arc: boolean = true,
   ): string {
     const startCenter = this.hexToPixel(startHex)
     const endCenter = this.hexToPixel(endHex)
@@ -153,6 +168,10 @@ export class Layout {
     if (length === 0) {
       const offset = characterRadius || 10
       return `M ${startCenter.x} ${startCenter.y - offset} Q ${startCenter.x + offset} ${startCenter.y} ${startCenter.x} ${startCenter.y + offset}`
+    }
+
+    if (arc && this.squash < 1) {
+      return this.arcPath(startCenter, endCenter, characterRadius, curveScale)
     }
 
     const dirX = dx / length
@@ -206,6 +225,51 @@ export class Layout {
     const controlY = midY + normY * curvature
 
     return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`
+  }
+
+  // In perspective an arrow is an arc in the air from portrait center to portrait
+  // center, drawn through the board's camera: its height rises straight up the
+  // screen at full size, the way portraits stand, so in board units it is divided
+  // by the squash (a quadratic stays exact under that projection). Only the part
+  // outside the two portraits is drawn, and cutting a quadratic leaves a quadratic
+  // on the same curve, so the arrow leaves and lands along it and keeps the
+  // height limit. Portraits close enough to hide the whole curve fall back to
+  // ends on each rim toward the control point.
+  private arcPath(start: Point, end: Point, radius: number, curveScale: number): string {
+    const screenDy = (end.y - start.y) * this.squash
+    const length = Math.hypot(end.x - start.x, screenDy)
+    const height = Math.min(length * ARC_RISE * curveScale, arcHeightLimit(screenDy, radius))
+    const control = {
+      x: (start.x + end.x) / 2,
+      y: (start.y + end.y) / 2 - (2 * height) / this.squash,
+    }
+    const at = (t: number): Point => ({
+      x: (1 - t) ** 2 * start.x + 2 * t * (1 - t) * control.x + t ** 2 * end.x,
+      y: (1 - t) ** 2 * start.y + 2 * t * (1 - t) * control.y + t ** 2 * end.y,
+    })
+    // Where the curve crosses the rim around `center`, from `inside` toward `out`.
+    const rimCrossing = (center: Point, inside: number, out: number): number => {
+      for (let i = 0; i < 24; i++) {
+        const mid = (inside + out) / 2
+        const p = at(mid)
+        if (Math.hypot(p.x - center.x, (p.y - center.y) * this.squash) >= radius) out = mid
+        else inside = mid
+      }
+      return out
+    }
+    const t0 = rimCrossing(start, 0, 0.5)
+    const t1 = rimCrossing(end, 1, 0.5)
+    if (t0 >= t1) {
+      const s = this.ringOffset(control.x - start.x, control.y - start.y, radius)
+      const e = this.ringOffset(control.x - end.x, control.y - end.y, radius)
+      return `M ${start.x + s.x} ${start.y + s.y} Q ${control.x} ${control.y} ${end.x + e.x} ${end.y + e.y}`
+    }
+    const from = at(t0)
+    const to = at(t1)
+    const mix = (1 - t0) * t1 + t0 * (1 - t1)
+    const cx = (1 - t0) * (1 - t1) * start.x + mix * control.x + t0 * t1 * end.x
+    const cy = (1 - t0) * (1 - t1) * start.y + mix * control.y + t0 * t1 * end.y
+    return `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`
   }
 
   // Straight border-to-border line between two hexes: pulled in by characterRadius
