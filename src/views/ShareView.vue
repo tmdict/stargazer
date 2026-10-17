@@ -164,7 +164,6 @@ const editLink = computed(() =>
               :characters="gameDataStore.characters"
               :info
               :show-skills
-              :show-perspective
               :readonly="true"
             />
             <TeamPowerPanel
@@ -181,7 +180,6 @@ const editLink = computed(() =>
             :characters="gameDataStore.characters"
             :info
             :show-skills
-            :show-perspective
             :readonly="true"
           />
           <TeamPowerPanel
