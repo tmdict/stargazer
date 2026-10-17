@@ -25,21 +25,21 @@ const choice = ref<AttrLayerChoice>(ATTR_PARAGON)
 
 export function useAttrLayerSelection(): {
   select: (next: AttrLayerChoice) => void
-  effectiveLayers: (visible: number[]) => number[]
-  litChoice: (visible: number[]) => AttrLayerChoice | null
+  effectiveLayers: (visible: readonly number[]) => readonly number[]
+  litChoice: (visible: readonly number[]) => AttrLayerChoice | null
 } {
   const select = (next: AttrLayerChoice): void => {
     choice.value = next
   }
 
-  const effectiveLayers = (visible: number[]): number[] => {
+  const effectiveLayers = (visible: readonly number[]): readonly number[] => {
     const current = choice.value
     return current !== 'all' && visible.includes(current) ? [current] : visible
   }
 
   // The lit chip follows the effective set, not the raw choice, so a hidden
   // choice's fallback lights exactly what taps will edit.
-  const litChoice = (visible: number[]): AttrLayerChoice | null => {
+  const litChoice = (visible: readonly number[]): AttrLayerChoice | null => {
     const effective = effectiveLayers(visible)
     if (effective.length === 0) return null
     return effective.length === 1 ? effective[0]! : 'all'

@@ -64,9 +64,7 @@ const verticalScaleComp = computed(() =>
 
 // When team view is on, the team-view-clip wrapper sits inside the perspective wrapper:
 // it crops the grid to only the ally region in unscaled SVG coordinates, while the outer
-// scaleY transform continues to apply to the cropped result. This keeps the existing
-// perspective-crop math (image is `bounds.height * (1 - compression) / 2` whitespace top/bottom)
-// working without modification.
+// scaleY transform continues to apply to the cropped result.
 //
 // shiftStyle gets explicit full-grid dimensions (defaultSvgHeight × defaultSvgHeight, scaled
 // by the breakpoint factor): otherwise, position:absolute shrink-to-fit interacts with the

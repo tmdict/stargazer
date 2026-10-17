@@ -49,6 +49,7 @@ grids.setGridCount(1)
 grids.hexSizeMode = 'breakpoint'
 grids.teamView = false
 grids.inverted = false
+grids.perspective = false
 const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()

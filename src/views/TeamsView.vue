@@ -98,6 +98,7 @@ watch(currentBreakpoint, applySize)
 // visit with no stored prefs doesn't inherit them from another page.
 grids.teamView = false
 grids.inverted = false
+grids.perspective = false
 
 // Display toggles are device-level preferences shared by every team mode (board
 // content stays per-mode; slot restores never touch them). Restore them before

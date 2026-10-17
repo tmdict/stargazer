@@ -17,7 +17,7 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import { attrMax, UPGRADE_ATTRS } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
 import { artifactSlot } from '@/stores/grids'
@@ -33,7 +33,7 @@ const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
 
 // Bulk actions and the lit chip both follow the effective set, so what the
 // dock shows selected is exactly what it will edit.
-const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_REFINEMENT] : []))
+const visibleAttrIds = computed(() => (props.showUpgrades ? UPGRADE_ATTRS : []))
 const editLayers = computed(() => effectiveLayers(visibleAttrIds.value))
 
 // The bulk upgrade actions edit real heroes only, but the clear wipes the
