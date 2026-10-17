@@ -500,7 +500,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   transform-origin: center;
   /* Always present (not inline-only) so the perspective<->flat transform animates
      in both directions, in sync with the grid + character icons. */
-  transition: transform 0.3s ease-out;
+  transition: transform var(--transition-perspective);
 }
 
 /* Ally artifact paints above the character layer (which is a later sibling). */
