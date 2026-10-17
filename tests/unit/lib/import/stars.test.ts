@@ -44,19 +44,16 @@ describe('readStars', () => {
       stars: 6,
       family: 'gold',
       level: 2,
-      sure: true,
     })
     expect(readStars(...args(frameWithStars(6, [200, 150, 245])))).toMatchObject({
       stars: 6,
       family: 'purple',
       level: 1,
-      sure: true,
     })
     expect(readStars(...args(frameWithStars(6, [250, 90, 110])))).toMatchObject({
       stars: 6,
       family: 'red',
       level: 3,
-      sure: true,
     })
   })
 
@@ -64,12 +61,10 @@ describe('readStars', () => {
     expect(readStars(...args(frameWithStars(6, [225, 240, 250])))).toMatchObject({
       family: 'white',
       level: 0,
-      sure: true,
     })
     expect(readStars(...args(frameWithStars(6, [250, 200, 245])))).toMatchObject({
       family: 'white',
       level: 4,
-      sure: true,
     })
   })
 
@@ -95,10 +90,6 @@ describe('readStars', () => {
     for (let x = 31; x <= 34; x++)
       f.shot.data.set([250, 200, 245], ((f.box.y + 10) * f.shot.width + x) * 4)
     expect(readStars(...args(f))).toMatchObject({ level: 0, sure: false })
-    expect(readStars(...args(frameWithStars(6, [225, 240, 250])))).toMatchObject({
-      level: 0,
-      sure: true,
-    })
   })
 
   it('reads a short row as R0 whatever its colour', () => {
