@@ -86,6 +86,6 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
 }
 
 .arrow-layer g {
-  transition: transform 0.3s ease-out;
+  transition: transform var(--transition-perspective);
 }
 </style>

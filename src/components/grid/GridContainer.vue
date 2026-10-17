@@ -59,8 +59,13 @@ provideGridContext(liveContext)
 // the squashed board floating in empty space. In perspective the box takes the
 // squashed height of the band the board draws in (drawnBounds), and the board
 // moves up so that band fills it; team view's clip already starts at its top.
+// The box always has an explicit height, so switching views eases it along with
+// the board's squash and what sits below moves with the board.
 const squash = computed(() => {
-  if (!props.context.perspective) return { box: {}, board: {} }
+  if (!props.context.perspective) {
+    const flat = { height: `${props.context.viewBoxBounds.height}px`, alignItems: 'flex-start' }
+    return { box: flat, board: {} }
+  }
   const c = PERSPECTIVE.compression
   const band = props.context.drawnBounds
   const top = props.context.teamView ? 0 : band.y
@@ -114,7 +119,10 @@ const shiftStyle = computed(() => {
 
 <template>
   <div class="perspective-container" :style="squash.box">
-    <div :style="squash.board" style="transform-origin: top; transition: transform 0.3s ease-out">
+    <div
+      :style="squash.board"
+      style="transform-origin: top; transition: transform var(--transition-perspective)"
+    >
       <div :style="clipStyle">
         <div :style="shiftStyle">
           <GridManager
@@ -138,6 +146,7 @@ const shiftStyle = computed(() => {
 <style scoped>
 /* Perspective container - simplified to just hold the grid */
 .perspective-container {
+  transition: height var(--transition-perspective);
   display: flex;
   justify-content: center;
   align-items: center;
