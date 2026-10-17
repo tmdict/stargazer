@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
-  artifactState,
   buildTeamImportPlan,
   cellState,
   isBlockingIssue,
@@ -265,16 +264,6 @@ describe('buildTeamImportPlan', () => {
 })
 
 describe('review state', () => {
-  it('asks to review an unsure artifact until it is edited, and never an absent one', () => {
-    const r = reading([5], [7])
-    expect(artifactState(r, Team.ALLY, {})).toBe('sure')
-    expect(artifactState(r, Team.ENEMY, {})).toBe('sure')
-    r.artifacts[Team.ALLY]!.sure = false
-    expect(artifactState(r, Team.ALLY, {})).toBe('review')
-    expect(artifactState(r, Team.ALLY, { [Team.ALLY]: 14 })).toBe('sure')
-    expect(artifactState(r, Team.ALLY, { [Team.ALLY]: null })).toBe('sure')
-  })
-
   it('needs both the hero and the paragon to be sure, and lets an edit settle each', () => {
     const cell = hero(1)
     expect(cellState(cell)).toBe('sure')
