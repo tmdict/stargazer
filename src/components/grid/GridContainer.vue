@@ -55,6 +55,21 @@ const liveContext = new Proxy({} as GridContext, {
 })
 provideGridContext(liveContext)
 
+// The squash is a transform, which leaves the box at the board's flat height with
+// the squashed board floating in empty space. In perspective the box takes the
+// squashed height of the band the board draws in (drawnBounds), and the board
+// moves up so that band fills it; team view's clip already starts at its top.
+const squash = computed(() => {
+  if (!props.context.perspective) return { box: {}, board: {} }
+  const c = PERSPECTIVE.compression
+  const band = props.context.drawnBounds
+  const top = props.context.teamView ? 0 : band.y
+  return {
+    box: { height: `${band.height * c}px`, alignItems: 'flex-start' },
+    board: { transform: `translateY(${-top * c}px) scaleY(${c})` },
+  }
+})
+
 // When team view is on, the team-view-clip wrapper sits inside the perspective wrapper:
 // it crops the grid to only the ally region in unscaled SVG coordinates, while the outer
 // scaleY transform continues to apply to the cropped result.
@@ -98,11 +113,8 @@ const shiftStyle = computed(() => {
 </script>
 
 <template>
-  <div class="perspective-container">
-    <div
-      :style="context.perspective ? { transform: `scaleY(${PERSPECTIVE.compression})` } : {}"
-      style="transform-origin: center; transition: transform 0.3s ease-out"
-    >
+  <div class="perspective-container" :style="squash.box">
+    <div :style="squash.board" style="transform-origin: top; transition: transform 0.3s ease-out">
       <div :style="clipStyle">
         <div :style="shiftStyle">
           <GridManager
