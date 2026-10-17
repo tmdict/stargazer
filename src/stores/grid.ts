@@ -32,10 +32,7 @@ export const useGridStore = defineStore('grid', () => {
   const currentMap = computed(() => active().currentMap)
   const getAllTiles = computed(() => active().grid.getAllTiles())
 
-  const gridOrigin = computed(() => {
-    const scale = grids.hexSize.x / 40
-    return { x: 300 * scale, y: 300 * scale }
-  })
+  const gridOrigin = computed(() => active().layout.origin)
 
   const teamView = computed({
     get: () => grids.teamView,

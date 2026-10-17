@@ -69,10 +69,12 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 </template>
 
 <style scoped>
+/* Visible overflow: a lifted arrow to the far row rises above the box. */
 .arrow-layer {
   position: absolute;
   top: 0;
   left: 0;
+  overflow: visible;
   pointer-events: none;
 }
 

@@ -12,6 +12,7 @@ GridManager                       event bus, drop handler, hex detector
 │   ├── regular hexes
 │   ├── occupied hexes
 │   ├── skill-highlighted hexes
+│   ├── skill corner lines
 │   ├── tile text
 │   └── event layer               transparent, takes every tile event
 ├── GridArtifacts                 artifact cells, own native drag
@@ -29,7 +30,7 @@ One drag exists at a time, so `useDragDrop` keeps its state and document handler
 
 `DragDropProvider` is mounted once per page (`HomeView`, `TeamsView`, `ShareView`) around the boards and the picker. It owns the document `drop`, `dragover` and `mousemove` listeners. Its `dragover` calls `preventDefault()`, which makes the whole page a drop target, so those listeners live and die with the provider's mount instead of the module. Each interactive `GridManager` registers a hex detector and a drop handler under its board id, and readonly boards register neither.
 
-Hover detection is hybrid. A tile's own `dragover` answers directly. On every `mousemove` and `dragover` the provider also asks each board's detector, which maps the screen point into SVG space through `getScreenCTM()` (the perspective transform included) and ray-casts it against each hex polygon. The first board to report a hex wins. A drop on a tile stops propagation and sets `dropHandled`, two separate guards against the provider's document `drop` handling the same event. A drop anywhere else goes to the handler of the board under the pointer.
+Hover detection is hybrid. A tile's own `dragover` answers directly. On every `mousemove` and `dragover` the provider also asks each board's detector, which maps the screen point into SVG space through `getScreenCTM()` (the perspective squash included; its tilt is already in the layout's polygons) and ray-casts it against each hex polygon. The first board to report a hex wins. A drop on a tile stops propagation and sets `dropHandled`, two separate guards against the provider's document `drop` handling the same event. A drop anywhere else goes to the handler of the board under the pointer.
 
 A tile's `dragleave` clears the hover only when position detection disagrees, because `dragleave` also fires when the pointer moves onto the portrait above the same tile.
 
