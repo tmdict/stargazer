@@ -558,7 +558,7 @@ const liftedMode = computed(() =>
 .character {
   pointer-events: auto;
   cursor: grab;
-  transition: transform 0.3s ease-out;
+  transition: transform var(--transition-perspective);
   -webkit-touch-callout: none;
   user-select: none;
 }
