@@ -30,6 +30,7 @@ const sample = (): ImportShot => ({
   kind: 'result',
   name: 'sample.png',
   size: 1,
+  sha256: 'a',
   thumb: 'blob:sample',
   status: 'ready',
   error: null,

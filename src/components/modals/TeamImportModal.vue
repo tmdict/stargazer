@@ -16,6 +16,7 @@ import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import {
+  CORRECTIONS_CAP,
   shotMapIndex,
   useTeamImport,
   type ImportShot,
@@ -76,7 +77,10 @@ const {
   swapSides,
   learnedCount,
   hasCorrections,
+  correctionCount,
+  correctionsFull,
   exportCorrections,
+  clearCorrections,
   plan,
   addFiles,
   removeShot,
@@ -203,10 +207,10 @@ const handlePaste = (event: ClipboardEvent): void => {
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
-const handleDownloadCorrections = async (): Promise<void> => {
+const handleDownloadCorrections = (): void => {
   try {
     downloadBlob(
-      new Blob([await exportCorrections()], { type: 'application/json' }),
+      new Blob([exportCorrections()], { type: 'application/json' }),
       timestampedName('stargazer-import-corrections', 'json'),
     )
   } catch {
@@ -309,6 +313,11 @@ const handleSaveAsNew = (): void => {
 const handleForgetLearned = (): void => {
   if (!confirm('forget')) return
   forgetLearned()
+}
+
+const handleClearCorrections = (): void => {
+  if (!confirm('clear')) return
+  clearCorrections()
 }
 </script>
 
@@ -500,6 +509,10 @@ const handleForgetLearned = (): void => {
         </li>
       </ul>
 
+      <p v-if="correctionsFull" class="note error">
+        {{ i18n.t('app.import-corrections-full', { max: CORRECTIONS_CAP }) }}
+      </p>
+
       <div class="footer">
         <button
           type="button"
@@ -525,6 +538,19 @@ const handleForgetLearned = (): void => {
           @click="handleDownloadCorrections"
         >
           {{ i18n.t('app.import-download-corrections') }}
+        </button>
+        <button
+          v-if="correctionCount > 0"
+          type="button"
+          class="link-btn"
+          :class="{ armed: armed === 'clear' }"
+          @click="handleClearCorrections"
+        >
+          {{
+            armed === 'clear'
+              ? i18n.t('app.confirm')
+              : i18n.t('app.import-clear-corrections', { count: correctionCount })
+          }}
         </button>
         <button
           v-if="learnedCount > 0"

@@ -63,7 +63,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 `cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), needs its refinement confirmed (hero and paragon settled but the star colour doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. `artifactState` treats each side's artifact the same way: settled once read surely or edited, otherwise counted in the card's review number, with the icon crop from the screenshot shown beside it.
 
-Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. `useTeamImport` keeps the worker, its references and the learned faces at module level for the page visit, and `TeamsView` calls `disposeTeamImport` when the page is left. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
+Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. The edits' corrections are saved as they are made ([Saved corrections](#saved-corrections)), so closing loses none. `useTeamImport` keeps the worker and its references at module level for the page visit, and `TeamsView` calls `disposeTeamImport` when the page is left. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
 
 `swapSides` puts every screenshot's Ally column on the enemy side of its board. The game's Ally tab is always the viewing player, whichever side of the board they fought from. It is one choice per match, since a player keeps one side for every map and the boards hold a hero once per side page-wide. It is a placement choice, so it stays out of the export and resets with the shots.
 
@@ -150,7 +150,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ### Corrections export
 
-`exportCorrections` writes a user-controlled download, never an upload. It holds one entry per screenshot with at least one correction, so it is downloaded before the modal closes. Each side of a reading holds five hero readings, one per row from top to bottom; the example shows the first of each. Card images and per-card descriptors are left out.
+`exportCorrections` writes a user-controlled download, never an upload. It holds one entry per screenshot with at least one correction: every saved one, with the latest edits of the screenshots open in the modal in place of their saved entries, and any screenshot left unsaved at the cap while it is open. Downloading clears nothing. Each side of a reading holds five hero readings, one per row from top to bottom; the example shows the first of each. Card images and per-card descriptors are left out.
 
 ```json
 {
@@ -225,7 +225,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 | `createdAt`                        | When the file was made, ISO 8601.                                                                                                                                                                                                                                                                             |
 | `learnedIcons`                     | The learned faces, in the format above.                                                                                                                                                                                                                                                                       |
 | `source`                           | The screenshot's file name, size in bytes, and SHA-256 in hex. It identifies the file, never a face.                                                                                                                                                                                                          |
-| `context`                          | The app's season, the board count of the Teams mode at export, and the width the panel is framed to before reading (`framePanel`).                                                                                                                                                                            |
+| `context`                          | The app's season, the board count of the Teams mode the screenshot was corrected in, and the width the panel is framed to before reading (`framePanel`).                                                                                                                                                      |
 | `predicted.mapIndex`, `mapCount`   | The map shown (from 0) and how many maps the match had, both `null` when the map strip was not found.                                                                                                                                                                                                         |
 | `predicted.winner`                 | Who won this map (1 ally, 2 enemy), read from the Ally tab's colour, or `null`.                                                                                                                                                                                                                               |
 | `predicted.mapResults`             | Who won each map on the strip, `null` where a result was cropped off.                                                                                                                                                                                                                                         |
@@ -237,6 +237,35 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 | `labels.mapIndex`, `labels.winner` | A corrected map or winner, present only when the user changed it.                                                                                                                                                                                                                                             |
 
 A missing label means unreviewed, and `null` means an explicit removal. Learned descriptors carry no source image, so checking or regenerating one needs the original screenshots.
+
+### Saved corrections
+
+`stargazer.import.corrections` keeps the corrections until the user clears them, across openings of the modal, page visits and sessions. Each entry of `shots` is exactly one entry of the export's `shots` above, keyed by its `source.sha256`:
+
+```json
+{
+  "version": 1,
+  "shots": [
+    {
+      "source": { "name": "match-2.png", "size": 1834211, "sha256": "<64 hex characters>" },
+      "context": { "season": 8, "mapCount": 3, "imageWidth": 1150 },
+      "predicted": { "mapIndex": 1, "mapCount": 3, "winner": 1, "sides": {}, "artifacts": {} },
+      "labels": {
+        "cells": { "2:0": { "characterId": 36, "paragon": 1 } },
+        "artifacts": { "2": 5 },
+        "winner": 1
+      }
+    }
+  ]
+}
+```
+
+| Field     | Rule                                                                                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version` | Always `1`; any other value, or a value that does not parse, reads as no saved corrections.                                                                                     |
+| `shots`   | One export entry per corrected result screenshot, in the order first saved. An entry without a source, a context, a prediction, or cell and artifact labels is dropped on read. |
+
+A screenshot's entry is written at its first correction and rewritten on every later one, synchronously, so an edit made just before the modal closes is kept. Correcting the same file in a later import replaces its entry; opening it without correcting it leaves the entry alone. The list holds at most `CORRECTIONS_CAP` (100) screenshots, about 0.8 MB, so it never crowds out the saved teams sharing the browser's storage: a new screenshot past the cap, or a write the browser refuses, is left unsaved and the modal says so, while it still downloads until the modal closes. Clear corrections removes the key.
 
 ## Checking against real screenshots
 
