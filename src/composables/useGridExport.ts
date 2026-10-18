@@ -52,10 +52,11 @@ const excludeMarkedChrome = (node: HTMLElement): boolean =>
 // a full-size board; it scales with the board, so every screen saves the same.
 const CROP_MARGIN = 8
 
-// Image pixels per CSS pixel on a full-size board: hero portraits are 180px-wide
-// sources shown 54px wide there, so this keeps their full detail. A smaller
-// board (a phone) scales up to match, so every screen saves the same image.
-const FULL_DETAIL_RATIO = 180 / 54
+// Image pixels per CSS pixel on a full-size board: portraits are drawn from their
+// 100px-wide display images (imageAssets.ts) at 48px inside their borders, so this
+// keeps every portrait pixel. A smaller board (a phone) scales up to match, so
+// every screen saves the same image.
+const FULL_DETAIL_RATIO = 100 / 48
 // The largest canvas iOS Safari draws is 4096 x 4096; a capture stays under it.
 const MAX_EXPORT_PIXELS = 16_000_000
 
