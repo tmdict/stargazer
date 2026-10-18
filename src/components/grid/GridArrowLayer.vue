@@ -27,9 +27,11 @@ const { svgDimensions, layerStyle, layerTransform } = useArrowLayer(() => props.
   left: 0;
   overflow: visible;
   pointer-events: none;
+  transition: opacity var(--transition-fast);
 }
 
-.grid-arrow-layer > g {
-  transition: transform var(--transition-perspective);
+.switching .grid-arrow-layer {
+  opacity: 0;
+  transition: none;
 }
 </style>
