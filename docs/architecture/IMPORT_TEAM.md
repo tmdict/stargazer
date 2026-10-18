@@ -106,7 +106,7 @@ The map is the one of the mode's lists whose deployment tiles for that side are 
 
 `applyLineups` places every side with `placeSide`, the Load menu's placement, so a unit with a tile takes it and one without takes a random free tile. A side placed from a formation screenshot re-seeds its phantimal baseline once placed, so it keeps the phantimal the screenshot showed, or none; a side without one gets the phantimal its lineup qualifies for, as before.
 
-The review shows a formation screenshot's units (the portrait as shot, its tile, and the unit it is taken for, which a dropdown of the side's units changes) and, on a board without a result screenshot, its card row and artifact. Learning and the corrections export cover result screenshots only.
+The review shows a formation screenshot's units over two numbered boards: the screenshot's own, with each unit's ring coloured by its state, and the side as the plan places it on its map (`BoardThumbnail`), so a tile can be checked against both; pointing at a unit in the list rings it on each. Under them each unit shows its portrait as shot, its tile, and the unit it is taken for, which a dropdown of the side's units changes. A board without a result screenshot also shows the formation's card row and artifact. Learning and the corrections export cover result screenshots only.
 
 ## Reference descriptors
 

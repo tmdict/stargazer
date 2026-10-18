@@ -25,6 +25,7 @@ import { getOpposingTeam } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading } from '@/lib/import/types'
+import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
   DEFAULT_VARIANT,
@@ -33,6 +34,7 @@ import {
   type TeamModeKey,
   type VariantMatch,
 } from '@/lib/teams/modes'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
   isBlockingIssue,
@@ -129,6 +131,21 @@ const unitOptions = (shot: ImportShot): number[] => {
 const cardSides = (shot: ImportShot): Team[] => {
   const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
   return side === null || hasResult(shot) ? [] : [side]
+}
+
+// The side a formation shot fills, as the plan places it, on the map it
+// lands on: the one its tiles name, else the board's own.
+const placedSide = (
+  shot: ImportShot,
+): { mapKey: string; team: Team; side: SideLoadBoard } | null => {
+  const mapIndex = shotMapIndex(shot, mapCount.value)
+  const team = formationSide(shot)
+  if (mapIndex === null || team === null) return null
+  const board = plan.value.boards[mapIndex]
+  const side = board?.sides[team]
+  if (!board || !side) return null
+  const mapKey = board.map ?? grids.contexts[mapIndex]?.currentMap ?? DEFAULT_MAP_KEY
+  return { mapKey, team, side }
 }
 
 const formationReview = (shot: ImportShot): number => {
@@ -438,7 +455,11 @@ const handleForgetLearned = (): void => {
           :names
           :swap-sides
           :sides="cardSides(selected)"
-          :units="{ assignments: unitsOf(selected.id), options: unitOptions(selected) }"
+          :units="{
+            assignments: unitsOf(selected.id),
+            options: unitOptions(selected),
+            placed: placedSide(selected),
+          }"
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
