@@ -5,6 +5,7 @@
  * visit; references arrive once, then each read is one message each way. */
 
 import { buildArtifactTable } from '@/lib/import/artifacts'
+import { fitBoard } from '@/lib/import/board'
 import { readFormation } from '@/lib/import/formation'
 import { prepareFrameRefs } from '@/lib/import/frames'
 import { buildHeroTable } from '@/lib/import/heroes'
@@ -36,10 +37,14 @@ export type TeamImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
   | { type: 'read'; id: string; image: RgbaImage; kind: ShotKind }
+  // Which kind a screenshot is, by whether a whole board is found in it; it
+  // needs no references, so a second worker answers while this one reads.
+  | { type: 'sort'; id: string; image: RgbaImage }
 
 export type TeamImportResponse =
   | { type: 'ready' }
   | { type: 'reading'; id: string; reading: ScreenshotReading }
+  | { type: 'sorted'; id: string; kind: ShotKind }
   | { type: 'error'; id: string | null; message: string }
 
 // The app compiles under the DOM lib, where `self` is a Window and its
@@ -73,8 +78,16 @@ const transferablesOf = (reading: ScreenshotReading): Transferable[] => {
 
 scope.addEventListener('message', (event) => {
   const msg = event.data
-  const id = msg.type === 'read' ? msg.id : null
+  const id = msg.type === 'read' || msg.type === 'sort' ? msg.id : null
   try {
+    if (msg.type === 'sort') {
+      scope.postMessage({
+        type: 'sorted',
+        id: msg.id,
+        kind: fitBoard(msg.image) ? 'formation' : 'result',
+      })
+      return
+    }
     if (msg.type === 'references') {
       portraits = msg.portraits
       refs = {
