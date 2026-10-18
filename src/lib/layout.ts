@@ -42,6 +42,13 @@ export interface Point {
   y: number
 }
 
+// A full-size board's hex radius. The board and token sizes below are measured at
+// it, and a board scales them by its hexScale (hexSize.x / BASE_HEX_RADIUS).
+export const BASE_HEX_RADIUS = 40
+
+// The square box a full-size board draws in, centered on the board.
+export const BOARD_SIZE = 600
+
 // The game's formation camera, which the perspective view reproduces: how much it
 // shortens the board vertically (a CSS squash) and its tilt (the Layout's).
 export const PERSPECTIVE = { compression: 0.606, tilt: 0.01 } as const

@@ -14,7 +14,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { ARTIFACT_RADIUS } from '@/lib/layout'
+import { ARTIFACT_RADIUS, BOARD_SIZE } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -80,7 +80,7 @@ const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
 
 // The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
 // so it compresses with the perspective wrapper exactly like the real hexes.
-const gridPixelSize = computed(() => 600 * ctx.hexScale)
+const gridPixelSize = computed(() => BOARD_SIZE * ctx.hexScale)
 // Match the tile stroke (GridTiles' BASE_STROKE_WIDTH) so a covering tile border
 // fully hides the dash on a shared edge.
 const cellStrokeWidth = computed(() => Math.max(1, 2 * ctx.hexScale))

@@ -16,6 +16,7 @@ import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
+import { BOARD_SIZE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
@@ -35,7 +36,6 @@ interface Props {
   // Map editor props
   isMapEditorMode: boolean
   selectedMapEditorState: State
-  defaultSvgHeight: number
   // Debug props
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
@@ -241,7 +241,6 @@ defineExpose({
       ref="gridTilesRef"
       :hexes="ctx.visibleHexes"
       :layout="ctx.layout"
-      :height="defaultSvgHeight"
       :show-tile-ids="info.tileIds"
       :show-coordinates="info.coordinates"
       :is-map-editor-mode="isMapEditorMode"
@@ -271,14 +270,14 @@ defineExpose({
       :tap-mode
     />
 
-    <SkillTargeting v-if="showSkills" :default-svg-height="defaultSvgHeight" />
+    <SkillTargeting v-if="showSkills" />
 
     <!-- Debug layer (Debug tab only). Capped like the tiles layer, or it
          widens the page on a screen narrower than the board. -->
     <svg
       v-if="showDebug"
-      :width="600 * ctx.hexScale"
-      :height="defaultSvgHeight * ctx.hexScale"
+      :width="BOARD_SIZE * ctx.hexScale"
+      :height="BOARD_SIZE * ctx.hexScale"
       style="position: absolute; max-width: 100%; pointer-events: none"
     >
       <g>
@@ -288,7 +287,7 @@ defineExpose({
 
     <!-- Closest-target arrows: last in the stack so they stay readable over
          the pathfinding debug lines when the Debug tab shows both. -->
-    <GridArrows v-if="info.targeting" :default-svg-height="defaultSvgHeight" />
+    <GridArrows v-if="info.targeting" />
   </div>
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

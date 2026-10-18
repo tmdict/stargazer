@@ -5,12 +5,6 @@ import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { Team } from '@/lib/types/team'
 
-interface Props {
-  defaultSvgHeight: number
-}
-
-defineProps<Props>()
-
 const ctx = useGridContext()
 
 // Normal targeting arrows bow harder than skill arrows in the flat view, and arc
@@ -33,7 +27,7 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
        enemy half away, so the layer hides rather than draw stubs truncated at
        the crop edge (from sprites that are not even rendered, on the enemy
        side). -->
-  <GridArrowLayer v-if="!ctx.teamView" :default-svg-height>
+  <GridArrowLayer v-if="!ctx.teamView">
     <template #default>
       <GridArrow
         v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"

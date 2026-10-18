@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { useArrowLayer } from '@/composables/useArrowLayer'
 
-const props = defineProps<{ defaultSvgHeight: number }>()
-
-const { svgDimensions, layerStyle, layerTransform } = useArrowLayer(() => props.defaultSvgHeight)
+const { svgDimensions, layerStyle, layerTransform } = useArrowLayer()
 </script>
 
 <template>

@@ -57,7 +57,7 @@ import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/charact
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
+import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
 import { artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
@@ -475,28 +475,27 @@ export function createGridContext(
   }
 
   const ctx = scope.run(() => {
+    const hexScale = computed(() => hexSize.value.x / BASE_HEX_RADIUS)
+    const fullBox = computed<ViewBoxBounds>(() => {
+      const size = BOARD_SIZE * hexScale.value
+      return { x: 0, y: 0, width: size, height: size }
+    })
+
     // Invert renders the board rotated 180 degrees and perspective tilts it: the
     // layout is rebuilt with both, and every consumer (tiles, sprites, arrows,
     // crops, hit-testing) follows them because they all derive from this computed.
     const layout = computed(() => {
-      const scale = hexSize.value.x / 40
+      const center = (BOARD_SIZE / 2) * hexScale.value
       const tilt = perspective.value ? PERSPECTIVE.tilt : 0
       const squash = perspective.value ? PERSPECTIVE.compression : 1
       const layoutAt = (originY: number) =>
-        new Layout(
-          POINTY,
-          hexSize.value,
-          { x: 300 * scale, y: originY },
-          inverted.value,
-          tilt,
-          squash,
-        )
+        new Layout(POINTY, hexSize.value, { x: center, y: originY }, inverted.value, tilt, squash)
       // The tilt draws near rows larger than far ones, which lowers the board in its
       // box until the near edge runs past the bottom; raising the origin by that
       // drift centers the drawn board, as the flat one is.
       const draft = layoutAt(0)
       const ys = grid.keys().flatMap((hex) => draft.polygonCorners(hex).map((c) => c.y))
-      return layoutAt(300 * scale - (Math.min(...ys) + Math.max(...ys)) / 2)
+      return layoutAt(center - (Math.min(...ys) + Math.max(...ys)) / 2)
     })
 
     // Team view always shows the ally team; under invert the same crop simply
@@ -527,9 +526,7 @@ export function createGridContext(
     // the far row in perspective. Team view crops to it, and the perspective view
     // fits the board's box to it.
     const drawnBounds = computed<ViewBoxBounds>(() => {
-      const scale = hexSize.value.x / 40
-      const fullBox = { x: 0, y: 0, width: 600 * scale, height: 600 * scale }
-      if (visibleHexes.value.length === 0) return fullBox
+      if (visibleHexes.value.length === 0) return fullBox.value
 
       const hexRadius = hexSize.value.x
       let minX = Infinity
@@ -567,11 +564,9 @@ export function createGridContext(
       return { x, y, width, height }
     })
 
-    const viewBoxBounds = computed<ViewBoxBounds>(() => {
-      if (teamView.value) return drawnBounds.value
-      const scale = hexSize.value.x / 40
-      return { x: 0, y: 0, width: 600 * scale, height: 600 * scale }
-    })
+    const viewBoxBounds = computed<ViewBoxBounds>(() =>
+      teamView.value ? drawnBounds.value : fullBox.value,
+    )
 
     const placements = computed(() => getCharacterPlacements(grid))
     const charactersPlaced = computed(() => getCharacterCount(grid))
@@ -598,7 +593,6 @@ export function createGridContext(
       ...artifactTargetArrows(grid, Team.ENEMY, artifacts.enemy.value),
     ])
 
-    const hexScale = computed(() => hexSize.value.x / 40)
     const teamViewActive = computed(() => teamView.value)
     const invertedActive = computed(() => inverted.value)
     const perspectiveActive = computed(() => perspective.value)
