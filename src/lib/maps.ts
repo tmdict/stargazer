@@ -94,15 +94,17 @@ export const getMapByKey = (key: string): MapConfig | undefined => {
   return MAPS[key]
 }
 
-// Occupied tiles read as their available state, so a populated board still
-// matches its preset.
 const AVAILABLE_STATE: Partial<Record<State, State>> = {
   [State.OCCUPIED_ALLY]: State.AVAILABLE_ALLY,
   [State.OCCUPIED_ENEMY]: State.AVAILABLE_ENEMY,
 }
 
-const tileKey = (hexId: number, state: State): string =>
-  `${hexId}:${AVAILABLE_STATE[state] ?? state}`
+// A tile's state without its occupant: an occupied tile reads as its side's
+// available tile.
+export const availableState = (state: State): State => AVAILABLE_STATE[state] ?? state
+
+// Occupied tiles read as available, so a populated board still matches its preset.
+const tileKey = (hexId: number, state: State): string => `${hexId}:${availableState(state)}`
 
 const layoutKey = (tileKeys: string[]): string => tileKeys.sort().join(' ')
 
