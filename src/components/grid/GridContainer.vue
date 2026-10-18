@@ -5,6 +5,7 @@ import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import { provideGridContext, type GridContext } from '@/composables/useGridContext'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
+import { BOARD_SIZE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 
@@ -23,8 +24,6 @@ interface Props {
   selectedMapEditorState?: State
   // Debug props
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
-  // Constants
-  defaultSvgHeight?: number
   // Interaction control
   readonly?: boolean
   // Force tap-to-place (true) or the desktop popup (false); omit to derive from
@@ -35,7 +34,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   isMapEditorMode: false,
   selectedMapEditorState: State.DEFAULT,
-  defaultSvgHeight: 600,
   readonly: false,
   // Tri-state: keep an omitted tapMode as undefined (not the Boolean-prop default
   // of false) so GridManager's `tapMode ?? scale < 1` falls back to grid scale on
@@ -96,17 +94,14 @@ watch(
 // it crops the grid to only the ally region in unscaled SVG coordinates, while the outer
 // scaleY transform continues to apply to the cropped result.
 //
-// shiftStyle gets explicit full-grid dimensions (defaultSvgHeight × defaultSvgHeight, scaled
-// by the breakpoint factor): otherwise, position:absolute shrink-to-fit interacts with the
+// shiftStyle gets explicit full-grid dimensions (the board's box, scaled by the
+// breakpoint factor): otherwise, position:absolute shrink-to-fit interacts with the
 // `max-width: 100%` on .grid-tiles and shrinks the SVG to the clip width while character
 // overlays (positioned in literal pixels from the board's layout) stay at full size,
 // producing a hex/character offset mismatch.
 const fullGridSize = computed(() => {
-  const scale = props.context.hexScale
-  return {
-    width: props.defaultSvgHeight * scale,
-    height: props.defaultSvgHeight * scale,
-  }
+  const size = BOARD_SIZE * props.context.hexScale
+  return { width: size, height: size }
 })
 
 const clipStyle = computed(() => {
@@ -147,7 +142,6 @@ const shiftStyle = computed(() => {
             :is-map-editor-mode
             :selected-map-editor-state
             :debug-panel-ref
-            :default-svg-height
             :readonly
             :tap-mode
           />

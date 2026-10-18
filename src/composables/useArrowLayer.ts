@@ -1,7 +1,7 @@
-import { computed, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
-import { PORTRAIT_RADIUS } from '@/lib/layout'
+import { BOARD_SIZE, PORTRAIT_RADIUS } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 
@@ -29,7 +29,7 @@ export function useArrowStyle() {
 /**
  * Geometry of the arrow overlay SVG (GridArrowLayer), aligned to the grid.
  */
-export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
+export function useArrowLayer() {
   const gridStore = useGridStore()
   const ctx = useGridContext()
 
@@ -37,8 +37,8 @@ export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   // and arrowheads keep their shape; the layout's arrow paths come out in these
   // upright coordinates.
   const svgDimensions = computed(() => {
-    const scale = gridStore.getHexScale()
-    return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale * ctx.layout.squash }
+    const size = BOARD_SIZE * gridStore.getHexScale()
+    return { width: size, height: size * ctx.layout.squash }
   })
 
   const layerStyle = computed(() =>

@@ -38,8 +38,6 @@ import { useUrlStateStore } from '@/stores/urlState'
 import { serializeGridState } from '@/utils/gridStateSerializer'
 import { encodeGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
-const DEFAULT_SVG_HEIGHT = 600
-
 const gridStore = useGridStore()
 const grids = useGrids()
 // The Arena is the single-board case. Start from a clean single board and default
@@ -291,7 +289,6 @@ const handleResetMap = () => {
             :is-map-editor-mode="mapEditorActive"
             :selected-map-editor-state="selectedMapEditorState"
             :debug-panel-ref
-            :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
           <template v-if="info.heroCard">
             <TeamPowerPanel :context="activeContext" :show-upgrades="info.upgrades" />

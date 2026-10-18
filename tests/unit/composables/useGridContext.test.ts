@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
+import { BOARD_SIZE } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 
@@ -161,8 +162,8 @@ describe('createGridContext attr re-keying and clearing', () => {
 })
 
 /* The tilt draws near rows larger than far ones, which would lower the board in its
- * 600-unit box (the tiles' and layers' svg height) until the near edge is clipped;
- * the context centers the drawn board instead. */
+ * box (BOARD_SIZE) until the near edge is clipped; the context centers the drawn
+ * board instead. */
 describe('createGridContext perspective layout', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -180,6 +181,6 @@ describe('createGridContext perspective layout', () => {
     const top = Math.min(...ys)
     const bottom = Math.max(...ys)
     expect(top).toBeGreaterThan(0)
-    expect(600 - bottom).toBeCloseTo(top, 6)
+    expect(BOARD_SIZE - bottom).toBeCloseTo(top, 6)
   })
 })

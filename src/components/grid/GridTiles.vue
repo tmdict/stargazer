@@ -9,7 +9,7 @@ import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
-import type { Layout } from '@/lib/layout'
+import { BOARD_SIZE, type Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -25,7 +25,6 @@ import {
 interface Props {
   hexes: Hex[]
   layout: Layout
-  height: number
   showTileIds: boolean
   showCoordinates: boolean
   isMapEditorMode: boolean
@@ -37,7 +36,6 @@ interface Props {
 const props = defineProps<Props>()
 
 // Base (unscaled) render constants
-const BASE_WIDTH = 600
 const BASE_STROKE_WIDTH = 2
 const HEX_ID_FONT_SIZE = 18
 const COORDINATE_FONT_SIZE = 8
@@ -135,11 +133,8 @@ const shouldShowHexId = (hex: Hex) => {
 const blockHover = ref(false)
 
 const svgDimensions = computed(() => {
-  const scale = ctx.hexScale
-  return {
-    width: BASE_WIDTH * scale,
-    height: props.height * scale,
-  }
+  const size = BOARD_SIZE * ctx.hexScale
+  return { width: size, height: size }
 })
 
 const scaledFontSizes = computed(() => {
