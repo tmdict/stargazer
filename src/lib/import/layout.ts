@@ -1,14 +1,17 @@
-/* Geometry of a result screenshot, in the pixels of the shot normalised to
- * CANONICAL_WIDTH. Nominal positions only seed the searches (strip.ts finds
- * the Ally and Enemy tabs, frames.ts settles each card column under its tab,
- * and every other region derives from those anchors); the ratios are the
- * game's layout and hold across the phone sizes measured. The one invariant
- * is the width: a crop must keep the full screen width, since the game lays
- * the panel out from it; a raw, uncropped capture qualifies. */
+/* Geometry of a result screenshot, in the pixels of the shot framed to
+ * CANONICAL_WIDTH by its tabs (panel.ts). Nominal positions only seed the
+ * searches (strip.ts finds the Ally and Enemy tabs, frames.ts settles each
+ * card column under its tab, and every other region derives from those
+ * anchors); the ratios are the game's layout and hold across the phone and
+ * desktop captures measured. */
 
 import { Team } from '@/lib/types/team'
 
 export const CANONICAL_WIDTH = 1150
+
+// A result shot is read at its own size up to this width, so a panel that
+// fills only part of a large capture keeps its pixels until it is framed.
+export const RESULT_MAX_WIDTH = 4096
 
 // A region at a fixed offset from a landmark point.
 export interface Region {
@@ -49,16 +52,20 @@ export const HEADER_ICON: { dx: Record<Team, number>; dy: number; diameter: numb
 // The Ally and Enemy tabs as landmarks: each is a solid orange or blue block
 // (that team's result on this map) at the panel's top left, beside the
 // panel's dark header row, and its team's first card starts just under it.
-// Rows where the left strip is mostly that colour and the header row beside
-// it is mostly dark are tab rows; a run of them the height of a tab is a tab.
+// `left` and `width` are where the tab stands in this layout, which every
+// shot is framed to (panel.ts). The search is in tab widths, since a shot's
+// scale is unknown until its tabs are found: a tab is about half its width
+// high, the header row past it is dark but for the sword icon, and the enemy
+// tab stands a panel below the ally tab.
 export const TABS = {
-  x: [10, 180],
-  darkX: [180, 420],
+  left: 12,
+  width: 146,
+  // The narrowest tab looked for, in shot pixels: a panel about 400 wide.
+  minWidth: 50,
   fill: 0.6,
-  dark: 0.25,
-  height: [40, 100],
-  // Ally tab top to enemy tab top.
-  gap: [400, 1100],
+  dark: { from: 0.2, to: 1.9, max: 0.25 },
+  height: [0.3, 0.8],
+  gap: [2.8, 7.8],
   toCard: 8,
 } as const
 

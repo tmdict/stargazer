@@ -232,43 +232,161 @@ export interface TabPair {
   enemy: TabBlock
 }
 
-/* The Ally and Enemy tabs, the landmarks every panel region hangs from:
- * the top run is the ally tab, the next run a panel below it the enemy tab.
- * Null unless both are there. */
-export function findTabs(shot: RgbaImage): TabPair | null {
-  const [x0, x1] = TABS.x
-  const [d0, d1] = TABS.darkX
-  const runs: TabBlock[] = []
-  for (let y = 0; y < shot.height; y++) {
-    let orange = 0
-    let blue = 0
-    for (let x = x0; x < x1; x++) {
-      const c = resultColourAt(shot, x, y)
-      if (c === Team.ALLY) orange++
-      else if (c === Team.ENEMY) blue++
+// A pair as found in a shot, with the tabs' shared left edge and width,
+// which frame the panel (panel.ts).
+export interface FoundTabs extends TabPair {
+  left: number
+  width: number
+}
+
+// A row's stretches of result colour, bridging gaps up to `gap` pixels (the
+// tab's lettering, anti-aliasing), each with its main colour and how much of
+// the stretch that colour fills.
+interface ColourRun {
+  start: number
+  end: number
+  colour: Team
+  fill: number
+}
+
+const colourRuns = (shot: RgbaImage, y: number, gap: number): ColourRun[] => {
+  const runs: ColourRun[] = []
+  let start = -1
+  let end = -1
+  let orange = 0
+  let blue = 0
+  const close = (): void => {
+    if (start < 0) return
+    runs.push({
+      start,
+      end,
+      colour: orange >= blue ? Team.ALLY : Team.ENEMY,
+      fill: Math.max(orange, blue) / (end - start + 1),
+    })
+  }
+  for (let x = 0; x < shot.width; x++) {
+    const c = resultColourAt(shot, x, y)
+    if (c === null) continue
+    if (start < 0 || x - end > gap) {
+      close()
+      start = x
+      orange = 0
+      blue = 0
     }
-    const fill = Math.max(orange, blue) / (x1 - x0)
-    if (fill < TABS.fill) continue
-    let coloured = 0
-    for (let x = d0; x < d1; x += 2) if (resultColourAt(shot, x, y) !== null) coloured++
-    if (coloured / ((d1 - d0) / 2) > TABS.dark) continue
-    const colour = orange >= blue ? Team.ALLY : Team.ENEMY
-    const last = runs[runs.length - 1]
-    if (last && y - last.bottom <= 2 && last.colour === colour) last.bottom = y
-    else runs.push({ top: y, bottom: y, colour })
+    end = x
+    if (c === Team.ALLY) orange++
+    else blue++
   }
-  const tabs = runs.filter((r) => {
-    const h = r.bottom - r.top + 1
-    return h >= TABS.height[0] && h <= TABS.height[1]
-  })
-  for (let i = 0; i < tabs.length; i++) {
-    const ally = tabs[i]!
-    const enemy = tabs
-      .slice(i + 1)
-      .find((t) => t.top - ally.top >= TABS.gap[0] && t.top - ally.top <= TABS.gap[1])
-    if (enemy) return { ally, enemy }
+  close()
+  return runs
+}
+
+// Fraction of a row span in either result colour, sampled every other pixel.
+const colouredFraction = (shot: RgbaImage, y: number, x0: number, x1: number): number => {
+  let n = 0
+  let hit = 0
+  for (let x = Math.round(x0); x <= x1; x += 2) {
+    n++
+    if (resultColourAt(shot, x, y) !== null) hit++
   }
-  return null
+  return n ? hit / n : 0
+}
+
+const median = (values: number[]): number => {
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[sorted.length >> 1]!
+}
+
+interface TabRows {
+  colour: Team
+  top: number
+  bottom: number
+  starts: number[]
+  ends: number[]
+}
+
+const tabBlock = ({ top, bottom, colour }: TabRows): TabBlock => ({ top, bottom, colour })
+
+/* The Ally and Enemy tabs, the landmarks every panel region hangs from, at
+ * whatever scale and offset the shot has the panel. A tab row is a solid run
+ * of one result colour with the panel's dark header row after it; rows of
+ * one run stacked about half its width high make a tab, and two tabs of one
+ * left edge and width, a panel apart, are the pair. The card frames' gold
+ * makes narrower runs of the same shape, so the widest pair wins. Null unless
+ * both are there. */
+export function findTabs(shot: RgbaImage): FoundTabs | null {
+  const gap = Math.max(3, Math.round(shot.width * 0.01))
+  const blocks: TabRows[] = []
+  let open: TabRows[] = []
+  for (let y = 0; y < shot.height; y++) {
+    const next: TabRows[] = []
+    for (const run of colourRuns(shot, y, gap)) {
+      const width = run.end - run.start
+      const darkTo = run.end + width * TABS.dark.to
+      if (width < TABS.minWidth || run.fill < TABS.fill || darkTo >= shot.width) continue
+      if (colouredFraction(shot, y, run.end + width * TABS.dark.from, darkTo) > TABS.dark.max) {
+        continue
+      }
+      const block = open.find(
+        (b) =>
+          b.colour === run.colour &&
+          Math.abs(b.starts.at(-1)! - run.start) <= gap &&
+          Math.abs(b.ends.at(-1)! - run.end) <= gap,
+      )
+      if (block) {
+        block.bottom = y
+        block.starts.push(run.start)
+        block.ends.push(run.end)
+        next.push(block)
+      } else {
+        const fresh = {
+          colour: run.colour,
+          top: y,
+          bottom: y,
+          starts: [run.start],
+          ends: [run.end],
+        }
+        blocks.push(fresh)
+        next.push(fresh)
+      }
+    }
+    // A block survives a missing row or two (a rounded corner, a letter).
+    open = [...next, ...open.filter((b) => !next.includes(b) && y - b.bottom <= 2)]
+  }
+
+  const tabs = blocks
+    .map((b) => {
+      const left = median(b.starts)
+      const width = median(b.ends) - left
+      return { block: b, left, width }
+    })
+    .filter(({ block, width }) => {
+      const h = block.bottom - block.top + 1
+      return h >= width * TABS.height[0] && h <= width * TABS.height[1]
+    })
+  let best: FoundTabs | null = null
+  for (const ally of tabs) {
+    for (const enemy of tabs) {
+      const rise = enemy.block.top - ally.block.top
+      if (
+        rise < ally.width * TABS.gap[0] ||
+        rise > ally.width * TABS.gap[1] ||
+        Math.abs(enemy.left - ally.left) > gap ||
+        Math.abs(enemy.width - ally.width) > gap
+      ) {
+        continue
+      }
+      const width = (ally.width + enemy.width) / 2
+      if (best && width <= best.width) continue
+      best = {
+        ally: tabBlock(ally.block),
+        enemy: tabBlock(enemy.block),
+        left: (ally.left + enemy.left) / 2,
+        width,
+      }
+    }
+  }
+  return best
 }
 
 /* The Ally tab beside the top panel, placed from the ally column anchor: it

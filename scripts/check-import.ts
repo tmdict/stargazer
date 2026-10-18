@@ -23,7 +23,7 @@ import { basename, join, resolve } from 'node:path'
 import { buildArtifactTable } from '../src/lib/import/artifacts.ts'
 import { prepareFrameRefs } from '../src/lib/import/frames.ts'
 import { buildHeroTable } from '../src/lib/import/heroes.ts'
-import { CANONICAL_WIDTH } from '../src/lib/import/layout.ts'
+import { RESULT_MAX_WIDTH } from '../src/lib/import/layout.ts'
 import { readScreenshot } from '../src/lib/import/pipeline.ts'
 import { buildImportHeroTable } from '../src/lib/import/references.ts'
 import type { ScreenshotReading } from '../src/lib/import/types.ts'
@@ -188,7 +188,7 @@ async function main(): Promise<void> {
     artifact: [] as number[],
   }
   for (const file of files) {
-    const shot = await toImage(join(samples, file), { width: CANONICAL_WIDTH })
+    const shot = await toImage(join(samples, file), { maxWidth: RESULT_MAX_WIDTH })
     const t = truth[basename(file)]
     const started = performance.now()
     const reading = readScreenshot(shot, {

@@ -1,8 +1,9 @@
-/* One screenshot, already normalised to CANONICAL_WIDTH, to a reading: the
- * Ally and Enemy tabs place the two card columns, each card's frame pins its
- * box, and the face, star row, strip and artifact icons are read from there.
- * The top panel is the viewer's team, taken to be the left player's, as in
- * the game's own history view. */
+/* One screenshot to a reading: the shot is framed to the canonical layout
+ * (panel.ts), the Ally and Enemy tabs place the two card columns, each card's
+ * frame pins its box, and the face, star row, strip and artifact icons are
+ * read from there. Every position in the reading is in the framed image. The
+ * top panel is the viewer's team, taken to be the left player's, as in the
+ * game's own history view. */
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
@@ -29,8 +30,9 @@ import {
   STRIP,
   TABS,
 } from './layout'
+import { framePanel } from './panel'
 import { readStars } from './stars'
-import { findTabs, readStrip, readTab, type TabPair } from './strip'
+import { readStrip, readTab, type TabPair } from './strip'
 import type {
   ArtifactReading,
   FrameRef,
@@ -80,8 +82,11 @@ interface Columns {
  * there. Without tabs (a crop that lost them) the columns are tried at their
  * crop positions, then found as a pair anywhere in the shot. A column placed
  * by a landmark is trusted down to the lower floor. */
-const placeColumns = (shot: RgbaImage, frames: readonly FrameRef[]): Columns => {
-  const tabs = findTabs(shot)
+const placeColumns = (
+  shot: RgbaImage,
+  frames: readonly FrameRef[],
+  tabs: TabPair | null,
+): Columns => {
   if (tabs) {
     const ally = findPanelAnchor(
       shot,
@@ -163,9 +168,10 @@ const columnSeeds = (anchor: PanelAnchor): { x: number; y: number }[] =>
     y: Math.round(anchor.y + anchor.pitch * row),
   }))
 
-export function readScreenshot(shot: RgbaImage, refs: ReferenceSet): ScreenshotReading {
+export function readScreenshot(capture: RgbaImage, refs: ReferenceSet): ScreenshotReading {
   const warnings: ImportWarning[] = []
-  const { tabs, anchors, floor } = placeColumns(shot, refs.frames)
+  const { image: shot, tabs: found } = framePanel(capture)
+  const { tabs, anchors, floor } = placeColumns(shot, refs.frames, found)
 
   const sides = {} as Record<Team, HeroReading[]>
   for (const team of [Team.ALLY, Team.ENEMY]) {

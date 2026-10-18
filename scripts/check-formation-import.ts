@@ -107,7 +107,7 @@ async function main(): Promise<void> {
     )
     const { prepareFrameRefs } = await load<typeof FramesModule>('/src/lib/import/frames.ts')
     const { buildHeroTable } = await load<typeof HeroesModule>('/src/lib/import/heroes.ts')
-    const { CANONICAL_WIDTH } = await load<typeof LayoutModule>('/src/lib/import/layout.ts')
+    const { RESULT_MAX_WIDTH } = await load<typeof LayoutModule>('/src/lib/import/layout.ts')
     const { readScreenshot } = await load<typeof PipelineModule>('/src/lib/import/pipeline.ts')
     const { buildImportHeroTable } = await load<typeof ReferencesModule>(
       '/src/lib/import/references.ts',
@@ -159,7 +159,7 @@ async function main(): Promise<void> {
     const formationFiles = await images(join(samples, 'formations'))
     const results = []
     for (const file of resultFiles) {
-      const shot = await toImage(join(samples, 'results', file), { width: CANONICAL_WIDTH })
+      const shot = await toImage(join(samples, 'results', file), { maxWidth: RESULT_MAX_WIDTH })
       const reading = readScreenshot(shot, refs)
       results.push({
         reading,

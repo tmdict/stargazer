@@ -9,8 +9,8 @@
  * can add peaks at its ends and tint the colour toward a refined family, so
  * a refined reading is sure only when its family's evidence is strong: a
  * real refined row is one colour from end to end. R4 differs from R0 only by
- * a faint pink tint, which a browser's resampling can halve, so R0 is sure
- * only when the row has none. */
+ * a faint pink tint, which resampling can halve, so R0 is sure only when the
+ * row has none. */
 
 import { hsvAt } from './image'
 import type { Rect, RefinementReading, RgbaImage, StarFamily } from './types'
