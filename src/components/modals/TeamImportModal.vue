@@ -9,7 +9,7 @@
    them once the plan is handed up. The modal only renders and emits the
    finished plan upward. */
 
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
@@ -50,6 +50,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { downloadBlob, timestampedName } from '@/utils/download'
+import { imageFilesFromPaste } from '@/utils/imageFile'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const { show, activeMode } = defineProps<{
@@ -87,6 +88,7 @@ const {
   setArtifact,
   setUnit,
   unitsOf,
+  resultsClosed,
   saveNames,
   forgetLearned,
   ensureReferences,
@@ -100,7 +102,6 @@ const formationShots = computed(() => shots.value.filter((s) => s.kind === 'form
 // Result shots make the import a match, whose formation shots only place its
 // heroes; formation shots dropped first are imported alone.
 const matchImport = computed(() => resultShots.value.length > 0)
-const resultsClosed = computed(() => !matchImport.value && formationShots.value.length > 0)
 
 // ---------- formation shots ----------
 
@@ -181,10 +182,24 @@ watch(
   { immediate: true },
 )
 
-const handleAdd = async (files: File[], kind: ShotKind = 'result'): Promise<void> => {
-  const added = await addFiles(files, kind)
-  if (added === 0) error(i18n.t('app.no-valid-images'))
+const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
+  const { added, refused } = await addFiles(files, kind)
+  if (refused > 0) error(i18n.t('app.import-results-closed'))
+  else if (added === 0) error(i18n.t('app.no-valid-images'))
 }
+
+// A paste lands in no drop area, so each pasted screenshot goes to the
+// section of the kind it shows.
+const handlePaste = (event: ClipboardEvent): void => {
+  if (!show) return
+  const files = imageFilesFromPaste(event)
+  if (!files.length) return
+  event.preventDefault()
+  void handleAdd(files, 'sort')
+}
+
+onMounted(() => window.addEventListener('paste', handlePaste))
+onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
 const handleDownloadCorrections = async (): Promise<void> => {
   try {
@@ -353,7 +368,7 @@ const handleForgetLearned = (): void => {
         <ImageDropZone
           dark
           :compact="shots.length > 0"
-          :paste-active="show && !resultsClosed"
+          :paste-active="false"
           :disabled="resultsClosed"
           @add="handleAdd"
         />
@@ -377,7 +392,7 @@ const handleForgetLearned = (): void => {
         <ImageDropZone
           dark
           :compact="shots.length > 0"
-          :paste-active="show && resultsClosed"
+          :paste-active="false"
           @add="(files) => handleAdd(files, 'formation')"
         />
         <TeamImportShotList
