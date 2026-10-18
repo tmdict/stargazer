@@ -1,5 +1,5 @@
 {
-  "en": "Use the battle stats screen shown after a match (each hero's damage dealt, healing and damage taken), one screenshot per map. Add formation screenshots below to place units on their tiles.",
-  "zh": "请使用对战结束后的战斗数据界面截图（列出每位英雄的造成伤害、治愈和承受伤害），每张地图一张。可在下方添加布阵截图，把单位放到所站的格子上。",
-  "ko": "대전이 끝난 뒤 나오는 전투 데이터 화면(영웅별 입힌 대미지, 치료, 받은 대미지)의 스크린샷을 맵마다 한 장씩 사용하세요. 아래에 배치 화면 스크린샷을 추가하면 유닛을 서 있는 타일에 배치합니다."
+  "en": "Import a match from its battle stats screens, adding its formation screenshots to put the heroes on their tiles, or import formation screenshots on their own.",
+  "zh": "用对战的战斗数据界面导入一场对局，并可添加其布阵截图把英雄放到所站的格子上；也可以只导入布阵截图。",
+  "ko": "대전의 전투 데이터 화면으로 경기를 가져오고 배치 화면 스크린샷을 더해 영웅을 서 있는 타일에 배치하거나, 배치 화면 스크린샷만 가져올 수 있습니다."
 }

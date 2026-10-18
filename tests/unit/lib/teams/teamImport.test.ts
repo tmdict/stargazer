@@ -362,6 +362,23 @@ describe('buildTeamImportPlan with formation shots', () => {
     expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
   })
 
+  it('leaves out a formation shot whose map has no result shot in a match import', () => {
+    const formations = [formationShot(Team.ALLY, [unit(1, 7)], [hero(7)], 1)]
+    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, formations)
+    expect(plan.boards[1]).toBeNull()
+    const issue: PlanIssue = { kind: 'formation-unused', team: Team.ALLY, mapIndex: 1 }
+    expect(plan.issues).toContainEqual(issue)
+    expect(isBlockingIssue(issue)).toBe(false)
+  })
+
+  it('names no match record for formation shots alone', () => {
+    const plan = buildTeamImportPlan([], '5v5', NAMES, false, [
+      formationShot(Team.ALLY, [unit(1, 7)], [hero(7)]),
+    ])
+    expect(plan.suggestedName).toBe('')
+    expect(plan.issues.map((i) => i.kind)).not.toContain('result-undecided')
+  })
+
   it('blocks two formation shots of one side of a board', () => {
     const formations = [
       formationShot(Team.ALLY, [unit(1, 7)]),

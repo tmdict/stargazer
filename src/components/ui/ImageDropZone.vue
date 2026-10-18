@@ -17,19 +17,23 @@ const emit = defineEmits<{
   add: [files: File[]]
 }>()
 
-const { pasteActive = true } = defineProps<{
+const { pasteActive = true, disabled = false } = defineProps<{
   // Slim "add more" affordance once the list is populated; full panel when empty.
   compact?: boolean
   // Whether window-level pastes belong to this zone right now.
   pasteActive?: boolean
   // Frosted variant for the dark modal surfaces, where the page's cream fill glares.
   dark?: boolean
+  // Takes no files: no picker, drop or paste.
+  disabled?: boolean
 }>()
 
 const fileInput = ref<HTMLInputElement>()
 const isDragging = ref(false)
 
-const openPicker = () => fileInput.value?.click()
+const openPicker = () => {
+  if (!disabled) fileInput.value?.click()
+}
 
 const handleFileInput = (event: Event) => {
   const files = imageFilesFromInput(event)
@@ -39,12 +43,13 @@ const handleFileInput = (event: Event) => {
 
 const handleDrop = (event: DragEvent) => {
   isDragging.value = false
+  if (disabled) return
   const files = imageFilesFromDrop(event)
   if (files.length) emit('add', files)
 }
 
 const handlePaste = (event: ClipboardEvent) => {
-  if (!pasteActive) return
+  if (!pasteActive || disabled) return
   const files = imageFilesFromPaste(event)
   if (files.length) {
     event.preventDefault()
@@ -59,13 +64,14 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 <template>
   <div
     class="drop-zone"
-    :class="{ dragging: isDragging, compact, dark }"
+    :class="{ dragging: isDragging, compact, dark, disabled }"
     role="button"
-    tabindex="0"
+    :tabindex="disabled ? -1 : 0"
+    :aria-disabled="disabled"
     @click="openPicker"
     @keydown.enter.prevent="openPicker"
     @keydown.space.prevent="openPicker"
-    @dragover.prevent="isDragging = true"
+    @dragover.prevent="isDragging = !disabled"
     @dragleave.prevent="isDragging = false"
     @drop.prevent="handleDrop"
   >
@@ -137,6 +143,19 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 .drop-zone.dark:focus-visible,
 .drop-zone.dark.dragging {
   border-color: var(--color-accent);
+}
+
+.drop-zone.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.drop-zone.disabled:hover {
+  background: var(--color-bg-secondary);
+}
+
+.drop-zone.dark.disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .file-input {
