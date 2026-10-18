@@ -324,23 +324,25 @@ const handleForgetLearned = (): void => {
     @close="emit('close')"
   >
     <div class="import">
-      <h1>{{ i18n.t('app.import-title') }}</h1>
-      <p class="note intro">{{ i18n.t('app.import-tip') }}</p>
-      <div class="meta">
-        <span class="meta-chip">
-          {{ i18n.t(TEAM_MODES[activeMode].labelKey) }}
-          <template v-if="variant !== null && variant !== DEFAULT_VARIANT">
-            {{ i18n.t(TEAM_VARIANTS[variant].labelKey) }}
-          </template>
-          · {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
-        </span>
-        <span v-if="referenceStatus === 'loading'" class="note">
-          {{ i18n.t('app.import-references-loading') }}
-        </span>
-        <span v-else-if="referenceStatus === 'failed'" class="note error">
-          {{ i18n.t('app.import-failed-references') }}
-        </span>
-      </div>
+      <header class="import-head">
+        <h1>{{ i18n.t('app.import-title') }}</h1>
+        <div class="meta">
+          <span class="meta-chip">
+            {{ i18n.t(TEAM_MODES[activeMode].labelKey) }}
+            <template v-if="variant !== null && variant !== DEFAULT_VARIANT">
+              {{ i18n.t(TEAM_VARIANTS[variant].labelKey) }}
+            </template>
+            · {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
+          </span>
+          <span v-if="referenceStatus === 'loading'" class="note">
+            {{ i18n.t('app.import-references-loading') }}
+          </span>
+          <span v-else-if="referenceStatus === 'failed'" class="note error">
+            {{ i18n.t('app.import-failed-references') }}
+          </span>
+        </div>
+        <p class="note intro">{{ i18n.t('app.import-tip') }}</p>
+      </header>
 
       <!-- Both drops share one size, so the two starts weigh the same. -->
       <section class="drop-section">
@@ -570,10 +572,18 @@ const handleForgetLearned = (): void => {
   margin: 0;
 }
 
+.import-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-sm);
 }
 
@@ -588,7 +598,7 @@ const handleForgetLearned = (): void => {
 
 .intro {
   max-width: 42em;
-  margin: 0 auto;
+  margin: 0;
   text-align: center;
 }
 
