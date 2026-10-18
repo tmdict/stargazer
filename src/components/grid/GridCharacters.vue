@@ -114,19 +114,13 @@ const hoverHint = computed(() =>
     : undefined,
 )
 
-// Places a control at a point on a sprite, (dx, dy) screen pixels from its
-// center. Perspective lifts the sprite and squashes it about its center
-// (getCharacterStyle), so the point moves too, and the control undoes the
-// board's vertical squash the way sprites do.
+// Where a point on a sprite, (dx, dy) screen pixels from its center, lands on the
+// layer. Perspective lifts the sprite and squashes it about its center
+// (getCharacterStyle), so the point moves too.
 const spriteLayerPoint = (hexId: number, dx: number, dy: number): { x: number; y: number } => {
   const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const lift = ctx.perspective ? ctx.layout.standingLift(characterDimensions.value.offset) : 0
   return { x: x + dx, y: y - lift + dy * counterScaleY.value }
-}
-
-const spritePoint = (hexId: number, dx: number, dy: number): Record<string, string> => {
-  const { x, y } = spriteLayerPoint(hexId, dx, dy)
-  return { left: `${x}px`, top: `${y}px`, '--counter-scale-y': String(counterScaleY.value) }
 }
 
 // The lift pill's gap from the sprite, and the room it takes above the sprite
@@ -146,11 +140,9 @@ const liftPill = computed(() => {
   const below = spriteLayerPoint(hexId, 0, -half - LIFT_PILL_ROOM).y < ctx.drawnBounds.y
   const pointer = ctx.perspective ? STANDING_POINTER_HEIGHT : 0
   return {
+    hexId,
     below,
-    style: {
-      ...spritePoint(hexId, 0, below ? half + pointer : -half),
-      '--lift-pill-gap': `${LIFT_PILL_GAP}px`,
-    },
+    style: { '--lift-pill-gap': `${LIFT_PILL_GAP}px`, '--lift-pill-pointer': `${pointer}px` },
   }
 })
 
@@ -393,16 +385,15 @@ const modeButtons = computed(() =>
 )
 
 // On the portrait's rim at its upper right.
-const modeStyle = (hexId: number): Record<string, string> => {
-  const rim = (characterDimensions.value.size / 2) * Math.SQRT1_2
+const modeStyle = computed(() => {
   const { size, hit, border } = modeDimensions.value
   return {
-    ...spritePoint(hexId, rim, -rim),
+    '--mode-rim': `${(characterDimensions.value.size / 2) * Math.SQRT1_2}px`,
     '--mode-size': `${size}px`,
     '--mode-hit': `${hit}px`,
     '--mode-border': `${border}px`,
   }
-}
+})
 
 const cycleMode = ({ team, characterId, next }: ModeButton): void =>
   ctx.setAttr(team, characterId, ATTR_SKILL_MODE, next)
@@ -485,46 +476,54 @@ const liftedMode = computed(() =>
       </div>
     </div>
 
-    <button
+    <!-- Controls sit in a box placed and transformed like their sprite, so they
+         move with it while the view switches. -->
+    <div
       v-for="button in modeButtons"
       :key="`mode-${button.hexId}`"
-      type="button"
-      class="skill-mode"
-      :style="modeStyle(button.hexId)"
-      :disabled="readonly"
-      :aria-label="i18n.t(`app.${button.mode.name}`)"
-      @click="cycleMode(button)"
-      @mouseenter="onModeEnter($event, button.hexId)"
-      @mouseleave="onModeLeave"
-      @touchstart.passive="onModeTouch"
-      @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
-    >
-      <span class="skill-mode-badge" :style="{ backgroundColor: button.mode.color }">
-        <component :is="button.icon" :size="modeDimensions.glyph" />
-      </span>
-    </button>
-
-    <div
-      v-if="liftPill && liftedHexId !== null"
-      class="lift-actions capture-exclude"
-      :class="{ below: liftPill.below }"
-      :style="liftPill.style"
+      class="sprite-anchor"
+      :style="getCharacterStyle(button.hexId)"
     >
       <button
-        v-if="liftedMode && !readonly"
         type="button"
-        class="lift-mode"
-        :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"
-        @click="cycleMode(liftedMode)"
+        class="skill-mode"
+        :style="modeStyle"
+        :disabled="readonly"
+        :aria-label="i18n.t(`app.${button.mode.name}`)"
+        @click="cycleMode(button)"
+        @mouseenter="onModeEnter($event, button.hexId)"
+        @mouseleave="onModeLeave"
+        @touchstart.passive="onModeTouch"
+        @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
       >
-        <span class="skill-mode-badge" :style="{ backgroundColor: liftedMode.mode.color }">
-          <component :is="liftedMode.icon" :size="11" />
+        <span class="skill-mode-badge" :style="{ backgroundColor: button.mode.color }">
+          <component :is="button.icon" :size="modeDimensions.glyph" />
         </span>
       </button>
-      <button type="button" class="lift-inspect" @click="inspectAt(liftedHexId)">
-        <IconInfo :size="16" />
-        {{ i18n.t('app.skills') }}
-      </button>
+    </div>
+
+    <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
+      <div
+        class="lift-actions capture-exclude"
+        :class="{ below: liftPill.below }"
+        :style="liftPill.style"
+      >
+        <button
+          v-if="liftedMode && !readonly"
+          type="button"
+          class="lift-mode"
+          :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"
+          @click="cycleMode(liftedMode)"
+        >
+          <span class="skill-mode-badge" :style="{ backgroundColor: liftedMode.mode.color }">
+            <component :is="liftedMode.icon" :size="11" />
+          </span>
+        </button>
+        <button type="button" class="lift-inspect" @click="inspectAt(liftPill.hexId)">
+          <IconInfo :size="16" />
+          {{ i18n.t('app.skills') }}
+        </button>
+      </div>
     </div>
 
     <Teleport to="body">
@@ -558,9 +557,13 @@ const liftedMode = computed(() =>
 .character {
   pointer-events: auto;
   cursor: grab;
-  transition: transform var(--transition-perspective);
   -webkit-touch-callout: none;
   user-select: none;
+}
+
+.switching .character,
+.switching .sprite-anchor {
+  transition: transform var(--transition-perspective);
 }
 
 .character:active {
@@ -593,11 +596,18 @@ const liftedMode = computed(() =>
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));
 }
 
+.sprite-anchor {
+  pointer-events: none;
+  z-index: var(--z-board-controls);
+}
+
 .skill-mode {
   position: absolute;
+  left: calc(50% + var(--mode-rim));
+  top: calc(50% - var(--mode-rim));
   width: var(--mode-hit);
   height: var(--mode-hit);
-  transform: translate(-50%, -50%) scaleY(var(--counter-scale-y));
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -607,7 +617,6 @@ const liftedMode = computed(() =>
   background: none;
   pointer-events: auto;
   cursor: pointer;
-  z-index: var(--z-board-controls);
 }
 
 .skill-mode:disabled {
@@ -661,16 +670,15 @@ const liftedMode = computed(() =>
 
 .lift-actions {
   position: absolute;
-  transform: translate(-50%, calc(-100% - var(--lift-pill-gap) * var(--counter-scale-y)))
-    scaleY(var(--counter-scale-y));
-  transform-origin: bottom;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, calc(-100% - var(--lift-pill-gap)));
   display: flex;
   align-items: center;
   border-radius: 999px;
   background: var(--color-primary);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
   pointer-events: auto;
-  z-index: var(--z-board-controls);
 }
 
 .lift-inspect,
@@ -710,9 +718,8 @@ const liftedMode = computed(() =>
 }
 
 .lift-actions.below {
-  transform: translate(-50%, calc(var(--lift-pill-gap) * var(--counter-scale-y)))
-    scaleY(var(--counter-scale-y));
-  transform-origin: top;
+  top: calc(100% + var(--lift-pill-pointer));
+  transform: translate(-50%, var(--lift-pill-gap));
 }
 
 .lift-actions.below::after {
