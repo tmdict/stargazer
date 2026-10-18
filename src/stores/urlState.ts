@@ -4,7 +4,7 @@ import { repositionCompanions } from '@/lib/characters/companion'
 import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { findMapByTiles, resolveBoardMap } from '@/lib/maps'
+import { availableState, findMapByTiles, resolveBoardMap } from '@/lib/maps'
 import { Team } from '@/lib/types/team'
 import {
   unpackDisplayFlags,
@@ -86,7 +86,10 @@ export const useUrlStateStore = defineStore('urlState', () => {
     if (preset === undefined) gridStore.resetAllTiles()
     else gridStore.switchMap(preset)
 
-    // Restore tile states from compact format: [hexId, state]
+    // Restore tile states from compact format: [hexId, state]. Each tile comes back
+    // as its side's zone and the units placed below mark theirs occupied. A saved
+    // occupied mark would hide a summoner's saved companion tiles from its skill,
+    // which needs free tiles, and would outlast a unit that fails to place.
     if (gridState.t) {
       gridState.t.forEach((entry) => {
         const validated = getValidatedTileEntry(entry)
@@ -94,7 +97,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
         try {
           const hex = gridStore.getHexById(validated.hexId)
-          gridStore.setState(hex, validated.state)
+          gridStore.setState(hex, availableState(validated.state))
         } catch (error) {
           console.warn(`Failed to restore tile state for hex ${validated.hexId}:`, error)
         }
