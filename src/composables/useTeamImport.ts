@@ -1,14 +1,13 @@
 /* Match screenshot import: file intake, decoding, the worker that reads the
  * screenshots (result screens, and formation panels for the tiles), the
- * reference images it needs, the review state per screenshot, and the saved
- * corrections. Module-level state like useSelectionState: the shots belong to
- * one opening of the modal (clearImport), the worker and its references to
- * the page visit (TeamsView disposes them on leave), and the learned faces
- * and corrections stay in storage until the user clears them. Images never
- * leave the device: the references are fetched, the screenshots are drawn to
- * a canvas and handed to the worker as pixels. */
+ * reference images it needs, and the review state per screenshot.
+ * Module-level state like useSelectionState: the shots belong to one opening
+ * of the modal (clearImport), the worker and its references to the page visit
+ * (TeamsView disposes them on leave), and the learned faces stay in storage.
+ * Images never leave the device: the references are fetched, the screenshots
+ * are drawn to a canvas and handed to the worker as pixels. */
 
-import { computed, reactive, ref, shallowRef, watch, type ComputedRef } from 'vue'
+import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
@@ -51,7 +50,7 @@ import {
   seasonArtifactImageUrl,
 } from '@/utils/artifactImage'
 import { loadMatcherPortraits } from '@/utils/dataLoader'
-import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
+import { readStorage, writeStorage } from '@/utils/storage'
 import type {
   ReferenceImages,
   ShotKind,
@@ -63,10 +62,6 @@ export type { ShotKind }
 
 const NAMES_KEY = 'stargazer.import.names'
 const LEARNED_KEY = 'stargazer.import.learned'
-const CORRECTIONS_KEY = 'stargazer.import.corrections'
-// A screenshot's corrections take about 8 KB, so the cap keeps them well
-// clear of the saved teams sharing the browser's storage.
-export const CORRECTIONS_CAP = 100
 
 export type ShotStatus = 'reading' | 'ready' | 'failed'
 // Why a shot failed: its file, the references (not loaded, or the worker
@@ -82,8 +77,6 @@ export interface ImportShot {
   kind: ShotKind
   name: string
   size: number
-  // Of the file, in hex: what identifies the screenshot in its corrections.
-  sha256: string
   // Object URL of the file, for the card thumbnail.
   thumb: string
   status: ShotStatus
@@ -116,57 +109,6 @@ export const shotWinner = (shot: ImportShot): Team | null =>
     ? shot.resultOverrides.winner
     : (shot.reading?.winner ?? null)
 
-/* One screenshot's corrections, as saved and as exported: the reading
- * without card pixels or descriptors, and the user's labels beside it. */
-export interface CorrectionRecord {
-  source: { name: string; size: number; sha256: string }
-  context: { season: number; mapCount: number; imageWidth: number }
-  // The reading as JSON, only ever exported.
-  predicted: unknown
-  labels: {
-    cells: Record<string, CellOverride>
-    artifacts: Partial<Record<Team, number | null>>
-    mapIndex?: number | null
-    winner?: Team | null
-  }
-}
-
-// A reading's card crops and per-card descriptors stay out of a record.
-const withoutPixels = (key: string, value: unknown): unknown =>
-  key === 'card' || (key === 'descriptor' && ArrayBuffer.isView(value)) ? undefined : value
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-
-/* Saved corrections from storage, dropping any entry without a source, a
- * context, a prediction and its cell and artifact labels. */
-const parseCorrections = (raw: string | null): CorrectionRecord[] => {
-  try {
-    const stored: unknown = JSON.parse(raw ?? 'null')
-    if (!isObject(stored) || stored.version !== 1 || !Array.isArray(stored.shots)) return []
-    return stored.shots.filter((entry): entry is CorrectionRecord => {
-      if (!isObject(entry) || !isObject(entry.source) || !isObject(entry.labels)) return false
-      const { name, size, sha256 } = entry.source
-      return (
-        typeof name === 'string' &&
-        typeof size === 'number' &&
-        typeof sha256 === 'string' &&
-        isObject(entry.context) &&
-        isObject(entry.predicted) &&
-        isObject(entry.labels.cells) &&
-        isObject(entry.labels.artifacts)
-      )
-    })
-  } catch {
-    return []
-  }
-}
-
-const sha256Of = async (file: Blob): Promise<string> => {
-  const hash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
-  return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
 export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
 const shots = ref<ImportShot[]>([])
@@ -179,11 +121,6 @@ const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.
 const learned = shallowRef<LearnedIcon[]>([])
-const corrections = shallowRef<CorrectionRecord[]>([])
-// Whether a correction was left unsaved, at the cap or by a refused write;
-// it still downloads while its screenshot is open.
-const correctionsFull = ref(false)
-let correctionsWritten: string | null = null
 let worker: Worker | null = null
 // A second worker of the same kind sorts pasted screenshots, so a paste is
 // sorted at once even while the first is busy reading.
@@ -220,28 +157,6 @@ const loadStored = (): void => {
   storedLoaded = true
   restoreNames()
   learned.value = parseLearnedIcons(readStorage(LEARNED_KEY))
-  corrections.value = parseCorrections(readStorage(CORRECTIONS_KEY))
-}
-
-/* Save the open screenshots' corrections, each replacing what an earlier
- * import saved for the same file. A new screenshot past the cap is left out
- * and flagged rather than pushing out an older one. */
-const saveCorrections = (open: readonly CorrectionRecord[]): void => {
-  let list = corrections.value
-  let full = false
-  for (const record of open) {
-    const at = list.findIndex((r) => r.source.sha256 === record.source.sha256)
-    if (at >= 0) list = list.map((r, i) => (i === at ? record : r))
-    else if (list.length < CORRECTIONS_CAP) list = [...list, record]
-    else full = true
-  }
-  corrections.value = list
-  const json = JSON.stringify({ version: 1, shots: list })
-  if (json !== correctionsWritten) {
-    if (writeStorage(CORRECTIONS_KEY, json)) correctionsWritten = json
-    else full = true
-  }
-  correctionsFull.value = full
 }
 
 const saveNames = (): void => {
@@ -601,11 +516,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   swapSides: typeof swapSides
   learnedCount: ComputedRef<number>
   hasCorrections: ComputedRef<boolean>
-  // Screenshots with saved corrections, and whether one was left unsaved.
-  correctionCount: ComputedRef<number>
-  correctionsFull: typeof correctionsFull
-  exportCorrections: () => string
-  clearCorrections: () => void
+  exportCorrections: () => Promise<string>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
@@ -662,14 +573,11 @@ export function useTeamImport(mode: () => TeamModeKey): {
         refused++
         continue
       }
-      const sha256 = await sha256Of(file)
-      if (mine !== opening) break
       const shot: ImportShot = reactive({
         id: `shot-${nextId++}`,
         kind: shotKind,
         name: file.name,
         size: file.size,
-        sha256,
         thumb: URL.createObjectURL(file),
         status: 'reading',
         error: null,
@@ -757,13 +665,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
     post({ type: 'learned', learned: [] })
   }
 
-  const clearCorrections = (): void => {
-    corrections.value = []
-    correctionsWritten = null
-    removeStorage(CORRECTIONS_KEY)
-    correctionsFull.value = false
-  }
-
   // The corrections export covers result screens, the shots it was made for.
   const correctedShots = computed(() =>
     shots.value.filter(
@@ -776,57 +677,42 @@ export function useTeamImport(mode: () => TeamModeKey): {
     ),
   )
 
-  const openCorrections = computed(() =>
-    correctedShots.value.map(
-      (shot): CorrectionRecord =>
-        JSON.parse(
-          JSON.stringify(
-            {
-              source: { name: shot.name, size: shot.size, sha256: shot.sha256 },
-              context: {
-                season: CURRENT_SEASON,
-                mapCount: boardCount(),
-                imageWidth: CANONICAL_WIDTH,
-              },
-              predicted: shot.reading,
-              labels: {
-                cells: shot.overrides,
-                artifacts: shot.artifactOverrides,
-                ...shot.resultOverrides,
-              },
-            },
-            withoutPixels,
-          ),
-        ) as CorrectionRecord,
-    ),
-  )
-  // Saved as they change, so a correction outlives the import, the page and
-  // the session until the user clears it; synchronously, so an edit made just
-  // before the modal closes is saved before its shot is dropped.
-  watch(
-    openCorrections,
-    (open) => {
-      if (open.length) saveCorrections(open)
-    },
-    { flush: 'sync' },
-  )
-
-  // Everything saved, with the open screenshots' latest edits in place of
-  // their saved ones and any left unsaved at the cap.
-  const exportCorrections = (): string => {
-    const open = openCorrections.value
-    const saved = corrections.value.filter(
-      (record) => !open.some((o) => o.source.sha256 === record.source.sha256),
+  const exportCorrections = async (): Promise<string> => {
+    const learnedIcons = learnedIconEnvelope(learned.value)
+    const records = await Promise.all(
+      correctedShots.value.map(async (shot) => {
+        // Taken before the first await, so an edit made while the file hashes
+        // stays out of this download; the hash itself waits until here since
+        // recognition never needs it.
+        const snapshot = {
+          context: { season: CURRENT_SEASON, mapCount: boardCount(), imageWidth: CANONICAL_WIDTH },
+          predicted: shot.reading,
+          labels: {
+            cells: { ...shot.overrides },
+            artifacts: { ...shot.artifactOverrides },
+            ...shot.resultOverrides,
+          },
+        }
+        const response = await fetch(shot.thumb)
+        if (!response.ok) throw new Error('Screenshot unavailable for correction export')
+        const hash = await crypto.subtle.digest('SHA-256', await response.arrayBuffer())
+        const sha256 = Array.from(new Uint8Array(hash), (byte) =>
+          byte.toString(16).padStart(2, '0'),
+        ).join('')
+        return { source: { name: shot.name, size: shot.size, sha256 }, ...snapshot }
+      }),
     )
     return JSON.stringify(
       {
         app: 'stargazer',
         kind: 'import-corrections',
         createdAt: new Date().toISOString(),
-        learnedIcons: learnedIconEnvelope(learned.value),
-        shots: [...saved, ...open],
+        learnedIcons,
+        shots: records,
       },
-      null,
+      // The envelope also names its descriptor size; only per-shot vectors are omitted.
+      (key: string, value: unknown) =>
+        key === 'card' || (key === 'descriptor' && ArrayBuffer.isView(value)) ? undefined : value,
       2,
     )
   }
@@ -873,14 +759,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
     names,
     swapSides,
     learnedCount: computed(() => learned.value.length),
-    hasCorrections: computed(
-      () =>
-        corrections.value.length > 0 || correctedShots.value.length > 0 || learned.value.length > 0,
-    ),
-    correctionCount: computed(() => corrections.value.length),
-    correctionsFull,
+    hasCorrections: computed(() => correctedShots.value.length > 0 || learned.value.length > 0),
     exportCorrections,
-    clearCorrections,
     plan,
     unitsOf,
     addFiles,

@@ -1,5 +1,5 @@
 {
-  "en": "Includes every saved correction and the learned icons; they stay saved until you clear them. Include the original images when sharing a recognition issue.",
-  "zh": "包含所有已保存的纠正记录和已学习的图标，清除前会一直保存。反馈识别问题时请一并提供原始截图。",
-  "ko": "저장된 모든 수정 기록과 학습 아이콘이 포함되며, 삭제하기 전까지 계속 저장됩니다. 인식 문제를 제보할 때는 원본 이미지도 함께 보내 주세요."
+  "en": "Includes saved learned icons. Download before closing this window to include its screenshots' corrections. Include the original images when sharing a recognition issue.",
+  "zh": "包含已学习的图标。请在关闭此窗口前下载，以保留其中截图的纠正记录。反馈识别问题时请一并提供原始截图。",
+  "ko": "저장된 학습 아이콘이 포함됩니다. 이 창의 스크린샷 수정 기록까지 담으려면 창을 닫기 전에 다운로드하세요. 인식 문제를 제보할 때는 원본 이미지도 함께 보내 주세요."
 }
