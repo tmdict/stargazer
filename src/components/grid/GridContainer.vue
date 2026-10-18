@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
@@ -73,6 +73,25 @@ const squash = computed(() => {
   }
 })
 
+// Switching views eases the board, its box and the tokens standing on it together.
+// The board's layers ease only under `.switching`, so a team view toggle or a
+// resize applies at once; the arrow layers, which take their final shape straight
+// away, stay hidden until the board settles. Only the latest switch ends it, as a
+// switch made mid-way restarts the board's transition.
+const board = ref<HTMLElement>()
+const switching = ref(false)
+let switchCount = 0
+watch(
+  () => props.context.perspective,
+  async () => {
+    const id = ++switchCount
+    switching.value = true
+    await nextTick()
+    await Promise.allSettled((board.value?.getAnimations() ?? []).map((a) => a.finished))
+    if (id === switchCount) switching.value = false
+  },
+)
+
 // When team view is on, the team-view-clip wrapper sits inside the perspective wrapper:
 // it crops the grid to only the ally region in unscaled SVG coordinates, while the outer
 // scaleY transform continues to apply to the cropped result.
@@ -116,11 +135,8 @@ const shiftStyle = computed(() => {
 </script>
 
 <template>
-  <div class="perspective-container" :style="squash.box">
-    <div
-      :style="squash.board"
-      style="transform-origin: top; transition: transform var(--transition-perspective)"
-    >
+  <div class="perspective-container" :class="{ switching }" :style="squash.box">
+    <div ref="board" class="board" :style="squash.board">
       <div :style="clipStyle">
         <div :style="shiftStyle">
           <GridManager
@@ -146,6 +162,17 @@ const shiftStyle = computed(() => {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+}
+
+.board {
+  transform-origin: top;
+}
+
+.switching {
   transition: height var(--transition-perspective);
+}
+
+.switching > .board {
+  transition: transform var(--transition-perspective);
 }
 </style>

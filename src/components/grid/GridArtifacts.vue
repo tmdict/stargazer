@@ -495,8 +495,9 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   -webkit-touch-callout: none;
   user-select: none;
   transform-origin: center;
-  /* Always present (not inline-only) so the perspective<->flat transform animates
-     in both directions, in sync with the grid + character icons. */
+}
+
+.switching .grid-artifact {
   transition: transform var(--transition-perspective);
 }
 
