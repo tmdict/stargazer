@@ -5,7 +5,6 @@ import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import { provideGridContext, type GridContext } from '@/composables/useGridContext'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
-import { PERSPECTIVE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 
@@ -65,7 +64,7 @@ const squash = computed(() => {
   if (!props.context.perspective) {
     return { box: { height: `${props.context.viewBoxBounds.height}px` }, board: {} }
   }
-  const c = PERSPECTIVE.compression
+  const c = props.context.layout.squash
   const band = props.context.drawnBounds
   const top = props.context.teamView ? 0 : band.y
   return {
@@ -143,7 +142,6 @@ const shiftStyle = computed(() => {
 </template>
 
 <style scoped>
-/* Perspective container - simplified to just hold the grid */
 .perspective-container {
   display: flex;
   justify-content: center;

@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
+import GridPointer from '@/components/grid/GridPointer.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
@@ -13,7 +14,6 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { PERSPECTIVE, STANDING_POINTER_HEIGHT, standingLift } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -101,8 +101,7 @@ const artifactDimensions = computed(() => {
 })
 
 // Center the icon on its host cell. In perspective it stands in the cell like a
-// portrait (the same transform GridCharacters applies): raised until its pointer
-// touches the cell's center, and counter-scaled while the cell beneath compresses.
+// portrait.
 const iconStyle = (center: { x: number; y: number }) => {
   const { containerSize, borderWidth } = artifactDimensions.value
   const styles: Record<string, string | number> = {
@@ -112,10 +111,7 @@ const iconStyle = (center: { x: number; y: number }) => {
     left: `${center.x - containerSize / 2}px`,
     top: `${center.y - containerSize / 2}px`,
   }
-  if (ctx.perspective) {
-    const verticalOffset = -standingLift(containerSize / 2)
-    styles.transform = `translateY(${verticalOffset}px) scaleY(${1 / PERSPECTIVE.compression})`
-  }
+  if (ctx.perspective) styles.transform = ctx.layout.standingTransform(containerSize / 2)
   return styles
 }
 
@@ -277,7 +273,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 </script>
 
 <template>
-  <div class="grid-artifacts" :style="{ '--standing-pointer': `${STANDING_POINTER_HEIGHT}px` }">
+  <div class="grid-artifacts">
     <!-- Dashed border as a full hexagon beneath the tiles (z-index: -1): each
          rendered neighbor's solid border covers the shared edge, and the dash shows
          wherever no tile is drawn beside it (e.g. team view hides the neighbor). The
@@ -371,7 +367,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
         <ArtifactImage v-if="allyArtifact" :artifact="allyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
-      <div v-if="ctx.perspective" class="artifact-pointer" />
+      <GridPointer v-if="ctx.perspective" />
       <HoldRing v-if="holdingTeam === Team.ALLY" />
     </div>
 
@@ -398,7 +394,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
         <ArtifactImage v-if="enemyArtifact" :artifact="enemyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
-      <div v-if="ctx.perspective" class="artifact-pointer" />
+      <GridPointer v-if="ctx.perspective" />
       <HoldRing v-if="holdingTeam === Team.ENEMY" />
     </div>
 
@@ -532,18 +528,5 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   border: var(--artifact-border-width, 2px) solid var(--color-bg-white);
   /* White backing for every season (icons may have transparency). */
   background: #fff;
-}
-
-/* Mirrors GridCharacters' .character-pointer: the isometric "foot" in perspective. */
-.artifact-pointer {
-  position: absolute;
-  bottom: calc(-1 * var(--standing-pointer));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: var(--standing-pointer) solid #777;
 }
 </style>

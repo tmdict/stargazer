@@ -54,11 +54,6 @@ export const PORTRAIT_RADIUS = 30
 // points at the tile's center with a pointer this tall, in screen pixels.
 export const STANDING_POINTER_HEIGHT = 8
 
-// How far above its tile's center a standing token of this screen radius sits,
-// in board pixels before the squash, so that its pointer tip lands on the center.
-export const standingLift = (radius: number): number =>
-  (radius + STANDING_POINTER_HEIGHT) / PERSPECTIVE.compression
-
 export class Layout {
   orientation: Orientation
   size: Point
@@ -91,6 +86,19 @@ export class Layout {
     this.rotated = rotated
     this.tilt = tilt
     this.squash = squash
+  }
+
+  // How far above its tile's center a token of this screen radius stands in
+  // perspective, in board pixels before the squash, so that its pointer tip lands
+  // on the center.
+  standingLift(radius: number): number {
+    return (radius + STANDING_POINTER_HEIGHT) / this.squash
+  }
+
+  // The CSS transform that stands such a token on its tile in perspective: lifted,
+  // and scaled against the squash so it stays round.
+  standingTransform(radius: number): string {
+    return `translateY(${-this.standingLift(radius)}px) scaleY(${1 / this.squash})`
   }
 
   // Arrow and center-line paths are drawn in the arrow layers, which undo the
@@ -154,7 +162,7 @@ export class Layout {
     return corners
   }
 
-  // Calculate curved arrow path between two hexes
+  // Curved arrow path between two hexes, in the arrow layers' upright coordinates.
   getArrowPath(
     startHex: Hex,
     endHex: Hex,
@@ -285,7 +293,8 @@ export class Layout {
   }
 
   // Straight border-to-border line between two hexes: pulled in by characterRadius
-  // at each end, the uncurved/headless counterpart to getArrowPath.
+  // at each end, the uncurved/headless counterpart to getArrowPath, in the same
+  // upright coordinates.
   getLinePath(startHex: Hex, endHex: Hex, characterRadius: number = 0): string {
     const start = this.hexToPixel(startHex)
     const end = this.hexToPixel(endHex)
@@ -301,7 +310,8 @@ export class Layout {
   }
 
   // Straight line between two specific hex corners, with no border pullback: the
-  // exact-edge counterpart to getLinePath (e.g. a wedge/band boundary).
+  // exact-edge counterpart to getLinePath (e.g. a wedge/band boundary), in board
+  // coordinates, for drawing with the tiles.
   getCornerLinePath(startHex: Hex, startCorner: number, endHex: Hex, endCorner: number): string {
     const start = this.polygonCorners(startHex)[startCorner]
     const end = this.polygonCorners(endHex)[endCorner]

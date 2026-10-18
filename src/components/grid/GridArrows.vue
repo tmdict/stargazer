@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import GridArrow from './GridArrow.vue'
-import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
+import GridArrowLayer from './GridArrowLayer.vue'
+import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { Team } from '@/lib/types/team'
 
@@ -8,7 +9,7 @@ interface Props {
   defaultSvgHeight: number
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const ctx = useGridContext()
 
@@ -19,9 +20,7 @@ const ctx = useGridContext()
 const ALLY_CURVE_SCALE = 1.5
 const ENEMY_CURVE_SCALE = 2.0
 
-const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
-  () => props.defaultSvgHeight,
-)
+const arrowStyle = useArrowStyle()
 
 const mutual = (allyHexId: number, enemyHexId: number): boolean =>
   ctx.closestAllyMap.get(enemyHexId)?.allyHexId === allyHexId &&
@@ -33,14 +32,8 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
        enemy half away, so the layer hides rather than draw stubs truncated at
        the crop edge (from sprites that are not even rendered, on the enemy
        side). -->
-  <svg
-    v-if="!ctx.teamView"
-    class="arrow-layer"
-    :width="svgDimensions.width"
-    :height="svgDimensions.height"
-    :style="layerStyle"
-  >
-    <g :transform="layerTransform">
+  <GridArrowLayer v-if="!ctx.teamView" :default-svg-height>
+    <template #default>
       <GridArrow
         v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"
         :id="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
@@ -69,21 +62,6 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
         :arc="!mutual(allyInfo.allyHexId!, enemyHexId)"
         dashed
       />
-    </g>
-  </svg>
+    </template>
+  </GridArrowLayer>
 </template>
-
-<style scoped>
-/* Visible overflow: a lifted arrow to the far row rises above the box. */
-.arrow-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.arrow-layer g {
-  transition: transform var(--transition-perspective);
-}
-</style>

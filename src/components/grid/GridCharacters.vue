@@ -7,6 +7,7 @@ import IconBell from '../ui/IconBell.vue'
 import IconFlame from '../ui/IconFlame.vue'
 import IconInfo from '../ui/IconInfo.vue'
 import TooltipPopup from '../ui/TooltipPopup.vue'
+import GridPointer from './GridPointer.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
@@ -25,7 +26,7 @@ import {
 } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
-import { PERSPECTIVE, PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT, standingLift } from '@/lib/layout'
+import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
 import { SKILL_MODES, type SkillMode, type SkillModeIcon } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -119,7 +120,7 @@ const hoverHint = computed(() =>
 // board's vertical squash the way sprites do.
 const spriteLayerPoint = (hexId: number, dx: number, dy: number): { x: number; y: number } => {
   const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
-  const lift = ctx.perspective ? standingLift(characterDimensions.value.offset) : 0
+  const lift = ctx.perspective ? ctx.layout.standingLift(characterDimensions.value.offset) : 0
   return { x: x + dx, y: y - lift + dy * counterScaleY.value }
 }
 
@@ -198,7 +199,7 @@ const BASE_CHARACTER_OFFSET = PORTRAIT_RADIUS
 const BASE_MODE_SIZE = 22
 
 // Undoes the board's perspective squash (GridContainer), so sprites stay round.
-const counterScaleY = computed(() => (ctx.perspective ? 1 / PERSPECTIVE.compression : 1))
+const counterScaleY = computed(() => 1 / ctx.layout.squash)
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
@@ -246,8 +247,7 @@ const getCharacterStyle = (hexId: number) => {
   }
 
   if (ctx.perspective) {
-    const verticalOffset = -standingLift(offset)
-    baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${counterScaleY.value})`
+    baseStyle.transform = ctx.layout.standingTransform(offset)
     baseStyle.transformOrigin = 'center'
   }
 
@@ -429,7 +429,7 @@ const liftedMode = computed(() =>
 </script>
 
 <template>
-  <div class="character-layer" :style="{ '--standing-pointer': `${STANDING_POINTER_HEIGHT}px` }">
+  <div class="character-layer">
     <div
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
@@ -480,7 +480,7 @@ const liftedMode = computed(() =>
           :style="getSkillBorderStyle(characterId, hexId)"
           draggable="false"
         />
-        <div v-if="ctx.perspective" class="character-pointer" />
+        <GridPointer v-if="ctx.perspective" />
         <HoldRing v-if="holdingHexId === hexId" />
       </div>
     </div>
@@ -750,17 +750,5 @@ const liftedMode = computed(() =>
   border-radius: 50%;
   object-fit: cover;
   border: var(--character-border-width, 3px) solid #fff;
-}
-
-.character-pointer {
-  position: absolute;
-  bottom: calc(-1 * var(--standing-pointer));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: var(--standing-pointer) solid #777;
 }
 </style>

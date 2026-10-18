@@ -179,7 +179,6 @@ export function useGridExport() {
     )
 
   return {
-    captureGrid,
     copyToClipboard,
     downloadAsImage,
   }
