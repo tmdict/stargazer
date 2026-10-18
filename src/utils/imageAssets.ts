@@ -7,6 +7,7 @@ const byName = (modules: Record<string, string>): Record<string, string> =>
     Object.entries(modules).map(([file, url]) => [file.slice(file.lastIndexOf('/') + 1, -4), url]),
   )
 
+// The 100px width sets the grid image export's resolution (FULL_DETAIL_RATIO).
 export const characterImages = byName(
   import.meta.glob<string>('@/assets/images/character/*.png', {
     query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
