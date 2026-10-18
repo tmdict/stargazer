@@ -1,11 +1,13 @@
 <script setup lang="ts">
-/* The match screenshot import: drop result screenshots, map each one to a
-   board, review what was read, name the record, pick the board sides, and
-   save it as a new team on the boards. Formation screenshots of either team,
-   optional, put that team's units on the tiles they stand on. State lives in
-   useTeamImport (module-level), so closing and reopening keeps the shots;
-   Save as New drops them once the plan is handed up. The modal only renders
-   and emits the finished plan upward. */
+/* The screenshot import, from either of two starts. A match: drop its result
+   screenshots, map each one to a board, add its formation screenshots to put
+   the heroes on their tiles, review what was read, name the record, pick the
+   board sides, and save it as a new team on the boards. Or formation
+   screenshots alone, each one team with the levels it shows, which closes the
+   result drop until they are removed. State lives in useTeamImport
+   (module-level), so closing and reopening keeps the shots; Save as New drops
+   them once the plan is handed up. The modal only renders and emits the
+   finished plan upward. */
 
 import { computed, ref, watch } from 'vue'
 
@@ -95,6 +97,10 @@ const selectedId = ref<string | null>(null)
 const selected = computed(() => shots.value.find((s) => s.id === selectedId.value) ?? null)
 const resultShots = computed(() => shots.value.filter((s) => s.kind === 'result'))
 const formationShots = computed(() => shots.value.filter((s) => s.kind === 'formation'))
+// Result shots make the import a match, whose formation shots only place its
+// heroes; formation shots dropped first are imported alone.
+const matchImport = computed(() => resultShots.value.length > 0)
+const resultsClosed = computed(() => !matchImport.value && formationShots.value.length > 0)
 
 // ---------- formation shots ----------
 
@@ -105,13 +111,12 @@ const formationSide = (shot: ImportShot): Team | null => {
   return side === null || !swapSides.value ? side : getOpposingTeam(side)
 }
 
-// A board with a result shot takes its lineup from it, so the formation
-// shot's own cards are not in play there.
-const hasResult = (shot: ImportShot): boolean => {
+// In a match import, a formation shot of a map with no result shot places nothing.
+const formationNotice = (shot: ImportShot): string | null => {
+  if (!matchImport.value) return null
   const mapIndex = shotMapIndex(shot, mapCount.value)
-  return (
-    mapIndex !== null && resultShots.value.some((s) => shotMapIndex(s, mapCount.value) === mapIndex)
-  )
+  const hasResult = resultShots.value.some((s) => shotMapIndex(s, mapCount.value) === mapIndex)
+  return hasResult ? null : i18n.t('app.import-no-result')
 }
 
 // The units a formation shot's portraits can be: its side's heroes with their
@@ -127,10 +132,10 @@ const unitOptions = (shot: ImportShot): number[] => {
   return [...heroes, ...phantimals].flatMap((id) => [id, ...companionIdsOf(id)])
 }
 
-// A formation shot's own cards are reviewed only where they give the lineup.
+// A formation shot's own cards give the lineup only when imported alone.
 const cardSides = (shot: ImportShot): Team[] => {
   const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
-  return side === null || hasResult(shot) ? [] : [side]
+  return side === null || matchImport.value ? [] : [side]
 }
 
 // The side a formation shot fills, as the plan places it, on the map it
@@ -267,6 +272,11 @@ const issueText = (issue: PlanIssue): string => {
         side: sideLabel(issue.team),
         map: issue.mapIndex + 1,
       })
+    case 'formation-unused':
+      return i18n.t('app.import-formation-unused', {
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
+      })
   }
 }
 
@@ -332,27 +342,40 @@ const handleForgetLearned = (): void => {
         </span>
       </div>
 
-      <ImageDropZone dark :compact="shots.length > 0" :paste-active="show" @add="handleAdd" />
-
-      <TeamImportShotList
-        v-if="resultShots.length"
-        v-model:selected-id="selectedId"
-        :shots="resultShots"
-        :map-count
-        @set-map="setMap"
-        @set-winner="setWinner"
-        @remove="removeShot"
-      />
-
-      <section class="formations">
-        <div class="section-head">
-          <span class="section-title">{{ i18n.t('app.import-formations') }}</span>
-          <span class="section-sub">{{ i18n.t('app.import-formations-tip') }}</span>
+      <!-- Both drops share one size, so the two starts weigh the same. -->
+      <section class="drop-section">
+        <div class="drop-head">
+          <span class="section-title">{{ i18n.t('app.import-results') }}</span>
+          <span class="note">{{ i18n.t('app.import-results-tip') }}</span>
         </div>
         <ImageDropZone
           dark
-          compact
-          :paste-active="false"
+          :compact="shots.length > 0"
+          :paste-active="show && !resultsClosed"
+          :disabled="resultsClosed"
+          @add="handleAdd"
+        />
+        <p v-if="resultsClosed" class="note closed">{{ i18n.t('app.import-results-closed') }}</p>
+        <TeamImportShotList
+          v-if="resultShots.length"
+          v-model:selected-id="selectedId"
+          :shots="resultShots"
+          :map-count
+          @set-map="setMap"
+          @set-winner="setWinner"
+          @remove="removeShot"
+        />
+      </section>
+
+      <section class="drop-section">
+        <div class="drop-head">
+          <span class="section-title">{{ i18n.t('app.import-formations') }}</span>
+          <span class="note">{{ i18n.t('app.import-formations-tip') }}</span>
+        </div>
+        <ImageDropZone
+          dark
+          :compact="shots.length > 0"
+          :paste-active="show && resultsClosed"
           @add="(files) => handleAdd(files, 'formation')"
         />
         <TeamImportShotList
@@ -362,13 +385,14 @@ const handleForgetLearned = (): void => {
           :map-count
           formation
           :review-count="formationReview"
+          :notice="formationNotice"
           @set-map="setMap"
           @remove="removeShot"
         />
       </section>
 
       <section v-if="shots.length" class="names">
-        <label class="field">
+        <label v-if="matchImport" class="field">
           <span class="field-label">{{ i18n.t('app.import-prefix') }}</span>
           <input
             v-model="names.prefix"
@@ -378,7 +402,7 @@ const handleForgetLearned = (): void => {
             maxlength="40"
           />
         </label>
-        <label class="field">
+        <label v-if="matchImport" class="field">
           <span class="field-label">{{ i18n.t('app.import-left-player') }}</span>
           <input
             v-model="names.left"
@@ -388,7 +412,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <label class="field">
+        <label v-if="matchImport" class="field">
           <span class="field-label">{{ i18n.t('app.import-right-player') }}</span>
           <input
             v-model="names.right"
@@ -398,7 +422,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <div class="field">
+        <div class="field" :class="{ alone: !matchImport }">
           <span class="field-label">{{ i18n.t('app.import-board-sides') }}</span>
           <button
             type="button"
@@ -411,7 +435,7 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-swap-sides') }}
           </button>
         </div>
-        <div class="field wide">
+        <div v-if="matchImport" class="field wide">
           <span id="import-record-name" class="field-label">{{
             i18n.t('app.import-record-name')
           }}</span>
@@ -586,6 +610,11 @@ const handleForgetLearned = (): void => {
   flex-basis: 100%;
 }
 
+/* Without the name fields, the side choice keeps its own width. */
+.field.alone {
+  flex: 0 0 auto;
+}
+
 .field-label {
   font-size: 0.68rem;
   font-weight: 700;
@@ -654,10 +683,21 @@ const handleForgetLearned = (): void => {
   border-color: var(--import-bad);
 }
 
-.formations {
+.drop-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+}
+
+.drop-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.note.closed {
+  margin: 0;
+  color: var(--import-warn);
 }
 
 .review-section {

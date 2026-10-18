@@ -1,0 +1,5 @@
+{
+  "en": "The {side} formation for map {map} has no match result to place, so it is left out",
+  "zh": "第 {map} 张地图的{side}布阵没有可放置的对战结果，已略过",
+  "ko": "맵 {map}의 {side} 진영 배치는 배치할 대전 결과가 없어 제외됩니다"
+}
