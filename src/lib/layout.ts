@@ -50,9 +50,21 @@ export const PERSPECTIVE = { compression: 0.606, tilt: 0.01 } as const
 // arrows and lines between units end on this ring around each portrait.
 export const PORTRAIT_RADIUS = 30
 
+// An artifact icon's radius at hex radius 40; its arrows leave from this ring.
+export const ARTIFACT_RADIUS = 26
+
 // A token standing on a tile in perspective (a portrait or an artifact icon)
 // points at the tile's center with a pointer this tall, in screen pixels.
 export const STANDING_POINTER_HEIGHT = 8
+
+export interface ArrowOptions {
+  invertCurve?: boolean
+  curveScale?: number
+  // In perspective, arc up through the air rather than bow sideways.
+  arc?: boolean
+  // The radius of a start token that is not a portrait (an artifact icon).
+  startRadius?: number
+}
 
 export class Layout {
   orientation: Orientation
@@ -167,13 +179,20 @@ export class Layout {
     startHex: Hex,
     endHex: Hex,
     characterRadius: number = 0,
-    invertCurve: boolean = false,
-    curveScale: number = 1,
-    // In perspective, arc up through the air rather than bow sideways.
-    arc: boolean = true,
+    {
+      invertCurve = false,
+      curveScale = 1,
+      arc = true,
+      startRadius = characterRadius,
+    }: ArrowOptions = {},
   ): string {
     const startCenter = this.hexToPixel(startHex)
     const endCenter = this.hexToPixel(endHex)
+    // The arrow layers rise to the portraits' centers (useArrowLayer), and a
+    // smaller start token stands lower.
+    if (this.squash < 1) {
+      startCenter.y += this.standingLift(characterRadius) - this.standingLift(startRadius)
+    }
 
     const dx = endCenter.x - startCenter.x
     const dy = endCenter.y - startCenter.y
@@ -189,7 +208,7 @@ export class Layout {
     }
 
     if (arc && this.squash < 1) {
-      return this.arcPath(startCenter, endCenter, characterRadius, curveScale)
+      return this.arcPath(startCenter, endCenter, startRadius, characterRadius, curveScale)
     }
 
     const dirX = dx / length
@@ -218,7 +237,7 @@ export class Layout {
     // straight-line point, which reads awkwardly on a curved path. The tangent
     // of a quadratic Bézier at its endpoints aims at the control point, which
     // sits `curvature` off the chord at half its length: atan2(curvature, half).
-    const halfChord = Math.max((length - 2 * characterRadius) / 2, 1)
+    const halfChord = Math.max((length - startRadius - characterRadius) / 2, 1)
     const tangentAngle = Math.atan2(curvature, halfChord)
     const cosA = Math.cos(tangentAngle)
     const sinA = Math.sin(tangentAngle)
@@ -226,7 +245,7 @@ export class Layout {
     const startRing = this.ringOffset(
       dirX * cosA + normX * sinA,
       dirY * cosA + normY * sinA,
-      characterRadius,
+      startRadius,
     )
     const endRing = this.ringOffset(
       -dirX * cosA + normX * sinA,
@@ -253,10 +272,17 @@ export class Layout {
   // on the same curve, so the arrow leaves and lands along it and keeps the
   // height limit. Portraits close enough to hide the whole curve fall back to
   // ends on each rim toward the control point.
-  private arcPath(start: Point, end: Point, radius: number, curveScale: number): string {
+  private arcPath(
+    start: Point,
+    end: Point,
+    startRadius: number,
+    endRadius: number,
+    curveScale: number,
+  ): string {
     const screenDy = (end.y - start.y) * this.squash
     const length = Math.hypot(end.x - start.x, screenDy)
-    const height = Math.min(length * ARC_RISE * curveScale, arcHeightLimit(screenDy, radius))
+    const limit = arcHeightLimit(screenDy, screenDy < 0 ? endRadius : startRadius)
+    const height = Math.min(length * ARC_RISE * curveScale, limit)
     const control = {
       x: (start.x + end.x) / 2,
       y: (start.y + end.y) / 2 - (2 * height) / this.squash,
@@ -265,25 +291,38 @@ export class Layout {
       x: (1 - t) ** 2 * start.x + 2 * t * (1 - t) * control.x + t ** 2 * end.x,
       y: (1 - t) ** 2 * start.y + 2 * t * (1 - t) * control.y + t ** 2 * end.y,
     })
-    // Where the curve crosses the rim around `center`, from `inside` toward `out`.
-    const rimCrossing = (center: Point, inside: number, out: number): number => {
+    const outside = (t: number, center: Point, radius: number): boolean => {
+      const p = at(t)
+      return Math.hypot(p.x - center.x, (p.y - center.y) * this.squash) >= radius
+    }
+    // Where the curve crosses the rim around `center`, between a point inside and
+    // one outside.
+    const rimCrossing = (center: Point, radius: number, inside: number, out: number) => {
       for (let i = 0; i < 24; i++) {
         const mid = (inside + out) / 2
-        const p = at(mid)
-        if (Math.hypot(p.x - center.x, (p.y - center.y) * this.squash) >= radius) out = mid
+        if (outside(mid, center, radius)) out = mid
         else inside = mid
       }
       return out
     }
-    const t0 = rimCrossing(start, 0, 0.5)
-    const t1 = rimCrossing(end, 1, 0.5)
-    if (t0 >= t1) {
-      const s = this.ringOffset(control.x - start.x, control.y - start.y, radius)
-      const e = this.ringOffset(control.x - end.x, control.y - end.y, radius)
+    // The drawn part runs from where the curve last leaves the start portrait to
+    // where it enters the end portrait for good. A steep arc can rise over the
+    // higher portrait and come back down through it, so the crossings are found by
+    // sampling the whole curve.
+    const STEPS = 64
+    let lastInStart = 0
+    for (let i = 1; i <= STEPS; i++) if (!outside(i / STEPS, start, startRadius)) lastInStart = i
+    let firstInEnd = STEPS
+    while (firstInEnd > 0 && !outside((firstInEnd - 1) / STEPS, end, endRadius)) firstInEnd--
+    if (lastInStart + 1 >= firstInEnd) {
+      const s = this.ringOffset(control.x - start.x, control.y - start.y, startRadius)
+      const e = this.ringOffset(control.x - end.x, control.y - end.y, endRadius)
       const from = { x: start.x + s.x, y: start.y + s.y }
       const to = { x: end.x + e.x, y: end.y + e.y }
       return `M ${this.upright(from)} Q ${this.upright(control)} ${this.upright(to)}`
     }
+    const t0 = rimCrossing(start, startRadius, lastInStart / STEPS, (lastInStart + 1) / STEPS)
+    const t1 = rimCrossing(end, endRadius, firstInEnd / STEPS, (firstInEnd - 1) / STEPS)
     const from = at(t0)
     const to = at(t1)
     const mix = (1 - t0) * t1 + t0 * (1 - t1)

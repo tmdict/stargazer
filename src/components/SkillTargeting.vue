@@ -8,6 +8,7 @@ import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import type { Hex } from '@/lib/hex'
+import { ARTIFACT_RADIUS } from '@/lib/layout'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
@@ -149,6 +150,7 @@ const linesToRender = computed(() =>
         :color="TEAM_ARROW_COLORS[arrow.team]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
+        :start-radius="ARTIFACT_RADIUS"
         :arc="false"
       />
     </template>

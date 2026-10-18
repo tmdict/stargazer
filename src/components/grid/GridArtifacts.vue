@@ -14,6 +14,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
+import { ARTIFACT_RADIUS } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -90,7 +91,7 @@ const cellDashArray = computed(() => {
 
 // Artifact icon geometry (at 40px hex radius). Icons are full-bleed square art
 // that fills the circle; only the container scales with the breakpoint.
-const BASE_ARTIFACT_SIZE = 52
+const BASE_ARTIFACT_SIZE = 2 * ARTIFACT_RADIUS
 
 const artifactDimensions = computed(() => {
   const scale = ctx.hexScale

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Hex } from '@/lib/hex'
-import { Layout, POINTY } from '@/lib/layout'
+import { Layout, PERSPECTIVE, POINTY } from '@/lib/layout'
 
 describe('Layout', () => {
   const SQRT3 = Math.sqrt(3)
@@ -106,21 +106,52 @@ describe('Layout', () => {
       expect(c[0]!.x - c[2]!.x).toBeGreaterThan(c[5]!.x - c[3]!.x)
     })
 
-    it('keeps arrow and line ends on a round ring once the container squashes', () => {
-      const squash = 0.5
-      const squashed = new Layout(POINTY, size, origin, false, 0, squash)
-      const radius = 4
-      const ends = (path: string) => path.match(/-?[\d.]+/g)!.map(Number)
-      // A column (straight down) and a row (straight across) of hexes.
-      for (const [from, to] of [
-        [new Hex(0, 0, 0), new Hex(-1, 2, -1)],
-        [new Hex(0, 0, 0), new Hex(2, 0, -2)],
-      ] as const) {
-        // Paths come out upright, y already times the squash.
-        const [sx, sy] = ends(squashed.getLinePath(from, to, radius))
-        const c = squashed.hexToPixel(from)
-        expect(Math.hypot(sx! - c.x, sy! - c.y * squash)).toBeCloseTo(radius)
+    it('ends every arrow and line on the rims of the tokens it joins', () => {
+      // The board's proportions: portraits of radius 30 on hexes of radius 40.
+      const squash = PERSPECTIVE.compression
+      const board = new Layout(POINTY, { x: 40, y: 40 }, origin, false, tilt, squash)
+      const radius = 30
+      const artifactRadius = 26
+      const hexes: Hex[] = []
+      for (let q = -3; q <= 3; q++) {
+        for (let r = Math.max(-3, -q - 3); r <= Math.min(3, -q + 3); r++) {
+          hexes.push(new Hex(q, r, -q - r))
+        }
       }
+      // Paths come out upright, y already times the squash. A smaller token stands
+      // lower than the portraits by the difference in radius.
+      const gap = (x: number, y: number, hex: Hex, r: number) => {
+        const c = board.hexToPixel(hex)
+        return Math.abs(Math.hypot(x - c.x, y - c.y * squash - (radius - r)) - r)
+      }
+      const offRim: string[] = []
+      const check = (from: Hex, to: Hex, path: string, startRadius = radius) => {
+        const v = path.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/g)!.map(Number)
+        if (
+          gap(v[0]!, v[1]!, from, startRadius) > 1e-3 ||
+          gap(v.at(-2)!, v.at(-1)!, to, radius) > 1e-3
+        ) {
+          offRim.push(`${from.getId()} -> ${to.getId()}: ${path}`)
+        }
+      }
+      for (const from of hexes) {
+        for (const to of hexes) {
+          if (from === to) continue
+          // The curve scales of skill, ally and enemy arrows, arcing and bowing.
+          for (const curveScale of [1, 1.5, 2]) {
+            for (const arc of [true, false]) {
+              check(from, to, board.getArrowPath(from, to, radius, { curveScale, arc }))
+            }
+          }
+          const artifactArrow = board.getArrowPath(from, to, radius, {
+            arc: false,
+            startRadius: artifactRadius,
+          })
+          check(from, to, artifactArrow, artifactRadius)
+          check(from, to, board.getLinePath(from, to, radius))
+        }
+      }
+      expect(offRim).toEqual([])
     })
 
     it('never arcs an arrow above the top of the portrait at its higher end', () => {
