@@ -25,7 +25,7 @@ for (let y = 0; y < T; y++) {
 const MASKED = MASK.flatMap((on, i) => (on ? [i] : []))
 // The disc shows about the central 71% of the reference art.
 const REFERENCE_ZOOM = 0.71
-// Disc sizes tried around HEADER_ICON.diameter, and the search around the
+// Disc sizes tried around the nominal diameter, and the search around the
 // nominal centre.
 const SIZES = [-3, 0, 3]
 const REACH = 18
@@ -105,16 +105,17 @@ export function readArtifact(
   centreX: number,
   centreY: number,
   table: ArtifactTable,
+  diameter: number = HEADER_ICON.diameter,
 ): ArtifactReading {
   const best = new Map<number, number>()
   let top: { score: number; shape: number; rect: Rect; crop: RgbaImage | null } = {
     score: -Infinity,
     shape: 0,
-    rect: square(centreX, centreY, HEADER_ICON.diameter),
+    rect: square(centreX, centreY, diameter),
     crop: null,
   }
   for (const ds of SIZES) {
-    const size = HEADER_ICON.diameter + ds
+    const size = diameter + ds
     for (let dx = -REACH; dx <= REACH; dx += STEP) {
       for (let dy = -REACH; dy <= REACH; dy += STEP) {
         const rect = square(centreX + dx, centreY + dy, size)

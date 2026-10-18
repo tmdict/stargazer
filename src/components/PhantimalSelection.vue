@@ -19,8 +19,7 @@ import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
-import { loadPhantimalLocales } from '@/utils/dataLoader'
-import { formatDisplayName } from '@/utils/nameFormatting'
+import { phantimalDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
@@ -112,8 +111,7 @@ const {
 const tooltipName = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return ''
-  const name = loadPhantimalLocales()[phantimal.name]?.name[i18n.currentLocale]
-  return name || formatDisplayName(phantimal.name)
+  return phantimalDisplayName(i18n.currentLocale, phantimal.name)
 })
 
 const tooltipRows = computed(() => {

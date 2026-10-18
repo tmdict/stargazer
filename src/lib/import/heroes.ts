@@ -174,8 +174,13 @@ interface Lead {
 /* Rank the table against a face. `alignments` are descriptors of the same
  * cell at small offsets, centre first: the centre ranks everything, the
  * others re-score the leaders, and the finer window grid re-scores the top
- * few against the stored portrait. */
-export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]): HeroCandidate[] {
+ * few against the stored portrait. Up to `limit` candidates come back, at
+ * most every leader. */
+export function rankHeroes(
+  table: HeroTable,
+  alignments: readonly Float32Array[],
+  limit = CANDIDATES,
+): HeroCandidate[] {
   const centre = alignments[0]
   if (!centre) return []
   const best = new Map<number, Lead>()
@@ -232,7 +237,7 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
   }
   leaders.sort((a, b) => b.score - a.score)
   return leaders
-    .slice(0, CANDIDATES)
+    .slice(0, limit)
     .map(({ characterId, score, learned, costume }) => ({ characterId, score, learned, costume }))
 }
 

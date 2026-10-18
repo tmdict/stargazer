@@ -1,0 +1,256 @@
+/* Formation shots in the match import: the map a shot's lit tiles name, who
+ * stands on each tile it shows, and the side that makes. A board's heroes and
+ * their upgrades come from its result shot when there is one, else from the
+ * formation's own card row; with neither, from the portraits alone. The units
+ * are matched against that lineup with the companions and phantimal it can
+ * bring, so a portrait only has to tell a handful of units apart. Pure data
+ * mapping, joined to the result shots by teamImport. */
+
+import { isBaseHeroId } from '@/lib/characters/character'
+import { companionIdsOf } from '@/lib/characters/companion'
+import { isPhantimalId } from '@/lib/characters/phantimal'
+import { BASE_TEAM_SIZE } from '@/lib/grid'
+import type { FormationReading, UnitReading } from '@/lib/import/types'
+import { MAPS } from '@/lib/maps'
+import { getCharacterSkill } from '@/lib/skills/registry'
+import { FULL_GRID, presetHexes } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import type { SideLoadBoard, SideLoadCompanion } from './sideLoad'
+import type { LineupEntry } from './teamImport'
+
+// ---------- the map ----------
+
+/* The map a formation shot shows: the first candidate whose deployment tiles
+ * for the shown side are exactly the lit tiles, where a tile a portrait
+ * hides counts either way and every unit stands on one of them. Null when
+ * none fits. */
+export function identifyMap(
+  reading: FormationReading,
+  candidates: readonly string[],
+): string | null {
+  if (reading.side === null) return null
+  const state = reading.side === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+  const lit = new Set(reading.tiles)
+  const open = new Set(reading.unclear)
+  for (const key of candidates) {
+    const map = MAPS[key]
+    if (!map) continue
+    const tiles = new Set(map.grid.filter((g) => g.type === state).flatMap((g) => g.hex))
+    const fits =
+      reading.tiles.every((id) => tiles.has(id)) &&
+      reading.units.every((unit) => tiles.has(unit.hexId)) &&
+      [...tiles].every(
+        (id) => lit.has(id) || open.has(id) || reading.units.some((u) => u.hexId === id),
+      )
+    if (fits) return key
+  }
+  return null
+}
+
+// ---------- the units ----------
+
+// A unit a side can field, and the reference its portrait ranks under: its
+// own art (a hero, a phantimal, a companion with an image of its own), else
+// its owner's (Lailah, Phraesto's shadow).
+interface Slot {
+  unitId: number
+  art: number
+  owner: number | null
+}
+
+const slotsOf = (ownerId: number): Slot[] => {
+  const companions = companionIdsOf(ownerId)
+  const ownArt = getCharacterSkill(ownerId)?.companionImageModifier !== undefined
+  return [
+    { unitId: ownerId, art: ownerId, owner: null },
+    ...companions.map((unitId) => ({
+      unitId,
+      art: ownArt ? companions[0]! : ownerId,
+      owner: ownerId,
+    })),
+  ]
+}
+
+const scoreOf = (unit: UnitReading, art: number): number =>
+  unit.candidates.reduce(
+    (best, c) => (c.characterId === art && c.score > best ? c.score : best),
+    -Infinity,
+  )
+
+// A portrait goes to a unit only at this score or above; the lineup leaves
+// few units to choose from, so even a weak match is usually the right one.
+const ASSIGN_FLOOR = 0.2
+// A phantimal stands on the board when some portrait matches its art better
+// than any hero's, and this well: on every capture measured the phantimal's
+// own portrait does (0.81 to 0.94), while a hero's can resemble phantimal art
+// more than the floor yet still matches a hero better.
+const PHANTIMAL_FLOOR = 0.6
+// A match is sure when it scores this well and leads every unit of other art
+// by this much; else it waits for review.
+const SURE_SCORE = 0.6
+const SURE_MARGIN = 0.08
+
+export type UnitState = 'sure' | 'review' | 'none'
+
+export interface UnitAssignment {
+  // The unit the portrait is taken for; null when it is none of the side's.
+  unitId: number | null
+  state: UnitState
+}
+
+/* Each portrait's unit among the lineup's heroes, their companions and the
+ * phantimal the portraits show, best matches first; a review pick (a unit id,
+ * or null for none) stands as made. Companions of one owner that share an
+ * image cannot be told apart, so they take their ids in tile order. */
+export function assignUnits(
+  units: readonly UnitReading[],
+  heroIds: readonly number[],
+  overrides: Readonly<Record<number, number | null>>,
+): UnitAssignment[] {
+  const pool = heroIds.flatMap(slotsOf)
+  let phantimal: { id: number; score: number } | null = null
+  for (const unit of units) {
+    const top = unit.candidates[0]
+    if (
+      top &&
+      isPhantimalId(top.characterId) &&
+      top.score >= (phantimal?.score ?? PHANTIMAL_FLOOR)
+    ) {
+      phantimal = { id: top.characterId, score: top.score }
+    }
+  }
+  if (phantimal) pool.push(...slotsOf(phantimal.id))
+
+  const taken = new Set<number>()
+  const out: UnitAssignment[] = units.map((_, i) => {
+    const pick = overrides[i]
+    if (pick === undefined) return { unitId: null, state: 'none' }
+    if (pick !== null) taken.add(pick)
+    return { unitId: pick, state: 'sure' }
+  })
+  const pairs: { i: number; slot: Slot; score: number }[] = []
+  units.forEach((unit, i) => {
+    if (overrides[i] !== undefined) return
+    for (const slot of pool) {
+      const score = scoreOf(unit, slot.art)
+      if (score >= ASSIGN_FLOOR) pairs.push({ i, slot, score })
+    }
+  })
+  pairs.sort((a, b) => b.score - a.score)
+  const done = new Set<number>()
+  for (const { i, slot, score } of pairs) {
+    if (done.has(i) || taken.has(slot.unitId)) continue
+    done.add(i)
+    taken.add(slot.unitId)
+    const rival = Math.max(
+      ...pool.filter((s) => s.art !== slot.art).map((s) => scoreOf(units[i]!, s.art)),
+    )
+    const sure = score >= SURE_SCORE && score - rival >= SURE_MARGIN
+    out[i] = { unitId: slot.unitId, state: sure ? 'sure' : 'review' }
+  }
+  // A portrait left over is still one of the side's units, and one with no
+  // likeness to its own art (Lailah, drawn on her own in game but beside
+  // Elijah in the app's art) is matched last by elimination, for review.
+  const leftover = units.flatMap((unit, i) =>
+    out[i]!.state === 'none' && overrides[i] === undefined
+      ? pool
+          .filter((slot) => !taken.has(slot.unitId))
+          .map((slot) => ({ i, slot, score: Math.max(-1, scoreOf(unit, slot.art)) }))
+      : [],
+  )
+  leftover.sort((a, b) => b.score - a.score)
+  for (const { i, slot } of leftover) {
+    if (done.has(i) || taken.has(slot.unitId)) continue
+    done.add(i)
+    taken.add(slot.unitId)
+    out[i] = { unitId: slot.unitId, state: 'review' }
+  }
+
+  // Interchangeable companions in tile order.
+  const siblings = new Map<string, number[]>()
+  out.forEach((a, i) => {
+    const slot = pool.find((s) => s.unitId === a.unitId)
+    if (!slot || slot.owner === null) return
+    const key = `${slot.owner}:${slot.art}`
+    siblings.set(key, [...(siblings.get(key) ?? []), i])
+  })
+  for (const indices of siblings.values()) {
+    const ids = indices.map((i) => out[i]!.unitId!).sort((a, b) => a - b)
+    const byTile = [...indices].sort((a, b) => units[a]!.hexId - units[b]!.hexId)
+    byTile.forEach((i, k) => {
+      out[i] = { ...out[i]!, unitId: ids[k]! }
+    })
+  }
+  return out
+}
+
+/* A lineup from the portraits alone, for a board with neither a result shot
+ * nor a card row: each portrait's best hero, surest portraits first. A
+ * portrait whose best hero is already taken and spawns companions is taken
+ * for one of them rather than for another hero. */
+export function heroesFromUnits(units: readonly UnitReading[]): number[] {
+  const heroes: number[] = []
+  const ranked = units
+    .map((unit) => unit.candidates.filter((c) => isBaseHeroId(c.characterId)))
+    .sort((a, b) => (b[0]?.score ?? 0) - (a[0]?.score ?? 0))
+  for (const candidates of ranked) {
+    if (heroes.length === BASE_TEAM_SIZE) break
+    const top = candidates[0]
+    if (!top || (heroes.includes(top.characterId) && companionIdsOf(top.characterId).length > 0))
+      continue
+    const pick = candidates.find((c) => c.score >= SURE_SCORE && !heroes.includes(c.characterId))
+    if (pick) heroes.push(pick.characterId)
+  }
+  return heroes
+}
+
+// ---------- the side ----------
+
+// The board's hexes by id, for the half-turn a swapped side takes.
+const HEXES = presetHexes(FULL_GRID)
+const rotated = (hexId: number): number | undefined => {
+  const hex = HEXES.find((h) => h.getId() === hexId)
+  return hex && HEXES.find((h) => h.q === -hex.q && h.r === -hex.r)?.getId()
+}
+
+/* One side of a board as the side-load places it: each hero with its
+ * upgrades on the tile its portrait marks, or on a random free tile when no
+ * portrait was taken for it; the companions and phantimal the portraits
+ * show; and the artifact. `rotate` turns every tile a half-turn, for a team
+ * that lands on the other half of the board. */
+export function formationSide(
+  units: readonly UnitReading[],
+  assignments: readonly UnitAssignment[],
+  heroes: readonly LineupEntry[],
+  artifact: number | null,
+  rotate: boolean,
+): SideLoadBoard {
+  const tileOf = (unitId: number): number | undefined => {
+    const i = assignments.findIndex((a) => a.unitId === unitId)
+    const hexId = units[i]?.hexId
+    if (hexId === undefined) return undefined
+    return rotate ? rotated(hexId) : hexId
+  }
+  const mains = heroes.map(({ characterId, attrs }) => ({
+    unitId: characterId,
+    hexId: tileOf(characterId),
+    attrs,
+  }))
+  const owners = heroes.map((h) => h.characterId)
+  const phantimalId =
+    assignments.find((a) => a.unitId !== null && isPhantimalId(a.unitId))?.unitId ?? null
+  if (phantimalId !== null) owners.push(phantimalId)
+  const companions: SideLoadCompanion[] = owners.flatMap((owner) =>
+    companionIdsOf(owner).flatMap((unitId) => {
+      const hexId = tileOf(unitId)
+      return hexId === undefined ? [] : [{ unitId, hexId, mainUnitId: owner }]
+    }),
+  )
+  return {
+    mains,
+    companions,
+    phantimal: phantimalId === null ? null : { unitId: phantimalId, hexId: tileOf(phantimalId) },
+    artifact,
+  }
+}

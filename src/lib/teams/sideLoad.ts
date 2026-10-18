@@ -34,8 +34,10 @@ import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 export interface SideLoadUnit {
   // Full unit id: base hero, placeholder, synergy-band hero, or phantimal-band id.
   unitId: number
-  // The record's own hex; the executor resolves it against the live map.
-  hexId: number
+  // The record's own hex, which the executor resolves against the live map;
+  // absent when no tile is known (a match import without a formation shot),
+  // which places the unit on a random free tile.
+  hexId?: number
   // Saved upgrade attrs, present only when the record holds some for the unit.
   attrs?: AttrRecord
 }

@@ -150,7 +150,7 @@ export interface GridContext {
   autoPlacePhantimal: (phantimalId: number, team: Team, avoid?: ReadonlySet<number>) => boolean
   phantimalCanJoinTeam: (phantimalId: number, team: Team) => boolean
   phantimalFactionCount: (phantimalId: number, team: Team) => number
-  seedPhantimalBaseline: () => void
+  seedPhantimalBaseline: (team?: Team) => void
   // Placement operations refresh the skill results themselves; raw tile edits
   // and companion settling do not, so their callers refresh once at the end.
   refreshSkills: () => void
@@ -304,9 +304,9 @@ export function createGridContext(
   // restore applies many characters in one batch, which the watcher would
   // otherwise read as a fresh transition; seeding afterward lets a saved state
   // that deliberately omits its phantimal load without one.
-  const seedPhantimalBaseline = (): void => {
-    for (const team of [Team.ALLY, Team.ENEMY]) {
-      lastQualifyingPhantimal.set(team, findQualifyingPhantimalId(team))
+  const seedPhantimalBaseline = (team?: Team): void => {
+    for (const t of team === undefined ? [Team.ALLY, Team.ENEMY] : [team]) {
+      lastQualifyingPhantimal.set(t, findQualifyingPhantimalId(t))
     }
   }
 

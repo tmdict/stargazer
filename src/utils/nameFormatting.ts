@@ -1,4 +1,6 @@
 import type { CharacterType } from '@/lib/types/character'
+import type { AppLocale } from '@/lib/types/i18n'
+import { loadPhantimalLocales } from '@/utils/dataLoader'
 
 /**
  * Localized display name with formatted-slug fallback: the homegrown i18n's
@@ -26,6 +28,11 @@ export function characterDisplayName(
   return character.placeholder
     ? t(`game.${character.faction}`)
     : localizedDisplayName(t, 'character', character.name)
+}
+
+/** A phantimal's name, from its seasonal locale file. */
+export function phantimalDisplayName(locale: AppLocale, name: string): string {
+  return loadPhantimalLocales()[name]?.name[locale] || formatDisplayName(name)
 }
 
 /**

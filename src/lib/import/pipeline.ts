@@ -118,20 +118,21 @@ const placeColumns = (shot: RgbaImage, frames: readonly FrameRef[]): Columns => 
   }
 }
 
-/* One panel's five cards: each card's frame pins its box, and the face, the
- * star row and a crop for the review come from there. Without a trusted
- * anchor the boxes are guesses, so the cells are offered empty for the
- * picker rather than with a stranger's face. */
-const readSide = (
+/* Five cards from where each is expected (its frame's top-left): each card's
+ * frame pins its box, and the face, the star row and a crop for the review
+ * come from there. Without a trusted placement the boxes are guesses, so the
+ * cells are offered empty for the picker rather than with a stranger's face.
+ * A side fields five different heroes, so the faces are settled together. */
+export const readCards = (
   shot: RgbaImage,
   refs: ReferenceSet,
-  anchor: PanelAnchor,
+  seeds: readonly { x: number; y: number }[],
   trusted: boolean,
 ): HeroReading[] => {
   const cells: Omit<HeroReading, keyof HeroIdentity>[] = []
   const rankings: HeroCandidate[][] = []
-  for (let row = 0; row < CARD_ROWS; row++) {
-    const match = matchCard(shot, refs.frames, anchor, row)
+  for (const seed of seeds) {
+    const match = matchCard(shot, refs.frames, { ...seed, pitch: 0 }, 0)
     const art = artBoxOf(match.box)
     const alignments = ALIGNMENTS.map(([dx, dy]) =>
       heroDescriptor(shot, { ...art, x: art.x + dx, y: art.y + dy }),
@@ -155,6 +156,13 @@ const readSide = (
   return cells.map((cell, row) => ({ ...cell, ...identities[row]! }))
 }
 
+// A panel's five cards stacked under its anchor.
+const columnSeeds = (anchor: PanelAnchor): { x: number; y: number }[] =>
+  Array.from({ length: CARD_ROWS }, (_, row) => ({
+    x: anchor.x,
+    y: Math.round(anchor.y + anchor.pitch * row),
+  }))
+
 export function readScreenshot(shot: RgbaImage, refs: ReferenceSet): ScreenshotReading {
   const warnings: ImportWarning[] = []
   const { tabs, anchors, floor } = placeColumns(shot, refs.frames)
@@ -163,7 +171,7 @@ export function readScreenshot(shot: RgbaImage, refs: ReferenceSet): ScreenshotR
   for (const team of [Team.ALLY, Team.ENEMY]) {
     const trusted = anchors[team].mean >= floor
     if (!trusted) warnings.push({ kind: 'no-panel', side: team })
-    sides[team] = readSide(shot, refs, anchors[team], trusted)
+    sides[team] = readCards(shot, refs, columnSeeds(anchors[team]), trusted)
     if (!trusted) continue
     sides[team].forEach((cell, row) => {
       if (!cell.recognised) warnings.push({ kind: 'unrecognised', side: team, row })

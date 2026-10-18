@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /* The match screenshot import: drop result screenshots, map each one to a
    board, review what was read, name the record, pick the board sides, and
-   save it as a new team on the boards. State lives in useTeamImport (module-level), so closing and
-   reopening keeps the shots; Save as New drops them once the plan is handed
-   up. The modal only renders and emits the finished plan upward. */
+   save it as a new team on the boards. Formation screenshots of either team,
+   optional, put that team's units on the tiles they stand on. State lives in
+   useTeamImport (module-level), so closing and reopening keeps the shots;
+   Save as New drops them once the plan is handed up. The modal only renders
+   and emits the finished plan upward. */
 
 import { computed, ref, watch } from 'vue'
 
@@ -12,8 +14,17 @@ import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { useTeamImport } from '@/composables/useTeamImport'
+import {
+  shotMapIndex,
+  useTeamImport,
+  type ImportShot,
+  type ShotKind,
+} from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
+import { getOpposingTeam } from '@/lib/characters/character'
+import { companionIdsOf } from '@/lib/characters/companion'
+import { toPhantimalId } from '@/lib/characters/phantimal'
+import { isFormationReading } from '@/lib/import/types'
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
   DEFAULT_VARIANT,
@@ -23,8 +34,10 @@ import {
   type VariantMatch,
 } from '@/lib/teams/modes'
 import {
+  artifactState,
   isBlockingIssue,
   NAME_FORBIDDEN,
+  reviewStates,
   type PlanIssue,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
@@ -68,6 +81,8 @@ const {
   setHero,
   setLevel,
   setArtifact,
+  setUnit,
+  unitsOf,
   saveNames,
   forgetLearned,
   ensureReferences,
@@ -76,6 +91,56 @@ const {
 const mapCount = computed(() => TEAM_MODES[activeMode].boardCount)
 const selectedId = ref<string | null>(null)
 const selected = computed(() => shots.value.find((s) => s.id === selectedId.value) ?? null)
+const resultShots = computed(() => shots.value.filter((s) => s.kind === 'result'))
+const formationShots = computed(() => shots.value.filter((s) => s.kind === 'formation'))
+
+// ---------- formation shots ----------
+
+// The board side a formation shot fills: the team it shows, across the board
+// when the match's sides are swapped.
+const formationSide = (shot: ImportShot): Team | null => {
+  const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
+  return side === null || !swapSides.value ? side : getOpposingTeam(side)
+}
+
+// A board with a result shot takes its lineup from it, so the formation
+// shot's own cards are not in play there.
+const hasResult = (shot: ImportShot): boolean => {
+  const mapIndex = shotMapIndex(shot, mapCount.value)
+  return (
+    mapIndex !== null && resultShots.value.some((s) => shotMapIndex(s, mapCount.value) === mapIndex)
+  )
+}
+
+// The units a formation shot's portraits can be: its side's heroes with their
+// companions, and the season's phantimals with theirs.
+const unitOptions = (shot: ImportShot): number[] => {
+  const mapIndex = shotMapIndex(shot, mapCount.value)
+  const side = formationSide(shot)
+  const heroes =
+    mapIndex === null || side === null
+      ? []
+      : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
+  const phantimals = gameData.phantimals.map(({ id }) => toPhantimalId(id))
+  return [...heroes, ...phantimals].flatMap((id) => [id, ...companionIdsOf(id)])
+}
+
+// A formation shot's own cards are reviewed only where they give the lineup.
+const cardSides = (shot: ImportShot): Team[] => {
+  const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
+  return side === null || hasResult(shot) ? [] : [side]
+}
+
+const formationReview = (shot: ImportShot): number => {
+  const units = unitsOf(shot.id).filter((u) => u.state !== 'sure').length
+  return cardSides(shot).reduce(
+    (n, side) =>
+      n +
+      reviewStates(shot.reading!, side, shot.overrides).filter((st) => st !== 'sure').length +
+      (artifactState(shot.reading!, side, shot.artifactOverrides) === 'review' ? 1 : 0),
+    units,
+  )
+}
 
 // Keep a card selected while there are cards; a new drop selects its first shot.
 watch(
@@ -94,8 +159,8 @@ watch(
   { immediate: true },
 )
 
-const handleAdd = async (files: File[]): Promise<void> => {
-  const added = await addFiles(files)
+const handleAdd = async (files: File[], kind: ShotKind = 'result'): Promise<void> => {
+  const added = await addFiles(files, kind)
   if (added === 0) error(i18n.t('app.no-valid-images'))
 }
 
@@ -170,6 +235,21 @@ const issueText = (issue: PlanIssue): string => {
         side: sideLabel(issue.team),
         map: issue.mapIndex + 1,
       })
+    case 'duplicate-formation':
+      return i18n.t('app.import-duplicate-formation', {
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
+      })
+    case 'map-conflict':
+      return i18n.t('app.import-map-conflict', { map: issue.mapIndex + 1 })
+    case 'unknown-map':
+      return i18n.t('app.import-unknown-map', { map: issue.mapIndex + 1 })
+    case 'unplaced':
+      return i18n.t('app.import-unplaced', {
+        count: issue.count,
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
+      })
   }
 }
 
@@ -238,14 +318,37 @@ const handleForgetLearned = (): void => {
       <ImageDropZone dark :compact="shots.length > 0" :paste-active="show" @add="handleAdd" />
 
       <TeamImportShotList
-        v-if="shots.length"
+        v-if="resultShots.length"
         v-model:selected-id="selectedId"
-        :shots
+        :shots="resultShots"
         :map-count
         @set-map="setMap"
         @set-winner="setWinner"
         @remove="removeShot"
       />
+
+      <section class="formations">
+        <div class="section-head">
+          <span class="section-title">{{ i18n.t('app.import-formations') }}</span>
+          <span class="section-sub">{{ i18n.t('app.import-formations-tip') }}</span>
+        </div>
+        <ImageDropZone
+          dark
+          compact
+          :paste-active="false"
+          @add="(files) => handleAdd(files, 'formation')"
+        />
+        <TeamImportShotList
+          v-if="formationShots.length"
+          v-model:selected-id="selectedId"
+          :shots="formationShots"
+          :map-count
+          formation
+          :review-count="formationReview"
+          @set-map="setMap"
+          @remove="removeShot"
+        />
+      </section>
 
       <section v-if="shots.length" class="names">
         <label class="field">
@@ -319,6 +422,7 @@ const handleForgetLearned = (): void => {
         <!-- Keyed per shot: a picker opened on one screenshot must not
              survive into another and land its pick there. -->
         <TeamImportReview
+          v-if="selected.kind === 'result'"
           :key="selected.id"
           :shot="selected"
           :names
@@ -326,6 +430,19 @@ const handleForgetLearned = (): void => {
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
+        />
+        <TeamImportReview
+          v-else
+          :key="`${selected.id}-formation`"
+          :shot="selected"
+          :names
+          :swap-sides
+          :sides="cardSides(selected)"
+          :units="{ assignments: unitsOf(selected.id), options: unitOptions(selected) }"
+          @set-hero="setHero"
+          @set-level="setLevel"
+          @set-artifact="setArtifact"
+          @set-unit="setUnit"
         />
       </section>
 
@@ -514,6 +631,12 @@ const handleForgetLearned = (): void => {
 
 .record-name.invalid {
   border-color: var(--import-bad);
+}
+
+.formations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 .review-section {

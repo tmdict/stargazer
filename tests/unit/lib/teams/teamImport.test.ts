@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
-import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import type { HeroReading, ScreenshotReading, UnitReading } from '@/lib/import/types'
 import {
   buildTeamImportPlan,
   cellState,
@@ -10,8 +11,10 @@ import {
   overrideKey,
   reviewStates,
   suggestRecordName,
+  type FormationAssignment,
   type PlanIssue,
   type ShotAssignment,
+  type TeamImportPlan,
 } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 
@@ -64,6 +67,10 @@ const shot = (
 
 const NAMES = { prefix: 'S7 SL5 Group', left: 'GNX', right: '10' }
 
+// The heroes a plan puts on one side of a board, in card order.
+const heroesOn = (plan: TeamImportPlan, mapIndex: number, team: Team): number[] =>
+  plan.boards[mapIndex]?.sides[team]?.mains.map((unit) => unit.unitId) ?? []
+
 describe('suggestRecordName', () => {
   it.each([
     { prefix: '', left: '', right: '' },
@@ -110,7 +117,7 @@ describe('buildTeamImportPlan', () => {
       left: '',
       right: '',
     })
-    expect(plan.boards[0]?.sides[Team.ALLY][0]?.characterId).toBe(1)
+    expect(heroesOn(plan, 0, Team.ALLY)).toEqual([1])
     expect(plan.suggestedName).toBe('')
     expect(plan.issues).toEqual([])
   })
@@ -135,11 +142,11 @@ describe('buildTeamImportPlan', () => {
       NAMES,
     )
     expect(plan.boards[0]).toBeNull()
-    const board = plan.boards[1]!
-    expect(board.sides[Team.ALLY].map((e) => e.characterId)).toEqual([1, 2, 3])
-    expect(board.sides[Team.ALLY][0]!.attrs).toEqual({ [ATTR_PARAGON]: 4, [ATTR_REFINEMENT]: 4 })
-    expect(board.sides[Team.ENEMY][0]).toEqual({ characterId: 40, attrs: { [ATTR_PARAGON]: 2 } })
-    expect(board.artifacts).toEqual({ ally: 14, enemy: null })
+    const { sides } = plan.boards[1]!
+    expect(heroesOn(plan, 1, Team.ALLY)).toEqual([1, 2, 3])
+    expect(sides[Team.ALLY]!.mains[0]!.attrs).toEqual({ [ATTR_PARAGON]: 4, [ATTR_REFINEMENT]: 4 })
+    expect(sides[Team.ENEMY]!.mains[0]).toEqual({ unitId: 40, attrs: { [ATTR_PARAGON]: 2 } })
+    expect([sides[Team.ALLY]!.artifact, sides[Team.ENEMY]!.artifact]).toEqual([14, null])
     expect(plan.issues).toEqual([])
   })
 
@@ -156,7 +163,7 @@ describe('buildTeamImportPlan', () => {
       '3v3',
       NAMES,
     )
-    expect(plan.boards[0]!.sides[Team.ALLY].map((e) => e.characterId)).toEqual([2])
+    expect(heroesOn(plan, 0, Team.ALLY)).toEqual([2])
     expect(plan.issues).toContainEqual({ kind: 'duplicate-map', mapIndex: 1 })
     expect(plan.issues).toContainEqual({ kind: 'unmapped', count: 1 })
     expect(plan.issues).toContainEqual({
@@ -174,7 +181,7 @@ describe('buildTeamImportPlan', () => {
       '3v3',
       NAMES,
     )
-    expect(plan.boards[0]!.sides[Team.ALLY].map((e) => e.characterId)).toEqual([1, 2])
+    expect(heroesOn(plan, 0, Team.ALLY)).toEqual([1, 2])
     const issue: PlanIssue = {
       kind: 'duplicate-hero',
       team: Team.ALLY,
@@ -217,10 +224,10 @@ describe('buildTeamImportPlan', () => {
       NAMES,
       true,
     )
-    const board = plan.boards[0]!
-    expect(board.sides[Team.ALLY].map((e) => e.characterId)).toEqual([3])
-    expect(board.sides[Team.ENEMY].map((e) => e.characterId)).toEqual([1])
-    expect(board.artifacts).toEqual({ ally: null, enemy: 14 })
+    const { sides } = plan.boards[0]!
+    expect(heroesOn(plan, 0, Team.ALLY)).toEqual([3])
+    expect(heroesOn(plan, 0, Team.ENEMY)).toEqual([1])
+    expect([sides[Team.ALLY]!.artifact, sides[Team.ENEMY]!.artifact]).toEqual([null, 14])
     expect(plan.issues).toContainEqual({
       kind: 'duplicate-hero',
       team: Team.ENEMY,
@@ -260,6 +267,109 @@ describe('buildTeamImportPlan', () => {
     const decided = buildTeamImportPlan([shot(0, reading([1], [2]))], '3v3', NAMES)
     expect(decided.issues).toEqual([])
     expect(buildTeamImportPlan([], '3v3', NAMES).issues).toEqual([])
+  })
+})
+
+describe('buildTeamImportPlan with formation shots', () => {
+  const ZANIE = 89
+  const TURRET = COMPANION_ID_OFFSET + ZANIE
+  const ARENA1_ALLY = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 16]
+  const ARENA1_ENEMY = [30, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
+
+  const unit = (hexId: number, characterId: number): UnitReading => ({
+    hexId,
+    ring: { x: 0, y: 0, radius: 1 },
+    score: 1,
+    candidates: [{ characterId, score: 0.9, learned: false, costume: false }],
+    card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+  })
+
+  const formationShot = (
+    side: Team,
+    units: UnitReading[],
+    cards: HeroReading[] = [],
+    mapIndex = 0,
+  ): FormationAssignment => ({
+    reading: {
+      ...reading([], []),
+      sides: {
+        [Team.ALLY]: side === Team.ALLY ? cards : [],
+        [Team.ENEMY]: side === Team.ENEMY ? cards : [],
+      },
+      board: { scale: 46, x: 0, y: 0, support: 0.7 },
+      side,
+      tiles: side === Team.ALLY ? ARENA1_ALLY : ARENA1_ENEMY,
+      unclear: [],
+      units,
+    },
+    mapIndex,
+    overrides: {},
+    artifactOverrides: {},
+    unitOverrides: {},
+  })
+
+  it("places the result shot's lineup on the tiles its formation shot shows", () => {
+    const formations = [
+      formationShot(Team.ALLY, [unit(1, ZANIE), unit(2, 1), unit(5, TURRET), unit(3, TURRET)]),
+    ]
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([ZANIE, 1], [2]))],
+      '5v5',
+      NAMES,
+      false,
+      formations,
+    )
+    const board = plan.boards[0]!
+    expect(board.sides[Team.ALLY]!.mains).toEqual([
+      { unitId: ZANIE, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
+      { unitId: 1, hexId: 2, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(board.sides[Team.ALLY]!.companions).toEqual([
+      { unitId: TURRET, hexId: 3, mainUnitId: ZANIE },
+      { unitId: COMPANION_ID_OFFSET * 2 + ZANIE, hexId: 5, mainUnitId: ZANIE },
+    ])
+    // The enemy side has no formation shot, so its heroes take random tiles.
+    expect(board.sides[Team.ENEMY]!.mains).toEqual([{ unitId: 2, attrs: { [ATTR_PARAGON]: 4 } }])
+    expect(board.formations).toEqual([Team.ALLY])
+    expect(board.map).toBe('arena1')
+  })
+
+  it('fills only the side a formation shot shows, from its own cards, when its board has no result', () => {
+    const cards = [hero(1, 3, 2), hero(2, 0, 0)]
+    const formations = [formationShot(Team.ENEMY, [unit(40, 1)], cards)]
+    const plan = buildTeamImportPlan([], '5v5', NAMES, false, formations)
+    const { sides } = plan.boards[0]!
+    expect(sides[Team.ALLY]).toBeUndefined()
+    expect(sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 1, hexId: 40, attrs: { [ATTR_PARAGON]: 3, [ATTR_REFINEMENT]: 2 } },
+      { unitId: 2, hexId: undefined, attrs: {} },
+    ])
+    expect(plan.issues).toContainEqual({
+      kind: 'unplaced',
+      team: Team.ENEMY,
+      mapIndex: 0,
+      count: 1,
+    })
+  })
+
+  it('turns a formation a half-turn onto the other half when the sides are swapped', () => {
+    const formations = [formationShot(Team.ALLY, [unit(1, 7)])]
+    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, formations)
+    expect(plan.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
+  })
+
+  it('blocks two formation shots of one side of a board', () => {
+    const formations = [
+      formationShot(Team.ALLY, [unit(1, 7)]),
+      formationShot(Team.ALLY, [unit(2, 7)]),
+    ]
+    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, formations)
+    const issue: PlanIssue = { kind: 'duplicate-formation', team: Team.ALLY, mapIndex: 0 }
+    expect(plan.issues).toContainEqual(issue)
+    expect(isBlockingIssue(issue)).toBe(true)
   })
 })
 
