@@ -49,7 +49,6 @@ import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { downloadBlob, timestampedName } from '@/utils/download'
 import { imageFilesFromPaste } from '@/utils/imageFile'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
@@ -75,8 +74,6 @@ const {
   names,
   swapSides,
   learnedCount,
-  hasCorrections,
-  exportCorrections,
   plan,
   addFiles,
   removeShot,
@@ -202,17 +199,6 @@ const handlePaste = (event: ClipboardEvent): void => {
 
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
-
-const handleDownloadCorrections = async (): Promise<void> => {
-  try {
-    downloadBlob(
-      new Blob([await exportCorrections()], { type: 'application/json' }),
-      timestampedName('stargazer-import-corrections', 'json'),
-    )
-  } catch {
-    error(i18n.t('app.download-failed'))
-  }
-}
 
 const nameInvalid = computed(
   () =>
@@ -518,15 +504,6 @@ const handleForgetLearned = (): void => {
           {{ i18n.t('app.cancel') }}
         </button>
         <button
-          v-if="hasCorrections"
-          type="button"
-          class="link-btn"
-          :title="i18n.t('app.import-download-corrections-hint')"
-          @click="handleDownloadCorrections"
-        >
-          {{ i18n.t('app.import-download-corrections') }}
-        </button>
-        <button
           v-if="learnedCount > 0"
           type="button"
           class="link-btn"
@@ -827,10 +804,6 @@ const handleForgetLearned = (): void => {
 
 .link-btn.armed {
   color: var(--import-bad);
-}
-
-.link-btn + .link-btn {
-  margin-left: 0;
 }
 
 @media (pointer: coarse) {
