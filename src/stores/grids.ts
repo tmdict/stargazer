@@ -47,7 +47,7 @@ import {
   type SideLoadPlan,
   type SideLoadUnit,
 } from '@/lib/teams/sideLoad'
-import type { BoardLineup, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
+import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { serializeGridState } from '@/utils/gridStateSerializer'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -617,85 +617,29 @@ export const useGrids = defineStore('grids', () => {
     return { placed, skipped }
   }
 
-  // The boards a match import stamps, shared by applyLineups and its
-  // read-only confirm mirror so the two can never drift.
-  const lineupTargets = (plan: TeamImportPlan): { ctx: GridContext; board: BoardLineup }[] =>
-    plan.boards.flatMap((board, i) => {
+  /* Stamp match-import lineups (lib/teams/teamImport) onto the boards of a new
+   * team (the page starts one first, so nothing from the previous team is kept
+   * or checked against). A board first moves to the map its formation shots
+   * show (moveToMap). Each side places as a loaded team does (placeSide):
+   * heroes with their upgrade records on the tiles a formation shot shows,
+   * else on random free ones. A side from a formation shot re-seeds its
+   * phantimal baseline once placed, so it keeps the phantimal the shot showed,
+   * or none; any other side gets the one its lineup qualifies for. A hero
+   * with no free tile left, or a hero or artifact already on that team on
+   * another board, is skipped and counted. Boards without a screenshot stay
+   * empty. */
+  const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
+    const targets = plan.boards.flatMap((board, i) => {
       const ctx = contexts.value[i]
       return board && ctx ? [{ ctx, board }] : []
     })
-
-  // The sides of a board the import replaces; the others stay as they are.
-  const replacedTeams = (board: BoardLineup): Team[] =>
-    [Team.ALLY, Team.ENEMY].filter((team) => board.sides[team] !== undefined)
-
-  const lineupsWouldReplace = (plan: TeamImportPlan): boolean =>
-    lineupTargets(plan).some(({ ctx, board }) =>
-      replacedTeams(board).some((team) => teamHasContent(ctx, team)),
-    )
-
-  // What applyLineups would skip for page-wide uniqueness: a hero or artifact
-  // already on the same side of a board where the plan leaves that side
-  // untouched. Read-only, so the review can say so before anything is cleared.
-  const lineupConflicts = (plan: TeamImportPlan): PlanIssue[] => {
-    const targets = lineupTargets(plan)
-    const kept = (ctx: GridContext, team: Team): boolean =>
-      !targets.some((target) => target.ctx.id === ctx.id && target.board.sides[team])
-    const issues: PlanIssue[] = []
-    for (const { board } of targets) {
-      for (const team of replacedTeams(board)) {
-        const side = board.sides[team]!
-        const holders = contexts.value
-          .map((ctx, mapIndex) => ({ ctx, mapIndex }))
-          .filter(({ ctx }) => kept(ctx, team))
-        for (const { unitId: characterId } of side.mains) {
-          const holder = holders.find(
-            ({ ctx }) => findCharacterHex(ctx.grid, characterId, team) !== null,
-          )
-          if (holder) {
-            issues.push({ kind: 'retained-hero', team, characterId, mapIndex: holder.mapIndex })
-          }
-        }
-        const artifactId = side.artifact
-        const holder =
-          artifactId === null
-            ? undefined
-            : holders.find(({ ctx }) => artifactSlot(ctx.artifacts, team) === artifactId)
-        if (artifactId !== null && holder) {
-          issues.push({ kind: 'retained-artifact', team, artifactId, mapIndex: holder.mapIndex })
-        }
-      }
-    }
-    return issues
-  }
-
-  /* Stamp match-import lineups (lib/teams/teamImport) onto the mapped boards.
-   * A board first moves to the map its formation shots show, carrying the
-   * sides the import keeps (moveToMap). Every side the import replaces then
-   * clears before any places, so a hero moving from one board to another never
-   * trips page-wide uniqueness against its own old copy, and each cleared
-   * board re-seeds its phantimal baseline so the reconcile watcher derives the
-   * phantimal from the new lineup even when it is the one the old lineup had.
-   * Each side places as a loaded team does (placeSide): heroes with their
-   * upgrade records on the tiles a formation shot shows, else on random free
-   * ones. A side from a formation shot re-seeds its baseline once placed, so
-   * it keeps the phantimal the shot showed, or none. A hero or artifact already
-   * used elsewhere on that team is skipped and counted. Unmapped boards and
-   * provenance are untouched. */
-  const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
-    const targets = lineupTargets(plan)
-    for (const { ctx, board } of targets) {
-      if (board.map !== null && board.map !== ctx.currentMap) moveToMap(ctx, board.map)
-    }
-    for (const { ctx, board } of targets) {
-      for (const team of replacedTeams(board)) ctx.clearTeam(team)
-      ctx.seedPhantimalBaseline()
-    }
     let placed = 0
     let skipped = 0
     for (const { ctx, board } of targets) {
-      for (const team of replacedTeams(board)) {
-        const side = board.sides[team]!
+      if (board.map !== null && board.map !== ctx.currentMap) moveToMap(ctx, board.map)
+      for (const team of [Team.ALLY, Team.ENEMY]) {
+        const side = board.sides[team]
+        if (!side) continue
         placeSide(ctx, side, team)
         // Heroes are what the import reports; its phantimal and companions are not counted.
         const landed = side.mains.filter(
@@ -998,8 +942,6 @@ export const useGrids = defineStore('grids', () => {
     sideHasContent,
     boardsHaveContent,
     loadTeamSide,
-    lineupsWouldReplace,
-    lineupConflicts,
     applyLineups,
     clearAll,
     clearSide,
