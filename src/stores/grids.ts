@@ -292,6 +292,8 @@ export const useGrids = defineStore('grids', () => {
 
   const clearAll = (): void => contexts.value.forEach((ctx) => ctx.clear())
 
+  const clearSide = (team: Team): void => contexts.value.forEach((ctx) => ctx.clearTeam(team))
+
   // Repair page-wide (character, team) uniqueness after a bulk restore: keep each
   // pair's first placement (board order) and remove later copies. Companions
   // re-derive from their mains, phantimals are one-per-team per board, and
@@ -562,15 +564,16 @@ export const useGrids = defineStore('grids', () => {
   const sideLoadContexts = (scope: SideLoadOptions['scope']): GridContext[] =>
     scope === 'active' ? (active.value ? [active.value] : []) : contexts.value
 
-  // Whether a load onto this team would remove anything: a unit or its artifact.
+  // Whether clearTeam would remove anything: a unit or the side's artifact.
   const teamHasContent = (ctx: GridContext, team: Team): boolean =>
     getTilesWithCharactersByTeam(ctx.grid, team).length > 0 ||
     artifactSlot(ctx.artifacts, team) !== null
 
-  // Read-only mirror of loadTeamSide's clear phase (the canDropCharacter
-  // pattern): the two-step confirm must promise exactly what the load removes.
-  const sideLoadWouldReplace = (dest: Team, scope: SideLoadOptions['scope']): boolean =>
-    sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, dest))
+  // Read-only mirror of clearTeam over the scoped boards (the canDropCharacter
+  // pattern): the Load confirm must promise exactly what the load's clear phase
+  // removes, and Clear's side choice greys out a side with nothing to remove.
+  const sideHasContent = (team: Team, scope: SideLoadOptions['scope']): boolean =>
+    sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, team))
 
   // Gates the type switch's confirm.
   const boardsHaveContent = (): boolean =>
@@ -976,12 +979,13 @@ export const useGrids = defineStore('grids', () => {
     swapBoards,
     moveToMap,
     moveToMaps,
-    sideLoadWouldReplace,
+    sideHasContent,
     boardsHaveContent,
     loadTeamSide,
     lineupsWouldReplace,
     lineupConflicts,
     applyLineups,
     clearAll,
+    clearSide,
   }
 })

@@ -28,7 +28,7 @@ import {
   type PlanIssue,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
-import { Team } from '@/lib/types/team'
+import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -128,7 +128,7 @@ const artifactLabel = (artifactId: number): string => {
   return artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : String(artifactId)
 }
 
-const sideLabel = (team: Team): string => i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy')
+const sideLabel = (team: Team): string => i18n.t(teamLabelKey(team))
 
 const issueText = (issue: PlanIssue): string => {
   switch (issue.kind) {
