@@ -82,10 +82,6 @@ export type PlanIssue =
   | { kind: 'cross-board-artifact'; team: Team; artifactId: number; maps: number[] }
   // Map wins are equal or unknown; the record name falls back to the typed order.
   | { kind: 'result-undecided' }
-  // Already on that side of a board the plan leaves untouched, so the import
-  // would skip it. Found against the live boards, not by the plan builder.
-  | { kind: 'retained-hero'; team: Team; characterId: number; mapIndex: number }
-  | { kind: 'retained-artifact'; team: Team; artifactId: number; mapIndex: number }
   // Two formation shots of the same side of one board.
   | { kind: 'duplicate-formation'; team: Team; mapIndex: number }
   // A board's formation shots show different maps.

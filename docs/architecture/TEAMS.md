@@ -131,7 +131,7 @@ The active mode's teams load board for board. A second group offers 1v1 teams in
 
 ## Screenshot import
 
-The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. `grids.applyLineups` clears the sides each mapped board replaces (both, for a result screenshot) and places the plan's lineups as a one-sided load does (`placeSide`), again without a restore: on the tiles a formation screenshot shows, else on random free ones, after moving the board to the map a formation screenshot shows. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
+The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. The page starts a new team as New does, so the import never merges into the previous one. `grids.applyLineups` then places the plan's lineups as a one-sided load does (`placeSide`), again without a restore: on the tiles a formation screenshot shows, else on random free ones, after moving the board to the map a formation screenshot shows. Boards and sides no screenshot shows stay empty. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
 
 ## Thumbnails
 

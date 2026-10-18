@@ -2,12 +2,11 @@
 /* The screenshot import, from either of two starts. A match: drop its result
    screenshots, map each one to a board, add its formation screenshots to put
    the heroes on their tiles, review what was read, name the record, pick the
-   board sides, and save it as a new team on the boards. Or formation
-   screenshots alone, each one team with the levels it shows, which closes the
-   result drop until they are removed. State lives in useTeamImport
-   (module-level), so closing and reopening keeps the shots; Save as New drops
-   them once the plan is handed up. The modal only renders and emits the
-   finished plan upward. */
+   board sides, and save it as a new team. Or formation screenshots alone,
+   each one team with the levels it shows, which closes the result drop until
+   they are removed. State lives in useTeamImport (module-level), so closing
+   and reopening keeps the shots; Save as New drops them once the plan is
+   handed up. The modal only renders and emits the finished plan upward. */
 
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -31,6 +30,7 @@ import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
   DEFAULT_VARIANT,
+  newTeamMaps,
   TEAM_MODES,
   TEAM_VARIANTS,
   type TeamModeKey,
@@ -53,7 +53,7 @@ import { downloadBlob, timestampedName } from '@/utils/download'
 import { imageFilesFromPaste } from '@/utils/imageFile'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
-const { show, activeMode } = defineProps<{
+const { show, activeMode, variant } = defineProps<{
   show: boolean
   activeMode: TeamModeKey
   // The live boards' type, named beside the mode in the header.
@@ -140,7 +140,7 @@ const cardSides = (shot: ImportShot): Team[] => {
 }
 
 // The side a formation shot fills, as the plan places it, on the map it
-// lands on: the one its tiles name, else the board's own.
+// lands on: the one its tiles name, else the new team's for that board.
 const placedSide = (
   shot: ImportShot,
 ): { mapKey: string; team: Team; side: SideLoadBoard } | null => {
@@ -150,7 +150,7 @@ const placedSide = (
   const board = plan.value.boards[mapIndex]
   const side = board?.sides[team]
   if (!board || !side) return null
-  const mapKey = board.map ?? grids.contexts[mapIndex]?.currentMap ?? DEFAULT_MAP_KEY
+  const mapKey = board.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? DEFAULT_MAP_KEY
   return { mapKey, team, side }
 }
 
@@ -260,18 +260,6 @@ const issueText = (issue: PlanIssue): string => {
       })
     case 'result-undecided':
       return i18n.t('app.import-result-undecided')
-    case 'retained-hero':
-      return i18n.t('app.import-retained-hero', {
-        hero: heroLabel(issue.characterId),
-        side: sideLabel(issue.team),
-        map: issue.mapIndex + 1,
-      })
-    case 'retained-artifact':
-      return i18n.t('app.import-retained-artifact', {
-        artifact: artifactLabel(issue.artifactId),
-        side: sideLabel(issue.team),
-        map: issue.mapIndex + 1,
-      })
     case 'duplicate-formation':
       return i18n.t('app.import-duplicate-formation', {
         side: sideLabel(issue.team),
@@ -297,28 +285,21 @@ const issueText = (issue: PlanIssue): string => {
 
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
 const reading = computed(() => shots.value.some((s) => s.status === 'reading'))
-// The plan's own issues plus what the live boards would make it skip. The
-// latter waits for every shot: shots are read in drop order, and a board a
-// pending shot will fill is not one the import leaves as it is.
-const issues = computed(() => [
-  ...plan.value.issues,
-  ...(reading.value ? [] : grids.lineupConflicts(plan.value)),
-])
 const blocked = computed(
   () =>
     mappedCount.value === 0 ||
     reading.value ||
     nameInvalid.value ||
     nameTooLong.value ||
-    issues.value.some(isBlockingIssue),
+    plan.value.issues.some(isBlockingIssue),
 )
 
-// The new team lands on the boards, so with content there it arms like
-// Clear and Load.
+// The import starts a new team on the boards, so with content there it arms
+// like New.
 const { armed, confirm } = useArmedConfirm()
 const handleSaveAsNew = (): void => {
   if (blocked.value) return
-  if (grids.lineupsWouldReplace(plan.value) && !confirm('save')) return
+  if (grids.boardsHaveContent() && !confirm('save')) return
   saveNames()
   emit('importMatch', plan.value)
   clearShots()
@@ -508,8 +489,12 @@ const handleForgetLearned = (): void => {
         />
       </section>
 
-      <ul v-if="issues.length" class="issues">
-        <li v-for="(issue, i) in issues" :key="i" :class="{ blocking: isBlockingIssue(issue) }">
+      <ul v-if="plan.issues.length" class="issues">
+        <li
+          v-for="(issue, i) in plan.issues"
+          :key="i"
+          :class="{ blocking: isBlockingIssue(issue) }"
+        >
           {{ issueText(issue) }}
         </li>
       </ul>

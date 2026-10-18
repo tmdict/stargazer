@@ -10,7 +10,7 @@ import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
 
 vi.mock('@/stores/grids', () => ({
-  useGrids: () => ({ lineupConflicts: () => [], lineupsWouldReplace: () => false }),
+  useGrids: () => ({ boardsHaveContent: () => false }),
 }))
 
 vi.mock('@/stores/gameData', () => ({

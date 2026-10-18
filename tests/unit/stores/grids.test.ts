@@ -916,16 +916,12 @@ describe('useGrids.applyLineups', () => {
     }
   })
 
-  it('keeps a side no screenshot shows, carrying it to the map the formation shows', () => {
+  it('places a formation side on the tiles of the map the formation shows', () => {
     const { grids, a: ctx } = setupBoards(1)
-    expect(ctx.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
-    ctx.setArtifact(Team.ENEMY, 6)
     grids.applyLineups(
       plan({ sides: { [Team.ALLY]: side([[ALLY_A, 1]]) }, formations: [Team.ALLY], map: 'arena2' }),
     )
     expect(ctx.currentMap).toBe('arena2')
     expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).toBe(1)
-    expect(findCharacterHex(ctx.grid, ENEMY_A, Team.ENEMY)).not.toBeNull()
-    expect(ctx.artifacts.enemy).toBe(6)
   })
 })

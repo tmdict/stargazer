@@ -25,6 +25,7 @@ import {
   initialMaps,
   isTeamModeKey,
   matchVariant,
+  newTeamMaps,
   normalizeTeamPayload,
   TEAM_MODES,
   variantMaps,
@@ -169,12 +170,8 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
    * which is why the control confirms first. */
   const newTeam = (): void => {
     const mode = activeMode.value
-    const match = variant.value
     persistence.setPaused(true)
-    grids.setGridCount(
-      TEAM_MODES[mode].boardCount,
-      match === null ? initialMaps(mode) : variantMaps(mode, match),
-    )
+    grids.setGridCount(TEAM_MODES[mode].boardCount, newTeamMaps(mode, variant.value))
     afterRebuild()
     sourceId.value = null
     persistence.setPaused(false)
