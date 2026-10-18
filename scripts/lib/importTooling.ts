@@ -50,7 +50,7 @@ export function directorySource(img: string): ReferenceSource {
   }
 }
 
-export function remoteSource(): ReferenceSource {
+function remoteSource(): ReferenceSource {
   const fetchBytes = async (url: string): Promise<Buffer | null> => {
     const response = await fetch(url)
     return response.ok ? Buffer.from(await response.arrayBuffer()) : null
