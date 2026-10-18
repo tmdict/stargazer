@@ -6,7 +6,9 @@ import { onScopeDispose, ref } from 'vue'
  * an instance (e.g. one per card). `confirm` returns true when the action
  * should run. `disarm` is for callers whose target can change underneath an
  * armed click (the boards it would act on were replaced), so the second click
- * can never land on different content than the first was armed for. */
+ * can never land on different content than the first was armed for. `pause`
+ * and `resume` are for callers that show choices while armed: the window must
+ * not lapse while the user is still on them, and restarts in full after. */
 export function useArmedConfirm(disarmAfterMs = 3000) {
   const armed = ref<string | null>(null)
   let disarmTimer: ReturnType<typeof setTimeout> | undefined
@@ -17,16 +19,26 @@ export function useArmedConfirm(disarmAfterMs = 3000) {
     armed.value = null
   }
 
-  const confirm = (key: string): boolean => {
+  const startWindow = (): void => {
     clearTimeout(disarmTimer)
+    disarmTimer = setTimeout(disarm, disarmAfterMs)
+  }
+
+  const confirm = (key: string): boolean => {
     if (armed.value === key) {
-      armed.value = null
+      disarm()
       return true
     }
     armed.value = key
-    disarmTimer = setTimeout(disarm, disarmAfterMs)
+    startWindow()
     return false
   }
 
-  return { armed, confirm, disarm }
+  const pause = (): void => clearTimeout(disarmTimer)
+
+  const resume = (): void => {
+    if (armed.value !== null) startWindow()
+  }
+
+  return { armed, confirm, disarm, pause, resume }
 }

@@ -30,7 +30,7 @@ import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { teamHasSynergy, teamTypeLabelKey } from '@/lib/teams/preview'
 import { retiredSeasonOf, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildSideLoadPlan, savedTeamSide } from '@/lib/teams/sideLoad'
-import { Team } from '@/lib/types/team'
+import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -118,7 +118,7 @@ const destOf = (team: SavedTeam): Team => {
   return invert.value ? getOpposingTeam(side) : side
 }
 
-const sideName = (team: Team): string => i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy')
+const sideName = (team: Team): string => i18n.t(teamLabelKey(team))
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
 
@@ -135,7 +135,7 @@ const confirmText = (team: SavedTeam): string =>
 const handlePick = (team: SavedTeam): void => {
   // The load clears the destination side, so it confirms only when that side
   // holds something on the boards it will touch (the store's read-only mirror).
-  if (grids.sideLoadWouldReplace(destOf(team), scopeOf(team)) && !confirm(team.id)) return
+  if (grids.sideHasContent(destOf(team), scopeOf(team)) && !confirm(team.id)) return
   const plan = buildSideLoadPlan(team.data, TEAM_MODES[activeMode].allowSynergy)
   if (!plan) return
   const { skipped } = grids.loadTeamSide(plan, { invert: invert.value, scope: scopeOf(team) })

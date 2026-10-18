@@ -30,7 +30,7 @@ import {
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import { Team } from '@/lib/types/team'
+import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
@@ -51,7 +51,7 @@ const emit = defineEmits<{
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
-const sideLabel = (team: Team): string => i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy')
+const sideLabel = (team: Team): string => i18n.t(teamLabelKey(team))
 
 const heroName = (characterId: number | null): string => {
   if (characterId === null) return i18n.t('app.import-none')

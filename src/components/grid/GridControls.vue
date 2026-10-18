@@ -3,17 +3,18 @@ import { computed } from 'vue'
 
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import MapInvertToggle from '@/components/MapInvertToggle.vue'
-import ClearButton from '@/components/ui/ClearButton.vue'
+import ClearButton, { type ClearSide } from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
 const grids = useGrids()
-const { handleClearAll, clearTargetHex, clearLiftedHex } = useSelectionState()
+const { handleClearAll, handleClearSide, clearTargetHex, clearLiftedHex } = useSelectionState()
 
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
@@ -34,7 +35,8 @@ defineProps<{
   hideGridInfo?: boolean
   // Shows the "Syn" friend-assist toggle (Arena team tabs; Teams 1v1 mode only).
   showSynToggle?: boolean
-  // Two-step confirm on Clear (Teams only; the Arena clears instantly).
+  // Two-step confirm on Clear, whose armed step also offers clearing one side
+  // (Teams only; the Arena clears instantly).
   confirmClear?: boolean
 }>()
 
@@ -63,6 +65,14 @@ const synergyView = computed({
     }
   },
 })
+
+// Team view hides the enemy half, so its side choice goes too, as on the board
+// bar. The plain Clear still empties both sides.
+const clearSides = computed((): ClearSide[] =>
+  [Team.ALLY, Team.ENEMY]
+    .filter((team) => team === Team.ALLY || !teamView.value)
+    .map((team) => ({ team, disabled: !grids.sideHasContent(team, 'all') })),
+)
 </script>
 
 <template>
@@ -114,7 +124,13 @@ const synergyView = computed({
         <IconDownload :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>
-      <ClearButton v-if="!hideTeamControls" :confirm-first="confirmClear" @click="handleClearAll" />
+      <ClearButton
+        v-if="!hideTeamControls"
+        :confirm-first="confirmClear"
+        :sides="confirmClear ? clearSides : undefined"
+        @click="handleClearAll"
+        @clear-side="handleClearSide"
+      />
     </div>
   </div>
 </template>
