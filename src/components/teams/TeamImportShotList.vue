@@ -27,6 +27,7 @@ const {
   mapCount,
   formation = false,
   reviewCount,
+  notice,
 } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
@@ -35,6 +36,8 @@ const {
   // What a card still asks about, when its owner counts it (a formation shot's
   // units come from the plan); else its cells and artifacts.
   reviewCount?: (shot: ImportShot) => number
+  // Why a mapped card adds nothing to the import, when its owner says so.
+  notice?: (shot: ImportShot) => string | null
 }>()
 
 const selectedId = defineModel<string | null>('selectedId', { required: true })
@@ -107,6 +110,8 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (found !== null && found !== mapCount)
     return { text: i18n.t('app.import-mode-mismatch', { count: found }), tone: 'error' }
   if (mapIndexOf(shot) === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
+  const unused = notice?.(shot)
+  if (unused) return { text: unused, tone: 'warn' }
   const n = (reviewCount ?? cellReviewCount)(shot)
   return n
     ? { text: i18n.t('app.import-to-review', { count: n }), tone: 'warn' }

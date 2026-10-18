@@ -2,10 +2,12 @@
  * lineups the grids store can stamp, and the record name the pvp export
  * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
  * on the ally half of the boards first, `>` when that player won more maps,
- * each player's map numbers in the brackets). Result shots give both sides'
- * heroes, upgrades and artifacts; formation shots give the tiles of the side
- * they show, and its lineup too where the board has no result shot
- * (formationImport). Pure data mapping, a sibling of sideLoad. */
+ * each player's map numbers in the brackets). An import is a match's result
+ * shots, which give both sides' heroes, upgrades and artifacts, with its
+ * formation shots placing those heroes on their tiles; or formation shots
+ * alone, each giving one side with the levels it shows (formationImport). A
+ * formation panel shows the screenshotting player's own levels, never a
+ * match's, so the two never mix. Pure data mapping, a sibling of sideLoad. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
@@ -93,6 +95,9 @@ export type PlanIssue =
   // Heroes of the lineup with no portrait on the formation shot, which take
   // random free tiles.
   | { kind: 'unplaced'; team: Team; mapIndex: number; count: number }
+  // In a match import, a formation shot of a map with no result shot: it has
+  // no match heroes to place, and is left out.
+  | { kind: 'formation-unused'; team: Team; mapIndex: number }
 
 export interface TeamImportPlan {
   // One entry per board; null leaves that board untouched.
@@ -337,11 +342,18 @@ export function buildTeamImportPlan(
     shown.set(formation.mapIndex, { ...board, [team]: formation })
   }
 
+  const matchImport = shots.length > 0
   const units: UnitAssignment[][] = formations.map(() => [])
   let empty = 0
   for (let mapIndex = 0; mapIndex < boardCount; mapIndex++) {
     const result = resultShots.get(mapIndex)
     const board = shown.get(mapIndex) ?? {}
+    if (matchImport && !result) {
+      for (const team of SIDES) {
+        if (board[team]) issues.push({ kind: 'formation-unused', team, mapIndex })
+      }
+      continue
+    }
     if (!result && !board[Team.ALLY] && !board[Team.ENEMY]) continue
     const sides: Partial<Record<Team, SideLoadBoard>> = {}
     for (const side of SIDES) {
@@ -350,8 +362,8 @@ export function buildTeamImportPlan(
       const repeated = (characterId: number): void => {
         issues.push({ kind: 'duplicate-hero', team: side, characterId, mapIndex })
       }
-      // Heroes, upgrades and artifact: the result shot's column, else the
-      // formation shot's own card row, which may be missing.
+      // Heroes, upgrades and artifact: the result shot's column, else (formation
+      // shots alone) the formation shot's own card row, which may be missing.
       const source = result
         ? { ...result, column: columnOf(side) }
         : { ...formation!, column: formation!.reading.side! }
@@ -444,7 +456,9 @@ export function buildTeamImportPlan(
     column === null ? null : sideOf(column),
   )
   const sideNames = swapSides ? { ...names, left: names.right, right: names.left } : names
-  const suggestedName = suggestRecordName(sideNames, results)
+  // Formation shots alone are no match record.
+  const suggestedName = matchImport ? suggestRecordName(sideNames, results) : ''
+
   const wins = (team: Team): number => results.filter((r) => r === team).length
   if (suggestedName && boards.some((b) => b !== null) && wins(Team.ALLY) === wins(Team.ENEMY)) {
     issues.push({ kind: 'result-undecided' })
