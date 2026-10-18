@@ -1,6 +1,6 @@
 /* Pixel primitives for the screenshot readers: crop-and-resize with box
- * sampling, HSV, per-channel normalised descriptors, and alpha-masked
- * normalised cross-correlation. */
+ * sampling, area-weighted resampling, HSV, per-channel normalised
+ * descriptors, and alpha-masked normalised cross-correlation. */
 
 import type { Rect, RgbaImage } from './types'
 
@@ -50,6 +50,76 @@ export function cropResize(src: RgbaImage, rect: Rect, w: number, h: number): Rg
       out.data[o + 1] = g / n
       out.data[o + 2] = b / n
       out.data[o + 3] = a / n
+    }
+  }
+  return out
+}
+
+// One axis of a resample: for each target pixel, the source pixels its
+// footprint overlaps and how much of it each covers.
+interface Taps {
+  index: Int32Array[]
+  weight: Float32Array[]
+}
+
+const axisTaps = (start: number, span: number, count: number, size: number): Taps => {
+  const step = span / count
+  const index: Int32Array[] = []
+  const weight: Float32Array[] = []
+  for (let t = 0; t < count; t++) {
+    const a = start + t * step
+    const b = a + step
+    const is: number[] = []
+    const ws: number[] = []
+    for (let p = Math.floor(a); p < b; p++) {
+      const w = Math.min(b, p + 1) - Math.max(a, p)
+      if (w <= 0 || p < 0 || p >= size) continue
+      is.push(p)
+      ws.push(w)
+    }
+    const total = ws.reduce((sum, w) => sum + w, 0)
+    index.push(Int32Array.from(is))
+    weight.push(Float32Array.from(ws, (w) => w / total))
+  }
+  return { index, weight }
+}
+
+/* Resample `rect` of `src` onto a w × h image, each target pixel the
+ * area-weighted mean of the source it covers: at a scale near 1 a pixel
+ * stays a pixel instead of blending with its neighbour, as cropResize's
+ * whole-pixel footprints do. Outside the source reads as opaque black. */
+export function resample(src: RgbaImage, rect: Rect, w: number, h: number): RgbaImage {
+  const out = createImage(w, h)
+  const xs = axisTaps(rect.x, rect.w, w, src.width)
+  const ys = axisTaps(rect.y, rect.h, h, src.height)
+  const px = new Float32Array(4)
+  for (let ty = 0; ty < h; ty++) {
+    const rows = ys.index[ty]!
+    const rowWeights = ys.weight[ty]!
+    for (let tx = 0; tx < w; tx++) {
+      const o = (ty * w + tx) * 4
+      const cols = xs.index[tx]!
+      const colWeights = xs.weight[tx]!
+      if (rows.length === 0 || cols.length === 0) {
+        out.data[o + 3] = 255
+        continue
+      }
+      px.fill(0)
+      for (let j = 0; j < rows.length; j++) {
+        const rowStart = rows[j]! * src.width
+        for (let i = 0; i < cols.length; i++) {
+          const weight = rowWeights[j]! * colWeights[i]!
+          const p = (rowStart + cols[i]!) * 4
+          px[0] += src.data[p]! * weight
+          px[1] += src.data[p + 1]! * weight
+          px[2] += src.data[p + 2]! * weight
+          px[3] += src.data[p + 3]! * weight
+        }
+      }
+      out.data[o] = px[0]!
+      out.data[o + 1] = px[1]!
+      out.data[o + 2] = px[2]!
+      out.data[o + 3] = px[3]!
     }
   }
   return out

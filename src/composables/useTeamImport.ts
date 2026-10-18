@@ -12,7 +12,7 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/frames'
-import { CANONICAL_WIDTH } from '@/lib/import/layout'
+import { CANONICAL_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
   addLearnedIcon,
   dropLearnedIcon,
@@ -450,8 +450,10 @@ const decodeShot = async (file: Blob, kind: ShotKind): Promise<RgbaImage> => {
     if (bitmap.width < (kind === 'formation' ? FORMATION_MIN_WIDTH : 600)) {
       throw new Error('too small')
     }
-    const width =
-      kind === 'formation' ? Math.min(bitmap.width, FORMATION_MAX_WIDTH) : CANONICAL_WIDTH
+    const width = Math.min(
+      bitmap.width,
+      kind === 'formation' ? FORMATION_MAX_WIDTH : RESULT_MAX_WIDTH,
+    )
     return drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
   } finally {
     bitmap.close()

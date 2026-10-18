@@ -135,7 +135,25 @@ describe('findTabs', () => {
     expect(findTabs(shot)).toEqual({
       ally: { top: 160, bottom: 229, colour: Team.ALLY },
       enemy: { top: 870, bottom: 939, colour: Team.ENEMY },
+      left: 15,
+      width: 149,
     })
     expect(findTabs(createImage(W, H))).toBeNull()
+  })
+
+  it('finds the tabs of a panel at another scale and offset', () => {
+    const shot = createImage(1600, 2400)
+    fill(shot, [60, 55, 50])
+    block(shot, 300, 400, 500, 550, blue)
+    block(shot, 300, 400, 1000, 1050, orange)
+    // Card frames: narrower runs of the same shape, a panel apart.
+    block(shot, 320, 370, 600, 625, orange)
+    block(shot, 320, 370, 1100, 1125, orange)
+    expect(findTabs(shot)).toEqual({
+      ally: { top: 500, bottom: 549, colour: Team.ENEMY },
+      enemy: { top: 1000, bottom: 1049, colour: Team.ALLY },
+      left: 300,
+      width: 99,
+    })
   })
 })

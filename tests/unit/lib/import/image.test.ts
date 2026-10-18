@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createImage, cropResize, maskedNcc } from '@/lib/import/image'
+import { createImage, cropResize, maskedNcc, resample } from '@/lib/import/image'
 import type { RgbaImage } from '@/lib/import/types'
 
 const paint = (img: RgbaImage, x: number, y: number, rgb: [number, number, number], a = 255) => {
@@ -28,6 +28,24 @@ describe('cropResize', () => {
     const out = cropResize(img, { x: 0, y: 0, w: 1, h: 1 }, 2, 2)
     expect(out.width).toBe(2)
     expect([...out.data.slice(12, 15)]).toEqual([9, 8, 7])
+  })
+})
+
+describe('resample', () => {
+  it('weights each source pixel by how much of the target pixel it covers', () => {
+    const img = createImage(4, 1)
+    ;[0, 100, 200, 40].forEach((v, x) => paint(img, x, 0, [v, 0, 0]))
+    // Target pixels 1.5 source pixels wide, from half a pixel in.
+    const out = resample(img, { x: 0.5, y: 0, w: 3, h: 1 }, 2, 1)
+    expect(out.data[0]).toBeCloseTo((0 * 0.5 + 100 * 1) / 1.5, 0)
+    expect(out.data[4]).toBeCloseTo((200 * 1 + 40 * 0.5) / 1.5, 0)
+  })
+
+  it('keeps pixels as they are at scale 1', () => {
+    const img = createImage(3, 1)
+    ;[10, 20, 30].forEach((v, x) => paint(img, x, 0, [v, v, v]))
+    const out = resample(img, { x: 1, y: 0, w: 2, h: 1 }, 2, 1)
+    expect([out.data[0], out.data[4]]).toEqual([20, 30])
   })
 })
 
