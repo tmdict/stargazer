@@ -51,6 +51,10 @@ const excludeMarkedChrome = (node: HTMLElement): boolean =>
 // Room kept around the drawn content when a capture is trimmed, in CSS pixels on
 // a full-size board; it scales with the board, so every screen saves the same.
 const CROP_MARGIN = 8
+// Room kept between rows of boards (the Teams page's wrap layout), in the same
+// units. On screen the space under a row also holds the hero cards and buttons
+// the image leaves out, so the trim closes it up to this.
+const ROW_GAP = 68
 
 // Image pixels per CSS pixel on a full-size board: portraits are drawn from their
 // 100px-wide display images (imageAssets.ts) at 48px inside their borders, so this
@@ -107,9 +111,10 @@ export function useGridExport() {
 
     try {
       const dataUrl = await capture(containerElement)
-      // A whole-pixel margin keeps the trim from resampling, and so blurring, the image.
-      const margin = Math.round(CROP_MARGIN * gridStore.getHexScale() * pixelRatio)
-      return await cropToDrawn(dataUrl, margin)
+      // Whole-pixel spacing keeps the trim from resampling, and so blurring, the image.
+      const toImagePixels = (cssPixels: number): number =>
+        Math.round(cssPixels * gridStore.getHexScale() * pixelRatio)
+      return await cropToDrawn(dataUrl, toImagePixels(CROP_MARGIN), toImagePixels(ROW_GAP))
     } finally {
       restoreBoards()
     }
@@ -120,9 +125,12 @@ export function useGridExport() {
    * squash leaves, the space of excluded chrome, and the width of the board's area
    * beyond the board. The capture's background is transparent, so the outermost
    * rows and columns holding any pixel bound everything drawn: tiles, the portraits
-   * standing above the far row, and arrows reaching over them.
+   * standing above the far row, and arrows reaching over them. A board draws
+   * without a break from top to bottom, so an empty band across the image lies
+   * between rows of boards, where the upper row's excluded chrome left its space;
+   * the crop keeps `rowGap` of it.
    */
-  const cropToDrawn = async (dataUrl: string, margin: number): Promise<string> => {
+  const cropToDrawn = async (dataUrl: string, margin: number, rowGap: number): Promise<string> => {
     const img = await loadImage(dataUrl)
 
     const canvas = document.createElement('canvas')
@@ -141,11 +149,10 @@ export function useGridExport() {
       }
       return false
     }
-    let top = 0
-    while (top < img.height && !drawn(top)) top++
-    if (top === img.height) return dataUrl
-    let bottom = img.height
-    while (!drawn(bottom - 1)) bottom--
+    const drawnRows = Array.from({ length: img.height }, (_, y) => drawn(y))
+    const top = drawnRows.indexOf(true)
+    if (top === -1) return dataUrl
+    const bottom = drawnRows.lastIndexOf(true) + 1
 
     const drawnColumn = (x: number): boolean => {
       for (let y = top; y < bottom; y++) {
@@ -158,13 +165,31 @@ export function useGridExport() {
     let right = img.width
     while (!drawnColumn(right - 1)) right--
 
-    const cropTop = Math.max(0, top - margin)
-    const cropBottom = Math.min(img.height, bottom + margin)
+    // Source rows to keep, top to bottom. Each empty band inside the trimmed span
+    // keeps only `rowGap` of its rows.
+    const spans: [number, number][] = []
+    let from = Math.max(0, top - margin)
+    for (let y = top; y < bottom; y++) {
+      if (drawnRows[y]) continue
+      const gapStart = y
+      while (!drawnRows[y]) y++
+      if (y - gapStart > rowGap) {
+        spans.push([from, gapStart + rowGap])
+        from = y
+      }
+    }
+    spans.push([from, Math.min(img.height, bottom + margin)])
+
     const cropLeft = Math.max(0, left - margin)
     const cropRight = Math.min(img.width, right + margin)
     canvas.width = cropRight - cropLeft
-    canvas.height = cropBottom - cropTop
-    ctx.drawImage(img, -cropLeft, -cropTop)
+    canvas.height = spans.reduce((height, [start, end]) => height + end - start, 0)
+    let offset = 0
+    for (const [start, end] of spans) {
+      const rows = end - start
+      ctx.drawImage(img, cropLeft, start, canvas.width, rows, 0, offset, canvas.width, rows)
+      offset += rows
+    }
 
     return canvas.toDataURL('image/png', 1.0)
   }
