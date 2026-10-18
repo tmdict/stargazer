@@ -16,7 +16,9 @@ interface Props {
   characterRadius?: number
   invertCurve?: boolean
   curveScale?: number
-  // In perspective, arc up through the air rather than bow sideways.
+  // In perspective, arc up through the air rather than bow sideways. Two arrows
+  // joining the same two units in opposite directions turn it off, because their
+  // arcs would lie on top of each other.
   arc?: boolean
   dashed?: boolean
   id: string

@@ -94,9 +94,8 @@ export class Layout {
   }
 
   // Arrow and center-line paths are drawn in the arrow layers, which undo the
-  // board's squash (useArrowLayer) so strokes and arrowheads keep their shape. Their
-  // points come out with y times the squash, so they land where the squashed board
-  // shows them.
+  // board's squash (useArrowLayer), so their y comes out times the squash to land
+  // where the squashed board shows it.
   private upright(p: Point): string {
     return `${p.x} ${p.y * this.squash}`
   }

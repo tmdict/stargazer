@@ -63,8 +63,7 @@ function targetingColor(key: string): string | undefined {
 }
 
 const arrowsToRender = computed(() => {
-  const arrows: Array<{ key: string; fromHex: Hex; toHex: Hex; color: string; mutual: boolean }> =
-    []
+  const arrows: Array<{ key: string; fromHex: Hex; toHex: Hex; color: string }> = []
 
   for (const [key, targetInfo] of skillTargets.value) {
     const color = targetingColor(key)
@@ -77,16 +76,13 @@ const arrowsToRender = computed(() => {
         fromHex: ctx.grid.getHexById(arrow.fromHexId),
         toHex: ctx.grid.getHexById(arrow.toHexId),
         color,
-        mutual: false,
       })
     })
   }
 
-  // Two heroes targeting each other would share one arc in perspective, so they
-  // keep the sideways bow that parts them in the flat view.
-  const joined = new Set(arrows.map((a) => `${a.fromHex.getId()}>${a.toHex.getId()}`))
-  for (const a of arrows) a.mutual = joined.has(`${a.toHex.getId()}>${a.fromHex.getId()}`)
-  return arrows
+  const pair = (from: Hex, to: Hex) => `${from.getId()}>${to.getId()}`
+  const joined = new Set(arrows.map((a) => pair(a.fromHex, a.toHex)))
+  return arrows.map((a) => ({ ...a, mutual: joined.has(pair(a.toHex, a.fromHex)) }))
 })
 
 // An artifact arrow shows with its slot (team view hides the enemy slot) and
