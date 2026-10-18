@@ -234,7 +234,7 @@ export function validateGridState(state: GridState): GridState {
 
   // Upgrade rows dedupe last-wins with defaults dropped (charId 0 is the
   // team-scope sentinel; values clamp to the attr's range for that hero rather
-  // than dropping) — mirrors canonicalAttrRows, so a crafted link carrying
+  // than dropping), as canonicalAttrRows does, so a crafted link carrying
   // duplicate or zero rows can't burn the 63-row cap or persist junk through
   // the arena autosave's decode/re-encode.
   if (state.u && Array.isArray(state.u)) {

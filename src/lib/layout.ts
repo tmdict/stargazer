@@ -57,7 +57,7 @@ export const ARTIFACT_RADIUS = 26
 // points at the tile's center with a pointer this tall, in screen pixels.
 export const STANDING_POINTER_HEIGHT = 8
 
-export interface ArrowOptions {
+interface ArrowOptions {
   invertCurve?: boolean
   curveScale?: number
   // In perspective, arc up through the air rather than bow sideways.
