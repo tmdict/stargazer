@@ -6,14 +6,16 @@
    candidates pinned first. Each side also shows its artifact, which opens the
    grid's artifact palette. A formation shot adds its units: each portrait as
    the shot shows it, its tile, and the unit it is taken for, picked from the
-   units its side can field. Every edit is an override on the shot; nothing
-   here touches a board. */
+   units its side can field, over two numbered boards, the screenshot's and
+   the side as it will be placed, so a tile can be checked against both.
+   Every edit is an override on the shot; nothing here touches a board. */
 
 import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -26,9 +28,11 @@ import {
 } from '@/lib/characters/character'
 import { inPhantimalBand } from '@/lib/characters/phantimal'
 import { compareFaction } from '@/lib/filterOrder'
+import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import type { HeroReading } from '@/lib/import/types'
 import { isFormationReading } from '@/lib/import/types'
 import type { UnitAssignment } from '@/lib/teams/formationImport'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
   cellArtifactId,
@@ -61,9 +65,13 @@ const {
   // The sides to show: a formation shot has only its own team's cards, and
   // none to review when its board's result shot names the lineup.
   sides?: readonly Team[]
-  // A formation shot's units: who each portrait is taken for, and the units
-  // its side can field.
-  units?: { assignments: readonly UnitAssignment[]; options: readonly number[] }
+  // A formation shot's units: who each portrait is taken for, the units its
+  // side can field, and the side as the plan places it, on its map.
+  units?: {
+    assignments: readonly UnitAssignment[]
+    options: readonly number[]
+    placed: { mapKey: string; team: Team; side: SideLoadBoard } | null
+  }
 }>()
 
 const emit = defineEmits<{
@@ -288,6 +296,61 @@ const pickUnit = (index: number, key: string): void => {
   emit('setUnit', shot.id, index, key === 'none' ? null : Number(key))
 }
 
+// The unit pointed at in the list, ringed on both boards.
+const hovered = ref<number | null>(null)
+
+// The screenshot's board with its portraits, in the read image's pixels: the
+// screenshot fills that box, so the board fit places tile numbers and rings on it.
+const shotBoard = computed(() => {
+  const reading = shot.reading
+  if (!reading || !isFormationReading(reading) || !reading.board) return null
+  const fit = reading.board
+  const xs: number[] = []
+  const ys: number[] = []
+  for (const hex of BOARD_HEXES) {
+    for (const corner of hexCorners(fit, hex)) {
+      xs.push(corner.x)
+      ys.push(corner.y)
+    }
+  }
+  for (const { ring } of reading.units) ys.push(ring.y - ring.radius)
+  const pad = fit.scale * 0.3
+  const x = Math.min(...xs) - pad
+  const y = Math.min(...ys) - pad
+  return {
+    viewBox: `${x} ${y} ${Math.max(...xs) + pad - x} ${Math.max(...ys) + pad - y}`,
+    size: reading.size,
+    scale: fit.scale,
+    numbers: BOARD_HEXES.map((hex) => ({ hexId: hex.getId(), ...hexCentre(fit, hex) })),
+    rings: reading.units.map(({ ring }, index) => ({
+      index,
+      ...ring,
+      state: units?.assignments[index]?.state ?? 'none',
+    })),
+  }
+})
+
+const placedUnits = computed((): ThumbnailUnit[] => {
+  const placed = units?.placed
+  if (!placed) return []
+  const { side, team } = placed
+  const pointed = hovered.value === null ? null : units.assignments[hovered.value]?.unitId
+  return [...side.mains, ...side.companions, ...(side.phantimal ? [side.phantimal] : [])].flatMap(
+    ({ unitId, hexId }) =>
+      hexId === undefined
+        ? []
+        : [
+            {
+              hexId,
+              team,
+              image: unitImage(unitId),
+              title: unitName(unitId),
+              highlight: unitId === pointed,
+            },
+          ],
+  )
+})
+
 const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
   review: 'app.import-review',
   none: 'app.import-unrecognised',
@@ -415,8 +478,65 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
       <div class="side-head">
         <span class="side-label">{{ i18n.t('app.import-units') }}</span>
       </div>
+      <div class="boards">
+        <figure v-if="shotBoard" class="board">
+          <svg class="board-view" :viewBox="shotBoard.viewBox">
+            <image
+              :href="shot.thumb"
+              x="0"
+              y="0"
+              :width="shotBoard.size.width"
+              :height="shotBoard.size.height"
+            />
+            <circle
+              v-for="ring in shotBoard.rings"
+              :key="`ring-${ring.index}`"
+              class="shot-ring"
+              :class="[ring.state, { pointed: hovered === ring.index }]"
+              :cx="ring.x"
+              :cy="ring.y"
+              :r="ring.radius"
+              :stroke-width="shotBoard.scale * (hovered === ring.index ? 0.14 : 0.06)"
+            />
+            <text
+              v-for="n in shotBoard.numbers"
+              :key="`n-${n.hexId}`"
+              class="shot-number"
+              :x="n.x"
+              :y="n.y"
+              :font-size="shotBoard.scale * 0.42"
+              :stroke-width="shotBoard.scale * 0.12"
+              text-anchor="middle"
+              dominant-baseline="central"
+            >
+              {{ n.hexId }}
+            </text>
+          </svg>
+          <figcaption>{{ i18n.t('app.import-in-screenshot') }}</figcaption>
+        </figure>
+        <figure v-if="units?.placed" class="board">
+          <BoardThumbnail
+            class="board-view"
+            :map-key="units.placed.mapKey"
+            :units="placedUnits"
+            :hex-size="16"
+            crisp
+            numbered
+          />
+          <figcaption>{{ i18n.t('app.import-on-board') }}</figcaption>
+        </figure>
+      </div>
       <div class="cells">
-        <div v-for="view in unitViews" :key="view.index" class="cell unit" :class="view.state">
+        <div
+          v-for="view in unitViews"
+          :key="view.index"
+          class="cell unit"
+          :class="view.state"
+          @mouseenter="hovered = view.index"
+          @mouseleave="hovered = null"
+          @focusin="hovered = view.index"
+          @focusout="hovered = null"
+        >
           <div class="cell-images">
             <img v-if="view.card" class="cell-card" :src="view.card" alt="" />
             <img
@@ -679,6 +799,57 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 
 .unit-pick {
   --dropdown-trigger-width: 100%;
+}
+
+.boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+.board figcaption {
+  font-size: 0.72rem;
+  color: var(--import-text-dim);
+}
+
+.board-view {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  border-radius: var(--radius-medium);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.shot-ring {
+  fill: none;
+  stroke: var(--color-accent);
+}
+
+.shot-ring.review {
+  stroke: var(--import-warn);
+}
+
+.shot-ring.none {
+  stroke: var(--import-bad);
+}
+
+.shot-number {
+  fill: #fff;
+  stroke: rgba(0, 0, 0, 0.75);
+  paint-order: stroke;
+  font-family: sans-serif;
+  font-weight: 700;
+  pointer-events: none;
 }
 
 .unit-tile {

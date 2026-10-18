@@ -134,6 +134,8 @@ export interface UnitReading {
 // side's cells and its artifact that side's; the slot strip under the board
 // stands in for the result strip (mapIndex, mapCount), with no results.
 export interface FormationReading extends ScreenshotReading {
+  // The read image's size, the pixels the board fit and the rings are in.
+  size: { width: number; height: number }
   board: BoardFit | null
   // The team the shot shows, from where its lit tiles lean; null without a board.
   side: Team | null

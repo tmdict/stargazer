@@ -177,6 +177,12 @@ const RING_RATIO = 0.3
 const RING_EDGE_RATIO = 0.5
 const RING_EDGE_BLUR_RATIO = 0.08
 
+// Tile numbers sit in the hex's lower half on a dark halo, so they read over
+// portraits and pale tiles alike.
+const NUMBER_DROP_RATIO = 0.48
+const NUMBER_SIZE_RATIO = 0.5
+const NUMBER_HALO_RATIO = 0.16
+
 const ARTIFACT_SIDES = [
   { side: 'ally', team: Team.ALLY },
   { side: 'enemy', team: Team.ENEMY },
@@ -196,6 +202,7 @@ const {
   hexSize = 7,
   viewBoxSize,
   crisp = false,
+  numbered = false,
 } = defineProps<{
   mapKey: string
   // Explicit [hexId, state] tile states (a record's serialized `t`), the
@@ -211,6 +218,8 @@ const {
   viewBoxSize?: number
   // The report's board style, for the preview modal.
   crisp?: boolean
+  // Each tile's number, low in the hex so a portrait's face stays clear.
+  numbered?: boolean
 }>()
 
 const uid = useId()
@@ -471,6 +480,22 @@ const placedArtifacts = computed(() =>
       />
     </g>
 
+    <template v-if="numbered">
+      <text
+        v-for="[hexId, center] in geometry.centers"
+        :key="`number-${hexId}`"
+        class="tile-number"
+        :x="center.x"
+        :y="center.y + hexSize * NUMBER_DROP_RATIO"
+        :font-size="hexSize * NUMBER_SIZE_RATIO"
+        :stroke-width="hexSize * NUMBER_HALO_RATIO"
+        text-anchor="middle"
+        dominant-baseline="central"
+      >
+        {{ hexId }}
+      </text>
+    </template>
+
     <!-- A layer of their own: drawn inside its unit's group, a ring would lose
          its outer half under neighbors painted after it. -->
     <template v-for="unit in ringedUnits" :key="`ring-${unit.hexId}`">
@@ -504,5 +529,16 @@ const placedArtifacts = computed(() =>
 
 .ring-edge {
   stroke: rgba(0, 0, 0, 0.45);
+}
+
+/* Literal colours, not tokens: exports serialize the SVG standalone. */
+.tile-number {
+  fill: #fff;
+  stroke: rgba(0, 0, 0, 0.75);
+  paint-order: stroke;
+  font-family: sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 </style>
