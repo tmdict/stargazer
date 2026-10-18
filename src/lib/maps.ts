@@ -99,8 +99,7 @@ const AVAILABLE_STATE: Partial<Record<State, State>> = {
   [State.OCCUPIED_ENEMY]: State.AVAILABLE_ENEMY,
 }
 
-// A tile's state without its occupant: an occupied tile reads as its side's
-// available tile.
+// A tile's state without its occupant.
 export const availableState = (state: State): State => AVAILABLE_STATE[state] ?? state
 
 // Occupied tiles read as available, so a populated board still matches its preset.

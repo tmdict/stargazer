@@ -101,8 +101,6 @@ const artifactDimensions = computed(() => {
   }
 })
 
-// Center the icon on its host cell. In perspective it stands in the cell like a
-// portrait.
 const iconStyle = (center: { x: number; y: number }) => {
   const { containerSize, borderWidth } = artifactDimensions.value
   const styles: Record<string, string | number> = {

@@ -42,8 +42,8 @@ const pickSide = (team: Team): void => {
 }
 
 // The armed window holds while a mouse rests on the control or focus is in
-// the tray, so it cannot lapse mid-choice. Touch is left out: a tap fires a
-// synthetic mouseenter that would hold it until the next tap elsewhere.
+// the tray, so it cannot lapse mid-choice. Touch is left out, because a tap
+// fires a synthetic mouseenter that would hold it until the next tap elsewhere.
 const hovered = ref(false)
 const trayFocused = ref(false)
 // A tray removed while focused fires no focusout.

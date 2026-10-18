@@ -7,8 +7,8 @@ import { onScopeDispose, ref } from 'vue'
  * should run. `disarm` is for callers whose target can change underneath an
  * armed click (the boards it would act on were replaced), so the second click
  * can never land on different content than the first was armed for. `pause`
- * and `resume` are for callers that show choices while armed: the window must
- * not lapse while the user is still on them, and restarts in full after. */
+ * and `resume` let a caller that shows choices while armed keep the window open
+ * while the user is on them; `resume` restarts it in full. */
 export function useArmedConfirm(disarmAfterMs = 3000) {
   const armed = ref<string | null>(null)
   let disarmTimer: ReturnType<typeof setTimeout> | undefined

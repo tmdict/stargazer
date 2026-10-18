@@ -11,7 +11,6 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
   const { autoFlattenOnMobile = true } = options
 
   const currentBreakpoint = ref<Breakpoint>('desktop')
-  // The boards' layouts read perspective from the grids store.
   const showPerspective = toRef(grids, 'perspective')
 
   // matchMedia (not window.innerWidth) drives the breakpoint: it reflects the
