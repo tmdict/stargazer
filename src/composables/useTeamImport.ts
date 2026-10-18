@@ -13,11 +13,10 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/frames'
-import { CANONICAL_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
+import { RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
   addLearnedIcon,
   dropLearnedIcon,
-  learnedIconEnvelope,
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
@@ -515,8 +514,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
   names: RecordNames
   swapSides: typeof swapSides
   learnedCount: ComputedRef<number>
-  hasCorrections: ComputedRef<boolean>
-  exportCorrections: () => Promise<string>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
@@ -665,58 +662,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
     post({ type: 'learned', learned: [] })
   }
 
-  // The corrections export covers result screens, the shots it was made for.
-  const correctedShots = computed(() =>
-    shots.value.filter(
-      (shot) =>
-        shot.kind === 'result' &&
-        shot.reading &&
-        (Object.keys(shot.overrides).length > 0 ||
-          Object.keys(shot.artifactOverrides).length > 0 ||
-          Object.keys(shot.resultOverrides).length > 0),
-    ),
-  )
-
-  const exportCorrections = async (): Promise<string> => {
-    const learnedIcons = learnedIconEnvelope(learned.value)
-    const records = await Promise.all(
-      correctedShots.value.map(async (shot) => {
-        // Taken before the first await, so an edit made while the file hashes
-        // stays out of this download; the hash itself waits until here since
-        // recognition never needs it.
-        const snapshot = {
-          context: { season: CURRENT_SEASON, mapCount: boardCount(), imageWidth: CANONICAL_WIDTH },
-          predicted: shot.reading,
-          labels: {
-            cells: { ...shot.overrides },
-            artifacts: { ...shot.artifactOverrides },
-            ...shot.resultOverrides,
-          },
-        }
-        const response = await fetch(shot.thumb)
-        if (!response.ok) throw new Error('Screenshot unavailable for correction export')
-        const hash = await crypto.subtle.digest('SHA-256', await response.arrayBuffer())
-        const sha256 = Array.from(new Uint8Array(hash), (byte) =>
-          byte.toString(16).padStart(2, '0'),
-        ).join('')
-        return { source: { name: shot.name, size: shot.size, sha256 }, ...snapshot }
-      }),
-    )
-    return JSON.stringify(
-      {
-        app: 'stargazer',
-        kind: 'import-corrections',
-        createdAt: new Date().toISOString(),
-        learnedIcons,
-        shots: records,
-      },
-      // The envelope also names its descriptor size; only per-shot vectors are omitted.
-      (key: string, value: unknown) =>
-        key === 'card' || (key === 'descriptor' && ArrayBuffer.isView(value)) ? undefined : value,
-      2,
-    )
-  }
-
   const formationShots = computed(() =>
     shots.value.filter(
       (s): s is ImportShot & { reading: FormationReading } =>
@@ -759,8 +704,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
     names,
     swapSides,
     learnedCount: computed(() => learned.value.length),
-    hasCorrections: computed(() => correctedShots.value.length > 0 || learned.value.length > 0),
-    exportCorrections,
     plan,
     unitsOf,
     addFiles,
