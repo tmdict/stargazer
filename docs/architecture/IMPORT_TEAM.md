@@ -63,7 +63,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 `cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), needs its refinement confirmed (hero and paragon settled but the star colour doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. `artifactState` treats each side's artifact the same way: settled once read surely or edited, otherwise counted in the card's review number, with the icon crop from the screenshot shown beside it.
 
-`useTeamImport` keeps its state at module level, so the modal can close and reopen without losing shots. Save as New clears them once the plan is handed over, and `TeamsView` calls `disposeTeamImport` when the page is left. The worker lives for one page visit. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
+Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. `useTeamImport` keeps the worker, its references and the learned faces at module level for the page visit, and `TeamsView` calls `disposeTeamImport` when the page is left. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
 
 `swapSides` puts every screenshot's Ally column on the enemy side of its board. The game's Ally tab is always the viewing player, whichever side of the board they fought from. It is one choice per match, since a player keeps one side for every map and the boards hold a hero once per side page-wide. It is a placement choice, so it stays out of the export and resets with the shots.
 
@@ -150,7 +150,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ### Corrections export
 
-`exportCorrections` writes a user-controlled download, never an upload. It holds one entry per screenshot with at least one correction. Each side of a reading holds five hero readings, one per row from top to bottom; the example shows the first of each. Card images and per-card descriptors are left out.
+`exportCorrections` writes a user-controlled download, never an upload. It holds one entry per screenshot with at least one correction, so it is downloaded before the modal closes. Each side of a reading holds five hero readings, one per row from top to bottom; the example shows the first of each. Card images and per-card descriptors are left out.
 
 ```json
 {
