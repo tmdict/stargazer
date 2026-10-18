@@ -21,6 +21,7 @@ import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStat
 import {
   ALLY_A,
   ALLY_B,
+  ALLY_C,
   ENEMY_A,
   ENEMY_B,
   EVIE,
@@ -268,6 +269,39 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       expect(snapshotTiles(stores.grid)).toEqual(before)
     }
     expect(stores.artifact.allyArtifactId).toBe(3)
+  })
+
+  it('keeps a summoner whose units fill its side exactly', () => {
+    const source = createStores()
+    // Shrink the ally zone to the six tiles a full side with Phraesto's shadow
+    // fills, so a saved layout leaves no other tile free for his skill.
+    for (const hexId of [7, 8, 9, 10, 12, 13, 16]) {
+      source.grid.setState(source.grid.getHexById(hexId), State.DEFAULT)
+    }
+    expect(source.character.placeCharacterOnHex(1, PHRAESTO, Team.ALLY)).toBe(true)
+    const free = source.grid.getAllTiles
+      .filter((t) => t.state === State.AVAILABLE_ALLY && t.characterId === undefined)
+      .map((t) => t.hex.getId())
+    expect(free).toHaveLength(4)
+    ;[ALLY_A, ALLY_B, ALLY_C, ENEMY_A].forEach((id, i) => {
+      expect(source.character.placeCharacterOnHex(free[i]!, id, Team.ALLY)).toBe(true)
+    })
+    const encoded = encodeStores(source)
+    const expected = snapshotTiles(source.grid)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(snapshotTiles(restored.grid)).toEqual(expected)
+  })
+
+  it('frees a saved tile marked occupied with nothing on it', () => {
+    const source = createStores()
+    source.grid.setState(source.grid.getHexById(9), State.OCCUPIED_ALLY)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.grid.getTile(9).state).toBe(State.AVAILABLE_ALLY)
   })
 
   it('clears pre-existing state before applying the encoded state', () => {
