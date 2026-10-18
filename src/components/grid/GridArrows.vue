@@ -23,8 +23,6 @@ const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
   () => props.defaultSvgHeight,
 )
 
-// An ally and an enemy targeting each other would share one arc in perspective, so
-// they keep the sideways bow that parts them in the flat view.
 const mutual = (allyHexId: number, enemyHexId: number): boolean =>
   ctx.closestAllyMap.get(enemyHexId)?.allyHexId === allyHexId &&
   ctx.closestEnemyMap.get(allyHexId)?.enemyHexId === enemyHexId

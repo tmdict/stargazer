@@ -63,14 +63,13 @@ provideGridContext(liveContext)
 // the board's squash and what sits below moves with the board.
 const squash = computed(() => {
   if (!props.context.perspective) {
-    const flat = { height: `${props.context.viewBoxBounds.height}px`, alignItems: 'flex-start' }
-    return { box: flat, board: {} }
+    return { box: { height: `${props.context.viewBoxBounds.height}px` }, board: {} }
   }
   const c = PERSPECTIVE.compression
   const band = props.context.drawnBounds
   const top = props.context.teamView ? 0 : band.y
   return {
-    box: { height: `${band.height * c}px`, alignItems: 'flex-start' },
+    box: { height: `${band.height * c}px` },
     board: { transform: `translateY(${-top * c}px) scaleY(${c})` },
   }
 })
@@ -146,9 +145,9 @@ const shiftStyle = computed(() => {
 <style scoped>
 /* Perspective container - simplified to just hold the grid */
 .perspective-container {
-  transition: height var(--transition-perspective);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  transition: height var(--transition-perspective);
 }
 </style>
