@@ -184,6 +184,27 @@ describe('Layout', () => {
       }
     })
 
+    it('arcs a closest-target arrow under a skill arrow between the same pair', () => {
+      const board = new Layout(
+        POINTY,
+        { x: 40, y: 40 },
+        origin,
+        false,
+        tilt,
+        PERSPECTIVE.compression,
+      )
+      // Far enough apart sideways that the height limit holds both arcs.
+      const [from, to] = [new Hex(-3, 0, 3), new Hex(3, 0, -3)]
+      const top = (path: string) => {
+        const [, y0, , cy, , y2] = path.match(/-?[\d.]+/g)!.map(Number)
+        const t = (y0! - cy!) / (y0! - 2 * cy! + y2!)
+        return (1 - t) ** 2 * y0! + 2 * t * (1 - t) * cy! + t ** 2 * y2!
+      }
+      const skill = top(board.getArrowPath(from, to, 30))
+      const closestTarget = top(board.getArrowPath(from, to, 30, { curveScale: 1.5 }))
+      expect(closestTarget).toBeGreaterThan(skill + 1)
+    })
+
     it('tilts after rotating, so the screen bottom stays nearest under invert', () => {
       const rotated = new Layout(POINTY, size, origin, true, tilt)
       for (const hex of [new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]) {

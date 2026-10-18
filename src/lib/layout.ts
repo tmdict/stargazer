@@ -282,7 +282,9 @@ export class Layout {
     const screenDy = (end.y - start.y) * this.squash
     const length = Math.hypot(end.x - start.x, screenDy)
     const limit = arcHeightLimit(screenDy, screenDy < 0 ? endRadius : startRadius)
-    const height = Math.min(length * ARC_RISE * curveScale, limit)
+    // A larger curveScale arcs lower, so arrows joining the same pair in the same
+    // direction stay apart even where the height limit holds them all.
+    const height = Math.min(length * ARC_RISE, limit) / curveScale
     const control = {
       x: (start.x + end.x) / 2,
       y: (start.y + end.y) / 2 - (2 * height) / this.squash,

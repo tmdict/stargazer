@@ -13,10 +13,11 @@ defineProps<Props>()
 
 const ctx = useGridContext()
 
-// Normal targeting arrows bow harder than skill arrows so the two stay distinct
-// where they share a direction (skill arrows use the default scale). Ally and
-// enemy arrows bow to the same side (enemy arrows invert), so the enemy scale is
-// larger to nest them apart instead of overlapping.
+// Normal targeting arrows bow harder than skill arrows in the flat view, and arc
+// lower in perspective, so the two stay distinct where they share a direction
+// (skill arrows use the default scale). Ally and enemy arrows bow to the same side
+// (enemy arrows invert), so the enemy scale is larger to nest them apart instead
+// of overlapping.
 const ALLY_CURVE_SCALE = 1.5
 const ENEMY_CURVE_SCALE = 2.0
 
