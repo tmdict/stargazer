@@ -296,6 +296,7 @@ describe('buildTeamImportPlan with formation shots', () => {
         [Team.ALLY]: side === Team.ALLY ? cards : [],
         [Team.ENEMY]: side === Team.ENEMY ? cards : [],
       },
+      size: { width: 640, height: 760 },
       board: { scale: 46, x: 0, y: 0, support: 0.7 },
       side,
       tiles: side === Team.ALLY ? ARENA1_ALLY : ARENA1_ENEMY,

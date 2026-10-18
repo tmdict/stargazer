@@ -401,7 +401,8 @@ function readCardRow(
 
 // ---------- the reading ----------
 
-const emptyReading = (warnings: ImportWarning[]): FormationReading => ({
+const emptyReading = (shot: RgbaImage, warnings: ImportWarning[]): FormationReading => ({
+  size: { width: shot.width, height: shot.height },
   mapIndex: null,
   mapCount: null,
   winner: null,
@@ -418,7 +419,7 @@ const emptyReading = (warnings: ImportWarning[]): FormationReading => ({
 
 export function readFormation(shot: RgbaImage, refs: ReferenceSet): FormationReading {
   const board = fitBoard(shot)
-  if (!board) return emptyReading([{ kind: 'no-board' }])
+  if (!board) return emptyReading(shot, [{ kind: 'no-board' }])
   const warnings: ImportWarning[] = []
   const found = findUnits(shot, board)
   const { tiles, unclear } = readTiles(shot, board, found)
@@ -427,7 +428,7 @@ export function readFormation(shot: RgbaImage, refs: ReferenceSet): FormationRea
   if (!slot) warnings.push({ kind: 'no-strip' })
   const row = side === null ? null : readCardRow(shot, refs, board)
   if (side !== null && row?.cells.length === 0) warnings.push({ kind: 'no-panel', side })
-  const reading = emptyReading(warnings)
+  const reading = emptyReading(shot, warnings)
   if (side !== null && row) {
     reading.sides[side] = row.cells
     reading.artifacts[side] = row.artifact

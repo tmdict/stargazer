@@ -38,6 +38,7 @@ const formation = (
   tiles: number[] = ARENA1_ALLY,
   unclear: number[] = [],
 ): FormationReading => ({
+  size: { width: 640, height: 760 },
   mapIndex: 0,
   mapCount: 5,
   winner: null,
