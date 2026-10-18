@@ -10,6 +10,7 @@ import { defineStore } from 'pinia'
 
 import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
+import { BASE_HEX_RADIUS } from '@/lib/layout'
 import { getMapByKey, type MapConfig } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { useGrids } from './grids'
@@ -78,7 +79,7 @@ export const useGridStore = defineStore('grid', () => {
     if (grids.hexSize.x !== newSize.x) grids.hexSize = newSize
   }
 
-  const getHexScale = (): number => grids.hexSize.x / 40
+  const getHexScale = (): number => grids.hexSize.x / BASE_HEX_RADIUS
 
   return {
     grid,

@@ -13,12 +13,6 @@ import { getCharacterSkill } from '@/lib/skills/skill'
 import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
 
-interface Props {
-  defaultSvgHeight: number
-}
-
-defineProps<Props>()
-
 const ctx = useGridContext()
 
 const arrowStyle = useArrowStyle()
@@ -119,7 +113,6 @@ const linesToRender = computed(() =>
   <GridArrowLayer
     v-if="arrowsToRender.length || artifactArrowsToRender.length || linesToRender.length"
     class="skill-arrow-layer"
-    :default-svg-height
   >
     <template #default>
       <GridLine
