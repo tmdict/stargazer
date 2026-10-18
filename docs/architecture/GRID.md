@@ -129,7 +129,7 @@ The arrow layers (`GridArrowLayer`) undo the squash, as portraits do, so strokes
 
 ## Image export
 
-Image export (`useGridExport`) trims every image to what it draws, on all four sides: the room the squash leaves, the hero cards and board buttons the Teams page's image of all boards leaves out, and the width of a board's area beyond the board. The background is transparent, so the trim keeps the portraits and arrows above the far row. The trim cuts on whole pixels, because a fractional offset would resample, and so soften, the whole image.
+Image export (`useGridExport`) trims every image to what it draws, on all four sides: the room the squash leaves, the hero cards and board buttons the Teams page's image of all boards leaves out, and the width of a board's area beyond the board. With the boards wrapped, the cards and buttons under the top row leave an empty band between the rows, which the trim narrows to a fixed gap (`ROW_GAP`). The background is transparent, so the trim keeps the portraits and arrows above the far row. The trim cuts on whole pixels, because a fractional offset would resample, and so soften, the whole image.
 
 The image's resolution follows the board, not the screen. Every portrait keeps all the pixels of the 100 px image the board draws it from (`FULL_DETAIL_RATIO`), so every device saves the same image, within the largest canvas iOS Safari draws.
 
