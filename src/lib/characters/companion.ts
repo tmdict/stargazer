@@ -1,4 +1,5 @@
-import type { Grid } from '../grid'
+import { COMPANION_ID_OFFSET, type Grid } from '../grid'
+import { getRegisteredSkills } from '../skills/registry'
 import { getCharacterSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
 import { findCharacterHex } from './character'
@@ -14,6 +15,25 @@ export interface CompanionPosition {
 }
 
 // Companion system helpers
+
+// The companions a unit's skill spawns, in spawn order. The arithmetic holds in
+// every band, so a phantimal's companions come out in the phantimal band.
+export function companionIdsOf(ownerId: number): number[] {
+  const count = getCharacterSkill(ownerId)?.companionCount ?? 0
+  return Array.from({ length: count }, (_, i) => (i + 1) * COMPANION_ID_OFFSET + ownerId)
+}
+
+// Companions drawn with an image of their own (Zanie's turrets, Wedge of Power)
+// rather than their owner's portrait: the image's name, under the id of the
+// first companion, since a skill's companions all share it.
+export function companionImages(): { unitId: number; image: string }[] {
+  return getRegisteredSkills().flatMap((skill) => {
+    const [first] = companionIdsOf(skill.characterId)
+    return skill.companionImageModifier && first !== undefined
+      ? [{ unitId: first, image: skill.companionImageModifier }]
+      : []
+  })
+}
 
 export function isCompanionId(grid: Grid, characterId: number): boolean {
   // Classified on the band-local id, so companions of synergy heroes and

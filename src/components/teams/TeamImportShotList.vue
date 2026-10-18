@@ -1,8 +1,10 @@
 <script setup lang="ts">
 /* The dropped screenshots as cards: a thumbnail that opens the full image in
-   a lightbox, the map it fills (read from the strip), who won it (read from
-   the Ally tab), both editable, and the reading's state. Two cards on one map
-   both turn red; the modal blocks Save as New on it. */
+   a lightbox, the map it fills (read from the strip, or from a formation
+   shot's slot circles), who won it (read from the Ally tab; for a formation
+   shot, the team it shows instead, read from its board), and the reading's
+   state. Two cards on one map both turn red; the modal blocks Save as New on
+   it. */
 
 import { ref } from 'vue'
 
@@ -15,13 +17,24 @@ import {
   type ImportShot,
   type ShotError,
 } from '@/composables/useTeamImport'
+import { isFormationReading } from '@/lib/import/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shots, mapCount } = defineProps<{
+const {
+  shots,
+  mapCount,
+  formation = false,
+  reviewCount,
+} = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
+  // Formation shots: the team shown instead of the winner, read-only.
+  formation?: boolean
+  // What a card still asks about, when its owner counts it (a formation shot's
+  // units come from the plan); else its cells and artifacts.
+  reviewCount?: (shot: ImportShot) => number
 }>()
 
 const selectedId = defineModel<string | null>('selectedId', { required: true })
@@ -38,14 +51,26 @@ const zoomed = ref<ImportShot | null>(null)
 
 const mapIndexOf = (shot: ImportShot): number | null => shotMapIndex(shot, mapCount)
 
+const shownTeam = (shot: ImportShot): Team | null =>
+  shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
+
+// Formation shots of the two teams share a map, so only the same team twice clashes.
 const duplicated = (shot: ImportShot): boolean => {
   const mapIndex = mapIndexOf(shot)
-  return mapIndex !== null && shots.some((s) => s !== shot && mapIndexOf(s) === mapIndex)
+  return (
+    mapIndex !== null &&
+    shots.some(
+      (s) =>
+        s !== shot &&
+        mapIndexOf(s) === mapIndex &&
+        (!formation || shownTeam(s) === shownTeam(shot)),
+    )
+  )
 }
 
 // Cells and artifacts still to look at, as the review shows them: an edit
 // settles its cell or artifact.
-const reviewCount = (shot: ImportShot): number => {
+const cellReviewCount = (shot: ImportShot): number => {
   const reading = shot.reading
   if (!reading) return 0
   return SIDES.reduce(
@@ -73,13 +98,16 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
     return { text: i18n.t(ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
   }
   const reading = shot.reading
-  if (reading?.warnings.some((w) => w.kind === 'no-panel'))
+  if (reading?.warnings.some((w) => w.kind === 'no-board'))
+    return { text: i18n.t('app.import-no-board'), tone: 'error' }
+  // A formation shot without cards still places its units.
+  if (!formation && reading?.warnings.some((w) => w.kind === 'no-panel'))
     return { text: i18n.t('app.import-no-panel'), tone: 'error' }
   const found = reading?.mapCount ?? null
   if (found !== null && found !== mapCount)
     return { text: i18n.t('app.import-mode-mismatch', { count: found }), tone: 'error' }
   if (mapIndexOf(shot) === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
-  const n = reviewCount(shot)
+  const n = (reviewCount ?? cellReviewCount)(shot)
   return n
     ? { text: i18n.t('app.import-to-review', { count: n }), tone: 'warn' }
     : { text: i18n.t('app.import-ready'), tone: 'plain' }
@@ -135,7 +163,23 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
           </button>
         </div>
       </div>
-      <div class="shot-row">
+      <div v-if="formation" class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-team') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-team')">
+          <button
+            v-for="team in SIDES"
+            :key="team"
+            type="button"
+            class="seg-btn side"
+            :class="{ on: shownTeam(shot) === team }"
+            :aria-pressed="shownTeam(shot) === team"
+            disabled
+          >
+            {{ i18n.t(teamLabelKey(team)) }}
+          </button>
+        </div>
+      </div>
+      <div v-else class="shot-row">
         <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
         <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
           <button
@@ -346,6 +390,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 
 .seg-btn.on.dup {
   background: var(--color-danger);
+}
+
+/* A formation shot's team is read, not picked, but stays legible. */
+.seg-btn.on:disabled {
+  opacity: 1;
 }
 
 .seg-btn.side {

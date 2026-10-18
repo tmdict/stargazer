@@ -287,6 +287,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   return {
     id,
     characterId: config.characterId,
+    companionCount: count,
     colorModifier,
     companionColorModifier,
     companionImageModifier,

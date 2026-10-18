@@ -20,6 +20,7 @@ vi.mock('@/utils/dataLoader', () => ({
 
 const shot = (): ImportShot => ({
   id: 'sample',
+  kind: 'result',
   name: 'sample.png',
   size: 11,
   thumb: 'blob:sample',
@@ -30,6 +31,8 @@ const shot = (): ImportShot => ({
   resultOverrides: {},
   cards: {},
   artifactCards: {},
+  unitOverrides: {},
+  unitCards: [],
   reading: {
     mapIndex: 3,
     mapCount: 5,
@@ -145,9 +148,9 @@ describe('board sides', () => {
     api.shots.value = [shot()]
     api.swapSides.value = true
     const board = api.plan.value.boards[3]!
-    expect(board.sides[2].map((e) => e.characterId)).toEqual([5])
-    expect(board.sides[1]).toEqual([])
-    expect(board.artifacts).toEqual({ ally: null, enemy: 8 })
+    expect(board.sides[2]!.mains.map((unit) => unit.unitId)).toEqual([5])
+    expect(board.sides[2]!.artifact).toBe(8)
+    expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     expect(api.hasCorrections.value).toBe(false)
     expect(await api.exportCorrections()).not.toContain('swap')
     api.clearShots()

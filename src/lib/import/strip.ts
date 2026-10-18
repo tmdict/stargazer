@@ -17,9 +17,10 @@ import type { Rect, RgbaImage } from './types'
 
 // The ring is two thin lines inside its band, a few percent of the band's
 // area on a sharp capture and about one on a soft one.
-const RING_FLOOR = 0.012
+export const GREEN_RING_FLOOR = 0.012
 
-const isGreen = (r: number, g: number, b: number): boolean => g > r + 30 && g > b + 30 && g > 90
+export const isGreen = (r: number, g: number, b: number): boolean =>
+  g > r + 30 && g > b + 30 && g > 90
 const isCream = (r: number, g: number, b: number): boolean =>
   r > 190 && g > 180 && b > 160 && Math.max(r, g, b) - Math.min(r, g, b) < 50
 
@@ -41,7 +42,7 @@ export interface StripReading {
 }
 
 // Green fraction in a circle's ring band.
-const ringGreen = (shot: RgbaImage, cx: number, cy: number, radius: number): number => {
+export const ringGreen = (shot: RgbaImage, cx: number, cy: number, radius: number): number => {
   let inRing = 0
   let green = 0
   for (let y = cy - radius - 4; y <= cy + radius + 4; y++) {
@@ -145,7 +146,7 @@ export function readStrip(shot: RgbaImage, searchTop: number): StripReading | nu
       })
     }
   }
-  if (best.frac < RING_FLOOR) return null
+  if (best.frac < GREEN_RING_FLOOR) return null
   const { cy, radius } = best
   const outer =
     discCream(shot, positions[0]! + best.dx, cy, radius) > 0.5 &&

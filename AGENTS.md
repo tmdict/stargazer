@@ -50,7 +50,7 @@ System docs:
 - [Skill Targeting](./docs/architecture/skills/TARGETING.md) - Targeting helpers for skills
 - [Skill Pages](./docs/architecture/SKILL_PAGES.md) - Skill pages, skill text loading, search
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library, rosters
-- [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import
+- [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match and formation screenshot import
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder

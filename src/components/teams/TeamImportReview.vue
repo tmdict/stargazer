@@ -1,10 +1,12 @@
 <script setup lang="ts">
-/* The review grid for one screenshot: both sides, five cells each, with the
+/* The review grid for one screenshot: its sides, five cells each, with the
    card as the reader located it, the hero it matched, the paragon /
    refinement pill, and a state: sure, review (amber), or not recognised
    (red). The name opens the grid's own character palette with the reader's
    candidates pinned first. Each side also shows its artifact, which opens the
-   grid's artifact palette. Every edit is an override on the shot; nothing
+   grid's artifact palette. A formation shot adds its units: each portrait as
+   the shot shows it, its tile, and the unit it is taken for, picked from the
+   units its side can field. Every edit is an override on the shot; nothing
    here touches a board. */
 
 import { computed, ref } from 'vue'
@@ -12,12 +14,21 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
+import {
+  getOpposingTeam,
+  isBaseHeroId,
+  isCompanionUnitId,
+  toBaseHeroId,
+} from '@/lib/characters/character'
+import { inPhantimalBand } from '@/lib/characters/phantimal'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/types'
+import { isFormationReading } from '@/lib/import/types'
+import type { UnitAssignment } from '@/lib/teams/formationImport'
 import {
   artifactState,
   cellArtifactId,
@@ -33,19 +44,33 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
+import { phantimalImageUrl } from '@/utils/artifactImage'
+import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
 
-const { shot, names, swapSides } = defineProps<{
+const {
+  shot,
+  names,
+  swapSides,
+  sides = SIDES,
+  units,
+} = defineProps<{
   shot: ImportShot
   names: RecordNames
   // The columns land on the opposite board sides; each head says which.
   swapSides: boolean
+  // The sides to show: a formation shot has only its own team's cards, and
+  // none to review when its board's result shot names the lineup.
+  sides?: readonly Team[]
+  // A formation shot's units: who each portrait is taken for, and the units
+  // its side can field.
+  units?: { assignments: readonly UnitAssignment[]; options: readonly number[] }
 }>()
 
 const emit = defineEmits<{
   setHero: [id: string, team: Team, row: number, characterId: number | null]
   setLevel: [id: string, team: Team, row: number, field: 'paragon' | 'refinement', level: number]
   setArtifact: [id: string, team: Team, artifactId: number | null]
+  setUnit: [id: string, index: number, unitId: number | null]
 }>()
 
 const gameData = useGameDataStore()
@@ -209,6 +234,60 @@ const closePickers = (event: MouseEvent): void => {
   artifactPicker.value = null
 }
 
+// ---------- units ----------
+
+// A hero's companion shows its owner's name, marked; a phantimal and the
+// companion it brings are named by their own art (Wedge of Power).
+const unitName = (unitId: number | null): string => {
+  if (unitId === null) return i18n.t('app.import-none')
+  if (inPhantimalBand(unitId)) {
+    return phantimalDisplayName(i18n.currentLocale, gameData.getPhantimalUnitSlug(unitId) ?? '')
+  }
+  const name = heroName(toBaseHeroId(unitId))
+  return isCompanionUnitId(unitId) ? i18n.t('app.import-companion', { name }) : name
+}
+
+const unitImage = (unitId: number | null): string => {
+  const name = unitId === null ? undefined : gameData.getCharacterImageNameById(unitId)
+  if (!name) return ''
+  return inPhantimalBand(unitId!) ? phantimalImageUrl(name) : gameData.getCharacterImage(name)
+}
+
+interface UnitView {
+  index: number
+  unitId: number | null
+  state: UnitAssignment['state']
+  edited: boolean
+  tile: number
+  card: string
+  items: DropdownItem[]
+}
+
+const unitViews = computed((): UnitView[] => {
+  const reading = shot.reading
+  if (!units || !reading || !isFormationReading(reading)) return []
+  return units.assignments.map((assignment, index) => ({
+    index,
+    unitId: assignment.unitId,
+    state: assignment.state,
+    edited: shot.unitOverrides[index] !== undefined,
+    tile: reading.units[index]?.hexId ?? 0,
+    card: shot.unitCards[index] ?? '',
+    items: [
+      ...units.options.map((id) => ({
+        key: String(id),
+        label: unitName(id),
+        selected: id === assignment.unitId,
+      })),
+      { key: 'none', label: i18n.t('app.import-none'), selected: assignment.unitId === null },
+    ],
+  }))
+})
+
+const pickUnit = (index: number, key: string): void => {
+  emit('setUnit', shot.id, index, key === 'none' ? null : Number(key))
+}
+
 const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
   review: 'app.import-review',
   none: 'app.import-unrecognised',
@@ -218,7 +297,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 
 <template>
   <div class="review-grid" @click="closePickers">
-    <div v-for="team in SIDES" :key="team" class="side">
+    <div v-for="team in sides" :key="team" class="side">
       <div class="side-head">
         <span class="side-label">{{ sideLabel(team) }}</span>
         <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
@@ -323,6 +402,53 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
             </button>
             <span v-else-if="view.state !== 'sure'" class="cell-state" :class="view.state">
               {{ i18n.t(STATE_LABEL[view.state]) }}
+            </span>
+            <span v-else-if="view.edited" class="cell-state edited">{{
+              i18n.t('app.import-edited')
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="unitViews.length" class="side">
+      <div class="side-head">
+        <span class="side-label">{{ i18n.t('app.import-units') }}</span>
+      </div>
+      <div class="cells">
+        <div v-for="view in unitViews" :key="view.index" class="cell unit" :class="view.state">
+          <div class="cell-images">
+            <img v-if="view.card" class="cell-card" :src="view.card" alt="" />
+            <img
+              v-if="view.unitId !== null"
+              class="cell-portrait"
+              :src="unitImage(view.unitId)"
+              alt=""
+            />
+            <span v-else class="cell-portrait empty" />
+          </div>
+          <DropdownSelect
+            :label="unitName(view.unitId)"
+            :items="view.items"
+            variant="dark"
+            floating
+            click-only
+            class="unit-pick"
+            @select="pickUnit(view.index, $event)"
+          />
+          <div class="cell-meta">
+            <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
+            <button
+              v-if="view.state === 'review' && view.unitId !== null"
+              type="button"
+              class="cell-state review confirm-choice"
+              :title="unitName(view.unitId)"
+              @click="emit('setUnit', shot.id, view.index, view.unitId)"
+            >
+              {{ i18n.t('app.import-confirm', { value: unitName(view.unitId) }) }}
+            </button>
+            <span v-else-if="view.state === 'none'" class="cell-state none">
+              {{ i18n.t('app.import-unrecognised') }}
             </span>
             <span v-else-if="view.edited" class="cell-state edited">{{
               i18n.t('app.import-edited')
@@ -541,6 +667,23 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 
 .cell-portrait.empty {
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* A unit's portraits are round in game, so both crops are square, from the top
+   of the art like the board's own portraits. */
+.cell.unit .cell-card,
+.cell.unit .cell-portrait {
+  aspect-ratio: 1;
+  object-position: top;
+}
+
+.unit-pick {
+  --dropdown-trigger-width: 100%;
+}
+
+.unit-tile {
+  font-size: 0.72rem;
+  color: var(--import-text-dim);
 }
 
 .cell-name {
