@@ -10,6 +10,7 @@ import {
 } from '@/composables/useTeamImport'
 import { DESCRIPTOR_LENGTH, encodeLearned } from '@/lib/import/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
+import { stubLocalStorage } from '../fixtures/storage'
 
 vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
 vi.mock('@/utils/dataLoader', () => ({
@@ -70,6 +71,7 @@ const shot = (): ImportShot => ({
 afterEach(() => {
   useTeamImport(() => '5v5').forgetLearned()
   disposeTeamImport()
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
 })
 
@@ -153,8 +155,23 @@ describe('board sides', () => {
     expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     expect(api.hasCorrections.value).toBe(false)
     expect(await api.exportCorrections()).not.toContain('swap')
-    api.clearShots()
+    api.clearImport()
     expect(api.swapSides.value).toBe(false)
+  })
+})
+
+describe('clearing an import', () => {
+  it('drops unsaved name edits back to the names last saved', () => {
+    vi.stubEnv('SSR', false)
+    stubLocalStorage()
+    const api = useTeamImport(() => '5v5')
+    api.names.left = 'unii'
+    api.saveNames()
+    api.names.left = 'typo'
+    api.names.right = 'BTrickz'
+    api.clearImport()
+    expect(api.names.left).toBe('unii')
+    expect(api.names.right).toBe('')
   })
 })
 
@@ -212,7 +229,7 @@ describe('download import corrections', () => {
     const api = useTeamImport(() => '5v5')
     api.shots.value = [shot()]
     api.setArtifact('sample', 1, 9)
-    api.clearShots()
+    api.clearImport()
     expect(api.hasCorrections.value).toBe(false)
     expect(JSON.parse(await api.exportCorrections())).toHaveProperty('shots', [])
   })
@@ -238,7 +255,7 @@ describe('download import corrections', () => {
     cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
     api.shots.value = [sample]
     api.setHero('sample', 1, 0, 7)
-    api.clearShots()
+    api.clearImport()
 
     expect(api.learnedCount.value).toBe(1)
     expect(api.hasCorrections.value).toBe(true)

@@ -112,7 +112,8 @@ export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
 const shots = ref<ImportShot[]>([])
 const referenceStatus = ref<ReferenceStatus>('idle')
-const names = reactive<RecordNames>({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
+const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
+const names = reactive<RecordNames>(defaultNames())
 // Whether every screenshot's columns land on the opposite board sides: one
 // choice per match (see buildTeamImportPlan), and not a reader correction.
 const swapSides = ref(false)
@@ -125,16 +126,19 @@ let worker: Worker | null = null
 let sorter: Worker | null = null
 const sorting = new Map<string, (kind: ShotKind | null) => void>()
 let nextId = 1
-let namesLoaded = false
+let storedLoaded = false
 // A page visit is one session. Work still in flight from an earlier one (a
 // decode, a reference fetch) checks this before touching the current state.
 let session = 0
+// Shots belong to one opening of the modal; clearImport ends it, and an
+// addFiles still sorting or decoding for that opening stops adding.
+let opening = 0
 // Decoded shots waiting on the worker, by shot id.
 const pending = new Map<string, { image: RgbaImage; kind: ShotKind }>()
 
-const loadNames = (): void => {
-  if (namesLoaded) return
-  namesLoaded = true
+// The record names as last saved, or the defaults.
+const restoreNames = (): void => {
+  Object.assign(names, defaultNames())
   try {
     const stored = JSON.parse(readStorage(NAMES_KEY) ?? 'null') as Partial<RecordNames> | null
     if (stored && typeof stored === 'object') {
@@ -145,6 +149,12 @@ const loadNames = (): void => {
   } catch {
     // Unreadable names fall back to the defaults.
   }
+}
+
+const loadStored = (): void => {
+  if (storedLoaded) return
+  storedLoaded = true
+  restoreNames()
   learned.value = parseLearnedIcons(readStorage(LEARNED_KEY))
 }
 
@@ -485,13 +495,17 @@ const readShot = async (shot: ImportShot, file: Blob): Promise<void> => {
   }
 }
 
-// Drop every shot and the match's side choice; the worker and its references
-// stay for the next import.
-const clearShots = (): void => {
+/* End an opening of the modal: drop every shot with its review edits, the
+ * match's side choice and any unsaved name edits, so the next opening starts
+ * fresh. The worker, its references and the learned faces stay for the page
+ * visit. */
+const clearImport = (): void => {
+  opening++
   pending.clear()
   for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
   shots.value = []
   swapSides.value = false
+  restoreNames()
 }
 
 export function useTeamImport(mode: () => TeamModeKey): {
@@ -508,7 +522,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   addFiles: (files: File[], kind?: ShotKind | 'sort') => Promise<{ added: number; refused: number }>
   resultsClosed: ComputedRef<boolean>
   removeShot: (id: string) => void
-  clearShots: () => void
+  clearImport: () => void
   setMap: (id: string, mapIndex: number | null) => void
   setWinner: (id: string, winner: Team | null) => void
   setHero: (id: string, team: Team, row: number, characterId: number | null) => void
@@ -525,7 +539,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
 } {
-  loadNames()
+  loadStored()
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
 
@@ -545,14 +559,14 @@ export function useTeamImport(mode: () => TeamModeKey): {
     kind: ShotKind | 'sort' = 'result',
   ): Promise<{ added: number; refused: number }> => {
     void ensureReferences()
-    const mine = session
+    const mine = opening
     let added = 0
     let refused = 0
     for (const file of files) {
-      if (mine !== session) break
+      if (mine !== opening) break
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
       const sorted = kind === 'sort' ? await sortShot(file).catch(() => null) : kind
-      if (mine !== session) break
+      if (mine !== opening) break
       const shotKind = sorted ?? (resultsClosed.value ? 'formation' : 'result')
       if (shotKind === 'result' && resultsClosed.value) {
         refused++
@@ -751,7 +765,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     addFiles,
     resultsClosed,
     removeShot,
-    clearShots,
+    clearImport,
     setMap,
     setWinner,
     setHero,
@@ -773,6 +787,6 @@ export function disposeTeamImport(): void {
   sorter = null
   for (const done of sorting.values()) done(null)
   sorting.clear()
-  clearShots()
+  clearImport()
   referenceStatus.value = 'idle'
 }
