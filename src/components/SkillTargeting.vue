@@ -63,7 +63,8 @@ function targetingColor(key: string): string | undefined {
 }
 
 const arrowsToRender = computed(() => {
-  const arrows: Array<{ key: string; fromHex: Hex; toHex: Hex; color: string }> = []
+  const arrows: Array<{ key: string; fromHex: Hex; toHex: Hex; color: string; mutual: boolean }> =
+    []
 
   for (const [key, targetInfo] of skillTargets.value) {
     const color = targetingColor(key)
@@ -76,10 +77,15 @@ const arrowsToRender = computed(() => {
         fromHex: ctx.grid.getHexById(arrow.fromHexId),
         toHex: ctx.grid.getHexById(arrow.toHexId),
         color,
+        mutual: false,
       })
     })
   }
 
+  // Two heroes targeting each other would share one arc in perspective, so they
+  // keep the sideways bow that parts them in the flat view.
+  const joined = new Set(arrows.map((a) => `${a.fromHex.getId()}>${a.toHex.getId()}`))
+  for (const a of arrows) a.mutual = joined.has(`${a.toHex.getId()}>${a.fromHex.getId()}`)
   return arrows
 })
 
@@ -139,6 +145,7 @@ const linesToRender = computed(() =>
         :color="arrow.color"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
+        :arc="!arrow.mutual"
       />
       <GridArrow
         v-for="arrow in artifactArrowsToRender"
