@@ -14,6 +14,8 @@ interface Props {
   strokeWidth: number
   arrowheadSize: number
   characterRadius?: number
+  // An artifact icon's radius when the arrow leaves one.
+  startRadius?: number
   invertCurve?: boolean
   curveScale?: number
   // In perspective, arc up through the air rather than bow sideways. Two arrows
@@ -45,14 +47,12 @@ const dashArray = computed(() => {
 })
 
 const pathData = computed(() =>
-  ctx.layout.getArrowPath(
-    props.startHex,
-    props.endHex,
-    props.characterRadius * ctx.hexScale,
-    props.invertCurve,
-    props.curveScale,
-    props.arc,
-  ),
+  ctx.layout.getArrowPath(props.startHex, props.endHex, props.characterRadius * ctx.hexScale, {
+    invertCurve: props.invertCurve,
+    curveScale: props.curveScale,
+    arc: props.arc,
+    startRadius: props.startRadius === undefined ? undefined : props.startRadius * ctx.hexScale,
+  }),
 )
 </script>
 
