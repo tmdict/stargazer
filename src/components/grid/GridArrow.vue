@@ -51,7 +51,7 @@ const pathData = computed(() =>
     invertCurve: props.invertCurve,
     curveScale: props.curveScale,
     arc: props.arc,
-    startRadius: props.startRadius === undefined ? undefined : props.startRadius * ctx.hexScale,
+    startRadius: (props.startRadius ?? props.characterRadius) * ctx.hexScale,
   }),
 )
 </script>

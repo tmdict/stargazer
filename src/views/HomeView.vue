@@ -259,13 +259,9 @@ const handleCopyLink = () => {
   return shareLink(encodedState)
 }
 
-const handleCopyImage = async () => {
-  await copyToClipboard()
-}
+const handleCopyImage = () => copyToClipboard()
 
-const handleDownload = async () => {
-  await downloadAsImage({ filePrefix: 'team' })
-}
+const handleDownload = () => downloadAsImage({ filePrefix: 'team' })
 
 const handleMapEditorStateSelected = (state: State) => {
   selectedMapEditorState.value = state
