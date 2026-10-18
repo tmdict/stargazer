@@ -114,13 +114,13 @@ const hoverHint = computed(() =>
     : undefined,
 )
 
-// Where a point on a sprite, (dx, dy) screen pixels from its center, lands on the
-// layer. Perspective lifts the sprite and squashes it about its center
+// Where a point dy screen pixels below a sprite's center lands on the layer.
+// Perspective lifts the sprite and squashes it about its center
 // (getCharacterStyle), so the point moves too.
-const spriteLayerPoint = (hexId: number, dx: number, dy: number): { x: number; y: number } => {
-  const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
+const spriteLayerY = (hexId: number, dy: number): number => {
+  const { y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const lift = ctx.perspective ? ctx.layout.standingLift(characterDimensions.value.offset) : 0
-  return { x: x + dx, y: y - lift + dy * counterScaleY.value }
+  return y - lift + dy / ctx.layout.squash
 }
 
 // The lift pill's gap from the sprite, and the room it takes above the sprite
@@ -137,7 +137,7 @@ const liftPill = computed(() => {
   const unitId = getCharacter(ctx.grid, hexId)
   if (unitId === undefined || !inspectTargetOf(unitId)) return null
   const half = characterDimensions.value.size / 2
-  const below = spriteLayerPoint(hexId, 0, -half - LIFT_PILL_ROOM).y < ctx.drawnBounds.y
+  const below = spriteLayerY(hexId, -half - LIFT_PILL_ROOM) < ctx.drawnBounds.y
   const pointer = ctx.perspective ? STANDING_POINTER_HEIGHT : 0
   return {
     hexId,
@@ -189,9 +189,6 @@ const getCharacterColors = (characterId: number) => {
 const BASE_CHARACTER_SIZE = 2 * PORTRAIT_RADIUS
 const BASE_CHARACTER_OFFSET = PORTRAIT_RADIUS
 const BASE_MODE_SIZE = 22
-
-// Undoes the board's perspective squash (GridContainer), so sprites stay round.
-const counterScaleY = computed(() => 1 / ctx.layout.squash)
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
