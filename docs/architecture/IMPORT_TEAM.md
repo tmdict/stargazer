@@ -26,7 +26,7 @@ Shots are decoded to pixels on the main thread and read in the worker by canvas-
 
 Landmarks come before templates. The Ally and Enemy tabs place the card columns, and template matching only settles exact positions and identities. `layout.ts` holds every nominal position and size on the result screen along with its per-shot range, while each reader owns its own template searches and score floors.
 
-A reading never changes once made. Every review decision is an override stored beside it, so each cell can show its confidence, every edit can be undone, and a corrections export carries the original prediction next to the fix.
+A reading never changes once made. Every review decision is an override stored beside it, so each cell can show its confidence, and every edit can be undone.
 
 The plan is pure data. Readings plus overrides become a `TeamImportPlan` with no store access (`src/lib/teams/teamImport.ts`, a sibling of `sideLoad.ts`), and the grids store applies it with its own placement primitives.
 
@@ -111,13 +111,13 @@ The map is the one of the mode's lists whose deployment tiles for that side are 
 
 `applyLineups` places every side with `placeSide`, the Load menu's placement, so a unit with a tile takes it and one without takes a random free tile. A side placed from a formation screenshot re-seeds its phantimal baseline once placed, so it keeps the phantimal the screenshot showed, or none; a side without one gets the phantimal its lineup qualifies for.
 
-The review shows a formation screenshot's units over two numbered boards: the screenshot's own, with each unit's ring coloured by its state, and the side as the plan places it on its map (`BoardThumbnail`), so a tile can be checked against both; pointing at a unit in the list rings it on each. Under them each unit shows its portrait as shot, its tile, and the unit it is taken for, which a dropdown of the side's units changes. Formation screenshots imported on their own also show their card row and artifact. Learning and the corrections export cover result screenshots only.
+The review shows a formation screenshot's units over two numbered boards: the screenshot's own, with each unit's ring coloured by its state, and the side as the plan places it on its map (`BoardThumbnail`), so a tile can be checked against both; pointing at a unit in the list rings it on each. Under them each unit shows its portrait as shot, its tile, and the unit it is taken for, which a dropdown of the side's units changes. Formation screenshots imported on their own also show their card row and artifact. Learning covers result screenshots only.
 
 ## Reference descriptors
 
 Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the checker alike. Portraits and costumes give general coverage. The bundled [`hero-icons.json`](../../src/data/import/hero-icons.json) holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
 
-The bundled file, browser storage (`stargazer.import.learned`) and the corrections export share one object, validated by `readLearnedIcons`:
+The bundled file and browser storage (`stargazer.import.learned`) share one object, validated by `readLearnedIcons`:
 
 ```json
 {
@@ -147,96 +147,6 @@ The bundled file, browser storage (`stargazer.import.learned`) and the correctio
 `spec` pins how the descriptors were made, so data whose `spec` differs, or that is not an object with an `icons` array, reads as nothing learned. The reference-file test rejects unknown hero ids, invalid files and duplicate descriptors.
 
 Each descriptor appears once. A local lesson for identical descriptor bytes overrides the bundled label, and forgetting local learning restores it. Different crops of one hero stay separate examples, and nothing is averaged or voted. No client correction ever edits the bundled file.
-
-### Corrections export
-
-`exportCorrections` writes a user-controlled download, never an upload. It holds one entry per screenshot with at least one correction, so it is downloaded before the modal closes. Each side of a reading holds five hero readings, one per row from top to bottom; the example shows the first of each. Card images and per-card descriptors are left out.
-
-```json
-{
-  "app": "stargazer",
-  "kind": "import-corrections",
-  "createdAt": "2026-09-27T10:00:00.000Z",
-  "learnedIcons": {
-    "spec": { "descriptor": [32, 24], "box": [0.23, 0.2, 0.69] },
-    "icons": []
-  },
-  "shots": [
-    {
-      "source": {
-        "name": "match-2.png",
-        "size": 1834211,
-        "sha256": "<64 hex characters>"
-      },
-      "context": { "season": 8, "mapCount": 3, "imageWidth": 1150 },
-      "predicted": {
-        "mapIndex": 1,
-        "mapCount": 3,
-        "winner": 1,
-        "mapResults": [1, 1, null],
-        "sides": {
-          "1": [
-            {
-              "candidates": [
-                { "characterId": 43, "score": 0.91, "learned": false, "costume": false },
-                { "characterId": 33, "score": 0.62, "learned": false, "costume": false }
-              ],
-              "recognised": true,
-              "margin": 0.29,
-              "sure": true,
-              "box": { "x": 212, "y": 318, "w": 96, "h": 118 },
-              "paragon": { "level": 4, "score": 0.88, "runnerUp": 0.41, "sure": true },
-              "refinement": { "level": 2, "stars": 6, "family": "gold", "sure": true }
-            }
-          ],
-          "2": [
-            {
-              "candidates": [
-                { "characterId": 36, "score": 0.47, "learned": true, "costume": false }
-              ],
-              "recognised": false,
-              "margin": 0.47,
-              "sure": false,
-              "box": { "x": 842, "y": 318, "w": 96, "h": 118 },
-              "paragon": { "level": 0, "score": 0.52, "runnerUp": 0.49, "sure": false },
-              "refinement": { "level": 0, "stars": 0, "family": "white", "sure": true }
-            }
-          ]
-        },
-        "artifacts": {
-          "1": { "candidates": [{ "artifactId": 3, "score": 1.52 }], "margin": 0.4, "sure": true },
-          "2": null
-        },
-        "warnings": [{ "kind": "unrecognised", "side": 2, "row": 0 }]
-      },
-      "labels": {
-        "cells": { "2:0": { "characterId": 36, "paragon": 1 } },
-        "artifacts": { "2": 5 },
-        "winner": 1
-      }
-    }
-  ]
-}
-```
-
-| Field                              | Rule                                                                                                                                                                                                                                                                                                          |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app`, `kind`                      | Always `"stargazer"` and `"import-corrections"`: which Stargazer file this is.                                                                                                                                                                                                                                |
-| `createdAt`                        | When the file was made, ISO 8601.                                                                                                                                                                                                                                                                             |
-| `learnedIcons`                     | The learned faces, in the format above.                                                                                                                                                                                                                                                                       |
-| `source`                           | The screenshot's file name, size in bytes, and SHA-256 in hex. It identifies the file, never a face.                                                                                                                                                                                                          |
-| `context`                          | The app's season, the board count of the Teams mode at export, and the width the panel is framed to before reading (`framePanel`).                                                                                                                                                                            |
-| `predicted.mapIndex`, `mapCount`   | The map shown (from 0) and how many maps the match had, both `null` when the map strip was not found.                                                                                                                                                                                                         |
-| `predicted.winner`                 | Who won this map (1 ally, 2 enemy), read from the Ally tab's colour, or `null`.                                                                                                                                                                                                                               |
-| `predicted.mapResults`             | Who won each map on the strip, `null` where a result was cropped off.                                                                                                                                                                                                                                         |
-| `predicted.sides`                  | Keyed `"1"` (ally) and `"2"` (enemy). A hero reading's `candidates` come best first; `margin` is the best score minus the runner-up's; `box` is the card in the framed screenshot's pixels; `refinement.family` is `white`, `purple`, `gold` or `red`, and `refinement.sure` whether the review needs to ask. |
-| `predicted.artifacts`              | Keyed like `sides`, each an artifact reading or `null`: up to three `candidates` best first, `margin` between the first two, and whether the reading is `sure`.                                                                                                                                               |
-| `predicted.warnings`               | `{ "kind": "no-panel", "side" }`, `{ "kind": "no-strip" }` or `{ "kind": "unrecognised", "side", "row" }`.                                                                                                                                                                                                    |
-| `labels.cells`                     | The user's edits per hero cell, keyed `"<side>:<row>"`, each with any of `characterId`, `paragon` and `refinement`. A `characterId` of `null` means the cell was cleared.                                                                                                                                     |
-| `labels.artifacts`                 | Keyed by side: a corrected artifact id, or `null` for removed.                                                                                                                                                                                                                                                |
-| `labels.mapIndex`, `labels.winner` | A corrected map or winner, present only when the user changed it.                                                                                                                                                                                                                                             |
-
-A missing label means unreviewed, and `null` means an explicit removal. Learned descriptors carry no source image, so checking or regenerating one needs the original screenshots.
 
 ## Checking against real screenshots
 
