@@ -120,6 +120,10 @@ const swapSides = ref(false)
 // and a reactive proxy cannot be structured-cloned.
 const learned = shallowRef<LearnedIcon[]>([])
 let worker: Worker | null = null
+// A second worker of the same kind sorts pasted screenshots, so a paste is
+// sorted at once even while the first is busy reading.
+let sorter: Worker | null = null
+const sorting = new Map<string, (kind: ShotKind | null) => void>()
 let nextId = 1
 let namesLoaded = false
 // A page visit is one session. Work still in flight from an earlier one (a
@@ -343,8 +347,54 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
     shot.error = 'read'
     return
   }
+  // Sorting is the second worker's.
+  if (msg.type !== 'reading') return
   const shot = findShot(msg.id)
   if (shot) applyReading(shot, msg.reading)
+}
+
+// The board fit reads a copy this wide, so the sort needs no more.
+const SORT_WIDTH = 480
+
+const startSorter = (): Worker => {
+  const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
+    type: 'module',
+  })
+  started.onmessage = (event: MessageEvent<TeamImportResponse>) => {
+    const msg = event.data
+    if (msg.type !== 'sorted' && msg.type !== 'error') return
+    const done = msg.id === null ? undefined : sorting.get(msg.id)
+    if (!done || msg.id === null) return
+    sorting.delete(msg.id)
+    done(msg.type === 'sorted' ? msg.kind : null)
+  }
+  started.onerror = () => {
+    started.terminate()
+    sorter = null
+    for (const done of sorting.values()) done(null)
+    sorting.clear()
+  }
+  return started
+}
+
+/* Which kind a screenshot is, for one that came with none (a paste); null
+   when it cannot be told, and the caller's default stands. */
+const sortShot = async (file: Blob): Promise<ShotKind | null> => {
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  let image: RgbaImage
+  try {
+    const width = Math.min(bitmap.width, SORT_WIDTH)
+    image = drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
+  } finally {
+    bitmap.close()
+  }
+  const target = (sorter ??= startSorter())
+  const id = `sort-${nextId++}`
+  return new Promise((resolve) => {
+    sorting.set(id, resolve)
+    const message: TeamImportRequest = { type: 'sort', id, image }
+    target.postMessage(message, [image.data.buffer])
+  })
 }
 
 const startWorker = (): Worker => {
@@ -452,7 +502,9 @@ export function useTeamImport(mode: () => TeamModeKey): {
   exportCorrections: () => Promise<string>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
-  addFiles: (files: File[], kind?: ShotKind) => Promise<number>
+  // Files of no stated kind ('sort': a paste) are sorted by what they show.
+  addFiles: (files: File[], kind?: ShotKind | 'sort') => Promise<{ added: number; refused: number }>
+  resultsClosed: ComputedRef<boolean>
   removeShot: (id: string) => void
   clearShots: () => void
   setMap: (id: string, mapIndex: number | null) => void
@@ -475,16 +527,38 @@ export function useTeamImport(mode: () => TeamModeKey): {
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
 
-  const addFiles = async (files: File[], kind: ShotKind = 'result'): Promise<number> => {
+  // Formation shots dropped before any result shot are imported alone, and
+  // no result shot joins them until they are removed: a formation panel shows
+  // the player's own upgrades, never a match's.
+  const resultsClosed = computed(
+    () =>
+      shots.value.some((s) => s.kind === 'formation') &&
+      !shots.value.some((s) => s.kind === 'result'),
+  )
+
+  // Result shots refused while formation shots are imported alone are
+  // counted, so the caller can say why they were not added.
+  const addFiles = async (
+    files: File[],
+    kind: ShotKind | 'sort' = 'result',
+  ): Promise<{ added: number; refused: number }> => {
     void ensureReferences()
     const mine = session
     let added = 0
+    let refused = 0
     for (const file of files) {
       if (mine !== session) break
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
+      const sorted = kind === 'sort' ? await sortShot(file).catch(() => null) : kind
+      if (mine !== session) break
+      const shotKind = sorted ?? (resultsClosed.value ? 'formation' : 'result')
+      if (shotKind === 'result' && resultsClosed.value) {
+        refused++
+        continue
+      }
       const shot: ImportShot = reactive({
         id: `shot-${nextId++}`,
-        kind,
+        kind: shotKind,
         name: file.name,
         size: file.size,
         thumb: URL.createObjectURL(file),
@@ -503,7 +577,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
       added++
       await readShot(shot, file)
     }
-    return added
+    return { added, refused }
   }
 
   const removeShot = (id: string): void => {
@@ -673,6 +747,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     plan,
     unitsOf,
     addFiles,
+    resultsClosed,
     removeShot,
     clearShots,
     setMap,
@@ -692,6 +767,10 @@ export function disposeTeamImport(): void {
   session++
   worker?.terminate()
   worker = null
+  sorter?.terminate()
+  sorter = null
+  for (const done of sorting.values()) done(null)
+  sorting.clear()
   clearShots()
   referenceStatus.value = 'idle'
 }

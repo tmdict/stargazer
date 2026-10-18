@@ -190,10 +190,10 @@ const REFINE = [
   { scale: 1.5, scaleStep: 0.25, shift: 6, shiftStep: 1 },
   { scale: 0.3, scaleStep: 0.05, shift: 1, shiftStep: 0.25 },
 ] as const
-// Below this share of the outline on a line there is no board: measured
-// 0.33 to 0.69 on formation captures, where portraits standing on the far
-// rows hide part of the outline.
-export const SUPPORT_FLOOR = 0.25
+// Below this share of the outline on a line there is no board: measured 0.47
+// to 0.73 on formation captures (portraits standing on the far rows hide part
+// of it), and at most 0.25 on result screens, where the best fit is chance.
+const SUPPORT_FLOOR = 0.4
 
 /* The board in the shot, or null when no whole board is found there. */
 export function fitBoard(shot: RgbaImage): BoardFit | null {
