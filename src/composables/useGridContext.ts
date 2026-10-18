@@ -68,10 +68,10 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
-// Crop padding for team view, as multipliers on hexRadius. In perspective the top
-// covers a portrait standing on the topmost ally tile with its mode bell; the
-// fixed-pixel pointer and bell take the most room on the smallest board (hex
-// radius 23). Re-tune if GridCharacters' standing geometry or bell size changes.
+// Padding around the drawn band (drawnBounds), as multipliers on hexRadius. In
+// perspective the top covers a portrait standing on the top row with its mode
+// bell; the fixed-pixel pointer and bell take the most room on the smallest board
+// (hex radius 23). Re-tune if GridCharacters' standing geometry or bell size changes.
 const CHARACTER_TOP_PAD_MULTIPLIER = { flat: 2.15, perspective: 2.3 }
 const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
 // Horizontal crop is pure margin: character discs and artifact icons sit within

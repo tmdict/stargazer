@@ -2,8 +2,9 @@
 import { computed } from 'vue'
 
 import GridArrow from './grid/GridArrow.vue'
+import GridArrowLayer from './grid/GridArrowLayer.vue'
 import GridLine from './grid/GridLine.vue'
-import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
+import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import type { Hex } from '@/lib/hex'
@@ -15,13 +16,11 @@ interface Props {
   defaultSvgHeight: number
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const ctx = useGridContext()
 
-const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
-  () => props.defaultSvgHeight,
-)
+const arrowStyle = useArrowStyle()
 
 const skillTargets = computed(() => ctx.skillTargets)
 
@@ -116,14 +115,12 @@ const linesToRender = computed(() =>
 </script>
 
 <template>
-  <svg
+  <GridArrowLayer
     v-if="arrowsToRender.length || artifactArrowsToRender.length || linesToRender.length"
     class="skill-arrow-layer"
-    :width="svgDimensions.width"
-    :height="svgDimensions.height"
-    :style="layerStyle"
+    :default-svg-height
   >
-    <g :transform="layerTransform">
+    <template #default>
       <GridLine
         v-for="(line, idx) in linesToRender"
         :key="`line-${idx}`"
@@ -154,22 +151,12 @@ const linesToRender = computed(() =>
         :arrowhead-size="arrowStyle.arrowheadSize"
         :arc="false"
       />
-    </g>
-  </svg>
+    </template>
+  </GridArrowLayer>
 </template>
 
 <style scoped>
-/* Visible overflow: a lifted arrow to the far row rises above the box. */
 .skill-arrow-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: visible;
-  pointer-events: none;
   z-index: var(--z-arrows);
-}
-
-.skill-arrow-layer g {
-  transition: transform var(--transition-perspective);
 }
 </style>

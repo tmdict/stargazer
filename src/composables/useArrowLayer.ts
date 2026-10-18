@@ -1,7 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
-import { PERSPECTIVE, PORTRAIT_RADIUS, standingLift } from '@/lib/layout'
+import { PORTRAIT_RADIUS } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 
@@ -27,8 +27,7 @@ export function useArrowStyle() {
 }
 
 /**
- * Shared geometry and styling for the arrow overlay SVGs (normal targeting and
- * skill targeting), keeping both layers aligned to the grid and visually matched.
+ * Geometry of the arrow overlay SVG (GridArrowLayer), aligned to the grid.
  */
 export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   const gridStore = useGridStore()
@@ -37,26 +36,24 @@ export function useArrowLayer(defaultSvgHeight: MaybeRefOrGetter<number>) {
   // The layer undoes the board's perspective squash, as portraits do, so strokes
   // and arrowheads keep their shape; the layout's arrow paths come out in these
   // upright coordinates.
-  const squash = computed(() => (ctx.perspective ? PERSPECTIVE.compression : 1))
-
   const svgDimensions = computed(() => {
     const scale = gridStore.getHexScale()
-    return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale * squash.value }
+    return { width: 600 * scale, height: toValue(defaultSvgHeight) * scale * ctx.layout.squash }
   })
 
   const layerStyle = computed(() =>
-    ctx.perspective ? { transform: `scaleY(${1 / squash.value})`, transformOrigin: '0 0' } : {},
+    ctx.perspective
+      ? { transform: `scaleY(${1 / ctx.layout.squash})`, transformOrigin: '0 0' }
+      : {},
   )
-
-  const arrowStyle = useArrowStyle()
 
   // Perspective stands the portraits above their tiles, so arrows between units
   // rise to the portrait centers.
   const layerTransform = computed(() =>
     ctx.perspective
-      ? `translate(0, ${-standingLift(PORTRAIT_RADIUS * gridStore.getHexScale()) * squash.value})`
+      ? `translate(0, ${-ctx.layout.standingLift(PORTRAIT_RADIUS * gridStore.getHexScale()) * ctx.layout.squash})`
       : '',
   )
 
-  return { svgDimensions, layerStyle, arrowStyle, layerTransform }
+  return { svgDimensions, layerStyle, layerTransform }
 }
