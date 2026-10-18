@@ -1,6 +1,6 @@
 # Team Import
 
-The team import reads the game's match result screenshots on the device and saves what they show as a new team: both lineups with each hero's paragon and refinement, both artifacts, and a record name. Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`), run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
+The team import reads the game's match result screenshots on the device and saves what they show as a new team: both lineups with each hero's paragon and refinement, both artifacts, and a record name. Formation screenshots, optional, add where each unit stands ([Formation screenshots](#formation-screenshots)). Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`), run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
 
 The hard part is that screenshots vary. Players crop them, phones have different shapes, and the in-game card zooms each portrait slightly differently. The readers have to find the cards before they can read them, and say how sure they are.
 
@@ -86,6 +86,27 @@ The prefix and names persist in `stargazer.import.names`. A missing or non-strin
 ```
 
 `isBlockingIssue` separates issues that would put a wrong lineup on a board (a map filled twice, a duplicate hero, a hero or artifact repeated across boards) from ones that only leave something out. Blocking issues and invalid names stop Save as New, and warnings do not. Applying and saving belong to the Teams page ([Teams](./TEAMS.md)). They are not one transaction: a full library leaves the boards as an unsaved team carrying the name, and skipped placements are reported.
+
+## Formation screenshots
+
+A formation screenshot is the game's formation panel for one team: the board under the formation camera with that team's deployment tiles lit and its units standing on them, the slot circles of the match's maps under it, and the team's card row with its artifact. The modal takes them in a drop area of their own, beside the result screenshots, and each fills one side of the board its slot names. A board's heroes, upgrades and artifact come from its result screenshot when there is one; a formation screenshot adds the tile every unit stands on, its companions and its phantimal. A board with only formation screenshots takes its lineup from their card rows, or, without a card row, from the portraits at paragon and refinement 0, and only the sides they show are replaced.
+
+`readFormation` (`src/lib/import/formation.ts`) places every region from the board, so a capture's size and padding do not matter:
+
+1. `fitBoard` (`board.ts`) finds the board. The game draws Stargazer's own grid under the camera the perspective view reproduces (`PERSPECTIVE`), so with that shape fixed a fit is a scale and a centre. The thin light outline is the evidence: each outline sample scores how far it stands above its neighbours, less the same for points just off the line. The search runs on a copy 480 px wide, coarse over every board wholly inside the shot, then finer; under a quarter of the outline found means no board, which is also how a result screenshot dropped there reads.
+2. Each tile is checked for a portrait ring standing above it: units stand with their pointer's tip at the tile centre, so the ring sits 0.83 hex radii above it, 0.63 across, on every row. The ring is light and grey, and a tile holds a unit when enough of its circle reads so; a nearer portrait can hide part of a far one's ring.
+3. The lower half of each tile, less what portraits cover, reads lit or not, split at the widest gap between the board's own tile readings. Every map's ally tiles lean to the near half and its enemy tiles to the far half, so the lit tiles say which team the shot shows.
+4. The slot circles sit at a fixed distance under the board; the selected one is ringed in green (`ringGreen`), and the circles with a numeral give the count.
+5. The card row starts at one of two places, as the phantimal slot is there or not, and is read on a copy resampled to the scale the frame templates were cut at, with the result reader's `readCards`. The artifact card's disc before it goes to `readArtifact`.
+6. Each portrait's face is ranked against the hero table and against a table of the units drawn with art of their own, the phantimals and companions such as Zanie's turrets (`companionImages`), kept apart so a result card never ranks against them.
+
+The plan (`src/lib/teams/formationImport.ts`, joined in by `buildTeamImportPlan`) takes each portrait for one of the units the side can field: the lineup's heroes, their companions (`companionCount` on the skill) and the phantimal the portraits match best. Best matches go first, and portraits left over take the units left over by elimination, for review: Lailah, drawn on her own in game but beside Elijah in the app's art, is placed so. A companion sharing its owner's image is told apart from the others only by tile order. A match is sure at a score of 0.6 with a lead of 0.08 over every unit of other art.
+
+The map is the one of the mode's lists whose deployment tiles for that side are exactly the lit tiles, the lists' map for that board first, and the board moves to it before placing (`moveToMap`). With Swap sides on, a formation screenshot's team lands on the other half like its result column, its tiles turned a half-turn. Two formation screenshots of one side of a board, or a board whose formation screenshots show different maps, block Save as New; tiles of no map of the mode's, and lineup heroes with no portrait (they take random tiles), are warnings.
+
+`applyLineups` places every side with `placeSide`, the Load menu's placement, so a unit with a tile takes it and one without takes a random free tile. A side placed from a formation screenshot re-seeds its phantimal baseline once placed, so it keeps the phantimal the screenshot showed, or none; a side without one gets the phantimal its lineup qualifies for, as before.
+
+The review shows a formation screenshot's units (the portrait as shot, its tile, and the unit it is taken for, which a dropdown of the side's units changes) and, on a board without a result screenshot, its card row and artifact. Learning and the corrections export cover result screenshots only.
 
 ## Reference descriptors
 
@@ -236,6 +257,45 @@ Truth defaults to `truth.json` beside the samples. Cells `a1` to `a5` and `e1` t
 ```
 
 Truth data measures the reader, and reference data changes it. Fixing a wrong expected label changes the evaluation, not the matcher. A descriptor update is judged by which cells it fixes and which it newly breaks, never by its total score alone.
+
+Formation screenshots have a checker of their own. It builds the plan as the app does, so it runs the app modules through Vite's server-side loader (the map registry and skills load with `import.meta.glob`). A set folder holds the formation screenshots under `formations/` and the same match's result screenshots, which name each board's lineup, under `results/`.
+
+```sh
+npm run check:formation -- --samples <dir> [--truth <json>] [--references <dir>] [--mode 5v5]
+```
+
+Its truth defaults to `formations/truth.json`, keyed by file name:
+
+```json
+{
+  "sl-1.png": {
+    "slots": 5,
+    "slot": 1,
+    "side": "ally",
+    "map": "arena1",
+    "artifact": "soulshock",
+    "phantimal": "wedge-of-matter",
+    "units": [
+      { "hex": 16, "hero": "dunlingr" },
+      { "hex": 3, "phantimal": "wedge-of-matter" },
+      { "hex": 5, "companionOf": "wedge-of-matter" }
+    ]
+  }
+}
+```
+
+| Field       | Rule                                                                                                                                                                                                                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slots`     | How many slot circles the strip has.                                                                                                                                                                                                                                                     |
+| `slot`      | The selected circle, numbered from 1 as in game.                                                                                                                                                                                                                                         |
+| `side`      | `"ally"` or `"enemy"`: the team the screenshot shows.                                                                                                                                                                                                                                    |
+| `map`       | The map key the lit tiles are, under `src/data/arena/`.                                                                                                                                                                                                                                  |
+| `artifact`  | The artifact card's slug, or `null` for none.                                                                                                                                                                                                                                            |
+| `phantimal` | The phantimal fielded, or `null` for none.                                                                                                                                                                                                                                               |
+| `cards`     | For a set without result screenshots: `c1` to `c5` left to right, each `{ hero, p, r }` as a result truth's cells. Left out where the result screenshots' truth holds the lineup.                                                                                                        |
+| `units`     | Every unit on the board, so a tile not listed is empty. Each has `hex` (1 to 45, as the board shows it) and one of `hero`, `phantimal`, or `companionOf` naming an owner listed in the same array; `index` (from 1) pins one of an owner's companions, which otherwise compare as a set. |
+
+Every field is optional, an omitted one is unreviewed, and every slug must be in the current data.
 
 `importReferenceUrl` fetches the import references from the image host under `img/import/`: the paragon frames `frame-p0` to `frame-p4-crown`, a `skins.json` manifest shaped `{ "<hero slug>": ["<file>", …] }`, and the costume captures under `skin/`. A missing manifest means no costumes. Artifact references are the bundled permanent icons plus the hosted seasonal set, capped at 128 px.
 

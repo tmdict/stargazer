@@ -113,7 +113,7 @@ Rotating content is separate. `rotatedHexId` (`src/lib/grid.ts`) negates all thr
 
 ## Perspective
 
-The perspective view (the Flat toggle unticked) draws the board the way the game's formation screen does: flattened, and leaning away from the viewer so lower rows are larger. `PERSPECTIVE` (`src/lib/layout.ts`) holds both numbers, measured from in-game formation captures. The flag is page state on `useGrids`, beside invert, because every board's layout reads it, and board components read it from their context (`ctx.perspective`). Each page opens flat, and `useBreakpoint` hands the flag to the page.
+The perspective view (the Flat toggle unticked) draws the board the way the game's formation screen does: flattened, and leaning away from the viewer so lower rows are larger. `PERSPECTIVE` (`src/lib/layout.ts`) holds both numbers, measured from in-game formation captures, and the import's board fit reads formation screenshots through the same camera ([Team Import](./IMPORT_TEAM.md#formation-screenshots)). The flag is page state on `useGrids`, beside invert, because every board's layout reads it, and board components read it from their context (`ctx.perspective`). Each page opens flat, and `useBreakpoint` hands the flag to the page.
 
 The squash (`compression`, how much the camera shortens the board vertically) is a CSS `scaleY` on the board's container, which sprites undo so portraits stay round. A transform leaves the box at the board's flat height, so in perspective `GridContainer` sizes the box to the squashed height of `drawnBounds` and moves the board up to fill it. `drawnBounds` is the padded extent of the tiles, the artifact host cells and the portraits standing above the far row, the same extent team view crops to.
 

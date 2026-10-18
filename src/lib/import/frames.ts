@@ -216,7 +216,7 @@ export interface CardMatch {
 export function matchCard(
   shot: RgbaImage,
   refs: readonly FrameRef[],
-  anchor: PanelAnchor,
+  anchor: ColumnSeed,
   row: number,
 ): CardMatch {
   let best: CardMatch | null = null

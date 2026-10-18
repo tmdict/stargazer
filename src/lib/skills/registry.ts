@@ -5,6 +5,9 @@ export interface SkillBase<Context = unknown> {
   id: string
   characterId: number
   colorModifier?: string
+  // How many companions the skill spawns, each N * companionIdOffset + its
+  // owner (N from 1); absent when it spawns none.
+  companionCount?: number
   companionImageModifier?: string
   companionColorModifier?: string
   targetingColorModifier?: string
@@ -33,7 +36,7 @@ export function hasSkill(characterId: number): boolean {
   return skillRegistry.has(decomposeUnitId(characterId).localId)
 }
 
-// Test enumeration point for registry-wide contract tests.
+// Every registered skill, for registry-wide contract tests and lookups across skills.
 export function getRegisteredSkills(): ReadonlyArray<SkillBase<unknown>> {
   return [...skillRegistry.values()]
 }

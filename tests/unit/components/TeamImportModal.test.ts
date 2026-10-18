@@ -27,6 +27,7 @@ vi.mock('@/stores/gameData', () => ({
 
 const sample = (): ImportShot => ({
   id: 'sample',
+  kind: 'result',
   name: 'sample.png',
   size: 1,
   thumb: 'blob:sample',
@@ -34,6 +35,8 @@ const sample = (): ImportShot => ({
   error: null,
   cards: {},
   artifactCards: {},
+  unitOverrides: {},
+  unitCards: [],
   overrides: {},
   artifactOverrides: {},
   resultOverrides: {},

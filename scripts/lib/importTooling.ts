@@ -6,11 +6,13 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import sharp from 'sharp'
 
+import { PHANTIMAL_ID_OFFSET } from '../../src/lib/characters/phantimal.ts'
 import { FRAME_NAMES } from '../../src/lib/import/frames.ts'
 import type { PortraitRef, RgbaImage } from '../../src/lib/import/types.ts'
 import {
   importReferenceUrl,
   importSkinsManifestUrl,
+  phantimalImageUrl,
   seasonArtifactImageUrl,
 } from '../../src/utils/artifactImage.ts'
 import { arg } from './shared.ts'
@@ -23,6 +25,7 @@ export interface ReferenceSource {
   skinsManifest(): Promise<Record<string, string[]> | null>
   skin(file: string): Promise<Buffer | null>
   seasonalArtifact(name: string): Promise<Buffer | null>
+  phantimal(name: string): Promise<Buffer | null>
 }
 
 // A directory laid out like the published `img/` tree (`import/`, `seasonal/`).
@@ -42,6 +45,7 @@ export function directorySource(img: string): ReferenceSource {
     },
     skin: (file) => read(`import/skin/${file}.webp`),
     seasonalArtifact: (name) => read(`seasonal/artifact/${name}.webp`),
+    phantimal: (name) => read(`seasonal/phantimal/${name}.webp`),
   }
 }
 
@@ -64,6 +68,7 @@ export function remoteSource(): ReferenceSource {
     },
     skin: (file) => fetchBytes(importReferenceUrl(`skin/${file}`)),
     seasonalArtifact: (name) => fetchBytes(seasonArtifactImageUrl(name)),
+    phantimal: (name) => fetchBytes(phantimalImageUrl(name)),
   }
 }
 
@@ -150,4 +155,39 @@ export async function loadArtifacts(
   })
   await read('src/data/seasonal/artifact', (name) => source.seasonalArtifact(name))
   return { names, icons }
+}
+
+/* The art of units that are not heroes, by unit id, as the app gathers it for
+ * formation shots: every phantimal of the season, and the companions drawn
+ * with an image of their own (`companions`, from the skills), a phantimal's
+ * from the published phantimal images and a hero's from the bundled art. */
+export async function loadUnits(
+  source: ReferenceSource,
+  companions: readonly { unitId: number; image: string; phantimal: boolean }[],
+): Promise<{ names: Map<number, string>; portraits: PortraitRef[] }> {
+  const names = new Map<number, string>()
+  const portraits: PortraitRef[] = []
+  const dataDir = join(ROOT, 'src/data/seasonal/phantimal')
+  for (const file of await readdir(dataDir)) {
+    if (!file.endsWith('.json')) continue
+    const phantimal = JSON.parse(await readFile(join(dataDir, file), 'utf8')) as {
+      id: number
+      name: string
+    }
+    const unitId = PHANTIMAL_ID_OFFSET + phantimal.id
+    names.set(unitId, phantimal.name)
+    const bytes = await source.phantimal(phantimal.name)
+    if (bytes) portraits.push({ characterId: unitId, image: await toImage(bytes) })
+  }
+  for (const { unitId, image, phantimal } of companions) {
+    names.set(unitId, image)
+    const art = join(ROOT, 'src/assets/images/character', `${image}.png`)
+    const bytes = phantimal
+      ? await source.phantimal(image)
+      : existsSync(art)
+        ? await readFile(art)
+        : null
+    if (bytes) portraits.push({ characterId: unitId, image: await toImage(bytes) })
+  }
+  return { names, portraits }
 }

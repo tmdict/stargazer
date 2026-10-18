@@ -398,7 +398,8 @@ export const useGrids = defineStore('grids', () => {
     dest: Team,
     invert = false,
   ): { placed: number; skipped: number } => {
-    const ownHex = (unit: { hexId: number }): number | undefined => {
+    const ownHex = (unit: { hexId?: number }): number | undefined => {
+      if (unit.hexId === undefined) return undefined
       const hexId = invert
         ? rotatedHexId(ctx.grid, unit.hexId)
         : ctx.grid.getHexByIdOrUndefined(unit.hexId)?.getId()
@@ -624,36 +625,42 @@ export const useGrids = defineStore('grids', () => {
       return board && ctx ? [{ ctx, board }] : []
     })
 
+  // The sides of a board the import replaces; the others stay as they are.
+  const replacedTeams = (board: BoardLineup): Team[] =>
+    [Team.ALLY, Team.ENEMY].filter((team) => board.sides[team] !== undefined)
+
   const lineupsWouldReplace = (plan: TeamImportPlan): boolean =>
-    lineupTargets(plan).some(({ ctx }) =>
-      [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)),
+    lineupTargets(plan).some(({ ctx, board }) =>
+      replacedTeams(board).some((team) => teamHasContent(ctx, team)),
     )
 
   // What applyLineups would skip for page-wide uniqueness: a hero or artifact
-  // already on the same side of a board the plan leaves untouched. Read-only,
-  // so the review can say so before anything is cleared.
+  // already on the same side of a board where the plan leaves that side
+  // untouched. Read-only, so the review can say so before anything is cleared.
   const lineupConflicts = (plan: TeamImportPlan): PlanIssue[] => {
     const targets = lineupTargets(plan)
-    const targetIds = new Set(targets.map(({ ctx }) => ctx.id))
-    const retained = contexts.value
-      .map((ctx, mapIndex) => ({ ctx, mapIndex }))
-      .filter(({ ctx }) => !targetIds.has(ctx.id))
+    const kept = (ctx: GridContext, team: Team): boolean =>
+      !targets.some((target) => target.ctx.id === ctx.id && target.board.sides[team])
     const issues: PlanIssue[] = []
     for (const { board } of targets) {
-      for (const team of [Team.ALLY, Team.ENEMY]) {
-        for (const { characterId } of board.sides[team]) {
-          const holder = retained.find(
+      for (const team of replacedTeams(board)) {
+        const side = board.sides[team]!
+        const holders = contexts.value
+          .map((ctx, mapIndex) => ({ ctx, mapIndex }))
+          .filter(({ ctx }) => kept(ctx, team))
+        for (const { unitId: characterId } of side.mains) {
+          const holder = holders.find(
             ({ ctx }) => findCharacterHex(ctx.grid, characterId, team) !== null,
           )
           if (holder) {
             issues.push({ kind: 'retained-hero', team, characterId, mapIndex: holder.mapIndex })
           }
         }
-        const artifactId = artifactSlot(board.artifacts, team)
+        const artifactId = side.artifact
         const holder =
           artifactId === null
             ? undefined
-            : retained.find(({ ctx }) => artifactSlot(ctx.artifacts, team) === artifactId)
+            : holders.find(({ ctx }) => artifactSlot(ctx.artifacts, team) === artifactId)
         if (artifactId !== null && holder) {
           issues.push({ kind: 'retained-artifact', team, artifactId, mapIndex: holder.mapIndex })
         }
@@ -663,37 +670,46 @@ export const useGrids = defineStore('grids', () => {
   }
 
   /* Stamp match-import lineups (lib/teams/teamImport) onto the mapped boards.
-   * Both sides of every mapped board clear first, so a hero moving from one
-   * board to another never trips page-wide uniqueness against its own old
-   * copy; each cleared board re-seeds its phantimal baseline so the reconcile
-   * watcher derives the phantimal from the new lineup even when it is the one
-   * the old lineup had. Then every hero auto-places with its upgrade record
-   * and each side's artifact is set; a hero or artifact already used elsewhere
-   * on that team is skipped and counted. Unmapped boards, maps, and provenance
-   * are untouched. */
+   * A board first moves to the map its formation shots show, carrying the
+   * sides the import keeps (moveToMap). Every side the import replaces then
+   * clears before any places, so a hero moving from one board to another never
+   * trips page-wide uniqueness against its own old copy, and each cleared
+   * board re-seeds its phantimal baseline so the reconcile watcher derives the
+   * phantimal from the new lineup even when it is the one the old lineup had.
+   * Each side places as a loaded team does (placeSide): heroes with their
+   * upgrade records on the tiles a formation shot shows, else on random free
+   * ones. A side from a formation shot re-seeds its baseline once placed, so
+   * it keeps the phantimal the shot showed, or none. A hero or artifact already
+   * used elsewhere on that team is skipped and counted. Unmapped boards and
+   * provenance are untouched. */
   const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
     const targets = lineupTargets(plan)
-    for (const { ctx } of targets) {
-      for (const team of [Team.ALLY, Team.ENEMY]) ctx.clearTeam(team)
+    for (const { ctx, board } of targets) {
+      if (board.map !== null && board.map !== ctx.currentMap) moveToMap(ctx, board.map)
+    }
+    for (const { ctx, board } of targets) {
+      for (const team of replacedTeams(board)) ctx.clearTeam(team)
       ctx.seedPhantimalBaseline()
     }
     let placed = 0
     let skipped = 0
     for (const { ctx, board } of targets) {
-      for (const team of [Team.ALLY, Team.ENEMY]) {
-        for (const { characterId, attrs } of board.sides[team]) {
-          if (isUsed(characterId, team) || !ctx.autoPlace(characterId, team)) {
-            skipped++
-            continue
-          }
-          ctx.setAttrs(team, characterId, attrs)
-          placed++
-        }
-        const artifact = artifactSlot(board.artifacts, team)
-        if (artifact === null) continue
-        if (isArtifactUsed(artifact, team)) skipped++
-        else ctx.setArtifact(team, artifact)
+      for (const team of replacedTeams(board)) {
+        const side = board.sides[team]!
+        placeSide(ctx, side, team)
+        // Heroes are what the import reports; its phantimal and companions are not counted.
+        const landed = side.mains.filter(
+          ({ unitId }) => findCharacterHex(ctx.grid, unitId, team) !== null,
+        ).length
+        placed += landed
+        skipped += side.mains.length - landed
+        if (side.artifact === null) continue
+        if (isArtifactUsed(side.artifact, team)) skipped++
+        else ctx.setArtifact(team, side.artifact)
       }
+      for (const team of board.formations) ctx.seedPhantimalBaseline(team)
+      // Companion settling leaves skill paint stale.
+      ctx.refreshSkills()
     }
     deriveSynergy()
     return { placed, skipped }

@@ -1,6 +1,6 @@
 /* Match screenshot import: file intake, decoding, the worker that reads the
- * screenshots, the reference images it needs, and the review state per
- * screenshot. Module-level state like useSelectionState, so the modal can be
+ * screenshots (result screens, and formation panels for the tiles), the
+ * reference images it needs, and the review state per screenshot. Module-level state like useSelectionState, so the modal can be
  * closed and reopened without losing the shots; Save as New drops them once
  * the plan is handed up, and TeamsView disposes everything on leave. Images
  * never leave the device: the references are fetched, the screenshots are
@@ -9,6 +9,8 @@
 import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 
 import { isBaseHeroId } from '@/lib/characters/character'
+import { companionImages } from '@/lib/characters/companion'
+import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/frames'
 import { CANONICAL_WIDTH } from '@/lib/import/layout'
 import {
@@ -18,13 +20,21 @@ import {
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
-import type { LearnedIcon, PortraitRef, RgbaImage, ScreenshotReading } from '@/lib/import/types'
+import {
+  isFormationReading,
+  type FormationReading,
+  type LearnedIcon,
+  type PortraitRef,
+  type RgbaImage,
+  type ScreenshotReading,
+} from '@/lib/import/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,
   overrideKey,
   type CellOverride,
+  type FormationAssignment,
   type RecordNames,
   type ShotAssignment,
   type TeamImportPlan,
@@ -35,15 +45,19 @@ import {
   importReferenceUrl,
   importSkinsManifestUrl,
   isRemoteArtifact,
+  phantimalImageUrl,
   seasonArtifactImageUrl,
 } from '@/utils/artifactImage'
 import { loadMatcherPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
 import type {
   ReferenceImages,
+  ShotKind,
   TeamImportRequest,
   TeamImportResponse,
 } from '@/workers/teamImport.worker'
+
+export type { ShotKind }
 
 const NAMES_KEY = 'stargazer.import.names'
 const LEARNED_KEY = 'stargazer.import.learned'
@@ -59,6 +73,7 @@ export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 
 // reading, or under another mode, is never overwritten or stranded.
 export interface ImportShot {
   id: string
+  kind: ShotKind
   name: string
   size: number
   // Object URL of the file, for the card thumbnail.
@@ -73,6 +88,10 @@ export interface ImportShot {
   // Data URLs of each card as located, keyed like overrides.
   cards: Record<string, string>
   artifactCards: Partial<Record<Team, string>>
+  // A formation shot's unit picks, by unit index (a unit id, or null for
+  // none), and its portraits as data URLs.
+  unitOverrides: Record<number, number | null>
+  unitCards: string[]
 }
 
 /* The board a shot fills among `boardCount`: the reviewer's choice, else the
@@ -107,7 +126,7 @@ let namesLoaded = false
 // decode, a reference fetch) checks this before touching the current state.
 let session = 0
 // Decoded shots waiting on the worker, by shot id.
-const pending = new Map<string, RgbaImage>()
+const pending = new Map<string, { image: RgbaImage; kind: ShotKind }>()
 
 const loadNames = (): void => {
   if (namesLoaded) return
@@ -247,7 +266,33 @@ async function loadReferences(): Promise<ReferenceImages> {
       ),
     )
   ).filter((ref): ref is ReferenceImages['artifacts'][number] => ref !== null)
-  return { frames, portraits: [...portraits, ...costumes], artifacts, learned: learned.value }
+  // Phantimals and the companions drawn with art of their own, for the units
+  // standing on a formation board; one that fails to load is skipped.
+  const units = (
+    await Promise.all(
+      [
+        ...gameData.phantimals.map(({ id, name }) =>
+          fetchImage(phantimalImageUrl(name)).then((image) => ({
+            characterId: toPhantimalId(id),
+            image,
+          })),
+        ),
+        ...companionImages().map(async ({ unitId, image }) => ({
+          characterId: unitId,
+          image: await fetchImage(
+            inPhantimalBand(unitId) ? phantimalImageUrl(image) : await portraitLoaders[image]!(),
+          ),
+        })),
+      ].map((job) => job.catch(() => null)),
+    )
+  ).filter((ref): ref is PortraitRef => ref !== null)
+  return {
+    frames,
+    portraits: [...portraits, ...costumes],
+    artifacts,
+    units,
+    learned: learned.value,
+  }
 }
 
 const post = (message: TeamImportRequest, transfer: Transferable[] = []): void => {
@@ -265,19 +310,20 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
       shot.cards[overrideKey(team, row)] = imageToDataUrl(cell.card)
     })
   }
+  if (isFormationReading(reading)) shot.unitCards = reading.units.map((u) => imageToDataUrl(u.card))
 }
 
 const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   const msg = event.data
   if (msg.type === 'ready') {
     referenceStatus.value = 'ready'
-    for (const [id, image] of pending) {
+    for (const [id, { image, kind }] of pending) {
       const shot = findShot(id)
       if (!shot) continue
       // Includes shots failed by an earlier reference load; this one reads them.
       shot.status = 'reading'
       shot.error = null
-      post({ type: 'read', id, image }, [image.data.buffer])
+      post({ type: 'read', id, image, kind }, [image.data.buffer])
     }
     pending.clear()
     return
@@ -328,6 +374,7 @@ async function ensureReferences(): Promise<void> {
       ...refs.frames.map((f) => f.data.buffer),
       ...refs.portraits.map((p) => p.image.data.buffer),
       ...refs.artifacts.map((a) => a.image.data.buffer),
+      ...refs.units.map((u) => u.image.data.buffer),
     ]
     post({ type: 'references', ...refs }, transfer)
   } catch (error) {
@@ -342,12 +389,20 @@ async function ensureReferences(): Promise<void> {
 
 // ---------- shots ----------
 
-const decodeShot = async (file: Blob): Promise<RgbaImage> => {
+// A formation shot is read at its own size, which the board fit measures, up
+// to a width that keeps a full-resolution phone capture quick to read.
+const FORMATION_MAX_WIDTH = 1200
+const FORMATION_MIN_WIDTH = 400
+
+const decodeShot = async (file: Blob, kind: ShotKind): Promise<RgbaImage> => {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   try {
-    if (bitmap.width < 600) throw new Error('too small')
-    const height = Math.round((bitmap.height * CANONICAL_WIDTH) / bitmap.width)
-    return drawToImage(bitmap, CANONICAL_WIDTH, height)
+    if (bitmap.width < (kind === 'formation' ? FORMATION_MIN_WIDTH : 600)) {
+      throw new Error('too small')
+    }
+    const width =
+      kind === 'formation' ? Math.min(bitmap.width, FORMATION_MAX_WIDTH) : CANONICAL_WIDTH
+    return drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
   } finally {
     bitmap.close()
   }
@@ -359,13 +414,13 @@ const decodeShot = async (file: Blob): Promise<RgbaImage> => {
 const readShot = async (shot: ImportShot, file: Blob): Promise<void> => {
   const mine = session
   try {
-    const image = await decodeShot(file)
+    const image = await decodeShot(file, shot.kind)
     if (mine !== session || !findShot(shot.id)) return
     if (referenceStatus.value === 'ready') {
-      post({ type: 'read', id: shot.id, image }, [image.data.buffer])
+      post({ type: 'read', id: shot.id, image, kind: shot.kind }, [image.data.buffer])
       return
     }
-    pending.set(shot.id, image)
+    pending.set(shot.id, { image, kind: shot.kind })
     if (referenceStatus.value === 'failed') {
       shot.status = 'failed'
       shot.error = 'references'
@@ -396,7 +451,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
   hasCorrections: ComputedRef<boolean>
   exportCorrections: () => Promise<string>
   plan: ComputedRef<TeamImportPlan>
-  addFiles: (files: File[]) => Promise<number>
+  unitsOf: (id: string) => TeamImportPlan['units'][number]
+  addFiles: (files: File[], kind?: ShotKind) => Promise<number>
   removeShot: (id: string) => void
   clearShots: () => void
   setMap: (id: string, mapIndex: number | null) => void
@@ -410,6 +466,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     level: number,
   ) => void
   setArtifact: (id: string, team: Team, artifactId: number | null) => void
+  setUnit: (id: string, index: number, unitId: number | null) => void
   saveNames: () => void
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
@@ -418,7 +475,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
 
-  const addFiles = async (files: File[]): Promise<number> => {
+  const addFiles = async (files: File[], kind: ShotKind = 'result'): Promise<number> => {
     void ensureReferences()
     const mine = session
     let added = 0
@@ -427,6 +484,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
       const shot: ImportShot = reactive({
         id: `shot-${nextId++}`,
+        kind,
         name: file.name,
         size: file.size,
         thumb: URL.createObjectURL(file),
@@ -438,6 +496,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
         resultOverrides: {},
         cards: {},
         artifactCards: {},
+        unitOverrides: {},
+        unitCards: [],
       }) as ImportShot
       shots.value = [...shots.value, shot]
       added++
@@ -472,8 +532,9 @@ export function useTeamImport(mode: () => TeamModeKey): {
     // A correction on a cell the reader was unsure about teaches it that
     // face, provided the frame match was trustworthy (else the crop may be
     // off the face). Picking the reader's own top candidate, or no hero,
-    // takes back whatever the face was taught before.
-    if (!cell.paragon.sure || cell.sure) return
+    // takes back whatever the face was taught before. Lessons come from
+    // result screens only, whose card crops the learned store holds.
+    if (shot.kind !== 'result' || !cell.paragon.sure || cell.sure) return
     const teach = characterId !== null && cell.candidates[0]?.characterId !== characterId
     const next = teach
       ? addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())
@@ -502,15 +563,22 @@ export function useTeamImport(mode: () => TeamModeKey): {
     if (shot) shot.artifactOverrides[team] = artifactId
   }
 
+  const setUnit = (id: string, index: number, unitId: number | null): void => {
+    const shot = findShot(id)
+    if (shot) shot.unitOverrides[index] = unitId
+  }
+
   const forgetLearned = (): void => {
     learned.value = []
     writeStorage(LEARNED_KEY, serializeLearnedIcons([]))
     post({ type: 'learned', learned: [] })
   }
 
+  // The corrections export covers result screens, the shots it was made for.
   const correctedShots = computed(() =>
     shots.value.filter(
       (shot) =>
+        shot.kind === 'result' &&
         shot.reading &&
         (Object.keys(shot.overrides).length > 0 ||
           Object.keys(shot.artifactOverrides).length > 0 ||
@@ -558,9 +626,19 @@ export function useTeamImport(mode: () => TeamModeKey): {
     )
   }
 
+  const formationShots = computed(() =>
+    shots.value.filter(
+      (s): s is ImportShot & { reading: FormationReading } =>
+        s.kind === 'formation' && s.reading !== null && isFormationReading(s.reading),
+    ),
+  )
+
   const plan = computed<TeamImportPlan>(() => {
     const assignments: ShotAssignment[] = shots.value
-      .filter((s): s is ImportShot & { reading: ScreenshotReading } => s.reading !== null)
+      .filter(
+        (s): s is ImportShot & { reading: ScreenshotReading } =>
+          s.kind === 'result' && s.reading !== null,
+      )
       .map((s) => ({
         reading: s.reading,
         mapIndex: shotMapIndex(s, boardCount()),
@@ -568,8 +646,21 @@ export function useTeamImport(mode: () => TeamModeKey): {
         overrides: s.overrides,
         artifactOverrides: s.artifactOverrides,
       }))
-    return buildTeamImportPlan(assignments, mode(), names, swapSides.value)
+    const formations: FormationAssignment[] = formationShots.value.map((s) => ({
+      reading: s.reading,
+      mapIndex: shotMapIndex(s, boardCount()),
+      overrides: s.overrides,
+      artifactOverrides: s.artifactOverrides,
+      unitOverrides: s.unitOverrides,
+    }))
+    return buildTeamImportPlan(assignments, mode(), names, swapSides.value, formations)
   })
+
+  // Who each unit of a formation shot is taken for, from the plan.
+  const unitsOf = (id: string): TeamImportPlan['units'][number] => {
+    const i = formationShots.value.findIndex((s) => s.id === id)
+    return i < 0 ? [] : (plan.value.units[i] ?? [])
+  }
 
   return {
     shots,
@@ -580,6 +671,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     hasCorrections: computed(() => correctedShots.value.length > 0 || learned.value.length > 0),
     exportCorrections,
     plan,
+    unitsOf,
     addFiles,
     removeShot,
     clearShots,
@@ -588,6 +680,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     setHero,
     setLevel,
     setArtifact,
+    setUnit,
     saveNames,
     forgetLearned,
     ensureReferences,

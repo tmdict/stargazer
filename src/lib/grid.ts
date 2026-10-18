@@ -2,7 +2,7 @@ import { PHANTIMAL_ID_OFFSET } from './characters/phantimal'
 import { Hex } from './hex'
 import { DEFAULT_MAP, type MapConfig } from './maps'
 import type { SkillManager } from './skills/skill'
-import { FULL_GRID, type GridPreset } from './types/grid'
+import { FULL_GRID, presetHexes } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -13,36 +13,6 @@ export const COMPANION_ID_OFFSET = 10000
 // Per-team unit capacity before any skill raises it (companion skills bump it
 // by their companion count while active)
 export const BASE_TEAM_SIZE = 5
-
-function iniGrid(preset: GridPreset): Hex[] {
-  const centerRowIndex = Math.floor(preset.hex.length / 2)
-  const hexes: Hex[] = []
-
-  for (let rowIndex = 0; rowIndex < preset.hex.length; rowIndex++) {
-    const row = preset.hex[rowIndex]
-    const offset = preset.qOffset[rowIndex]
-
-    if (!row || offset === undefined) {
-      console.warn('grid: Skipping invalid row/offset in createHexesFromPreset', {
-        rowIndex,
-        rowExists: !!row,
-        offset,
-      })
-      continue
-    }
-
-    const r = rowIndex - centerRowIndex
-
-    for (let i = 0; i < row.length; i++) {
-      const q = offset + i
-      const s = -q - r
-      const id = row[i]
-      hexes.push(new Hex(q, r, s, id))
-    }
-  }
-
-  return hexes
-}
 
 export interface GridTile {
   hex: Hex
@@ -72,7 +42,7 @@ export class Grid {
 
   constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
     this.storage = new Map()
-    iniGrid(layout).forEach((hex) => {
+    presetHexes(layout).forEach((hex) => {
       this.storage.set(Grid.key(hex), { hex, state: State.DEFAULT })
       this.hexById.set(hex.getId(), hex)
     })

@@ -1,8 +1,8 @@
-/* Match screenshot import: the reading a result screenshot yields, and the
- * reference tables the readers match against. Pure data, shared by the worker,
- * the composable, and the plan builder in lib/teams/teamImport. Every pixel
- * buffer is an RGBA `RgbaImage` (the shape of a canvas ImageData), so nothing
- * here depends on the DOM. */
+/* Match screenshot import: the readings a result or formation screenshot
+ * yields, and the reference tables the readers match against. Pure data,
+ * shared by the worker, the composable, and the plan builder in
+ * lib/teams/teamImport. Every pixel buffer is an RGBA `RgbaImage` (the shape
+ * of a canvas ImageData), so nothing here depends on the DOM. */
 
 import type { Team } from '@/lib/types/team'
 
@@ -83,6 +83,8 @@ export type ImportWarning =
   | { kind: 'no-panel'; side: Team }
   | { kind: 'no-strip' }
   | { kind: 'unrecognised'; side: Team; row: number }
+  // A formation shot without a whole board: nothing else is read from it.
+  | { kind: 'no-board' }
 
 // What one screenshot says, independent of the mode it is reviewed in: the
 // strip is always read, and the board it fills is settled at review time.
@@ -100,6 +102,50 @@ export interface ScreenshotReading {
   artifacts: Record<Team, ArtifactReading | null>
   warnings: ImportWarning[]
 }
+
+// ---------- formation shots ----------
+
+// Where a formation shot draws the board: screen pixels per hex radius, the
+// board's centre (the middle hex), and the share of its outline found on a
+// light line, which is the fit's evidence.
+export interface BoardFit {
+  scale: number
+  x: number
+  y: number
+  support: number
+}
+
+// A unit standing on a formation board: its portrait's ring, the tile its
+// pointer marks, and who it may be.
+export interface UnitReading {
+  hexId: number
+  // In the shot's pixels.
+  ring: { x: number; y: number; radius: number }
+  // Share of the ring found: under 1 where a nearer portrait covers part of it.
+  score: number
+  // Best first: heroes by their base id, companions and phantimals by their
+  // unit id.
+  candidates: HeroCandidate[]
+  // The portrait, cropped, for the review.
+  card: RgbaImage
+}
+
+// What a formation shot says. It shows one team, so its card row is that
+// side's cells and its artifact that side's; the slot strip under the board
+// stands in for the result strip (mapIndex, mapCount), with no results.
+export interface FormationReading extends ScreenshotReading {
+  board: BoardFit | null
+  // The team the shot shows, from where its lit tiles lean; null without a board.
+  side: Team | null
+  // The lit tiles (the shown team's deployment tiles) by hex id, and the
+  // tiles portraits cover too much to read.
+  tiles: number[]
+  unclear: number[]
+  units: UnitReading[]
+}
+
+export const isFormationReading = (reading: ScreenshotReading): reading is FormationReading =>
+  'units' in reading
 
 // ---------- references ----------
 
@@ -162,4 +208,7 @@ export interface ReferenceSet {
   frames: FrameRef[]
   heroes: HeroTable
   artifacts: ArtifactTable
+  // Companions and phantimals with art of their own, by unit id, kept apart
+  // from the heroes so a result card never ranks against them.
+  units: HeroTable
 }

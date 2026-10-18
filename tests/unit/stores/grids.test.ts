@@ -9,6 +9,7 @@ import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
+import type { BoardLineup, TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -874,6 +875,57 @@ describe('useGrids.loadTeamSide', () => {
     )
 
     expect(ctx.artifacts.ally).toBeNull()
+    expect(ctx.artifacts.enemy).toBe(6)
+  })
+})
+
+describe('useGrids.applyLineups', () => {
+  const side = (mains: [number, number?][], extra: Partial<SideLoadBoard> = {}): SideLoadBoard => ({
+    mains: mains.map(([unitId, hexId]) => ({ unitId, hexId, attrs: {} })),
+    companions: [],
+    phantimal: null,
+    artifact: null,
+    ...extra,
+  })
+  const plan = (board: BoardLineup): TeamImportPlan => ({
+    boards: [board],
+    issues: [],
+    suggestedName: '',
+    units: [],
+  })
+
+  it("stands a formation side's units and companion on their tiles wherever they spawn", () => {
+    for (const spawn of [0, 0.3, 0.6, 0.95]) {
+      setActivePinia(createPinia())
+      vi.spyOn(Math, 'random').mockReturnValue(spawn)
+      const { grids, a: ctx } = setupBoards(1)
+      const formation = side(
+        [
+          [PHRAESTO, 6],
+          [ALLY_A, 13],
+        ],
+        { companions: [{ unitId: PHRAESTO_COMPANION, hexId: 1, mainUnitId: PHRAESTO }] },
+      )
+      grids.applyLineups(
+        plan({ sides: { [Team.ALLY]: formation }, formations: [Team.ALLY], map: null }),
+      )
+      expect(findCharacterHex(ctx.grid, PHRAESTO, Team.ALLY)).toBe(6)
+      expect(findCharacterHex(ctx.grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(1)
+      expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).toBe(13)
+      vi.restoreAllMocks()
+    }
+  })
+
+  it('keeps a side no screenshot shows, carrying it to the map the formation shows', () => {
+    const { grids, a: ctx } = setupBoards(1)
+    expect(ctx.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    ctx.setArtifact(Team.ENEMY, 6)
+    grids.applyLineups(
+      plan({ sides: { [Team.ALLY]: side([[ALLY_A, 1]]) }, formations: [Team.ALLY], map: 'arena2' }),
+    )
+    expect(ctx.currentMap).toBe('arena2')
+    expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).toBe(1)
+    expect(findCharacterHex(ctx.grid, ENEMY_A, Team.ENEMY)).not.toBeNull()
     expect(ctx.artifacts.enemy).toBe(6)
   })
 })

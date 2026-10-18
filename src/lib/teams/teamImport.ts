@@ -2,13 +2,23 @@
  * lineups the grids store can stamp, and the record name the pvp export
  * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
  * on the ally half of the boards first, `>` when that player won more maps,
- * each player's map numbers in the brackets). Pure data mapping, a sibling
- * of sideLoad. */
+ * each player's map numbers in the brackets). Result shots give both sides'
+ * heroes, upgrades and artifacts; formation shots give the tiles of the side
+ * they show, and its lineup too where the board has no result shot
+ * (formationImport). Pure data mapping, a sibling of sideLoad. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
-import { getOpposingTeam } from '@/lib/characters/character'
-import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
-import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
+import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
+import {
+  assignUnits,
+  formationSide,
+  heroesFromUnits,
+  identifyMap,
+  type UnitAssignment,
+} from '@/lib/teams/formationImport'
+import { TEAM_MODES, variantsForMode, type TeamModeKey } from '@/lib/teams/modes'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 
 export const SIDES = [Team.ALLY, Team.ENEMY] as const
@@ -30,14 +40,33 @@ export interface ShotAssignment {
   artifactOverrides: Partial<Record<Team, number | null>>
 }
 
+export interface FormationAssignment {
+  reading: FormationReading
+  // 0-based board this screenshot shows; null while unmapped.
+  mapIndex: number | null
+  // Review edits of its card row and artifact, used when the board has no
+  // result shot; keyed like a result shot's.
+  overrides: Record<string, CellOverride>
+  artifactOverrides: Partial<Record<Team, number | null>>
+  // Review picks for its units, by index in the reading: a unit id, or null
+  // for a portrait that is none of the side's units.
+  unitOverrides: Record<number, number | null>
+}
+
 export interface LineupEntry {
   characterId: number
   attrs: AttrRecord
 }
 
 export interface BoardLineup {
-  sides: Record<Team, LineupEntry[]>
-  artifacts: { ally: number | null; enemy: number | null }
+  // The sides the import replaces, as the side-load places them; a side no
+  // screenshot shows stays as it is.
+  sides: Partial<Record<Team, SideLoadBoard>>
+  // Sides placed from a formation shot, whose phantimal is the one shown (or
+  // none); another side gets the phantimal its lineup qualifies for.
+  formations: Team[]
+  // The map the board's formation shots show; null to keep the board's own.
+  map: string | null
 }
 
 export type PlanIssue =
@@ -55,12 +84,23 @@ export type PlanIssue =
   // would skip it. Found against the live boards, not by the plan builder.
   | { kind: 'retained-hero'; team: Team; characterId: number; mapIndex: number }
   | { kind: 'retained-artifact'; team: Team; artifactId: number; mapIndex: number }
+  // Two formation shots of the same side of one board.
+  | { kind: 'duplicate-formation'; team: Team; mapIndex: number }
+  // A board's formation shots show different maps.
+  | { kind: 'map-conflict'; mapIndex: number }
+  // A formation shot's tiles are no map of the mode's; the board keeps its own.
+  | { kind: 'unknown-map'; mapIndex: number }
+  // Heroes of the lineup with no portrait on the formation shot, which take
+  // random free tiles.
+  | { kind: 'unplaced'; team: Team; mapIndex: number; count: number }
 
 export interface TeamImportPlan {
   // One entry per board; null leaves that board untouched.
   boards: (BoardLineup | null)[]
   issues: PlanIssue[]
   suggestedName: string
+  // Per formation shot, in the order given: who each of its units is taken for.
+  units: UnitAssignment[][]
 }
 
 export interface RecordNames {
@@ -77,7 +117,9 @@ export const isBlockingIssue = (issue: PlanIssue): boolean =>
   issue.kind === 'duplicate-map' ||
   issue.kind === 'duplicate-hero' ||
   issue.kind === 'cross-board-duplicate' ||
-  issue.kind === 'cross-board-artifact'
+  issue.kind === 'cross-board-artifact' ||
+  issue.kind === 'duplicate-formation' ||
+  issue.kind === 'map-conflict'
 
 // Names sit between the operator and the brackets of the record name, so
 // those four characters are the only ones a name cannot carry.
@@ -210,74 +252,163 @@ export function suggestRecordName(names: RecordNames, results: readonly (Team | 
   return `${players} (${leftMaps.join(',')} ${op} ${rightMaps.join(',')})`
 }
 
+// The maps a board of the mode can stand on, the ones its lists put at that
+// board first: what a formation shot's tiles are matched against.
+const mapCandidates = (mode: TeamModeKey, mapIndex: number): string[] => {
+  const lists = [...variantsForMode(mode).map((v) => v.maps), TEAM_MODES[mode].defaultMaps]
+  const here = lists.flatMap((maps) => (maps[mapIndex] === undefined ? [] : [maps[mapIndex]!]))
+  return [...new Set([...here, ...lists.flat()])]
+}
+
+// A side's heroes from one column of a reading, in card order: each cell's
+// hero once, with its upgrades; a hero on two cells is reported.
+function columnLineup(
+  reading: ScreenshotReading,
+  column: Team,
+  overrides: Record<string, CellOverride>,
+  repeated: (characterId: number) => void,
+): LineupEntry[] {
+  const ids = reading.sides[column].map((_, row) =>
+    cellCharacterId(reading, column, row, overrides),
+  )
+  // The reader settles a side's five cells against each other, so a hero on
+  // two cells can only come from review edits; the first cell keeps it and
+  // the issue blocks until one is changed.
+  const repeats = ids.filter((id, i): id is number => id !== null && ids.indexOf(id) !== i)
+  for (const id of new Set(repeats)) repeated(id)
+  const entries: LineupEntry[] = []
+  ids.forEach((characterId, row) => {
+    if (characterId === null || entries.some((e) => e.characterId === characterId)) return
+    entries.push({ characterId, attrs: cellAttrs(reading, column, row, overrides) })
+  })
+  return entries
+}
+
 /* `swapSides` puts every screenshot's Ally column on the enemy side of its
- * board and its Enemy column on the ally side. One choice for the whole match
- * rather than per screenshot: the game's Ally tab is the viewing player, who
- * keeps one side of the board for every map, and the boards hold a hero once
- * per side page-wide. Issues and the record name follow board sides
- * throughout. */
+ * board and its Enemy column on the ally side, and every formation shot's
+ * team on the other half, its tiles turned a half-turn. One choice for the
+ * whole match rather than per screenshot: the game's Ally tab and a formation
+ * shot's near team are the viewing player, who keeps one side of the board for
+ * every map, and the boards hold a hero once per side page-wide. Issues and the
+ * record name follow board sides throughout. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
   names: RecordNames,
   swapSides = false,
+  formations: readonly FormationAssignment[] = [],
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)
   const issues: PlanIssue[] = []
-  const seen = new Set<number>()
   const mapped = (mapIndex: number | null): mapIndex is number =>
     mapIndex !== null && mapIndex < boardCount
   // The screenshot column that fills a board side.
   const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
   // A column's board side: the swap is its own inverse.
   const sideOf = columnOf
-  const unmapped = shots.filter((s) => !mapped(s.mapIndex)).length
+  // A formation shot without a board has nothing to place and says so on its card.
+  const placeable = formations.filter((f) => f.reading.side !== null)
+  const unmapped =
+    shots.filter((s) => !mapped(s.mapIndex)).length +
+    placeable.filter((f) => !mapped(f.mapIndex)).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
-  let empty = 0
 
+  const resultShots = new Map<number, ShotAssignment>()
   for (const shot of shots) {
     if (!mapped(shot.mapIndex)) continue
-    if (seen.has(shot.mapIndex)) {
+    if (resultShots.has(shot.mapIndex)) {
       if (!issues.some((i) => i.kind === 'duplicate-map' && i.mapIndex === shot.mapIndex)) {
         issues.push({ kind: 'duplicate-map', mapIndex: shot.mapIndex })
       }
       continue
     }
-    seen.add(shot.mapIndex)
-    const sides = {} as Record<Team, LineupEntry[]>
-    for (const side of SIDES) {
-      const column = columnOf(side)
-      const ids = shot.reading.sides[column].map((_, row) =>
-        cellCharacterId(shot.reading, column, row, shot.overrides),
-      )
-      // The reader settles a side's five cells against each other, so a hero
-      // on two cells can only come from review edits; the first cell keeps it
-      // and the issue blocks until one is changed.
-      const repeated = new Set(
-        ids.filter((id, i): id is number => id !== null && ids.indexOf(id) !== i),
-      )
-      for (const characterId of repeated) {
-        issues.push({ kind: 'duplicate-hero', team: side, characterId, mapIndex: shot.mapIndex })
-      }
-      const entries: LineupEntry[] = []
-      ids.forEach((characterId, row) => {
-        if (characterId === null || entries.some((e) => e.characterId === characterId)) return
-        entries.push({ characterId, attrs: cellAttrs(shot.reading, column, row, shot.overrides) })
-      })
-      sides[side] = entries
+    resultShots.set(shot.mapIndex, shot)
+  }
+  const shown = new Map<number, Partial<Record<Team, FormationAssignment>>>()
+  for (const formation of placeable) {
+    if (!mapped(formation.mapIndex)) continue
+    const team = sideOf(formation.reading.side!)
+    const board = shown.get(formation.mapIndex) ?? {}
+    if (board[team]) {
+      issues.push({ kind: 'duplicate-formation', team, mapIndex: formation.mapIndex })
+      continue
     }
-    // An empty board would only wipe what is there; the screenshot is skipped.
-    if (sides[Team.ALLY].length === 0 && sides[Team.ENEMY].length === 0) {
+    shown.set(formation.mapIndex, { ...board, [team]: formation })
+  }
+
+  const units: UnitAssignment[][] = formations.map(() => [])
+  let empty = 0
+  for (let mapIndex = 0; mapIndex < boardCount; mapIndex++) {
+    const result = resultShots.get(mapIndex)
+    const board = shown.get(mapIndex) ?? {}
+    if (!result && !board[Team.ALLY] && !board[Team.ENEMY]) continue
+    const sides: Partial<Record<Team, SideLoadBoard>> = {}
+    for (const side of SIDES) {
+      const formation = board[side]
+      if (!result && !formation) continue
+      const repeated = (characterId: number): void => {
+        issues.push({ kind: 'duplicate-hero', team: side, characterId, mapIndex })
+      }
+      // Heroes, upgrades and artifact: the result shot's column, else the
+      // formation shot's own card row, which may be missing.
+      const source = result
+        ? { ...result, column: columnOf(side) }
+        : { ...formation!, column: formation!.reading.side! }
+      const lineup =
+        source.reading.sides[source.column].length > 0
+          ? columnLineup(source.reading, source.column, source.overrides, repeated)
+          : null
+      const artifact = cellArtifactId(source.reading, source.column, source.artifactOverrides)
+      if (!formation) {
+        sides[side] = {
+          mains: (lineup ?? []).map(({ characterId, attrs }) => ({ unitId: characterId, attrs })),
+          companions: [],
+          phantimal: null,
+          artifact,
+        }
+        continue
+      }
+      const { reading, unitOverrides } = formation
+      // Without a lineup the portraits name the heroes, at their lowest upgrades.
+      const heroes =
+        lineup ??
+        [
+          ...new Set([
+            ...heroesFromUnits(reading.units),
+            ...Object.values(unitOverrides).filter(
+              (id): id is number => id !== null && isBaseHeroId(id),
+            ),
+          ]),
+        ].map((characterId) => ({ characterId, attrs: {} }))
+      const assignments = assignUnits(
+        reading.units,
+        heroes.map((h) => h.characterId),
+        unitOverrides,
+      )
+      units[formations.indexOf(formation)] = assignments
+      const placed = formationSide(reading.units, assignments, heroes, artifact, swapSides)
+      const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
+      if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
+      sides[side] = placed
+    }
+
+    // An empty board would only wipe what is there; the screenshots are skipped.
+    if (Object.values(sides).every((side) => side.mains.length === 0)) {
       empty++
       continue
     }
-    boards[shot.mapIndex] = {
+    const maps = new Set<string>()
+    for (const formation of Object.values(board)) {
+      const map = identifyMap(formation.reading, mapCandidates(mode, mapIndex))
+      if (map === null) issues.push({ kind: 'unknown-map', mapIndex })
+      else maps.add(map)
+    }
+    if (maps.size > 1) issues.push({ kind: 'map-conflict', mapIndex })
+    boards[mapIndex] = {
       sides,
-      artifacts: {
-        ally: cellArtifactId(shot.reading, columnOf(Team.ALLY), shot.artifactOverrides),
-        enemy: cellArtifactId(shot.reading, columnOf(Team.ENEMY), shot.artifactOverrides),
-      },
+      formations: SIDES.filter((side) => board[side] !== undefined),
+      map: maps.size === 1 ? [...maps][0]! : null,
     }
   }
   if (empty > 0) issues.push({ kind: 'empty', count: empty })
@@ -292,10 +423,10 @@ export function buildTeamImportPlan(
       where.set(id, [...(where.get(id) ?? []), map])
     }
     boards.forEach((board, map) => {
-      if (!board) return
-      for (const entry of board.sides[team]) note(heroMaps, entry.characterId, map)
-      const artifact = team === Team.ALLY ? board.artifacts.ally : board.artifacts.enemy
-      if (artifact !== null) note(artifactMaps, artifact, map)
+      const side = board?.sides[team]
+      if (!side) return
+      for (const unit of side.mains) note(heroMaps, unit.unitId, map)
+      if (side.artifact !== null) note(artifactMaps, side.artifact, map)
     })
     for (const [characterId, maps] of heroMaps) {
       if (maps.length > 1) issues.push({ kind: 'cross-board-duplicate', team, characterId, maps })
@@ -319,5 +450,5 @@ export function buildTeamImportPlan(
     issues.push({ kind: 'result-undecided' })
   }
 
-  return { boards, issues, suggestedName }
+  return { boards, issues, suggestedName, units }
 }

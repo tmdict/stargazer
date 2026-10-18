@@ -5,15 +5,18 @@
  * visit; references arrive once, then each read is one message each way. */
 
 import { buildArtifactTable } from '@/lib/import/artifacts'
+import { readFormation } from '@/lib/import/formation'
 import { prepareFrameRefs } from '@/lib/import/frames'
+import { buildHeroTable } from '@/lib/import/heroes'
 import { readScreenshot } from '@/lib/import/pipeline'
 import { buildImportHeroTable } from '@/lib/import/references'
-import type {
-  LearnedIcon,
-  PortraitRef,
-  ReferenceSet,
-  RgbaImage,
-  ScreenshotReading,
+import {
+  isFormationReading,
+  type LearnedIcon,
+  type PortraitRef,
+  type ReferenceSet,
+  type RgbaImage,
+  type ScreenshotReading,
 } from '@/lib/import/types'
 
 export interface ReferenceImages {
@@ -21,13 +24,18 @@ export interface ReferenceImages {
   frames: RgbaImage[]
   portraits: PortraitRef[]
   artifacts: { artifactId: number; image: RgbaImage }[]
+  // Phantimals and companions with art of their own, by unit id.
+  units: PortraitRef[]
   learned: LearnedIcon[]
 }
+
+// A result screen, or a formation panel.
+export type ShotKind = 'result' | 'formation'
 
 export type TeamImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
-  | { type: 'read'; id: string; image: RgbaImage }
+  | { type: 'read'; id: string; image: RgbaImage; kind: ShotKind }
 
 export type TeamImportResponse =
   | { type: 'ready' }
@@ -57,6 +65,9 @@ const transferablesOf = (reading: ScreenshotReading): Transferable[] => {
   for (const artifact of Object.values(reading.artifacts)) {
     if (artifact) out.push(artifact.card.data.buffer)
   }
+  if (isFormationReading(reading)) {
+    for (const unit of reading.units) out.push(unit.card.data.buffer)
+  }
   return out
 }
 
@@ -70,6 +81,7 @@ scope.addEventListener('message', (event) => {
         frames: prepareFrameRefs(msg.frames),
         heroes: buildImportHeroTable(portraits, msg.learned),
         artifacts: buildArtifactTable(msg.artifacts),
+        units: buildHeroTable(msg.units),
       }
       scope.postMessage({ type: 'ready' })
       return
@@ -87,7 +99,8 @@ scope.addEventListener('message', (event) => {
       scope.postMessage({ type: 'error', id, message: 'references not loaded' })
       return
     }
-    const reading = readScreenshot(msg.image, refs)
+    const reading =
+      msg.kind === 'formation' ? readFormation(msg.image, refs) : readScreenshot(msg.image, refs)
     scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))
   } catch (error) {
     scope.postMessage({
