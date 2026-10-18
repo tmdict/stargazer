@@ -106,7 +106,9 @@ export function useGridExport() {
 
     try {
       const dataUrl = await capture(containerElement)
-      return await cropToDrawn(dataUrl, CROP_MARGIN * gridStore.getHexScale() * pixelRatio)
+      // A whole-pixel margin keeps the trim from resampling, and so blurring, the image.
+      const margin = Math.round(CROP_MARGIN * gridStore.getHexScale() * pixelRatio)
+      return await cropToDrawn(dataUrl, margin)
     } finally {
       restoreBoards()
     }
