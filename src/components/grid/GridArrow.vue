@@ -16,7 +16,7 @@ interface Props {
   characterRadius?: number
   invertCurve?: boolean
   curveScale?: number
-  // In perspective, arc up through the air; artifact arrows keep the sideways bow.
+  // In perspective, arc up through the air rather than bow sideways.
   arc?: boolean
   dashed?: boolean
   id: string

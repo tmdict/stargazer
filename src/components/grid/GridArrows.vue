@@ -22,6 +22,12 @@ const ENEMY_CURVE_SCALE = 2.0
 const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
   () => props.defaultSvgHeight,
 )
+
+// An ally and an enemy targeting each other would share one arc in perspective, so
+// they keep the sideways bow that parts them in the flat view.
+const mutual = (allyHexId: number, enemyHexId: number): boolean =>
+  ctx.closestAllyMap.get(enemyHexId)?.allyHexId === allyHexId &&
+  ctx.closestEnemyMap.get(allyHexId)?.enemyHexId === enemyHexId
 </script>
 
 <template>
@@ -47,6 +53,7 @@ const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :curve-scale="ALLY_CURVE_SCALE"
+        :arc="!mutual(allyHexId, enemyInfo.enemyHexId!)"
         dashed
       />
 
@@ -61,6 +68,7 @@ const { svgDimensions, layerStyle, arrowStyle, layerTransform } = useArrowLayer(
         :arrowhead-size="arrowStyle.arrowheadSize"
         :invert-curve="true"
         :curve-scale="ENEMY_CURVE_SCALE"
+        :arc="!mutual(allyInfo.allyHexId!, enemyHexId)"
         dashed
       />
     </g>
