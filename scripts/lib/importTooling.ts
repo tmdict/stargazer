@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import sharp from 'sharp'
+import { createServer } from 'vite'
 
 import { PHANTIMAL_ID_OFFSET } from '../../src/lib/characters/phantimal.ts'
 import { FRAME_NAMES } from '../../src/lib/import/frames.ts'
@@ -190,4 +191,24 @@ export async function loadUnits(
     if (bytes) portraits.push({ characterId: unitId, image: await toImage(bytes) })
   }
   return { names, portraits }
+}
+
+/* App modules that read Vite's import.meta.glob (the map registry, the skills
+ * and whatever reads them) cannot load under tsx alone, so they load through
+ * Vite's server-side loader; close it when done. */
+export async function appModuleLoader(): Promise<{
+  load: <T>(path: string) => Promise<T>
+  close: () => Promise<void>
+}> {
+  const vite = await createServer({
+    root: ROOT,
+    configFile: join(ROOT, 'vite.config.ts'),
+    server: { middlewareMode: true, hmr: false },
+    appType: 'custom',
+    logLevel: 'error',
+  })
+  return {
+    load: <T>(path: string) => vite.ssrLoadModule(path) as Promise<T>,
+    close: () => vite.close(),
+  }
 }

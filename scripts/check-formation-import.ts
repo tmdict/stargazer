@@ -23,7 +23,6 @@
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { createServer } from 'vite'
 
 import type * as CompanionModule from '../src/lib/characters/companion.ts'
 import type * as PhantimalModule from '../src/lib/characters/phantimal.ts'
@@ -39,12 +38,12 @@ import type { TeamModeKey } from '../src/lib/teams/modes.ts'
 import type * as TeamImportModule from '../src/lib/teams/teamImport.ts'
 import { Team } from '../src/lib/types/team.ts'
 import {
+  appModuleLoader,
   loadArtifacts,
   loadFrames,
   loadHeroes,
   loadUnits,
   referenceSource,
-  ROOT,
   toImage,
 } from './lib/importTooling.ts'
 import { arg } from './lib/shared.ts'
@@ -93,15 +92,8 @@ async function main(): Promise<void> {
     : {}
   const mode = (arg('mode') ?? '5v5') as TeamModeKey
 
-  const vite = await createServer({
-    root: ROOT,
-    configFile: join(ROOT, 'vite.config.ts'),
-    server: { middlewareMode: true, hmr: false },
-    appType: 'custom',
-    logLevel: 'error',
-  })
+  const { load, close } = await appModuleLoader()
   try {
-    const load = <T>(path: string): Promise<T> => vite.ssrLoadModule(path) as Promise<T>
     // Registers every skill, which the companion lookups read.
     await load('/src/lib/skills/skill.ts')
     const { companionIdsOf, companionImages } = await load<typeof CompanionModule>(
@@ -305,7 +297,7 @@ async function main(): Promise<void> {
       )
     }
   } finally {
-    await vite.close()
+    await close()
   }
 }
 
