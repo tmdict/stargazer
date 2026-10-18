@@ -16,7 +16,7 @@ import {
   type ShotError,
 } from '@/composables/useTeamImport'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
-import { Team } from '@/lib/types/team'
+import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
 const { shots, mapCount } = defineProps<{
@@ -152,7 +152,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             :disabled="shot.status !== 'ready'"
             @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
           >
-            {{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}
+            {{ i18n.t(teamLabelKey(team)) }}
           </button>
         </div>
       </div>
