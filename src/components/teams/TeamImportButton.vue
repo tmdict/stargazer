@@ -25,8 +25,7 @@ const emit = defineEmits<{
 
 const i18n = useI18nStore()
 const open = ref(false)
-// Mounted on first use and kept, so the modal's leave transition plays and its
-// selected card survives a close.
+// Mounted on first use and kept, so the modal's leave transition plays.
 const mounted = ref(false)
 const {
   anchor: tipTarget,

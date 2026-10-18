@@ -4,9 +4,9 @@
    the heroes on their tiles, review what was read, name the record, pick the
    board sides, and save it as a new team. Or formation screenshots alone,
    each one team with the levels it shows, which closes the result drop until
-   they are removed. State lives in useTeamImport (module-level), so closing
-   and reopening keeps the shots; Save as New drops them once the plan is
-   handed up. The modal only renders and emits the finished plan upward. */
+   they are removed. State lives in useTeamImport, and closing the modal
+   clears it, so each opening is a new import. The modal only renders and
+   emits the finished plan upward. */
 
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -80,7 +80,7 @@ const {
   plan,
   addFiles,
   removeShot,
-  clearShots,
+  clearImport,
   setMap,
   setWinner,
   setHero,
@@ -174,10 +174,12 @@ watch(
   { immediate: true },
 )
 
+// Every opening starts fresh: closing, by Save as New or otherwise, clears it.
 watch(
   () => show,
   (open) => {
     if (open) void ensureReferences()
+    else clearImport()
   },
   { immediate: true },
 )
@@ -302,7 +304,6 @@ const handleSaveAsNew = (): void => {
   if (grids.boardsHaveContent() && !confirm('save')) return
   saveNames()
   emit('importMatch', plan.value)
-  clearShots()
 }
 
 const handleForgetLearned = (): void => {
