@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  CORRECTIONS_CAP,
   disposeTeamImport,
   shotMapIndex,
   shotWinner,
@@ -19,11 +20,14 @@ vi.mock('@/utils/dataLoader', () => ({
   loadPhantimals: () => [],
 }))
 
+const SHA = createHash('sha256').update('image bytes').digest('hex')
+
 const shot = (): ImportShot => ({
   id: 'sample',
   kind: 'result',
   name: 'sample.png',
   size: 11,
+  sha256: SHA,
   thumb: 'blob:sample',
   status: 'ready',
   error: null,
@@ -69,7 +73,9 @@ const shot = (): ImportShot => ({
 })
 
 afterEach(() => {
-  useTeamImport(() => '5v5').forgetLearned()
+  const api = useTeamImport(() => '5v5')
+  api.forgetLearned()
+  api.clearCorrections()
   disposeTeamImport()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
@@ -154,7 +160,7 @@ describe('board sides', () => {
     expect(board.sides[2]!.artifact).toBe(8)
     expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     expect(api.hasCorrections.value).toBe(false)
-    expect(await api.exportCorrections()).not.toContain('swap')
+    expect(api.exportCorrections()).not.toContain('swap')
     api.clearImport()
     expect(api.swapSides.value).toBe(false)
   })
@@ -176,11 +182,9 @@ describe('clearing an import', () => {
 })
 
 describe('download import corrections', () => {
-  it('exports explicit labels and original image hashes without pixels or unreviewed guesses as labels', async () => {
-    const fetchImage = vi.fn(async () => new Response('image bytes'))
-    vi.stubGlobal('fetch', fetchImage)
+  it('exports explicit labels and original image hashes without pixels or unreviewed guesses as labels', () => {
     const api = useTeamImport(() => '5v5')
-    api.shots.value = [shot(), { ...shot(), id: 'untouched', name: 'untouched.png' }]
+    api.shots.value = [shot(), { ...shot(), id: 'untouched', name: 'untouched.png', sha256: 'b' }]
     expect(api.hasCorrections.value).toBe(false)
     api.setHero('sample', 1, 0, 7)
     api.setLevel('sample', 1, 0, 'paragon', 0)
@@ -188,22 +192,15 @@ describe('download import corrections', () => {
     api.setMap('sample', 0)
     api.setWinner('sample', 1)
     expect(api.hasCorrections.value).toBe(true)
-    expect(fetchImage).not.toHaveBeenCalled()
 
-    const pending = api.exportCorrections()
-    api.setHero('sample', 1, 0, 9)
-    const raw = await pending
+    const raw = api.exportCorrections()
     expect(JSON.parse(raw)).toMatchObject({
       app: 'stargazer',
       kind: 'import-corrections',
       learnedIcons: { icons: [] },
       shots: [
         {
-          source: {
-            name: 'sample.png',
-            size: 11,
-            sha256: createHash('sha256').update('image bytes').digest('hex'),
-          },
+          source: { name: 'sample.png', size: 11, sha256: SHA },
           context: { season: 0, mapCount: 5, imageWidth: 1150 },
           predicted: { sides: { 1: [{ candidates: [{ characterId: 5 }] }] } },
           labels: {
@@ -222,32 +219,70 @@ describe('download import corrections', () => {
     expect(raw).not.toContain('untouched.png')
     expect(raw).not.toContain('"card"')
     expect(JSON.parse(raw)).not.toHaveProperty('shots.0.predicted.sides.1.0.descriptor')
-    expect(fetchImage).toHaveBeenCalledExactlyOnceWith('blob:sample')
   })
 
-  it('exports only loaded screenshots without retaining an archive', async () => {
+  it('keeps corrections past the import, replacing a screenshot corrected again, until cleared', () => {
+    vi.stubEnv('SSR', false)
+    const { storage } = stubLocalStorage()
     const api = useTeamImport(() => '5v5')
     api.shots.value = [shot()]
     api.setArtifact('sample', 1, 9)
     api.clearImport()
+    api.shots.value = [{ ...shot(), id: 'again' }]
+    api.setArtifact('again', 1, 4)
+    api.clearImport()
+
+    const exported = JSON.parse(api.exportCorrections()) as { shots: { labels: unknown }[] }
+    expect(exported.shots.map((s) => s.labels)).toEqual([{ cells: {}, artifacts: { 1: 4 } }])
+    expect(JSON.parse(storage.get('stargazer.import.corrections')!)).toMatchObject({
+      version: 1,
+      shots: [{ source: { sha256: SHA }, labels: { artifacts: { 1: 4 } } }],
+    })
+    expect(api.correctionCount.value).toBe(1)
+
+    api.clearCorrections()
     expect(api.hasCorrections.value).toBe(false)
-    expect(JSON.parse(await api.exportCorrections())).toHaveProperty('shots', [])
+    expect(storage.has('stargazer.import.corrections')).toBe(false)
   })
 
-  it('fails the download if an original image cannot be read', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response('', { status: 404 })),
-    )
+  it('leaves a new screenshot unsaved at the cap, still downloading it while open', () => {
+    vi.stubEnv('SSR', false)
+    stubLocalStorage()
     const api = useTeamImport(() => '5v5')
-    api.shots.value = [shot()]
-    api.setArtifact('sample', 1, 9)
-    await expect(api.exportCorrections()).rejects.toThrow('Screenshot unavailable')
+    api.shots.value = Array.from({ length: CORRECTIONS_CAP + 1 }, (_, i) => ({
+      ...shot(),
+      id: `s${i}`,
+      sha256: `${i}`,
+    }))
+    for (const { id } of api.shots.value) api.setArtifact(id, 1, 9)
+    expect(api.correctionCount.value).toBe(CORRECTIONS_CAP)
+    expect(api.correctionsFull.value).toBe(true)
+    expect(JSON.parse(api.exportCorrections()).shots).toHaveLength(CORRECTIONS_CAP + 1)
+    api.clearImport()
+    expect(JSON.parse(api.exportCorrections()).shots).toHaveLength(CORRECTIONS_CAP)
   })
 
-  it('exports saved hero descriptors after their screenshots are cleared', async () => {
-    const fetchImage = vi.fn()
-    vi.stubGlobal('fetch', fetchImage)
+  it('reads saved corrections back on the next visit, dropping malformed entries', async () => {
+    vi.stubEnv('SSR', false)
+    const { storage } = stubLocalStorage()
+    const saved = {
+      source: { name: 'kept.png', size: 3, sha256: 'a' },
+      context: { season: 8, mapCount: 5, imageWidth: 1150 },
+      predicted: { sides: {} },
+      labels: { cells: {}, artifacts: { 1: 2 } },
+    }
+    storage.set(
+      'stargazer.import.corrections',
+      JSON.stringify({ version: 1, shots: [saved, { source: { name: 'broken.png' } }] }),
+    )
+    vi.resetModules()
+    const fresh = await import('@/composables/useTeamImport')
+    const api = fresh.useTeamImport(() => '5v5')
+    expect(JSON.parse(api.exportCorrections()).shots).toEqual([saved])
+    api.clearCorrections()
+  })
+
+  it('exports saved hero descriptors after their screenshots are cleared', () => {
     const api = useTeamImport(() => '5v5')
     const sample = shot()
     const cell = sample.reading!.sides[1][0]!
@@ -256,18 +291,16 @@ describe('download import corrections', () => {
     api.shots.value = [sample]
     api.setHero('sample', 1, 0, 7)
     api.clearImport()
+    api.clearCorrections()
 
     expect(api.learnedCount.value).toBe(1)
     expect(api.hasCorrections.value).toBe(true)
-    const pending = api.exportCorrections()
-    api.forgetLearned()
-    const exported = JSON.parse(await pending) as { shots: unknown[]; learnedIcons: unknown }
-    expect(exported.shots).toEqual([])
+    const exported = JSON.parse(api.exportCorrections()) as { learnedIcons: unknown }
     expect(readLearnedIcons(exported.learnedIcons)).toEqual([
       { characterId: 7, descriptor: encodeLearned(cell.descriptor), learnedAt: expect.any(Number) },
     ])
-    expect(fetchImage).not.toHaveBeenCalled()
+    api.forgetLearned()
     expect(api.hasCorrections.value).toBe(false)
-    expect(JSON.parse(await api.exportCorrections())).toHaveProperty('learnedIcons.icons', [])
+    expect(JSON.parse(api.exportCorrections())).toHaveProperty('learnedIcons.icons', [])
   })
 })
