@@ -4,7 +4,6 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { imagetools } from 'vite-imagetools'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
@@ -166,7 +165,7 @@ function processRenderedPage(route: string, html: string): string {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools(), imagetools(), guideReports()],
+  plugins: [vue(), imagetools(), guideReports()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
