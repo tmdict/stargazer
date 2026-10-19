@@ -1,5 +1,5 @@
 {
-  "en": "Import a match from its battle stats screens, adding its formation screenshots to put the heroes on their tiles, or import formation screenshots on their own. A screenshot pasted anywhere here goes to the section of its kind.",
-  "zh": "用对战的战斗数据界面导入一场对局，并可添加其布阵截图把英雄放到所站的格子上；也可以只导入布阵截图。在此处任意位置粘贴的截图会自动放入对应的区域。",
-  "ko": "대전의 전투 데이터 화면으로 경기를 가져오고 배치 화면 스크린샷을 더해 영웅을 서 있는 타일에 배치하거나, 배치 화면 스크린샷만 가져올 수 있습니다. 이 창 어디에나 붙여 넣은 스크린샷은 종류에 맞는 영역으로 들어갑니다."
+  "en": "Add a match's battle stats screens, plus its formation screenshots if you want each hero on its exact tile. Formation screenshots also work on their own. Paste anywhere here and each screenshot lands in the right section.",
+  "zh": "添加一场对局的战斗数据界面。如需把每个英雄放到准确的格子上，再加上布阵截图。布阵截图也可以单独导入。在此处任意位置粘贴，截图会自动归入对应区域。",
+  "ko": "대전의 전투 데이터 화면을 추가하고, 영웅을 정확한 타일에 놓으려면 배치 화면 스크린샷도 더하세요. 배치 화면 스크린샷만 가져올 수도 있습니다. 이 창 어디에나 붙여 넣으면 스크린샷이 알맞은 영역으로 들어갑니다."
 }
