@@ -16,17 +16,12 @@ import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import {
-  shotMapIndex,
-  useTeamImport,
-  type ImportShot,
-  type ShotKind,
-} from '@/composables/useTeamImport'
+import { shotMapIndex, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
 import { getOpposingTeam } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { isFormationReading } from '@/lib/import/types'
+import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
