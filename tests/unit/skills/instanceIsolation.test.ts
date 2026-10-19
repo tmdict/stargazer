@@ -24,7 +24,7 @@ import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { getRegisteredSkills } from '@/lib/skills/registry'
-import { SkillManager } from '@/lib/skills/skill'
+import { SkillManager, type SkillBadge } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { NO_LOOKUPS } from '../fixtures/skills'
@@ -36,6 +36,7 @@ interface ManagerSnapshot {
   tileColors: [number, string[]][]
   tileFills: [number, string[]][]
   lineCount: number
+  badges: SkillBadge[]
 }
 
 const snapshot = (sm: SkillManager): ManagerSnapshot => ({
@@ -45,6 +46,7 @@ const snapshot = (sm: SkillManager): ManagerSnapshot => ({
   tileColors: [...sm.getTileColorModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
   tileFills: [...sm.getTileFillModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
   lineCount: sm.getSkillLines().length,
+  badges: sm.getSkillBadges(),
 })
 
 const hasEffect = (s: ManagerSnapshot): boolean =>
@@ -53,7 +55,8 @@ const hasEffect = (s: ManagerSnapshot): boolean =>
     s.images.length +
     s.tileColors.length +
     s.tileFills.length +
-    s.lineCount >
+    s.lineCount +
+    s.badges.length >
   0
 
 const keyed = <T>(entries: [string, T][], id: number): [string, T][] =>
@@ -150,6 +153,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
       expect(after.tileColors).toEqual(soloState.tileColors)
       expect(after.tileFills).toEqual(soloState.tileFills)
       expect(after.lineCount).toBe(soloState.lineCount)
+      expect(after.badges).toEqual(soloState.badges)
 
       // Removing the base must leave no trace anywhere.
       expect(executeRemoveCharacter(grid, sm, baseHex)).toBe(true)
@@ -160,6 +164,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
       expect(final.tileColors).toEqual([])
       expect(final.tileFills).toEqual([])
       expect(final.lineCount).toBe(0)
+      expect(final.badges).toEqual([])
       expect(grid.companionLinks.size).toBe(0)
       expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
       expect(

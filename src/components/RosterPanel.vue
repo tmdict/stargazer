@@ -266,6 +266,8 @@ interface Stroke {
   from: CharacterType
   crossed: Set<number>
   held: boolean
+  // Whether it wrote to the roster, so the write is reported once per stroke.
+  edited: boolean
 }
 let stroke: Stroke | null = null
 
@@ -276,45 +278,64 @@ const onPress = (character: CharacterType, event: MouseEvent): void => {
   // Outside select mode a pill press steps a level.
   if (selecting.value ? !owned : (event.target as Element).closest('.pill-slot')) return
   const on = selecting.value ? !ticked.value.has(character.id) : !owned
-  stroke = { on, from: character, crossed: new Set(), held: true }
+  stroke = { on, from: character, crossed: new Set(), held: true, edited: false }
 }
 
-const paint = ({ on, crossed }: Stroke, character: CharacterType): void => {
-  crossed.add(character.id)
-  const owned = !!levelsOf(character)
-  if (!selecting.value) {
-    if (on !== owned) editHeroes({ [character.id]: on ? {} : null })
-  } else if (owned) {
+const paint = (current: Stroke, heroes: readonly CharacterType[]): void => {
+  for (const { id } of heroes) current.crossed.add(id)
+  if (selecting.value) {
     const next = new Set(ticked.value)
-    if (on) next.add(character.id)
-    else next.delete(character.id)
+    for (const { id } of heroes.filter((c) => levelsOf(c))) {
+      if (current.on) next.add(id)
+      else next.delete(id)
+    }
     ticked.value = next
-    anchorId = character.id
+    return
   }
+  const roster = rosters.active
+  const changing = heroes.filter((c) => !!levelsOf(c) !== current.on)
+  if (!roster || !changing.length) return
+  rosters.setHeroes(
+    roster.id,
+    Object.fromEntries(changing.map(({ id }) => [id, current.on ? {} : null])),
+  )
+  current.edited = true
 }
 
-// A release outside the window never reaches the document, so the buttons
-// still down decide whether the stroke goes on.
+// A failing write shows one message however many heroes the stroke changed.
+const endStroke = (current: Stroke): void => {
+  current.held = false
+  if (current.edited) report()
+}
+
+// A release the page never saw (a native menu or drag took the mouse) leaves
+// the stroke held, so the buttons still down decide whether it goes on. No
+// click follows such a release, so the stroke ends outright.
 const onCross = (character: CharacterType, event: MouseEvent): void => {
   if (!stroke?.held) return
   if (!(event.buttons & 1)) {
-    stroke.held = false
+    endStroke(stroke)
+    stroke = null
     return
   }
-  if (stroke.crossed.has(character.id)) return
-  if (stroke.crossed.size === 0) {
+  if (!stroke.crossed.size) {
     if (character.id === stroke.from.id) return
-    paint(stroke, stroke.from)
-  }
-  paint(stroke, character)
+    paint(stroke, [stroke.from, character])
+  } else if (!stroke.crossed.has(character.id)) paint(stroke, [character])
+  // Shift-click goes on from where the stroke ended, on a hero it crossed
+  // before too.
+  if (selecting.value && levelsOf(character)) anchorId = character.id
 }
 
 // Kept only until the click this release makes has been seen, so a later
 // tick from the keyboard still counts.
 const onRelease = (): void => {
-  if (!stroke) return
-  stroke.held = false
-  setTimeout(() => (stroke = null))
+  const ended = stroke
+  if (!ended?.held) return
+  endStroke(ended)
+  setTimeout(() => {
+    if (stroke === ended) stroke = null
+  })
 }
 onMounted(() => document.addEventListener('mouseup', onRelease))
 onUnmounted(() => document.removeEventListener('mouseup', onRelease))
@@ -326,6 +347,15 @@ const onPortrait = (character: CharacterType, event: MouseEvent): void => {
   if (stroke?.crossed.size) return
   if (!selecting.value) toggle(character)
   else if (levelsOf(character)) tick(character.id, event.shiftKey)
+}
+
+// While selecting, a pill click ticks the hero instead of stepping a level.
+// The styles keep the mouse off the pill's buttons; stopping the click here
+// keeps the keyboard off them too.
+const onPillClick = (character: CharacterType, event: MouseEvent): void => {
+  if (!selecting.value) return
+  event.stopPropagation()
+  onPortrait(character, event)
 }
 
 // ---- Library ----
@@ -616,7 +646,7 @@ const {
             <span
               class="pill-slot"
               :class="{ ticking: selecting && levelsOf(character) }"
-              @click="selecting && onPortrait(character, $event)"
+              @click.capture="onPillClick(character, $event)"
             >
               <UpgradePill
                 :ref="(pill) => trackPill(character.id, pill)"
@@ -808,6 +838,7 @@ const {
 
 .pill-slot {
   display: inline-flex;
+  user-select: none;
 }
 
 .pill-slot.ticking {

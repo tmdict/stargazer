@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { toSynergyId } from '@/lib/characters/synergy'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { SKILL_COLORS } from '@/lib/skills/utils/colors'
@@ -120,6 +121,18 @@ describe('himmel class-trio highlighting', () => {
 
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
     expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getSkillBadges()).toEqual([])
+  })
+
+  it('badges a member its synergy copy shares once, until both have left', () => {
+    const tank = { hexId: 16, icon: 'tank' as const, color: SKILL_COLORS.blue }
+    skillManager.setSkillBadges(HIMMEL, Team.ALLY, [tank])
+    skillManager.setSkillBadges(toSynergyId(HIMMEL), Team.ALLY, [tank])
+    expect(skillManager.getSkillBadges()).toEqual([tank])
+
+    skillManager.clearSkillBadges(toSynergyId(HIMMEL), Team.ALLY)
+    expect(skillManager.getSkillBadges()).toEqual([tank])
+    skillManager.clearSkillBadges(HIMMEL, Team.ALLY)
     expect(skillManager.getSkillBadges()).toEqual([])
   })
 
