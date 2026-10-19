@@ -324,7 +324,7 @@ export class SkillManager {
 
   // Paint exactly `tiles` for this skill instance, first removing the tiles it
   // painted on the previous call (the diff) so a repaint moves/recolors the
-  // highlight cleanly. Shared by every tile-highlight skill (withTilePaint,
+  // highlight cleanly. Shared by every tile-highlight skill (withEffects,
   // reinier, ...) so the set/remove/track cycle lives in one place.
   paintTiles(characterId: number, team: Team, tiles: TilePaint[]): void {
     const key = this.getSkillKey(characterId, team)

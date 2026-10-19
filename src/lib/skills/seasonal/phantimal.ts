@@ -8,7 +8,7 @@
  * season's marks, which paint only while the phantimal's data file sets
  * `"targeting": true`, so a mark can be written ahead of its in-game unlock.
  * The registry holds one skill per id, so a phantimal that already has a skill
- * (a companion) takes its mark as withTilePaint over that skill instead.
+ * (a companion) takes its mark as withEffects over that skill instead.
  *
  * Every registration's id is `phantimal-<slug>` of the phantimal its id holds;
  * a data-contract test fails when the slug no longer matches, which catches
@@ -25,7 +25,7 @@ import { getCompanions } from '../../characters/companion'
 import { inPhantimalBand, toPhantimalId } from '../../characters/phantimal'
 import { registerSkill } from '../registry'
 import type { Skill, SkillContext, TilePaint } from '../skill'
-import { createCompanionSkill, withTilePaint } from '../utils/builders'
+import { createCompanionSkill, withEffects } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { findAdjacentPriorityTarget, type TargetDirection } from '../utils/targeting'
 
@@ -61,10 +61,8 @@ export function createSpiritMarkSkill(
     onActivate() {},
     onDeactivate() {},
   }
-  return withTilePaint(
-    base,
-    whenTargeting((ctx) => markTiles(ctx, direction)),
-  )
+  const mark = whenTargeting((ctx) => markTiles(ctx, direction))
+  return withEffects(base, (ctx) => ({ tiles: mark(ctx) }))
 }
 
 const spiritMarks: { localId: number; name: string; direction: TargetDirection }[] = [
@@ -95,8 +93,10 @@ function wedgeMarkTiles(ctx: SkillContext): TilePaint[] {
 // Wedge of Matter enters with Wedge of Power on a random free tile of its
 // team; removing either removes both. Neither wedge holds a team slot, and
 // Wedge of Power targets at range 20 under its own portrait.
+const wedgeMarks = whenTargeting(wedgeMarkTiles)
+
 registerSkill(
-  withTilePaint(
+  withEffects(
     createCompanionSkill({
       id: 'phantimal-wedge-of-matter',
       characterId: toPhantimalId(5),
@@ -104,6 +104,6 @@ registerSkill(
       companionImageModifier: 'wedge-of-power',
       companionRange: 20,
     }),
-    whenTargeting(wedgeMarkTiles),
+    (ctx) => ({ tiles: wedgeMarks(ctx) }),
   ),
 )

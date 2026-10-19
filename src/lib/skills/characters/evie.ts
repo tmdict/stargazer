@@ -2,7 +2,7 @@ import { getTeamFromTileState } from '../../../utils/tileStateFormatting'
 import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
-import { createTargetingSkill, withTilePaint } from '../utils/builders'
+import { createTargetingSkill, withEffects } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { findTarget, TargetingMethod } from '../utils/distance'
 import { getSymmetricalHexId } from '../utils/symmetry'
@@ -32,7 +32,7 @@ function computeHighlights(ctx: SkillContext): TilePaint[] {
 // Targets the rearmost ally on the same team (the ally the quill follows when the
 // battle starts), and outlines the enemy-zone tiles around her symmetrical cell.
 registerSkill(
-  withTilePaint(
+  withEffects(
     createTargetingSkill({
       id: 'evie',
       characterId: 113,
@@ -45,6 +45,6 @@ registerSkill(
           targetingMethod: TargetingMethod.REARMOST,
         }),
     }),
-    computeHighlights,
+    (ctx) => ({ tiles: computeHighlights(ctx) }),
   ),
 )

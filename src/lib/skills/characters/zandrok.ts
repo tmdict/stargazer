@@ -1,7 +1,7 @@
 import type { Hex } from '../../hex'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillLine } from '../skill'
-import { createLineSkill } from '../utils/builders'
+import { createEffectsSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { laneSpan } from '../utils/line'
 
@@ -45,4 +45,10 @@ export function wedgeLines(ctx: SkillContext): SkillLine[] {
   ].filter((line): line is SkillLine => line !== null)
 }
 
-registerSkill(createLineSkill({ id: 'zandrok', characterId: ZANDROK, calculate: wedgeLines }))
+registerSkill(
+  createEffectsSkill({
+    id: 'zandrok',
+    characterId: ZANDROK,
+    calculate: (ctx) => ({ lines: wedgeLines(ctx) }),
+  }),
+)

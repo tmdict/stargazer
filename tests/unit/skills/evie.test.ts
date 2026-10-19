@@ -47,7 +47,7 @@ describe('evie symmetrical enemy-tile highlight', () => {
     }
   })
 
-  it('still targets the rearmost ally (base skill preserved under withTilePaint)', () => {
+  it('still targets the rearmost ally (base skill preserved under withEffects)', () => {
     placeOnTile(grid, 1, 200, Team.ALLY)
 
     evie().onActivate(ctx())

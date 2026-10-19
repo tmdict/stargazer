@@ -8,9 +8,8 @@
  *   - createTileHighlightSkill: paints a color modifier on the target tile,
  *     with previous-target cleanup on update
  *
- * createTilePaintSkill and createLineSkill cover skills whose whole behavior
- * is a single decorator pass (withTilePaint / withSkillLine over an otherwise
- * empty lifecycle).
+ * createEffectsSkill covers skills whose whole behavior is drawing tile paints,
+ * lines and unit badges (withEffects over an otherwise empty lifecycle).
  *
  * createCompanionSkill owns the companion lifecycle instead: spawning N
  * companions on random free tiles, raising team capacity, linking them to
@@ -161,124 +160,69 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
   }
 }
 
+// What a skill draws for the current grid state. A channel left out is not
+// written, so two decorators on one skill never overwrite each other.
+export interface SkillEffects {
+  tiles?: TilePaint[]
+  lines?: SkillLine[]
+  badges?: SkillBadge[]
+}
+
 /**
- * Decorates a skill with a tile-paint pass driven by `calculate`, which returns
- * the tiles (color, and border/fill channel) to highlight for the current grid state.
- *
- * Runs after the base skill's own hooks on activate/update, delegating the
- * set/remove/track diff to `skillManager.paintTiles` (cleared on deactivate). Lets
- * a skill that already owns other behavior (e.g. a companion skill) also paint
- * tiles, since the registry allows one skill per character.
+ * Decorates a skill with the effects `calculate` returns: tile paints (diffed
+ * by `skillManager.paintTiles`), lines (drawn by SkillTargeting and
+ * SkillCornerLines) and unit badges (drawn by GridCharacters). They are written
+ * after the base skill's own hooks on activate and update, and cleared before
+ * the base's deactivate, so a skill that already owns other behavior (a target,
+ * companions) can draw too, since the registry allows one skill per character.
+ * Effects that come from one computation are returned together, so it runs once.
  */
-export function withTilePaint(
+export function withEffects(
   base: Skill,
-  calculate: (context: SkillContext) => TilePaint[],
+  calculate: (context: SkillContext) => SkillEffects,
 ): Skill {
+  const draw = (ctx: SkillContext): void => {
+    const { tiles, lines, badges } = calculate(ctx)
+    const { skillManager, characterId, team } = ctx
+    if (tiles) skillManager.paintTiles(characterId, team, tiles)
+    if (lines) skillManager.setSkillLines(characterId, team, lines)
+    if (badges) skillManager.setSkillBadges(characterId, team, badges)
+  }
   return {
     ...base,
     onActivate(ctx) {
       base.onActivate(ctx)
-      ctx.skillManager.paintTiles(ctx.characterId, ctx.team, calculate(ctx))
+      draw(ctx)
     },
     onUpdate(ctx) {
       base.onUpdate?.(ctx)
-      ctx.skillManager.paintTiles(ctx.characterId, ctx.team, calculate(ctx))
+      draw(ctx)
     },
+    // Every channel is cleared whichever ones `calculate` filled, because the
+    // instance is going away.
     onDeactivate(ctx) {
-      ctx.skillManager.clearPaintedTiles(ctx.characterId, ctx.team)
+      const { skillManager, characterId, team } = ctx
+      skillManager.clearPaintedTiles(characterId, team)
+      skillManager.clearSkillLines(characterId, team)
+      skillManager.clearSkillBadges(characterId, team)
       base.onDeactivate(ctx)
     },
   }
 }
 
-// Base for factories whose whole behavior lives in a decorator.
-const bareSkill = (id: string, characterId: number): Skill => ({
-  id,
-  characterId,
-  onActivate() {},
-  onDeactivate() {},
-})
-
-interface TilePaintSkillConfig {
+interface EffectsSkillConfig {
   id: string
   characterId: number
-  calculate: (context: SkillContext) => TilePaint[]
+  calculate: (context: SkillContext) => SkillEffects
 }
 
 /**
- * Skill whose only behavior is painting the tiles `calculate` returns: the
- * multi-tile analog of createTileHighlightSkill. A skill that owns other
- * behavior composes withTilePaint onto that base instead.
+ * Skill whose only behavior is drawing the effects `calculate` returns. A skill
+ * that owns other behavior composes withEffects onto that base instead.
  */
-export function createTilePaintSkill(config: TilePaintSkillConfig): Skill {
+export function createEffectsSkill(config: EffectsSkillConfig): Skill {
   const { id, characterId, calculate } = config
-  return withTilePaint(bareSkill(id, characterId), calculate)
-}
-
-/**
- * Decorates a skill with connection lines (drawn by SkillTargeting and
- * SkillCornerLines) computed by `calculate`. The line analog of withTilePaint;
- * clears on deactivate.
- */
-export function withSkillLine(
-  base: Skill,
-  calculate: (context: SkillContext) => SkillLine[],
-): Skill {
-  return {
-    ...base,
-    onActivate(ctx) {
-      base.onActivate(ctx)
-      ctx.skillManager.setSkillLines(ctx.characterId, ctx.team, calculate(ctx))
-    },
-    onUpdate(ctx) {
-      base.onUpdate?.(ctx)
-      ctx.skillManager.setSkillLines(ctx.characterId, ctx.team, calculate(ctx))
-    },
-    onDeactivate(ctx) {
-      ctx.skillManager.clearSkillLines(ctx.characterId, ctx.team)
-      base.onDeactivate(ctx)
-    },
-  }
-}
-
-interface LineSkillConfig {
-  id: string
-  characterId: number
-  calculate: (context: SkillContext) => SkillLine[]
-}
-
-/**
- * Skill whose only behavior is drawing the lines `calculate` returns: the line
- * analog of createTilePaintSkill.
- */
-export function createLineSkill(config: LineSkillConfig): Skill {
-  const { id, characterId, calculate } = config
-  return withSkillLine(bareSkill(id, characterId), calculate)
-}
-
-/**
- * Decorates a skill with the unit badges `calculate` returns (drawn by
- * GridCharacters). The badge analog of withSkillLine; clears on deactivate.
- */
-export function withSkillBadges(
-  base: Skill,
-  calculate: (context: SkillContext) => SkillBadge[],
-): Skill {
-  return {
-    ...base,
-    onActivate(ctx) {
-      base.onActivate(ctx)
-      ctx.skillManager.setSkillBadges(ctx.characterId, ctx.team, calculate(ctx))
-    },
-    onUpdate(ctx) {
-      base.onUpdate?.(ctx)
-      ctx.skillManager.setSkillBadges(ctx.characterId, ctx.team, calculate(ctx))
-    },
-    onDeactivate(ctx) {
-      ctx.skillManager.clearSkillBadges(ctx.characterId, ctx.team)
-      base.onDeactivate(ctx)
-    },
-  }
+  return withEffects({ id, characterId, onActivate() {}, onDeactivate() {} }, calculate)
 }
 
 interface CompanionSkillConfig {

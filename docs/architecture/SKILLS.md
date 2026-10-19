@@ -47,9 +47,9 @@ Place, move, swap and remove run their tile changes and skill hooks inside `exec
 
 ## Builders and composition
 
-`src/lib/skills/utils/builders.ts` covers the common shapes: one target with an optional arrow, one highlighted tile, a painted tile set, a line set, and companions. Target helpers are documented in [Targeting](./skills/TARGETING.md).
+`src/lib/skills/utils/builders.ts` covers the common shapes: one target with an optional arrow, one highlighted tile, a set of drawn effects (tile paints, lines and unit badges), and companions. Target helpers are documented in [Targeting](./skills/TARGETING.md).
 
-The registry allows one skill per character, so a hero with several behaviors decorates a base skill. `withTilePaint`, `withSkillLine` and `withSkillBadges` run after the base hooks on activate and update, and clear before the base on deactivate. Elijah-Lailah, for example, is a companion skill wrapped in both. `createTilePaintSkill` and `createLineSkill` are the same decorators over an empty base. Kulu and Reinier pass a hand-written object to `registerSkill`.
+The registry allows one skill per character, so a hero with several behaviors decorates a base skill. `withEffects` writes the tile paints, lines and unit badges its `calculate` returns after the base hooks on activate and update, and clears them before the base on deactivate. Effects from one computation are returned together, so it runs once: Himmel's tiles and badges come from one scan of his party. Elijah-Lailah, for example, is a companion skill decorated with its tiles and lines. `createEffectsSkill` is the same decorator over an empty base. Kulu and Reinier pass a hand-written object to `registerSkill`.
 
 A companion's id is `N × grid.companionIdOffset + characterId`, so lookups resolve it to its main hero. The synergy and phantimal bands mirror this arithmetic, so it holds inside them too ([Seasonal Content](./SEASONAL.md)). `createCompanionSkill` raises team capacity by its count unless `raisesCapacity: false`, which a phantimal uses because it holds no team slot.
 
@@ -65,7 +65,7 @@ Arrows take their color from the definition's `targetingColorModifier`, or from 
 
 A unit badge is an icon in a colored disc on a portrait's rim, drawn by `UnitBadge.vue`, which maps each icon key (`BadgeIcon`, `src/lib/types/unitBadge.ts`) to its component. Each source has its own spot, so badges never cover each other: skill-mode buttons sit at the upper right and skill badges at the upper left. The lower right stays free because the rows of the perspective view overlap there.
 
-A skill shows badges the way it draws lines. `withSkillBadges` replaces the instance's `SkillBadge` list (a hex, an icon key and a color) on activate and update and clears it on deactivate, and `GridCharacters` draws the flattened list on the units standing on those hexes, one badge per hex and icon however many instances show it. Himmel badges each member of his party with its class, in the color of the party's tiles.
+A skill shows badges the way it draws lines. The `badges` that `withEffects`' `calculate` returns replace the instance's `SkillBadge` list (a hex, an icon key and a color) on activate and update and are cleared on deactivate, and `GridCharacters` draws the flattened list on the units standing on those hexes, one badge per hex and icon however many instances show it. Himmel badges each member of his party with its class, in the color of the party's tiles.
 
 What identifies a unit shows whatever the Skills toggle says: a companion's border color and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
 
