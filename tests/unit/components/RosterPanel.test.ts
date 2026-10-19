@@ -191,5 +191,13 @@ describe('RosterPanel drag across heroes', () => {
     expect(tickedCount()).toBe('1 selected')
     await tap(owned[3]!)
     expect(tickedCount()).toBe('2 selected')
+
+    // A tick from the keyboard after a drag still counts.
+    await drag([owned[4]!, owned[5]!])
+    await new Promise((resolve) => setTimeout(resolve))
+    const pills = document.querySelectorAll('.character-grid .pill-slot')
+    pills[owned[6]!]!.querySelector('button')!.click()
+    await nextTick()
+    expect(tickedCount()).toBe('5 selected')
   })
 })
