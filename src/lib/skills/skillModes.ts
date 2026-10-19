@@ -11,9 +11,7 @@ import { SKILL_COLORS } from './utils/colors'
 export interface SkillMode {
   // App locale key holding the game's name for the mode.
   name: string
-  // The hero's arrows in this mode, and its badge unless badgeColor is set.
   color: string
-  badgeColor?: string
 }
 
 interface HeroSkillModes {
@@ -26,7 +24,7 @@ export const SKILL_MODES: Readonly<Record<number, HeroSkillModes>> = {
   57: {
     icon: 'bell',
     modes: [
-      { name: 'spellbind', color: SKILL_COLORS.amber, badgeColor: SKILL_COLORS.gold },
+      { name: 'spellbind', color: SKILL_COLORS.amber },
       { name: 'curelock', color: SKILL_COLORS.lilac },
     ],
   },
