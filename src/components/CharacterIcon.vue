@@ -33,8 +33,9 @@ const props = defineProps<{
   // picks). Unset opens the full page.
   inspectChips?: readonly TagPick[]
   showEnergy?: boolean
-  // Unset: no tick. False: an empty tick circle (the Rosters tab while
-  // selecting). True: ticked, with the ring in the selection colour.
+  // The Rosters tab while selecting: an empty tick circle, filled and with the
+  // ring in the selection colour once the hero is ticked.
+  tickable?: boolean
   ticked?: boolean
 }>()
 
@@ -104,7 +105,7 @@ const handleDragEnd = (event: DragEvent) => {
           draggable: isDraggable,
           dimmed,
           selected: isSelected,
-          ticked,
+          ticked: tickable && ticked,
           inspectable: inspectTarget,
         }"
         :style="{
@@ -136,7 +137,7 @@ const handleDragEnd = (event: DragEvent) => {
         <span v-else class="portrait-name">{{ displayName }}</span>
       </div>
       <HoldRing v-if="pressing" />
-      <span v-if="ticked !== undefined" class="tick" :class="{ on: ticked }" aria-hidden="true">
+      <span v-if="tickable" class="tick" :class="{ on: ticked }" aria-hidden="true">
         <svg
           viewBox="0 0 12 12"
           fill="none"

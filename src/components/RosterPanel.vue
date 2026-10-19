@@ -632,7 +632,8 @@ const {
           :show-energy="energyPicked"
           inspectable
           :inspect-chips
-          :ticked="selecting && levelsOf(character) ? ticked.has(character.id) : undefined"
+          :tickable="selecting && !!levelsOf(character)"
+          :ticked="ticked.has(character.id)"
           @character-click="onPortrait"
           @mousedown="onPress(character, $event)"
           @mouseenter="onCross(character, $event)"
