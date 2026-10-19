@@ -106,7 +106,7 @@ scope.addEventListener('message', (event) => {
         artifacts: buildArtifactTable(msg.artifacts),
         units: buildHeroTable(msg.units),
       }
-      arena = msg.arena && prepareArena(msg.arena)
+      arena = msg.arena ? prepareArena(msg.arena) : null
       scope.postMessage({ type: 'ready' })
       return
     }
