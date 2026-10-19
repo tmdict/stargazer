@@ -25,7 +25,7 @@ export const SKILL_MODES: Readonly<Record<number, HeroSkillModes>> = {
     icon: 'bell',
     modes: [
       { name: 'spellbind', color: SKILL_COLORS.amber },
-      { name: 'curelock', color: SKILL_COLORS.purple },
+      { name: 'curelock', color: SKILL_COLORS.lilac },
     ],
   },
   // Natsu
