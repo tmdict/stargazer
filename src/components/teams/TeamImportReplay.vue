@@ -12,7 +12,7 @@
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
+import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam } from '@/lib/characters/character'
@@ -201,28 +201,12 @@ const isPointed = (tile: TileView): boolean =>
   tile.column === pointed.value.column &&
   tile.unitId === pointed.value.unitId
 
-const placedUnits = computed((): ThumbnailUnit[] => {
+const pointedOnBoard = computed(() => {
   const target = pointed.value
+  if (!target) return null
   // The board side a screenshot column fills.
-  const pointedSide = target && (swapSides ? getOpposingTeam(target.column) : target.column)
-  return SIDES.flatMap((team) => {
-    const side = placed?.[team]
-    if (!side) return []
-    return [...side.mains, ...side.companions, ...(side.phantimal ? [side.phantimal] : [])].flatMap(
-      ({ unitId, hexId }) =>
-        hexId === undefined
-          ? []
-          : [
-              {
-                hexId,
-                team,
-                image: unitImage(unitId),
-                title: unitName(unitId),
-                highlight: team === pointedSide && unitId === target?.unitId,
-              },
-            ],
-    )
-  })
+  const team = swapSides ? getOpposingTeam(target.column) : target.column
+  return { team, unitId: target.unitId }
 })
 
 // ---------- typed tiles ----------
@@ -431,17 +415,12 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
           </ul>
         </div>
         <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
-        <figure v-if="placed && mapKey" class="placed">
-          <BoardThumbnail
-            class="placed-view"
-            :map-key="mapKey"
-            :units="placedUnits"
-            :hex-size="16"
-            crisp
-            numbered
-          />
-          <figcaption>{{ i18n.t('app.import-on-board') }}</figcaption>
-        </figure>
+        <TeamImportPlaced
+          v-if="placed && mapKey"
+          :map-key
+          :sides="placed"
+          :pointed="pointedOnBoard"
+        />
       </div>
     </div>
   </div>
@@ -717,25 +696,5 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
   margin: 0;
   font-size: 0.75rem;
   color: var(--import-bad);
-}
-
-.placed {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-}
-
-.placed figcaption {
-  font-size: 0.72rem;
-  color: var(--import-text-dim);
-}
-
-.placed-view {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius-medium);
-  background: rgba(0, 0, 0, 0.35);
 }
 </style>
