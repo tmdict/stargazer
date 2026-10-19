@@ -55,8 +55,7 @@ export interface SkillLine {
   toCorner?: number
 }
 
-// An icon a skill puts on the unit standing on a hex, at the portrait's upper
-// left: the class of each member of Himmel's party.
+// An icon a skill puts on the unit standing on a hex (drawn by GridCharacters).
 export interface SkillBadge {
   hexId: number
   icon: BadgeIcon
@@ -381,8 +380,15 @@ export class SkillManager {
     if (this.skillBadges.delete(this.getSkillKey(characterId, team))) this.targetVersion++
   }
 
+  // One badge per hex and icon however many instances show it: a synergy
+  // copy's party can share members with its base hero's.
   getSkillBadges(): SkillBadge[] {
-    return [...this.skillBadges.values()].flat()
+    const unique = new Map<string, SkillBadge>()
+    for (const badge of [...this.skillBadges.values()].flat()) {
+      const key = `${badge.hexId}-${badge.icon}`
+      if (!unique.has(key)) unique.set(key, badge)
+    }
+    return [...unique.values()]
   }
 
   // Get color modifiers mapped by "characterId-team"
