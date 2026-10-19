@@ -121,17 +121,16 @@ describe('identifyMap', () => {
 
 describe('formationSide', () => {
   it('turns every tile a half-turn for a team landing on the other half', () => {
-    const units = [unit(1, {}), unit(16, {})]
-    const assignments = [
-      { unitId: 11, state: 'sure' as const },
-      { unitId: 12, state: 'sure' as const },
+    const seen = [
+      { unitId: 11, hexId: 1 },
+      { unitId: 12, hexId: 16 },
     ]
     const heroes = [
       { characterId: 11, attrs: {} },
       { characterId: 12, attrs: {} },
       { characterId: 13, attrs: {} },
     ]
-    const side = formationSide(units, assignments, heroes, null, true)
+    const side = formationSide(seen, heroes, null, true)
     expect(side.mains.map((m) => [m.unitId, m.hexId])).toEqual([
       [11, 45],
       [12, 30],

@@ -37,6 +37,7 @@ const sample = (): ImportShot => ({
   artifactCards: {},
   unitOverrides: {},
   unitCards: [],
+  tilePicks: {},
   overrides: {},
   artifactOverrides: {},
   resultOverrides: {},

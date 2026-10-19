@@ -11,8 +11,11 @@ import { prepareFrameRefs } from '@/lib/import/frames'
 import { buildHeroTable } from '@/lib/import/heroes'
 import { readScreenshot } from '@/lib/import/pipeline'
 import { buildImportHeroTable } from '@/lib/import/references'
+import { isReplayFrame, prepareArena, readReplay } from '@/lib/import/replay'
+import { findTabs } from '@/lib/import/strip'
 import {
   isFormationReading,
+  type ArenaRef,
   type LearnedIcon,
   type PortraitRef,
   type ReferenceSet,
@@ -28,18 +31,23 @@ export interface ReferenceImages {
   // Phantimals and companions with art of their own, by unit id.
   units: PortraitRef[]
   learned: LearnedIcon[]
+  // The Supreme League arena that places replay frames.
+  arena: RgbaImage
 }
 
-// A result screen, or a formation panel.
-export type ShotKind = 'result' | 'formation'
+// A result screen, a formation panel, or a paused replay frame.
+export type ShotKind = 'result' | 'formation' | 'replay'
 
 export type TeamImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
   | { type: 'read'; id: string; image: RgbaImage; kind: ShotKind }
-  // Which kind a screenshot is, by whether a whole board is found in it; it
-  // needs no references, so a second worker answers while this one reads.
-  | { type: 'sort'; id: string; image: RgbaImage }
+  // Which kind a screenshot is: a formation panel when a whole board is found
+  // in it, else a replay frame (where `replay` allows one) when it has no
+  // result tabs and the arena matches it, else a result screen. It needs only
+  // the arena, so a second worker answers while this one reads.
+  | { type: 'arena'; image: RgbaImage }
+  | { type: 'sort'; id: string; image: RgbaImage; replay: boolean }
 
 export type TeamImportResponse =
   | { type: 'ready' }
@@ -59,6 +67,14 @@ const scope = self as unknown as {
 
 let refs: ReferenceSet | null = null
 let portraits: ReferenceImages['portraits'] = []
+// From the references in the reader, from its own message in the sorter.
+let arena: ArenaRef | null = null
+
+const sortKind = (image: RgbaImage, replay: boolean): ShotKind => {
+  if (fitBoard(image)) return 'formation'
+  if (replay && arena && !findTabs(image) && isReplayFrame(image, arena)) return 'replay'
+  return 'result'
+}
 
 const transferablesOf = (reading: ScreenshotReading): Transferable[] => {
   const out: Transferable[] = []
@@ -81,11 +97,11 @@ scope.addEventListener('message', (event) => {
   const id = msg.type === 'read' || msg.type === 'sort' ? msg.id : null
   try {
     if (msg.type === 'sort') {
-      scope.postMessage({
-        type: 'sorted',
-        id: msg.id,
-        kind: fitBoard(msg.image) ? 'formation' : 'result',
-      })
+      scope.postMessage({ type: 'sorted', id: msg.id, kind: sortKind(msg.image, msg.replay) })
+      return
+    }
+    if (msg.type === 'arena') {
+      arena = prepareArena(msg.image)
       return
     }
     if (msg.type === 'references') {
@@ -96,6 +112,7 @@ scope.addEventListener('message', (event) => {
         artifacts: buildArtifactTable(msg.artifacts),
         units: buildHeroTable(msg.units),
       }
+      arena = prepareArena(msg.arena)
       scope.postMessage({ type: 'ready' })
       return
     }
@@ -108,12 +125,16 @@ scope.addEventListener('message', (event) => {
       }
       return
     }
-    if (!refs) {
+    if (!refs || !arena) {
       scope.postMessage({ type: 'error', id, message: 'references not loaded' })
       return
     }
     const reading =
-      msg.kind === 'formation' ? readFormation(msg.image, refs) : readScreenshot(msg.image, refs)
+      msg.kind === 'formation'
+        ? readFormation(msg.image, refs)
+        : msg.kind === 'replay'
+          ? readReplay(msg.image, arena)
+          : readScreenshot(msg.image, refs)
     scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))
   } catch (error) {
     scope.postMessage({

@@ -9,6 +9,7 @@
 
 import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 
+import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
@@ -22,9 +23,11 @@ import {
 } from '@/lib/import/learned'
 import {
   isFormationReading,
+  isReplayReading,
   type FormationReading,
   type LearnedIcon,
   type PortraitRef,
+  type ReplayReading,
   type RgbaImage,
   type ScreenshotReading,
 } from '@/lib/import/types'
@@ -36,6 +39,7 @@ import {
   type CellOverride,
   type FormationAssignment,
   type RecordNames,
+  type ReplayAssignment,
   type ShotAssignment,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
@@ -92,6 +96,9 @@ export interface ImportShot {
   // none), and its portraits as data URLs.
   unitOverrides: Record<number, number | null>
   unitCards: string[]
+  // A replay frame's picks: by screenshot column, the unit that started on
+  // each tile, by hex id.
+  tilePicks: Partial<Record<Team, Record<number, number>>>
 }
 
 /* The board a shot fills among `boardCount`: the reviewer's choice, else the
@@ -122,8 +129,11 @@ const swapSides = ref(false)
 const learned = shallowRef<LearnedIcon[]>([])
 let worker: Worker | null = null
 // A second worker of the same kind sorts pasted screenshots, so a paste is
-// sorted at once even while the first is busy reading.
-let sorter: Worker | null = null
+// sorted at once even while the first is busy reading. It is ready once it
+// holds the arena that tells a replay frame.
+let sorter: Promise<Worker> | null = null
+// The arena picture, fetched once and copied to each worker.
+let arena: Promise<RgbaImage> | null = null
 const sorting = new Map<string, (kind: ShotKind | null) => void>()
 let nextId = 1
 let storedLoaded = false
@@ -200,6 +210,15 @@ const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> =>
     bitmap.close()
   }
 }
+
+// A failed fetch is forgotten, so the next open tries again.
+const loadArena = (): Promise<RgbaImage> =>
+  (arena ??= fetchImage(arenaUrl).catch((error: unknown) => {
+    arena = null
+    throw error
+  }))
+
+const copyImage = (image: RgbaImage): RgbaImage => ({ ...image, data: image.data.slice() })
 
 const imageToDataUrl = (image: RgbaImage): string => {
   const canvas = document.createElement('canvas')
@@ -306,6 +325,7 @@ async function loadReferences(): Promise<ReferenceImages> {
     artifacts,
     units,
     learned: learned.value,
+    arena: copyImage(await loadArena()),
   }
 }
 
@@ -363,10 +383,13 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   if (shot) applyReading(shot, msg.reading)
 }
 
-// The board fit reads a copy this wide, so the sort needs no more.
+// The board fit reads a copy this wide, and the result tabs and the arena
+// still show at it, so the sort needs no more.
 const SORT_WIDTH = 480
 
-const startSorter = (): Worker => {
+/* The sorter, ready once it holds the arena; without the arena (it failed to
+ * load) it still tells formation panels from result screens. */
+const startSorter = async (): Promise<Worker> => {
   const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
     type: 'module',
   })
@@ -384,12 +407,20 @@ const startSorter = (): Worker => {
     for (const done of sorting.values()) done(null)
     sorting.clear()
   }
+  try {
+    const image = copyImage(await loadArena())
+    const message: TeamImportRequest = { type: 'arena', image }
+    started.postMessage(message, [image.data.buffer])
+  } catch {
+    // Pastes are still sorted between formations and results.
+  }
   return started
 }
 
 /* Which kind a screenshot is, for one that came with none (a paste); null
-   when it cannot be told, and the caller's default stands. */
-const sortShot = async (file: Blob): Promise<ShotKind | null> => {
+   when it cannot be told, and the caller's default stands. A replay frame is
+   only told when `replay` allows one. */
+const sortShot = async (file: Blob, replay: boolean): Promise<ShotKind | null> => {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   let image: RgbaImage
   try {
@@ -398,11 +429,11 @@ const sortShot = async (file: Blob): Promise<ShotKind | null> => {
   } finally {
     bitmap.close()
   }
-  const target = (sorter ??= startSorter())
+  const target = await (sorter ??= startSorter())
   const id = `sort-${nextId++}`
   return new Promise((resolve) => {
     sorting.set(id, resolve)
-    const message: TeamImportRequest = { type: 'sort', id, image }
+    const message: TeamImportRequest = { type: 'sort', id, image, replay }
     target.postMessage(message, [image.data.buffer])
   })
 }
@@ -435,6 +466,7 @@ async function ensureReferences(): Promise<void> {
       ...refs.portraits.map((p) => p.image.data.buffer),
       ...refs.artifacts.map((a) => a.image.data.buffer),
       ...refs.units.map((u) => u.image.data.buffer),
+      refs.arena.data.buffer,
     ]
     post({ type: 'references', ...refs }, transfer)
   } catch (error) {
@@ -508,7 +540,12 @@ const clearImport = (): void => {
   restoreNames()
 }
 
-export function useTeamImport(mode: () => TeamModeKey): {
+/* `replayMode`: whether replay frames can be read for the boards' type; only
+ * Supreme League is fought in the arena they are matched against. */
+export function useTeamImport(
+  mode: () => TeamModeKey,
+  replayMode: () => boolean = () => false,
+): {
   shots: typeof shots
   referenceStatus: typeof referenceStatus
   names: RecordNames
@@ -517,8 +554,13 @@ export function useTeamImport(mode: () => TeamModeKey): {
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
-  addFiles: (files: File[], kind?: ShotKind | 'sort') => Promise<{ added: number; refused: number }>
+  addFiles: (
+    files: File[],
+    kind?: ShotKind | 'sort',
+  ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
   resultsClosed: ComputedRef<boolean>
+  formationsClosed: ComputedRef<boolean>
+  replayOpen: ComputedRef<boolean>
   removeShot: (id: string) => void
   clearImport: () => void
   setMap: (id: string, mapIndex: number | null) => void
@@ -533,6 +575,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   ) => void
   setArtifact: (id: string, team: Team, artifactId: number | null) => void
   setUnit: (id: string, index: number, unitId: number | null) => void
+  setTilePick: (id: string, column: Team, hexId: number, unitId: number | null) => void
   saveNames: () => void
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
@@ -550,24 +593,40 @@ export function useTeamImport(mode: () => TeamModeKey): {
       !shots.value.some((s) => s.kind === 'result'),
   )
 
-  // Result shots refused while formation shots are imported alone are
-  // counted, so the caller can say why they were not added.
+  // Replay frames place a match's heroes when its formations could not be
+  // saved: they are offered once result shots name the lineups and while no
+  // formation shot places them, and close the formation drop until removed.
+  const replayOpen = computed(
+    () =>
+      replayMode() &&
+      shots.value.some((s) => s.kind === 'result') &&
+      !shots.value.some((s) => s.kind === 'formation'),
+  )
+  const formationsClosed = computed(() => shots.value.some((s) => s.kind === 'replay'))
+
+  // Shots refused because their drop is closed are counted by kind, so the
+  // caller can say why they were not added.
   const addFiles = async (
     files: File[],
     kind: ShotKind | 'sort' = 'result',
-  ): Promise<{ added: number; refused: number }> => {
+  ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
     void ensureReferences()
     const mine = opening
     let added = 0
-    let refused = 0
+    const refused: Partial<Record<ShotKind, number>> = {}
     for (const file of files) {
       if (mine !== opening) break
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
-      const sorted = kind === 'sort' ? await sortShot(file).catch(() => null) : kind
+      const sorted =
+        kind === 'sort' ? await sortShot(file, replayOpen.value).catch(() => null) : kind
       if (mine !== opening) break
       const shotKind = sorted ?? (resultsClosed.value ? 'formation' : 'result')
-      if (shotKind === 'result' && resultsClosed.value) {
-        refused++
+      const closed =
+        (shotKind === 'result' && resultsClosed.value) ||
+        (shotKind === 'formation' && formationsClosed.value) ||
+        (shotKind === 'replay' && !replayOpen.value)
+      if (closed) {
+        refused[shotKind] = (refused[shotKind] ?? 0) + 1
         continue
       }
       const shot: ImportShot = reactive({
@@ -586,6 +645,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
         artifactCards: {},
         unitOverrides: {},
         unitCards: [],
+        tilePicks: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
       added++
@@ -656,6 +716,19 @@ export function useTeamImport(mode: () => TeamModeKey): {
     if (shot) shot.unitOverrides[index] = unitId
   }
 
+  // A unit starts on one tile, so picking it for a tile takes it off any other.
+  const setTilePick = (id: string, column: Team, hexId: number, unitId: number | null): void => {
+    const shot = findShot(id)
+    if (!shot) return
+    const picks = Object.fromEntries(
+      Object.entries(shot.tilePicks[column] ?? {}).filter(
+        ([hex, picked]) => Number(hex) !== hexId && picked !== unitId,
+      ),
+    )
+    if (unitId !== null) picks[hexId] = unitId
+    shot.tilePicks = { ...shot.tilePicks, [column]: picks }
+  }
+
   const forgetLearned = (): void => {
     learned.value = []
     writeStorage(LEARNED_KEY, serializeLearnedIcons([]))
@@ -689,7 +762,13 @@ export function useTeamImport(mode: () => TeamModeKey): {
       artifactOverrides: s.artifactOverrides,
       unitOverrides: s.unitOverrides,
     }))
-    return buildTeamImportPlan(assignments, mode(), names, swapSides.value, formations)
+    const replays: ReplayAssignment[] = shots.value
+      .filter(
+        (s): s is ImportShot & { reading: ReplayReading } =>
+          s.kind === 'replay' && s.reading !== null && isReplayReading(s.reading),
+      )
+      .map((s) => ({ mapIndex: shotMapIndex(s, boardCount()), picks: s.tilePicks }))
+    return buildTeamImportPlan(assignments, mode(), names, swapSides.value, formations, replays)
   })
 
   // Who each unit of a formation shot is taken for, from the plan.
@@ -708,6 +787,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
     unitsOf,
     addFiles,
     resultsClosed,
+    formationsClosed,
+    replayOpen,
     removeShot,
     clearImport,
     setMap,
@@ -716,6 +797,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     setLevel,
     setArtifact,
     setUnit,
+    setTilePick,
     saveNames,
     forgetLearned,
     ensureReferences,
@@ -727,7 +809,7 @@ export function disposeTeamImport(): void {
   session++
   worker?.terminate()
   worker = null
-  sorter?.terminate()
+  void sorter?.then((w) => w.terminate())
   sorter = null
   for (const done of sorting.values()) done(null)
   sorting.clear()

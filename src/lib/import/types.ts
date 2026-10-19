@@ -85,6 +85,8 @@ export type ImportWarning =
   | { kind: 'unrecognised'; side: Team; row: number }
   // A formation shot without a whole board: nothing else is read from it.
   | { kind: 'no-board' }
+  // A replay frame the arena could not be matched in: no board to draw.
+  | { kind: 'no-arena' }
 
 // What one screenshot says, independent of the mode it is reviewed in: the
 // strip is always read, and the board it fills is settled at review time.
@@ -149,6 +151,28 @@ export interface FormationReading extends ScreenshotReading {
 export const isFormationReading = (reading: ScreenshotReading): reading is FormationReading =>
   'units' in reading
 
+// Where a replay frame sits against the reference frame its camera was
+// measured in: reference pixel p is frame pixel (x, y) + scale * p, and score is
+// how well the arena matched there.
+export interface ReplayPlacement {
+  scale: number
+  x: number
+  y: number
+  score: number
+}
+
+// A paused replay frame: no cards, only where the board lies in it. The map
+// strip's ring stands in for the result strip (mapIndex, mapCount), with no
+// results; the sides and artifacts are empty.
+export interface ReplayReading extends ScreenshotReading {
+  // The read image's size, the pixels the placement is in.
+  size: { width: number; height: number }
+  placement: ReplayPlacement | null
+}
+
+export const isReplayReading = (reading: ScreenshotReading): reading is ReplayReading =>
+  'placement' in reading
+
 // ---------- references ----------
 
 export interface FrameRef {
@@ -204,6 +228,18 @@ export interface LearnedIcon {
   // Int8-quantised descriptor, base64.
   descriptor: string
   learnedAt: number
+}
+
+export interface GreyImage {
+  width: number
+  height: number
+  data: Float32Array
+}
+
+// The Supreme League arena for placing replay frames, at two reductions.
+export interface ArenaRef {
+  fine: GreyImage
+  coarse: GreyImage
 }
 
 export interface ReferenceSet {
