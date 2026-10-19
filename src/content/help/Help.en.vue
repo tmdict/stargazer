@@ -200,8 +200,8 @@ const SKILL = {
       </div>
       <ul class="help-notes reading-secondary">
         <li>
-          The buttons above the heroes change everyone you can see. Filter first to change just a
-          few.
+          The buttons above the heroes change everyone you can see. To change only some, choose
+          <b>Select</b>, pick those heroes, then pick a level.
         </li>
         <li>Pick <b>All heroes</b> to see every hero again.</li>
         <li>

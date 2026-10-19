@@ -63,6 +63,7 @@ const HEROES = [
             <UpgradeDockChip text danger :tip="label('clear')">{{
               label('clear')
             }}</UpgradeDockChip>
+            <UpgradeDockChip text :tip="label('select')">{{ label('select') }}</UpgradeDockChip>
           </span>
           <UpgradeDockLabel>{{ label('upgrades') }}</UpgradeDockLabel>
           <span class="help-mock-chips">
