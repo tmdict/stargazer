@@ -1,5 +1,5 @@
 import { registerSkill } from '../registry'
-import { createLineSkill } from '../utils/builders'
+import { createEffectsSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { zoneOutline } from '../utils/line'
 
@@ -7,9 +7,9 @@ import { zoneOutline } from '../utils/line'
 // by allies within a 2-tile radius; drawn as one outline along the zone's
 // outer boundary, not a border per tile.
 registerSkill(
-  createLineSkill({
+  createEffectsSkill({
     id: 'callan',
     characterId: 70,
-    calculate: (ctx) => zoneOutline(ctx.grid, ctx.hexId, 2, SKILL_COLORS.green),
+    calculate: (ctx) => ({ lines: zoneOutline(ctx.grid, ctx.hexId, 2, SKILL_COLORS.green) }),
   }),
 )
