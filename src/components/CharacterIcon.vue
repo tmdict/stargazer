@@ -33,10 +33,13 @@ const props = defineProps<{
   // picks). Unset opens the full page.
   inspectChips?: readonly TagPick[]
   showEnergy?: boolean
+  // Unset: no tick. False: an empty tick circle (the Rosters tab while
+  // selecting). True: ticked, with the ring in the selection colour.
+  ticked?: boolean
 }>()
 
 const emit = defineEmits<{
-  characterClick: [character: CharacterType]
+  characterClick: [character: CharacterType, event: MouseEvent]
 }>()
 
 const gameDataStore = useGameDataStore()
@@ -46,7 +49,7 @@ const {
   onMouseDown,
   onMouseUp,
   cancel: cancelPress,
-} = usePressClick(() => emit('characterClick', props.character))
+} = usePressClick((event: MouseEvent) => emit('characterClick', props.character, event))
 const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
 const characterElement = ref<HTMLElement>()
@@ -101,6 +104,7 @@ const handleDragEnd = (event: DragEvent) => {
           draggable: isDraggable,
           dimmed,
           selected: isSelected,
+          ticked,
           inspectable: inspectTarget,
         }"
         :style="{
@@ -132,6 +136,18 @@ const handleDragEnd = (event: DragEvent) => {
         <span v-else class="portrait-name">{{ displayName }}</span>
       </div>
       <HoldRing v-if="pressing" />
+      <span v-if="ticked !== undefined" class="tick" :class="{ on: ticked }" aria-hidden="true">
+        <svg
+          viewBox="0 0 12 12"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M2.5 6.3l2.3 2.3 4.7-5" />
+        </svg>
+      </span>
     </div>
     <div v-if="$slots.badge" class="portrait-badge">
       <slot name="badge" />
@@ -260,6 +276,60 @@ const handleDragEnd = (event: DragEvent) => {
   box-shadow: 0 0 0 5px #c05b4d;
 }
 
+.character-display.ticked {
+  box-shadow: 0 0 0 5px var(--color-primary);
+}
+
+.tick {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.18);
+  color: #fff;
+  pointer-events: none;
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.tick svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    transform 0.22s cubic-bezier(0.3, 1.8, 0.5, 1),
+    opacity 0.12s;
+}
+
+.tick.on {
+  background: var(--color-primary);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.tick.on svg {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tick svg {
+    transition: none;
+  }
+}
+
 /* The portrait's 5px ring sits outside its box, so this small pull seats the
    badge over the ring's visible edge by about a third of its height, as the
    board hero card's pill does. */
@@ -317,6 +387,17 @@ const handleDragEnd = (event: DragEvent) => {
     width: 50px;
     height: 50px;
     box-shadow: 0 0 0 3px #fff;
+  }
+
+  .character-display.ticked {
+    box-shadow: 0 0 0 3px var(--color-primary);
+  }
+
+  .tick {
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
   }
 
   .portrait {
