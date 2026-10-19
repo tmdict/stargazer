@@ -77,7 +77,7 @@ A skill that needs data-store facts reads them from `ctx.lookups`, never from th
 
 ## Skill modes
 
-Some heroes enter battle in one of several modes the player picks beforehand, such as Dunlingr's Bell of Order (Spellbind or Curelock) and Natsu's Lightning Fire Dragon Mode or Fire Dragon King Mode. `SKILL_MODES` (`src/lib/skills/skillModes.ts`) lists them per base hero id: an icon key, and per mode an app locale key for its game name and a `SKILL_COLORS` color.
+Some heroes enter battle in one of several modes the player picks beforehand, such as Dunlingr's Bell of Order (Spellbind or Curelock) and Natsu's Lightning Fire Dragon Mode or Fire Dragon King Mode. `SKILL_MODES` (`src/lib/skills/skillModes.ts`) lists them per base hero id: an icon key, and per mode an app locale key for its game name and a `SKILL_COLORS` color for its arrows and badge. A mode can give its badge another color (`badgeColor`): Spellbind's arrows are amber and its badge gold.
 
 A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#hero-upgrade-attributes)), whose value is the mode's position in that list. Position 0 is the default and is never written, so a hero in its default mode has no row. Each list is append-only: a mode is never reordered or removed, and a new one goes at the end. The 4-bit value field allows 16 modes per hero. A value past a hero's last mode reads as the last mode, and a row for any id without an entry drops, including companion and synergy ids, since the lookup takes the exact id. Rosters never store a mode. A saved team with Valen at P4 and Dunlingr set to Curelock:
 
@@ -101,7 +101,7 @@ A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#he
 }
 ```
 
-A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right, a [unit badge](#unit-badges). The arrows show only while the Skills toggle is on. The button shows whatever the toggle says, because the mode is part of the hero's setup, and it is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
+A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and badge color on the portrait's upper right, a [unit badge](#unit-badges). The arrows show only while the Skills toggle is on. The button shows whatever the toggle says, because the mode is part of the hero's setup, and it is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 
