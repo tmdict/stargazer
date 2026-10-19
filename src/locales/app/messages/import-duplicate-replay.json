@@ -1,5 +1,5 @@
 {
-  "en": "Two replay frames are on map {map}; remove one",
+  "en": "Two replay frames are set to map {map}: remove one",
   "zh": "第 {map} 张地图有两张回放画面，请移除一张",
   "ko": "맵 {map}에 리플레이 화면이 두 장 있습니다. 한 장을 제거하세요"
 }

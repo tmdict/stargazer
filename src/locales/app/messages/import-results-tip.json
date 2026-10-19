@@ -1,5 +1,5 @@
 {
-  "en": "The battle stats screen after a match, one per map: both teams' heroes, upgrades and artifacts.",
-  "zh": "对战结束后的战斗数据界面，每张地图一张：双方的英雄、强化与神器。",
-  "ko": "대전이 끝난 뒤의 전투 데이터 화면을 맵마다 한 장씩: 두 진영의 영웅, 강화, 메아리."
+  "en": "One battle stats screen per map, for both teams' heroes, upgrades and artifacts.",
+  "zh": "每张地图一张战斗数据界面，用于读取双方的英雄、强化与神器。",
+  "ko": "맵마다 전투 데이터 화면 한 장씩: 두 진영의 영웅, 강화, 메아리를 읽습니다."
 }

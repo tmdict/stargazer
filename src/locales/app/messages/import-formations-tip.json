@@ -1,5 +1,5 @@
 {
-  "en": "One per team per map. With match results they only place the heroes, since a formation shows your own upgrades, not the match's. On their own, each places one team with the upgrades it shows.",
-  "zh": "每张地图每方一张。与对战结果一起使用时只放置英雄，因为布阵显示的是你自己的强化，而不是对战中的。单独导入时，每张按其显示的强化放置一方。",
-  "ko": "맵마다 진영별로 한 장씩. 배치 화면은 대전이 아닌 내 강화를 보여 주므로, 대전 결과와 함께 쓰면 영웅만 배치합니다. 따로 쓰면 각 장이 보여 주는 강화로 한 진영을 배치합니다."
+  "en": "One per team per map. With match results, they only set each hero's tile, since a formation shows your own upgrades, not the match's. On their own, each one imports a team with the upgrades shown.",
+  "zh": "每张地图每方一张。与对战结果一起使用时只决定英雄所站的格子，因为布阵显示的是你自己的强化，而不是对战中的。单独导入时，每张按显示的强化导入一方。",
+  "ko": "맵마다 진영별로 한 장씩. 배치 화면은 대전이 아닌 내 강화를 보여 주므로, 대전 결과와 함께 쓰면 영웅의 타일만 정합니다. 따로 쓰면 각 장이 보여 주는 강화로 한 진영을 가져옵니다."
 }
