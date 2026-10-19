@@ -24,7 +24,14 @@ import { performRemove } from '../../characters/remove'
 import { BASE_TEAM_SIZE } from '../../grid'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
-import type { Skill, SkillContext, SkillLine, SkillTargetInfo, TilePaint } from '../skill'
+import type {
+  Skill,
+  SkillBadge,
+  SkillContext,
+  SkillLine,
+  SkillTargetInfo,
+  TilePaint,
+} from '../skill'
 
 interface TargetingSkillConfig {
   id: string
@@ -247,6 +254,31 @@ interface LineSkillConfig {
 export function createLineSkill(config: LineSkillConfig): Skill {
   const { id, characterId, calculate } = config
   return withSkillLine(bareSkill(id, characterId), calculate)
+}
+
+/**
+ * Decorates a skill with the unit badges `calculate` returns (drawn by
+ * GridCharacters). The badge analog of withSkillLine; clears on deactivate.
+ */
+export function withSkillBadges(
+  base: Skill,
+  calculate: (context: SkillContext) => SkillBadge[],
+): Skill {
+  return {
+    ...base,
+    onActivate(ctx) {
+      base.onActivate(ctx)
+      ctx.skillManager.setSkillBadges(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onUpdate(ctx) {
+      base.onUpdate?.(ctx)
+      ctx.skillManager.setSkillBadges(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onDeactivate(ctx) {
+      ctx.skillManager.clearSkillBadges(ctx.characterId, ctx.team)
+      base.onDeactivate(ctx)
+    },
+  }
 }
 
 interface CompanionSkillConfig {

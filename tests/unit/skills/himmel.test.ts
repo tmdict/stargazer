@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
+import { SKILL_COLORS } from '@/lib/skills/utils/colors'
 import { Team } from '@/lib/types/team'
 import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../fixtures/skills'
 
@@ -49,6 +50,11 @@ describe('himmel class-trio highlighting', () => {
     expect(skillManager.getTileFillModifier(16)).toHaveLength(1)
     expect(skillManager.getTileFillModifier(12)).toHaveLength(1)
     expect(skillManager.getTileFillModifier(6)).toHaveLength(1)
+    expect(skillManager.getSkillBadges()).toEqual([
+      { hexId: 16, icon: 'tank', color: SKILL_COLORS.blue },
+      { hexId: 12, icon: 'mage', color: SKILL_COLORS.blue },
+      { hexId: 6, icon: 'support', color: SKILL_COLORS.blue },
+    ])
   })
 
   it('ignores neighbors whose class is not tank/mage/support', () => {
@@ -61,6 +67,7 @@ describe('himmel class-trio highlighting', () => {
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
     expect(skillManager.getTileFillModifier(12)).toBeUndefined()
     expect(skillManager.getTileFillModifier(6)).toBeUndefined()
+    expect(skillManager.getSkillBadges()).toEqual([])
   })
 
   it('scans diagonal rows back-to-front: a deeper-row tank (4) beats a nearer-row tank (7)', () => {
@@ -113,5 +120,18 @@ describe('himmel class-trio highlighting', () => {
 
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
     expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getSkillBadges()).toEqual([])
+  })
+
+  it('takes its badges away when Himmel leaves', () => {
+    placeOnTile(grid, 16, 1, Team.ALLY)
+    placeOnTile(grid, 12, 2, Team.ALLY)
+    placeOnTile(grid, 6, 3, Team.ALLY)
+    himmel().onActivate(ctx())
+    expect(skillManager.getSkillBadges()).toHaveLength(3)
+
+    himmel().onDeactivate(ctx())
+
+    expect(skillManager.getSkillBadges()).toEqual([])
   })
 })
