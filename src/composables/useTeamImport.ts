@@ -1,6 +1,7 @@
 /* Match screenshot import: file intake, decoding, the worker that reads the
- * screenshots (result screens, and formation panels for the tiles), the
- * reference images it needs, and the review state per screenshot.
+ * screenshots (result screens, formation panels and replay frames for the
+ * tiles), a second one that sorts pastes, the reference images they need, and
+ * the review state per screenshot.
  * Module-level state like useSelectionState: the shots belong to one opening
  * of the modal (clearImport), the worker and its references to the page visit
  * (TeamsView disposes them on leave), and the learned faces stay in storage.
@@ -13,8 +14,9 @@ import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
+import { FIT_WIDTH } from '@/lib/import/board'
 import { FRAME_NAMES } from '@/lib/import/frames'
-import { RESULT_MAX_WIDTH } from '@/lib/import/layout'
+import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
   addLearnedIcon,
   dropLearnedIcon,
@@ -30,6 +32,7 @@ import {
   type ReplayReading,
   type RgbaImage,
   type ScreenshotReading,
+  type ShotKind,
 } from '@/lib/import/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
@@ -56,12 +59,9 @@ import { loadMatcherPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
 import type {
   ReferenceImages,
-  ShotKind,
   TeamImportRequest,
   TeamImportResponse,
 } from '@/workers/teamImport.worker'
-
-export type { ShotKind }
 
 const NAMES_KEY = 'stargazer.import.names'
 const LEARNED_KEY = 'stargazer.import.learned'
@@ -325,7 +325,8 @@ async function loadReferences(): Promise<ReferenceImages> {
     artifacts,
     units,
     learned: learned.value,
-    arena: copyImage(await loadArena()),
+    // Only replay frames need the arena, so the rest read without it.
+    arena: await loadArena().then(copyImage, () => null),
   }
 }
 
@@ -383,10 +384,6 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   if (shot) applyReading(shot, msg.reading)
 }
 
-// The board fit reads a copy this wide, and the result tabs and the arena
-// still show at it, so the sort needs no more.
-const SORT_WIDTH = 480
-
 /* The sorter, ready once it holds the arena; without the arena (it failed to
  * load) it still tells formation panels from result screens. */
 const startSorter = async (): Promise<Worker> => {
@@ -421,15 +418,23 @@ const startSorter = async (): Promise<Worker> => {
    when it cannot be told, and the caller's default stands. A replay frame is
    only told when `replay` allows one. */
 const sortShot = async (file: Blob, replay: boolean): Promise<ShotKind | null> => {
+  const mine = session
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   let image: RgbaImage
   try {
-    const width = Math.min(bitmap.width, SORT_WIDTH)
+    // The board fit reads a copy this wide, so the sort needs no more; a
+    // result screen too small for its tabs at it still lands in the default.
+    const width = Math.min(bitmap.width, FIT_WIDTH)
     image = drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
   } finally {
     bitmap.close()
   }
-  const target = await (sorter ??= startSorter())
+  // The page was left meanwhile: no sorter is started for it.
+  if (mine !== session) return null
+  const started = (sorter ??= startSorter())
+  const target = await started
+  // The sorter failed while starting, and its error answered the sorts it had.
+  if (sorter !== started) return null
   const id = `sort-${nextId++}`
   return new Promise((resolve) => {
     sorting.set(id, resolve)
@@ -466,7 +471,7 @@ async function ensureReferences(): Promise<void> {
       ...refs.portraits.map((p) => p.image.data.buffer),
       ...refs.artifacts.map((a) => a.image.data.buffer),
       ...refs.units.map((u) => u.image.data.buffer),
-      refs.arena.data.buffer,
+      ...(refs.arena ? [refs.arena.data.buffer] : []),
     ]
     post({ type: 'references', ...refs }, transfer)
   } catch (error) {
@@ -480,11 +485,6 @@ async function ensureReferences(): Promise<void> {
 }
 
 // ---------- shots ----------
-
-// A formation shot is read at its own size, which the board fit measures, up
-// to a width that keeps a full-resolution phone capture quick to read.
-const FORMATION_MAX_WIDTH = 1200
-const FORMATION_MIN_WIDTH = 400
 
 const decodeShot = async (file: Blob, kind: ShotKind): Promise<RgbaImage> => {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
@@ -504,7 +504,7 @@ const decodeShot = async (file: Blob, kind: ShotKind): Promise<RgbaImage> => {
 
 // Decode a shot and hand it to the worker, or queue it until the references
 // are ready. With the references failed the shot fails too, but its pixels
-// stay queued for the retry a later open makes.
+// stay queued for the retry the next added shot makes in this opening.
 const readShot = async (shot: ImportShot, file: Blob): Promise<void> => {
   const mine = session
   try {
@@ -768,7 +768,18 @@ export function useTeamImport(
           s.kind === 'replay' && s.reading !== null && isReplayReading(s.reading),
       )
       .map((s) => ({ mapIndex: shotMapIndex(s, boardCount()), picks: s.tilePicks }))
-    return buildTeamImportPlan(assignments, mode(), names, swapSides.value, formations, replays)
+    // A result shot that failed to read still makes the import a match, as the
+    // modal shows it, so formations never fall back to their own upgrades.
+    const match = shots.value.some((s) => s.kind === 'result')
+    return buildTeamImportPlan(
+      assignments,
+      mode(),
+      names,
+      swapSides.value,
+      formations,
+      replays,
+      match,
+    )
   })
 
   // Who each unit of a formation shot is taken for, from the plan.

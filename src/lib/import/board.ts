@@ -180,7 +180,7 @@ function support(m: LineMap, s: number, ox: number, oy: number): number {
 // The fit runs on a copy this wide (or the shot itself when narrower), pooled
 // by POOL for the coarse pass. Boards from MIN_WIDTH of the copy's width up to
 // all of it are tried, in SCALE_STEP increments.
-const FIT_WIDTH = 480
+export const FIT_WIDTH = 480
 const POOL = 4
 const MIN_WIDTH = 0.35
 const SCALE_STEP = 0.015

@@ -8,7 +8,7 @@
    may have moved before the pause, so the tile is the reviewer's call. Every
    pick is an edit on the shot; nothing here touches a board. */
 
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
@@ -123,9 +123,23 @@ interface Picker {
 
 const picker = ref<Picker | null>(null)
 
+// Escape closes only the picker: heard on capture, before the modal's own
+// listener would close the import and drop every shot with it.
+const closeOnEscape = (event: KeyboardEvent): void => {
+  if (event.key !== 'Escape' || !picker.value) return
+  event.stopPropagation()
+  picker.value = null
+}
+onMounted(() => document.addEventListener('keydown', closeOnEscape, { capture: true }))
+onUnmounted(() => document.removeEventListener('keydown', closeOnEscape, { capture: true }))
+
+// A tile no team deploys on closes the picker, as a click on the frame does.
 const openPicker = (tile: TileView): void => {
   const box = view.value?.box
-  if (tile.column === null || !box) return
+  if (tile.column === null || !box) {
+    picker.value = null
+    return
+  }
   picker.value =
     picker.value?.hexId === tile.id
       ? null
@@ -241,7 +255,7 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
           :viewBox="`${view.box.x} ${view.box.y} ${view.box.w} ${view.box.h}`"
           role="img"
           :aria-label="shot.name"
-          @click.self="picker = null"
+          @click="picker = null"
         >
           <defs>
             <pattern

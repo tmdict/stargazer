@@ -46,6 +46,10 @@ import type {
   ScreenshotReading,
 } from './types'
 
+// A result screen never shows a companion or phantimal, so its reading needs
+// no unit table.
+type ResultReferences = Omit<ReferenceSet, 'units'>
+
 // Small offsets of the face crop, centre first, absorbing the frame match's
 // residual error.
 const ALIGNMENTS: readonly [number, number][] = [
@@ -130,7 +134,7 @@ const placeColumns = (
  * A side fields five different heroes, so the faces are settled together. */
 export const readCards = (
   shot: RgbaImage,
-  refs: ReferenceSet,
+  refs: ResultReferences,
   seeds: readonly { x: number; y: number }[],
   trusted: boolean,
 ): HeroReading[] => {
@@ -168,7 +172,7 @@ const columnSeeds = (anchor: PanelAnchor): { x: number; y: number }[] =>
     y: Math.round(anchor.y + anchor.pitch * row),
   }))
 
-export function readScreenshot(capture: RgbaImage, refs: ReferenceSet): ScreenshotReading {
+export function readScreenshot(capture: RgbaImage, refs: ResultReferences): ScreenshotReading {
   const warnings: ImportWarning[] = []
   const { image: shot, tabs: found } = framePanel(capture)
   const { tabs, anchors, floor } = placeColumns(shot, refs.frames, found)

@@ -29,7 +29,7 @@ afterEach(() => {
   disposeTeamImport()
 })
 
-const mountReplay = async () => {
+const mountReplay = async (placement: ReplayReading['placement'] = null) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -42,7 +42,7 @@ const mountReplay = async () => {
     artifacts: { 1: null, 2: null },
     warnings: [],
     size: { width: 1400, height: 1940 },
-    placement: null,
+    placement,
   }
   const api = useTeamImport(
     () => '5v5',
@@ -120,5 +120,39 @@ describe('typing a replay tile', () => {
 
     await type(boxes()[0]!, '', new Event('change'))
     expect(picks()[1]).toEqual({})
+  })
+})
+
+describe('the tile picker', () => {
+  it('closes on Escape without the key reaching the modal, and on a click on the frame', async () => {
+    await mountReplay({ scale: 1, x: 0, y: 0, score: 1 })
+    const modalHeard: string[] = []
+    const modal = (event: KeyboardEvent) => modalHeard.push(event.key)
+    document.addEventListener('keydown', modal)
+    const ally = deploymentTile(State.AVAILABLE_ALLY)
+    const open = async () => {
+      document
+        .querySelector(`polygon[aria-label="Tile ${ally}"]`)!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      await nextTick()
+      expect(document.querySelector('.picker')).not.toBeNull()
+    }
+
+    await open()
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await nextTick()
+    expect(document.querySelector('.picker')).toBeNull()
+    expect(modalHeard).toEqual([])
+
+    await open()
+    document
+      .querySelector('.frame-view image')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(document.querySelector('.picker')).toBeNull()
+
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    expect(modalHeard).toEqual(['Escape'])
+    document.removeEventListener('keydown', modal)
   })
 })

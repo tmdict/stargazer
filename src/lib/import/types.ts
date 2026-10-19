@@ -88,6 +88,9 @@ export type ImportWarning =
   // A replay frame the arena could not be matched in: no board to draw.
   | { kind: 'no-arena' }
 
+// A result screen, a formation panel, or a paused replay frame.
+export type ShotKind = 'result' | 'formation' | 'replay'
+
 // What one screenshot says, independent of the mode it is reviewed in: the
 // strip is always read, and the board it fills is settled at review time.
 export interface ScreenshotReading {

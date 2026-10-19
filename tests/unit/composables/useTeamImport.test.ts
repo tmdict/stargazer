@@ -9,6 +9,7 @@ import {
 } from '@/composables/useTeamImport'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
+import type { FormationReading } from '@/lib/import/types'
 import { stubLocalStorage } from '../fixtures/storage'
 
 vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
@@ -153,6 +154,41 @@ describe('board sides', () => {
     expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     api.clearImport()
     expect(api.swapSides.value).toBe(false)
+  })
+})
+
+describe('a match import', () => {
+  it('leaves out a formation shot when the only result shot failed to read', () => {
+    const api = useTeamImport(() => '5v5')
+    const result = shot()
+    const unit = {
+      hexId: 1,
+      ring: { x: 0, y: 0, radius: 1 },
+      score: 1,
+      candidates: [{ characterId: 5, score: 0.9, learned: false, costume: false }],
+      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+    }
+    const formation: FormationReading = {
+      ...result.reading!,
+      mapIndex: 0,
+      size: { width: 640, height: 760 },
+      board: { scale: 46, x: 0, y: 0, support: 0.7 },
+      side: 1,
+      tiles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 16],
+      unclear: [],
+      units: [unit],
+    }
+    api.shots.value = [
+      { ...result, id: 'unread', status: 'failed', error: 'read', reading: null },
+      { ...shot(), id: 'formation', kind: 'formation', reading: formation },
+    ]
+    // Read alone, the formation shot would place its own cards' heroes.
+    expect(api.plan.value.boards[0]).toBeNull()
+    expect(api.plan.value.issues).toContainEqual({
+      kind: 'formation-unused',
+      team: 1,
+      mapIndex: 0,
+    })
   })
 })
 

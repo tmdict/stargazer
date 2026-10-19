@@ -70,8 +70,8 @@ export interface LineupEntry {
 }
 
 export interface BoardLineup {
-  // The sides the import replaces, as the side-load places them; a side no
-  // screenshot shows stays as it is.
+  // The sides the import fills, as the side-load places them; a side no
+  // screenshot shows stays empty on the new team.
   sides: Partial<Record<Team, SideLoadBoard>>
   // Sides placed from a formation shot, whose phantimal is the one shown (or
   // none); another side gets the phantimal its lineup qualifies for.
@@ -315,6 +315,8 @@ export function buildTeamImportPlan(
   swapSides = false,
   formations: readonly FormationAssignment[] = [],
   replays: readonly ReplayAssignment[] = [],
+  // Whether result screenshots make this a match, counting unread ones.
+  matchImport = shots.length > 0,
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)
@@ -367,7 +369,6 @@ export function buildTeamImportPlan(
     replayed.set(replay.mapIndex, replay)
   }
 
-  const matchImport = shots.length > 0
   const units: UnitAssignment[][] = formations.map(() => [])
   let empty = 0
   for (let mapIndex = 0; mapIndex < boardCount; mapIndex++) {
