@@ -334,8 +334,8 @@ const SKILL = {
       <li>
         <IconBell :size="18" />
         <span>
-          Some heroes pick a mode before battle, like Dunlingr and Natsu. With <b>Skills</b> on, a
-          button on the hero shows its mode and colors its arrows.
+          Some heroes pick a mode before battle, like Dunlingr and Natsu. A button on the hero shows
+          its mode, and with <b>Skills</b> on its arrows take the mode's color.
           <span class="help-mouse">Click it to switch modes.</span>
           <span class="help-touch"
             >To switch, tap the hero, then the round button next to <b>Skills</b>.</span

@@ -61,6 +61,14 @@ Lines need no diff: `setSkillLines` replaces the instance's set outright and the
 
 Arrows take their color from the definition's `targetingColorModifier`, or from the hero's skill mode (below), while lines and paints carry their own color. Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. `SkillTargeting` draws arrows and center lines, which join units and stand above the portraits. `GridTiles` draws paints and, through `SkillCornerLines`, corner lines, which lie on the tiles beneath everything standing on them. All of them show only while the Skills toggle is on.
 
+## Unit badges
+
+A unit badge is an icon in a colored disc on a portrait's rim, drawn by `UnitBadge.vue`, which maps each icon key (`BadgeIcon`, `src/lib/types/unitBadge.ts`) to its component. Each source has its own spot, so badges never cover each other: skill-mode buttons sit at the upper right and skill badges at the upper left. The lower right stays free because the rows of the perspective view overlap there.
+
+A skill shows badges the way it draws lines. `withSkillBadges` replaces the instance's `SkillBadge` list (a hex, an icon key and a color) on activate and update and clears it on deactivate, and `GridCharacters` draws the flattened list on the units standing on those hexes. Himmel badges each member of his party with its class, in the color of the party's tiles.
+
+What identifies a unit shows whatever the Skills toggle says: a companion's border color and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
+
 ## Lookups
 
 A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.
@@ -93,7 +101,7 @@ A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#he
 }
 ```
 
-A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right. Both show only while the Skills toggle is on, and the button is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
+A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right, a [unit badge](#unit-badges). The arrows show only while the Skills toggle is on. The button shows whatever the toggle says, because the mode is part of the hero's setup, and it is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 

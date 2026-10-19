@@ -1,6 +1,7 @@
 import { findCharacterHex } from '../characters/character'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
+import type { BadgeIcon } from '../types/unitBadge'
 // Underscore imports use SkillBase<unknown>, wrapped below with Skill = SkillBase<SkillContext>
 import {
   getCharacterSkill as _getCharacterSkill,
@@ -52,6 +53,14 @@ export interface SkillLine {
   color: string
   fromCorner?: number
   toCorner?: number
+}
+
+// An icon a skill puts on the unit standing on a hex, at the portrait's upper
+// left: the class of each member of Himmel's party.
+export interface SkillBadge {
+  hexId: number
+  icon: BadgeIcon
+  color: string
 }
 
 export interface SkillTargetInfo {
@@ -110,6 +119,8 @@ export class SkillManager {
   private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
   // Connection lines each skill instance draws (rendered by SkillTargeting and SkillCornerLines)
   private skillLines: Map<string, SkillLine[]> = new Map()
+  // Unit badges each skill instance shows (rendered by GridCharacters)
+  private skillBadges: Map<string, SkillBadge[]> = new Map()
   // Bumped on every mutation the UI must see; the board's computeds read it
   // to re-derive from this non-reactive class.
   private targetVersion = 0
@@ -204,6 +215,7 @@ export class SkillManager {
     this.skillTargets.clear()
     this.skillPaintedTiles.clear()
     this.skillLines.clear()
+    this.skillBadges.clear()
     this.targetVersion++
   }
 
@@ -355,6 +367,22 @@ export class SkillManager {
 
   getSkillLines(): SkillLine[] {
     return [...this.skillLines.values()].flat()
+  }
+
+  // Replaced outright, as lines are.
+  setSkillBadges(characterId: number, team: Team, badges: SkillBadge[]): void {
+    const key = this.getSkillKey(characterId, team)
+    if (badges.length) this.skillBadges.set(key, badges)
+    else this.skillBadges.delete(key)
+    this.targetVersion++
+  }
+
+  clearSkillBadges(characterId: number, team: Team): void {
+    if (this.skillBadges.delete(this.getSkillKey(characterId, team))) this.targetVersion++
+  }
+
+  getSkillBadges(): SkillBadge[] {
+    return [...this.skillBadges.values()].flat()
   }
 
   // Get color modifiers mapped by "characterId-team"

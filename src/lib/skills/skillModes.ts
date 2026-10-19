@@ -5,10 +5,8 @@
  * the end. Position 0 is the default and is never stored. The attribute's
  * 4-bit value field allows up to 16 modes per hero. */
 
+import type { BadgeIcon } from '../types/unitBadge'
 import { SKILL_COLORS } from './utils/colors'
-
-// The board maps each key to an icon component.
-export type SkillModeIcon = 'bell' | 'flame'
 
 export interface SkillMode {
   // App locale key holding the game's name for the mode.
@@ -17,7 +15,7 @@ export interface SkillMode {
 }
 
 interface HeroSkillModes {
-  icon: SkillModeIcon
+  icon: BadgeIcon
   modes: readonly SkillMode[]
 }
 
