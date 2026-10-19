@@ -4,7 +4,8 @@
    board) and its pill steps one level. The dock's add, remove and upgrade
    actions act on every hero the filters show. Select swaps the dock for a
    selection bar: portrait taps then tick heroes, and a level chip sets that
-   level on every ticked hero. */
+   level on every ticked hero. A mouse drag across heroes gives each the
+   first hero's change, as dragging paints tiles on the map. */
 
 import { computed, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance } from 'vue'
 
@@ -201,11 +202,6 @@ const tick = (id: number, extend: boolean): void => {
   anchorId = id
 }
 
-const onPortrait = (character: CharacterType, event: MouseEvent): void => {
-  if (!selecting.value) toggle(character)
-  else if (levelsOf(character)) tick(character.id, event.shiftKey)
-}
-
 // A level chip is lit when every ticked hero already has that level.
 const sharedLevel = (attrId: number): number | null => {
   const [first, ...rest] = tickedLevels.value
@@ -259,6 +255,74 @@ const onKeyDown = (event: KeyboardEvent): void => {
 }
 onMounted(() => document.addEventListener('keydown', onKeyDown))
 onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
+
+// ---- Drag across heroes ----
+
+// The latest press on a hero. It paints only once it reaches a second hero,
+// so a press that stays on one is still a click or a hold, and the click its
+// release produces is ignored once it has painted.
+interface Stroke {
+  on: boolean
+  from: CharacterType
+  crossed: Set<number>
+  held: boolean
+}
+let stroke: Stroke | null = null
+
+const onPress = (character: CharacterType, event: MouseEvent): void => {
+  stroke = null
+  if (event.button !== 0) return
+  const owned = !!levelsOf(character)
+  // Outside select mode a pill press steps a level.
+  if (selecting.value ? !owned : (event.target as Element).closest('.pill-slot')) return
+  const on = selecting.value ? !ticked.value.has(character.id) : !owned
+  stroke = { on, from: character, crossed: new Set(), held: true }
+}
+
+const paint = ({ on, crossed }: Stroke, character: CharacterType): void => {
+  crossed.add(character.id)
+  const owned = !!levelsOf(character)
+  if (!selecting.value) {
+    if (on !== owned) editHeroes({ [character.id]: on ? {} : null })
+  } else if (owned) {
+    const next = new Set(ticked.value)
+    if (on) next.add(character.id)
+    else next.delete(character.id)
+    ticked.value = next
+    anchorId = character.id
+  }
+}
+
+// A release outside the window never reaches the document, so the buttons
+// still down decide whether the stroke goes on.
+const onCross = (character: CharacterType, event: MouseEvent): void => {
+  if (!stroke?.held) return
+  if (!(event.buttons & 1)) {
+    stroke.held = false
+    return
+  }
+  if (stroke.crossed.has(character.id)) return
+  if (stroke.crossed.size === 0) {
+    if (character.id === stroke.from.id) return
+    paint(stroke, stroke.from)
+  }
+  paint(stroke, character)
+}
+
+const onRelease = (): void => {
+  if (stroke) stroke.held = false
+}
+onMounted(() => document.addEventListener('mouseup', onRelease))
+onUnmounted(() => document.removeEventListener('mouseup', onRelease))
+
+// Esc mid-stroke would otherwise carry a tick stroke on as adds or removes.
+watch(selecting, () => (stroke = null))
+
+const onPortrait = (character: CharacterType, event: MouseEvent): void => {
+  if (stroke?.crossed.size) return
+  if (!selecting.value) toggle(character)
+  else if (levelsOf(character)) tick(character.id, event.shiftKey)
+}
 
 // ---- Library ----
 
@@ -537,6 +601,8 @@ const {
           :inspect-chips
           :ticked="selecting && levelsOf(character) ? ticked.has(character.id) : undefined"
           @character-click="onPortrait"
+          @mousedown="onPress(character, $event)"
+          @mouseenter="onCross(character, $event)"
         >
           <!-- Reserved, not removed: revealing a pill on select would reflow the
                grid and move the next tap target. -->
