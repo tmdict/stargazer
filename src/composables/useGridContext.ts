@@ -128,6 +128,7 @@ export interface GridContext {
   artifactArrows: ArtifactArrow[]
   skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
   skillLines: ReturnType<SkillManager['getSkillLines']>
+  skillBadges: ReturnType<SkillManager['getSkillBadges']>
   // Page-wide values surfaced on the board for one-stop component access.
   hexScale: number
   teamView: boolean
@@ -616,6 +617,10 @@ export function createGridContext(
       skillManager.getTargetVersion()
       return skillManager.getSkillLines()
     })
+    const skillBadges = computed(() => {
+      skillManager.getTargetVersion()
+      return skillManager.getSkillBadges()
+    })
     const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined =>
       colorModifiers.value.get(`${characterId}-${team}`)
     const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
@@ -680,6 +685,7 @@ export function createGridContext(
       perspective: perspectiveActive,
       skillTargets,
       skillLines,
+      skillBadges,
       getColorModifierForCharacter,
       getImageModifierForCharacter,
       getTileColorModifier,

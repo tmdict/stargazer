@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
 import HoldRing from '../ui/HoldRing.vue'
-import IconBell from '../ui/IconBell.vue'
-import IconFlame from '../ui/IconFlame.vue'
 import IconInfo from '../ui/IconInfo.vue'
 import TooltipPopup from '../ui/TooltipPopup.vue'
 import GridPointer from './GridPointer.vue'
+import UnitBadge from './UnitBadge.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
@@ -27,9 +26,10 @@ import {
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
-import { SKILL_MODES, type SkillMode, type SkillModeIcon } from '@/lib/skills/skillModes'
+import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
+import type { BadgeIcon } from '@/lib/types/unitBadge'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -188,7 +188,7 @@ const getCharacterColors = (characterId: number) => {
 // Base character size (at 40px hex radius)
 const BASE_CHARACTER_SIZE = 2 * PORTRAIT_RADIUS
 const BASE_CHARACTER_OFFSET = PORTRAIT_RADIUS
-const BASE_MODE_SIZE = 22
+const BASE_BADGE_SIZE = 22
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
@@ -201,8 +201,8 @@ const characterDimensions = computed(() => {
 
 // The mode button reaches past its drawn badge, so a near miss lands on the
 // button rather than on the portrait, where a click removes the hero.
-const modeDimensions = computed(() => {
-  const size = Math.max(16, Math.round(BASE_MODE_SIZE * ctx.hexScale))
+const badgeDimensions = computed(() => {
+  const size = Math.max(16, Math.round(BASE_BADGE_SIZE * ctx.hexScale))
   return {
     size,
     hit: Math.max(28, size + 12),
@@ -352,23 +352,23 @@ const visiblePlacements = computed(() => {
   )
 })
 
-const MODE_ICONS: Record<SkillModeIcon, Component> = { bell: IconBell, flame: IconFlame }
-
 interface ModeButton {
   hexId: number
   team: Team
   characterId: number
-  icon: Component
+  icon: BadgeIcon
   mode: SkillMode
   next: number
 }
 
-// Mode buttons show while the Skills toggle is on, like the arrows they colour.
-// The lookup takes the exact id: a synergy copy cannot hold a mode, because a
-// link's upgrade row cannot name its id.
+// A mode is part of the hero's setup, so its button shows whatever the Skills
+// toggle says, as a companion's border does; the arrows it colours follow the
+// toggle. The lookup takes the exact id: a synergy copy cannot hold a mode,
+// because a link's upgrade row cannot name its id.
 const modeButtons = computed(() =>
-  props.showSkills && !props.isMapEditorMode
-    ? visiblePlacements.value.flatMap(([hexId, characterId]): ModeButton[] => {
+  props.isMapEditorMode
+    ? []
+    : visiblePlacements.value.flatMap(([hexId, characterId]): ModeButton[] => {
         const entry = SKILL_MODES[characterId]
         const team = getCharacterTeam(ctx.grid, hexId)
         if (!entry || !team) return []
@@ -376,19 +376,26 @@ const modeButtons = computed(() =>
         const mode = entry.modes[position]
         if (!mode) return []
         const next = (position + 1) % entry.modes.length
-        return [{ hexId, team, characterId, icon: MODE_ICONS[entry.icon], mode, next }]
-      })
-    : [],
+        return [{ hexId, team, characterId, icon: entry.icon, mode, next }]
+      }),
 )
 
-// On the portrait's rim at its upper right.
-const modeStyle = computed(() => {
-  const { size, hit, border } = modeDimensions.value
+// A skill's badges picture what it does, so they follow the Skills toggle like
+// its tiles and arrows.
+const skillBadges = computed(() => {
+  if (!props.showSkills) return []
+  const shown = new Set(visiblePlacements.value.map(([hexId]) => hexId))
+  return ctx.skillBadges.filter((badge) => shown.has(badge.hexId))
+})
+
+// Badges sit on the portrait's rim, each source at its own spot.
+const badgeStyle = computed(() => {
+  const { size, hit, border } = badgeDimensions.value
   return {
-    '--mode-rim': `${(characterDimensions.value.size / 2) * Math.SQRT1_2}px`,
-    '--mode-size': `${size}px`,
+    '--badge-rim': `${(characterDimensions.value.size / 2) * Math.SQRT1_2}px`,
+    '--badge-size': `${size}px`,
+    '--badge-border': `${border}px`,
     '--mode-hit': `${hit}px`,
-    '--mode-border': `${border}px`,
   }
 })
 
@@ -417,7 +424,7 @@ const liftedMode = computed(() =>
 </script>
 
 <template>
-  <div class="character-layer">
+  <div class="character-layer" :style="badgeStyle">
     <div
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
@@ -483,8 +490,7 @@ const liftedMode = computed(() =>
     >
       <button
         type="button"
-        class="skill-mode"
-        :style="modeStyle"
+        class="skill-mode badge-upper-right"
         :disabled="readonly"
         :aria-label="i18n.t(`app.${button.mode.name}`)"
         @click="cycleMode(button)"
@@ -493,10 +499,22 @@ const liftedMode = computed(() =>
         @touchstart.passive="onModeTouch"
         @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
       >
-        <span class="skill-mode-badge" :style="{ backgroundColor: button.mode.color }">
-          <component :is="button.icon" :size="modeDimensions.glyph" />
-        </span>
+        <UnitBadge :icon="button.icon" :color="button.mode.color" :glyph="badgeDimensions.glyph" />
       </button>
+    </div>
+
+    <div
+      v-for="badge in skillBadges"
+      :key="`badge-${badge.hexId}-${badge.icon}`"
+      class="sprite-anchor"
+      :style="getCharacterStyle(badge.hexId)"
+    >
+      <UnitBadge
+        class="badge-upper-left"
+        :icon="badge.icon"
+        :color="badge.color"
+        :glyph="badgeDimensions.glyph"
+      />
     </div>
 
     <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
@@ -512,9 +530,7 @@ const liftedMode = computed(() =>
           :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"
           @click="cycleMode(liftedMode)"
         >
-          <span class="skill-mode-badge" :style="{ backgroundColor: liftedMode.mode.color }">
-            <component :is="liftedMode.icon" :size="11" />
-          </span>
+          <UnitBadge :icon="liftedMode.icon" :color="liftedMode.mode.color" :glyph="11" />
         </button>
         <button type="button" class="lift-inspect" @click="inspectAt(liftPill.hexId)">
           <IconInfo :size="16" />
@@ -598,13 +614,24 @@ const liftedMode = computed(() =>
   z-index: var(--z-board-controls);
 }
 
-.skill-mode {
+.badge-upper-right,
+.badge-upper-left {
   position: absolute;
-  left: calc(50% + var(--mode-rim));
-  top: calc(50% - var(--mode-rim));
+  top: calc(50% - var(--badge-rim));
+  transform: translate(-50%, -50%);
+}
+
+.badge-upper-right {
+  left: calc(50% + var(--badge-rim));
+}
+
+.badge-upper-left {
+  left: calc(50% - var(--badge-rim));
+}
+
+.skill-mode {
   width: var(--mode-hit);
   height: var(--mode-hit);
-  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -624,30 +651,14 @@ const liftedMode = computed(() =>
   outline: none;
 }
 
-.skill-mode-badge {
-  width: var(--mode-size);
-  height: var(--mode-size);
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: var(--mode-border) solid #fff;
-  border-radius: 50%;
-  color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.12s ease-out;
-}
-
-.skill-mode:focus-visible .skill-mode-badge {
+.skill-mode:focus-visible .unit-badge {
   transform: scale(1.25);
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
 
 @media (hover: hover) {
-  .skill-mode:hover .skill-mode-badge {
+  .skill-mode:hover .unit-badge {
     transform: scale(1.25);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
@@ -656,12 +667,6 @@ const liftedMode = computed(() =>
 @media not all and (any-pointer: fine) {
   .skill-mode {
     pointer-events: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skill-mode-badge {
-    transition: none;
   }
 }
 
@@ -698,8 +703,8 @@ const liftedMode = computed(() =>
 }
 
 .lift-mode {
-  --mode-size: 18px;
-  --mode-border: 1.5px;
+  --badge-size: 18px;
+  --badge-border: 1.5px;
   padding: 3px 0 3px 3px;
 }
 
