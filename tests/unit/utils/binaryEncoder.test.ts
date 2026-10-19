@@ -187,8 +187,8 @@ describe('binaryEncoder', () => {
       expect(decodeLink(new Uint8Array([0]))).toBeNull()
     })
 
-    // Cross-format guardrails: the other formats' bytes must fail to null,
-    // never misparse — the shim's probe order depends on it.
+    // Bytes in another format must decode to null, so an old link shows as
+    // invalid.
     it('rejects v1 payloads (the retired binary format)', () => {
       const V1_GOLDEN = '2sAWgYoJZAAMZIBK2olBikMC'
       const V1_GOLDEN_SECTIONS = 'iUyBBDIAcchIBgAIyAACigwgDA'

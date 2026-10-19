@@ -217,16 +217,3 @@ describe('useTeamLibrary export/import', () => {
     expect(library.count).toBe(MAX_SAVED_TEAMS)
   })
 })
-
-// TEMPORARY: deleted with src/utils/upgradeMigration.ts.
-describe('upgradeMigration library read', () => {
-  // A library the v pass failed to rewrite.
-  it('loads a { v, teams } library and keeps every team through the next save', () => {
-    storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [record('a', 'Alpha')] }))
-    const library = useTeamLibrary()
-    expect(library.teams.map((t) => t.id)).toEqual(['a'])
-
-    library.saveAsNew('3v3', CANONICAL_3V3, 'New')
-    expect(stored().map((t) => t.name)).toEqual(['Alpha', 'New'])
-  })
-})

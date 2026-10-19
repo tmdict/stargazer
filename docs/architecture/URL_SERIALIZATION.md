@@ -10,7 +10,7 @@ Every link uses one self-describing codec. The envelope names a mode (the Arena 
 
 The format has no version field. The app and its links deploy together, links are disposable, and only the Arena autosave outlives a deploy. Golden-string tests in `tests/unit/utils/binaryEncoder.test.ts` freeze the layout, so any change to field order, section order, bit width or the URL alphabet fails them.
 
-Decoding is strict, so a payload decodes exactly or not at all. Unknown mode ids, unknown map ids and unknown bitmap bits reject it. So do a counted section with a zero count (the encoder never writes an empty section) and a map id on an Arena board. After the last board the stream must end cleanly, with fewer than 8 bits left and all of them zero. These rules exist because short payloads in other formats would otherwise read as plausible near-empty links, and the migration shim relies on them to probe formats in order.
+Decoding is strict, so a payload decodes exactly or not at all. Unknown mode ids, unknown map ids and unknown bitmap bits reject it. So do a counted section with a zero count (the encoder never writes an empty section) and a map id on an Arena board. After the last board the stream must end cleanly, with fewer than 8 bits left and all of them zero. These rules exist because short payloads in other formats would otherwise read as plausible near-empty links.
 
 ## Binary wire format
 
@@ -42,7 +42,7 @@ Sections, in bitmap-bit order
 
 Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: a state without `d` encodes the unpack defaults, so skills and perspective do not switch off on decode. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
 
-`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key that names no registered map encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because a failed probe is normal traffic for the shim. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
+`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key that names no registered map encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because old and mangled links are ordinary input. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
 
 In memory, a board keeps phantimals and their companions together in `s`, a phantimal as its local id L and a companion as `N × 10000 + L`. The encoder splits the companions into the bit 6 section so the phantimal entry keeps its fixed 4-bit id, and the decoder appends them back to `s` after the phantimals. A companion entry with index 0 rejects, because index 0 is the phantimal itself. A board without companions leaves bit 6 unset.
 
@@ -69,7 +69,7 @@ Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attr
 
 | Field                  | Bits | In use                           | Capacity | Headroom                                           |
 | ---------------------- | ---- | -------------------------------- | -------- | -------------------------------------------------- |
-| Mode id                | 3    | 4 (the Arena and 3 board counts) | 8        | 4 more board counts (id 4 is held by the shim)     |
+| Mode id                | 3    | 4 (the Arena and 3 board counts) | 8        | 4 more board counts                                |
 | Active board           | 3    | up to 5 boards                   | 8        | modes of up to 8 boards                            |
 | Display flags          | 8    | 5 flags                          | 8        | 3 more toggles                                     |
 | Map id                 | 6    | 22 maps, plus 0 for none         | 63       | 41 more maps; seasonal preset ids rotate           |
@@ -85,7 +85,7 @@ Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attr
 
 Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types and upgrade kinds, level caps up to 15, up to 3 more display toggles, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
 
-Changing the game's shape does need a new format: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format ships with new golden strings and a frozen copy of the old decoder in a temporary shim that converts the Arena autosave once. Every existing link breaks.
+Changing the game's shape does need a new format: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format ships with new golden strings and a temporary migration that converts the Arena autosave once with a frozen copy of the old decoder. Every existing link breaks.
 
 ## Wire registries
 
@@ -93,15 +93,13 @@ Changing the game's shape does need a new format: a grid beyond 63 hexes, an eig
 
 The file imports no Vue and, apart from `maps.ts` (which loads only the arena JSON), no data, because the codec imports it. Contract tests check the mode table against `TEAM_MODES` instead.
 
-An id stays fixed while its mode or map exists, since reassigning one that live data still carries would silently re-route those links. A retired id goes through a conversion window: a temporary migration converts it for as long as the migration lives, and the id is free once it is deleted. Seasonal preset maps rotate the same way. Id 4 belongs to the retired `5v5sl` mode until the shim is gone.
+An id stays fixed while its mode or map exists, since reassigning one that live data still carries would silently re-route those links. A retired id goes through a conversion window: a temporary migration converts it for as long as the migration lives, and the id is free once it is deleted. Seasonal preset maps rotate the same way.
 
 ## Reading a link
 
 Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
 
 Display flags travel with every link, and a `?g=` restore applies them, since showing the sharer's view is the reason for a link. Multi-board restores report `hasDisplayFlags`, so a payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
-
-The temporary shim in `src/utils/upgradeMigration.ts` catches what strict decoding rejects. `decodeLegacyLink` re-reads a link whose mode id is 4 (the retired `5v5sl` mode) as 5v5 on a patched copy of its bytes, then tries pre-binary JSON Teams links, then a frozen copy of the previous binary decoder, and converts each to the current shape. Startup passes in the same file rewrite stored values into the current formats, each under its own marker. `runUpgradeStoragePass` converts the library records, the mode slots and the Arena autosave. `runModeStoragePass` moves the retired `5v5sl` slot into the 5v5 slot when it was the last-used mode, rewrites library records, and drops the old key. `runVersionStoragePass` rewrites the library and mode slots into their current shapes ([Teams](./TEAMS.md)). The whole file is meant to be deleted on one date, and its header holds the removal steps.
 
 ## Restoring a board
 

@@ -13,12 +13,7 @@
  * which correctly retires every stamp).
  *
  * An UNSTAMPED payload has no provenance and passes through everywhere as
- * current-pool content. During the shim window the JSON choke point stamps
- * legacy payloads with season 7 and the storage pass persists it; per the
- * shims-are-always-temporary policy there is no permanent default, so an
- * unstamped payload surfacing after the window (an old export file) simply
- * resolves its seasonal ids against the current pool — accepted, like every
- * other post-shim legacy outcome.
+ * current-pool content.
  */
 
 import { loadArtifacts, loadPhantimals } from '@/utils/dataLoader'

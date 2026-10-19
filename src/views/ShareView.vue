@@ -14,7 +14,6 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
-import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
@@ -86,11 +85,7 @@ i18nStore.initialize()
 const restoreStateFromUrl = () => {
   const result =
     isMultiBoard.value && linkAtLoad
-      ? // TEMPORARY (upgradeMigration shim): only the shim's legacy JSON probe
-        // stamps a link season; honoring it strips a retired-season link like
-        // the Teams page does, instead of resolving its reused ids as
-        // current-pool content.
-        urlStateStore.restoreMultiFromDecodedState(stripRetiredSeasonal(linkAtLoad))
+      ? urlStateStore.restoreMultiFromDecodedState(linkAtLoad)
       : urlStateStore.restoreFromEncodedState(encodedAtLoad)
 
   if (result.success) {

@@ -40,11 +40,11 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
 
 `CURRENT_SEASON` (`src/lib/seasonal.ts`) is the highest `season` in the loaded data files, so the season changes when a cutover deploys, not on a date. Every saved team records the season it was saved in. When a stored team comes from another season, its phantimals and seasonal artifacts are dropped as it is read (`stripRetiredSeasonal`, applied by `normalizeTeamPayload` on every Teams page load and by side-load), and a dismissible banner says what was removed (`useSeasonNotice`). The saved record itself keeps them until it is saved again, and its card shows an "S7"-style placeholder instead of looking the reused id up. `teamContentKey` includes the stamp only when a team has seasonal content, so a season change does not mark other teams as edited.
 
-The arena autosave is stored without a season, so `runSeasonRotationPass` (`src/utils/seasonRotation.ts`) keeps a marker (`stargazer.season`, a decimal string such as `"8"`) and strips the autosave once per season change. A missing marker, or one that is not one to four digits, counts as season 7 (`PRE_MARKER_SEASON`), the season the marker shipped in. Teams saved before stamps existed are stamped 7 by the temporary shim in `src/utils/upgradeMigration.ts`.
+The arena autosave is stored without a season, so `runSeasonRotationPass` (`src/utils/seasonRotation.ts`) keeps a marker (`stargazer.season`, a decimal string such as `"8"`) and strips the autosave once per season change. A missing marker, or one that is not one to four digits, counts as season 7 (`PRE_MARKER_SEASON`), the season the marker shipped in.
 
 Share links carry no season, so an old link shows whatever the current season has under its ids. Links are treated as disposable, so this is accepted.
 
-Code keyed by id has the same problem: a leftover phantimal skill or artifact rule would apply to the next season's unit with that id. Each registration therefore names its unit (`phantimal-<slug>` for skills, `name` on each `ARTIFACT_TARGETING` entry), and tests fail when a name no longer matches the data file holding its id. Another test pins `CURRENT_SEASON` and requires every data file's `season` to equal it, so a partial bump fails too.
+Code keyed by id has the same problem: a leftover phantimal skill or artifact rule would apply to the next season's unit with that id. Each registration therefore names its unit (`phantimal-<slug>` for skills, `name` on each `ARTIFACT_TARGETING` entry), and tests fail when a name no longer matches the data file holding its id. Another test requires every seasonal data file's `season` to equal `CURRENT_SEASON`, so a partial bump fails too.
 
 ## Phantimals
 
@@ -118,7 +118,7 @@ It needs the new ids, names in every app locale, artifact stats, phantimal facti
 2. Retire the old generated text: `npm run import:phantimals -- --retire`, then the same for `import:artifacts` and `import:charms`. Charms carry no season stamp, so the old text cannot stay up.
 3. Run `npm run import:structure`: it replaces the season's artifact and phantimal data files and the artifact names, reusing the freed ids. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key. Phantimal names come with their text from `import:phantimals`; if the feed does not carry the season's text yet, write name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) for phase 2 to overwrite.
 4. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
-5. Bump the season pin in `tests/unit/lib/seasonal.test.ts` and replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
+5. Replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
 6. If the Supreme League map list changed, give the new preset maps the ids the old ones free (the `id` in each arena JSON under `src/data/arena/`) and edit the `sl` row of `TEAM_VARIANTS` (`src/lib/teams/modes.ts`). Boards on the old list stop reading as Supreme League. The Supreme League maps also change mid-season, every couple of months; this step applies then too, and [Team Import](./IMPORT_TEAM.md) says what the replay-frame reader needs.
 7. Run the tests and deploy. Nothing stored is rewritten: stale teams are cleaned as they are read, and each device's arena autosave on its first visit.
 
@@ -132,7 +132,7 @@ Artifacts, phantimals and charms may arrive on different builds. Run `npm run im
 
 Add an artifact rule whenever its mechanic is known; it draws from that deploy on. Write a phantimal's Spirit Mark whenever convenient, and set `"targeting": true` in its data file once the mark is live in the game.
 
-`PRE_MARKER_SEASON` and the shim's 7 do not change at a cutover.
+`PRE_MARKER_SEASON` does not change at a cutover.
 
 ## Removing a feature
 

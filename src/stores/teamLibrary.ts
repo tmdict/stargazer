@@ -32,13 +32,9 @@ const readLibrary = (): SavedTeam[] => {
   } catch {
     return []
   }
-  // TEMPORARY: delete with upgradeMigration.ts (its runbook names this line).
-  // A library its v pass has not rewritten yet still loads, and the next write
-  // stores it as the plain array, so a failed rewrite can't lose a team.
-  const records = Array.isArray(parsed) ? parsed : (parsed as { teams?: unknown } | null)?.teams
-  if (!Array.isArray(records)) return []
+  if (!Array.isArray(parsed)) return []
   const teams: SavedTeam[] = []
-  for (const record of records) {
+  for (const record of parsed) {
     // Per-record isolation: one malformed record must drop alone, never hide
     // (or, via the next write, wipe) the rest of the library.
     try {

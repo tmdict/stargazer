@@ -5,11 +5,10 @@
  * the season the stored value was last aligned to; on mismatch the pass
  * strips seasonal references once and re-aligns the marker.
  *
- * PERMANENT, unlike the temporary migration shim: this runs at every future
- * cutover with no per-season code. An absent marker means the device last
- * wrote arena data on a build that predates the marker itself — the
- * first-stamped-season pool — so it converts correctly even for devices that
- * skip an entire release.
+ * This runs at every future cutover with no per-season code. An absent marker
+ * means the device last wrote arena data on a build that predates the marker
+ * itself (the first-stamped-season pool), so it converts correctly even for
+ * devices that skip an entire release.
  *
  * Accepted race: an old-build tab left open across a cutover deploy can
  * autosave old-pool content after this pass ran, and the aligned marker never
@@ -39,8 +38,8 @@ export function runSeasonRotationPass(): number | null {
   const last = raw !== null && /^\d{1,4}$/.test(raw) ? Number(raw) : PRE_MARKER_SEASON
   if (last === CURRENT_SEASON) return null
 
-  // Marker-last, like the storage pass: a failed write leaves it stale so the
-  // strip retries next load, and a throw must not block startup.
+  // The marker is written last, so a failed write leaves it stale and the
+  // strip retries on the next load. A throw must not block startup.
   let stripped: number | null = null
   try {
     const stored = readStorage(ARENA_KEY)

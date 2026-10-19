@@ -19,7 +19,6 @@ import { computed, ref } from 'vue'
 
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { CURRENT_SEASON, hasRetiredSeasonal } from '@/lib/seasonal'
 import {
   DEFAULT_TEAM_MODE,
   initialMaps,
@@ -208,24 +207,17 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
       // here is a wrong-page link and falls through to the slot. The decoded
       // link re-encodes as JSON so the apply path stays the interchange one.
       const link = decodeLinkFromUrl(sharedLink)
-      if (link && isTeamModeKey(link.mode) && link.boards.length > 0) {
+      if (link && isTeamModeKey(link.mode)) {
         const mode = link.mode
-        // Binary links carry no season — their bare ids can only mean the
-        // current pool (an old link resolving to new content is the
-        // accepted links-are-expendable mis-render). The shim's legacy
-        // JSON probe DOES supply one, so those links strip like records.
-        const season = link.season ?? CURRENT_SEASON
         const decoded: MultiGridState = {
           boards: link.boards,
           active: link.active,
           d: link.d,
           mode,
-          season,
         }
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
         if (applyEncoded(normalized, true)) {
-          if (hasRetiredSeasonal(decoded)) seasonNotice.notify(season)
           // Persisted only on success: a link that decodes but fails to apply
           // must not leave its mode as the remembered one for the fallback.
           persistence.persistMode(mode)

@@ -87,7 +87,6 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.tags.expanded`                                                          | the mechanic filter shown as chips in the hero lists                    | [Skill Pages](./architecture/SKILL_PAGES.md)             |
 | `stargazer.prefs`                                                                  | device preferences                                                      | below                                                    |
 | `stargazer.locale`                                                                 | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
-| `stargazer.migration.*`                                                            | markers of the temporary `src/utils/upgradeMigration.ts`                | its header                                               |
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 
@@ -107,7 +106,7 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
 }
 ```
 
-Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change. `src/utils/upgradeMigration.ts` is a temporary shim; its header explains when and how to delete it.
+Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change.
 
 ## Rules that apply everywhere
 

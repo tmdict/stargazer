@@ -4,7 +4,7 @@
  *   the arena autosave, the one binary value at rest (a device-local snapshot
  *   that is never exported or shared). `decodeLinkFromUrl` is the universal
  *   link decoder: the only function any page or storage pass calls for a
- *   `?g=` payload, and the shim's single call site in live code.
+ *   `?g=` payload.
  * - JSON (encode/decodeMultiGridState) is the interchange format — the
  *   saved-team library, mode slots, and export files — the data that
  *   canonicalization and the byte-equality compares operate on. Links never
@@ -19,19 +19,12 @@ import {
   type BinaryLinkState,
 } from './binaryEncoder'
 import type { GridState, MultiGridState } from './gridStateSerializer'
-import { convertLegacyBoard, decodeLegacyLink, stampLegacySeason } from './upgradeMigration'
 
-/* Decode any `?g=` link payload. Strict v2 first; a failure falls through to
- * the shim's frozen legacy reader (old binary arena links and the stored
- * arena autosave, plus pre-binary JSON Teams links). Pages route on the
- * result's mode — 'arena' or a team mode key. */
+/* Decode any `?g=` link payload. Pages route on the result's mode: 'arena'
+ * or a team mode key. */
 export function decodeLinkFromUrl(encoded: string): BinaryLinkState | null {
   const bytes = urlSafeToBytes(encoded)
-  if (!bytes || bytes.length === 0) return null
-  const link = decodeLink(bytes)
-  if (link) return link
-  // TEMPORARY: delete with upgradeMigration.ts.
-  return decodeLegacyLink(encoded, bytes)
+  return bytes ? decodeLink(bytes) : null
 }
 
 export function encodeGridStateToUrl(gridState: GridState): string {
@@ -109,9 +102,6 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     ) {
       delete parsed.season
     }
-    // TEMPORARY: delete with upgradeMigration.ts.
-    stampLegacySeason(parsed)
-    for (const board of parsed.boards) convertLegacyBoard(board as Record<string, unknown>)
     return parsed
   } catch {
     return null

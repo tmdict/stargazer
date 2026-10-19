@@ -232,7 +232,7 @@ describe('synergy band emission', () => {
 
 describe('season stamp', () => {
   // The one line the provenance scheme hangs on: without it every new
-  // snapshot is unstamped and, post-shim, permanently provenance-less.
+  // snapshot is unstamped and provenance-less.
   it('serializeMultiGridState stamps every snapshot with the current season', () => {
     const state = serializeMultiGridState(
       [{ tiles: [], allyArtifact: null, enemyArtifact: null, map: 'arena1' }],

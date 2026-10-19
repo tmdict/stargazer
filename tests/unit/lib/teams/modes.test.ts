@@ -27,9 +27,9 @@ describe('TEAM_MODES registry', () => {
     expect([...counts].sort((a, b) => a - b)).toEqual(counts)
   })
 
-  // One slot per count, smallest-fit inference, and the shim's count-based
-  // healing all rest on this: a mode IS a board count. An in-game mode on an
-  // existing count is a TEAM_VARIANTS row, never a second mode.
+  // One slot per count and smallest-fit inference both rest on this: a mode IS
+  // a board count. An in-game mode on an existing count is a TEAM_VARIANTS
+  // row, never a second mode.
   it('keeps board counts unique across modes', () => {
     const counts = Object.values(TEAM_MODES).map((cfg) => cfg.boardCount)
     expect(new Set(counts).size).toBe(counts.length)

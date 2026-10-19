@@ -56,9 +56,9 @@ import {
  * an arena-mode board carrying a map id rejects (arena boards never encode
  * one); a counted section with a zero count rejects (validation never emits
  * empty sections); and the entire input must be consumed with only zero
- * padding bits remaining. Together these make another format's bytes
- * practically impossible to misread as a valid link, which the shim's probe
- * order relies on — near-empty payloads especially need the arena-map and
+ * padding bits remaining. Together these make another format's bytes, such
+ * as a link from a retired format, practically impossible to misread as a
+ * valid link. Near-empty payloads especially need the arena-map and
  * zero-count rules, since a minimal parse can fit inside just a few foreign
  * bytes. No version field, deliberately: the app and its links deploy
  * together, links are expendable, and only the arena autosave outlives a
@@ -119,10 +119,6 @@ export interface BinaryLinkState {
   active: number
   d: number
   boards: BoardState[]
-  // TEMPORARY (delete with upgradeMigration.ts): set only by the shim's
-  // legacy JSON probe, whose payloads carry season provenance the ingress
-  // strip must see. The wire format itself never encodes one.
-  season?: number
 }
 
 interface BinaryLinkInput {
@@ -565,8 +561,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
   return board
 }
 
-// Silent on failure by design: during the shim window this decoder is the
-// first probe for payloads that may legitimately be another format.
+// Returns null without logging, because old and mangled links are ordinary input.
 export function decodeLink(bytes: Uint8Array): BinaryLinkState | null {
   if (!bytes || bytes.length === 0) return null
   try {
