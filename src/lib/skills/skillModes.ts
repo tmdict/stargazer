@@ -24,7 +24,7 @@ export const SKILL_MODES: Readonly<Record<number, HeroSkillModes>> = {
   57: {
     icon: 'bell',
     modes: [
-      { name: 'spellbind', color: SKILL_COLORS.gold },
+      { name: 'spellbind', color: SKILL_COLORS.amber },
       { name: 'curelock', color: SKILL_COLORS.lilac },
     ],
   },
