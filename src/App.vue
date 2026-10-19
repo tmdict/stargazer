@@ -27,11 +27,6 @@ import { useI18nStore } from '@/stores/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
-import {
-  runModeStoragePass,
-  runUpgradeStoragePass,
-  runVersionStoragePass,
-} from '@/utils/upgradeMigration'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
@@ -48,19 +43,8 @@ useLiftGuard()
 // don't call initialize (about, skill/*) still get translations. Idempotent.
 i18n.initialize()
 
-// TEMPORARY (delete with upgradeMigration.ts). Root setup runs before any
-// route child's persistence reads, and on every entry page, so stored boards
-// convert even for visitors who never open /teams. The u-pass runs first so a
-// device that skipped a release converts the retired slot's rows before the
-// mode pass moves it; the v pass runs last so it strips `v` from whatever
-// they wrote.
-runUpgradeStoragePass()
-runModeStoragePass()
-runVersionStoragePass()
-
-// Permanent: root setup runs before any route child's persistence reads, and
-// the arena autosave must re-align once per season flip before its page can
-// read it.
+// Root setup runs before any route child's persistence reads, and the arena
+// autosave must re-align once per season flip before its page can read it.
 const strippedSeason = runSeasonRotationPass()
 if (strippedSeason !== null) useSeasonNotice().notify(strippedSeason)
 

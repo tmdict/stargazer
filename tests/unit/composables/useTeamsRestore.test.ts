@@ -14,7 +14,6 @@ import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
 import { packDisplayFlags, type DisplayFlags } from '@/utils/gridStateSerializer'
-import { runModeStoragePass } from '@/utils/upgradeMigration'
 import {
   decodeMultiGridStateFromUrl,
   encodeGridStateToUrl,
@@ -25,8 +24,8 @@ import { stubLocalStorage } from '../fixtures/storage'
 
 /* The mode-switch regression suite: per-mode slot isolation (one mode's edits
  * must never overwrite another mode's save), the type switch and New on top
- * of the single 5v5 slot, plus the ?g= ingress routing (mode resolution +
- * shape normalization). Headless: node env, in-memory localStorage, SSR off. */
+ * of the single 5v5 slot, plus the ?g= ingress routing by mode. Headless: node
+ * env, in-memory localStorage, SSR off. */
 
 let storage: Map<string, string>
 let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
@@ -366,96 +365,6 @@ describe('useTeamsRestore', () => {
     const slot = readEnvelope('1v1')
     expect(slot.sourceId).toBeNull()
     expect(decodeBoards(slot.data).boards[0]!.m).toBe('arena4')
-  })
-})
-
-/* TEMPORARY: pre-binary JSON teams links decode only through the shim; deleted
- * with src/utils/upgradeMigration.ts (see its removal runbook). Binary links
- * always carry a mode and an exact board count, so count-based mode resolution
- * and pad-to-shape are legacy-only behavior. */
-describe('upgradeMigration legacy links via useTeamsRestore', () => {
-  it('a mode-less 2-board JSON link routes to 3v3 and is padded to shape', () => {
-    // The unit lands on a non-placeable hex of arena2; restore warns and skips it.
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { restore, grids } = createHarness()
-    const link = encodeMultiGridStateToUrl({
-      boards: [{ m: 'arena2', c: [[1, 11, Team.ALLY]] }, { m: 'arena3' }],
-    })
-    const result = restore.initialize(link)
-    expect(result.linkLoaded).toBe(true)
-    expect(restore.activeMode.value).toBe('3v3')
-    expect(grids.contexts).toHaveLength(3)
-    expect(currentMaps(grids)).toEqual(['arena2', 'arena3', 'arena1'])
-    expect(restore.sourceId.value).toBeNull()
-    const slot = decodeBoards(readEnvelope('3v3').data)
-    expect(slot.boards).toHaveLength(3)
-    expect(slot.mode).toBe('3v3')
-    warn.mockRestore()
-  })
-})
-
-/* TEMPORARY: the 5v5sl retirement's slot move, walked through a real startup
- * between two attempts; deleted with src/utils/upgradeMigration.ts. */
-describe('upgradeMigration mode retirement via useTeamsRestore', () => {
-  const RETIRED_SLOT_KEY = 'stargazer.teams.active.5v5sl'
-  const MOVE_KEY = 'stargazer.migration.sl.move'
-  const MARKER_KEY = 'stargazer.migration.sl'
-
-  it('retries the slot move after a failed copy even though startup persisted 5v5', async () => {
-    // A genuine retired slot: SL boards with a hero, exactly as the retired
-    // mode autosaved them (tiles included; restore replays `t`, so a hand-built
-    // board without it would come back blank).
-    let retiredData: string
-    {
-      const { restore, grids, character } = createHarness()
-      restore.initialize(null)
-      grids.setActive(0)
-      expect(character.placeCharacterOnHex(1, 11, Team.ALLY)).toBe(true)
-      await nextTick()
-      retiredData = encodeMultiGridStateToUrl({
-        ...decodeBoards(restore.snapshot()),
-        mode: '5v5sl',
-      })
-    }
-    storage.clear()
-    storage.set('stargazer.teams.mode', '5v5sl')
-    storage.set(RETIRED_SLOT_KEY, JSON.stringify({ v: 1, data: retiredData, sourceId: null }))
-
-    // First attempt: the store refuses the large slot write but not the short ones.
-    const failing = vi
-      .spyOn(globalThis.localStorage, 'setItem')
-      .mockImplementation((key: string, value: string) => {
-        if (key === teamsSlotKey('5v5')) throw new Error('quota')
-        storage.set(key, value)
-      })
-    runModeStoragePass()
-    expect(storage.has(RETIRED_SLOT_KEY)).toBe(true)
-    expect(storage.get(MOVE_KEY)).toBe('1')
-    expect(storage.has(MARKER_KEY)).toBe(false)
-
-    // The same load continues: the retired key is rejected and 5v5 persisted
-    // as last-used, which is what a naive retry would read.
-    {
-      const { restore } = createHarness()
-      restore.initialize(null)
-      expect(restore.activeMode.value).toBe('5v5')
-    }
-    expect(storage.get('stargazer.teams.mode')).toBe('5v5')
-    failing.mockRestore()
-
-    // Next load: the flag carries the decision, so the old boards still move.
-    runModeStoragePass()
-    expect(storage.has(RETIRED_SLOT_KEY)).toBe(false)
-    expect(storage.has(MOVE_KEY)).toBe(false)
-    expect(storage.get(MARKER_KEY)).toBe('1')
-    expect(decodeBoards(readEnvelope('5v5').data).boards[0]!.c).toEqual([[1, 11, Team.ALLY]])
-
-    const { restore, grids } = createHarness()
-    restore.initialize(null)
-    expect(restore.activeMode.value).toBe('5v5')
-    expect(restore.variant.value).toBe('sl')
-    expect(decodeBoards(restore.snapshot()).boards[0]!.c).toEqual([[1, 11, Team.ALLY]])
-    expect(grids.contexts).toHaveLength(5)
   })
 })
 

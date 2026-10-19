@@ -30,9 +30,6 @@ export const WIRE_MODES: readonly WireMode[] = [
   { wireId: 1, key: '1v1', boardCount: 1 },
   { wireId: 2, key: '3v3', boardCount: 3 },
   { wireId: 3, key: '5v5', boardCount: 5 },
-  // TEMPORARY (delete with upgradeMigration.ts): id 4 is the retired 5v5sl
-  // mode's id, which the shim converts on links; the id is free once the shim
-  // is gone.
 ]
 
 const MODE_BY_ID = new Map(WIRE_MODES.map((mode) => [mode.wireId, mode]))

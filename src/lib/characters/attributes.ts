@@ -62,9 +62,9 @@ export type AttrRecord = Record<number, number>
 /* A serialized `u` row. */
 export type AttrRow = [team: Team, characterId: number, attrId: number, value: number]
 
-/* Canonical row order for emission, canonicalization, and legacy conversion —
- * one comparator so identical content is always byte-identical (the
- * unsaved-changes compare and import dedupe are byte compares). */
+/* Canonical row order for emission and canonicalization: one comparator so
+ * identical content is always byte-identical (the unsaved-changes compare and
+ * import dedupe are byte compares). */
 export const compareAttrRows = (a: AttrRow, b: AttrRow): number =>
   a[0] - b[0] || a[1] - b[1] || a[2] - b[2]
 
