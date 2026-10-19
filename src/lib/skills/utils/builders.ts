@@ -169,13 +169,11 @@ export interface SkillEffects {
 }
 
 /**
- * Decorates a skill with the effects `calculate` returns: tile paints (diffed
- * by `skillManager.paintTiles`), lines (drawn by SkillTargeting and
- * SkillCornerLines) and unit badges (drawn by GridCharacters). They are written
- * after the base skill's own hooks on activate and update, and cleared before
- * the base's deactivate, so a skill that already owns other behavior (a target,
- * companions) can draw too, since the registry allows one skill per character.
- * Effects that come from one computation are returned together, so it runs once.
+ * Decorates a skill with the tile paints, lines and unit badges `calculate`
+ * returns. They are written after the base skill's own hooks on activate and
+ * update and cleared before its deactivate, so a skill that owns other behavior
+ * (a target, companions) can draw too, since the registry allows one skill per
+ * character. Effects from one computation are returned together, so it runs once.
  */
 export function withEffects(
   base: Skill,
