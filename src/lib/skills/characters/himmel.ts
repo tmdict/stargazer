@@ -1,6 +1,6 @@
 import { registerSkill } from '../registry'
 import type { SkillContext } from '../skill'
-import { createTilePaintSkill, withSkillBadges } from '../utils/builders'
+import { createEffectsSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { rowScan, ScanDirection } from '../utils/ring'
 
@@ -35,20 +35,20 @@ function party(ctx: SkillContext): PartyMember[] {
   return members
 }
 
-// The party's tiles and its class badges both come from party(), so they always agree.
 registerSkill(
-  withSkillBadges(
-    createTilePaintSkill({
-      id: 'himmel',
-      characterId: 112,
-      calculate: (ctx) =>
-        party(ctx).map(({ hexId }) => ({ hexId, color: SKILL_COLORS.blue, fill: true })),
-    }),
-    (ctx) =>
-      party(ctx).map(({ hexId, className }) => ({
-        hexId,
-        icon: className,
-        color: SKILL_COLORS.blue,
-      })),
-  ),
+  createEffectsSkill({
+    id: 'himmel',
+    characterId: 112,
+    calculate: (ctx) => {
+      const members = party(ctx)
+      return {
+        tiles: members.map(({ hexId }) => ({ hexId, color: SKILL_COLORS.blue, fill: true })),
+        badges: members.map(({ hexId, className }) => ({
+          hexId,
+          icon: className,
+          color: SKILL_COLORS.blue,
+        })),
+      }
+    },
+  }),
 )

@@ -3,7 +3,7 @@ import { getCompanions } from '../../characters/companion'
 import type { Hex } from '../../hex'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillLine, TilePaint } from '../skill'
-import { createCompanionSkill, withSkillLine, withTilePaint } from '../utils/builders'
+import { createCompanionSkill, withEffects } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { hexesBetween } from '../utils/line'
 
@@ -75,17 +75,14 @@ function calculateLine(ctx: SkillContext): SkillLine[] {
 // Elijah and Lailah occupy separate tiles, increasing team capacity by 1.
 // Removing either removes both. Lailah has a range of 1.
 registerSkill(
-  withTilePaint(
-    withSkillLine(
-      createCompanionSkill({
-        id: 'elijah-lailah',
-        characterId: 68,
-        colorModifier: SKILL_COLOR,
-        companionColorModifier: COMPANION_COLOR,
-        companionRange: 1,
-      }),
-      calculateLine,
-    ),
-    calculateBetweenTiles,
+  withEffects(
+    createCompanionSkill({
+      id: 'elijah-lailah',
+      characterId: 68,
+      colorModifier: SKILL_COLOR,
+      companionColorModifier: COMPANION_COLOR,
+      companionRange: 1,
+    }),
+    (ctx) => ({ tiles: calculateBetweenTiles(ctx), lines: calculateLine(ctx) }),
   ),
 )
