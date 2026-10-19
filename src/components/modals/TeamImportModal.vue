@@ -182,6 +182,15 @@ const replayColumns = (shot: ImportShot): Record<Team, { heroes: number[]; optio
   return { [Team.ALLY]: column(Team.ALLY), [Team.ENEMY]: column(Team.ENEMY) }
 }
 
+// A replay frame's board as the plan places it, on the map it lands on.
+const placedBoard = (
+  shot: ImportShot,
+): { mapKey: string; sides: Partial<Record<Team, SideLoadBoard>> } | null => {
+  const mapIndex = shotMapIndex(shot, mapCount.value)
+  const board = mapIndex === null ? null : plan.value.boards[mapIndex]
+  return board ? { mapKey: boardMap(mapIndex) ?? DEFAULT_MAP_KEY, sides: board.sides } : null
+}
+
 // Heroes not yet placed on a tile of their frame.
 const replayReview = (shot: ImportShot): number => {
   const columns = replayColumns(shot)
@@ -544,6 +553,7 @@ const handleForgetLearned = (): void => {
           :map-key="boardMap(shotMapIndex(selected, mapCount))"
           :columns="replayColumns(selected)"
           :swap-sides
+          :placed="placedBoard(selected)"
           @set-pick="setTilePick"
         />
         <TeamImportReview

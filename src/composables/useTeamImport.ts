@@ -663,7 +663,12 @@ export function useTeamImport(
 
   const setMap = (id: string, mapIndex: number | null): void => {
     const shot = findShot(id)
-    if (shot) shot.resultOverrides.mapIndex = mapIndex
+    if (!shot) return
+    const before = shotMapIndex(shot, boardCount())
+    shot.resultOverrides.mapIndex = mapIndex
+    // A frame's picks are tiles of its old board's map, so another board
+    // starts them over.
+    if (shot.kind === 'replay' && shotMapIndex(shot, boardCount()) !== before) shot.tilePicks = {}
   }
 
   const setWinner = (id: string, winner: Team | null): void => {
@@ -762,10 +767,15 @@ export function useTeamImport(
       artifactOverrides: s.artifactOverrides,
       unitOverrides: s.unitOverrides,
     }))
+    // A frame the arena was not found in has no board to place, and its card
+    // says so.
     const replays: ReplayAssignment[] = shots.value
       .filter(
         (s): s is ImportShot & { reading: ReplayReading } =>
-          s.kind === 'replay' && s.reading !== null && isReplayReading(s.reading),
+          s.kind === 'replay' &&
+          s.reading !== null &&
+          isReplayReading(s.reading) &&
+          s.reading.placement !== null,
       )
       .map((s) => ({ mapIndex: shotMapIndex(s, boardCount()), picks: s.tilePicks }))
     // A result shot that failed to read still makes the import a match, as the

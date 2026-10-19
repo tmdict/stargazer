@@ -9,7 +9,7 @@ import {
 } from '@/composables/useTeamImport'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
-import type { FormationReading } from '@/lib/import/types'
+import type { FormationReading, ReplayReading } from '@/lib/import/types'
 import { stubLocalStorage } from '../fixtures/storage'
 
 vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
@@ -205,6 +205,33 @@ describe('replay tile picks', () => {
     expect(picks()).toEqual({ 2: 9 })
     api.setTilePick('sample', 1, 2, null)
     expect(picks()).toEqual({})
+  })
+
+  it("starts a frame's picks over when it moves to another board", () => {
+    const api = useTeamImport(() => '5v5')
+    const reading: ReplayReading = {
+      ...shot().reading!,
+      size: { width: 1400, height: 1940 },
+      placement: { scale: 1, x: 0, y: 0, score: 0.8 },
+    }
+    api.shots.value = [{ ...shot(), kind: 'replay', reading }]
+    api.setTilePick('sample', 1, 1, 7)
+    api.setMap('sample', 3)
+    expect(api.shots.value[0]!.tilePicks).toEqual({ 1: { 1: 7 } })
+    api.setMap('sample', 2)
+    expect(api.shots.value[0]!.tilePicks).toEqual({})
+  })
+
+  it('leaves out a frame the arena was not found in', () => {
+    const api = useTeamImport(() => '5v5')
+    const reading: ReplayReading = {
+      ...shot().reading!,
+      mapIndex: null,
+      size: { width: 1400, height: 1940 },
+      placement: null,
+    }
+    api.shots.value = [shot(), { ...shot(), id: 'frame', kind: 'replay', reading }]
+    expect(api.plan.value.issues.some((issue) => issue.kind === 'unmapped')).toBe(false)
   })
 })
 

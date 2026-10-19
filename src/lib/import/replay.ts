@@ -6,8 +6,8 @@
  * it with the units taken out (replay-arena.png), which holds whatever the
  * crop keeps, the game's UI included or not. The camera then takes every tile
  * to the frame, and the map strip's green ring names the map when the UI is in
- * view. The numbers are measured on real frames battle-frame
- * study. */
+ * view. The numbers are measured on real frames
+ * calibration/replay. */
 
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'

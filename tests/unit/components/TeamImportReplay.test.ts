@@ -29,7 +29,7 @@ afterEach(() => {
   disposeTeamImport()
 })
 
-const mountReplay = async (placement: ReplayReading['placement'] = null) => {
+const mountReplay = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -42,7 +42,7 @@ const mountReplay = async (placement: ReplayReading['placement'] = null) => {
     artifacts: { 1: null, 2: null },
     warnings: [],
     size: { width: 1400, height: 1940 },
-    placement,
+    placement: { scale: 1, x: 0, y: 0, score: 1 },
   }
   const api = useTeamImport(
     () => '5v5',
@@ -77,6 +77,7 @@ const mountReplay = async (placement: ReplayReading['placement'] = null) => {
         mapKey: DEFAULT_MAP_KEY,
         columns: { 1: { heroes: [5, 6], options: [5, 6] }, 2: { heroes: [7], options: [7] } },
         swapSides: false,
+        placed: null,
         onSetPick: api.setTilePick,
       }),
   })
@@ -125,7 +126,7 @@ describe('typing a replay tile', () => {
 
 describe('the tile picker', () => {
   it('closes on Escape without the key reaching the modal, and on a click on the frame', async () => {
-    await mountReplay({ scale: 1, x: 0, y: 0, score: 1 })
+    await mountReplay()
     const modalHeard: string[] = []
     const modal = (event: KeyboardEvent) => modalHeard.push(event.key)
     document.addEventListener('keydown', modal)
