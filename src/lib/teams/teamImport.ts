@@ -1,6 +1,6 @@
 /* Match import: readings plus the user's review decisions become per-board
- * lineups the grids store can stamp, and the record name the pvp export
- * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
+ * lineups the grids store can stamp, and the match's record name
+ * ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
  * on the ally half of the boards first, `>` when that player won more maps,
  * each player's map numbers in the brackets). An import is a match's result
  * shots, which give both sides' heroes, upgrades and artifacts, with its

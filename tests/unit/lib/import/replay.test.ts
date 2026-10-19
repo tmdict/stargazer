@@ -59,7 +59,7 @@ function frameOf(
 
 describe('replay frames', () => {
   it('puts the fixed points measured in the reference frame on their tiles', () => {
-    // Wall corners on tiles 31 and 15, wedge bases on 5 and 3 (the calibration study).
+    // Wall corners on tiles 31 and 15, wedge bases on 5 and 3.
     const measured: [number, number, number][] = [
       [31, 600, 789],
       [15, 925, 1159],
