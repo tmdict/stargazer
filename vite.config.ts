@@ -163,7 +163,6 @@ function processRenderedPage(route: string, html: string): string {
 
 // Vite Config
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), imagetools(), guideReports()],
   resolve: {

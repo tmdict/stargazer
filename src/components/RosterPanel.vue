@@ -638,7 +638,7 @@ const {
           @mousedown="onPress(character, $event)"
           @mouseenter="onCross(character, $event)"
         >
-          <!-- Reserved, not removed: revealing a pill on select would reflow the
+          <!-- Reserved, not removed: revealing a pill on add would reflow the
                grid and move the next tap target. -->
           <template #badge>
             <span

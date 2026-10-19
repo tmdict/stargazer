@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* A unit badge: an icon in a colored disc on a portrait's rim. The board sets
-   the disc's size and rim (--badge-size, --badge-border) and its host places
-   it. */
+   the disc's size and border (--badge-size, --badge-border) and its host
+   places it. */
 
 import type { Component } from 'vue'
 

@@ -124,7 +124,6 @@ const noResultNotice = (shot: ImportShot): string | null => {
   return hasResult ? null : i18n.t('app.import-no-result')
 }
 
-// The heroes the plan places on one side of a board.
 const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
   mapIndex === null || side === null
     ? []
@@ -148,8 +147,7 @@ const cardSides = (shot: ImportShot): Team[] => {
   return side === null || matchImport.value ? [] : [side]
 }
 
-// The side a formation shot fills, as the plan places it, on the map it
-// lands on: the one its tiles name, else the new team's for that board.
+// The side a formation shot fills, as the plan places it, on the map it lands on.
 const placedSide = (
   shot: ImportShot,
 ): { mapKey: string; team: Team; side: SideLoadBoard } | null => {
@@ -182,7 +180,6 @@ const replayColumns = (shot: ImportShot): Record<Team, { heroes: number[]; optio
   return { [Team.ALLY]: column(Team.ALLY), [Team.ENEMY]: column(Team.ENEMY) }
 }
 
-// A replay frame's board sides as the plan places them.
 const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | null => {
   const mapIndex = shotMapIndex(shot, mapCount.value)
   return (mapIndex === null ? null : plan.value.boards[mapIndex]?.sides) ?? null
@@ -378,7 +375,6 @@ const handleForgetLearned = (): void => {
         <p class="note intro">{{ i18n.t('app.import-tip') }}</p>
       </header>
 
-      <!-- Both drops share one size, so the two starts weigh the same. -->
       <section class="drop-section">
         <div class="drop-head">
           <span class="section-title">{{ i18n.t('app.import-results') }}</span>
@@ -694,7 +690,6 @@ const handleForgetLearned = (): void => {
   flex-basis: 100%;
 }
 
-/* Without the name fields, the side choice keeps its own width. */
 .field.alone {
   flex: 0 0 auto;
 }

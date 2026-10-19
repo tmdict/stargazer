@@ -119,8 +119,7 @@ export const variantMaps = (mode: TeamModeKey, choice: TeamVariantChoice): strin
 export const initialMaps = (mode: TeamModeKey): string[] =>
   variantMaps(mode, TEAM_MODES[mode].initialVariant ?? DEFAULT_VARIANT)
 
-// The maps a new team starts on: the boards' type, or the mode's initial one
-// when the boards are on custom maps.
+// The maps a new team starts on.
 export const newTeamMaps = (mode: TeamModeKey, match: VariantMatch): string[] =>
   match === null ? initialMaps(mode) : variantMaps(mode, match)
 

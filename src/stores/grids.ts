@@ -576,7 +576,6 @@ export const useGrids = defineStore('grids', () => {
   const sideHasContent = (team: Team, scope: SideLoadOptions['scope']): boolean =>
     sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, team))
 
-  // Gates the type switch's confirm.
   const boardsHaveContent = (): boolean =>
     contexts.value.some((ctx) => [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)))
 
@@ -621,9 +620,9 @@ export const useGrids = defineStore('grids', () => {
    * team (the page starts one first, so nothing from the previous team is kept
    * or checked against). A board first moves to the map its formation shots
    * show (moveToMap). Each side places as a loaded team does (placeSide):
-   * heroes with their upgrade records on the tiles a formation shot shows,
-   * else on random free ones. A side from a formation shot re-seeds its
-   * phantimal baseline once placed, so it keeps the phantimal the shot showed,
+   * heroes with their upgrade records on the tiles the plan gives them, else
+   * on random free ones. A side in `board.formations` re-seeds its phantimal
+   * baseline once placed, so it keeps the phantimal its screenshot showed,
    * or none; any other side gets the one its lineup qualifies for. A hero
    * with no free tile left, or a hero or artifact already on that team on
    * another board, is skipped and counted. Boards without a screenshot stay

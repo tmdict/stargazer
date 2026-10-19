@@ -102,7 +102,7 @@ export function useGridExport() {
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images
-    // finish decoding (WebKit bug 99677) and drops the slowest — the remote
+    // finish decoding (WebKit bug 99677) and drops the slowest, the remote
     // artifact WebP; a throwaway pass primes the image cache for the kept pass.
     const capture = async (element: HTMLElement): Promise<string> => {
       if (isWebKit()) await toPng(element, toPngOptions)
@@ -165,8 +165,6 @@ export function useGridExport() {
     let right = img.width
     while (!drawnColumn(right - 1)) right--
 
-    // Source rows to keep, top to bottom. Each empty band inside the trimmed span
-    // keeps only `rowGap` of its rows.
     const spans: [number, number][] = []
     let from = Math.max(0, top - margin)
     for (let y = top; y < bottom; y++) {

@@ -73,8 +73,8 @@ export interface BoardLineup {
   // The sides the import fills, as the side-load places them; a side no
   // screenshot shows stays empty on the new team.
   sides: Partial<Record<Team, SideLoadBoard>>
-  // Sides placed from a formation shot, whose phantimal is the one shown (or
-  // none); another side gets the phantimal its lineup qualifies for.
+  // Sides whose phantimal is the one a screenshot shows (or none); another
+  // side gets the phantimal its lineup qualifies for.
   formations: Team[]
   // The map the board's formation shots show; null to keep the board's own.
   map: string | null

@@ -404,7 +404,6 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   background: var(--color-danger);
 }
 
-/* A formation shot's team is read, not picked, but stays legible. */
 .seg-btn.on:disabled {
   opacity: 1;
 }

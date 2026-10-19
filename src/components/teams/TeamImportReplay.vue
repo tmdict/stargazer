@@ -491,7 +491,6 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
   stroke-width: 1.5;
 }
 
-/* A blocked tile's fill is its hatch, set on the element. */
 .tile.neutral {
   fill: transparent;
 }
