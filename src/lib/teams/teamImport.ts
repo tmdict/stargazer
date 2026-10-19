@@ -95,8 +95,9 @@ export type PlanIssue =
   | { kind: 'duplicate-formation'; team: Team; mapIndex: number }
   // A board's formation shots show different maps.
   | { kind: 'map-conflict'; mapIndex: number }
-  // A formation shot's tiles are no map of the mode's; the board keeps its own.
-  | { kind: 'unknown-map'; mapIndex: number }
+  // A formation shot's tiles are no map of the mode's. The board takes the map
+  // of its other formation shot when that one has a map, else keeps its own.
+  | { kind: 'unknown-map'; mapIndex: number; keepsMap: boolean }
   // Heroes of the lineup with no portrait on the formation shot, which take
   // random free tiles.
   | { kind: 'unplaced'; team: Team; mapIndex: number; count: number }
@@ -456,11 +457,12 @@ export function buildTeamImportPlan(
       empty++
       continue
     }
-    const maps = new Set<string>()
-    for (const formation of Object.values(board)) {
-      const map = identifyMap(formation.reading, mapCandidates(mode, mapIndex))
-      if (map === null) issues.push({ kind: 'unknown-map', mapIndex })
-      else maps.add(map)
+    const found = Object.values(board).map((formation) =>
+      identifyMap(formation.reading, mapCandidates(mode, mapIndex)),
+    )
+    const maps = new Set(found.filter((map) => map !== null))
+    if (found.includes(null)) {
+      issues.push({ kind: 'unknown-map', mapIndex, keepsMap: maps.size === 0 })
     }
     if (maps.size > 1) issues.push({ kind: 'map-conflict', mapIndex })
     boards[mapIndex] = {

@@ -1,0 +1,5 @@
+{
+  "en": "A formation screenshot for map {map} matches no map in this mode, so the board takes the map of the other formation screenshot",
+  "zh": "第 {map} 张地图的布阵截图与本模式的任何地图都不匹配，棋盘采用另一张布阵截图的地图",
+  "ko": "맵 {map}의 배치 화면 스크린샷이 이 모드의 어느 맵과도 맞지 않아 보드는 다른 배치 화면 스크린샷의 맵을 따릅니다"
+}
