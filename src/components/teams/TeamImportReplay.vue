@@ -30,8 +30,8 @@ const { shot, mapKey, columns, swapSides, placed } = defineProps<{
   shot: ImportShot
   // The map the frame's board stands on; null while the frame has no board.
   mapKey: string | null
-  // The frame's board as the plan places it, by board side; null without one.
-  placed: { mapKey: string; sides: Partial<Record<Team, SideLoadBoard>> } | null
+  // The frame's board sides as the plan places them; null without a board.
+  placed: Partial<Record<Team, SideLoadBoard>> | null
   // Per screenshot column: its lineup's heroes, and every unit it can field.
   columns: Record<Team, { heroes: readonly number[]; options: readonly number[] }>
   // The columns land on the opposite board sides; each head says which.
@@ -206,7 +206,7 @@ const placedUnits = computed((): ThumbnailUnit[] => {
   // The board side a screenshot column fills.
   const pointedSide = target && (swapSides ? getOpposingTeam(target.column) : target.column)
   return SIDES.flatMap((team) => {
-    const side = placed?.sides[team]
+    const side = placed?.[team]
     if (!side) return []
     return [...side.mains, ...side.companions, ...(side.phantimal ? [side.phantimal] : [])].flatMap(
       ({ unitId, hexId }) =>
@@ -431,10 +431,10 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
           </ul>
         </div>
         <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
-        <figure v-if="placed" class="placed">
+        <figure v-if="placed && mapKey" class="placed">
           <BoardThumbnail
             class="placed-view"
-            :map-key="placed.mapKey"
+            :map-key="mapKey"
             :units="placedUnits"
             :hex-size="16"
             crisp
