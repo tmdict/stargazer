@@ -1,5 +1,5 @@
 {
-  "en": "Supreme League arena not found",
-  "zh": "未识别出至高联赛场地",
-  "ko": "슈프림 리그 경기장을 찾지 못했습니다"
+  "en": "No arena found: not a replay frame",
+  "zh": "未找到场地：不是回放画面",
+  "ko": "경기장을 찾지 못했습니다: 리플레이 화면이 아닙니다"
 }
