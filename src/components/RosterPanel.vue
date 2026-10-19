@@ -309,8 +309,12 @@ const onCross = (character: CharacterType, event: MouseEvent): void => {
   paint(stroke, character)
 }
 
+// Kept only until the click this release makes has been seen, so a later
+// tick from the keyboard still counts.
 const onRelease = (): void => {
-  if (stroke) stroke.held = false
+  if (!stroke) return
+  stroke.held = false
+  setTimeout(() => (stroke = null))
 }
 onMounted(() => document.addEventListener('mouseup', onRelease))
 onUnmounted(() => document.removeEventListener('mouseup', onRelease))
