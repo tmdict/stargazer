@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* A round icon button in an upgrade dock, with its hover tooltip; `text`
    widens it into a pill for a word label. `danger` marks a two-step
-   destructive control (useArmedConfirm), whose first click only arms it. */
+   destructive control (useArmedConfirm), whose first click only arms it.
+   `primary` fills it for the main action of a bar. */
 
 import { watch } from 'vue'
 
@@ -12,6 +13,7 @@ const props = defineProps<{
   tip: string
   disabled?: boolean
   danger?: boolean
+  primary?: boolean
   armed?: boolean
   text?: boolean
 }>()
@@ -43,7 +45,7 @@ const handleClick = (): void => {
   <button
     type="button"
     class="dock-chip"
-    :class="{ danger, text, 'confirm-armed': armed }"
+    :class="{ danger, primary, text, 'confirm-armed': armed }"
     :disabled
     :aria-label="tip"
     @click="handleClick"
@@ -80,7 +82,7 @@ const handleClick = (): void => {
   transition: all var(--transition-fast);
 }
 
-.dock-chip:hover:not(:disabled):not(.danger) {
+.dock-chip:hover:not(:disabled):not(.danger):not(.primary) {
   background: rgba(0, 0, 0, 0.14);
   color: var(--color-text-primary);
 }
@@ -94,6 +96,15 @@ const handleClick = (): void => {
   width: 18px;
   height: 18px;
   color: var(--color-danger);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
 }
 
 .text {
