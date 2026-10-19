@@ -10,7 +10,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
 /* Select mode on the Rosters tab: which heroes a level chip reaches, and when
- * the ticks reset. */
+ * the ticks reset. Dragging across heroes: which heroes a stroke changes. */
 
 // jsdom has neither; the level chips call both for the pill pulse.
 beforeAll(() => {
@@ -79,6 +79,20 @@ const tap = async (index: number, shiftKey = false): Promise<void> => {
   await nextTick()
 }
 
+// Presses the first hero, crosses the others with the button held and
+// releases on the last.
+const drag = async (indices: number[]): Promise<void> => {
+  const tiles = document.querySelectorAll('.character-grid .character-wrapper')
+  const portrait = (index: number): Element => tiles[index]!.querySelector('.character-display')!
+  portrait(indices[0]!).dispatchEvent(
+    new MouseEvent('mousedown', { button: 0, buttons: 1, bubbles: true }),
+  )
+  for (const index of indices.slice(1))
+    tiles[index]!.dispatchEvent(new MouseEvent('mouseenter', { buttons: 1 }))
+  portrait(indices.at(-1)!).dispatchEvent(new MouseEvent('mouseup', { button: 0, bubbles: true }))
+  await nextTick()
+}
+
 const tickedCount = (): string =>
   document.querySelector('.tick-count')?.textContent?.trim() ?? 'not selecting'
 
@@ -132,5 +146,50 @@ describe('RosterPanel select mode', () => {
     rosters.setActive(firstRoster)
     await nextTick()
     expect(tickedCount()).toBe('not selecting')
+  })
+})
+
+describe('RosterPanel drag across heroes', () => {
+  const split = (rosters: ReturnType<typeof useRosters>) => {
+    const ids = heroIds()
+    const before: Record<number, AttrRecord> = JSON.parse(JSON.stringify(rosters.active!.heroes))
+    const owned = ids.flatMap((id, i) => (before[id] ? [i] : []))
+    const unowned = ids.flatMap((id, i) => (before[id] ? [] : [i]))
+    return { ids, before, owned, unowned }
+  }
+
+  it("gives every hero a stroke crosses the first hero's change", async () => {
+    const rosters = await mountPanel()
+    const { ids, before, owned, unowned } = split(rosters)
+
+    await drag([unowned[0]!, owned[0]!, unowned[1]!])
+    expect(rosters.active!.heroes).toEqual({
+      ...before,
+      [ids[unowned[0]!]!]: {},
+      [ids[unowned[1]!]!]: {},
+    })
+
+    // Released back on the first hero, the stroke is not undone by a click.
+    await drag([owned[1]!, owned[2]!, unowned[0]!, owned[1]!])
+    const expected: Record<number, AttrRecord> = { ...before, [ids[unowned[1]!]!]: {} }
+    delete expected[ids[owned[1]!]!]
+    delete expected[ids[owned[2]!]!]
+    expect(rosters.active!.heroes).toEqual(expected)
+  })
+
+  it('ticks only roster heroes while selecting, and a press on one hero stays a click', async () => {
+    const rosters = await mountPanel()
+    const { owned, unowned } = split(rosters)
+    button('.dock-chip', 'Select').click()
+    await nextTick()
+
+    await drag([owned[0]!, unowned[0]!, owned[1]!, owned[2]!])
+    expect(tickedCount()).toBe('3 selected')
+    await drag([owned[1]!, owned[2]!])
+    expect(tickedCount()).toBe('1 selected')
+    await drag([unowned[0]!, owned[3]!])
+    expect(tickedCount()).toBe('1 selected')
+    await tap(owned[3]!)
+    expect(tickedCount()).toBe('2 selected')
   })
 })

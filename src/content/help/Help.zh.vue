@@ -156,7 +156,13 @@ const SKILL = {
         <ol class="help-steps">
           <li><span>打开<b>英雄池</b>标签页，点<b>新建</b>。点铅笔图标可以改名。</span></li>
           <li>
-            <span>点选你拥有的英雄，再点英雄下方的 <b>P</b> 或 <b>R</b> 调整等级。</span>
+            <span class="help-mouse">
+              点选你拥有的英雄，也可以按住鼠标一次拖过多个英雄。再点英雄下方的 <b>P</b> 或
+              <b>R</b> 调整等级。
+            </span>
+            <span class="help-touch">
+              点选你拥有的英雄，再点英雄下方的 <b>P</b> 或 <b>R</b> 调整等级。
+            </span>
           </li>
           <li><span>在英雄列表顶部选择你的英雄池，英雄上场时会带上你设置的等级。</span></li>
         </ol>

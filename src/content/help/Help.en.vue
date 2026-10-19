@@ -185,7 +185,8 @@ const SKILL = {
           </li>
           <li>
             <span class="help-mouse">
-              Click the heroes you own. Click <b>P</b> or <b>R</b> under a hero to set its level.
+              Click the heroes you own, or drag across several. Click <b>P</b> or <b>R</b> under a
+              hero to set its level.
             </span>
             <span class="help-touch">
               Tap the heroes you own. Tap <b>P</b> or <b>R</b> under a hero to set its level.

@@ -1,5 +1,5 @@
 {
-  "en": "Tap heroes to select them, then tap a level to give it to every selected hero.",
-  "zh": "点击英雄将其选中，再点击等级，即可应用到所有选中的英雄。",
-  "ko": "영웅을 눌러 선택한 뒤 레벨을 누르면 선택한 모든 영웅에 적용됩니다."
+  "en": "Tap heroes to select them, then tap a level to give it to every selected hero. With a mouse, you can also drag across heroes.",
+  "zh": "点击英雄将其选中，再点击等级，即可应用到所有选中的英雄。使用鼠标时，也可以拖过多个英雄一次选中。",
+  "ko": "영웅을 눌러 선택한 뒤 레벨을 누르면 선택한 모든 영웅에 적용됩니다. 마우스로는 여러 영웅 위로 드래그해 한 번에 선택할 수도 있습니다."
 }
