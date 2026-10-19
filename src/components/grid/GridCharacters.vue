@@ -362,9 +362,8 @@ interface ModeButton {
 }
 
 // A mode is part of the hero's setup, so its button shows whatever the Skills
-// toggle says, as a companion's border does; the arrows it colours follow the
-// toggle. The lookup takes the exact id: a synergy copy cannot hold a mode,
-// because a link's upgrade row cannot name its id.
+// toggle says. The lookup takes the exact id: a synergy copy cannot hold a
+// mode, because a link's upgrade row cannot name its id.
 const modeButtons = computed(() =>
   props.isMapEditorMode
     ? []
@@ -380,8 +379,7 @@ const modeButtons = computed(() =>
       }),
 )
 
-// A skill's badges picture what it does, so they follow the Skills toggle like
-// its tiles and arrows.
+// A skill's badges picture what it does, so they follow the Skills toggle.
 const skillBadges = computed(() => {
   if (!props.showSkills) return []
   const shown = new Set(visiblePlacements.value.map(([hexId]) => hexId))

@@ -4,8 +4,7 @@ import { createEffectsSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { rowScan, ScanDirection } from '../utils/ring'
 
-// One unit of each of these classes joins the party; if any is absent among the
-// neighbors there is no party. Each class name is also its badge icon.
+// Each class name is also its badge icon.
 const REQUIRED_CLASSES = ['tank', 'mage', 'support'] as const
 
 interface PartyMember {
@@ -29,7 +28,7 @@ function party(ctx: SkillContext): PartyMember[] {
       maxDistance: 1,
       filter: (characterId) => ctx.lookups.classOf(characterId) === className,
     })
-    if (!target?.targetHexId) return [] // a required class is missing: skill does not fire
+    if (!target?.targetHexId) return []
     members.push({ hexId: target.targetHexId, className })
   }
   return members

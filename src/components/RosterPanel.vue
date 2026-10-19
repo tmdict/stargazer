@@ -266,7 +266,6 @@ interface Stroke {
   from: CharacterType
   crossed: Set<number>
   held: boolean
-  // Whether it wrote to the roster, so the write is reported once per stroke.
   edited: boolean
 }
 let stroke: Stroke | null = null
@@ -641,8 +640,6 @@ const {
           <!-- Reserved, not removed: revealing a pill on select would reflow the
                grid and move the next tap target. -->
           <template #badge>
-            <!-- While selecting, a tap on the pill ticks the hero like a tap on
-                 the portrait, so the pill stops taking taps itself. -->
             <span
               class="pill-slot"
               :class="{ ticking: selecting && levelsOf(character) }"

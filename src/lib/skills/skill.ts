@@ -368,7 +368,6 @@ export class SkillManager {
     return [...this.skillLines.values()].flat()
   }
 
-  // Replaced outright, as lines are.
   setSkillBadges(characterId: number, team: Team, badges: SkillBadge[]): void {
     const key = this.getSkillKey(characterId, team)
     if (badges.length) this.skillBadges.set(key, badges)

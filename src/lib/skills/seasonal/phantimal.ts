@@ -90,11 +90,11 @@ function wedgeMarkTiles(ctx: SkillContext): TilePaint[] {
   return tiles
 }
 
+const wedgeMarks = whenTargeting(wedgeMarkTiles)
+
 // Wedge of Matter enters with Wedge of Power on a random free tile of its
 // team; removing either removes both. Neither wedge holds a team slot, and
 // Wedge of Power targets at range 20 under its own portrait.
-const wedgeMarks = whenTargeting(wedgeMarkTiles)
-
 registerSkill(
   withEffects(
     createCompanionSkill({
