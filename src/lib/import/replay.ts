@@ -24,7 +24,7 @@ import type {
 } from './types'
 
 // The reference frame's size; the arena picture is a quarter of it.
-export const REPLAY_REFERENCE = { width: 1400, height: 1940 } as const
+const REPLAY_REFERENCE = { width: 1400, height: 1940 } as const
 const ARENA_FACTOR = 4
 
 // The camera in reference pixels: a board point (x, y) on the pointy-top layout
@@ -47,9 +47,9 @@ const RING_FLOOR = 0.1
 
 // The placement search: scales around the frame's width over the reference's
 // (a crop keeps most of the window's width), shifts up to this fraction of the
-// frame. Replay frames score 0.68 to 0.90 though units and effects differ;
-// result and formation screens, over the same arena blurred or not at all, 0.20
-// to 0.30. Below the floor a frame is not this arena.
+// frame. Replay frames score 0.68 to 0.88 though units and effects differ;
+// result and formation screens, over the same arena blurred or not at all, 0.13
+// to 0.25. Below the floor a frame is not this arena.
 const SCALE_SPREAD = [0.85, 1.18] as const
 const SHIFT_SPREAD = 0.35
 const PLACEMENT_FLOOR = 0.45
@@ -183,7 +183,13 @@ export function placeReplay(shot: RgbaImage, arena: ArenaRef): ReplayPlacement {
       }
     }
   }
+  // The coarse copies are blurrier and score higher than the fine ones, so the
+  // fine search starts from the coarse winner scored at the fine size.
   const centre = best
+  best = {
+    ...centre,
+    score: score(arena.fine, ARENA_FACTOR, fine, unit, centre.scale, centre.x, centre.y, 2),
+  }
   for (let ds = -0.015; ds <= 0.015 + 1e-9; ds += 0.003) {
     const scale = centre.scale + ds * guess
     for (let y = centre.y - 6 * unit; y <= centre.y + 6 * unit; y += unit) {
@@ -203,7 +209,7 @@ export const isReplayFrame = (shot: RgbaImage, arena: ArenaRef): boolean =>
 // ---------- reading ----------
 
 // The ring is a thin band, so each circle is tried a few pixels either way of
-// where the placement puts it, which is good to about that much.
+// where the placement and the measured strip put it.
 const RING_SLACK = [-8, -4, 0, 4, 8] as const
 
 /* The map whose strip circle carries the green ring, when the strip is in the

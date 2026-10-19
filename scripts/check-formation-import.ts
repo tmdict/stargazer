@@ -70,10 +70,6 @@ type Truth = Record<
   }
 >
 
-// The app reads a formation shot at its own size up to this width
-// (useTeamImport's FORMATION_MAX_WIDTH).
-const FORMATION_MAX_WIDTH = 1200
-
 const images = async (dir: string): Promise<string[]> =>
   existsSync(dir) ? (await readdir(dir)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f)).sort() : []
 
@@ -107,7 +103,9 @@ async function main(): Promise<void> {
     )
     const { prepareFrameRefs } = await load<typeof FramesModule>('/src/lib/import/frames.ts')
     const { buildHeroTable } = await load<typeof HeroesModule>('/src/lib/import/heroes.ts')
-    const { RESULT_MAX_WIDTH } = await load<typeof LayoutModule>('/src/lib/import/layout.ts')
+    const { FORMATION_MAX_WIDTH, RESULT_MAX_WIDTH } = await load<typeof LayoutModule>(
+      '/src/lib/import/layout.ts',
+    )
     const { readScreenshot } = await load<typeof PipelineModule>('/src/lib/import/pipeline.ts')
     const { buildImportHeroTable } = await load<typeof ReferencesModule>(
       '/src/lib/import/references.ts',

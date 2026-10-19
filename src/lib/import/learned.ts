@@ -1,5 +1,5 @@
-/* The descriptor format shared by browser learning, correction exports and
- * curated references. `spec` checks prevent matching stale face crops; a
+/* The descriptor format shared by browser learning and the curated
+ * references. `spec` checks prevent matching stale face crops; a
  * change to normalisation or quantisation must add a field to SPEC and
  * specMatches, so faces encoded the old way stop matching. */
 

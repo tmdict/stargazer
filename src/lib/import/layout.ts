@@ -13,6 +13,11 @@ export const CANONICAL_WIDTH = 1150
 // fills only part of a large capture keeps its pixels until it is framed.
 export const RESULT_MAX_WIDTH = 4096
 
+// A formation shot is read at its own size, which the board fit measures, up
+// to a width that keeps a full-resolution phone capture quick to read.
+export const FORMATION_MAX_WIDTH = 1200
+export const FORMATION_MIN_WIDTH = 400
+
 // A region at a fixed offset from a landmark point.
 export interface Region {
   dx: number
