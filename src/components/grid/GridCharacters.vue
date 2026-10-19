@@ -357,7 +357,6 @@ interface ModeButton {
   team: Team
   characterId: number
   icon: BadgeIcon
-  color: string
   mode: SkillMode
   next: number
 }
@@ -376,8 +375,7 @@ const modeButtons = computed(() =>
         const mode = entry.modes[position]
         if (!mode) return []
         const next = (position + 1) % entry.modes.length
-        const color = mode.badgeColor ?? mode.color
-        return [{ hexId, team, characterId, icon: entry.icon, color, mode, next }]
+        return [{ hexId, team, characterId, icon: entry.icon, mode, next }]
       }),
 )
 
@@ -499,7 +497,7 @@ const liftedMode = computed(() =>
         @touchstart.passive="onModeTouch"
         @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
       >
-        <UnitBadge :icon="button.icon" :color="button.color" :glyph="badgeDimensions.glyph" />
+        <UnitBadge :icon="button.icon" :color="button.mode.color" :glyph="badgeDimensions.glyph" />
       </button>
     </div>
 
@@ -530,7 +528,7 @@ const liftedMode = computed(() =>
           :aria-label="i18n.t(`app.${liftedMode.mode.name}`)"
           @click="cycleMode(liftedMode)"
         >
-          <UnitBadge :icon="liftedMode.icon" :color="liftedMode.color" :glyph="11" />
+          <UnitBadge :icon="liftedMode.icon" :color="liftedMode.mode.color" :glyph="11" />
         </button>
         <button type="button" class="lift-inspect" @click="inspectAt(liftPill.hexId)">
           <IconInfo :size="16" />
