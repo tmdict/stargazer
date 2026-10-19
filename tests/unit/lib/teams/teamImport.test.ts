@@ -81,7 +81,7 @@ describe('suggestRecordName', () => {
     expect(suggestRecordName(names, [Team.ALLY, Team.ENEMY, Team.ALLY])).toBe('')
   })
 
-  it('follows the pvp export convention', () => {
+  it("formats the match's record name", () => {
     const results = [Team.ALLY, Team.ENEMY, Team.ALLY, Team.ALLY, Team.ALLY]
     expect(suggestRecordName(NAMES, results)).toBe('S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)')
     expect(suggestRecordName(NAMES, [Team.ENEMY, Team.ENEMY, Team.ALLY])).toBe(

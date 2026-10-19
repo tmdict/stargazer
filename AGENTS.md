@@ -17,6 +17,10 @@
 
 Any new or changed data contract requires the owner's explicit approval before it is implemented, however small. This covers localStorage keys and every field or shape inside a stored value, export and import file formats, and share-link formats. A version field, a backup key or a default field counts. Present the exact keys and field-by-field shapes for approval, then document each one, with a complete example payload, in the doc of the feature that owns it, and list new keys in the key index under "Where state is stored" in [Architecture](./docs/ARCHITECTURE.md), in the same change.
 
+### Private Sources
+
+Nothing committed here names or points to a private repository, its files or its folders: not code, comments, docs, tests or test names, script output, file paths, commit messages or PR text. Describe such a source in neutral words ("the upstream data feed", "the image host", "an external report generator") or leave it out. The image host's address in `src/utils/artifactImage.ts` is the only exception.
+
 ### Comments
 
 Add a comment only when the code can't tell the story itself: a non-obvious mechanic, something that looks wrong but is intentional, a cross-file contract, or a real gotcha. If a competent reader could already know it from the code, omit it.
