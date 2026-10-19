@@ -38,7 +38,7 @@ import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
   characters: readonly CharacterType[]
-  // Gates the hover card only; placement interactions are unaffected.
+  // Gates the hover card and the mode button's label; placement interactions are unaffected.
   showHover: boolean
   showSkills: boolean
   isMapEditorMode: boolean
@@ -492,7 +492,7 @@ const liftedMode = computed(() =>
         :disabled="readonly"
         :aria-label="i18n.t(`app.${button.mode.name}`)"
         @click="cycleMode(button)"
-        @mouseenter="onModeEnter($event, button.hexId)"
+        @mouseenter="showHover && onModeEnter($event, button.hexId)"
         @mouseleave="onModeLeave"
         @touchstart.passive="onModeTouch"
         @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
