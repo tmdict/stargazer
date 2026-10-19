@@ -88,7 +88,10 @@ const mountImport = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
-  const api = useTeamImport(() => '3v3')
+  const api = useTeamImport(
+    () => '3v3',
+    () => false,
+  )
   api.referenceStatus.value = 'ready'
   api.shots.value = [reactive(sample())]
   Object.assign(api.names, { prefix: '', left: '', right: '' })

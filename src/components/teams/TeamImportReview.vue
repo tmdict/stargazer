@@ -24,8 +24,7 @@ import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
-import type { HeroReading } from '@/lib/import/types'
-import { isFormationReading } from '@/lib/import/types'
+import { isFormationReading, type HeroReading } from '@/lib/import/types'
 import type { UnitAssignment } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
@@ -757,8 +756,6 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* A unit's portraits are round in game, so both crops are square, from the top
-   of the art like the board's own portraits. */
 .cell.unit .cell-card,
 .cell.unit .cell-portrait {
   aspect-ratio: 1;

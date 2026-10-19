@@ -70,7 +70,10 @@ const shot = (): ImportShot => ({
 })
 
 afterEach(() => {
-  useTeamImport(() => '5v5').forgetLearned()
+  useTeamImport(
+    () => '5v5',
+    () => false,
+  ).forgetLearned()
   disposeTeamImport()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
@@ -80,7 +83,10 @@ describe('learning from corrections', () => {
   it('teaches an unsure cell, replaces the lesson on a second pick, and takes it back', () => {
     vi.stubEnv('SSR', false)
     const { storage } = stubLocalStorage()
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     const learnedIds = (): number[] =>
       readLearnedIcons(JSON.parse(storage.get('stargazer.import.learned') ?? 'null')).map(
         (i) => i.characterId,
@@ -100,7 +106,10 @@ describe('learning from corrections', () => {
   })
 
   it('never teaches a sure cell or one whose frame match was doubtful', () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     const sample = shot()
     const cell = sample.reading!.sides[1][0]!
     cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
@@ -121,7 +130,10 @@ describe('shot map and winner', () => {
     expect(shotMapIndex(s, 1)).toBe(0)
     expect(shotWinner(s)).toBe(1)
 
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     api.shots.value = [s]
     api.setMap('sample', 1)
     api.setWinner('sample', 2)
@@ -135,7 +147,10 @@ describe('shot map and winner', () => {
 
   it('keeps a map chosen before the reading arrived', () => {
     const s: ImportShot = { ...shot(), reading: null, status: 'reading' }
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     api.shots.value = [s]
     api.setMap('sample', 2)
     s.reading = shot().reading
@@ -145,7 +160,10 @@ describe('shot map and winner', () => {
 
 describe('board sides', () => {
   it('swaps every screenshot onto the opposite sides until the shots go', () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     api.shots.value = [shot()]
     api.swapSides.value = true
     const board = api.plan.value.boards[3]!
@@ -159,7 +177,10 @@ describe('board sides', () => {
 
 describe('a match import', () => {
   it('leaves out a formation shot when the only result shot failed to read', () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     const result = shot()
     const unit = {
       hexId: 1,
@@ -194,7 +215,10 @@ describe('a match import', () => {
 
 describe('replay tile picks', () => {
   it('moves a unit picked for another tile and replaces what a tile held', () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     api.shots.value = [{ ...shot(), kind: 'replay' }]
     const picks = () => api.shots.value[0]!.tilePicks[1]
     api.setTilePick('sample', 1, 1, 7)
@@ -208,7 +232,10 @@ describe('replay tile picks', () => {
   })
 
   it("starts a frame's picks over when it moves to another board", () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     const reading: ReplayReading = {
       ...shot().reading!,
       size: { width: 1400, height: 1940 },
@@ -223,7 +250,10 @@ describe('replay tile picks', () => {
   })
 
   it('leaves out a frame the arena was not found in', () => {
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     const reading: ReplayReading = {
       ...shot().reading!,
       mapIndex: null,
@@ -239,7 +269,10 @@ describe('clearing an import', () => {
   it('drops unsaved name edits back to the names last saved', () => {
     vi.stubEnv('SSR', false)
     stubLocalStorage()
-    const api = useTeamImport(() => '5v5')
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
     api.names.left = 'unii'
     api.saveNames()
     api.names.left = 'typo'

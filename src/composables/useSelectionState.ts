@@ -93,8 +93,8 @@ export function useSelectionState() {
     targetArtifactGridId.value = null
   }
 
-  // One side of every board. As with the board bar's side clear, the tap/lift
-  // gesture drops because its unit may be gone.
+  // One side of every board. The tap/lift gesture drops because its unit may
+  // be gone.
   const handleClearSide = (team: Team) => {
     grids.clearSide(team)
     clearTargetHex()

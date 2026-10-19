@@ -531,7 +531,6 @@ const placedArtifacts = computed(() =>
   stroke: rgba(0, 0, 0, 0.45);
 }
 
-/* Literal colours, not tokens: exports serialize the SVG standalone. */
 .tile-number {
   fill: #fff;
   stroke: rgba(0, 0, 0, 0.75);
