@@ -7,8 +7,8 @@ export const SKILL_COLORS = {
   red: '#e57373', // galahad, hepler, satrana, zandrok
   crimson: '#c83232', // natsu, phraesto (clone), talene
   rust: '#cd7169', // elijah-lailah (lailah)
-  amber: '#ffa000', // aliceth
-  gold: '#fbc02d', // dunlingr (spellbind), natsu, phantimal (spirit marks)
+  amber: '#ffa000', // aliceth, dunlingr (spellbind)
+  gold: '#fbc02d', // natsu, phantimal (spirit marks)
   green: '#98be5d', // bonnie, callan, daimon, isabella, nara, niru, silvina
   teal: '#6d9c86', // faramor, ravion, thador
   blue: '#0288d1', // cassadee, evie, himmel, hugin
