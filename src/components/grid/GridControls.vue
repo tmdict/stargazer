@@ -66,8 +66,8 @@ const synergyView = computed({
   },
 })
 
-// Team view hides the enemy half, so its side choice goes too, as on the board
-// bar. The plain Clear still empties both sides.
+// Team view hides the enemy half, so its side choice goes too. The plain Clear
+// still empties both sides.
 const clearSides = computed((): ClearSide[] =>
   [Team.ALLY, Team.ENEMY]
     .filter((team) => team === Team.ALLY || !teamView.value)

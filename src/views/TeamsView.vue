@@ -202,11 +202,10 @@ const handleLoadTeam = (team: SavedTeam) => {
   success(i18n.t('app.team-loaded'))
 }
 
-// Start a new team, put the screenshots' lineups on its boards, and save it
-// under the suggested name. The previous team is never merged into or
-// overwritten; the modal confirms first when it has content. The save waits a
-// tick so the reconcile watcher has placed the phantimals; a full library
-// leaves the boards as an unsaved team that still offers the name.
+// The previous team is never merged into or overwritten; the modal confirms
+// first when it has content. The save waits a tick so the reconcile watcher
+// has placed the phantimals; a full library leaves the boards as an unsaved
+// team that still offers the name.
 const handleImportMatch = async (plan: TeamImportPlan) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.newTeam()

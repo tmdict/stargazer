@@ -41,10 +41,7 @@ export type TeamImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
   | { type: 'read'; id: string; image: RgbaImage; kind: ShotKind }
-  // Which kind a screenshot is: a formation panel when a whole board is found
-  // in it, else a replay frame (where `replay` allows one) when it has no
-  // result tabs and the arena matches it, else a result screen. It needs only
-  // the arena, so a second worker answers while this one reads.
+  // Sorting needs only the arena, so a second worker answers while this one reads.
   | { type: 'arena'; image: RgbaImage }
   | { type: 'sort'; id: string; image: RgbaImage; replay: boolean }
 

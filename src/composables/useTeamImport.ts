@@ -146,7 +146,6 @@ let opening = 0
 // Decoded shots waiting on the worker, by shot id.
 const pending = new Map<string, { image: RgbaImage; kind: ShotKind }>()
 
-// The record names as last saved, or the defaults.
 const restoreNames = (): void => {
   Object.assign(names, defaultNames())
   try {
@@ -384,8 +383,6 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   if (shot) applyReading(shot, msg.reading)
 }
 
-/* The sorter, ready once it holds the arena; without the arena (it failed to
- * load) it still tells formation panels from result screens. */
 const startSorter = async (): Promise<Worker> => {
   const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
     type: 'module',
@@ -393,8 +390,9 @@ const startSorter = async (): Promise<Worker> => {
   started.onmessage = (event: MessageEvent<TeamImportResponse>) => {
     const msg = event.data
     if (msg.type !== 'sorted' && msg.type !== 'error') return
-    const done = msg.id === null ? undefined : sorting.get(msg.id)
-    if (!done || msg.id === null) return
+    if (msg.id === null) return
+    const done = sorting.get(msg.id)
+    if (!done) return
     sorting.delete(msg.id)
     done(msg.type === 'sorted' ? msg.kind : null)
   }
@@ -544,7 +542,7 @@ const clearImport = (): void => {
  * Supreme League is fought in the arena they are matched against. */
 export function useTeamImport(
   mode: () => TeamModeKey,
-  replayMode: () => boolean = () => false,
+  replayMode: () => boolean,
 ): {
   shots: typeof shots
   referenceStatus: typeof referenceStatus
@@ -556,7 +554,7 @@ export function useTeamImport(
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
   addFiles: (
     files: File[],
-    kind?: ShotKind | 'sort',
+    kind: ShotKind | 'sort',
   ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
@@ -608,7 +606,7 @@ export function useTeamImport(
   // caller can say why they were not added.
   const addFiles = async (
     files: File[],
-    kind: ShotKind | 'sort' = 'result',
+    kind: ShotKind | 'sort',
   ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
     void ensureReferences()
     const mine = opening

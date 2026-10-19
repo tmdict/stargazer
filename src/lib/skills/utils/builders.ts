@@ -162,7 +162,7 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
 
 // What a skill draws for the current grid state. A channel left out is not
 // written, so two decorators on one skill never overwrite each other.
-export interface SkillEffects {
+interface SkillEffects {
   tiles?: TilePaint[]
   lines?: SkillLine[]
   badges?: SkillBadge[]
@@ -214,10 +214,7 @@ interface EffectsSkillConfig {
   calculate: (context: SkillContext) => SkillEffects
 }
 
-/**
- * Skill whose only behavior is drawing the effects `calculate` returns. A skill
- * that owns other behavior composes withEffects onto that base instead.
- */
+/** Skill whose only behavior is drawing the effects `calculate` returns. */
 export function createEffectsSkill(config: EffectsSkillConfig): Skill {
   const { id, characterId, calculate } = config
   return withEffects({ id, characterId, onActivate() {}, onDeactivate() {} }, calculate)

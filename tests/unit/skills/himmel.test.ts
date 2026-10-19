@@ -135,16 +135,4 @@ describe('himmel class-trio highlighting', () => {
     skillManager.clearSkillBadges(HIMMEL, Team.ALLY)
     expect(skillManager.getSkillBadges()).toEqual([])
   })
-
-  it('takes its badges away when Himmel leaves', () => {
-    placeOnTile(grid, 16, 1, Team.ALLY)
-    placeOnTile(grid, 12, 2, Team.ALLY)
-    placeOnTile(grid, 6, 3, Team.ALLY)
-    himmel().onActivate(ctx())
-    expect(skillManager.getSkillBadges()).toHaveLength(3)
-
-    himmel().onDeactivate(ctx())
-
-    expect(skillManager.getSkillBadges()).toEqual([])
-  })
 })

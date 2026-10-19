@@ -25,7 +25,7 @@ import { getCompanions } from '../../characters/companion'
 import { inPhantimalBand, toPhantimalId } from '../../characters/phantimal'
 import { registerSkill } from '../registry'
 import type { Skill, SkillContext, TilePaint } from '../skill'
-import { createCompanionSkill, withEffects } from '../utils/builders'
+import { createCompanionSkill, createEffectsSkill, withEffects } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { findAdjacentPriorityTarget, type TargetDirection } from '../utils/targeting'
 
@@ -55,14 +55,12 @@ export function createSpiritMarkSkill(
   name: string,
   direction: TargetDirection,
 ): Skill {
-  const base: Skill = {
+  const mark = whenTargeting((ctx) => markTiles(ctx, direction))
+  return createEffectsSkill({
     id: `phantimal-${name}`,
     characterId: toPhantimalId(localId),
-    onActivate() {},
-    onDeactivate() {},
-  }
-  const mark = whenTargeting((ctx) => markTiles(ctx, direction))
-  return withEffects(base, (ctx) => ({ tiles: mark(ctx) }))
+    calculate: (ctx) => ({ tiles: mark(ctx) }),
+  })
 }
 
 const spiritMarks: { localId: number; name: string; direction: TargetDirection }[] = [

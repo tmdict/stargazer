@@ -103,10 +103,12 @@ const FACE_ASPECT = 0.75
 const UNIT_CANDIDATES = 60
 const UNIT_CARD = 64
 
-function findUnits(shot: RgbaImage, fit: BoardFit): Omit<UnitReading, 'candidates' | 'card'>[] {
+type FoundUnit = Omit<UnitReading, 'candidates' | 'card'>
+
+function findUnits(shot: RgbaImage, fit: BoardFit): FoundUnit[] {
   const s = fit.scale
   const radius = RING_RADIUS * s
-  const units: Omit<UnitReading, 'candidates' | 'card'>[] = []
+  const units: FoundUnit[] = []
   for (const hex of BOARD_HEXES) {
     const centre = hexCentre(fit, hex)
     let best = { score: 0, x: 0, y: 0 }
@@ -125,11 +127,7 @@ function findUnits(shot: RgbaImage, fit: BoardFit): Omit<UnitReading, 'candidate
   return units
 }
 
-function identify(
-  shot: RgbaImage,
-  refs: ReferenceSet,
-  unit: Omit<UnitReading, 'candidates' | 'card'>,
-): UnitReading {
+function identify(shot: RgbaImage, refs: ReferenceSet, unit: FoundUnit): UnitReading {
   const { x, y, radius: r } = unit.ring
   const alignments = FACE_BOXES.map((box) => {
     const w = Math.round(box.w * r)
@@ -177,7 +175,7 @@ const LIT_GAP = 12
 function readTiles(
   shot: RgbaImage,
   fit: BoardFit,
-  units: readonly Omit<UnitReading, 'candidates' | 'card'>[],
+  units: readonly FoundUnit[],
 ): { tiles: number[]; unclear: number[] } {
   const covered = (x: number, y: number): boolean =>
     units.some(({ ring }) => Math.hypot(x - ring.x, y - ring.y) <= ring.radius + 3)
