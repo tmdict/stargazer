@@ -1,13 +1,13 @@
 /* Match import: readings plus the user's review decisions become per-board
  * lineups the grids store can stamp, and the match's record name
- * ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
- * on the ally half of the boards first, `>` when that player won more maps,
- * each player's map numbers in the brackets). An import is a match's result
- * shots, which give both sides' heroes, upgrades and artifacts, with its
- * formation shots placing those heroes on their tiles; or formation shots
- * alone, each giving one side with the levels it shows (formationImport). A
- * formation panel shows the screenshotting player's own levels, never a
- * match's, so the two never mix. Pure data mapping, a sibling of sideLoad. */
+ * ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player on the ally half of the
+ * boards first, `>` when that player won more maps, each player's map numbers
+ * in the brackets). An import is a match's result shots, which give both sides'
+ * heroes, upgrades and artifacts, with its formation shots placing those heroes
+ * on their tiles; or formation shots alone, each giving one side with the
+ * levels it shows (formationImport). A formation panel shows the screenshotting
+ * player's own levels, never a match's, so the two never mix. Pure data
+ * mapping, a sibling of sideLoad. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'

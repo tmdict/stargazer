@@ -138,10 +138,7 @@ export function teamContentKey(encoded: string): string | null {
  * highlight has nothing to point at. */
 export function validateSavedTeam(record: unknown): SavedTeam | null {
   if (typeof record !== 'object' || record === null) return null
-  const { id, name, data, createdAt, updatedAt } = record as Record<string, unknown>
-  let { mode } = record as Record<string, unknown>
-  // TEMPORARY: delete with upgradeMigration.ts (its runbook names this line).
-  if (mode === '5v5sl') mode = '5v5'
+  const { id, name, mode, data, createdAt, updatedAt } = record as Record<string, unknown>
 
   if (typeof id !== 'string' || id.length === 0) return null
   const cleanName = sanitizeName(name)

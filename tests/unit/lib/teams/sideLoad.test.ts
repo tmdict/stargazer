@@ -8,8 +8,6 @@ import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-// Stamped current unless a case sets its own season: an unstamped payload
-// decodes as the legacy pre-field season, which retires after a cutover.
 const encode = (state: MultiGridState): string =>
   encodeMultiGridStateToUrl({ season: CURRENT_SEASON, ...state })
 
