@@ -403,7 +403,10 @@ const handleForgetLearned = (): void => {
 
       <section class="drop-section">
         <div class="drop-head">
-          <span class="section-title">{{ i18n.t('app.import-formations') }}</span>
+          <span class="section-title">
+            {{ i18n.t('app.import-formations') }}
+            <span v-if="matchImport" class="optional">{{ i18n.t('app.import-optional') }}</span>
+          </span>
           <span class="note">{{ i18n.t('app.import-formations-tip') }}</span>
         </div>
         <ImageDropZone
@@ -431,7 +434,10 @@ const handleForgetLearned = (): void => {
 
       <section v-if="replayOpen || replayShots.length" class="drop-section">
         <div class="drop-head">
-          <span class="section-title">{{ i18n.t('app.import-replay') }}</span>
+          <span class="section-title">
+            {{ i18n.t('app.import-replay') }}
+            <span v-if="matchImport" class="optional">{{ i18n.t('app.import-optional') }}</span>
+          </span>
           <span class="note">{{ i18n.t('app.import-replay-tip') }}</span>
         </div>
         <ImageDropZone
@@ -792,6 +798,15 @@ const handleForgetLearned = (): void => {
 .section-title {
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+.section-title .optional {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--import-label);
 }
 
 .section-sub {
