@@ -15,7 +15,8 @@ export const SKILL_COLORS = {
   sky: '#51abcb', // elijah-lailah (elijah)
   steel: '#7badc4', // alna
   lavender: '#b0a8d0', // frieren
-  purple: '#9661f1', // dunlingr, gunnar, pandora, reinier, vala
+  purple: '#9661f1', // gunnar, pandora, reinier, vala
+  lilac: '#b08cf6', // dunlingr (curelock)
   orchid: '#a47fb8', // kulu (breakable tiles)
   slate: '#565b63', // kulu (demolition zone)
   white: '#ffffff', // phraesto
