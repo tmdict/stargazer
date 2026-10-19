@@ -5,11 +5,14 @@
    Tapping a deployment tile picks which of that team's units started there,
    from the lineup the map's result screenshot named; or a tile number typed
    beside a unit in the lists places it, Enter moving on to the next. Heroes
-   may have moved before the pause, so the tile is the reviewer's call. Every
-   pick is an edit on the shot; nothing here touches a board. */
+   may have moved before the pause, so the tile is the reviewer's call. The
+   "As placed" board under the lists shows the sides as the plan will place
+   them, turned when the sides are swapped. Every pick is an edit on the
+   shot; nothing here touches a board. */
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
+import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam } from '@/lib/characters/character'
@@ -17,15 +20,18 @@ import { BOARD_HEXES } from '@/lib/import/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/replay'
 import { isReplayReading } from '@/lib/import/types'
 import { MAPS } from '@/lib/maps'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { SIDES } from '@/lib/teams/teamImport'
 import { State } from '@/lib/types/state'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shot, mapKey, columns, swapSides } = defineProps<{
+const { shot, mapKey, columns, swapSides, placed } = defineProps<{
   shot: ImportShot
   // The map the frame's board stands on; null while the frame has no board.
   mapKey: string | null
+  // The frame's board as the plan places it, by board side; null without one.
+  placed: { mapKey: string; sides: Partial<Record<Team, SideLoadBoard>> } | null
   // Per screenshot column: its lineup's heroes, and every unit it can field.
   columns: Record<Team, { heroes: readonly number[]; options: readonly number[] }>
   // The columns land on the opposite board sides; each head says which.
@@ -195,6 +201,30 @@ const isPointed = (tile: TileView): boolean =>
   tile.column === pointed.value.column &&
   tile.unitId === pointed.value.unitId
 
+const placedUnits = computed((): ThumbnailUnit[] => {
+  const target = pointed.value
+  // The board side a screenshot column fills.
+  const pointedSide = target && (swapSides ? getOpposingTeam(target.column) : target.column)
+  return SIDES.flatMap((team) => {
+    const side = placed?.sides[team]
+    if (!side) return []
+    return [...side.mains, ...side.companions, ...(side.phantimal ? [side.phantimal] : [])].flatMap(
+      ({ unitId, hexId }) =>
+        hexId === undefined
+          ? []
+          : [
+              {
+                hexId,
+                team,
+                image: unitImage(unitId),
+                title: unitName(unitId),
+                highlight: team === pointedSide && unitId === target?.unitId,
+              },
+            ],
+    )
+  })
+})
+
 // ---------- typed tiles ----------
 
 const lineupsEl = ref<HTMLElement>()
@@ -358,7 +388,7 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
       </div>
       <p v-else class="note">{{ i18n.t('app.import-no-arena') }}</p>
 
-      <div ref="lineupsEl" class="lineups">
+      <div v-if="view" ref="lineupsEl" class="lineups">
         <div
           v-for="lineup in lineups"
           :key="lineup.column"
@@ -401,6 +431,17 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
           </ul>
         </div>
         <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
+        <figure v-if="placed" class="placed">
+          <BoardThumbnail
+            class="placed-view"
+            :map-key="placed.mapKey"
+            :units="placedUnits"
+            :hex-size="16"
+            crisp
+            numbered
+          />
+          <figcaption>{{ i18n.t('app.import-on-board') }}</figcaption>
+        </figure>
       </div>
     </div>
   </div>
@@ -677,5 +718,25 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
   margin: 0;
   font-size: 0.75rem;
   color: var(--import-bad);
+}
+
+.placed {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.placed figcaption {
+  font-size: 0.72rem;
+  color: var(--import-text-dim);
+}
+
+.placed-view {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-medium);
+  background: rgba(0, 0, 0, 0.35);
 }
 </style>
