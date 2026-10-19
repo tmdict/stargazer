@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { createApp, h, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import RosterPanel from '@/components/RosterPanel.vue'
+import { useToast } from '@/composables/useToast'
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -179,7 +180,7 @@ describe('RosterPanel drag across heroes', () => {
 
   it('ticks only roster heroes while selecting, and a press on one hero stays a click', async () => {
     const rosters = await mountPanel()
-    const { owned, unowned } = split(rosters)
+    const { ids, before, owned, unowned } = split(rosters)
     button('.dock-chip', 'Select').click()
     await nextTick()
 
@@ -192,12 +193,53 @@ describe('RosterPanel drag across heroes', () => {
     await tap(owned[3]!)
     expect(tickedCount()).toBe('2 selected')
 
-    // A tick from the keyboard after a drag still counts.
+    // A tick from the keyboard after a drag still counts, and only ticks.
     await drag([owned[4]!, owned[5]!])
     await new Promise((resolve) => setTimeout(resolve))
     const pills = document.querySelectorAll('.character-grid .pill-slot')
     pills[owned[6]!]!.querySelector('button')!.click()
     await nextTick()
     expect(tickedCount()).toBe('5 selected')
+    expect(rosters.active!.heroes[ids[owned[6]!]!]).toEqual(before[ids[owned[6]!]!])
+
+    // A release the page never saw ends the stroke once the pointer reaches a
+    // hero with no button held, and the keyboard still ticks after it.
+    const tiles = document.querySelectorAll('.character-grid .character-wrapper')
+    tiles[owned[7]!]!.querySelector('.character-display')!.dispatchEvent(
+      new MouseEvent('mousedown', { button: 0, buttons: 1, bubbles: true }),
+    )
+    tiles[owned[8]!]!.dispatchEvent(new MouseEvent('mouseenter', { buttons: 1 }))
+    tiles[owned[9]!]!.dispatchEvent(new MouseEvent('mouseenter', { buttons: 0 }))
+    await nextTick()
+    expect(tickedCount()).toBe('7 selected')
+    pills[owned[10]!]!.querySelector('button')!.click()
+    await nextTick()
+    expect(tickedCount()).toBe('8 selected')
+  })
+
+  it('continues a Shift-click from where a stroke ended, on a hero it crossed before too', async () => {
+    const rosters = await mountPanel()
+    const { owned } = split(rosters)
+    button('.dock-chip', 'Select').click()
+    await nextTick()
+
+    await drag([owned[0]!, owned[1]!, owned[2]!, owned[1]!])
+    expect(tickedCount()).toBe('3 selected')
+    await tap(owned[0]!, true)
+    expect(tickedCount()).toBe('1 selected')
+  })
+
+  it('reports a failing write once per stroke', async () => {
+    const rosters = await mountPanel()
+    const { unowned } = split(rosters)
+    const { toasts } = useToast()
+    toasts.splice(0)
+    // Storage that refuses every write, as a full quota or blocked site data does.
+    const write = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota')
+    })
+    await drag([unowned[0]!, unowned[1]!, unowned[2]!, unowned[3]!])
+    write.mockRestore()
+    expect(toasts.filter((toast) => toast.type === 'error')).toHaveLength(1)
   })
 })
