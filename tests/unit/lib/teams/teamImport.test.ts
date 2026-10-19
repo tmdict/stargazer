@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { HeroReading, ScreenshotReading, UnitReading } from '@/lib/import/types'
 import {
@@ -388,6 +389,68 @@ describe('buildTeamImportPlan with formation shots', () => {
     const issue: PlanIssue = { kind: 'duplicate-formation', team: Team.ALLY, mapIndex: 0 }
     expect(plan.issues).toContainEqual(issue)
     expect(isBlockingIssue(issue)).toBe(true)
+  })
+})
+
+describe('buildTeamImportPlan with replay frames', () => {
+  it("places each column's heroes on the tiles picked for them, the rest on random tiles", () => {
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([7, 9], [8]))],
+      '5v5',
+      NAMES,
+      false,
+      [],
+      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7 }, [Team.ENEMY]: { 40: 8 } } }],
+    )
+    const board = plan.boards[0]!
+    expect(board.sides[Team.ALLY]!.mains).toEqual([
+      { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
+      { unitId: 9, hexId: undefined, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(board.sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 8, hexId: 40, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(plan.issues).toContainEqual({ kind: 'unplaced', team: Team.ALLY, mapIndex: 0, count: 1 })
+    // No phantimal was picked, so each side gets the one its lineup qualifies for.
+    expect(board.formations).toEqual([])
+  })
+
+  it('keeps a picked phantimal and turns the picks a half-turn when the sides are swapped', () => {
+    const phantimal = toPhantimalId(1)
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([7], [8]))],
+      '5v5',
+      NAMES,
+      true,
+      [],
+      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7, 3: phantimal } } }],
+    )
+    const enemy = plan.boards[0]!.sides[Team.ENEMY]!
+    expect(enemy.mains).toEqual([{ unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } }])
+    expect(enemy.phantimal).toEqual({ unitId: phantimal, hexId: 43 })
+    expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
+  })
+
+  it('blocks two replay frames of one board and leaves out one whose map has no result', () => {
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([7], [8]))],
+      '5v5',
+      NAMES,
+      false,
+      [],
+      [
+        { mapIndex: 0, picks: {} },
+        { mapIndex: 0, picks: {} },
+        { mapIndex: 1, picks: {} },
+      ],
+    )
+    const duplicate: PlanIssue = { kind: 'duplicate-replay', mapIndex: 0 }
+    const unused: PlanIssue = { kind: 'replay-unused', mapIndex: 1 }
+    expect(plan.issues).toContainEqual(duplicate)
+    expect(plan.issues).toContainEqual(unused)
+    expect(isBlockingIssue(duplicate)).toBe(true)
+    expect(isBlockingIssue(unused)).toBe(false)
+    expect(plan.boards[1]).toBeNull()
   })
 })
 

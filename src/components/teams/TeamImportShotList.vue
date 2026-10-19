@@ -2,9 +2,9 @@
 /* The dropped screenshots as cards: a thumbnail that opens the full image in
    a lightbox, the map it fills (read from the strip, or from a formation
    shot's slot circles), who won it (read from the Ally tab; for a formation
-   shot, the team it shows instead, read from its board), and the reading's
-   state. Two cards on one map both turn red; the modal blocks Save as New on
-   it. */
+   shot, the team it shows instead, read from its board; a replay frame has
+   neither), and the reading's state. Two cards on one map both turn red; the
+   modal blocks Save as New on it. */
 
 import { ref } from 'vue'
 
@@ -26,6 +26,7 @@ const {
   shots,
   mapCount,
   formation = false,
+  replay = false,
   reviewCount,
   notice,
 } = defineProps<{
@@ -33,6 +34,8 @@ const {
   mapCount: number
   // Formation shots: the team shown instead of the winner, read-only.
   formation?: boolean
+  // Replay frames: no winner, and the count is of heroes still to place.
+  replay?: boolean
   // What a card still asks about, when its owner counts it (a formation shot's
   // units come from the plan); else its cells and artifacts.
   reviewCount?: (shot: ImportShot) => number
@@ -103,6 +106,8 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   const reading = shot.reading
   if (reading?.warnings.some((w) => w.kind === 'no-board'))
     return { text: i18n.t('app.import-no-board'), tone: 'error' }
+  if (reading?.warnings.some((w) => w.kind === 'no-arena'))
+    return { text: i18n.t('app.import-no-arena'), tone: 'error' }
   // A formation shot without cards still places its units.
   if (!formation && reading?.warnings.some((w) => w.kind === 'no-panel'))
     return { text: i18n.t('app.import-no-panel'), tone: 'error' }
@@ -113,9 +118,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   const unused = notice?.(shot)
   if (unused) return { text: unused, tone: 'warn' }
   const n = (reviewCount ?? cellReviewCount)(shot)
-  return n
-    ? { text: i18n.t('app.import-to-review', { count: n }), tone: 'warn' }
-    : { text: i18n.t('app.import-ready'), tone: 'plain' }
+  if (!n) return { text: i18n.t('app.import-ready'), tone: 'plain' }
+  return {
+    text: i18n.t(replay ? 'app.import-to-place' : 'app.import-to-review', { count: n }),
+    tone: 'warn',
+  }
 }
 </script>
 
@@ -184,7 +191,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
           </button>
         </div>
       </div>
-      <div v-else class="shot-row">
+      <div v-else-if="!replay" class="shot-row">
         <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
         <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
           <button

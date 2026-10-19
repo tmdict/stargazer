@@ -20,13 +20,8 @@ import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelec
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import {
-  getOpposingTeam,
-  isBaseHeroId,
-  isCompanionUnitId,
-  toBaseHeroId,
-} from '@/lib/characters/character'
-import { inPhantimalBand } from '@/lib/characters/phantimal'
+import { useUnitLabels } from '@/composables/useUnitLabels'
+import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import type { HeroReading } from '@/lib/import/types'
@@ -48,8 +43,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageUrl } from '@/utils/artifactImage'
-import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const {
   shot,
@@ -86,16 +80,7 @@ const i18n = useI18nStore()
 
 const sideLabel = (team: Team): string => i18n.t(teamLabelKey(team))
 
-const heroName = (characterId: number | null): string => {
-  if (characterId === null) return i18n.t('app.import-none')
-  const slug = gameData.getCharacterNameById(characterId)
-  return slug ? localizedDisplayName(i18n.t, 'character', slug) : String(characterId)
-}
-
-const heroImage = (characterId: number | null): string => {
-  const slug = characterId === null ? undefined : gameData.getCharacterNameById(characterId)
-  return slug ? gameData.getCharacterImage(slug) : ''
-}
+const { heroName, heroImage, unitName, unitImage } = useUnitLabels()
 
 const artifactName = (artifact: ArtifactType | null): string =>
   artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-none')
@@ -243,23 +228,6 @@ const closePickers = (event: MouseEvent): void => {
 }
 
 // ---------- units ----------
-
-// A hero's companion shows its owner's name, marked; a phantimal and the
-// companion it brings are named by their own art (Wedge of Power).
-const unitName = (unitId: number | null): string => {
-  if (unitId === null) return i18n.t('app.import-none')
-  if (inPhantimalBand(unitId)) {
-    return phantimalDisplayName(i18n.currentLocale, gameData.getPhantimalUnitSlug(unitId) ?? '')
-  }
-  const name = heroName(toBaseHeroId(unitId))
-  return isCompanionUnitId(unitId) ? i18n.t('app.import-companion', { name }) : name
-}
-
-const unitImage = (unitId: number | null): string => {
-  const name = unitId === null ? undefined : gameData.getCharacterImageNameById(unitId)
-  if (!name) return ''
-  return inPhantimalBand(unitId!) ? phantimalImageUrl(name) : gameData.getCharacterImage(name)
-}
 
 interface UnitView {
   index: number
