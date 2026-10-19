@@ -11,6 +11,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
+import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
@@ -42,6 +43,7 @@ import {
   isBlockingIssue,
   NAME_FORBIDDEN,
   reviewStates,
+  SIDES,
   type PlanIssue,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
@@ -84,18 +86,26 @@ const {
   setLevel,
   setArtifact,
   setUnit,
+  setTilePick,
   unitsOf,
   resultsClosed,
+  formationsClosed,
+  replayOpen,
   saveNames,
   forgetLearned,
   ensureReferences,
-} = useTeamImport(() => activeMode)
+} = useTeamImport(
+  () => activeMode,
+  // Replay frames are read in the Supreme League arena alone.
+  () => variant === 'sl',
+)
 
 const mapCount = computed(() => TEAM_MODES[activeMode].boardCount)
 const selectedId = ref<string | null>(null)
 const selected = computed(() => shots.value.find((s) => s.id === selectedId.value) ?? null)
 const resultShots = computed(() => shots.value.filter((s) => s.kind === 'result'))
 const formationShots = computed(() => shots.value.filter((s) => s.kind === 'formation'))
+const replayShots = computed(() => shots.value.filter((s) => s.kind === 'replay'))
 // Result shots make the import a match, whose formation shots only place its
 // heroes; formation shots dropped first are imported alone.
 const matchImport = computed(() => resultShots.value.length > 0)
@@ -109,26 +119,32 @@ const formationSide = (shot: ImportShot): Team | null => {
   return side === null || !swapSides.value ? side : getOpposingTeam(side)
 }
 
-// In a match import, a formation shot of a map with no result shot places nothing.
-const formationNotice = (shot: ImportShot): string | null => {
+// In a match import, a formation shot or replay frame of a map with no result
+// shot places nothing.
+const noResultNotice = (shot: ImportShot): string | null => {
   if (!matchImport.value) return null
   const mapIndex = shotMapIndex(shot, mapCount.value)
   const hasResult = resultShots.value.some((s) => shotMapIndex(s, mapCount.value) === mapIndex)
   return hasResult ? null : i18n.t('app.import-no-result')
 }
 
-// The units a formation shot's portraits can be: its side's heroes with their
-// companions, and the season's phantimals with theirs.
-const unitOptions = (shot: ImportShot): number[] => {
-  const mapIndex = shotMapIndex(shot, mapCount.value)
-  const side = formationSide(shot)
-  const heroes =
-    mapIndex === null || side === null
-      ? []
-      : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
-  const phantimals = gameData.phantimals.map(({ id }) => toPhantimalId(id))
-  return [...heroes, ...phantimals].flatMap((id) => [id, ...companionIdsOf(id)])
-}
+// The heroes the plan places on one side of a board.
+const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
+  mapIndex === null || side === null
+    ? []
+    : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
+
+// The units a side can field: its heroes with their companions, and the
+// season's phantimals with theirs.
+const fieldable = (heroes: readonly number[]): number[] =>
+  [...heroes, ...gameData.phantimals.map(({ id }) => toPhantimalId(id))].flatMap((id) => [
+    id,
+    ...companionIdsOf(id),
+  ])
+
+// The units a formation shot's portraits can be.
+const unitOptions = (shot: ImportShot): number[] =>
+  fieldable(boardHeroes(shotMapIndex(shot, mapCount.value), formationSide(shot)))
 
 // A formation shot's own cards give the lineup only when imported alone.
 const cardSides = (shot: ImportShot): Team[] => {
@@ -147,8 +163,36 @@ const placedSide = (
   const board = plan.value.boards[mapIndex]
   const side = board?.sides[team]
   if (!board || !side) return null
-  const mapKey = board.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? DEFAULT_MAP_KEY
-  return { mapKey, team, side }
+  return { mapKey: boardMap(mapIndex) ?? DEFAULT_MAP_KEY, team, side }
+}
+
+// ---------- replay frames ----------
+
+// The map a board stands on: the one its formation shots name, else the new
+// team's for that board.
+const boardMap = (mapIndex: number | null): string | null =>
+  mapIndex === null
+    ? null
+    : (plan.value.boards[mapIndex]?.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? null)
+
+// A replay frame's teams by screenshot column, each with the heroes its
+// board side takes from the map's result screenshot.
+const replayColumns = (shot: ImportShot): Record<Team, { heroes: number[]; options: number[] }> => {
+  const mapIndex = shotMapIndex(shot, mapCount.value)
+  const column = (team: Team) => {
+    const heroes = boardHeroes(mapIndex, swapSides.value ? getOpposingTeam(team) : team)
+    return { heroes, options: fieldable(heroes) }
+  }
+  return { [Team.ALLY]: column(Team.ALLY), [Team.ENEMY]: column(Team.ENEMY) }
+}
+
+// Heroes not yet placed on a tile of their frame.
+const replayReview = (shot: ImportShot): number => {
+  const columns = replayColumns(shot)
+  return SIDES.reduce((n, column) => {
+    const picked = Object.values(shot.tilePicks[column] ?? {})
+    return n + columns[column].heroes.filter((id) => !picked.includes(id)).length
+  }, 0)
 }
 
 const formationReview = (shot: ImportShot): number => {
@@ -183,7 +227,8 @@ watch(
 
 const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
   const { added, refused } = await addFiles(files, kind)
-  if (refused > 0) error(i18n.t('app.import-results-closed'))
+  if (refused.result) error(i18n.t('app.import-results-closed'))
+  else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))
 }
 
@@ -268,6 +313,10 @@ const issueText = (issue: PlanIssue): string => {
         side: sideLabel(issue.team),
         map: issue.mapIndex + 1,
       })
+    case 'duplicate-replay':
+      return i18n.t('app.import-duplicate-replay', { map: issue.mapIndex + 1 })
+    case 'replay-unused':
+      return i18n.t('app.import-replay-unused', { map: issue.mapIndex + 1 })
   }
 }
 
@@ -361,8 +410,12 @@ const handleForgetLearned = (): void => {
           dark
           :compact="shots.length > 0"
           :paste-active="false"
+          :disabled="formationsClosed"
           @add="(files) => handleAdd(files, 'formation')"
         />
+        <p v-if="formationsClosed" class="note closed">
+          {{ i18n.t('app.import-formations-closed') }}
+        </p>
         <TeamImportShotList
           v-if="formationShots.length"
           v-model:selected-id="selectedId"
@@ -370,7 +423,32 @@ const handleForgetLearned = (): void => {
           :map-count
           formation
           :review-count="formationReview"
-          :notice="formationNotice"
+          :notice="noResultNotice"
+          @set-map="setMap"
+          @remove="removeShot"
+        />
+      </section>
+
+      <section v-if="replayOpen || replayShots.length" class="drop-section">
+        <div class="drop-head">
+          <span class="section-title">{{ i18n.t('app.import-replay') }}</span>
+          <span class="note">{{ i18n.t('app.import-replay-tip') }}</span>
+        </div>
+        <ImageDropZone
+          dark
+          compact
+          :paste-active="false"
+          :disabled="!replayOpen"
+          @add="(files) => handleAdd(files, 'replay')"
+        />
+        <TeamImportShotList
+          v-if="replayShots.length"
+          v-model:selected-id="selectedId"
+          :shots="replayShots"
+          :map-count
+          replay
+          :review-count="replayReview"
+          :notice="noResultNotice"
           @set-map="setMap"
           @remove="removeShot"
         />
@@ -456,6 +534,15 @@ const handleForgetLearned = (): void => {
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
+        />
+        <TeamImportReplay
+          v-else-if="selected.kind === 'replay'"
+          :key="`${selected.id}-replay`"
+          :shot="selected"
+          :map-key="boardMap(shotMapIndex(selected, mapCount))"
+          :columns="replayColumns(selected)"
+          :swap-sides
+          @set-pick="setTilePick"
         />
         <TeamImportReview
           v-else

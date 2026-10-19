@@ -1,5 +1,5 @@
 {
-  "en": "{count} hero(es) on the {side} side of map {map} are not on its formation screenshot and take random tiles",
-  "zh": "第 {map} 张地图{side}有 {count} 名英雄不在布阵截图中，将随机放置",
-  "ko": "맵 {map}의 {side} 진영 영웅 {count}명이 배치 화면 스크린샷에 없어 무작위 타일에 배치됩니다"
+  "en": "{count} hero(es) on the {side} side of map {map} have no tile from its screenshots and take random tiles",
+  "zh": "第 {map} 张地图{side}有 {count} 名英雄在截图中没有对应的格子，将随机放置",
+  "ko": "맵 {map}의 {side} 진영 영웅 {count}명은 스크린샷에서 정해진 타일이 없어 무작위 타일에 배치됩니다"
 }

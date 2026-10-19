@@ -11,12 +11,14 @@
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
+import { isPhantimalId } from '@/lib/characters/phantimal'
 import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
   assignUnits,
   formationSide,
   heroesFromUnits,
   identifyMap,
+  type PlacedUnit,
   type UnitAssignment,
 } from '@/lib/teams/formationImport'
 import { TEAM_MODES, variantsForMode, type TeamModeKey } from '@/lib/teams/modes'
@@ -53,6 +55,13 @@ export interface FormationAssignment {
   // Review picks for its units, by index in the reading: a unit id, or null
   // for a portrait that is none of the side's units.
   unitOverrides: Record<number, number | null>
+}
+
+export interface ReplayAssignment {
+  // 0-based board this replay frame shows; null while unmapped.
+  mapIndex: number | null
+  // By screenshot column, the unit picked as starting on each tile, by hex id.
+  picks: Partial<Record<Team, Readonly<Record<number, number>>>>
 }
 
 export interface LineupEntry {
@@ -94,6 +103,10 @@ export type PlanIssue =
   // In a match import, a formation shot of a map with no result shot: it has
   // no match heroes to place, and is left out.
   | { kind: 'formation-unused'; team: Team; mapIndex: number }
+  // Two replay frames of one board.
+  | { kind: 'duplicate-replay'; mapIndex: number }
+  // A replay frame of a map with no result shot, left out like a formation shot.
+  | { kind: 'replay-unused'; mapIndex: number }
 
 export interface TeamImportPlan {
   // One entry per board; null leaves that board untouched.
@@ -120,6 +133,7 @@ export const isBlockingIssue = (issue: PlanIssue): boolean =>
   issue.kind === 'cross-board-duplicate' ||
   issue.kind === 'cross-board-artifact' ||
   issue.kind === 'duplicate-formation' ||
+  issue.kind === 'duplicate-replay' ||
   issue.kind === 'map-conflict'
 
 // Names sit between the operator and the brackets of the record name, so
@@ -286,18 +300,21 @@ function columnLineup(
 }
 
 /* `swapSides` puts every screenshot's Ally column on the enemy side of its
- * board and its Enemy column on the ally side, and every formation shot's
- * team on the other half, its tiles turned a half-turn. One choice for the
- * whole match rather than per screenshot: the game's Ally tab and a formation
- * shot's near team are the viewing player, who keeps one side of the board for
- * every map, and the boards hold a hero once per side page-wide. Issues and the
- * record name follow board sides throughout. */
+ * board and its Enemy column on the ally side, and every formation shot's and
+ * replay frame's team on the other half, its tiles turned a half-turn. One
+ * choice for the whole match rather than per screenshot: the game's Ally tab,
+ * a formation shot's near team and a replay's lower-left team are the viewing
+ * player, who keeps one side of the board for every map, and the boards hold a
+ * hero once per side page-wide. Issues and the record name follow board sides
+ * throughout. A replay frame places a side the way a formation shot does, from
+ * the tiles picked on it, for a side no formation shot shows. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
   names: RecordNames,
   swapSides = false,
   formations: readonly FormationAssignment[] = [],
+  replays: readonly ReplayAssignment[] = [],
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)
@@ -312,7 +329,8 @@ export function buildTeamImportPlan(
   const placeable = formations.filter((f) => f.reading.side !== null)
   const unmapped =
     shots.filter((s) => !mapped(s.mapIndex)).length +
-    placeable.filter((f) => !mapped(f.mapIndex)).length
+    placeable.filter((f) => !mapped(f.mapIndex)).length +
+    replays.filter((r) => !mapped(r.mapIndex)).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
 
   const resultShots = new Map<number, ShotAssignment>()
@@ -337,6 +355,17 @@ export function buildTeamImportPlan(
     }
     shown.set(formation.mapIndex, { ...board, [team]: formation })
   }
+  const replayed = new Map<number, ReplayAssignment>()
+  for (const replay of replays) {
+    if (!mapped(replay.mapIndex)) continue
+    if (replayed.has(replay.mapIndex)) {
+      if (!issues.some((i) => i.kind === 'duplicate-replay' && i.mapIndex === replay.mapIndex)) {
+        issues.push({ kind: 'duplicate-replay', mapIndex: replay.mapIndex })
+      }
+      continue
+    }
+    replayed.set(replay.mapIndex, replay)
+  }
 
   const matchImport = shots.length > 0
   const units: UnitAssignment[][] = formations.map(() => [])
@@ -344,12 +373,16 @@ export function buildTeamImportPlan(
   for (let mapIndex = 0; mapIndex < boardCount; mapIndex++) {
     const result = resultShots.get(mapIndex)
     const board = shown.get(mapIndex) ?? {}
+    const replay = replayed.get(mapIndex)
+    if (!result && replay) issues.push({ kind: 'replay-unused', mapIndex })
     if (matchImport && !result) {
       for (const team of SIDES) {
         if (board[team]) issues.push({ kind: 'formation-unused', team, mapIndex })
       }
       continue
     }
+    // Sides placed from what a screenshot shows keep the phantimal shown.
+    const shownSides: Team[] = SIDES.filter((side) => board[side] !== undefined)
     if (!result && !board[Team.ALLY] && !board[Team.ENEMY]) continue
     const sides: Partial<Record<Team, SideLoadBoard>> = {}
     for (const side of SIDES) {
@@ -368,6 +401,18 @@ export function buildTeamImportPlan(
           ? columnLineup(source.reading, source.column, source.overrides, repeated)
           : null
       const artifact = cellArtifactId(source.reading, source.column, source.artifactOverrides)
+      if (!formation && replay) {
+        const seen: PlacedUnit[] = Object.entries(replay.picks[columnOf(side)] ?? {}).map(
+          ([hexId, unitId]) => ({ unitId, hexId: Number(hexId) }),
+        )
+        const placed = formationSide(seen, lineup ?? [], artifact, swapSides)
+        const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
+        if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
+        // A phantimal left unpicked comes from the lineup, as without a replay.
+        if (seen.some((u) => u.unitId !== null && isPhantimalId(u.unitId))) shownSides.push(side)
+        sides[side] = placed
+        continue
+      }
       if (!formation) {
         sides[side] = {
           mains: (lineup ?? []).map(({ characterId, attrs }) => ({ unitId: characterId, attrs })),
@@ -395,7 +440,11 @@ export function buildTeamImportPlan(
         unitOverrides,
       )
       units[formations.indexOf(formation)] = assignments
-      const placed = formationSide(reading.units, assignments, heroes, artifact, swapSides)
+      const seen = reading.units.map((unit, i) => ({
+        unitId: assignments[i]?.unitId ?? null,
+        hexId: unit.hexId,
+      }))
+      const placed = formationSide(seen, heroes, artifact, swapSides)
       const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
       if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
       sides[side] = placed
@@ -415,7 +464,7 @@ export function buildTeamImportPlan(
     if (maps.size > 1) issues.push({ kind: 'map-conflict', mapIndex })
     boards[mapIndex] = {
       sides,
-      formations: SIDES.filter((side) => board[side] !== undefined),
+      formations: shownSides,
       map: maps.size === 1 ? [...maps][0]! : null,
     }
   }

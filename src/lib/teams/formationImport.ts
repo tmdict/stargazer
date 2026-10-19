@@ -214,21 +214,26 @@ const rotated = (hexId: number): number | undefined => {
   return hex && HEXES.find((h) => h.q === -hex.q && h.r === -hex.r)?.getId()
 }
 
+// A unit seen on a tile: a formation shot's portrait as assigned, or a replay
+// frame's pick. A null unit is none of the side's.
+export interface PlacedUnit {
+  unitId: number | null
+  hexId: number
+}
+
 /* One side of a board as the side-load places it: each hero with its
- * upgrades on the tile its portrait marks, or on a random free tile when no
- * portrait was taken for it; the companions and phantimal the portraits
- * show; and the artifact. `rotate` turns every tile a half-turn, for a team
- * that lands on the other half of the board. */
+ * upgrades on the tile it was seen on, or on a random free tile when it was
+ * not; the companions and phantimal seen; and the artifact. `rotate` turns
+ * every tile a half-turn, for a team that lands on the other half of the
+ * board. */
 export function formationSide(
-  units: readonly UnitReading[],
-  assignments: readonly UnitAssignment[],
+  seen: readonly PlacedUnit[],
   heroes: readonly LineupEntry[],
   artifact: number | null,
   rotate: boolean,
 ): SideLoadBoard {
   const tileOf = (unitId: number): number | undefined => {
-    const i = assignments.findIndex((a) => a.unitId === unitId)
-    const hexId = units[i]?.hexId
+    const hexId = seen.find((u) => u.unitId === unitId)?.hexId
     if (hexId === undefined) return undefined
     return rotate ? rotated(hexId) : hexId
   }
@@ -238,8 +243,7 @@ export function formationSide(
     attrs,
   }))
   const owners = heroes.map((h) => h.characterId)
-  const phantimalId =
-    assignments.find((a) => a.unitId !== null && isPhantimalId(a.unitId))?.unitId ?? null
+  const phantimalId = seen.find((u) => u.unitId !== null && isPhantimalId(u.unitId))?.unitId ?? null
   if (phantimalId !== null) owners.push(phantimalId)
   const companions: SideLoadCompanion[] = owners.flatMap((owner) =>
     companionIdsOf(owner).flatMap((unitId) => {

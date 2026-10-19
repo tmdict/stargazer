@@ -1,0 +1,5 @@
+{
+  "en": "The replay frame for map {map} has no match result to place, so it is left out",
+  "zh": "第 {map} 张地图的回放画面没有可放置的对战结果，已略过",
+  "ko": "맵 {map}의 리플레이 화면은 배치할 대전 결과가 없어 제외됩니다"
+}

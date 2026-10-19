@@ -33,6 +33,7 @@ const shot = (): ImportShot => ({
   artifactCards: {},
   unitOverrides: {},
   unitCards: [],
+  tilePicks: {},
   reading: {
     mapIndex: 3,
     mapCount: 5,
@@ -152,6 +153,22 @@ describe('board sides', () => {
     expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     api.clearImport()
     expect(api.swapSides.value).toBe(false)
+  })
+})
+
+describe('replay tile picks', () => {
+  it('moves a unit picked for another tile and replaces what a tile held', () => {
+    const api = useTeamImport(() => '5v5')
+    api.shots.value = [{ ...shot(), kind: 'replay' }]
+    const picks = () => api.shots.value[0]!.tilePicks[1]
+    api.setTilePick('sample', 1, 1, 7)
+    api.setTilePick('sample', 1, 2, 7)
+    expect(picks()).toEqual({ 2: 7 })
+    api.setTilePick('sample', 1, 3, 9)
+    api.setTilePick('sample', 1, 2, 9)
+    expect(picks()).toEqual({ 2: 9 })
+    api.setTilePick('sample', 1, 2, null)
+    expect(picks()).toEqual({})
   })
 })
 
