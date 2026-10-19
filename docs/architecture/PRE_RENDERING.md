@@ -20,7 +20,7 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
        from every .html in dist/
 ```
 
-`npm run build` runs the type check and `build:ssg` in parallel. `build:spa` skips pre-rendering, and the dev server is SPA only.
+`npm run build` runs the type check, then `build:ssg`. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
 `getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `APP_LOCALES` × `GUIDE_PAGES` ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
