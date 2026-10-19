@@ -3,10 +3,10 @@
    puts it on the paused frame, every tile numbered, each team's deployment
    tiles tinted and the blocked ones hatched (they should sit on the walls).
    Tapping a deployment tile picks which of that team's units started there,
-   from the lineup the map's result screenshot named; the lists beside it say
-   where each hero was placed. Heroes may have moved before the pause, so the
-   tile is the reviewer's call. Every pick is an edit on the shot; nothing
-   here touches a board. */
+   from the lineup the map's result screenshot named; or a tile number typed
+   beside a unit in the lists places it, Enter moving on to the next. Heroes
+   may have moved before the pause, so the tile is the reviewer's call. Every
+   pick is an edit on the shot; nothing here touches a board. */
 
 import { computed, ref } from 'vue'
 
@@ -174,12 +174,61 @@ const lineups = computed(() =>
   }),
 )
 
-// The unit pointed at in a list, ringed on its tile.
+// The unit pointed at or typed for in a list, ringed on its tile.
 const pointed = ref<{ column: Team; unitId: number } | null>(null)
 const isPointed = (tile: TileView): boolean =>
   pointed.value !== null &&
   tile.column === pointed.value.column &&
   tile.unitId === pointed.value.unitId
+
+// ---------- typed tiles ----------
+
+const lineupsEl = ref<HTMLElement>()
+const typeError = ref<string | null>(null)
+
+/* A tile number typed beside a unit: one of its team's deployment tiles
+ * places the unit there, taking it off any other as a tap does; an empty box
+ * takes it off the board; anything else is refused, said so, and the box goes
+ * back to the unit's tile, returning false. */
+const typeTile = (column: Team, unitId: number, input: HTMLInputElement): boolean => {
+  const text = input.value.trim()
+  const current = tileOf(column, unitId)
+  if (text === '') {
+    typeError.value = null
+    if (current !== null) emit('setPick', shot.id, column, current, null)
+    return true
+  }
+  const hexId = Number(text)
+  if (Number.isInteger(hexId) && KIND_COLUMN[tileKinds.value.get(hexId) ?? 'neutral'] === column) {
+    typeError.value = null
+    if (hexId !== current) emit('setPick', shot.id, column, hexId, unitId)
+    return true
+  }
+  typeError.value = i18n.t('app.import-tile-refused', {
+    tile: text,
+    side: i18n.t(teamLabelKey(column)),
+  })
+  input.value = current === null ? '' : String(current)
+  return false
+}
+
+// Enter places the unit and moves on to the next box, so a team is typed in
+// one go; a refused number keeps the box, selected for typing again.
+const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): void => {
+  const input = event.target as HTMLInputElement
+  if (!typeTile(column, unitId, input)) {
+    input.select()
+    return
+  }
+  const boxes = [...(lineupsEl.value?.querySelectorAll<HTMLInputElement>('.lineup-tile') ?? [])]
+  const next = boxes[boxes.indexOf(input) + 1]
+  if (next) {
+    next.focus()
+    next.select()
+  } else {
+    input.blur()
+  }
+}
 </script>
 
 <template>
@@ -295,7 +344,7 @@ const isPointed = (tile: TileView): boolean =>
       </div>
       <p v-else class="note">{{ i18n.t('app.import-no-arena') }}</p>
 
-      <div class="lineups">
+      <div ref="lineupsEl" class="lineups">
         <div
           v-for="lineup in lineups"
           :key="lineup.column"
@@ -322,14 +371,22 @@ const isPointed = (tile: TileView): boolean =>
             >
               <img class="lineup-portrait" :src="unitImage(unit.unitId)" alt="" />
               <span class="lineup-name">{{ unitName(unit.unitId) }}</span>
-              <span class="lineup-tile">{{
-                unit.tile === null
-                  ? i18n.t('app.import-not-placed')
-                  : i18n.t('app.import-tile', { tile: unit.tile })
-              }}</span>
+              <input
+                class="lineup-tile"
+                type="text"
+                inputmode="numeric"
+                maxlength="2"
+                :value="unit.tile ?? ''"
+                :aria-label="i18n.t('app.import-tile-for', { name: unitName(unit.unitId) })"
+                @focus="pointed = { column: lineup.column, unitId: unit.unitId }"
+                @blur="pointed = null"
+                @change="typeTile(lineup.column, unit.unitId, $event.target as HTMLInputElement)"
+                @keydown.enter.prevent="typeTileAndNext(lineup.column, unit.unitId, $event)"
+              />
             </li>
           </ul>
         </div>
+        <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
       </div>
     </div>
   </div>
@@ -580,12 +637,31 @@ const isPointed = (tile: TileView): boolean =>
 }
 
 .lineup-tile {
-  font-size: 0.72rem;
-  color: var(--import-text-dim);
+  width: 3.4em;
+  flex: none;
+  padding: 3px 6px;
+  border: 1px solid var(--import-border);
+  border-radius: var(--radius-small);
+  background: var(--import-surface);
+  color: var(--import-text);
+  font: inherit;
+  font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.lineup-tile:focus-visible {
+  border-color: var(--import-border-strong);
+  outline: none;
 }
 
 .lineup-units li.missing .lineup-tile {
-  color: var(--import-warn);
+  border-color: var(--import-warn);
+}
+
+.type-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--import-bad);
 }
 </style>
