@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* The screenshot import, from either of two starts. A match: drop its result
-   screenshots, map each one to a board, add its formation screenshots to put
-   the heroes on their tiles, review what was read, name the record, pick the
+   screenshots, map each one to a board, add its formation screenshots (or, in
+   Supreme League when they couldn't be saved, replay frames) to put the
+   heroes on their tiles, review what was read, name the record, pick the
    board sides, and save it as a new team. Or formation screenshots alone,
    each one team with the levels it shows, which closes the result drop until
    they are removed. State lives in useTeamImport, and closing the modal
