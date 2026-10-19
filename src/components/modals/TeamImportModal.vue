@@ -300,7 +300,9 @@ const issueText = (issue: PlanIssue): string => {
     case 'map-conflict':
       return i18n.t('app.import-map-conflict', { map: issue.mapIndex + 1 })
     case 'unknown-map':
-      return i18n.t('app.import-unknown-map', { map: issue.mapIndex + 1 })
+      return i18n.t(issue.keepsMap ? 'app.import-unknown-map' : 'app.import-unknown-map-other', {
+        map: issue.mapIndex + 1,
+      })
     case 'unplaced':
       return i18n.t('app.import-unplaced', {
         count: issue.count,

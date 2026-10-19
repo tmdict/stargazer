@@ -390,6 +390,48 @@ describe('buildTeamImportPlan with formation shots', () => {
     expect(plan.issues).toContainEqual(issue)
     expect(isBlockingIssue(issue)).toBe(true)
   })
+
+  describe('a formation shot of no map', () => {
+    // One lit tile too many, so the tiles fit no map of the mode's.
+    const unmatched = (formation: FormationAssignment): FormationAssignment => ({
+      ...formation,
+      reading: { ...formation.reading, tiles: [...formation.reading.tiles, 20] },
+    })
+    const mapIssues = (plan: TeamImportPlan): PlanIssue[] =>
+      plan.issues.filter((i) => i.kind === 'unknown-map' || i.kind === 'map-conflict')
+
+    it('warns once for the board, which keeps its map, when neither shot has one', () => {
+      const formations = [
+        unmatched(formationShot(Team.ALLY, [unit(1, 7)])),
+        unmatched(formationShot(Team.ENEMY, [unit(40, 8)])),
+      ]
+      const plan = buildTeamImportPlan(
+        [shot(0, reading([7], [8]))],
+        '5v5',
+        NAMES,
+        false,
+        formations,
+      )
+      expect(plan.boards[0]!.map).toBeNull()
+      expect(mapIssues(plan)).toEqual([{ kind: 'unknown-map', mapIndex: 0, keepsMap: true }])
+    })
+
+    it("warns that the board takes the other shot's map", () => {
+      const formations = [
+        unmatched(formationShot(Team.ALLY, [unit(1, 7)])),
+        formationShot(Team.ENEMY, [unit(40, 8)]),
+      ]
+      const plan = buildTeamImportPlan(
+        [shot(0, reading([7], [8]))],
+        '5v5',
+        NAMES,
+        false,
+        formations,
+      )
+      expect(plan.boards[0]!.map).toBe('arena1')
+      expect(mapIssues(plan)).toEqual([{ kind: 'unknown-map', mapIndex: 0, keepsMap: false }])
+    })
+  })
 })
 
 describe('buildTeamImportPlan with replay frames', () => {

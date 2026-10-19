@@ -15,7 +15,7 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
-import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
+import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -297,25 +297,10 @@ const shotBoard = computed(() => {
   }
 })
 
-const placedUnits = computed((): ThumbnailUnit[] => {
+const pointedUnit = computed(() => {
   const placed = units?.placed
-  if (!placed) return []
-  const { side, team } = placed
-  const pointed = hovered.value === null ? null : units.assignments[hovered.value]?.unitId
-  return [...side.mains, ...side.companions, ...(side.phantimal ? [side.phantimal] : [])].flatMap(
-    ({ unitId, hexId }) =>
-      hexId === undefined
-        ? []
-        : [
-            {
-              hexId,
-              team,
-              image: unitImage(unitId),
-              title: unitName(unitId),
-              highlight: unitId === pointed,
-            },
-          ],
-  )
+  const unitId = hovered.value === null ? null : (units?.assignments[hovered.value]?.unitId ?? null)
+  return placed && unitId !== null ? { team: placed.team, unitId } : null
 })
 
 const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
@@ -481,17 +466,12 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
           </svg>
           <figcaption>{{ i18n.t('app.import-in-screenshot') }}</figcaption>
         </figure>
-        <figure v-if="units?.placed" class="board">
-          <BoardThumbnail
-            class="board-view"
-            :map-key="units.placed.mapKey"
-            :units="placedUnits"
-            :hex-size="16"
-            crisp
-            numbered
-          />
-          <figcaption>{{ i18n.t('app.import-on-board') }}</figcaption>
-        </figure>
+        <TeamImportPlaced
+          v-if="units?.placed"
+          :map-key="units.placed.mapKey"
+          :sides="{ [units.placed.team]: units.placed.side }"
+          :pointed="pointedUnit"
+        />
       </div>
       <div class="cells">
         <div
@@ -767,6 +747,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 }
 
 .boards {
+  --placed-max-height: 380px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--spacing-md);
@@ -790,7 +771,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   display: block;
   width: 100%;
   height: auto;
-  max-height: 380px;
+  max-height: var(--placed-max-height);
   border-radius: var(--radius-medium);
   background: rgba(0, 0, 0, 0.35);
 }
