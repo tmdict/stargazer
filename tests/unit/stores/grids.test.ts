@@ -892,6 +892,8 @@ describe('useGrids.applyLineups', () => {
     issues: [],
     suggestedName: '',
     units: [],
+    sidesSwapped: false,
+    sidesFromFormations: false,
   })
 
   it("stands a formation side's units and companion on their tiles wherever they spawn", () => {

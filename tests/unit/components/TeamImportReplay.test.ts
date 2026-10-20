@@ -75,8 +75,7 @@ const mountReplay = async () => {
       h(TeamImportReplay, {
         shot: api.shots.value[0]!,
         mapKey: DEFAULT_MAP_KEY,
-        columns: { 1: { heroes: [5, 6], options: [5, 6] }, 2: { heroes: [7], options: [7] } },
-        swapSides: false,
+        sides: { 1: { heroes: [5, 6], options: [5, 6] }, 2: { heroes: [7], options: [7] } },
         placed: null,
         onSetPick: api.setTilePick,
       }),

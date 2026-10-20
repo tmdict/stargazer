@@ -18,6 +18,7 @@ import {
   formationSide,
   heroesFromUnits,
   identifyMap,
+  SURE_SCORE,
   type PlacedUnit,
   type UnitAssignment,
 } from '@/lib/teams/formationImport'
@@ -60,7 +61,7 @@ export interface FormationAssignment {
 export interface ReplayAssignment {
   // 0-based board this replay frame shows; null while unmapped.
   mapIndex: number | null
-  // By screenshot column, the unit picked as starting on each tile, by hex id.
+  // By board side, the unit picked as starting on each tile, by hex id.
   picks: Partial<Record<Team, Readonly<Record<number, number>>>>
 }
 
@@ -116,6 +117,11 @@ export interface TeamImportPlan {
   suggestedName: string
   // Per formation shot, in the order given: who each of its units is taken for.
   units: UnitAssignment[][]
+  // Whether each result column fills the opposite board side, and whether the
+  // formation shots settled it (else the `swapSides` passed in did). Formation
+  // shots alone have no result columns, so neither is ever set for them.
+  sidesSwapped: boolean
+  sidesFromFormations: boolean
 }
 
 export interface RecordNames {
@@ -154,6 +160,13 @@ export const cellCharacterId = (
   const cell = reading.sides[team][row]
   return cell?.recognised ? (cell.candidates[0]?.characterId ?? null) : null
 }
+
+const columnIds = (
+  reading: ScreenshotReading,
+  team: Team,
+  overrides: Record<string, CellOverride>,
+): (number | null)[] =>
+  reading.sides[team].map((_, row) => cellCharacterId(reading, team, row, overrides))
 
 const cellAttrs = (
   reading: ScreenshotReading,
@@ -220,7 +233,7 @@ export function reviewStates(
   team: Team,
   overrides: Record<string, CellOverride>,
 ): CellState[] {
-  const ids = reading.sides[team].map((_, row) => cellCharacterId(reading, team, row, overrides))
+  const ids = columnIds(reading, team, overrides)
   return reading.sides[team].map((cell, row) => {
     const id = ids[row]!
     if (id !== null && ids.indexOf(id) !== ids.lastIndexOf(id)) return 'duplicate'
@@ -284,9 +297,7 @@ function columnLineup(
   overrides: Record<string, CellOverride>,
   repeated: (characterId: number) => void,
 ): LineupEntry[] {
-  const ids = reading.sides[column].map((_, row) =>
-    cellCharacterId(reading, column, row, overrides),
-  )
+  const ids = columnIds(reading, column, overrides)
   // The reader settles a side's five cells against each other, so a hero on
   // two cells can only come from review edits; the first cell keeps it and
   // the issue blocks until one is changed.
@@ -300,16 +311,47 @@ function columnLineup(
   return entries
 }
 
-/* `swapSides` puts every result screenshot's Ally column on the enemy side of
- * its board and its Enemy column on the ally side: the game's Ally tab is the
- * viewing player whichever side they fought from. Formation shots and replay
- * frames show the sides as fought, so their teams keep their own halves and
- * tiles, and a swap only changes which column's lineup each of them takes. One
- * choice for the whole match rather than per screenshot: a player keeps one
- * side of the board for every map, and the boards hold a hero once per side
- * page-wide. Issues and the record name follow board sides throughout. A
- * replay frame places a side the way a formation shot does, from the tiles
- * picked on it, for a side no formation shot shows. */
+/* Whether a match's sides are swapped, as its formation shots show. A shot
+ * stands its team on the half it fought from, and its portraits are one
+ * result column's heroes. Each portrait read surely as a hero counts for a
+ * swap when only the column across the board from its half holds that hero,
+ * and against one when only its own half's column does; the match goes the
+ * way more portraits count, so a shot mapped to the wrong board, which can
+ * match a lineup only by chance, weighs little. Null when they go neither
+ * way, as with no formation shot of a map with a result shot, or lineups too
+ * alike to tell. */
+function formationsSwapped(
+  results: ReadonlyMap<number, ShotAssignment>,
+  formations: readonly FormationAssignment[],
+): boolean | null {
+  let lean = 0
+  for (const { reading, mapIndex } of formations) {
+    const result = mapIndex === null ? undefined : results.get(mapIndex)
+    if (!result || reading.side === null) continue
+    const own = columnIds(result.reading, reading.side, result.overrides)
+    const across = columnIds(result.reading, getOpposingTeam(reading.side), result.overrides)
+    for (const unit of reading.units) {
+      // A phantimal or companion portrait still has a weak best hero, which
+      // says nothing of the lineups.
+      const top = unit.candidates[0]
+      if (!top || !isBaseHeroId(top.characterId) || top.score < SURE_SCORE) continue
+      lean += Number(across.includes(top.characterId)) - Number(own.includes(top.characterId))
+    }
+  }
+  return lean === 0 ? null : lean > 0
+}
+
+/* A swap puts every result shot's Ally column on the enemy side of its board
+ * and its Enemy column on the ally side: the game's Ally tab is the viewing
+ * player whichever half they fought from. Formation shots and replay frames
+ * show each team on the half it fought from, so they keep their half and
+ * tiles, and a swap only changes which column's lineup each of them takes.
+ * The formation shots settle the swap when they tell it, else `swapSides`
+ * does. One choice for the whole match rather than per screenshot: a player
+ * keeps one side of the board for every map, and the boards hold a hero once
+ * per side page-wide. Issues and the record name follow board sides
+ * throughout. A replay frame places a side the way a formation shot does,
+ * from the tiles picked on it, for a side no formation shot shows. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
@@ -325,10 +367,6 @@ export function buildTeamImportPlan(
   const issues: PlanIssue[] = []
   const mapped = (mapIndex: number | null): mapIndex is number =>
     mapIndex !== null && mapIndex < boardCount
-  // The result screenshot column that fills a board side.
-  const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
-  // A result column's board side: the swap is its own inverse.
-  const sideOf = columnOf
   // A formation shot without a board has nothing to place and says so on its card.
   const placeable = formations.filter((f) => f.reading.side !== null)
   const unmapped =
@@ -348,6 +386,13 @@ export function buildTeamImportPlan(
     }
     resultShots.set(shot.mapIndex, shot)
   }
+  // Formation shots alone have no result columns to swap.
+  const formationSwap = matchImport ? formationsSwapped(resultShots, placeable) : null
+  const sidesSwapped = matchImport && (formationSwap ?? swapSides)
+  // The result column that fills a board side.
+  const columnOf = (side: Team): Team => (sidesSwapped ? getOpposingTeam(side) : side)
+  // A result column's board side: the swap is its own inverse.
+  const sideOf = columnOf
   const shown = new Map<number, Partial<Record<Team, FormationAssignment>>>()
   for (const formation of placeable) {
     if (!mapped(formation.mapIndex)) continue
@@ -405,7 +450,9 @@ export function buildTeamImportPlan(
           : null
       const artifact = cellArtifactId(source.reading, source.column, source.artifactOverrides)
       if (!formation && replay) {
-        const seen: PlacedUnit[] = Object.entries(replay.picks[columnOf(side)] ?? {}).map(
+        // A pick of a unit the lineup does not field, left from before a swap,
+        // places nothing.
+        const seen: PlacedUnit[] = Object.entries(replay.picks[side] ?? {}).map(
           ([hexId, unitId]) => ({ unitId, hexId: Number(hexId) }),
         )
         const placed = formationSide(seen, lineup ?? [], artifact)
@@ -504,7 +551,7 @@ export function buildTeamImportPlan(
   const results = mapResultsFrom(shots, boardCount).map((column) =>
     column === null ? null : sideOf(column),
   )
-  const sideNames = swapSides ? { ...names, left: names.right, right: names.left } : names
+  const sideNames = sidesSwapped ? { ...names, left: names.right, right: names.left } : names
   // Formation shots alone are no match record.
   const suggestedName = matchImport ? suggestRecordName(sideNames, results) : ''
 
@@ -513,5 +560,12 @@ export function buildTeamImportPlan(
     issues.push({ kind: 'result-undecided' })
   }
 
-  return { boards, issues, suggestedName, units }
+  return {
+    boards,
+    issues,
+    suggestedName,
+    units,
+    sidesSwapped,
+    sidesFromFormations: formationSwap !== null,
+  }
 }

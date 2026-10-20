@@ -14,7 +14,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
-import { getOpposingTeam } from '@/lib/characters/character'
 import { BOARD_HEXES } from '@/lib/import/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/replay'
 import { isReplayReading } from '@/lib/import/types'
@@ -25,20 +24,18 @@ import { State } from '@/lib/types/state'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shot, mapKey, columns, swapSides, placed } = defineProps<{
+const { shot, mapKey, sides, placed } = defineProps<{
   shot: ImportShot
   // The map the frame's board stands on; null while the frame has no board.
   mapKey: string | null
   // The frame's board sides as the plan places them; null without a board.
   placed: Partial<Record<Team, SideLoadBoard>> | null
-  // Per screenshot column: its lineup's heroes, and every unit it can field.
-  columns: Record<Team, { heroes: readonly number[]; options: readonly number[] }>
-  // The columns land on the opposite board sides; each head says which.
-  swapSides: boolean
+  // Per board side: the heroes the plan puts there, and every unit it can field.
+  sides: Record<Team, { heroes: readonly number[]; options: readonly number[] }>
 }>()
 
 const emit = defineEmits<{
-  setPick: [id: string, column: Team, hexId: number, unitId: number | null]
+  setPick: [id: string, side: Team, hexId: number, unitId: number | null]
 }>()
 
 const i18n = useI18nStore()
@@ -46,13 +43,9 @@ const { unitName, unitImage } = useUnitLabels()
 
 type TileKind = 'ally' | 'enemy' | 'blocked' | 'neutral'
 
-// The screenshot column whose units start on a kind of deployment tile. The
-// frame shows the sides as fought, so the viewing player, the Ally column, is
-// on the ally tiles unless the match's sides are swapped.
-const columnOf = (kind: TileKind): Team | null => {
-  const team = kind === 'ally' ? Team.ALLY : kind === 'enemy' ? Team.ENEMY : null
-  return team === null || !swapSides ? team : getOpposingTeam(team)
-}
+// The frame shows each team on the half it fought from, so a deployment
+// tile's kind is its board side whether or not the match's sides are swapped.
+const KIND_SIDE: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Team.ENEMY }
 
 const tileKinds = computed(() => {
   const kinds = new Map<number, TileKind>()
@@ -78,9 +71,23 @@ interface TileView {
   // Across the tile, in frame pixels: far rows are drawn smaller.
   width: number
   kind: TileKind
-  column: Team | null
+  side: Team | null
   unitId: number | null
 }
+
+// The units picked on each side's tiles, by hex id. A pick counts while its
+// unit is one the side fields: a swap that gives the side the other team's
+// heroes hides it, and swapping back brings it back.
+const sidePicks = (side: Team): Map<number, number> =>
+  new Map(
+    Object.entries(shot.tilePicks[side] ?? {})
+      .filter(([, unitId]) => sides[side].options.includes(unitId))
+      .map(([hexId, unitId]) => [Number(hexId), unitId]),
+  )
+const picks = computed((): Record<Team, Map<number, number>> => ({
+  [Team.ALLY]: sidePicks(Team.ALLY),
+  [Team.ENEMY]: sidePicks(Team.ENEMY),
+}))
 
 const view = computed(() => {
   const reading = shot.reading
@@ -92,7 +99,7 @@ const view = computed(() => {
     const centre = replayHexCentre(placement, hex)
     const xs = corners.map((c) => c.x)
     const kind = tileKinds.value.get(id) ?? 'neutral'
-    const column = columnOf(kind)
+    const side = KIND_SIDE[kind] ?? null
     return {
       id,
       points: corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' '),
@@ -100,8 +107,8 @@ const view = computed(() => {
       y: centre.y,
       width: Math.max(...xs) - Math.min(...xs),
       kind,
-      column,
-      unitId: column === null ? null : (shot.tilePicks[column]?.[id] ?? null),
+      side,
+      unitId: side === null ? null : (picks.value[side].get(id) ?? null),
     }
   })
   // The board with room above it for the units standing on the far rows.
@@ -115,16 +122,14 @@ const view = computed(() => {
   return { box: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, width, height, tiles }
 })
 
-const tileOf = (column: Team, unitId: number): number | null => {
-  const entry = Object.entries(shot.tilePicks[column] ?? {}).find(([, id]) => id === unitId)
-  return entry ? Number(entry[0]) : null
-}
+const tileOf = (side: Team, unitId: number): number | null =>
+  [...picks.value[side]].find(([, id]) => id === unitId)?.[0] ?? null
 
 // ---------- picking ----------
 
 interface Picker {
   hexId: number
-  column: Team
+  side: Team
   // Where the tile is, as a fraction of the drawn frame.
   left: number
   top: number
@@ -145,7 +150,7 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape, { captu
 // A tile no team deploys on closes the picker, as a click on the frame does.
 const openPicker = (tile: TileView): void => {
   const box = view.value?.box
-  if (tile.column === null || !box) {
+  if (tile.side === null || !box) {
     picker.value = null
     return
   }
@@ -154,7 +159,7 @@ const openPicker = (tile: TileView): void => {
       ? null
       : {
           hexId: tile.id,
-          column: tile.column,
+          side: tile.side,
           left: (tile.x - box.x) / box.w,
           top: (tile.y - box.y) / box.h,
         }
@@ -163,54 +168,44 @@ const openPicker = (tile: TileView): void => {
 const pickerItems = computed(() => {
   const target = picker.value
   if (!target) return []
-  return columns[target.column].options.map((unitId) => ({
+  return sides[target.side].options.map((unitId) => ({
     unitId,
-    tile: tileOf(target.column, unitId),
+    tile: tileOf(target.side, unitId),
   }))
 })
 
 const pickedHere = computed(() => {
   const target = picker.value
-  return target ? (shot.tilePicks[target.column]?.[target.hexId] ?? null) : null
+  return target ? (picks.value[target.side].get(target.hexId) ?? null) : null
 })
 
 const pick = (unitId: number | null): void => {
   const target = picker.value
   if (!target) return
-  emit('setPick', shot.id, target.column, target.hexId, unitId)
+  emit('setPick', shot.id, target.side, target.hexId, unitId)
   picker.value = null
 }
 
 // ---------- lineups ----------
 
 const lineups = computed(() =>
-  SIDES.map((column) => {
-    const heroes = columns[column].heroes
-    const others = Object.entries(shot.tilePicks[column] ?? {})
+  SIDES.map((side) => {
+    const heroes = sides[side].heroes
+    const others = [...picks.value[side]]
       .filter(([, unitId]) => !heroes.includes(unitId))
-      .map(([hexId, unitId]) => ({ unitId, tile: Number(hexId) }))
+      .map(([tile, unitId]) => ({ unitId, tile }))
     return {
-      column,
-      heroes: heroes.map((unitId) => ({ unitId, tile: tileOf(column, unitId) })),
+      side,
+      heroes: heroes.map((unitId) => ({ unitId, tile: tileOf(side, unitId) })),
       others,
     }
   }),
 )
 
 // The unit pointed at or typed for in a list, ringed on its tile.
-const pointed = ref<{ column: Team; unitId: number } | null>(null)
+const pointed = ref<{ team: Team; unitId: number } | null>(null)
 const isPointed = (tile: TileView): boolean =>
-  pointed.value !== null &&
-  tile.column === pointed.value.column &&
-  tile.unitId === pointed.value.unitId
-
-const pointedOnBoard = computed(() => {
-  const target = pointed.value
-  if (!target) return null
-  // The board side a screenshot column fills.
-  const team = swapSides ? getOpposingTeam(target.column) : target.column
-  return { team, unitId: target.unitId }
-})
+  pointed.value !== null && tile.side === pointed.value.team && tile.unitId === pointed.value.unitId
 
 // ---------- typed tiles ----------
 
@@ -221,23 +216,23 @@ const typeError = ref<string | null>(null)
  * places the unit there, taking it off any other as a tap does; an empty box
  * takes it off the board; anything else is refused, said so, and the box goes
  * back to the unit's tile, returning false. */
-const typeTile = (column: Team, unitId: number, input: HTMLInputElement): boolean => {
+const typeTile = (side: Team, unitId: number, input: HTMLInputElement): boolean => {
   const text = input.value.trim()
-  const current = tileOf(column, unitId)
+  const current = tileOf(side, unitId)
   if (text === '') {
     typeError.value = null
-    if (current !== null) emit('setPick', shot.id, column, current, null)
+    if (current !== null) emit('setPick', shot.id, side, current, null)
     return true
   }
   const hexId = Number(text)
-  if (Number.isInteger(hexId) && columnOf(tileKinds.value.get(hexId) ?? 'neutral') === column) {
+  if (Number.isInteger(hexId) && KIND_SIDE[tileKinds.value.get(hexId) ?? 'neutral'] === side) {
     typeError.value = null
-    if (hexId !== current) emit('setPick', shot.id, column, hexId, unitId)
+    if (hexId !== current) emit('setPick', shot.id, side, hexId, unitId)
     return true
   }
   typeError.value = i18n.t('app.import-tile-refused', {
     tile: text,
-    side: i18n.t(teamLabelKey(column)),
+    side: i18n.t(teamLabelKey(side)),
   })
   input.value = current === null ? '' : String(current)
   return false
@@ -245,9 +240,9 @@ const typeTile = (column: Team, unitId: number, input: HTMLInputElement): boolea
 
 // Enter places the unit and moves on to the next box, so a team is typed in
 // one go; a refused number keeps the box, selected for typing again.
-const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): void => {
+const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void => {
   const input = event.target as HTMLInputElement
-  if (!typeTile(column, unitId, input)) {
+  if (!typeTile(side, unitId, input)) {
     input.select()
     return
   }
@@ -299,10 +294,10 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
               ]"
               :points="tile.points"
               :fill="tile.kind === 'blocked' ? `url(#hatch-${shot.id})` : undefined"
-              :role="tile.column === null ? undefined : 'button'"
-              :tabindex="tile.column === null ? undefined : 0"
+              :role="tile.side === null ? undefined : 'button'"
+              :tabindex="tile.side === null ? undefined : 0"
               :aria-label="
-                tile.column === null ? undefined : i18n.t('app.import-tile', { tile: tile.id })
+                tile.side === null ? undefined : i18n.t('app.import-tile', { tile: tile.id })
               "
               @click.stop="openPicker(tile)"
               @keydown.enter.prevent="openPicker(tile)"
@@ -378,26 +373,19 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
       <div v-if="view" ref="lineupsEl" class="lineups">
         <div
           v-for="lineup in lineups"
-          :key="lineup.column"
+          :key="lineup.side"
           class="lineup"
-          :class="lineup.column === Team.ALLY ? 'left' : 'right'"
+          :class="lineup.side === Team.ALLY ? 'left' : 'right'"
         >
           <div class="lineup-head">
-            <span class="lineup-label">{{ i18n.t(teamLabelKey(lineup.column)) }}</span>
-            <span v-if="swapSides" class="lineup-board">
-              {{
-                i18n.t('app.import-board-side', {
-                  side: i18n.t(teamLabelKey(getOpposingTeam(lineup.column))),
-                })
-              }}
-            </span>
+            <span class="lineup-label">{{ i18n.t(teamLabelKey(lineup.side)) }}</span>
           </div>
           <ul class="lineup-units">
             <li
               v-for="unit in [...lineup.heroes, ...lineup.others]"
               :key="unit.unitId"
               :class="{ missing: unit.tile === null }"
-              @mouseenter="pointed = { column: lineup.column, unitId: unit.unitId }"
+              @mouseenter="pointed = { team: lineup.side, unitId: unit.unitId }"
               @mouseleave="pointed = null"
             >
               <img class="lineup-portrait" :src="unitImage(unit.unitId)" alt="" />
@@ -409,21 +397,16 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
                 maxlength="2"
                 :value="unit.tile ?? ''"
                 :aria-label="i18n.t('app.import-tile-for', { name: unitName(unit.unitId) })"
-                @focus="pointed = { column: lineup.column, unitId: unit.unitId }"
+                @focus="pointed = { team: lineup.side, unitId: unit.unitId }"
                 @blur="pointed = null"
-                @change="typeTile(lineup.column, unit.unitId, $event.target as HTMLInputElement)"
-                @keydown.enter.prevent="typeTileAndNext(lineup.column, unit.unitId, $event)"
+                @change="typeTile(lineup.side, unit.unitId, $event.target as HTMLInputElement)"
+                @keydown.enter.prevent="typeTileAndNext(lineup.side, unit.unitId, $event)"
               />
             </li>
           </ul>
         </div>
         <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
-        <TeamImportPlaced
-          v-if="placed && mapKey"
-          :map-key
-          :sides="placed"
-          :pointed="pointedOnBoard"
-        />
+        <TeamImportPlaced v-if="placed && mapKey" :map-key :sides="placed" :pointed />
       </div>
     </div>
   </div>
@@ -644,10 +627,6 @@ const typeTileAndNext = (column: Team, unitId: number, event: KeyboardEvent): vo
 
 .lineup.right .lineup-label {
   color: var(--import-right);
-}
-
-.lineup-board {
-  color: var(--import-text-dim);
 }
 
 .lineup-units {

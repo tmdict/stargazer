@@ -87,7 +87,7 @@ const ASSIGN_FLOOR = 0.2
 const PHANTIMAL_FLOOR = 0.6
 // A match is sure when it scores this well and leads every unit of other art
 // by this much; else it waits for review.
-const SURE_SCORE = 0.6
+export const SURE_SCORE = 0.6
 const SURE_MARGIN = 0.08
 
 export type UnitState = 'sure' | 'review' | 'none'
