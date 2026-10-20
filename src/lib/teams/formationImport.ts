@@ -13,7 +13,6 @@ import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/types'
 import { MAPS } from '@/lib/maps'
 import { getCharacterSkill } from '@/lib/skills/registry'
-import { FULL_GRID, presetHexes } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import type { SideLoadBoard, SideLoadCompanion } from './sideLoad'
@@ -207,13 +206,6 @@ export function heroesFromUnits(units: readonly UnitReading[]): number[] {
 
 // ---------- the side ----------
 
-// The board's hexes by id, for the half-turn a swapped side takes.
-const HEXES = presetHexes(FULL_GRID)
-const rotated = (hexId: number): number | undefined => {
-  const hex = HEXES.find((h) => h.getId() === hexId)
-  return hex && HEXES.find((h) => h.q === -hex.q && h.r === -hex.r)?.getId()
-}
-
 // A unit seen on a tile: a formation shot's portrait as assigned, or a replay
 // frame's pick. A null unit is none of the side's.
 export interface PlacedUnit {
@@ -223,20 +215,14 @@ export interface PlacedUnit {
 
 /* One side of a board as the side-load places it: each hero with its
  * upgrades on the tile it was seen on, or on a random free tile when it was
- * not; the companions and phantimal seen; and the artifact. `rotate` turns
- * every tile a half-turn, for a team that lands on the other half of the
- * board. */
+ * not; the companions and phantimal seen; and the artifact. */
 export function formationSide(
   seen: readonly PlacedUnit[],
   heroes: readonly LineupEntry[],
   artifact: number | null,
-  rotate: boolean,
 ): SideLoadBoard {
-  const tileOf = (unitId: number): number | undefined => {
-    const hexId = seen.find((u) => u.unitId === unitId)?.hexId
-    if (hexId === undefined) return undefined
-    return rotate ? rotated(hexId) : hexId
-  }
+  const tileOf = (unitId: number): number | undefined =>
+    seen.find((u) => u.unitId === unitId)?.hexId
   const mains = heroes.map(({ characterId, attrs }) => ({
     unitId: characterId,
     hexId: tileOf(characterId),

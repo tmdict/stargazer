@@ -7,6 +7,7 @@
 //
 // Usage:
 //   npm run check:formation -- --samples <dir> [--truth <json>] [--references <dir>] [--mode 5v5]
+//                               [--swap-sides]
 //
 //   --samples    a set folder: formation shots under formations/, result shots of the
 //                same match under results/ (optional; without them a board's lineup
@@ -19,6 +20,7 @@
 //   --references read the frames, costume captures and seasonal icons from a local copy
 //                of the published img/ tree instead of the deployed image host
 //   --mode       the Teams mode whose map lists and board count apply (default 5v5)
+//   --swap-sides the match's Swap sides: each result shot's Ally column on the enemy side
 
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
@@ -46,7 +48,7 @@ import {
   referenceSource,
   toImage,
 } from './lib/importTooling.ts'
-import { arg } from './lib/shared.ts'
+import { arg, hasFlag } from './lib/shared.ts'
 
 interface TruthUnit {
   hex: number
@@ -77,7 +79,7 @@ async function main(): Promise<void> {
   const samplesArg = arg('samples')
   if (!samplesArg) {
     console.error(
-      'usage: check-formation-import --samples <dir> [--truth <json>] [--references <dir>] [--mode 5v5]',
+      'usage: check-formation-import --samples <dir> [--truth <json>] [--references <dir>] [--mode 5v5] [--swap-sides]',
     )
     process.exit(2)
   }
@@ -180,7 +182,7 @@ async function main(): Promise<void> {
       results,
       mode,
       { prefix: '', left: '', right: '' },
-      false,
+      hasFlag('swap-sides'),
       formations.map(({ reading }) => ({
         reading,
         mapIndex: reading.mapIndex,
