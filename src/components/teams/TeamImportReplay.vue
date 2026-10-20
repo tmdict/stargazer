@@ -50,8 +50,8 @@ type TileKind = 'ally' | 'enemy' | 'blocked' | 'neutral'
 // tile's kind is its board side whether or not the match's sides are swapped.
 const KIND_SIDE: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Team.ENEMY }
 
-// A placed unit's portrait spans this share of its tile's width, small
-// enough to leave the units standing around it readable on the frame.
+// A placed unit's portrait spans this share of its tile's width; a larger
+// one hides the units standing next to it on the frame.
 const MARK = 0.2
 
 const tileKinds = computed(() => {
@@ -165,7 +165,6 @@ const clickTile = (tile: TileView): void => {
   chosen.value = { ...chosen.value, [side]: undefined }
 }
 
-// The free tile under the pointer previews the unit a click would place.
 const hoveredTile = ref<number | null>(null)
 const preview = computed(() => {
   const tile = view.value?.tiles.find((t) => t.id === hoveredTile.value)
@@ -214,8 +213,6 @@ const openPicker = (tile: TileView): void => {
         }
 }
 
-// The side's heroes in a row of portraits, the rest it can field (companions,
-// phantimals) as small icons under them, so the picker never scrolls.
 const pickerItems = computed(() => {
   const target = picker.value
   if (!target) return { heroes: [], extras: [] }
