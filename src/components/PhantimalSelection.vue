@@ -41,7 +41,6 @@ const heading = computed(() => {
   return `${i18n.t('game.season')} ${season} ${i18n.t('game.phantimal')}`
 })
 
-// Hex a phantimal currently occupies on a team, or null.
 const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   const id = toPhantimalId(phantimal.id)
   const tile = characterStore
@@ -58,8 +57,8 @@ const teamHasPhantimal = (team: Team): boolean =>
 const factionCount = (phantimal: PhantimalType, team: Team): number =>
   characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), team)
 
-// The side a click fills: the first in fill order that has no phantimal and
-// that this one can join. Each side fields one, and both may field the same.
+// The side a click fills. Each side fields one phantimal, and both may field
+// the same one.
 const openTeam = (phantimal: PhantimalType): Team | null =>
   fillOrder.find(
     (team) =>
