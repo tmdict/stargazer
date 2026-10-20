@@ -8,6 +8,7 @@ import {
   useTeamImport,
   type ImportShot,
 } from '@/composables/useTeamImport'
+import { PHANTIMAL_COMPANION_STRIDE, toPhantimalId } from '@/lib/characters/phantimal'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading, ReplayReading } from '@/lib/import/types'
@@ -277,6 +278,25 @@ describe('replay tile picks', () => {
     expect(picks()).toEqual({ 2: 9 })
     api.setTilePick('sample', 1, 2, null)
     expect(picks()).toEqual({})
+  })
+
+  it("drops a side's picks of another phantimal's units, as the side fields one", () => {
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
+    api.shots.value = [{ ...shot(), kind: 'replay' }]
+    const [first, second] = [toPhantimalId(1), toPhantimalId(2)]
+    const companionOf = (phantimal: number): number => phantimal + PHANTIMAL_COMPANION_STRIDE
+    api.setTilePick('sample', 1, 1, first)
+    api.setTilePick('sample', 1, 2, companionOf(first))
+    api.setTilePick('sample', 1, 3, 7)
+    api.setTilePick('sample', 2, 4, first)
+    api.setTilePick('sample', 1, 5, companionOf(second))
+    expect(api.shots.value[0]!.tilePicks).toEqual({
+      1: { 3: 7, 5: companionOf(second) },
+      2: { 4: first },
+    })
   })
 
   it("starts a frame's picks over when it moves to another board", () => {

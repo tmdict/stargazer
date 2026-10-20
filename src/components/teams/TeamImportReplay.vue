@@ -28,7 +28,7 @@ import { BOARD_HEXES } from '@/lib/import/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/replay'
 import { isReplayReading } from '@/lib/import/types'
 import { MAPS } from '@/lib/maps'
-import { placingOrder } from '@/lib/teams/formationImport'
+import { replayPlacing } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { SIDES } from '@/lib/teams/teamImport'
 import { State } from '@/lib/types/state'
@@ -90,17 +90,11 @@ interface TileView {
   unitId: number | null
 }
 
-// A pick counts while its unit is one the side fields, so a swap that gives
-// the side the other team's heroes hides it until swapped back.
-const sidePicks = (side: Team): Map<number, number> =>
-  new Map(
-    Object.entries(shot.tilePicks[side] ?? {})
-      .filter(([, unitId]) => sides[side].options.includes(unitId))
-      .map(([hexId, unitId]) => [Number(hexId), unitId]),
-  )
-const picks = computed((): Record<Team, Map<number, number>> => ({
-  [Team.ALLY]: sidePicks(Team.ALLY),
-  [Team.ENEMY]: sidePicks(Team.ENEMY),
+const sidePlacing = (side: Team) =>
+  replayPlacing(sides[side].heroes, sides[side].options, shot.tilePicks[side] ?? {})
+const placings = computed(() => ({
+  [Team.ALLY]: sidePlacing(Team.ALLY),
+  [Team.ENEMY]: sidePlacing(Team.ENEMY),
 }))
 
 const view = computed(() => {
@@ -122,7 +116,7 @@ const view = computed(() => {
       width: Math.max(...xs) - Math.min(...xs),
       kind,
       side,
-      unitId: side === null ? null : (picks.value[side].get(id) ?? null),
+      unitId: side === null ? null : (placings.value[side].picks.get(id) ?? null),
     }
   })
   // The board with room above it for the units standing on the far rows.
@@ -140,10 +134,10 @@ const view = computed(() => {
 
 const placingSides = computed((): Record<Team, PlacingSide> => {
   const side = (team: Team): PlacingSide => ({
-    order: placingOrder(sides[team].heroes, [...picks.value[team].values()]),
+    order: placings.value[team].order,
     heroes: sides[team].heroes,
     options: sides[team].options,
-    picks: picks.value[team],
+    picks: placings.value[team].picks,
   })
   return { [Team.ALLY]: side(Team.ALLY), [Team.ENEMY]: side(Team.ENEMY) }
 })

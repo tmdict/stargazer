@@ -29,6 +29,7 @@ import { join, resolve } from 'node:path'
 
 import type * as CompanionModule from '../src/lib/characters/companion.ts'
 import type * as PhantimalModule from '../src/lib/characters/phantimal.ts'
+import type * as PhantimalFactionModule from '../src/lib/characters/phantimalFaction.ts'
 import type * as ArtifactsModule from '../src/lib/import/artifacts.ts'
 import type * as FormationModule from '../src/lib/import/formation.ts'
 import type * as FramesModule from '../src/lib/import/frames.ts'
@@ -40,6 +41,7 @@ import type { FormationReading, ReferenceSet } from '../src/lib/import/types.ts'
 import type { TeamModeKey } from '../src/lib/teams/modes.ts'
 import type * as TeamImportModule from '../src/lib/teams/teamImport.ts'
 import { Team } from '../src/lib/types/team.ts'
+import type * as DataLoaderModule from '../src/utils/dataLoader.ts'
 import {
   appModuleLoader,
   loadArtifacts,
@@ -98,8 +100,14 @@ async function main(): Promise<void> {
     const { companionIdsOf, companionImages } = await load<typeof CompanionModule>(
       '/src/lib/characters/companion.ts',
     )
-    const { inPhantimalBand, isPhantimalId } = await load<typeof PhantimalModule>(
+    const { inPhantimalBand, isPhantimalId, toPhantimalId } = await load<typeof PhantimalModule>(
       '/src/lib/characters/phantimal.ts',
+    )
+    const { lineupQualifies } = await load<typeof PhantimalFactionModule>(
+      '/src/lib/characters/phantimalFaction.ts',
+    )
+    const { loadCharacters, loadPhantimals } = await load<typeof DataLoaderModule>(
+      '/src/utils/dataLoader.ts',
     )
     const { buildArtifactTable } = await load<typeof ArtifactsModule>(
       '/src/lib/import/artifacts.ts',
@@ -130,6 +138,13 @@ async function main(): Promise<void> {
       heroes: buildImportHeroTable(portraits),
       artifacts: buildArtifactTable(icons),
       units: buildHeroTable(units),
+    }
+    // The board's faction rule, as the app hands it to the plan.
+    const factions = new Map(loadCharacters().map((c) => [c.id, c.faction]))
+    const phantimals = new Map(loadPhantimals().map((p) => [toPhantimalId(p.id), p]))
+    const phantimalFits = (phantimalId: number, lineup: readonly number[]): boolean => {
+      const phantimal = phantimals.get(phantimalId)
+      return !phantimal || lineupQualifies(phantimal, lineup, (id) => factions.get(id))
     }
     const heroIds = new Map([...heroNames].map(([id, slug]) => [slug, id]))
     const unitIds = new Map([...unitNames].map(([id, slug]) => [slug, id]))
@@ -196,6 +211,9 @@ async function main(): Promise<void> {
       { prefix: '', left: '', right: '' },
       swapSides,
       assignments,
+      [],
+      results.length > 0,
+      phantimalFits,
     )
     console.log(
       `references from ${source.label}; ${resultFiles.length} result and ${formationFiles.length} formation shots`,

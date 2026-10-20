@@ -57,7 +57,7 @@ describe('assignUnits', () => {
       unit(2, { 11: 0.8 }),
       unit(5, { 12: 0.7, 11: 0.65 }),
     ]
-    const assigned = assignUnits(units, [ZANIE, 11, 12], {})
+    const assigned = assignUnits(units, [ZANIE, 11, 12], {}, () => true)
     expect(assigned.map((a) => a.unitId)).toEqual([
       ZANIE,
       COMPANION_ID_OFFSET * 2 + ZANIE,
@@ -71,7 +71,7 @@ describe('assignUnits', () => {
 
   it('leaves a portrait unlike any art to the unit left over, for review', () => {
     const units = [unit(1, { [ELIJAH_LAILAH]: 0.5 }), unit(2, { 7: 0.7 })]
-    const assigned = assignUnits(units, [ELIJAH_LAILAH], {})
+    const assigned = assignUnits(units, [ELIJAH_LAILAH], {}, () => true)
     expect(assigned).toEqual([
       { unitId: ELIJAH_LAILAH, state: 'review' },
       { unitId: COMPANION_ID_OFFSET + ELIJAH_LAILAH, state: 'review' },
@@ -85,7 +85,7 @@ describe('assignUnits', () => {
       unit(3, { [WEDGE_POWER]: 0.82 }),
       unit(4, { 11: 0.7 }),
     ]
-    const assigned = assignUnits(units, [11], { 0: null, 3: 11 })
+    const assigned = assignUnits(units, [11], { 0: null, 3: 11 }, () => true)
     expect(assigned.map((a) => a.unitId)).toEqual([null, WEDGE, WEDGE_POWER, 11])
   })
 })

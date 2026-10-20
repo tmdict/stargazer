@@ -408,6 +408,28 @@ describe('buildTeamImportPlan with formation shots', () => {
     ])
   })
 
+  it("takes no portrait or pick for a phantimal the side's heroes do not qualify for", () => {
+    const wedge = toPhantimalId(1)
+    const formation = {
+      ...formationShot(Team.ALLY, [unit(1, 7), unit(2, wedge)]),
+      picks: { [Team.ALLY]: { 4: toPhantimalId(2) } },
+    }
+    const plan = (fits: boolean) =>
+      buildTeamImportPlan(
+        [shot(0, reading([7], [8]))],
+        '5v5',
+        NAMES,
+        false,
+        [formation],
+        [],
+        true,
+        () => fits,
+      )
+    expect(plan(true).boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: wedge, hexId: 2 })
+    expect(plan(false).units[0]![1]!.unitId).not.toBe(wedge)
+    expect(plan(false).boards[0]!.sides[Team.ALLY]!.phantimal).toBeNull()
+  })
+
   it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
     // The Enemy column's hero on the ally half: the viewing player fought from
     // the enemy half.
@@ -590,6 +612,27 @@ describe('buildTeamImportPlan with replay frames', () => {
     expect(ally.phantimal).toEqual({ unitId: wedge, hexId: undefined })
     expect(ally.companions).toEqual([{ unitId: wedgePower, hexId: 5, mainUnitId: wedge }])
     expect(plan.boards[0]!.formations).toEqual([Team.ALLY])
+  })
+
+  it('fields no phantimal picked on a frame for heroes that do not qualify for it', () => {
+    const wedge = toPhantimalId(5)
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([7], [8]))],
+      '5v5',
+      NAMES,
+      false,
+      [],
+      [
+        {
+          mapIndex: 0,
+          picks: { [Team.ALLY]: { 1: 7, 5: wedge }, [Team.ENEMY]: { 40: 8, 41: wedge } },
+        },
+      ],
+      true,
+      (_, heroIds) => heroIds.includes(7),
+    )
+    expect(plan.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: wedge, hexId: 5 })
+    expect(plan.boards[0]!.sides[Team.ENEMY]!.phantimal).toBeNull()
   })
 
   it('blocks two replay frames of one board and leaves out one whose map has no result', () => {
