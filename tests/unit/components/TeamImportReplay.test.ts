@@ -121,7 +121,7 @@ describe('typing a replay tile', () => {
     const { picks } = await mountReplay()
     const ally = deploymentTile(State.AVAILABLE_ALLY)
     const enemy = deploymentTile(State.AVAILABLE_ENEMY)
-    const boxes = () => [...document.querySelectorAll<HTMLInputElement>('.lineup-tile')]
+    const boxes = () => [...document.querySelectorAll<HTMLInputElement>('.tile-box')]
 
     await type(boxes()[0]!, String(ally), new KeyboardEvent('keydown', { key: 'Enter' }))
     expect(picks()[1]).toEqual({ [ally]: 5 })

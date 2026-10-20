@@ -8,6 +8,8 @@
    the shot shows it, its tile, and the unit it is taken for, picked from the
    units its side can field, over two numbered boards, the screenshot's and
    the side as it will be placed, so a tile can be checked against both.
+   The units it misses are listed after, each placed on one of the side's
+   free tiles as on a replay frame (useTilePlacing).
    Every edit is an override on the shot; nothing here touches a board. */
 
 import { computed, ref } from 'vue'
@@ -15,17 +17,22 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
+import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
+import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
+import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import { isFormationReading, type HeroReading } from '@/lib/import/types'
-import type { UnitAssignment } from '@/lib/teams/formationImport'
+import { MAPS } from '@/lib/maps'
+import { pickableUnit, placingOrder, type UnitAssignment } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
@@ -39,6 +46,7 @@ import {
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
+import { State } from '@/lib/types/state'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -72,6 +80,7 @@ const emit = defineEmits<{
   setLevel: [id: string, team: Team, row: number, field: 'paragon' | 'refinement', level: number]
   setArtifact: [id: string, team: Team, artifactId: number | null]
   setUnit: [id: string, index: number, unitId: number | null]
+  setPick: [id: string, side: Team, hexId: number, unitId: number | null]
 }>()
 
 const gameData = useGameDataStore()
@@ -221,6 +230,7 @@ const setArtifactPicked = (artifactId: number | null): void => {
 // own click-outside listens, so a tap elsewhere on the grid closes the
 // pickers here (a mouse leaving the popup already does).
 const closePickers = (event: MouseEvent): void => {
+  tilePicker.value = null
   if ((event.target as HTMLElement).closest('.cell-name, .artifact-btn')) return
   picker.value = null
   artifactPicker.value = null
@@ -297,11 +307,151 @@ const shotBoard = computed(() => {
   }
 })
 
+// A missing unit pointed at in its list, ringed on both boards too.
+const pointedMissing = ref<number | null>(null)
+
 const pointedUnit = computed(() => {
   const placed = units?.placed
-  const unitId = hovered.value === null ? null : (units?.assignments[hovered.value]?.unitId ?? null)
+  const unitId =
+    hovered.value === null
+      ? pointedMissing.value
+      : (units?.assignments[hovered.value]?.unitId ?? null)
   return placed && unitId !== null ? { team: placed.team, unitId } : null
 })
+
+// ---------- units the screenshot misses ----------
+
+// The board side the shot fills, its deployment tiles on the map its lit
+// tiles name, and the tiles a portrait stands on.
+const shotTiles = computed(() => {
+  const placed = units?.placed
+  const reading = shot.reading
+  if (!placed || !reading || !isFormationReading(reading)) return null
+  const state = placed.team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+  const deploy = new Set(
+    (MAPS[placed.mapKey]?.grid ?? []).filter((g) => g.type === state).flatMap((g) => g.hex),
+  )
+  return { team: placed.team, deploy, shown: new Set(reading.units.map((u) => u.hexId)) }
+})
+
+/* The units the screenshot misses, placed like a replay frame's: the
+ * lineup's heroes no portrait is taken for, their companions and those of
+ * the phantimal fielded, each on a tile picked for it. */
+const missing = computed((): PlacingSide | null => {
+  const tiles = shotTiles.value
+  const placed = units?.placed
+  if (!units || !placed || !tiles) return null
+  const shown = units.assignments.map((a) => a.unitId)
+  const options = units.options.filter((unitId) => pickableUnit(unitId, shown))
+  const picks = new Map(
+    Object.entries(shot.tilePicks[tiles.team] ?? {})
+      .map(([hexId, unitId]) => [Number(hexId), unitId] as const)
+      .filter(([hexId, unitId]) => !tiles.shown.has(hexId) && options.includes(unitId)),
+  )
+  const lineup = placed.side.mains.map((unit) => unit.unitId)
+  const order = placingOrder(lineup, [
+    ...shown.filter((id): id is number => id !== null),
+    ...picks.values(),
+  ]).filter((unitId) => !shown.includes(unitId))
+  if (order.length === 0 && picks.size === 0) return null
+  const heroes = lineup.filter((unitId) => !shown.includes(unitId))
+  return { order, heroes, options, picks }
+})
+
+const {
+  nextUnits,
+  choose,
+  clickTile,
+  hovered: hoveredTile,
+  preview,
+  picker: tilePicker,
+  pickerItems,
+  pickedHere,
+  pick: pickTile,
+  rows,
+  typeError,
+  typeTile,
+  typeTileAndNext,
+} = useTilePlacing({
+  sides: () => (missing.value && shotTiles.value ? { [shotTiles.value.team]: missing.value } : {}),
+  refusal: (side, hexId, text) => {
+    if (!shotTiles.value?.deploy.has(hexId)) {
+      return i18n.t('app.import-tile-refused', { tile: text, side: sideLabel(side) })
+    }
+    return shotTiles.value.shown.has(hexId) ? i18n.t('app.import-tile-taken', { tile: text }) : null
+  },
+  setPick: (side, hexId, unitId) => emit('setPick', shot.id, side, hexId, unitId),
+})
+
+const shotTeam = computed(() => shotTiles.value?.team ?? null)
+const sideClass = computed(() => (shotTeam.value === Team.ALLY ? 'left' : 'right'))
+const missingRows = computed(() => (shotTeam.value === null ? [] : rows(shotTeam.value)))
+
+// The side's free deployment tiles on the screenshot's board, with the unit
+// picked for each.
+const pickTiles = computed(() => {
+  const tiles = shotTiles.value
+  const reading = shot.reading
+  if (!missing.value || !tiles || !reading || !isFormationReading(reading) || !reading.board) {
+    return []
+  }
+  const fit = reading.board
+  return BOARD_HEXES.filter(
+    (hex) => tiles.deploy.has(hex.getId()) && !tiles.shown.has(hex.getId()),
+  ).map((hex) => ({
+    hexId: hex.getId(),
+    points: hexCorners(fit, hex)
+      .map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`)
+      .join(' '),
+    ...hexCentre(fit, hex),
+    unitId: missing.value!.picks.get(hex.getId()) ?? null,
+  }))
+})
+
+// A picked unit's portrait, drawn where and as large as the screenshot draws
+// its own: the portraits' mean size and offset from their tile's centre.
+const mark = computed(() => {
+  const reading = shot.reading
+  if (!reading || !isFormationReading(reading) || !reading.board) return { radius: 0, dx: 0, dy: 0 }
+  const fit = reading.board
+  const offsets = reading.units.flatMap(({ hexId, ring }) => {
+    const hex = BOARD_HEXES.find((h) => h.getId() === hexId)
+    if (!hex) return []
+    const centre = hexCentre(fit, hex)
+    return [{ radius: ring.radius, dx: ring.x - centre.x, dy: ring.y - centre.y }]
+  })
+  const mean = (key: 'radius' | 'dx' | 'dy'): number =>
+    offsets.reduce((sum, o) => sum + o[key], 0) / Math.max(offsets.length, 1)
+  return { radius: mean('radius'), dx: mean('dx'), dy: mean('dy') }
+})
+
+const previewMark = computed(() => {
+  const shown = preview.value
+  const tile = shown ? pickTiles.value.find((t) => t.hexId === shown.hexId) : undefined
+  return shown && tile ? { ...tile, unitId: shown.unitId } : null
+})
+
+const boardFrame = ref<HTMLElement>()
+
+// The picker sits under the tile clicked, measured on screen, since the
+// board may be drawn smaller than its box.
+const clickShotTile = (hexId: number, event: Event): void => {
+  const frame = boardFrame.value?.getBoundingClientRect()
+  const team = shotTeam.value
+  if (!frame || team === null) return
+  const tile = (event.currentTarget as Element).getBoundingClientRect()
+  clickTile({
+    hexId,
+    side: team,
+    left: (tile.left + tile.width / 2 - frame.left) / frame.width,
+    top: (tile.top + tile.height / 2 - frame.top) / frame.height,
+  })
+}
+
+const missingEl = ref<HTMLElement>()
+const tileBoxes = (): HTMLInputElement[] => [
+  ...(missingEl.value?.querySelectorAll<HTMLInputElement>('.tile-box') ?? []),
+]
 
 const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
   review: 'app.import-review',
@@ -432,38 +582,110 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
       </div>
       <div class="boards">
         <figure v-if="shotBoard" class="board">
-          <svg class="board-view" :viewBox="shotBoard.viewBox">
-            <image
-              :href="shot.thumb"
-              x="0"
-              y="0"
-              :width="shotBoard.size.width"
-              :height="shotBoard.size.height"
+          <div ref="boardFrame" class="board-frame" :class="sideClass">
+            <svg class="board-view" :viewBox="shotBoard.viewBox" @click="tilePicker = null">
+              <defs>
+                <clipPath
+                  v-for="tile in pickTiles"
+                  :id="`mark-${shot.id}-${tile.hexId}`"
+                  :key="tile.hexId"
+                >
+                  <circle :cx="tile.x + mark.dx" :cy="tile.y + mark.dy" :r="mark.radius" />
+                </clipPath>
+              </defs>
+              <image
+                :href="shot.thumb"
+                x="0"
+                y="0"
+                :width="shotBoard.size.width"
+                :height="shotBoard.size.height"
+              />
+              <polygon
+                v-for="tile in pickTiles"
+                :key="`pick-${tile.hexId}`"
+                class="pick-tile"
+                :class="{ active: tilePicker?.hexId === tile.hexId }"
+                :points="tile.points"
+                :stroke-width="shotBoard.scale * 0.05"
+                role="button"
+                tabindex="0"
+                :aria-label="i18n.t('app.import-tile', { tile: tile.hexId })"
+                @click.stop="clickShotTile(tile.hexId, $event)"
+                @keydown.enter.prevent="clickShotTile(tile.hexId, $event)"
+                @mouseenter="hoveredTile = { side: shotTeam!, hexId: tile.hexId }"
+                @mouseleave="hoveredTile = null"
+              />
+              <circle
+                v-for="ring in shotBoard.rings"
+                :key="`ring-${ring.index}`"
+                class="shot-ring"
+                :class="[ring.state, { pointed: hovered === ring.index }]"
+                :cx="ring.x"
+                :cy="ring.y"
+                :r="ring.radius"
+                :stroke-width="shotBoard.scale * (hovered === ring.index ? 0.14 : 0.06)"
+              />
+              <template v-for="tile in pickTiles" :key="`mark-${tile.hexId}`">
+                <template v-if="tile.unitId !== null">
+                  <image
+                    class="pick-unit"
+                    :href="unitImage(tile.unitId)"
+                    :x="tile.x + mark.dx - mark.radius"
+                    :y="tile.y + mark.dy - mark.radius"
+                    :width="mark.radius * 2"
+                    :height="mark.radius * 2"
+                    :clip-path="`url(#mark-${shot.id}-${tile.hexId})`"
+                  />
+                  <circle
+                    class="pick-ring"
+                    :class="{ pointed: pointedMissing === tile.unitId }"
+                    :cx="tile.x + mark.dx"
+                    :cy="tile.y + mark.dy"
+                    :r="mark.radius"
+                    :stroke-width="shotBoard.scale * (pointedMissing === tile.unitId ? 0.14 : 0.06)"
+                  />
+                </template>
+              </template>
+              <g v-if="previewMark" class="pick-preview">
+                <image
+                  :href="unitImage(previewMark.unitId)"
+                  :x="previewMark.x + mark.dx - mark.radius"
+                  :y="previewMark.y + mark.dy - mark.radius"
+                  :width="mark.radius * 2"
+                  :height="mark.radius * 2"
+                  :clip-path="`url(#mark-${shot.id}-${previewMark.hexId})`"
+                />
+                <circle
+                  class="pick-ring"
+                  :cx="previewMark.x + mark.dx"
+                  :cy="previewMark.y + mark.dy"
+                  :r="mark.radius"
+                  :stroke-width="shotBoard.scale * 0.06"
+                  :stroke-dasharray="`${shotBoard.scale * 0.14} ${shotBoard.scale * 0.1}`"
+                />
+              </g>
+              <text
+                v-for="n in shotBoard.numbers"
+                :key="`n-${n.hexId}`"
+                class="shot-number"
+                :x="n.x"
+                :y="n.y"
+                :font-size="shotBoard.scale * 0.42"
+                :stroke-width="shotBoard.scale * 0.12"
+                text-anchor="middle"
+                dominant-baseline="central"
+              >
+                {{ n.hexId }}
+              </text>
+            </svg>
+            <TeamImportTilePicker
+              v-if="tilePicker"
+              :picker="tilePicker"
+              :items="pickerItems"
+              :picked-here
+              @pick="pickTile"
             />
-            <circle
-              v-for="ring in shotBoard.rings"
-              :key="`ring-${ring.index}`"
-              class="shot-ring"
-              :class="[ring.state, { pointed: hovered === ring.index }]"
-              :cx="ring.x"
-              :cy="ring.y"
-              :r="ring.radius"
-              :stroke-width="shotBoard.scale * (hovered === ring.index ? 0.14 : 0.06)"
-            />
-            <text
-              v-for="n in shotBoard.numbers"
-              :key="`n-${n.hexId}`"
-              class="shot-number"
-              :x="n.x"
-              :y="n.y"
-              :font-size="shotBoard.scale * 0.42"
-              :stroke-width="shotBoard.scale * 0.12"
-              text-anchor="middle"
-              dominant-baseline="central"
-            >
-              {{ n.hexId }}
-            </text>
-          </svg>
+          </div>
           <figcaption>{{ i18n.t('app.import-in-screenshot') }}</figcaption>
         </figure>
         <TeamImportPlaced
@@ -523,6 +745,45 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
           </div>
         </div>
       </div>
+      <template v-if="missingRows.length && shotTeam !== null">
+        <p class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
+        <div ref="missingEl" class="cells" :class="sideClass">
+          <div
+            v-for="row in missingRows"
+            :key="row.unitId"
+            class="cell unit missing"
+            :class="{ next: nextUnits[shotTeam] === row.unitId }"
+            @mouseenter="pointedMissing = row.unitId"
+            @mouseleave="pointedMissing = null"
+          >
+            <div class="cell-images">
+              <span class="cell-card empty" />
+              <img class="cell-portrait" :src="unitImage(row.unitId)" alt="" />
+            </div>
+            <button
+              type="button"
+              class="cell-name"
+              :aria-pressed="nextUnits[shotTeam] === row.unitId"
+              :title="unitName(row.unitId)"
+              @click="choose(shotTeam, row.unitId)"
+            >
+              {{ unitName(row.unitId) }}
+            </button>
+            <div class="cell-meta">
+              <TeamImportTileBox
+                :tile="row.tile"
+                :label="i18n.t('app.import-tile-for', { name: unitName(row.unitId) })"
+                @focus="pointedMissing = row.unitId"
+                @blur="pointedMissing = null"
+                @change="typeTile(shotTeam, row.unitId, $event.target as HTMLInputElement)"
+                @keydown.enter.prevent="typeTileAndNext(shotTeam, row.unitId, $event, tileBoxes())"
+              />
+              <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
+            </div>
+          </div>
+        </div>
+        <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
+      </template>
     </div>
 
     <!-- Outside the modal's container, so their clicks and Escape are stopped
@@ -732,6 +993,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   background: rgba(0, 0, 0, 0.35);
 }
 
+.cell-card.empty,
 .cell-portrait.empty {
   background: rgba(255, 255, 255, 0.06);
 }
@@ -789,6 +1051,53 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   stroke: var(--import-bad);
 }
 
+.board-frame {
+  position: relative;
+}
+
+.board-frame.left,
+.cells.left {
+  --pick-colour: var(--import-left);
+}
+
+.board-frame.right,
+.cells.right {
+  --pick-colour: var(--import-right);
+}
+
+.pick-tile {
+  fill: color-mix(in srgb, var(--pick-colour) 30%, transparent);
+  stroke: color-mix(in srgb, var(--pick-colour) 85%, white);
+  cursor: pointer;
+}
+
+.pick-tile:hover,
+.pick-tile:focus-visible,
+.pick-tile.active {
+  stroke: #fff;
+  outline: none;
+}
+
+.pick-unit {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.pick-ring {
+  fill: none;
+  stroke: #fff;
+  pointer-events: none;
+}
+
+.pick-ring.pointed {
+  stroke: var(--import-warn);
+}
+
+.pick-preview {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
 .shot-number {
   fill: #fff;
   stroke: rgba(0, 0, 0, 0.75);
@@ -796,6 +1105,22 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   font-family: sans-serif;
   font-weight: 700;
   pointer-events: none;
+}
+
+.units-note {
+  margin: var(--spacing-sm) 0;
+  font-size: 0.78rem;
+  color: var(--import-text-dim);
+}
+
+.cell.missing.next {
+  border-color: var(--pick-colour);
+}
+
+.type-error {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 0.75rem;
+  color: var(--import-bad);
 }
 
 .unit-tile {

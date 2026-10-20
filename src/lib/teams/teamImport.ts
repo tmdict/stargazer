@@ -17,6 +17,7 @@ import {
   formationSide,
   heroesFromUnits,
   identifyMap,
+  pickableUnit,
   SURE_SCORE,
   type PlacedUnit,
   type UnitAssignment,
@@ -55,6 +56,9 @@ export interface FormationAssignment {
   // Review picks for its units, by index in the reading: a unit id, or null
   // for a portrait that is none of the side's units.
   unitOverrides: Record<number, number | null>
+  // By board side, the unit picked for each tile, by hex id: the units the
+  // screenshot does not show.
+  picks: Partial<Record<Team, Readonly<Record<number, number>>>>
 }
 
 export interface ReplayAssignment {
@@ -477,18 +481,27 @@ export function buildTeamImportPlan(
         unitOverrides,
       )
       units[formations.indexOf(formation)] = assignments
-      const seen = reading.units.map((unit, i) => ({
+      const seen: PlacedUnit[] = reading.units.map((unit, i) => ({
         unitId: assignments[i]?.unitId ?? null,
         hexId: unit.hexId,
       }))
+      const shown = seen.map((u) => u.unitId)
+      const short = heroes.some(({ characterId }) => !shown.includes(characterId))
+      // A pick places a unit the review may pick, on a tile no portrait stands on.
+      for (const [hex, unitId] of Object.entries(formation.picks[side] ?? {})) {
+        const hexId = Number(hex)
+        if (pickableUnit(unitId, shown) && !seen.some((u) => u.hexId === hexId)) {
+          seen.push({ unitId, hexId })
+        }
+      }
       const placed = formationSide(seen, heroes, artifact)
       const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
       if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
       // The formation panel cannot draw a hero the screenshotting account
       // lacks, and can drop a phantimal whose faction count needed that hero,
-      // so a shot short of heroes and showing no phantimal leaves it to the
-      // lineup.
-      if (placed.phantimal !== null || missing === 0) shownSides.push(side)
+      // so a shot short of heroes leaves the phantimal to the lineup unless
+      // one is shown or picked.
+      if (placed.phantimal !== null || !short) shownSides.push(side)
       sides[side] = placed
     }
 
