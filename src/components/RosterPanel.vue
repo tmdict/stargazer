@@ -13,6 +13,7 @@ import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import RosterMenu from './RosterMenu.vue'
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -484,7 +485,7 @@ const {
         >
           <IconTrash :size="13" class="btn-icon" />
           <span class="btn-text">
-            {{ armed === rosters.active.id ? i18n.t('app.confirm') : i18n.t('app.delete') }}
+            <ConfirmLabel :armed="armed === rosters.active.id" :label="i18n.t('app.delete')" />
           </span>
         </button>
         <input

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import ConfirmLabel from './ConfirmLabel.vue'
 import IconTrash from './IconTrash.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { usePanelClamp } from '@/composables/usePanelClamp'
@@ -81,7 +82,9 @@ const onTrayFocusOut = (e: FocusEvent): void => {
       :title="i18n.t(armed !== null ? 'app.confirm' : 'app.clear')"
     >
       <IconTrash :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t(armed !== null ? 'app.confirm' : 'app.clear') }}</span>
+      <span class="btn-text">
+        <ConfirmLabel :armed="armed !== null" :label="i18n.t('app.clear')" />
+      </span>
     </button>
     <span
       v-if="trayOpen"
