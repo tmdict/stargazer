@@ -569,6 +569,7 @@ const handleForgetLearned = (): void => {
           @set-level="setLevel"
           @set-artifact="setArtifact"
           @set-unit="setUnit"
+          @set-pick="setTilePick"
         />
       </section>
 

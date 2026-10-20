@@ -97,8 +97,9 @@ export interface ImportShot {
   // none), and its portraits as data URLs.
   unitOverrides: Record<number, number | null>
   unitCards: string[]
-  // A replay frame's picks: by board side, the unit that started on each
-  // tile, by hex id.
+  // By board side, the unit picked for each tile, by hex id: on a replay
+  // frame the unit that started there, on a formation shot one its
+  // screenshot does not show.
   tilePicks: Partial<Record<Team, Record<number, number>>>
 }
 
@@ -770,6 +771,7 @@ export function useTeamImport(
       overrides: s.overrides,
       artifactOverrides: s.artifactOverrides,
       unitOverrides: s.unitOverrides,
+      picks: s.tilePicks,
     })),
   )
 

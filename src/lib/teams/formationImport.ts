@@ -232,6 +232,15 @@ export function placingOrder(heroes: readonly number[], picked: readonly number[
   ])
 }
 
+/* Whether a formation shot's review may pick a unit for a tile: one no
+ * portrait is taken for, and while the portraits field a phantimal, none of
+ * another phantimal's, which would take the place of the one shown. */
+export function pickableUnit(unitId: number, shown: readonly (number | null)[]): boolean {
+  if (shown.includes(unitId)) return false
+  const phantimal = fieldedPhantimal(shown)
+  return phantimal === null || !inPhantimalBand(unitId) || phantimalOwnerId(unitId) === phantimal
+}
+
 /* One side of a board as the side-load places it: each hero with its
  * upgrades on the tile it was seen on, or on a random free tile when it was
  * not; the companions and phantimal seen, the phantimal on a random free tile
