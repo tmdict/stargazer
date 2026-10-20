@@ -38,6 +38,7 @@ import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,
+  formationsSwapped,
   overrideKey,
   type CellOverride,
   type FormationAssignment,
@@ -122,8 +123,9 @@ const referenceStatus = ref<ReferenceStatus>('idle')
 const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
 const names = reactive<RecordNames>(defaultNames())
 // Swap sides: whether every result screenshot's columns land on the opposite
-// board sides when the formation shots do not settle it. One choice per match
-// (see buildTeamImportPlan), and not a reader correction.
+// board sides. The formation shots set it when they tell, and the user can
+// change it. One choice per match (see buildTeamImportPlan), and not a reader
+// correction.
 const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.
@@ -549,6 +551,7 @@ export function useTeamImport(
   referenceStatus: typeof referenceStatus
   names: RecordNames
   swapSides: typeof swapSides
+  formationSwap: ComputedRef<boolean | null>
   learnedCount: ComputedRef<number>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
@@ -746,8 +749,8 @@ export function useTeamImport(
     ),
   )
 
-  const plan = computed<TeamImportPlan>(() => {
-    const assignments: ShotAssignment[] = shots.value
+  const resultAssignments = computed((): ShotAssignment[] =>
+    shots.value
       .filter(
         (s): s is ImportShot & { reading: ScreenshotReading } =>
           s.kind === 'result' && s.reading !== null,
@@ -758,14 +761,35 @@ export function useTeamImport(
         winner: shotWinner(s),
         overrides: s.overrides,
         artifactOverrides: s.artifactOverrides,
-      }))
-    const formations: FormationAssignment[] = formationShots.value.map((s) => ({
+      })),
+  )
+  const formationAssignments = computed((): FormationAssignment[] =>
+    formationShots.value.map((s) => ({
       reading: s.reading,
       mapIndex: shotMapIndex(s, boardCount()),
       overrides: s.overrides,
       artifactOverrides: s.artifactOverrides,
       unitOverrides: s.unitOverrides,
-    }))
+    })),
+  )
+
+  // What the formation shots say of the sides; null when they cannot tell.
+  const formationSwap = computed(() =>
+    formationsSwapped(resultAssignments.value, formationAssignments.value),
+  )
+  // A new answer from the formation shots sets Swap sides, which the user can
+  // still change; it stands until their answer changes.
+  watch(formationSwap, (said) => {
+    if (said !== null) swapSides.value = said
+  })
+  // A swap gives every formation shot the other column's lineup, so the
+  // portrait corrections made against the old one start over. Replay picks
+  // stay, as tiles of the frame (see TeamImportReplay).
+  watch(swapSides, () => {
+    for (const shot of shots.value) shot.unitOverrides = {}
+  })
+
+  const plan = computed<TeamImportPlan>(() => {
     // A frame the arena was not found in has no board to place, and its card
     // says so.
     const replays: ReplayAssignment[] = shots.value
@@ -781,28 +805,15 @@ export function useTeamImport(
     // modal shows it, so formations never fall back to their own upgrades.
     const match = shots.value.some((s) => s.kind === 'result')
     return buildTeamImportPlan(
-      assignments,
+      resultAssignments.value,
       mode(),
       names,
       swapSides.value,
-      formations,
+      formationAssignments.value,
       replays,
       match,
     )
   })
-
-  // A change of sides gives every formation shot the other column's lineup, so
-  // the portrait corrections made against the old one start over. Replay picks
-  // stay, as tiles of the frame (see TeamImportReplay). While the formation
-  // shots settle the sides the hidden toggle follows them, so a shot removed
-  // or an edit that leaves them tied keeps the sides as they were.
-  watch(
-    () => plan.value.sidesSwapped,
-    (swapped) => {
-      for (const shot of shots.value) shot.unitOverrides = {}
-      if (plan.value.sidesFromFormations) swapSides.value = swapped
-    },
-  )
 
   // Who each unit of a formation shot is taken for, from the plan.
   const unitsOf = (id: string): TeamImportPlan['units'][number] => {
@@ -815,6 +826,7 @@ export function useTeamImport(
     referenceStatus,
     names,
     swapSides,
+    formationSwap,
     learnedCount: computed(() => learned.value.length),
     plan,
     unitsOf,

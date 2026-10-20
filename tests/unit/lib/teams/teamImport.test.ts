@@ -7,6 +7,7 @@ import type { HeroReading, ScreenshotReading, UnitReading } from '@/lib/import/t
 import {
   buildTeamImportPlan,
   cellState,
+  formationsSwapped,
   isBlockingIssue,
   mapResultsFrom,
   overrideKey,
@@ -354,27 +355,26 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
   })
 
-  it("takes the sides from the formation shots' portraits over the toggle", () => {
+  it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
     // The Enemy column's hero on the ally half: the viewing player fought from
-    // the enemy half, and the shot keeps its own half and tiles.
-    const swapped = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, [
+    // the enemy half.
+    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, [
       formationShot(Team.ALLY, [unit(1, 8)]),
     ])
-    expect(swapped.sidesSwapped).toBe(true)
-    expect(swapped.sidesFromFormations).toBe(true)
-    expect(swapped.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
+    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 8, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
     ])
-    expect(heroesOn(swapped, 0, Team.ENEMY)).toEqual([7])
-    expect(swapped.boards[0]!.formations).toEqual([Team.ALLY])
+    expect(heroesOn(plan, 0, Team.ENEMY)).toEqual([7])
+    expect(plan.boards[0]!.formations).toEqual([Team.ALLY])
+  })
 
-    const kept = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, [
-      formationShot(Team.ENEMY, [unit(40, 8)]),
-    ])
-    expect(kept.sidesSwapped).toBe(false)
-    expect(kept.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
-      { unitId: 8, hexId: 40, attrs: { [ATTR_PARAGON]: 4 } },
-    ])
+  it("reads the swap from the formation shots' hero portraits", () => {
+    const results = [shot(0, reading([7], [8]))]
+    expect(formationsSwapped(results, [formationShot(Team.ALLY, [unit(1, 8)])])).toBe(true)
+    expect(formationsSwapped(results, [formationShot(Team.ENEMY, [unit(40, 8)])])).toBe(false)
+    // A hero both lineups hold says nothing.
+    const shared = [shot(0, reading([7, 9], [7, 8]))]
+    expect(formationsSwapped(shared, [formationShot(Team.ALLY, [unit(1, 7)])])).toBeNull()
   })
 
   it('counts only hero portraits, and weighs each shot by how many count', () => {
@@ -387,37 +387,22 @@ describe('buildTeamImportPlan with formation shots', () => {
         { characterId: 8, score: 0.15, learned: false, costume: false },
       ],
     })
-    const kept = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, [
-      formationShot(Team.ALLY, [unit(1, 7), phantimal(3), phantimal(4)]),
-    ])
-    expect(kept.sidesFromFormations).toBe(true)
-    expect(kept.sidesSwapped).toBe(false)
-
+    expect(
+      formationsSwapped(
+        [shot(0, reading([7], [8]))],
+        [formationShot(Team.ALLY, [unit(1, 7), phantimal(3), phantimal(4)])],
+      ),
+    ).toBe(false)
     // One portrait leaning to a swap against three that do not.
-    const weighed = buildTeamImportPlan(
-      [shot(0, reading([7], [8])), shot(1, reading([9, 10, 11], [12]))],
-      '5v5',
-      NAMES,
-      true,
-      [
-        formationShot(Team.ALLY, [unit(1, 8)]),
-        formationShot(Team.ALLY, [unit(1, 9), unit(2, 10), unit(3, 11)], [], 1),
-      ],
-    )
-    expect(weighed.sidesFromFormations).toBe(true)
-    expect(weighed.sidesSwapped).toBe(false)
-  })
-
-  it('leaves the sides to the toggle when the portraits fit both columns', () => {
-    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [7, 8]))], '5v5', NAMES, true, [
-      formationShot(Team.ALLY, [unit(1, 7)]),
-    ])
-    expect(plan.sidesFromFormations).toBe(false)
-    expect(plan.sidesSwapped).toBe(true)
-    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
-      { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
-      { unitId: 8, hexId: undefined, attrs: { [ATTR_PARAGON]: 4 } },
-    ])
+    expect(
+      formationsSwapped(
+        [shot(0, reading([7], [8])), shot(1, reading([9, 10, 11], [12]))],
+        [
+          formationShot(Team.ALLY, [unit(1, 8)]),
+          formationShot(Team.ALLY, [unit(1, 9), unit(2, 10), unit(3, 11)], [], 1),
+        ],
+      ),
+    ).toBe(false)
   })
 
   it('leaves out a formation shot whose map has no result shot in a match import', () => {
