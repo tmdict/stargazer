@@ -24,6 +24,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
+import { placingOrder } from '@/lib/teams/formationImport'
 import {
   DEFAULT_VARIANT,
   newTeamMaps,
@@ -184,12 +185,12 @@ const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | n
   return (mapIndex === null ? null : plan.value.boards[mapIndex]?.sides) ?? null
 }
 
-// Heroes not yet placed on a tile of their frame.
+// Units of a frame's placing order not yet on a tile.
 const replayReview = (shot: ImportShot): number => {
   const sides = replaySides(shot)
   return SIDES.reduce((n, side) => {
     const picked = Object.values(shot.tilePicks[side] ?? {})
-    return n + sides[side].heroes.filter((id) => !picked.includes(id)).length
+    return n + placingOrder(sides[side].heroes, picked).filter((id) => !picked.includes(id)).length
   }, 0)
 }
 

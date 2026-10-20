@@ -11,7 +11,6 @@
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
-import { isPhantimalId } from '@/lib/characters/phantimal'
 import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
   assignUnits,
@@ -447,7 +446,7 @@ export function buildTeamImportPlan(
         const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
         if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
         // A phantimal left unpicked comes from the lineup, as without a replay.
-        if (seen.some((u) => u.unitId !== null && isPhantimalId(u.unitId))) shownSides.push(side)
+        if (placed.phantimal !== null) shownSides.push(side)
         sides[side] = placed
         continue
       }
