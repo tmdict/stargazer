@@ -166,6 +166,17 @@ describe('a tile click', () => {
     expect(document.querySelector('.picker')).not.toBeNull()
   })
 
+  it('uses up a chosen hero placed by typing its tile', async () => {
+    const { picks } = await mountReplay()
+    const [a0, a1] = deploymentTiles(State.AVAILABLE_ALLY)
+    document.querySelectorAll<HTMLElement>('.lineup.left .lineup-pick')[1]!.click()
+    await nextTick()
+    const box = document.querySelectorAll<HTMLInputElement>('.tile-box')[1]!
+    await type(box, String(a0), new Event('change'))
+    await clickTile(a1!)
+    expect(picks()[1]).toEqual({ [a0!]: 6, [a1!]: 5 })
+  })
+
   it("places a hero's companions after it, and a picked phantimal's after the heroes", async () => {
     const elijah = 68
     const [lailah] = companionIdsOf(elijah)

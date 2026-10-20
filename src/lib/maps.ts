@@ -3,6 +3,7 @@
    dataLoader and Vue. */
 
 import { State } from './types/state'
+import { Team } from './types/team'
 
 interface ArenaJson {
   // Carried by links (a 6-bit field, 0 meaning "no map"), so it never changes
@@ -92,6 +93,11 @@ export const getMapNames = (): Array<{ key: string; name: string }> => {
 
 export const getMapByKey = (key: string): MapConfig | undefined => {
   return MAPS[key]
+}
+
+export const deploymentTiles = (mapKey: string, team: Team): Set<number> => {
+  const state = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+  return new Set((MAPS[mapKey]?.grid ?? []).filter((g) => g.type === state).flatMap((g) => g.hex))
 }
 
 const AVAILABLE_STATE: Partial<Record<State, State>> = {

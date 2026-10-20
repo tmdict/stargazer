@@ -208,9 +208,14 @@ describe('board sides', () => {
     expect(api.swapSides.value).toBe(true)
     expect(api.plan.value.boards[3]!.sides[2]!.mains.map((unit) => unit.unitId)).toEqual([5])
 
+    // The swap starts the portrait corrections over and keeps the tile picks.
+    api.setUnit('formation', 0, 5)
+    api.setTilePick('formation', 2, 41, 6)
     api.swapSides.value = false
     await nextTick()
     expect(api.swapSides.value).toBe(false)
+    expect(api.shots.value[1]!.unitOverrides).toEqual({})
+    expect(api.shots.value[1]!.tilePicks).toEqual({ 2: { 41: 6 } })
     // With the shots unable to tell, the choice stays.
     api.shots.value = [result]
     await nextTick()
