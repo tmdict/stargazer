@@ -17,7 +17,7 @@ import {
   formationSide,
   heroesFromUnits,
   identifyMap,
-  pickableUnit,
+  placedPicks,
   SURE_SCORE,
   type PlacedUnit,
   type UnitAssignment,
@@ -485,16 +485,12 @@ export function buildTeamImportPlan(
         unitId: assignments[i]?.unitId ?? null,
         hexId: unit.hexId,
       }))
-      const shown = seen.map((u) => u.unitId)
-      const short = heroes.some(({ characterId }) => !shown.includes(characterId))
-      // A pick places a unit the review may pick, on a tile no portrait stands on.
-      for (const [hex, unitId] of Object.entries(formation.picks[side] ?? {})) {
-        const hexId = Number(hex)
-        if (pickableUnit(unitId, shown) && !seen.some((u) => u.hexId === hexId)) {
-          seen.push({ unitId, hexId })
-        }
-      }
-      const placed = formationSide(seen, heroes, artifact)
+      const short = heroes.some(({ characterId }) => !seen.some((u) => u.unitId === characterId))
+      const placed = formationSide(
+        [...seen, ...placedPicks(formation.picks[side] ?? {}, seen)],
+        heroes,
+        artifact,
+      )
       const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
       if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
       // The formation panel cannot draw a hero the screenshotting account

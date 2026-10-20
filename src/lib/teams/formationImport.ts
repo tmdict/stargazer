@@ -11,10 +11,8 @@ import { companionIdsOf } from '@/lib/characters/companion'
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/types'
-import { MAPS } from '@/lib/maps'
+import { deploymentTiles, MAPS } from '@/lib/maps'
 import { getCharacterSkill } from '@/lib/skills/registry'
-import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
 import type { SideLoadBoard, SideLoadCompanion } from './sideLoad'
 import type { LineupEntry } from './teamImport'
 
@@ -29,13 +27,11 @@ export function identifyMap(
   candidates: readonly string[],
 ): string | null {
   if (reading.side === null) return null
-  const state = reading.side === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
   const lit = new Set(reading.tiles)
   const open = new Set(reading.unclear)
   for (const key of candidates) {
-    const map = MAPS[key]
-    if (!map) continue
-    const tiles = new Set(map.grid.filter((g) => g.type === state).flatMap((g) => g.hex))
+    if (!MAPS[key]) continue
+    const tiles = deploymentTiles(key, reading.side)
     const fits =
       reading.tiles.every((id) => tiles.has(id)) &&
       reading.units.every((unit) => tiles.has(unit.hexId)) &&
@@ -206,8 +202,8 @@ export function heroesFromUnits(units: readonly UnitReading[]): number[] {
 
 // ---------- the side ----------
 
-// A unit seen on a tile: a formation shot's portrait as assigned, or a replay
-// frame's pick. A null unit is none of the side's.
+// A unit seen on a tile: a formation shot's portrait as assigned, or a pick
+// made in a review. A null unit is none of the side's.
 export interface PlacedUnit {
   unitId: number | null
   hexId: number
@@ -221,9 +217,9 @@ function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
   return id === undefined ? null : phantimalOwnerId(id)
 }
 
-// The units a replay frame's side places in turn: each hero, then its
-// companions, and last the phantimal its picks field with that phantimal's
-// companions.
+// The units a side places in turn on a screenshot's tiles: each hero, then
+// its companions, and last the phantimal the units seen field, with that
+// phantimal's companions.
 export function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
   const phantimal = fieldedPhantimal(picked)
   return [...heroes, ...(phantimal === null ? [] : [phantimal])].flatMap((unitId) => [
@@ -239,6 +235,22 @@ export function pickableUnit(unitId: number, shown: readonly (number | null)[]):
   if (shown.includes(unitId)) return false
   const phantimal = fieldedPhantimal(shown)
   return phantimal === null || !inPhantimalBand(unitId) || phantimalOwnerId(unitId) === phantimal
+}
+
+/* A formation shot's review picks that place a unit: one the review may pick,
+ * on a tile no portrait stands on. Shared by the plan and the review, so the
+ * review shows what Save as New places. */
+export function placedPicks(
+  picks: Readonly<Record<number, number>>,
+  portraits: readonly PlacedUnit[],
+): { unitId: number; hexId: number }[] {
+  const shown = portraits.map((u) => u.unitId)
+  return Object.entries(picks).flatMap(([hex, unitId]) => {
+    const hexId = Number(hex)
+    return pickableUnit(unitId, shown) && !portraits.some((u) => u.hexId === hexId)
+      ? [{ unitId, hexId }]
+      : []
+  })
 }
 
 /* One side of a board as the side-load places it: each hero with its
