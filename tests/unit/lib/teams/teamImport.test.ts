@@ -529,6 +529,23 @@ describe('buildTeamImportPlan with replay frames', () => {
     expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
   })
 
+  it('fields the phantimal of a companion picked without it, on a random tile', () => {
+    const wedge = toPhantimalId(5)
+    const wedgePower = COMPANION_ID_OFFSET + wedge
+    const plan = buildTeamImportPlan(
+      [shot(0, reading([7], [8]))],
+      '5v5',
+      NAMES,
+      false,
+      [],
+      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7, 5: wedgePower } } }],
+    )
+    const ally = plan.boards[0]!.sides[Team.ALLY]!
+    expect(ally.phantimal).toEqual({ unitId: wedge, hexId: undefined })
+    expect(ally.companions).toEqual([{ unitId: wedgePower, hexId: 5, mainUnitId: wedge }])
+    expect(plan.boards[0]!.formations).toEqual([Team.ALLY])
+  })
+
   it('blocks two replay frames of one board and leaves out one whose map has no result', () => {
     const plan = buildTeamImportPlan(
       [shot(0, reading([7], [8]))],

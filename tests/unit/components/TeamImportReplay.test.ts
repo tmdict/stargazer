@@ -166,19 +166,18 @@ describe('a tile click', () => {
     expect(document.querySelector('.picker')).not.toBeNull()
   })
 
-  it("places a hero's companions after it, and the picked phantimal's after the heroes", async () => {
+  it("places a hero's companions after it, and a picked phantimal's after the heroes", async () => {
     const elijah = 68
     const [lailah] = companionIdsOf(elijah)
     const wedgeOfMatter = toPhantimalId(5)
     const [wedgeOfPower] = companionIdsOf(wedgeOfMatter)
+    const wedges = [wedgeOfMatter, wedgeOfPower!]
     const { picks, setPick } = await mountReplay({
-      [Team.ALLY]: {
-        heroes: [elijah, 6],
-        options: [elijah, lailah!, 6, wedgeOfMatter, wedgeOfPower!],
-      },
-      [Team.ENEMY]: { heroes: [7], options: [7] },
+      [Team.ALLY]: { heroes: [elijah, 6], options: [elijah, lailah!, 6, ...wedges] },
+      [Team.ENEMY]: { heroes: [7], options: [7, ...wedges] },
     })
     const [a0, a1, a2, a3, a4] = deploymentTiles(State.AVAILABLE_ALLY)
+    const [e0, e1, e2] = deploymentTiles(State.AVAILABLE_ENEMY)
 
     for (const tile of [a0!, a1!, a2!]) await clickTile(tile)
     expect(picks()[1]).toEqual({ [a0!]: elijah, [a1!]: lailah, [a2!]: 6 })
@@ -187,6 +186,13 @@ describe('a tile click', () => {
     await nextTick()
     await clickTile(a4!)
     expect(picks()[1]).toMatchObject({ [a3!]: wedgeOfMatter, [a4!]: wedgeOfPower })
+
+    // A companion picked first fields its phantimal, which goes next.
+    await clickTile(e0!)
+    setPick('frame', Team.ENEMY, e1!, wedgeOfPower!)
+    await nextTick()
+    await clickTile(e2!)
+    expect(picks()[2]).toEqual({ [e0!]: 7, [e1!]: wedgeOfPower, [e2!]: wedgeOfMatter })
   })
 })
 
