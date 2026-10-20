@@ -560,9 +560,11 @@ export function useTeamImport(
   // Whether heroes qualify for a phantimal, the board's faction rule.
   phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
+  // `onFirst` hears the first shot added, before it is read.
   addFiles: (
     files: File[],
     kind: ShotKind | 'sort',
+    onFirst?: (id: string) => void,
   ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
@@ -615,6 +617,7 @@ export function useTeamImport(
   const addFiles = async (
     files: File[],
     kind: ShotKind | 'sort',
+    onFirst?: (id: string) => void,
   ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
     void ensureReferences()
     const mine = opening
@@ -654,6 +657,7 @@ export function useTeamImport(
         tilePicks: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
+      if (added === 0) onFirst?.(shot.id)
       added++
       await readShot(shot, file)
     }
