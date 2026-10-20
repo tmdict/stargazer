@@ -125,18 +125,20 @@ describe('match import review and save', () => {
       button.textContent?.includes('Forget learned icons'),
     )!
     const save = document.querySelector<HTMLButtonElement>('.footer-btn.danger')!
+    const label = (button: HTMLButtonElement) =>
+      button.querySelector(':scope > span:not(.hidden)')?.textContent?.trim()
 
     forget.click()
     await nextTick()
     expect(api.learnedCount.value).toBe(1)
-    expect(forget.textContent?.trim()).toBe('Confirm?')
+    expect(label(forget)).toBe('Confirm?')
     expect(forget.classList.contains('armed')).toBe(true)
-    expect(save.textContent).toContain('Save as New')
+    expect(label(save)).toContain('Save as New')
     expect(save.classList.contains('armed')).toBe(false)
 
     vi.advanceTimersByTime(3000)
     await nextTick()
-    expect(forget.textContent).toContain('Forget learned icons (1)')
+    expect(label(forget)).toBe('Forget learned icons (1)')
     expect(forget.classList.contains('armed')).toBe(false)
     forget.click()
     expect(api.learnedCount.value).toBe(1)

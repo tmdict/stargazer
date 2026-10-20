@@ -24,7 +24,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
-import { placingOrder } from '@/lib/teams/formationImport'
+import { missingUnits, placingOrder } from '@/lib/teams/formationImport'
 import {
   DEFAULT_VARIANT,
   newTeamMaps,
@@ -186,12 +186,32 @@ const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | n
 }
 
 // Units of a frame's placing order not yet on a tile.
-const replayReview = (shot: ImportShot): number => {
+const replayToPlace = (shot: ImportShot): number => {
   const sides = replaySides(shot)
   return SIDES.reduce((n, side) => {
     const picked = Object.values(shot.tilePicks[side] ?? {})
     return n + placingOrder(sides[side].heroes, picked).filter((id) => !picked.includes(id)).length
   }, 0)
+}
+
+// Units a formation shot misses, as its review lists them, not yet on a tile.
+const formationToPlace = (shot: ImportShot): number => {
+  const placed = placedSide(shot)
+  const reading = shot.reading
+  if (!placed || !reading || !isFormationReading(reading)) return 0
+  const assignments = unitsOf(shot.id)
+  const portraits = reading.units.map((unit, i) => ({
+    unitId: assignments[i]?.unitId ?? null,
+    hexId: unit.hexId,
+  }))
+  const { order, picks } = missingUnits(
+    placed.side.mains.map((unit) => unit.unitId),
+    portraits,
+    unitOptions(shot),
+    shot.tilePicks[placed.team] ?? {},
+  )
+  const picked = [...picks.values()]
+  return order.filter((id) => !picked.includes(id)).length
 }
 
 const formationReview = (shot: ImportShot): number => {
@@ -426,6 +446,7 @@ const handleForgetLearned = (): void => {
           :map-count
           formation
           :review-count="formationReview"
+          :place-count="formationToPlace"
           :notice="noResultNotice"
           @set-map="setMap"
           @remove="removeShot"
@@ -453,7 +474,7 @@ const handleForgetLearned = (): void => {
           :shots="replayShots"
           :map-count
           replay
-          :review-count="replayReview"
+          :place-count="replayToPlace"
           :notice="noResultNotice"
           @set-map="setMap"
           @remove="removeShot"
@@ -584,18 +605,19 @@ const handleForgetLearned = (): void => {
       </ul>
 
       <div class="footer">
+        <!-- Both labels hold the button's width, so the confirm click lands
+             on it and not on Cancel. -->
         <button
           type="button"
-          class="footer-btn danger"
+          class="footer-btn danger keep-width"
           :class="{ armed: armed === 'save' }"
           :disabled="blocked"
           @click="handleSaveAsNew"
         >
-          {{
-            armed === 'save'
-              ? i18n.t('app.confirm')
-              : i18n.t('app.import-save-as-new', { count: mappedCount })
-          }}
+          <span :class="{ hidden: armed === 'save' }">{{
+            i18n.t('app.import-save-as-new', { count: mappedCount })
+          }}</span>
+          <span :class="{ hidden: armed !== 'save' }">{{ i18n.t('app.confirm') }}</span>
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
@@ -603,15 +625,14 @@ const handleForgetLearned = (): void => {
         <button
           v-if="learnedCount > 0"
           type="button"
-          class="link-btn"
+          class="link-btn keep-width"
           :class="{ armed: armed === 'forget' }"
           @click="handleForgetLearned"
         >
-          {{
-            armed === 'forget'
-              ? i18n.t('app.confirm')
-              : i18n.t('app.import-forget-learned', { count: learnedCount })
-          }}
+          <span :class="{ hidden: armed === 'forget' }">{{
+            i18n.t('app.import-forget-learned', { count: learnedCount })
+          }}</span>
+          <span :class="{ hidden: armed !== 'forget' }">{{ i18n.t('app.confirm') }}</span>
         </button>
       </div>
     </div>
@@ -634,6 +655,7 @@ const handleForgetLearned = (): void => {
   --import-warn-tint: rgba(246, 196, 83, 0.12);
   --import-bad: #f28b82;
   --import-bad-tint: rgba(242, 139, 130, 0.14);
+  --import-good: #81c995;
   --import-left: #d9782f;
   --import-right: #4f78c0;
 
@@ -886,6 +908,19 @@ const handleForgetLearned = (): void => {
 
 .footer-btn.secondary:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+.keep-width {
+  display: inline-grid;
+  place-items: center;
+}
+
+.keep-width > span {
+  grid-area: 1 / 1;
+}
+
+.keep-width > .hidden {
+  visibility: hidden;
 }
 
 .link-btn {

@@ -18,6 +18,7 @@ import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
+import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
@@ -32,12 +33,7 @@ import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import { isFormationReading, type HeroReading } from '@/lib/import/types'
 import { deploymentTiles } from '@/lib/maps'
-import {
-  pickableUnit,
-  placedPicks,
-  placingOrder,
-  type UnitAssignment,
-} from '@/lib/teams/formationImport'
+import { missingUnits, type UnitAssignment } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
@@ -347,25 +343,15 @@ const missing = computed((): PlacingSide | null => {
   const placed = units?.placed
   const reading = shot.reading
   if (!units || !placed || !tiles || !reading || !isFormationReading(reading)) return null
-  const shown = units.assignments.map((a) => a.unitId)
-  const options = units.options.filter((unitId) => pickableUnit(unitId, shown))
   const portraits = reading.units.map((unit, i) => ({
-    unitId: shown[i] ?? null,
+    unitId: units.assignments[i]?.unitId ?? null,
     hexId: unit.hexId,
   }))
-  const picks = new Map(
-    placedPicks(shot.tilePicks[tiles.team] ?? {}, portraits)
-      .filter(({ unitId }) => options.includes(unitId))
-      .map(({ hexId, unitId }) => [hexId, unitId] as const),
-  )
   const lineup = placed.side.mains.map((unit) => unit.unitId)
-  const order = placingOrder(lineup, [
-    ...shown.filter((id): id is number => id !== null),
-    ...picks.values(),
-  ]).filter((unitId) => !shown.includes(unitId))
-  if (order.length === 0 && picks.size === 0) return null
-  const heroes = lineup.filter((unitId) => !shown.includes(unitId))
-  return { order, heroes, options, picks }
+  const side = missingUnits(lineup, portraits, units.options, shot.tilePicks[tiles.team] ?? {})
+  if (side.order.length === 0 && side.picks.size === 0) return null
+  const heroes = lineup.filter((unitId) => !portraits.some((u) => u.unitId === unitId))
+  return { ...side, heroes }
 })
 
 const {
@@ -396,6 +382,15 @@ const {
 const shotTeam = computed(() => shotTiles.value?.team ?? null)
 const sideClass = computed(() => (shotTeam.value === Team.ALLY ? 'left' : 'right'))
 const missingRows = computed(() => (shotTeam.value === null ? [] : rows(shotTeam.value)))
+
+// The side's units on a tile, of every unit it fields: the portraits' and the missing ones.
+const placeCount = computed(() => {
+  const shown = unitViews.value.filter((view) => view.unitId !== null).length
+  return {
+    placed: shown + missingRows.value.filter((row) => row.tile !== null).length,
+    total: shown + missingRows.value.length,
+  }
+})
 
 // The side's free deployment tiles on the screenshot's board, with the unit
 // picked for each.
@@ -458,9 +453,9 @@ const clickShotTile = (hexId: number, event: Event): void => {
   })
 }
 
-const missingEl = ref<HTMLElement>()
+const cellsEl = ref<HTMLElement>()
 const tileBoxes = (): HTMLInputElement[] => [
-  ...(missingEl.value?.querySelectorAll<HTMLInputElement>('.tile-box') ?? []),
+  ...(cellsEl.value?.querySelectorAll<HTMLInputElement>('.tile-box') ?? []),
 ]
 
 const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
@@ -589,6 +584,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
     <div v-if="unitViews.length" class="side">
       <div class="side-head">
         <span class="side-label">{{ i18n.t('app.import-units') }}</span>
+        <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
       </div>
       <div class="boards">
         <figure v-if="shotBoard" class="board">
@@ -705,7 +701,8 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
           :pointed="pointedUnit"
         />
       </div>
-      <div class="cells">
+      <p v-if="missingRows.length" class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
+      <div ref="cellsEl" class="cells" :class="sideClass">
         <div
           v-for="view in unitViews"
           :key="view.index"
@@ -754,15 +751,12 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
             }}</span>
           </div>
         </div>
-      </div>
-      <template v-if="missingRows.length && shotTeam !== null">
-        <p class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
-        <div ref="missingEl" class="cells" :class="sideClass">
+        <template v-if="shotTeam !== null">
           <div
             v-for="row in missingRows"
             :key="row.unitId"
             class="cell unit missing"
-            :class="{ next: nextUnits[shotTeam] === row.unitId }"
+            :class="{ next: nextUnits[shotTeam] === row.unitId, unplaced: row.tile === null }"
             @mouseenter="pointedMissing = row.unitId"
             @mouseleave="pointedMissing = null"
           >
@@ -791,9 +785,9 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
               <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
             </div>
           </div>
-        </div>
-        <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
-      </template>
+        </template>
+      </div>
+      <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
     </div>
 
     <!-- Outside the modal's container, so their clicks and Escape are stopped
@@ -852,6 +846,10 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   margin-bottom: var(--spacing-sm);
+}
+
+.side-head > .place-count {
+  margin-left: auto;
 }
 
 .side-label {
@@ -976,7 +974,8 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 
 .cell.review,
 .cell.paragon,
-.cell.refinement {
+.cell.refinement,
+.cell.missing.unplaced {
   border-color: var(--import-warn);
   background: var(--import-warn-tint);
 }
@@ -1079,13 +1078,13 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   fill: color-mix(in srgb, var(--pick-colour) 30%, transparent);
   stroke: color-mix(in srgb, var(--pick-colour) 85%, white);
   cursor: pointer;
+  outline: none;
 }
 
 .pick-tile:hover,
 .pick-tile:focus-visible,
 .pick-tile.active {
   stroke: #fff;
-  outline: none;
 }
 
 .pick-unit {
