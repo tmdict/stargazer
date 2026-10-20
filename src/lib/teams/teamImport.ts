@@ -11,6 +11,7 @@
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
+import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
   assignUnits,
@@ -345,7 +346,9 @@ export function formationsSwapped(
  * keeps one side of the board for every map, and the boards hold a hero once
  * per side page-wide. Issues and the record name follow board sides
  * throughout. A replay frame places a side the way a formation shot does,
- * from the tiles picked on it, for a side no formation shot shows. */
+ * from the tiles picked on it, for a side no formation shot shows. A side
+ * fields only a phantimal its heroes qualify for (`phantimalFits`, the
+ * board's faction rule), as the board places nothing else. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
@@ -355,6 +358,7 @@ export function buildTeamImportPlan(
   replays: readonly ReplayAssignment[] = [],
   // Whether result screenshots make this a match, counting unread ones.
   matchImport = shots.length > 0,
+  phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean = () => true,
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)
@@ -365,6 +369,15 @@ export function buildTeamImportPlan(
   const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
   // A result column's board side: the swap is its own inverse.
   const sideOf = columnOf
+  // The units seen that can stand on a side's board: a phantimal's only when
+  // the side's heroes qualify for it.
+  const fielded = (seen: readonly PlacedUnit[], heroIds: readonly number[]): PlacedUnit[] =>
+    seen.filter(
+      ({ unitId }) =>
+        unitId === null ||
+        !inPhantimalBand(unitId) ||
+        phantimalFits(phantimalOwnerId(unitId), heroIds),
+    )
   // A formation shot without a board has nothing to place and says so on its card.
   const placeable = formations.filter((f) => f.reading.side !== null)
   const unmapped =
@@ -446,7 +459,8 @@ export function buildTeamImportPlan(
         const seen: PlacedUnit[] = Object.entries(replay.picks[side] ?? {}).map(
           ([hexId, unitId]) => ({ unitId, hexId: Number(hexId) }),
         )
-        const placed = formationSide(seen, lineup ?? [], artifact)
+        const heroIds = (lineup ?? []).map((h) => h.characterId)
+        const placed = formationSide(fielded(seen, heroIds), lineup ?? [], artifact)
         const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
         if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
         // A phantimal left unpicked comes from the lineup, as without a replay.
@@ -475,10 +489,9 @@ export function buildTeamImportPlan(
             ),
           ]),
         ].map((characterId) => ({ characterId, attrs: {} }))
-      const assignments = assignUnits(
-        reading.units,
-        heroes.map((h) => h.characterId),
-        unitOverrides,
+      const heroIds = heroes.map((h) => h.characterId)
+      const assignments = assignUnits(reading.units, heroIds, unitOverrides, (phantimalId) =>
+        phantimalFits(phantimalId, heroIds),
       )
       units[formations.indexOf(formation)] = assignments
       const seen: PlacedUnit[] = reading.units.map((unit, i) => ({
@@ -487,7 +500,7 @@ export function buildTeamImportPlan(
       }))
       const short = heroes.some(({ characterId }) => !seen.some((u) => u.unitId === characterId))
       const placed = formationSide(
-        [...seen, ...placedPicks(formation.picks[side] ?? {}, seen)],
+        fielded([...seen, ...placedPicks(formation.picks[side] ?? {}, seen)], heroIds),
         heroes,
         artifact,
       )
