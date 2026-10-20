@@ -309,6 +309,7 @@ describe('buildTeamImportPlan with formation shots', () => {
     overrides: {},
     artifactOverrides: {},
     unitOverrides: {},
+    picks: {},
   })
 
   it("places the result shot's lineup on the tiles its formation shot shows", () => {
@@ -360,6 +361,51 @@ describe('buildTeamImportPlan with formation shots', () => {
       formationShot(Team.ALLY, [unit(1, 7)]),
     ])
     expect(plan.boards[0]!.formations).toEqual([])
+  })
+
+  it('places the units a formation shot misses on the tiles picked for them', () => {
+    const phantimal = toPhantimalId(1)
+    const missing = { ...formationShot(Team.ALLY, [unit(1, 7)]), picks: { [Team.ALLY]: { 2: 9 } } }
+    // A pick on a portrait's tile or of a unit a portrait shows places nothing.
+    const refused = { [Team.ALLY]: { 1: 9, 3: 7 } }
+    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
+      missing,
+    ])
+    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
+      { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
+      { unitId: 9, hexId: 2, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(plan.issues.some((issue) => issue.kind === 'unplaced')).toBe(false)
+    // Placing the missing hero still leaves the phantimal the panel may have
+    // dropped to the lineup, until one is picked.
+    expect(plan.boards[0]!.formations).toEqual([])
+    const picked = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
+      { ...missing, picks: { [Team.ALLY]: { 2: 9, 4: phantimal } } },
+    ])
+    expect(picked.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: phantimal, hexId: 4 })
+    expect(picked.boards[0]!.formations).toEqual([Team.ALLY])
+    const ignored = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
+      { ...missing, picks: refused },
+    ])
+    expect(ignored.boards[0]!.sides[Team.ALLY]!.mains[1]!.hexId).toBeUndefined()
+    // A pick of another phantimal does not take the place of the one whose
+    // companion a portrait is taken for.
+    const wedge = toPhantimalId(5)
+    const wedgePower = COMPANION_ID_OFFSET + wedge
+    const shown = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
+      {
+        ...formationShot(Team.ALLY, [unit(1, 7), unit(3, 9)]),
+        unitOverrides: { 1: wedgePower },
+        picks: { [Team.ALLY]: { 4: phantimal } },
+      },
+    ])
+    expect(shown.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({
+      unitId: wedge,
+      hexId: undefined,
+    })
+    expect(shown.boards[0]!.sides[Team.ALLY]!.companions).toEqual([
+      { unitId: wedgePower, hexId: 3, mainUnitId: wedge },
+    ])
   })
 
   it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {

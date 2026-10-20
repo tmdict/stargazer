@@ -185,6 +185,7 @@ async function main(): Promise<void> {
       overrides: {},
       artifactOverrides: {},
       unitOverrides: {},
+      picks: {},
     }))
     // Swap sides as the import sets it.
     const formationSwap = formationsSwapped(results, assignments)
