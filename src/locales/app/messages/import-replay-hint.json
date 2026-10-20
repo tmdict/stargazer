@@ -1,5 +1,5 @@
 {
-  "en": "Tap a tinted tile to choose who started there, or type each unit's tile in the list. Units may have moved since the fight began, so go by where each one started.",
-  "zh": "点击带颜色的格子选择起始时站在那里的单位，或在列表中输入每个单位的格子编号。开战后单位可能已经移动，请以各自的起始位置为准。",
-  "ko": "색이 칠해진 타일을 눌러 그곳에서 시작한 유닛을 고르거나, 목록에 각 유닛의 타일 번호를 입력하세요. 전투가 시작된 뒤 유닛이 움직였을 수 있으니 처음 서 있던 자리를 기준으로 하세요."
+  "en": "Click a tinted tile to place the highlighted hero of that side there. Click another hero first to place that one, or the highlighted hero again to choose from a list instead. Click a placed unit to change or clear it, or type each unit's tile in the list. Units may have moved since the fight began, so go by where each one started.",
+  "zh": "点击带颜色的格子，把该方高亮的英雄放到那里。先点击其他英雄可改放那名英雄，再次点击高亮的英雄则改为从列表中选择。点击已放置的单位可更换或清除，也可在列表中输入每个单位的格子编号。开战后单位可能已经移动，请以各自的起始位置为准。",
+  "ko": "색이 칠해진 타일을 누르면 그 진영에서 강조된 영웅이 그곳에 배치됩니다. 다른 영웅을 먼저 누르면 그 영웅을 배치하고, 강조된 영웅을 다시 누르면 목록에서 고를 수 있습니다. 배치된 유닛을 누르면 바꾸거나 지울 수 있고, 목록에 각 유닛의 타일 번호를 입력해도 됩니다. 전투가 시작된 뒤 유닛이 움직였을 수 있으니 처음 서 있던 자리를 기준으로 하세요."
 }
