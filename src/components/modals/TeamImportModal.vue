@@ -25,7 +25,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
-import { missingUnits, placingOrder } from '@/lib/teams/formationImport'
+import { missingUnits, replayPlacing } from '@/lib/teams/formationImport'
 import {
   DEFAULT_VARIANT,
   newTeamMaps,
@@ -86,6 +86,7 @@ const {
   setUnit,
   setTilePick,
   unitsOf,
+  phantimalFits,
   resultsClosed,
   formationsClosed,
   replayOpen,
@@ -133,12 +134,14 @@ const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
     : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
 
 // The units a side can field: its heroes with their companions, and the
-// season's phantimals with theirs.
+// phantimals its heroes qualify for with theirs.
 const fieldable = (heroes: readonly number[]): number[] =>
-  [...heroes, ...gameData.phantimals.map(({ id }) => toPhantimalId(id))].flatMap((id) => [
-    id,
-    ...companionIdsOf(id),
-  ])
+  [
+    ...heroes,
+    ...gameData.phantimals
+      .map(({ id }) => toPhantimalId(id))
+      .filter((id) => phantimalFits(id, heroes)),
+  ].flatMap((id) => [id, ...companionIdsOf(id)])
 
 // The units a formation shot's portraits can be.
 const unitOptions = (shot: ImportShot): number[] =>
@@ -186,12 +189,14 @@ const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | n
   return (mapIndex === null ? null : plan.value.boards[mapIndex]?.sides) ?? null
 }
 
-// Units of a frame's placing order not yet on a tile.
+// Units of a frame's placing order not yet on a tile, as its review counts them.
 const replayToPlace = (shot: ImportShot): number => {
   const sides = replaySides(shot)
   return SIDES.reduce((n, side) => {
-    const picked = Object.values(shot.tilePicks[side] ?? {})
-    return n + placingOrder(sides[side].heroes, picked).filter((id) => !picked.includes(id)).length
+    const { heroes, options } = sides[side]
+    const { order, picks } = replayPlacing(heroes, options, shot.tilePicks[side] ?? {})
+    const picked = [...picks.values()]
+    return n + order.filter((id) => !picked.includes(id)).length
   }, 0)
 }
 

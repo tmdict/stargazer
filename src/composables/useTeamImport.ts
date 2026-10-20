@@ -13,7 +13,8 @@ import { computed, reactive, ref, shallowRef, watch, type ComputedRef } from 'vu
 import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
-import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, phantimalOwnerId, toPhantimalId } from '@/lib/characters/phantimal'
+import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { FIT_WIDTH } from '@/lib/import/board'
 import { FRAME_NAMES } from '@/lib/import/frames'
 import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
@@ -556,6 +557,8 @@ export function useTeamImport(
   learnedCount: ComputedRef<number>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
+  // Whether heroes qualify for a phantimal, the board's faction rule.
+  phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
   addFiles: (
     files: File[],
@@ -728,9 +731,16 @@ export function useTeamImport(
   const setTilePick = (id: string, side: Team, hexId: number, unitId: number | null): void => {
     const shot = findShot(id)
     if (!shot) return
+    // A side fields one phantimal, so a unit of another takes the place of
+    // the side's earlier phantimal picks.
+    const otherPhantimal = (picked: number): boolean =>
+      unitId !== null &&
+      inPhantimalBand(unitId) &&
+      inPhantimalBand(picked) &&
+      phantimalOwnerId(picked) !== phantimalOwnerId(unitId)
     const picks = Object.fromEntries(
       Object.entries(shot.tilePicks[side] ?? {}).filter(
-        ([hex, picked]) => Number(hex) !== hexId && picked !== unitId,
+        ([hex, picked]) => Number(hex) !== hexId && picked !== unitId && !otherPhantimal(picked),
       ),
     )
     if (unitId !== null) picks[hexId] = unitId
@@ -791,6 +801,13 @@ export function useTeamImport(
     for (const shot of shots.value) shot.unitOverrides = {}
   })
 
+  // An id with no data is retired content, which the board keeps too.
+  const phantimalFits = (phantimalId: number, heroIds: readonly number[]): boolean => {
+    const gameData = useGameDataStore()
+    const phantimal = gameData.getPhantimalById(phantimalId)
+    return !phantimal || lineupQualifies(phantimal, heroIds, gameData.getCharacterFaction)
+  }
+
   const plan = computed<TeamImportPlan>(() => {
     // A frame the arena was not found in has no board to place, and its card
     // says so.
@@ -814,6 +831,7 @@ export function useTeamImport(
       formationAssignments.value,
       replays,
       match,
+      phantimalFits,
     )
   })
 
@@ -832,6 +850,7 @@ export function useTeamImport(
     learnedCount: computed(() => learned.value.length),
     plan,
     unitsOf,
+    phantimalFits,
     addFiles,
     resultsClosed,
     formationsClosed,

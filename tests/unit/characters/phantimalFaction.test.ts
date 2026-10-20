@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { countTeamFaction, requiredFactions } from '@/lib/characters/phantimalFaction'
+import {
+  countTeamFaction,
+  lineupQualifies,
+  requiredFactions,
+} from '@/lib/characters/phantimalFaction'
 import { performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
@@ -55,6 +59,16 @@ describe('phantimalFaction', () => {
       // isCompanionId guard is removed.
       performPlace(g, 2, 10100, Team.ALLY)
       expect(countTeamFaction(g, Team.ALLY, ['lightbearer'], factionOf)).toBe(1)
+    })
+  })
+
+  describe('lineupQualifies', () => {
+    it('needs three heroes of the factions the phantimal counts', () => {
+      const factions: Record<number, string> = { 1: 'hypogean', 2: 'hypogean', 3: 'celestial' }
+      const of = (id: number): string | undefined => factions[id]
+      expect(lineupQualifies({ faction: 'hypogean' }, [1, 2, 3, 4], of)).toBe(false)
+      const both = { faction: 'hypogean', qualifyingFactions: ['hypogean', 'celestial'] }
+      expect(lineupQualifies(both, [1, 2, 3, 4], of)).toBe(true)
     })
   })
 })
