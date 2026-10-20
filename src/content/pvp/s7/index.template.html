@@ -145,6 +145,7 @@ td.counter-rate,td.record-cell{text-align:left;font-variant-numeric:tabular-nums
 .counter-table tr:has(>td:target)>td{background:rgba(255,255,255,.05)}
 .counter-table td:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 table.mx th,table.mx td{text-align:center}
+table.mx th{vertical-align:top}
 table.mx td.name{text-align:left}
 table.mx .win-record{align-items:center}
 td.name{font-weight:600}
@@ -174,12 +175,12 @@ table.mx .ar{text-transform:none;letter-spacing:normal}
   text-align:center;white-space:nowrap}
 /* A chip stays on one line. A place that lets it run onto more sets
    white-space:normal and shows the <wbr> that breaksBetweenHeroes writes
-   between heroes. It needs both: Safari ignores a <wbr> under nowrap, and
-   Chrome breaks at a shown one even there. A hero's name, with the slash or
-   plus after it, never wraps, in a chip or on the counter ladder, so neither
-   browser breaks inside it or before its separator, in either language. It
-   stays an inline span: Chrome does not break between two inline-blocks of
-   Chinese text, so inline-blocks with no <wbr> would not wrap there. */
+   between heroes: Safari ignores a <wbr> under nowrap, and Chrome breaks at a
+   shown one even there. Each hero's name, with the slash or plus after it, is
+   a .hero-name that never wraps, in a chip or on the counter ladder, so
+   neither browser breaks inside it or before its separator, in either
+   language. It is an inline span, not an inline-block: Chrome does not break
+   between two inline-blocks of Chinese text. */
 .ar wbr{display:none}
 .hero-name{white-space:nowrap}
 .ar.t1{color:#e8b04b;background:rgba(232,176,75,.12);border-color:rgba(232,176,75,.35)}
