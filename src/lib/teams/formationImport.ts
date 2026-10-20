@@ -253,6 +253,30 @@ export function placedPicks(
   })
 }
 
+/* The units a formation shot's review places on free tiles: the side's
+ * placing order less the units portraits are taken for, the units it may
+ * pick, and the picks that place one. Shared by the review and its card's
+ * count. */
+export function missingUnits(
+  lineup: readonly number[],
+  portraits: readonly PlacedUnit[],
+  options: readonly number[],
+  picks: Readonly<Record<number, number>>,
+): { order: number[]; options: number[]; picks: Map<number, number> } {
+  const shown = portraits.map((u) => u.unitId)
+  const pickable = options.filter((unitId) => pickableUnit(unitId, shown))
+  const placed = new Map(
+    placedPicks(picks, portraits)
+      .filter(({ unitId }) => pickable.includes(unitId))
+      .map(({ hexId, unitId }) => [hexId, unitId] as const),
+  )
+  const order = placingOrder(lineup, [
+    ...shown.filter((id): id is number => id !== null),
+    ...placed.values(),
+  ]).filter((unitId) => !shown.includes(unitId))
+  return { order, options: pickable, picks: placed }
+}
+
 /* One side of a board as the side-load places it: each hero with its
  * upgrades on the tile it was seen on, or on a random free tile when it was
  * not; the companions and phantimal seen, the phantimal on a random free tile

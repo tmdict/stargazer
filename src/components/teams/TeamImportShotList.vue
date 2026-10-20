@@ -28,17 +28,21 @@ const {
   formation = false,
   replay = false,
   reviewCount,
+  placeCount,
   notice,
 } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
   // Formation shots: the team shown instead of the winner, read-only.
   formation?: boolean
-  // Replay frames: no winner, and the count is of heroes still to place.
+  // Replay frames: no winner.
   replay?: boolean
   // What a card still asks about, when its owner counts it (a formation shot's
   // units come from the plan); else its cells and artifacts.
   reviewCount?: (shot: ImportShot) => number
+  // Units still without a tile, counted once nothing is left to review, since
+  // a correction can change which units are missing.
+  placeCount?: (shot: ImportShot) => number
   // Why a mapped card adds nothing to the import, when its owner says so.
   notice?: (shot: ImportShot) => string | null
 }>()
@@ -117,12 +121,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (mapIndexOf(shot) === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
   const unused = notice?.(shot)
   if (unused) return { text: unused, tone: 'warn' }
-  const n = (reviewCount ?? cellReviewCount)(shot)
-  if (!n) return { text: i18n.t('app.import-ready'), tone: 'plain' }
-  return {
-    text: i18n.t(replay ? 'app.import-to-place' : 'app.import-to-review', { count: n }),
-    tone: 'warn',
-  }
+  const review = (reviewCount ?? cellReviewCount)(shot)
+  if (review) return { text: i18n.t('app.import-to-review', { count: review }), tone: 'warn' }
+  const place = placeCount?.(shot) ?? 0
+  if (place) return { text: i18n.t('app.import-to-place', { count: place }), tone: 'warn' }
+  return { text: i18n.t('app.import-ready'), tone: 'plain' }
 }
 </script>
 
