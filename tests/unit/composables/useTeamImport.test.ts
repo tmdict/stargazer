@@ -211,7 +211,7 @@ describe('board sides', () => {
     api.swapSides.value = false
     await nextTick()
     expect(api.swapSides.value).toBe(false)
-    // The shots no longer telling leaves the choice as it is.
+    // With the shots unable to tell, the choice stays.
     api.shots.value = [result]
     await nextTick()
     expect(api.swapSides.value).toBe(false)
