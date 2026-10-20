@@ -354,13 +354,18 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
   })
 
-  it('turns a formation a half-turn onto the other half when the sides are swapped', () => {
-    const formations = [formationShot(Team.ALLY, [unit(1, 7)])]
+  it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
+    // Formations show the sides as fought: with the viewing player on the enemy
+    // half, the shot's ally team is the result's Enemy column.
+    const formations = [formationShot(Team.ALLY, [unit(1, 8)])]
     const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, formations)
-    expect(plan.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
-      { unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } },
+    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
+      { unitId: 8, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
     ])
-    expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
+    expect(plan.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 7, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(plan.boards[0]!.formations).toEqual([Team.ALLY])
   })
 
   it('leaves out a formation shot whose map has no result shot in a match import', () => {
@@ -457,15 +462,16 @@ describe('buildTeamImportPlan with replay frames', () => {
     expect(board.formations).toEqual([])
   })
 
-  it('keeps a picked phantimal and turns the picks a half-turn when the sides are swapped', () => {
+  it('keeps a picked phantimal and the picked tiles when the sides are swapped', () => {
     const phantimal = toPhantimalId(1)
+    // Swapped, the frame shows the Ally column's team on the enemy tiles.
     const plan = buildTeamImportPlan(
       [shot(0, reading([7], [8]))],
       '5v5',
       NAMES,
       true,
       [],
-      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7, 3: phantimal } } }],
+      [{ mapIndex: 0, picks: { [Team.ALLY]: { 45: 7, 43: phantimal } } }],
     )
     const enemy = plan.boards[0]!.sides[Team.ENEMY]!
     expect(enemy.mains).toEqual([{ unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } }])

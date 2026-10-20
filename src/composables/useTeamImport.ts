@@ -8,7 +8,7 @@
  * Images never leave the device: the references are fetched, the screenshots
  * are drawn to a canvas and handed to the worker as pixels. */
 
-import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
+import { computed, reactive, ref, shallowRef, watch, type ComputedRef } from 'vue'
 
 import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
@@ -121,8 +121,8 @@ const shots = ref<ImportShot[]>([])
 const referenceStatus = ref<ReferenceStatus>('idle')
 const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
 const names = reactive<RecordNames>(defaultNames())
-// Whether every screenshot's columns land on the opposite board sides: one
-// choice per match (see buildTeamImportPlan), and not a reader correction.
+// Whether every result screenshot's columns land on the opposite board sides:
+// one choice per match (see buildTeamImportPlan), and not a reader correction.
 const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.
@@ -581,6 +581,15 @@ export function useTeamImport(
   loadStored()
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
+
+  // A swap gives every formation shot and replay frame the other column's
+  // lineup, so the units picked against the old one start over.
+  watch(swapSides, () => {
+    for (const shot of shots.value) {
+      shot.unitOverrides = {}
+      shot.tilePicks = {}
+    }
+  })
 
   // Formation shots dropped before any result shot are imported alone, and
   // no result shot joins them until they are removed: a formation panel shows
