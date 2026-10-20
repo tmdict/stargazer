@@ -2,12 +2,15 @@
 /* A replay frame's review: Stargazer's board drawn where the battle camera
    puts it on the paused frame, every tile numbered, each team's deployment
    tiles tinted and the blocked ones hatched (they should sit on the walls).
-   Tapping a deployment tile picks which of that team's units started there,
-   from the lineup the map's result screenshot named; or a tile number typed
-   beside a unit in the lists places it, Enter moving on to the next. Heroes
-   may have moved before the pause, so the tile is the reviewer's call. The
-   "As placed" board under the lists shows the sides as the plan will place
-   them. Every pick is an edit on the shot; nothing here touches a board. */
+   A click on a free deployment tile places that side's next unit there: the
+   one chosen in the lists, else the first hero of the map's result
+   screenshot without a tile. A click on a placed unit, or with nothing to
+   place, opens a picker of the side's units instead; a tile number typed
+   beside a unit in the lists places it too, Enter moving on to the next.
+   Heroes may have moved before the pause, so the tile is the reviewer's
+   call. The "As placed" board beside the frame shows the sides as the plan
+   will place them. Every pick is an edit on the shot; nothing here touches a
+   board. */
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -46,6 +49,10 @@ type TileKind = 'ally' | 'enemy' | 'blocked' | 'neutral'
 // The frame shows each team on the half it fought from, so a deployment
 // tile's kind is its board side whether or not the match's sides are swapped.
 const KIND_SIDE: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Team.ENEMY }
+
+// A placed unit's portrait spans this share of its tile's width, small
+// enough to leave the units standing around it readable on the frame.
+const MARK = 0.2
 
 const tileKinds = computed(() => {
   const kinds = new Map<number, TileKind>()
@@ -124,6 +131,49 @@ const view = computed(() => {
 const tileOf = (side: Team, unitId: number): number | null =>
   [...picks.value[side]].find(([, id]) => id === unitId)?.[0] ?? null
 
+// ---------- placing ----------
+
+// Per side, a unit chosen in the lists to place next, or null after the
+// reviewer stops placing; absent, the first hero without a tile goes next.
+const chosen = ref<Partial<Record<Team, number | null>>>({})
+
+const nextFor = (side: Team): number | null => {
+  const choice = chosen.value[side]
+  if (choice === null) return null
+  if (choice !== undefined && sides[side].options.includes(choice)) return choice
+  return sides[side].heroes.find((unitId) => tileOf(side, unitId) === null) ?? null
+}
+const nextUnits = computed((): Record<Team, number | null> => ({
+  [Team.ALLY]: nextFor(Team.ALLY),
+  [Team.ENEMY]: nextFor(Team.ENEMY),
+}))
+
+// Choosing the unit already next stops placing, so tile clicks open the picker.
+const choose = (side: Team, unitId: number): void => {
+  chosen.value = { ...chosen.value, [side]: nextUnits.value[side] === unitId ? null : unitId }
+}
+
+const clickTile = (tile: TileView): void => {
+  const side = tile.side
+  const next = side !== null && tile.unitId === null ? nextUnits.value[side] : null
+  if (side === null || next === null) {
+    openPicker(tile)
+    return
+  }
+  picker.value = null
+  emit('setPick', shot.id, side, tile.id, next)
+  chosen.value = { ...chosen.value, [side]: undefined }
+}
+
+// The free tile under the pointer previews the unit a click would place.
+const hoveredTile = ref<number | null>(null)
+const preview = computed(() => {
+  const tile = view.value?.tiles.find((t) => t.id === hoveredTile.value)
+  if (!tile || tile.side === null || tile.unitId !== null || picker.value) return null
+  const unitId = nextUnits.value[tile.side]
+  return unitId === null ? null : { tile, unitId }
+})
+
 // ---------- picking ----------
 
 interface Picker {
@@ -164,13 +214,17 @@ const openPicker = (tile: TileView): void => {
         }
 }
 
+// The side's heroes in a row of portraits, the rest it can field (companions,
+// phantimals) as small icons under them, so the picker never scrolls.
 const pickerItems = computed(() => {
   const target = picker.value
-  if (!target) return []
-  return sides[target.side].options.map((unitId) => ({
-    unitId,
-    tile: tileOf(target.side, unitId),
-  }))
+  if (!target) return { heroes: [], extras: [] }
+  const { heroes, options } = sides[target.side]
+  const item = (unitId: number) => ({ unitId, tile: tileOf(target.side, unitId) })
+  return {
+    heroes: heroes.map(item),
+    extras: options.filter((unitId) => !heroes.includes(unitId)).map(item),
+  }
 })
 
 const pickedHere = computed(() => {
@@ -280,7 +334,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
               <line x1="0" y1="0" x2="0" y2="12" class="hatch-line" />
             </pattern>
             <clipPath v-for="tile in view.tiles" :id="`clip-${shot.id}-${tile.id}`" :key="tile.id">
-              <circle :cx="tile.x" :cy="tile.y" :r="tile.width * 0.3" />
+              <circle :cx="tile.x" :cy="tile.y" :r="tile.width * MARK" />
             </clipPath>
           </defs>
           <image :href="shot.thumb" x="0" y="0" :width="view.width" :height="view.height" />
@@ -298,16 +352,18 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
               :aria-label="
                 tile.side === null ? undefined : i18n.t('app.import-tile', { tile: tile.id })
               "
-              @click.stop="openPicker(tile)"
-              @keydown.enter.prevent="openPicker(tile)"
+              @click.stop="clickTile(tile)"
+              @keydown.enter.prevent="clickTile(tile)"
+              @mouseenter="hoveredTile = tile.id"
+              @mouseleave="hoveredTile = null"
             />
             <template v-if="tile.unitId !== null">
               <image
                 :href="unitImage(tile.unitId)"
-                :x="tile.x - tile.width * 0.3"
-                :y="tile.y - tile.width * 0.3"
-                :width="tile.width * 0.6"
-                :height="tile.width * 0.6"
+                :x="tile.x - tile.width * MARK"
+                :y="tile.y - tile.width * MARK"
+                :width="tile.width * MARK * 2"
+                :height="tile.width * MARK * 2"
                 :clip-path="`url(#clip-${shot.id}-${tile.id})`"
                 class="tile-unit"
               />
@@ -316,14 +372,14 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
                 :class="{ pointed: isPointed(tile) }"
                 :cx="tile.x"
                 :cy="tile.y"
-                :r="tile.width * 0.3"
-                :stroke-width="tile.width * (isPointed(tile) ? 0.07 : 0.035)"
+                :r="tile.width * MARK"
+                :stroke-width="tile.width * (isPointed(tile) ? 0.05 : 0.025)"
               />
             </template>
             <text
               class="tile-number"
               :x="tile.x"
-              :y="tile.unitId === null ? tile.y : tile.y + tile.width * 0.38"
+              :y="tile.unitId === null ? tile.y : tile.y + tile.width * (MARK + 0.12)"
               :font-size="tile.width * 0.2"
               :stroke-width="tile.width * 0.06"
               text-anchor="middle"
@@ -332,30 +388,65 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
               {{ tile.id }}
             </text>
           </g>
+          <g v-if="preview" class="tile-preview">
+            <image
+              :href="unitImage(preview.unitId)"
+              :x="preview.tile.x - preview.tile.width * MARK"
+              :y="preview.tile.y - preview.tile.width * MARK"
+              :width="preview.tile.width * MARK * 2"
+              :height="preview.tile.width * MARK * 2"
+              :clip-path="`url(#clip-${shot.id}-${preview.tile.id})`"
+            />
+            <circle
+              class="preview-ring"
+              :cx="preview.tile.x"
+              :cy="preview.tile.y"
+              :r="preview.tile.width * MARK"
+              :stroke-width="preview.tile.width * 0.03"
+              :stroke-dasharray="`${preview.tile.width * 0.06} ${preview.tile.width * 0.045}`"
+            />
+          </g>
         </svg>
         <div
           v-if="picker"
           class="picker"
-          :style="{ left: `${picker.left * 100}%`, top: `${picker.top * 100}%` }"
+          :style="{ '--tile-x': `${picker.left * 100}%`, top: `${picker.top * 100}%` }"
           role="menu"
           :aria-label="i18n.t('app.import-tile', { tile: picker.hexId })"
         >
           <span class="picker-head">{{ i18n.t('app.import-tile', { tile: picker.hexId }) }}</span>
-          <button
-            v-for="item in pickerItems"
-            :key="item.unitId"
-            type="button"
-            class="picker-item"
-            :class="{ on: item.unitId === pickedHere }"
-            role="menuitem"
-            @click.stop="pick(item.unitId)"
-          >
-            <img class="picker-portrait" :src="unitImage(item.unitId)" alt="" />
-            <span class="picker-name">{{ unitName(item.unitId) }}</span>
-            <span v-if="item.tile !== null && item.tile !== picker.hexId" class="picker-tile">
-              {{ item.tile }}
-            </span>
-          </button>
+          <div class="picker-heroes">
+            <button
+              v-for="item in pickerItems.heroes"
+              :key="item.unitId"
+              type="button"
+              class="picker-item hero"
+              :class="{ on: item.unitId === pickedHere }"
+              role="menuitem"
+              @click.stop="pick(item.unitId)"
+            >
+              <img class="picker-portrait" :src="unitImage(item.unitId)" alt="" />
+              <span class="picker-name">{{ unitName(item.unitId) }}</span>
+              <span v-if="item.tile !== null && item.tile !== picker.hexId" class="picker-tile">
+                {{ item.tile }}
+              </span>
+            </button>
+          </div>
+          <div v-if="pickerItems.extras.length" class="picker-extras">
+            <button
+              v-for="item in pickerItems.extras"
+              :key="item.unitId"
+              type="button"
+              class="picker-item extra"
+              :class="{ on: item.unitId === pickedHere }"
+              role="menuitem"
+              :title="unitName(item.unitId)"
+              :aria-label="unitName(item.unitId)"
+              @click.stop="pick(item.unitId)"
+            >
+              <img class="picker-portrait" :src="unitImage(item.unitId)" alt="" />
+            </button>
+          </div>
           <button
             v-if="pickedHere !== null"
             type="button"
@@ -368,6 +459,8 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
         </div>
       </div>
       <p v-else class="note">{{ i18n.t('app.import-no-arena') }}</p>
+
+      <TeamImportPlaced v-if="view && placed && mapKey" :map-key :sides="placed" :pointed />
 
       <div v-if="view" ref="lineupsEl" class="lineups">
         <div
@@ -383,12 +476,22 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
             <li
               v-for="unit in [...lineup.heroes, ...lineup.others]"
               :key="unit.unitId"
-              :class="{ missing: unit.tile === null }"
+              :class="{ missing: unit.tile === null, next: nextUnits[lineup.side] === unit.unitId }"
               @mouseenter="pointed = { team: lineup.side, unitId: unit.unitId }"
               @mouseleave="pointed = null"
             >
-              <img class="lineup-portrait" :src="unitImage(unit.unitId)" alt="" />
-              <span class="lineup-name">{{ unitName(unit.unitId) }}</span>
+              <button
+                type="button"
+                class="lineup-pick"
+                :aria-pressed="nextUnits[lineup.side] === unit.unitId"
+                @click="choose(lineup.side, unit.unitId)"
+              >
+                <img class="lineup-portrait" :src="unitImage(unit.unitId)" alt="" />
+                <span class="lineup-name">{{ unitName(unit.unitId) }}</span>
+                <span v-if="nextUnits[lineup.side] === unit.unitId" class="lineup-next">
+                  {{ i18n.t('app.next') }}
+                </span>
+              </button>
               <input
                 class="lineup-tile"
                 type="text"
@@ -405,7 +508,6 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
           </ul>
         </div>
         <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
-        <TeamImportPlaced v-if="placed && mapKey" :map-key :sides="placed" :pointed />
       </div>
     </div>
   </div>
@@ -426,7 +528,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
 
 .replay-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: var(--spacing-md);
   align-items: start;
 }
@@ -500,6 +602,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
 }
 
 .tile-unit {
+  opacity: 0.85;
   pointer-events: none;
 }
 
@@ -507,6 +610,16 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
   fill: none;
   stroke: #fff;
   pointer-events: none;
+}
+
+.tile-preview {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.preview-ring {
+  fill: none;
+  stroke: #fff;
 }
 
 .tile-ring.pointed {
@@ -523,16 +636,15 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
 }
 
 .picker {
+  --picker-half: 162px;
   position: absolute;
   z-index: 2;
+  left: clamp(var(--picker-half), var(--tile-x), calc(100% - var(--picker-half)));
   transform: translate(-50%, 12px);
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 190px;
-  max-height: 280px;
-  overflow-y: auto;
-  padding: 6px;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid var(--import-border-strong);
   border-radius: var(--radius-medium);
   background: rgba(20, 22, 28, 0.96);
@@ -576,6 +688,54 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
   color: var(--import-bad);
 }
 
+.picker-heroes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: calc(5 * 58px + 4 * 4px);
+}
+
+.picker-item.hero {
+  position: relative;
+  flex-direction: column;
+  gap: 3px;
+  width: 58px;
+  padding: 5px 2px;
+}
+
+.picker-item.hero .picker-portrait {
+  width: 40px;
+  height: 40px;
+}
+
+.picker-item.hero .picker-name {
+  max-width: 100%;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.picker-item.hero .picker-tile {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  padding: 0 4px;
+  border-radius: var(--radius-small);
+  background: var(--import-surface-hover);
+  color: var(--import-text);
+}
+
+.picker-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--import-border);
+}
+
+.picker-item.extra {
+  padding: 3px;
+}
+
 .picker-portrait,
 .lineup-portrait {
   width: 24px;
@@ -602,10 +762,17 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
 }
 
 .lineups {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm) var(--spacing-lg);
   min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .lineups {
+    grid-column: auto;
+  }
 }
 
 .lineup-head {
@@ -646,8 +813,48 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
   font-size: 0.8rem;
 }
 
-.lineup-units li:hover {
+.lineup-units li:hover,
+.lineup-units li.next {
   background: var(--import-surface);
+}
+
+.lineup.left li.next {
+  box-shadow: inset 3px 0 0 var(--import-left);
+}
+
+.lineup.right li.next {
+  box-shadow: inset 3px 0 0 var(--import-right);
+}
+
+.lineup-pick {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lineup-next {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-medium);
+  font-size: 0.62rem;
+  color: #fff;
+}
+
+.lineup.left .lineup-next {
+  background: var(--import-left);
+}
+
+.lineup.right .lineup-next {
+  background: var(--import-right);
 }
 
 .lineup-tile {
@@ -674,6 +881,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
 }
 
 .type-error {
+  grid-column: 1 / -1;
   margin: 0;
   font-size: 0.75rem;
   color: var(--import-bad);

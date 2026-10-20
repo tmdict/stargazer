@@ -18,8 +18,16 @@ vi.mock('@/stores/gameData', () => ({
   }),
 }))
 
-const deploymentTile = (type: State): number =>
-  MAPS[DEFAULT_MAP_KEY]!.grid.find((entry) => entry.type === type)!.hex[0]!
+const deploymentTiles = (type: State): number[] =>
+  MAPS[DEFAULT_MAP_KEY]!.grid.filter((entry) => entry.type === type).flatMap((entry) => entry.hex)
+const deploymentTile = (type: State): number => deploymentTiles(type)[0]!
+
+const clickTile = async (hexId: number): Promise<void> => {
+  document
+    .querySelector(`polygon[aria-label="Tile ${hexId}"]`)!
+    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  await nextTick()
+}
 
 let teardown: (() => void) | undefined
 
@@ -123,6 +131,31 @@ describe('typing a replay tile', () => {
   })
 })
 
+describe('a tile click', () => {
+  it("places each side's next hero, a chosen one first, and opens the picker with none left", async () => {
+    const { picks } = await mountReplay()
+    const [a0, a1, a2, a3] = deploymentTiles(State.AVAILABLE_ALLY)
+    const enemy = deploymentTile(State.AVAILABLE_ENEMY)
+    const allyRows = () => [...document.querySelectorAll<HTMLElement>('.lineup.left .lineup-pick')]
+
+    await clickTile(a0!)
+    await clickTile(enemy)
+    expect(picks()).toEqual({ 1: { [a0!]: 5 }, 2: { [enemy]: 7 } })
+
+    // A hero chosen in the list goes next, even one already placed.
+    allyRows()[0]!.click()
+    await nextTick()
+    await clickTile(a1!)
+    expect(picks()[1]).toEqual({ [a1!]: 5 })
+
+    await clickTile(a2!)
+    expect(picks()[1]).toEqual({ [a1!]: 5, [a2!]: 6 })
+    await clickTile(a3!)
+    expect(picks()[1]).toEqual({ [a1!]: 5, [a2!]: 6 })
+    expect(document.querySelector('.picker')).not.toBeNull()
+  })
+})
+
 describe('the tile picker', () => {
   it('closes on Escape without the key reaching the modal, and on a click on the frame', async () => {
     await mountReplay()
@@ -130,11 +163,11 @@ describe('the tile picker', () => {
     const modal = (event: KeyboardEvent) => modalHeard.push(event.key)
     document.addEventListener('keydown', modal)
     const ally = deploymentTile(State.AVAILABLE_ALLY)
+    // Choosing the highlighted hero again stops placing, so a click opens the picker.
+    document.querySelector<HTMLElement>('.lineup.left li.next .lineup-pick')!.click()
+    await nextTick()
     const open = async () => {
-      document
-        .querySelector(`polygon[aria-label="Tile ${ally}"]`)!
-        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
-      await nextTick()
+      await clickTile(ally)
       expect(document.querySelector('.picker')).not.toBeNull()
     }
 
