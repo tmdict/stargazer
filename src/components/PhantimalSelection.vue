@@ -99,8 +99,8 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
     characterStore.removeCharacterFromHex(hex)
     return
   }
-  // Standing nowhere with every side taken, it replaces the phantimal of the
-  // first side it can join.
+  // Standing nowhere with no side open, it replaces the phantimal of the first
+  // side it can join.
   for (const team of fillOrder) {
     if (characterStore.autoPlacePhantimal(id, team)) break
   }

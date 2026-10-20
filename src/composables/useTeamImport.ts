@@ -784,8 +784,9 @@ export function useTeamImport(
     if (said !== null) swapSides.value = said
   })
   // A swap gives every formation shot the other column's lineup, so the
-  // portrait corrections made against the old one start over. Replay picks
-  // stay, as tiles of the frame (see TeamImportReplay).
+  // portrait corrections made against the old one start over. Tile picks
+  // stay, as tiles of the screenshot, and count again for the lineup they
+  // were made for once swapped back.
   watch(swapSides, () => {
     for (const shot of shots.value) shot.unitOverrides = {}
   })

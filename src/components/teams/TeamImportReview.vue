@@ -31,8 +31,13 @@ import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import { isFormationReading, type HeroReading } from '@/lib/import/types'
-import { MAPS } from '@/lib/maps'
-import { pickableUnit, placingOrder, type UnitAssignment } from '@/lib/teams/formationImport'
+import { deploymentTiles } from '@/lib/maps'
+import {
+  pickableUnit,
+  placedPicks,
+  placingOrder,
+  type UnitAssignment,
+} from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
@@ -46,7 +51,6 @@ import {
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import { State } from '@/lib/types/state'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -327,26 +331,32 @@ const shotTiles = computed(() => {
   const placed = units?.placed
   const reading = shot.reading
   if (!placed || !reading || !isFormationReading(reading)) return null
-  const state = placed.team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-  const deploy = new Set(
-    (MAPS[placed.mapKey]?.grid ?? []).filter((g) => g.type === state).flatMap((g) => g.hex),
-  )
-  return { team: placed.team, deploy, shown: new Set(reading.units.map((u) => u.hexId)) }
+  return {
+    team: placed.team,
+    deploy: deploymentTiles(placed.mapKey, placed.team),
+    shown: new Set(reading.units.map((u) => u.hexId)),
+  }
 })
 
-/* The units the screenshot misses, placed like a replay frame's: the
- * lineup's heroes no portrait is taken for, their companions and those of
- * the phantimal fielded, each on a tile picked for it. */
+/* The units the screenshot misses, placed like a replay frame's: the units
+ * of the side's placing order no portrait is taken for (heroes, companions,
+ * and the phantimal and its companions once fielded), each on a tile picked
+ * for it. */
 const missing = computed((): PlacingSide | null => {
   const tiles = shotTiles.value
   const placed = units?.placed
-  if (!units || !placed || !tiles) return null
+  const reading = shot.reading
+  if (!units || !placed || !tiles || !reading || !isFormationReading(reading)) return null
   const shown = units.assignments.map((a) => a.unitId)
   const options = units.options.filter((unitId) => pickableUnit(unitId, shown))
+  const portraits = reading.units.map((unit, i) => ({
+    unitId: shown[i] ?? null,
+    hexId: unit.hexId,
+  }))
   const picks = new Map(
-    Object.entries(shot.tilePicks[tiles.team] ?? {})
-      .map(([hexId, unitId]) => [Number(hexId), unitId] as const)
-      .filter(([hexId, unitId]) => !tiles.shown.has(hexId) && options.includes(unitId)),
+    placedPicks(shot.tilePicks[tiles.team] ?? {}, portraits)
+      .filter(({ unitId }) => options.includes(unitId))
+      .map(({ hexId, unitId }) => [hexId, unitId] as const),
   )
   const lineup = placed.side.mains.map((unit) => unit.unitId)
   const order = placingOrder(lineup, [

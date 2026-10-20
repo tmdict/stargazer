@@ -92,6 +92,15 @@ export function useTilePlacing(config: {
     chosen.value = { ...chosen.value, [side]: nextUnits.value[side] === unitId ? null : unitId }
   }
 
+  // Placing the chosen unit, however it is placed, uses the choice up, so the
+  // order goes on from there.
+  const place = (side: Team, hexId: number, unitId: number | null): void => {
+    config.setPick(side, hexId, unitId)
+    if (unitId !== null && chosen.value[side] === unitId) {
+      chosen.value = { ...chosen.value, [side]: undefined }
+    }
+  }
+
   const picker = ref<TilePicker | null>(null)
 
   // Escape closes only the picker: heard on capture, before the modal's own
@@ -112,8 +121,7 @@ export function useTilePlacing(config: {
       return
     }
     picker.value = null
-    config.setPick(target.side, target.hexId, next)
-    chosen.value = { ...chosen.value, [target.side]: undefined }
+    place(target.side, target.hexId, next)
   }
 
   const hovered = ref<{ side: Team; hexId: number } | null>(null)
@@ -143,7 +151,7 @@ export function useTilePlacing(config: {
   const pick = (unitId: number | null): void => {
     const target = picker.value
     if (!target) return
-    config.setPick(target.side, target.hexId, unitId)
+    place(target.side, target.hexId, unitId)
     picker.value = null
   }
 
@@ -168,14 +176,14 @@ export function useTilePlacing(config: {
     const current = tileOf(side, unitId)
     if (text === '') {
       typeError.value = null
-      if (current !== null) config.setPick(side, current, null)
+      if (current !== null) place(side, current, null)
       return true
     }
     const hexId = Number(text)
     const refused = config.refusal(side, hexId, text)
     if (refused === null) {
       typeError.value = null
-      if (hexId !== current) config.setPick(side, hexId, unitId)
+      if (hexId !== current) place(side, hexId, unitId)
       return true
     }
     typeError.value = refused

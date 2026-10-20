@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /* The unit picker an import review opens on a tile of its screenshot: the
    side's heroes as a row of portraits over the rest, and a Clear tile while
-   the tile holds a unit. Placed in a positioned box around the drawn board. */
+   the tile holds a unit. Placed in a positioned box around the drawn board; a
+   click inside it stops there, so a review closing it on clicks elsewhere
+   leaves it open. */
 
 import type { PickerItem, TilePicker } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
@@ -25,6 +27,7 @@ const { unitName, unitImage } = useUnitLabels()
     :style="{ '--tile-x': `${picker.left * 100}%`, top: `${picker.top * 100}%` }"
     role="menu"
     :aria-label="i18n.t('app.import-tile', { tile: picker.hexId })"
+    @click.stop
   >
     <span class="picker-head">{{ i18n.t('app.import-tile', { tile: picker.hexId }) }}</span>
     <div class="picker-heroes">
