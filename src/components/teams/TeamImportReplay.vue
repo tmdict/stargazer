@@ -3,9 +3,10 @@
    puts it on the paused frame, every tile numbered, each team's deployment
    tiles tinted and the blocked ones hatched (they should sit on the walls).
    A click on a free deployment tile places that side's next unit there: the
-   one chosen in the lists, else the first hero of the map's result
-   screenshot without a tile. A click on a placed unit, or with nothing to
-   place, opens a picker of the side's units instead; a tile number typed
+   one chosen in the lists, else the first one without a tile, going through
+   the heroes of the map's result screenshot with each hero's companions
+   after it. A click on a placed unit, or with nothing to place, opens a
+   picker of the side's units instead; a tile number typed
    beside a unit in the lists places it too, Enter moving on to the next.
    Heroes may have moved before the pause, so the tile is the reviewer's
    call. The "As placed" board beside the frame shows the sides as the plan
@@ -17,6 +18,8 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
+import { companionIdsOf } from '@/lib/characters/companion'
+import { isPhantimalId } from '@/lib/characters/phantimal'
 import { BOARD_HEXES } from '@/lib/import/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/replay'
 import { isReplayReading } from '@/lib/import/types'
@@ -133,15 +136,29 @@ const tileOf = (side: Team, unitId: number): number | null =>
 
 // ---------- placing ----------
 
+// The units a side places in turn: each hero, then its companions, and last
+// the companions of the phantimal picked for it, which the frame shows too.
+const placingOrder = (side: Team): number[] => {
+  const phantimal = [...picks.value[side].values()].find(isPhantimalId)
+  return [...sides[side].heroes, ...(phantimal === undefined ? [] : [phantimal])].flatMap(
+    (unitId) => [unitId, ...companionIdsOf(unitId)],
+  )
+}
+const orders = computed((): Record<Team, number[]> => ({
+  [Team.ALLY]: placingOrder(Team.ALLY),
+  [Team.ENEMY]: placingOrder(Team.ENEMY),
+}))
+
 // Per side, a unit chosen in the lists to place next, or null after the
-// reviewer stops placing; absent, the first hero without a tile goes next.
+// reviewer stops placing; absent, the first unit of its order without a tile
+// goes next.
 const chosen = ref<Partial<Record<Team, number | null>>>({})
 
 const nextFor = (side: Team): number | null => {
   const choice = chosen.value[side]
   if (choice === null) return null
   if (choice !== undefined && sides[side].options.includes(choice)) return choice
-  return sides[side].heroes.find((unitId) => tileOf(side, unitId) === null) ?? null
+  return orders.value[side].find((unitId) => tileOf(side, unitId) === null) ?? null
 }
 const nextUnits = computed((): Record<Team, number | null> => ({
   [Team.ALLY]: nextFor(Team.ALLY),
@@ -240,14 +257,13 @@ const pick = (unitId: number | null): void => {
 
 const lineups = computed(() =>
   SIDES.map((side) => {
-    const heroes = sides[side].heroes
+    const order = orders.value[side]
     const others = [...picks.value[side]]
-      .filter(([, unitId]) => !heroes.includes(unitId))
+      .filter(([, unitId]) => !order.includes(unitId))
       .map(([tile, unitId]) => ({ unitId, tile }))
     return {
       side,
-      heroes: heroes.map((unitId) => ({ unitId, tile: tileOf(side, unitId) })),
-      others,
+      units: [...order.map((unitId) => ({ unitId, tile: tileOf(side, unitId) })), ...others],
     }
   }),
 )
@@ -471,7 +487,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
           </div>
           <ul class="lineup-units">
             <li
-              v-for="unit in [...lineup.heroes, ...lineup.others]"
+              v-for="unit in lineup.units"
               :key="unit.unitId"
               :class="{ missing: unit.tile === null, next: nextUnits[lineup.side] === unit.unitId }"
               @mouseenter="pointed = { team: lineup.side, unitId: unit.unitId }"
@@ -637,6 +653,8 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
   position: absolute;
   z-index: 2;
   left: clamp(var(--picker-half), var(--tile-x), calc(100% - var(--picker-half)));
+  width: max-content;
+  max-width: calc(2 * var(--picker-half));
   transform: translate(-50%, 12px);
   display: flex;
   flex-direction: column;
@@ -700,7 +718,7 @@ const typeTileAndNext = (side: Team, unitId: number, event: KeyboardEvent): void
   padding: 5px 2px;
 }
 
-.picker-item.hero .picker-portrait {
+.picker-item .picker-portrait {
   width: 40px;
   height: 40px;
 }
