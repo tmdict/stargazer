@@ -187,8 +187,8 @@ async function main(): Promise<void> {
       unitOverrides: {},
     }))
     // Swap sides as the import sets it.
-    const told = formationsSwapped(results, assignments)
-    const swapSides = told ?? hasFlag('swap-sides')
+    const formationSwap = formationsSwapped(results, assignments)
+    const swapSides = formationSwap ?? hasFlag('swap-sides')
     const plan = buildTeamImportPlan(
       results,
       mode,
@@ -201,7 +201,7 @@ async function main(): Promise<void> {
     )
     if (resultFiles.length > 0) {
       console.log(
-        `sides ${swapSides ? 'swapped' : 'as the result tabs list them'}, ${told !== null ? 'from the formation shots' : 'as --swap-sides says'}`,
+        `sides ${swapSides ? 'swapped' : 'as the result tabs list them'}, ${formationSwap !== null ? 'from the formation shots' : 'as --swap-sides says'}`,
       )
     }
     for (const issue of plan.issues) console.log(`plan issue: ${JSON.stringify(issue)}`)

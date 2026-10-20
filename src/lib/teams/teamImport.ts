@@ -306,15 +306,12 @@ function columnLineup(
   return entries
 }
 
-/* Whether a match's sides are swapped, as its formation shots show; the
- * import sets Swap sides from it. A shot stands its team on the half it
- * fought from, and its portraits are one result column's heroes. Each
- * portrait read surely as a hero counts for a swap when only the column
- * across the board from its half holds that hero, and against one when only
- * its own half's column does; the match goes the way more portraits count, so
- * a shot mapped to the wrong board, which can match a lineup only by chance,
- * weighs little. Null when they go neither way, as with no formation shot of
- * a map with a result shot, or lineups too alike to tell. */
+/* Whether a match's sides are swapped, as its formation shots show; null when
+ * they cannot tell. A shot stands its team on the half it fought from, so a
+ * portrait read surely as a hero counts for a swap when only the result
+ * column across the board holds that hero, and against one when only its own
+ * half's column does. Every portrait counts, so a shot mapped to the wrong
+ * board, which matches a lineup only by chance, weighs little. */
 export function formationsSwapped(
   shots: readonly ShotAssignment[],
   formations: readonly FormationAssignment[],
@@ -327,8 +324,7 @@ export function formationsSwapped(
     const own = columnIds(result.reading, reading.side, result.overrides)
     const across = columnIds(result.reading, getOpposingTeam(reading.side), result.overrides)
     for (const unit of reading.units) {
-      // A phantimal or companion portrait still has a weak best hero, which
-      // says nothing of the lineups.
+      // A phantimal or companion portrait still ranks some hero, weakly.
       const top = unit.candidates[0]
       if (!top || !isBaseHeroId(top.characterId) || top.score < SURE_SCORE) continue
       lean += Number(across.includes(top.characterId)) - Number(own.includes(top.characterId))
