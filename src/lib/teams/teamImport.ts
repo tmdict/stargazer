@@ -418,7 +418,7 @@ export function buildTeamImportPlan(
       continue
     }
     // Sides placed from what a screenshot shows keep the phantimal shown.
-    const shownSides: Team[] = SIDES.filter((side) => board[side] !== undefined)
+    const shownSides: Team[] = []
     if (!result && !board[Team.ALLY] && !board[Team.ENEMY]) continue
     const sides: Partial<Record<Team, SideLoadBoard>> = {}
     for (const side of SIDES) {
@@ -485,6 +485,11 @@ export function buildTeamImportPlan(
       const placed = formationSide(seen, heroes, artifact)
       const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
       if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
+      // The formation panel cannot draw a hero the screenshotting account
+      // lacks, and can drop a phantimal whose faction count needed that hero,
+      // so a shot short of heroes and showing no phantimal leaves it to the
+      // lineup.
+      if (placed.phantimal !== null || missing === 0) shownSides.push(side)
       sides[side] = placed
     }
 

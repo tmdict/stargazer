@@ -355,6 +355,13 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
   })
 
+  it('leaves the phantimal to the lineup when a formation shot misses a hero and shows none', () => {
+    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
+      formationShot(Team.ALLY, [unit(1, 7)]),
+    ])
+    expect(plan.boards[0]!.formations).toEqual([])
+  })
+
   it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
     // The Enemy column's hero on the ally half: the viewing player fought from
     // the enemy half.
