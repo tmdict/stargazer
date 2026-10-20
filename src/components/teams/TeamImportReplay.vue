@@ -17,6 +17,7 @@
 import { computed, ref } from 'vue'
 
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
+import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
@@ -193,7 +194,12 @@ const previewTile = computed(() => {
 
 // ---------- lineups ----------
 
-const lineups = computed(() => SIDES.map((side) => ({ side, units: rows(side) })))
+const lineups = computed(() =>
+  SIDES.map((side) => {
+    const units = rows(side)
+    return { side, units, placed: units.filter((unit) => unit.tile !== null).length }
+  }),
+)
 
 // The unit pointed at or typed for in a list, ringed on its tile.
 const pointed = ref<{ team: Team; unitId: number } | null>(null)
@@ -326,6 +332,7 @@ const tileBoxes = (): HTMLInputElement[] => [
         >
           <div class="lineup-head">
             <span class="lineup-label">{{ i18n.t(teamLabelKey(lineup.side)) }}</span>
+            <TeamImportPlaceCount :placed="lineup.placed" :total="lineup.units.length" />
           </div>
           <ul class="lineup-units">
             <li
@@ -419,6 +426,7 @@ const tileBoxes = (): HTMLInputElement[] => [
 .tile.enemy {
   cursor: pointer;
   stroke-width: 2;
+  outline: none;
 }
 
 .tile.ally {
@@ -438,7 +446,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 .tile.active {
   stroke: #fff;
   stroke-width: 3;
-  outline: none;
 }
 
 .tile.blocked {
