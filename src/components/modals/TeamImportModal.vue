@@ -108,12 +108,10 @@ const matchImport = computed(() => resultShots.value.length > 0)
 
 // ---------- formation shots ----------
 
-// The board side a formation shot fills: the team it shows, across the board
-// when the match's sides are swapped.
-const formationSide = (shot: ImportShot): Team | null => {
-  const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
-  return side === null || !swapSides.value ? side : getOpposingTeam(side)
-}
+// The board side a formation shot fills: the team it shows, which fought from
+// that side whether or not the match's sides are swapped.
+const formationSide = (shot: ImportShot): Team | null =>
+  shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
 
 // In a match import, a formation shot or replay frame of a map with no result
 // shot places nothing.
@@ -460,8 +458,8 @@ const handleForgetLearned = (): void => {
         />
       </section>
 
-      <section v-if="shots.length" class="names">
-        <label v-if="matchImport" class="field">
+      <section v-if="matchImport" class="names">
+        <label class="field">
           <span class="field-label">{{ i18n.t('app.import-prefix') }}</span>
           <input
             v-model="names.prefix"
@@ -471,7 +469,7 @@ const handleForgetLearned = (): void => {
             maxlength="40"
           />
         </label>
-        <label v-if="matchImport" class="field">
+        <label class="field">
           <span class="field-label">{{ i18n.t('app.import-left-player') }}</span>
           <input
             v-model="names.left"
@@ -481,7 +479,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <label v-if="matchImport" class="field">
+        <label class="field">
           <span class="field-label">{{ i18n.t('app.import-right-player') }}</span>
           <input
             v-model="names.right"
@@ -491,7 +489,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <div class="field" :class="{ alone: !matchImport }">
+        <div class="field">
           <span class="field-label">{{ i18n.t('app.import-board-sides') }}</span>
           <button
             type="button"
@@ -504,7 +502,7 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-swap-sides') }}
           </button>
         </div>
-        <div v-if="matchImport" class="field wide">
+        <div class="field wide">
           <span id="import-record-name" class="field-label">{{
             i18n.t('app.import-record-name')
           }}</span>
@@ -690,10 +688,6 @@ const handleForgetLearned = (): void => {
 
 .field.wide {
   flex-basis: 100%;
-}
-
-.field.alone {
-  flex: 0 0 auto;
 }
 
 .field-label {

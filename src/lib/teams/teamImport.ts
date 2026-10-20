@@ -300,15 +300,16 @@ function columnLineup(
   return entries
 }
 
-/* `swapSides` puts every screenshot's Ally column on the enemy side of its
- * board and its Enemy column on the ally side, and every formation shot's and
- * replay frame's team on the other half, its tiles turned a half-turn. One
- * choice for the whole match rather than per screenshot: the game's Ally tab,
- * a formation shot's near team and a replay's lower-left team are the viewing
- * player, who keeps one side of the board for every map, and the boards hold a
- * hero once per side page-wide. Issues and the record name follow board sides
- * throughout. A replay frame places a side the way a formation shot does, from
- * the tiles picked on it, for a side no formation shot shows. */
+/* `swapSides` puts every result screenshot's Ally column on the enemy side of
+ * its board and its Enemy column on the ally side: the game's Ally tab is the
+ * viewing player whichever side they fought from. Formation shots and replay
+ * frames show the sides as fought, so their teams keep their own halves and
+ * tiles, and a swap only changes which column's lineup each of them takes. One
+ * choice for the whole match rather than per screenshot: a player keeps one
+ * side of the board for every map, and the boards hold a hero once per side
+ * page-wide. Issues and the record name follow board sides throughout. A
+ * replay frame places a side the way a formation shot does, from the tiles
+ * picked on it, for a side no formation shot shows. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
@@ -324,9 +325,9 @@ export function buildTeamImportPlan(
   const issues: PlanIssue[] = []
   const mapped = (mapIndex: number | null): mapIndex is number =>
     mapIndex !== null && mapIndex < boardCount
-  // The screenshot column that fills a board side.
+  // The result screenshot column that fills a board side.
   const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
-  // A column's board side: the swap is its own inverse.
+  // A result column's board side: the swap is its own inverse.
   const sideOf = columnOf
   // A formation shot without a board has nothing to place and says so on its card.
   const placeable = formations.filter((f) => f.reading.side !== null)
@@ -350,7 +351,7 @@ export function buildTeamImportPlan(
   const shown = new Map<number, Partial<Record<Team, FormationAssignment>>>()
   for (const formation of placeable) {
     if (!mapped(formation.mapIndex)) continue
-    const team = sideOf(formation.reading.side!)
+    const team = formation.reading.side!
     const board = shown.get(formation.mapIndex) ?? {}
     if (board[team]) {
       issues.push({ kind: 'duplicate-formation', team, mapIndex: formation.mapIndex })
@@ -407,7 +408,7 @@ export function buildTeamImportPlan(
         const seen: PlacedUnit[] = Object.entries(replay.picks[columnOf(side)] ?? {}).map(
           ([hexId, unitId]) => ({ unitId, hexId: Number(hexId) }),
         )
-        const placed = formationSide(seen, lineup ?? [], artifact, swapSides)
+        const placed = formationSide(seen, lineup ?? [], artifact)
         const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
         if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
         // A phantimal left unpicked comes from the lineup, as without a replay.
@@ -446,7 +447,7 @@ export function buildTeamImportPlan(
         unitId: assignments[i]?.unitId ?? null,
         hexId: unit.hexId,
       }))
-      const placed = formationSide(seen, heroes, artifact, swapSides)
+      const placed = formationSide(seen, heroes, artifact)
       const missing = placed.mains.filter((unit) => unit.hexId === undefined).length
       if (missing > 0) issues.push({ kind: 'unplaced', team: side, mapIndex, count: missing })
       sides[side] = placed

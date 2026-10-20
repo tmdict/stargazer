@@ -7,8 +7,7 @@
    beside a unit in the lists places it, Enter moving on to the next. Heroes
    may have moved before the pause, so the tile is the reviewer's call. The
    "As placed" board under the lists shows the sides as the plan will place
-   them, turned when the sides are swapped. Every pick is an edit on the
-   shot; nothing here touches a board. */
+   them. Every pick is an edit on the shot; nothing here touches a board. */
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -47,9 +46,13 @@ const { unitName, unitImage } = useUnitLabels()
 
 type TileKind = 'ally' | 'enemy' | 'blocked' | 'neutral'
 
-// A team's deployment tiles are its column's: the game draws the viewing
-// player, the Ally column, on the ally tiles.
-const KIND_COLUMN: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Team.ENEMY }
+// The screenshot column whose units start on a kind of deployment tile. The
+// frame shows the sides as fought, so the viewing player, the Ally column, is
+// on the ally tiles unless the match's sides are swapped.
+const columnOf = (kind: TileKind): Team | null => {
+  const team = kind === 'ally' ? Team.ALLY : kind === 'enemy' ? Team.ENEMY : null
+  return team === null || !swapSides ? team : getOpposingTeam(team)
+}
 
 const tileKinds = computed(() => {
   const kinds = new Map<number, TileKind>()
@@ -89,7 +92,7 @@ const view = computed(() => {
     const centre = replayHexCentre(placement, hex)
     const xs = corners.map((c) => c.x)
     const kind = tileKinds.value.get(id) ?? 'neutral'
-    const column = KIND_COLUMN[kind] ?? null
+    const column = columnOf(kind)
     return {
       id,
       points: corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' '),
@@ -227,7 +230,7 @@ const typeTile = (column: Team, unitId: number, input: HTMLInputElement): boolea
     return true
   }
   const hexId = Number(text)
-  if (Number.isInteger(hexId) && KIND_COLUMN[tileKinds.value.get(hexId) ?? 'neutral'] === column) {
+  if (Number.isInteger(hexId) && columnOf(tileKinds.value.get(hexId) ?? 'neutral') === column) {
     typeError.value = null
     if (hexId !== current) emit('setPick', shot.id, column, hexId, unitId)
     return true

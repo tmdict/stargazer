@@ -3,12 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/types'
-import {
-  assignUnits,
-  formationSide,
-  heroesFromUnits,
-  identifyMap,
-} from '@/lib/teams/formationImport'
+import { assignUnits, heroesFromUnits, identifyMap } from '@/lib/teams/formationImport'
 import { Team } from '@/lib/types/team'
 
 // Code-registered companion skills: Zanie's two turrets share an image of
@@ -116,25 +111,5 @@ describe('identifyMap', () => {
   it('names none when a unit stands off the map or a tile is missing', () => {
     expect(identifyMap(formation(Team.ALLY, [unit(30, {})]), ['arena1'])).toBeNull()
     expect(identifyMap(formation(Team.ALLY, [], ARENA1_ALLY.slice(1)), ['arena1'])).toBeNull()
-  })
-})
-
-describe('formationSide', () => {
-  it('turns every tile a half-turn for a team landing on the other half', () => {
-    const seen = [
-      { unitId: 11, hexId: 1 },
-      { unitId: 12, hexId: 16 },
-    ]
-    const heroes = [
-      { characterId: 11, attrs: {} },
-      { characterId: 12, attrs: {} },
-      { characterId: 13, attrs: {} },
-    ]
-    const side = formationSide(seen, heroes, null, true)
-    expect(side.mains.map((m) => [m.unitId, m.hexId])).toEqual([
-      [11, 45],
-      [12, 30],
-      [13, undefined],
-    ])
   })
 })
