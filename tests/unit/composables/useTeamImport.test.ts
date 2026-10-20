@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -159,7 +160,7 @@ describe('shot map and winner', () => {
 })
 
 describe('board sides', () => {
-  it('swaps every screenshot onto the opposite sides until the shots go', () => {
+  it("swaps the result screenshot's columns onto the opposite sides until the shots go", () => {
     const api = useTeamImport(
       () => '5v5',
       () => false,
@@ -172,6 +173,42 @@ describe('board sides', () => {
     expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     api.clearImport()
     expect(api.swapSides.value).toBe(false)
+  })
+
+  it('keeps the sides the formation shots settled once they stop telling', async () => {
+    const api = useTeamImport(
+      () => '5v5',
+      () => false,
+    )
+    const result = shot()
+    // The Ally column's hero on the enemy half: the match is swapped.
+    const formation: FormationReading = {
+      ...result.reading!,
+      size: { width: 640, height: 760 },
+      board: { scale: 46, x: 0, y: 0, support: 0.7 },
+      side: 2,
+      tiles: [],
+      unclear: [],
+      units: [
+        {
+          hexId: 40,
+          ring: { x: 0, y: 0, radius: 1 },
+          score: 1,
+          candidates: [{ characterId: 5, score: 0.9, learned: false, costume: false }],
+          card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+        },
+      ],
+    }
+    api.shots.value = [
+      result,
+      { ...shot(), id: 'formation', kind: 'formation', reading: formation },
+    ]
+    expect(api.plan.value.sidesFromFormations).toBe(true)
+    expect(api.plan.value.sidesSwapped).toBe(true)
+    await nextTick()
+    api.shots.value = [result]
+    expect(api.plan.value.sidesFromFormations).toBe(false)
+    expect(api.plan.value.sidesSwapped).toBe(true)
   })
 })
 

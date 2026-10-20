@@ -20,7 +20,8 @@
 //   --references read the frames, costume captures and seasonal icons from a local copy
 //                of the published img/ tree instead of the deployed image host
 //   --mode       the Teams mode whose map lists and board count apply (default 5v5)
-//   --swap-sides the match's Swap sides: each result shot's Ally column on the enemy side
+//   --swap-sides the match's Swap sides, each result shot's Ally column on the enemy side,
+//                for a match whose formation shots do not settle the sides
 
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
@@ -194,6 +195,11 @@ async function main(): Promise<void> {
     console.log(
       `references from ${source.label}; ${resultFiles.length} result and ${formationFiles.length} formation shots`,
     )
+    if (resultFiles.length > 0) {
+      console.log(
+        `sides ${plan.sidesSwapped ? 'swapped' : 'as the result tabs list them'}, ${plan.sidesFromFormations ? 'from the formation shots' : 'as --swap-sides says'}`,
+      )
+    }
     for (const issue of plan.issues) console.log(`plan issue: ${JSON.stringify(issue)}`)
 
     const tally: Record<string, number[]> = {}

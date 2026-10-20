@@ -14,8 +14,6 @@ import { useI18nStore } from '@/stores/i18n'
 const { sides, pointed } = defineProps<{
   mapKey: string
   sides: Partial<Record<Team, SideLoadBoard>>
-  // The team is a board side, so a swapped import passes the opposite of the
-  // screenshot column.
   pointed: { team: Team; unitId: number } | null
 }>()
 

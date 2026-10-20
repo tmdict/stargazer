@@ -354,18 +354,70 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
   })
 
-  it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
-    // Formations show the sides as fought: with the viewing player on the enemy
-    // half, the shot's ally team is the result's Enemy column.
-    const formations = [formationShot(Team.ALLY, [unit(1, 8)])]
-    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, formations)
-    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
+  it("takes the sides from the formation shots' portraits over the toggle", () => {
+    // The Enemy column's hero on the ally half: the viewing player fought from
+    // the enemy half, and the shot keeps its own half and tiles.
+    const swapped = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, [
+      formationShot(Team.ALLY, [unit(1, 8)]),
+    ])
+    expect(swapped.sidesSwapped).toBe(true)
+    expect(swapped.sidesFromFormations).toBe(true)
+    expect(swapped.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 8, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
     ])
-    expect(plan.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
-      { unitId: 7, attrs: { [ATTR_PARAGON]: 4 } },
+    expect(heroesOn(swapped, 0, Team.ENEMY)).toEqual([7])
+    expect(swapped.boards[0]!.formations).toEqual([Team.ALLY])
+
+    const kept = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, [
+      formationShot(Team.ENEMY, [unit(40, 8)]),
     ])
-    expect(plan.boards[0]!.formations).toEqual([Team.ALLY])
+    expect(kept.sidesSwapped).toBe(false)
+    expect(kept.boards[0]!.sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 8, hexId: 40, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+  })
+
+  it('counts only hero portraits, and weighs each shot by how many count', () => {
+    const wedge = toPhantimalId(1)
+    // A phantimal portrait whose weak best hero is the Enemy column's 8.
+    const phantimal = (hexId: number): UnitReading => ({
+      ...unit(hexId, wedge),
+      candidates: [
+        { characterId: wedge, score: 0.95, learned: false, costume: false },
+        { characterId: 8, score: 0.15, learned: false, costume: false },
+      ],
+    })
+    const kept = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, [
+      formationShot(Team.ALLY, [unit(1, 7), phantimal(3), phantimal(4)]),
+    ])
+    expect(kept.sidesFromFormations).toBe(true)
+    expect(kept.sidesSwapped).toBe(false)
+
+    // One portrait leaning to a swap against three that do not.
+    const weighed = buildTeamImportPlan(
+      [shot(0, reading([7], [8])), shot(1, reading([9, 10, 11], [12]))],
+      '5v5',
+      NAMES,
+      true,
+      [
+        formationShot(Team.ALLY, [unit(1, 8)]),
+        formationShot(Team.ALLY, [unit(1, 9), unit(2, 10), unit(3, 11)], [], 1),
+      ],
+    )
+    expect(weighed.sidesFromFormations).toBe(true)
+    expect(weighed.sidesSwapped).toBe(false)
+  })
+
+  it('leaves the sides to the toggle when the portraits fit both columns', () => {
+    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [7, 8]))], '5v5', NAMES, true, [
+      formationShot(Team.ALLY, [unit(1, 7)]),
+    ])
+    expect(plan.sidesFromFormations).toBe(false)
+    expect(plan.sidesSwapped).toBe(true)
+    expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
+      { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
+      { unitId: 8, hexId: undefined, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
   })
 
   it('leaves out a formation shot whose map has no result shot in a match import', () => {
@@ -462,20 +514,26 @@ describe('buildTeamImportPlan with replay frames', () => {
     expect(board.formations).toEqual([])
   })
 
-  it('keeps a picked phantimal and the picked tiles when the sides are swapped', () => {
+  it("keeps a swapped frame's picks on their tiles, for the heroes the swap puts there", () => {
     const phantimal = toPhantimalId(1)
-    // Swapped, the frame shows the Ally column's team on the enemy tiles.
+    // Swapped, the enemy half fields the Ally column's heroes, so the pick of
+    // the Enemy column's 8 there, made before the swap, places nothing.
     const plan = buildTeamImportPlan(
       [shot(0, reading([7], [8]))],
       '5v5',
       NAMES,
       true,
       [],
-      [{ mapIndex: 0, picks: { [Team.ALLY]: { 45: 7, 43: phantimal } } }],
+      [{ mapIndex: 0, picks: { [Team.ENEMY]: { 45: 7, 43: phantimal, 44: 8 } } }],
     )
-    const enemy = plan.boards[0]!.sides[Team.ENEMY]!
-    expect(enemy.mains).toEqual([{ unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } }])
-    expect(enemy.phantimal).toEqual({ unitId: phantimal, hexId: 43 })
+    const { sides } = plan.boards[0]!
+    expect(sides[Team.ENEMY]!.mains).toEqual([
+      { unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
+    expect(sides[Team.ENEMY]!.phantimal).toEqual({ unitId: phantimal, hexId: 43 })
+    expect(sides[Team.ALLY]!.mains).toEqual([
+      { unitId: 8, hexId: undefined, attrs: { [ATTR_PARAGON]: 4 } },
+    ])
     expect(plan.boards[0]!.formations).toEqual([Team.ENEMY])
   })
 
