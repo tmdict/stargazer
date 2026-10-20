@@ -5,9 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import { disposeTeamImport, useTeamImport } from '@/composables/useTeamImport'
+import { companionIdsOf } from '@/lib/characters/companion'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { ReplayReading } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
 vi.mock('@/stores/gameData', () => ({
@@ -15,6 +18,7 @@ vi.mock('@/stores/gameData', () => ({
     getCharacterNameById: () => undefined,
     getCharacterImageNameById: () => undefined,
     getCharacterImage: () => '',
+    getPhantimalUnitSlug: () => undefined,
   }),
 }))
 
@@ -37,7 +41,14 @@ afterEach(() => {
   disposeTeamImport()
 })
 
-const mountReplay = async () => {
+type Sides = Record<Team, { heroes: number[]; options: number[] }>
+
+const mountReplay = async (
+  sides: Sides = {
+    [Team.ALLY]: { heroes: [5, 6], options: [5, 6] },
+    [Team.ENEMY]: { heroes: [7], options: [7] },
+  },
+) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -83,7 +94,7 @@ const mountReplay = async () => {
       h(TeamImportReplay, {
         shot: api.shots.value[0]!,
         mapKey: DEFAULT_MAP_KEY,
-        sides: { 1: { heroes: [5, 6], options: [5, 6] }, 2: { heroes: [7], options: [7] } },
+        sides,
         placed: null,
         onSetPick: api.setTilePick,
       }),
@@ -95,7 +106,7 @@ const mountReplay = async () => {
     host.remove()
   }
   await nextTick()
-  return { picks: () => api.shots.value[0]!.tilePicks }
+  return { picks: () => api.shots.value[0]!.tilePicks, setPick: api.setTilePick }
 }
 
 const type = async (box: HTMLInputElement, text: string, event: Event): Promise<void> => {
@@ -153,6 +164,29 @@ describe('a tile click', () => {
     await clickTile(a3!)
     expect(picks()[1]).toEqual({ [a1!]: 5, [a2!]: 6 })
     expect(document.querySelector('.picker')).not.toBeNull()
+  })
+
+  it("places a hero's companions after it, and the picked phantimal's after the heroes", async () => {
+    const elijah = 68
+    const [lailah] = companionIdsOf(elijah)
+    const wedgeOfMatter = toPhantimalId(5)
+    const [wedgeOfPower] = companionIdsOf(wedgeOfMatter)
+    const { picks, setPick } = await mountReplay({
+      [Team.ALLY]: {
+        heroes: [elijah, 6],
+        options: [elijah, lailah!, 6, wedgeOfMatter, wedgeOfPower!],
+      },
+      [Team.ENEMY]: { heroes: [7], options: [7] },
+    })
+    const [a0, a1, a2, a3, a4] = deploymentTiles(State.AVAILABLE_ALLY)
+
+    for (const tile of [a0!, a1!, a2!]) await clickTile(tile)
+    expect(picks()[1]).toEqual({ [a0!]: elijah, [a1!]: lailah, [a2!]: 6 })
+
+    setPick('frame', Team.ALLY, a3!, wedgeOfMatter)
+    await nextTick()
+    await clickTile(a4!)
+    expect(picks()[1]).toMatchObject({ [a3!]: wedgeOfMatter, [a4!]: wedgeOfPower })
   })
 })
 
