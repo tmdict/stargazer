@@ -231,7 +231,7 @@ const formationReview = (shot: ImportShot): number => {
   )
 }
 
-// Keep a card selected while there are cards; a new drop selects its first shot.
+// Keep a card selected while there are cards.
 watch(
   shots,
   (list) => {
@@ -250,8 +250,12 @@ watch(
   { immediate: true },
 )
 
+// A drop or paste opens its first screenshot for review. The rest of the
+// batch, read after it, leaves the review on it.
 const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
-  const { added, refused } = await addFiles(files, kind)
+  const { added, refused } = await addFiles(files, kind, (id) => {
+    selectedId.value = id
+  })
   if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))
