@@ -19,7 +19,6 @@ import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { shotMapIndex, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
-import { getOpposingTeam } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
@@ -108,8 +107,8 @@ const matchImport = computed(() => resultShots.value.length > 0)
 
 // ---------- formation shots ----------
 
-// The board side a formation shot fills: the team it shows, which fought from
-// that side whether or not the match's sides are swapped.
+// The board side a formation shot fills: the half its team fought from, which
+// a swap of the match's sides leaves as it is.
 const formationSide = (shot: ImportShot): Team | null =>
   shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
 
@@ -141,7 +140,7 @@ const unitOptions = (shot: ImportShot): number[] =>
 
 // A formation shot's own cards give the lineup only when imported alone.
 const cardSides = (shot: ImportShot): Team[] => {
-  const side = shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
+  const side = formationSide(shot)
   return side === null || matchImport.value ? [] : [side]
 }
 
@@ -167,15 +166,15 @@ const boardMap = (mapIndex: number | null): string | null =>
     ? null
     : (plan.value.boards[mapIndex]?.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? null)
 
-// A replay frame's teams by screenshot column, each with the heroes its
-// board side takes from the map's result screenshot.
-const replayColumns = (shot: ImportShot): Record<Team, { heroes: number[]; options: number[] }> => {
+// A replay frame's board sides, each with the heroes the plan puts there from
+// the map's result screenshot.
+const replaySides = (shot: ImportShot): Record<Team, { heroes: number[]; options: number[] }> => {
   const mapIndex = shotMapIndex(shot, mapCount.value)
-  const column = (team: Team) => {
-    const heroes = boardHeroes(mapIndex, swapSides.value ? getOpposingTeam(team) : team)
+  const side = (team: Team) => {
+    const heroes = boardHeroes(mapIndex, team)
     return { heroes, options: fieldable(heroes) }
   }
-  return { [Team.ALLY]: column(Team.ALLY), [Team.ENEMY]: column(Team.ENEMY) }
+  return { [Team.ALLY]: side(Team.ALLY), [Team.ENEMY]: side(Team.ENEMY) }
 }
 
 const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | null => {
@@ -185,10 +184,10 @@ const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | n
 
 // Heroes not yet placed on a tile of their frame.
 const replayReview = (shot: ImportShot): number => {
-  const columns = replayColumns(shot)
-  return SIDES.reduce((n, column) => {
-    const picked = Object.values(shot.tilePicks[column] ?? {})
-    return n + columns[column].heroes.filter((id) => !picked.includes(id)).length
+  const sides = replaySides(shot)
+  return SIDES.reduce((n, side) => {
+    const picked = Object.values(shot.tilePicks[side] ?? {})
+    return n + sides[side].heroes.filter((id) => !picked.includes(id)).length
   }, 0)
 }
 
@@ -489,7 +488,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <div class="field">
+        <div v-if="!plan.sidesFromFormations" class="field">
           <span class="field-label">{{ i18n.t('app.import-board-sides') }}</span>
           <button
             type="button"
@@ -534,7 +533,7 @@ const handleForgetLearned = (): void => {
           :key="selected.id"
           :shot="selected"
           :names
-          :swap-sides
+          :swap-sides="plan.sidesSwapped"
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
@@ -544,8 +543,7 @@ const handleForgetLearned = (): void => {
           :key="`${selected.id}-replay`"
           :shot="selected"
           :map-key="boardMap(shotMapIndex(selected, mapCount))"
-          :columns="replayColumns(selected)"
-          :swap-sides
+          :sides="replaySides(selected)"
           :placed="placedSides(selected)"
           @set-pick="setTilePick"
         />
@@ -554,7 +552,7 @@ const handleForgetLearned = (): void => {
           :key="`${selected.id}-formation`"
           :shot="selected"
           :names
-          :swap-sides
+          :swap-sides="plan.sidesSwapped"
           :sides="cardSides(selected)"
           :units="{
             assignments: unitsOf(selected.id),

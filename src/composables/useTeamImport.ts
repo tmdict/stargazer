@@ -96,8 +96,8 @@ export interface ImportShot {
   // none), and its portraits as data URLs.
   unitOverrides: Record<number, number | null>
   unitCards: string[]
-  // A replay frame's picks: by screenshot column, the unit that started on
-  // each tile, by hex id.
+  // A replay frame's picks: by board side, the unit that started on each
+  // tile, by hex id.
   tilePicks: Partial<Record<Team, Record<number, number>>>
 }
 
@@ -121,8 +121,9 @@ const shots = ref<ImportShot[]>([])
 const referenceStatus = ref<ReferenceStatus>('idle')
 const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
 const names = reactive<RecordNames>(defaultNames())
-// Whether every result screenshot's columns land on the opposite board sides:
-// one choice per match (see buildTeamImportPlan), and not a reader correction.
+// Swap sides: whether every result screenshot's columns land on the opposite
+// board sides when the formation shots do not settle it. One choice per match
+// (see buildTeamImportPlan), and not a reader correction.
 const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.
@@ -573,7 +574,7 @@ export function useTeamImport(
   ) => void
   setArtifact: (id: string, team: Team, artifactId: number | null) => void
   setUnit: (id: string, index: number, unitId: number | null) => void
-  setTilePick: (id: string, column: Team, hexId: number, unitId: number | null) => void
+  setTilePick: (id: string, side: Team, hexId: number, unitId: number | null) => void
   saveNames: () => void
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
@@ -581,15 +582,6 @@ export function useTeamImport(
   loadStored()
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
-
-  // A swap gives every formation shot and replay frame the other column's
-  // lineup, so the units picked against the old one start over.
-  watch(swapSides, () => {
-    for (const shot of shots.value) {
-      shot.unitOverrides = {}
-      shot.tilePicks = {}
-    }
-  })
 
   // Formation shots dropped before any result shot are imported alone, and
   // no result shot joins them until they are removed: a formation panel shows
@@ -729,16 +721,16 @@ export function useTeamImport(
   }
 
   // A unit starts on one tile, so picking it for a tile takes it off any other.
-  const setTilePick = (id: string, column: Team, hexId: number, unitId: number | null): void => {
+  const setTilePick = (id: string, side: Team, hexId: number, unitId: number | null): void => {
     const shot = findShot(id)
     if (!shot) return
     const picks = Object.fromEntries(
-      Object.entries(shot.tilePicks[column] ?? {}).filter(
+      Object.entries(shot.tilePicks[side] ?? {}).filter(
         ([hex, picked]) => Number(hex) !== hexId && picked !== unitId,
       ),
     )
     if (unitId !== null) picks[hexId] = unitId
-    shot.tilePicks = { ...shot.tilePicks, [column]: picks }
+    shot.tilePicks = { ...shot.tilePicks, [side]: picks }
   }
 
   const forgetLearned = (): void => {
@@ -798,6 +790,19 @@ export function useTeamImport(
       match,
     )
   })
+
+  // A change of sides gives every formation shot the other column's lineup, so
+  // the portrait corrections made against the old one start over. Replay picks
+  // stay, as tiles of the frame (see TeamImportReplay). While the formation
+  // shots settle the sides the hidden toggle follows them, so a shot removed
+  // or an edit that leaves them tied keeps the sides as they were.
+  watch(
+    () => plan.value.sidesSwapped,
+    (swapped) => {
+      for (const shot of shots.value) shot.unitOverrides = {}
+      if (plan.value.sidesFromFormations) swapSides.value = swapped
+    },
+  )
 
   // Who each unit of a formation shot is taken for, from the plan.
   const unitsOf = (id: string): TeamImportPlan['units'][number] => {
