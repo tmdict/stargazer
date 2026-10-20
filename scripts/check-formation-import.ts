@@ -114,7 +114,7 @@ async function main(): Promise<void> {
       '/src/lib/import/references.ts',
     )
     const { readFormation } = await load<typeof FormationModule>('/src/lib/import/formation.ts')
-    const { buildTeamImportPlan } = await load<typeof TeamImportModule>(
+    const { buildTeamImportPlan, formationsSwapped } = await load<typeof TeamImportModule>(
       '/src/lib/teams/teamImport.ts',
     )
 
@@ -179,25 +179,29 @@ async function main(): Promise<void> {
       const reading = readFormation(shot, refs)
       formations.push({ file, reading, ms: Math.round(performance.now() - started) })
     }
+    const assignments = formations.map(({ reading }) => ({
+      reading,
+      mapIndex: reading.mapIndex,
+      overrides: {},
+      artifactOverrides: {},
+      unitOverrides: {},
+    }))
+    // Swap sides as the import sets it.
+    const told = formationsSwapped(results, assignments)
+    const swapSides = told ?? hasFlag('swap-sides')
     const plan = buildTeamImportPlan(
       results,
       mode,
       { prefix: '', left: '', right: '' },
-      hasFlag('swap-sides'),
-      formations.map(({ reading }) => ({
-        reading,
-        mapIndex: reading.mapIndex,
-        overrides: {},
-        artifactOverrides: {},
-        unitOverrides: {},
-      })),
+      swapSides,
+      assignments,
     )
     console.log(
       `references from ${source.label}; ${resultFiles.length} result and ${formationFiles.length} formation shots`,
     )
     if (resultFiles.length > 0) {
       console.log(
-        `sides ${plan.sidesSwapped ? 'swapped' : 'as the result tabs list them'}, ${plan.sidesFromFormations ? 'from the formation shots' : 'as --swap-sides says'}`,
+        `sides ${swapSides ? 'swapped' : 'as the result tabs list them'}, ${told !== null ? 'from the formation shots' : 'as --swap-sides says'}`,
       )
     }
     for (const issue of plan.issues) console.log(`plan issue: ${JSON.stringify(issue)}`)
