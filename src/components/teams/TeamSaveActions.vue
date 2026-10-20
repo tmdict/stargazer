@@ -9,6 +9,7 @@
 
 import { computed, nextTick, ref, watch } from 'vue'
 
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
@@ -114,7 +115,9 @@ const tipText = computed((): string => {
       @mouseleave="hideTip"
     >
       <IconFilePlus :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t(armed !== null ? 'app.confirm' : 'app.new') }}</span>
+      <span class="btn-text">
+        <ConfirmLabel :armed="armed !== null" :label="i18n.t('app.new')" />
+      </span>
     </button>
     <button
       type="button"

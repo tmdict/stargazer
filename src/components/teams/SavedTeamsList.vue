@@ -12,6 +12,7 @@ import { computed, ref, watch } from 'vue'
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
 import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
 import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -376,7 +377,7 @@ const actionTipText = computed((): string => {
           :class="{ armed: armed === 'all' }"
           @click="handleDeleteAll"
         >
-          {{ armed === 'all' ? i18n.t('app.confirm') : i18n.t('app.delete-all') }}
+          <ConfirmLabel :armed="armed === 'all'" :label="i18n.t('app.delete-all')" />
         </button>
         <input
           ref="fileInput"
@@ -540,7 +541,7 @@ const actionTipText = computed((): string => {
             :class="{ armed: armed === team.id }"
             @click="handleDelete(team)"
           >
-            {{ armed === team.id ? i18n.t('app.confirm') : i18n.t('app.delete') }}
+            <ConfirmLabel :armed="armed === team.id" :label="i18n.t('app.delete')" />
           </button>
         </div>
       </div>

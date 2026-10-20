@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import type { TeamModeKey, TeamVariantChoice, VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
+import { shownText } from '../fixtures/dom'
 
 /* The type picker's two-step confirm must belong to the boards it was armed
  * for: a mode switch or a Load inside the confirm window replaces them, and
@@ -55,7 +56,7 @@ const mountPicker = async (overrides: Partial<PickerState> = {}) => {
 
 const segment = (label: string): HTMLButtonElement =>
   [...document.querySelectorAll<HTMLButtonElement>('.variant-seg')].find(
-    (button) => button.textContent?.trim() === label,
+    (button) => shownText(button) === label,
   )!
 
 describe('TeamVariantPicker', () => {

@@ -8,6 +8,7 @@
 
 import { computed, watch } from 'vue'
 
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import {
   DEFAULT_VARIANT,
@@ -76,7 +77,7 @@ const select = (choice: TeamVariantChoice): void => {
       :class="{ active: match === choice.key, armed: armed === armedKey(choice.key) }"
       @click="select(choice.key)"
     >
-      {{ armed === armedKey(choice.key) ? i18n.t('app.confirm') : choice.label }}
+      <ConfirmLabel :armed="armed === armedKey(choice.key)" :label="choice.label" />
     </button>
   </div>
 </template>
