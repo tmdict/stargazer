@@ -3,11 +3,12 @@
    puts it on the paused frame, every tile numbered, each team's deployment
    tiles tinted and the blocked ones hatched (they should sit on the walls).
    A click on a free deployment tile places that side's next unit there: the
-   one chosen in the lists, else the first one without a tile, going through
-   the heroes of the map's result screenshot with each hero's companions
-   after it. A click on a placed unit, or with nothing to place, opens a
-   picker of the side's units instead; a tile number typed
-   beside a unit in the lists places it too, Enter moving on to the next.
+   one chosen in the lists, else the first one without a tile in the side's
+   placing order: the heroes of the map's result screenshot, each with its
+   companions, then the phantimal the picks field. A click on a placed unit,
+   or with nothing to place, opens a picker of the side's units instead; a
+   tile number typed beside a unit in the lists places it too, Enter moving
+   on to the next.
    Heroes may have moved before the pause, so the tile is the reviewer's
    call. The "As placed" board beside the frame shows the sides as the plan
    will place them. Every pick is an edit on the shot; nothing here touches a
@@ -18,12 +19,11 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
-import { companionIdsOf } from '@/lib/characters/companion'
-import { isPhantimalId } from '@/lib/characters/phantimal'
 import { BOARD_HEXES } from '@/lib/import/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/replay'
 import { isReplayReading } from '@/lib/import/types'
 import { MAPS } from '@/lib/maps'
+import { placingOrder } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { SIDES } from '@/lib/teams/teamImport'
 import { State } from '@/lib/types/state'
@@ -136,17 +136,11 @@ const tileOf = (side: Team, unitId: number): number | null =>
 
 // ---------- placing ----------
 
-// The units a side places in turn: each hero, then its companions, and last
-// the companions of the phantimal picked for it, which the frame shows too.
-const placingOrder = (side: Team): number[] => {
-  const phantimal = [...picks.value[side].values()].find(isPhantimalId)
-  return [...sides[side].heroes, ...(phantimal === undefined ? [] : [phantimal])].flatMap(
-    (unitId) => [unitId, ...companionIdsOf(unitId)],
-  )
-}
+const sideOrder = (side: Team): number[] =>
+  placingOrder(sides[side].heroes, [...picks.value[side].values()])
 const orders = computed((): Record<Team, number[]> => ({
-  [Team.ALLY]: placingOrder(Team.ALLY),
-  [Team.ENEMY]: placingOrder(Team.ENEMY),
+  [Team.ALLY]: sideOrder(Team.ALLY),
+  [Team.ENEMY]: sideOrder(Team.ENEMY),
 }))
 
 // Per side, a unit chosen in the lists to place next, or null after the

@@ -8,7 +8,7 @@
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
-import { isPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/types'
 import { MAPS } from '@/lib/maps'
@@ -213,9 +213,29 @@ export interface PlacedUnit {
   hexId: number
 }
 
+// The phantimal a side fields from the units seen on its tiles: one seen
+// itself, else the owner of a companion seen, which exists only with it.
+function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
+  const band = unitIds.filter((id): id is number => id !== null && inPhantimalBand(id))
+  const id = band.find(isPhantimalId) ?? band[0]
+  return id === undefined ? null : phantimalOwnerId(id)
+}
+
+// The units a replay frame's side places in turn: each hero, then its
+// companions, and last the phantimal its picks field with that phantimal's
+// companions.
+export function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
+  const phantimal = fieldedPhantimal(picked)
+  return [...heroes, ...(phantimal === null ? [] : [phantimal])].flatMap((unitId) => [
+    unitId,
+    ...companionIdsOf(unitId),
+  ])
+}
+
 /* One side of a board as the side-load places it: each hero with its
  * upgrades on the tile it was seen on, or on a random free tile when it was
- * not; the companions and phantimal seen; and the artifact. */
+ * not; the companions and phantimal seen, the phantimal on a random free tile
+ * when only its companion was; and the artifact. */
 export function formationSide(
   seen: readonly PlacedUnit[],
   heroes: readonly LineupEntry[],
@@ -229,7 +249,7 @@ export function formationSide(
     attrs,
   }))
   const owners = heroes.map((h) => h.characterId)
-  const phantimalId = seen.find((u) => u.unitId !== null && isPhantimalId(u.unitId))?.unitId ?? null
+  const phantimalId = fieldedPhantimal(seen.map((u) => u.unitId))
   if (phantimalId !== null) owners.push(phantimalId)
   const companions: SideLoadCompanion[] = owners.flatMap((owner) =>
     companionIdsOf(owner).flatMap((unitId) => {
