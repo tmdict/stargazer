@@ -1,5 +1,5 @@
 {
-  "en": "{name}'s companion",
-  "zh": "{name}的召唤物",
-  "ko": "{name}의 소환물"
+  "en": "Companion ({name})",
+  "zh": "召唤物（{name}）",
+  "ko": "소환물 ({name})"
 }
