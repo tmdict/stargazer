@@ -19,7 +19,10 @@ import { computed, ref } from 'vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
+import TeamImportTile from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
+import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
+import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
@@ -229,81 +232,56 @@ const tileBoxes = (): HTMLInputElement[] => [
               <rect width="12" height="12" class="hatch-ground" />
               <line x1="0" y1="0" x2="0" y2="12" class="hatch-line" />
             </pattern>
-            <clipPath v-for="tile in view.tiles" :id="`clip-${shot.id}-${tile.id}`" :key="tile.id">
-              <circle :cx="tile.x" :cy="tile.y" :r="tile.width * MARK" />
-            </clipPath>
           </defs>
           <image :href="shot.thumb" x="0" y="0" :width="view.width" :height="view.height" />
           <g v-for="tile in view.tiles" :key="tile.id">
-            <polygon
-              class="tile"
-              :class="[
-                tile.kind,
-                { picked: tile.unitId !== null, active: picker?.hexId === tile.id },
-              ]"
+            <TeamImportTile
+              v-if="tile.side !== null"
               :points="tile.points"
-              :fill="tile.kind === 'blocked' ? `url(#hatch-${shot.id})` : undefined"
-              :role="tile.side === null ? undefined : 'button'"
-              :tabindex="tile.side === null ? undefined : 0"
-              :aria-label="
-                tile.side === null ? undefined : i18n.t('app.import-tile', { tile: tile.id })
-              "
+              :tile-width="tile.width"
+              :side="tile.side"
+              :active="picker?.hexId === tile.id"
+              role="button"
+              tabindex="0"
+              :aria-label="i18n.t('app.import-tile', { tile: tile.id })"
               @click.stop="clickFrameTile(tile)"
               @keydown.enter.prevent="clickFrameTile(tile)"
-              @mouseenter="
-                hovered = tile.side === null ? null : { side: tile.side, hexId: tile.id }
-              "
+              @mouseenter="hovered = { side: tile.side, hexId: tile.id }"
               @mouseleave="hovered = null"
             />
-            <template v-if="tile.unitId !== null">
-              <image
-                :href="unitImage(tile.unitId)"
-                :x="tile.x - tile.width * MARK"
-                :y="tile.y - tile.width * MARK"
-                :width="tile.width * MARK * 2"
-                :height="tile.width * MARK * 2"
-                :clip-path="`url(#clip-${shot.id}-${tile.id})`"
-                class="tile-unit"
-              />
-              <circle
-                class="tile-ring"
-                :class="{ pointed: isPointed(tile) }"
-                :cx="tile.x"
-                :cy="tile.y"
-                :r="tile.width * MARK"
-                :stroke-width="tile.width * (isPointed(tile) ? 0.05 : 0.025)"
-              />
-            </template>
-            <text
-              class="tile-number"
+            <polygon
+              v-else
+              class="tile"
+              :class="tile.kind"
+              :points="tile.points"
+              :fill="tile.kind === 'blocked' ? `url(#hatch-${shot.id})` : undefined"
+              @click.stop="clickFrameTile(tile)"
+            />
+            <TeamImportTileMark
+              v-if="tile.unitId !== null"
+              :x="tile.x"
+              :y="tile.y"
+              :radius="tile.width * MARK"
+              :tile-width="tile.width"
+              :href="unitImage(tile.unitId)"
+              :pointed="isPointed(tile)"
+            />
+            <TeamImportTileNumber
               :x="tile.x"
               :y="tile.unitId === null ? tile.y : tile.y + tile.width * (MARK + 0.12)"
-              :font-size="tile.width * 0.2"
-              :stroke-width="tile.width * 0.06"
-              text-anchor="middle"
-              dominant-baseline="central"
-            >
-              {{ tile.id }}
-            </text>
-          </g>
-          <g v-if="previewTile" class="tile-preview">
-            <image
-              :href="unitImage(previewTile.unitId)"
-              :x="previewTile.tile.x - previewTile.tile.width * MARK"
-              :y="previewTile.tile.y - previewTile.tile.width * MARK"
-              :width="previewTile.tile.width * MARK * 2"
-              :height="previewTile.tile.width * MARK * 2"
-              :clip-path="`url(#clip-${shot.id}-${previewTile.tile.id})`"
-            />
-            <circle
-              class="preview-ring"
-              :cx="previewTile.tile.x"
-              :cy="previewTile.tile.y"
-              :r="previewTile.tile.width * MARK"
-              :stroke-width="previewTile.tile.width * 0.03"
-              :stroke-dasharray="`${previewTile.tile.width * 0.06} ${previewTile.tile.width * 0.045}`"
+              :tile-width="tile.width"
+              :hex-id="tile.id"
             />
           </g>
+          <TeamImportTileMark
+            v-if="previewTile"
+            preview
+            :x="previewTile.tile.x"
+            :y="previewTile.tile.y"
+            :radius="previewTile.tile.width * MARK"
+            :tile-width="previewTile.tile.width"
+            :href="unitImage(previewTile.unitId)"
+          />
         </svg>
         <TeamImportTilePicker
           v-if="picker"
@@ -416,32 +394,6 @@ const tileBoxes = (): HTMLInputElement[] => [
   fill: transparent;
 }
 
-.tile.ally,
-.tile.enemy {
-  cursor: pointer;
-  stroke-width: 2;
-  outline: none;
-}
-
-.tile.ally {
-  fill: color-mix(in srgb, var(--import-left) 22%, transparent);
-  stroke: color-mix(in srgb, var(--import-left) 85%, white);
-}
-
-.tile.enemy {
-  fill: color-mix(in srgb, var(--import-right) 24%, transparent);
-  stroke: color-mix(in srgb, var(--import-right) 70%, white);
-}
-
-.tile.ally:hover,
-.tile.enemy:hover,
-.tile.ally:focus-visible,
-.tile.enemy:focus-visible,
-.tile.active {
-  stroke: #fff;
-  stroke-width: 3;
-}
-
 .tile.blocked {
   stroke: rgba(255, 255, 255, 0.7);
   stroke-width: 2;
@@ -454,40 +406,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 .hatch-line {
   stroke: rgba(255, 255, 255, 0.45);
   stroke-width: 3;
-}
-
-.tile-unit {
-  opacity: 0.85;
-  pointer-events: none;
-}
-
-.tile-ring {
-  fill: none;
-  stroke: #fff;
-  pointer-events: none;
-}
-
-.tile-preview {
-  opacity: 0.75;
-  pointer-events: none;
-}
-
-.preview-ring {
-  fill: none;
-  stroke: #fff;
-}
-
-.tile-ring.pointed {
-  stroke: var(--import-warn);
-}
-
-.tile-number {
-  fill: #fff;
-  stroke: rgba(0, 0, 0, 0.75);
-  paint-order: stroke;
-  font-family: sans-serif;
-  font-weight: 700;
-  pointer-events: none;
 }
 
 .lineup-portrait {
