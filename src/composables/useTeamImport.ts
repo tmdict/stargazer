@@ -773,12 +773,11 @@ export function useTeamImport(
     })),
   )
 
-  // What the formation shots say of the sides; null when they cannot tell.
   const formationSwap = computed(() =>
     formationsSwapped(resultAssignments.value, formationAssignments.value),
   )
-  // A new answer from the formation shots sets Swap sides, which the user can
-  // still change; it stands until their answer changes.
+  // Each new answer from the formation shots sets Swap sides; a change the
+  // user makes stands until the next one.
   watch(formationSwap, (said) => {
     if (said !== null) swapSides.value = said
   })

@@ -386,7 +386,6 @@ const skillBadges = computed(() => {
   return ctx.skillBadges.filter((badge) => shown.has(badge.hexId))
 })
 
-// Badges sit on the portrait's rim, each source at its own spot.
 const badgeStyle = computed(() => {
   const { size, hit, border } = badgeDimensions.value
   return {

@@ -75,9 +75,8 @@ interface TileView {
   unitId: number | null
 }
 
-// The units picked on each side's tiles, by hex id. A pick counts while its
-// unit is one the side fields: a swap that gives the side the other team's
-// heroes hides it, and swapping back brings it back.
+// A pick counts while its unit is one the side fields, so a swap that gives
+// the side the other team's heroes hides it until swapped back.
 const sidePicks = (side: Team): Map<number, number> =>
   new Map(
     Object.entries(shot.tilePicks[side] ?? {})

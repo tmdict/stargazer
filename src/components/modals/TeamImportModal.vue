@@ -111,8 +111,8 @@ const sidesSwapped = computed(() => matchImport.value && swapSides.value)
 
 // ---------- formation shots ----------
 
-// The board side a formation shot fills: the half its team fought from, which
-// a swap of the match's sides leaves as it is.
+// The board side a formation shot fills: the half its team fought from,
+// swapped or not.
 const formationSide = (shot: ImportShot): Team | null =>
   shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
 
@@ -170,8 +170,6 @@ const boardMap = (mapIndex: number | null): string | null =>
     ? null
     : (plan.value.boards[mapIndex]?.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? null)
 
-// A replay frame's board sides, each with the heroes the plan puts there from
-// the map's result screenshot.
 const replaySides = (shot: ImportShot): Record<Team, { heroes: number[]; options: number[] }> => {
   const mapIndex = shotMapIndex(shot, mapCount.value)
   const side = (team: Team) => {
