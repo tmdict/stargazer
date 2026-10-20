@@ -11,7 +11,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useUnitTooltipRows } from '@/composables/useUnitTooltipRows'
-import { toPhantimalId } from '@/lib/characters/phantimal'
+import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -41,8 +41,7 @@ const heading = computed(() => {
   return `${i18n.t('game.season')} ${season} ${i18n.t('game.phantimal')}`
 })
 
-// Hex a phantimal currently occupies on a team, or null. Phantimals are capped at
-// one per team, so this also drives the "placed" affordance for the picker.
+// Hex a phantimal currently occupies on a team, or null.
 const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   const id = toPhantimalId(phantimal.id)
   const tile = characterStore
@@ -51,10 +50,32 @@ const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   return tile ? tile.hex.getId() : null
 }
 
-const placedHex = (phantimal: PhantimalType): number | null =>
-  placedHexForTeam(phantimal, Team.ALLY) ?? placedHexForTeam(phantimal, Team.ENEMY)
+const teamHasPhantimal = (team: Team): boolean =>
+  characterStore
+    .getTilesWithCharacters()
+    .some((t) => t.team === team && t.characterId !== undefined && isPhantimalId(t.characterId))
 
-const isPlaced = (phantimal: PhantimalType): boolean => placedHex(phantimal) !== null
+const factionCount = (phantimal: PhantimalType, team: Team): number =>
+  characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), team)
+
+// The side a click fills: the first in fill order that has no phantimal and
+// that this one can join. Each side fields one, and both may field the same.
+const openTeam = (phantimal: PhantimalType): Team | null =>
+  fillOrder.find(
+    (team) =>
+      !teamHasPhantimal(team) && factionCount(phantimal, team) >= PHANTIMAL_FACTION_REQUIREMENT,
+  ) ?? null
+
+// With no side open, a click takes the phantimal off where it stands, the side
+// filled last first; the picker greys it out to say so.
+const removableHex = (phantimal: PhantimalType): number | null => {
+  if (openTeam(phantimal) !== null) return null
+  for (const team of [...fillOrder].reverse()) {
+    const hex = placedHexForTeam(phantimal, team)
+    if (hex !== null) return hex
+  }
+  return null
+}
 
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
@@ -69,13 +90,18 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
     clearTargetHex()
     return
   }
-  const hex = placedHex(phantimal)
+  const team = openTeam(phantimal)
+  if (team !== null) {
+    characterStore.autoPlacePhantimal(id, team)
+    return
+  }
+  const hex = removableHex(phantimal)
   if (hex !== null) {
     characterStore.removeCharacterFromHex(hex)
     return
   }
-  // Each attempt fails if that team lacks the faction requirement, falling
-  // through to the next.
+  // Standing nowhere with every side taken, it replaces the phantimal of the
+  // first side it can join.
   for (const team of fillOrder) {
     if (characterStore.autoPlacePhantimal(id, team)) break
   }
@@ -97,9 +123,10 @@ const handleDragEnd = (event: DragEvent) => {
   if (isDraggable) endDrag(event)
 }
 
-// Hover tooltip: whether the phantimal can currently be deployed on the primary
-// (ally) fill target, with the faction unit count. One shared popup follows the
-// hovered icon; portraits are action triggers (tap places), so touch gets none.
+// Hover tooltip: whether the phantimal can currently be deployed on the side a
+// click fills (else the first in fill order), with the faction unit count. One
+// shared popup follows the hovered icon; portraits are action triggers (tap
+// places), so touch gets none.
 const {
   anchor: hoveredEl,
   payload: hovered,
@@ -117,7 +144,7 @@ const tooltipName = computed(() => {
 const tooltipRows = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return []
-  const count = characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), fillOrder[0])
+  const count = factionCount(phantimal, openTeam(phantimal) ?? fillOrder[0])
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
   return [
@@ -155,7 +182,7 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
           class="phantimal"
-          :class="{ draggable: isDraggable, placed: isPlaced(phantimal) }"
+          :class="{ draggable: isDraggable, placed: removableHex(phantimal) !== null }"
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
           @dragend="handleDragEnd"
