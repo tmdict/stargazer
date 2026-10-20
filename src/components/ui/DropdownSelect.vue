@@ -221,7 +221,7 @@ const pressSegment = (): void => {
       <IconMinus v-else />
     </button>
     <!-- The variant class is repeated on the list: on <body> it has no root
-         to inherit the variant's type size from. -->
+         to take the variant's type size and colours from. -->
     <Teleport to="body" :disabled="!floating">
       <div
         v-if="open"
@@ -483,8 +483,8 @@ const pressSegment = (): void => {
   max-width: 100%;
 }
 
-.dark .list,
-.icon .list {
+.list.dark,
+.list.icon {
   background: rgb(32, 32, 32);
   border-color: rgba(255, 255, 255, 0.15);
 }
