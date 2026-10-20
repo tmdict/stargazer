@@ -15,6 +15,7 @@ import BaseModal from './BaseModal.vue'
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { shotMapIndex, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
@@ -605,19 +606,17 @@ const handleForgetLearned = (): void => {
       </ul>
 
       <div class="footer">
-        <!-- Both labels hold the button's width, so the confirm click lands
-             on it and not on Cancel. -->
         <button
           type="button"
-          class="footer-btn danger keep-width"
+          class="footer-btn danger"
           :class="{ armed: armed === 'save' }"
           :disabled="blocked"
           @click="handleSaveAsNew"
         >
-          <span :class="{ hidden: armed === 'save' }">{{
-            i18n.t('app.import-save-as-new', { count: mappedCount })
-          }}</span>
-          <span :class="{ hidden: armed !== 'save' }">{{ i18n.t('app.confirm') }}</span>
+          <ConfirmLabel
+            :armed="armed === 'save'"
+            :label="i18n.t('app.import-save-as-new', { count: mappedCount })"
+          />
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
@@ -625,14 +624,14 @@ const handleForgetLearned = (): void => {
         <button
           v-if="learnedCount > 0"
           type="button"
-          class="link-btn keep-width"
+          class="link-btn"
           :class="{ armed: armed === 'forget' }"
           @click="handleForgetLearned"
         >
-          <span :class="{ hidden: armed === 'forget' }">{{
-            i18n.t('app.import-forget-learned', { count: learnedCount })
-          }}</span>
-          <span :class="{ hidden: armed !== 'forget' }">{{ i18n.t('app.confirm') }}</span>
+          <ConfirmLabel
+            :armed="armed === 'forget'"
+            :label="i18n.t('app.import-forget-learned', { count: learnedCount })"
+          />
         </button>
       </div>
     </div>
@@ -908,19 +907,6 @@ const handleForgetLearned = (): void => {
 
 .footer-btn.secondary:hover {
   background: rgba(255, 255, 255, 0.14);
-}
-
-.keep-width {
-  display: inline-grid;
-  place-items: center;
-}
-
-.keep-width > span {
-  grid-area: 1 / 1;
-}
-
-.keep-width > .hidden {
-  visibility: hidden;
 }
 
 .link-btn {
