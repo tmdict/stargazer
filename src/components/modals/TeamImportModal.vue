@@ -70,6 +70,7 @@ const {
   referenceStatus,
   names,
   swapSides,
+  formationSwap,
   learnedCount,
   plan,
   addFiles,
@@ -104,6 +105,9 @@ const replayShots = computed(() => shots.value.filter((s) => s.kind === 'replay'
 // Result shots make the import a match, whose formation shots only place its
 // heroes; formation shots dropped first are imported alone.
 const matchImport = computed(() => resultShots.value.length > 0)
+// Formation shots alone have no result columns to swap, whatever the toggle
+// held before their results were removed.
+const sidesSwapped = computed(() => matchImport.value && swapSides.value)
 
 // ---------- formation shots ----------
 
@@ -488,7 +492,7 @@ const handleForgetLearned = (): void => {
             maxlength="30"
           />
         </label>
-        <div v-if="!plan.sidesFromFormations" class="field">
+        <div class="field">
           <span class="field-label">{{ i18n.t('app.import-board-sides') }}</span>
           <button
             type="button"
@@ -500,6 +504,9 @@ const handleForgetLearned = (): void => {
           >
             {{ i18n.t('app.import-swap-sides') }}
           </button>
+          <small v-if="formationSwap === swapSides" class="note">
+            {{ i18n.t('app.import-sides-from-formations') }}
+          </small>
         </div>
         <div class="field wide">
           <span id="import-record-name" class="field-label">{{
@@ -533,7 +540,7 @@ const handleForgetLearned = (): void => {
           :key="selected.id"
           :shot="selected"
           :names
-          :swap-sides="plan.sidesSwapped"
+          :swap-sides="sidesSwapped"
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
@@ -552,7 +559,7 @@ const handleForgetLearned = (): void => {
           :key="`${selected.id}-formation`"
           :shot="selected"
           :names
-          :swap-sides="plan.sidesSwapped"
+          :swap-sides="sidesSwapped"
           :sides="cardSides(selected)"
           :units="{
             assignments: unitsOf(selected.id),

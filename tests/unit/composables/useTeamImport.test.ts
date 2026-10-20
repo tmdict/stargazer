@@ -175,7 +175,7 @@ describe('board sides', () => {
     expect(api.swapSides.value).toBe(false)
   })
 
-  it('keeps the sides the formation shots settled once they stop telling', async () => {
+  it('sets Swap sides from the formation shots and leaves it to the user after', async () => {
     const api = useTeamImport(
       () => '5v5',
       () => false,
@@ -203,12 +203,18 @@ describe('board sides', () => {
       result,
       { ...shot(), id: 'formation', kind: 'formation', reading: formation },
     ]
-    expect(api.plan.value.sidesFromFormations).toBe(true)
-    expect(api.plan.value.sidesSwapped).toBe(true)
     await nextTick()
+    expect(api.formationSwap.value).toBe(true)
+    expect(api.swapSides.value).toBe(true)
+    expect(api.plan.value.boards[3]!.sides[2]!.mains.map((unit) => unit.unitId)).toEqual([5])
+
+    api.swapSides.value = false
+    await nextTick()
+    expect(api.swapSides.value).toBe(false)
+    // The shots no longer telling leaves the choice as it is.
     api.shots.value = [result]
-    expect(api.plan.value.sidesFromFormations).toBe(false)
-    expect(api.plan.value.sidesSwapped).toBe(true)
+    await nextTick()
+    expect(api.swapSides.value).toBe(false)
   })
 })
 
