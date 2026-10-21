@@ -16,8 +16,7 @@ export function tileOutline(corners: readonly Point[]): { points: string; width:
 </script>
 
 <script setup lang="ts">
-/* A deployment tile an import review places units on, tinted in its side's
-   colour, its edge a share of the tile's width. */
+/* A deployment tile an import review places units on. */
 
 import { Team } from '@/lib/types/team'
 

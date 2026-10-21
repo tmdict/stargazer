@@ -8,9 +8,9 @@
  * so the disc is searched around its nominal centre, placed by the best match
  * of any reference, and every reference is scored on that one disc: one left
  * to find its own place can win a crop beside the art (over the disc's rim)
- * and narrow a clear lead to a doubtful one. A reading is sure only
- * when it leads clearly, its shapes match well enough, and the crop holds art
- * at all: the colour term alone still ranks a black or empty disc. */
+ * and narrow a clear lead to a doubtful one. A reading is sure only when it
+ * leads clearly, its shapes match well enough, and the crop holds art at all:
+ * the colour term alone still ranks a black or empty disc. */
 
 import { cropResize, dot, normalizedVectorMasked } from './image'
 import { HEADER_ICON } from './layout'

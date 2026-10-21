@@ -265,9 +265,6 @@ export function createGridContext(
     return ranges
   }
 
-  // A phantimal may only join a team that fields enough of its faction(s). An id
-  // with no data is retired content: it has no faction to count and is kept as a
-  // removable "?" (GridCharacters).
   const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean =>
     teamQualifies(
       grid,

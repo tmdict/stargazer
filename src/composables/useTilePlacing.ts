@@ -41,7 +41,6 @@ export function useTilePlacing(config: {
   refusal: (side: Team, hexId: number, text: string) => string | null
   setPick: (side: Team, hexId: number, unitId: number | null) => void
 }): {
-  tileOf: (side: Team, unitId: number) => number | null
   nextUnits: ComputedRef<Partial<Record<Team, number | null>>>
   choose: (side: Team, unitId: number) => void
   clickTile: (target: TilePicker) => void
@@ -167,10 +166,7 @@ export function useTilePlacing(config: {
 
   const typeError = ref<string | null>(null)
 
-  /* A tile number typed beside a unit: a tile the side may take places the
-   * unit there, taking it off any other as a click does; an empty box takes it
-   * off the board; anything else is refused, said so, and the box goes back to
-   * the unit's tile, returning false. */
+  // False when the typed tile is refused.
   const typeTile = (side: Team, unitId: number, input: HTMLInputElement): boolean => {
     const text = input.value.trim()
     const current = tileOf(side, unitId)
@@ -214,7 +210,6 @@ export function useTilePlacing(config: {
   }
 
   return {
-    tileOf,
     nextUnits,
     choose,
     clickTile,
