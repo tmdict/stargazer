@@ -46,13 +46,13 @@ defineProps<{
 }
 
 .pick-tile.ally {
-  fill: color-mix(in srgb, var(--color-ally) 22%, transparent);
-  stroke: color-mix(in srgb, var(--color-ally) 85%, white);
+  fill: color-mix(in srgb, var(--import-ally) 22%, transparent);
+  stroke: color-mix(in srgb, var(--import-ally) 85%, white);
 }
 
 .pick-tile.enemy {
-  fill: color-mix(in srgb, var(--color-enemy) 24%, transparent);
-  stroke: color-mix(in srgb, var(--color-enemy) 70%, white);
+  fill: color-mix(in srgb, var(--import-enemy) 24%, transparent);
+  stroke: color-mix(in srgb, var(--import-enemy) 70%, white);
 }
 
 .pick-tile:hover,

@@ -413,11 +413,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 }
 
 .seg-btn.side.on.ally {
-  background: var(--color-ally);
+  background: var(--import-ally);
 }
 
 .seg-btn.side.on.enemy {
-  background: var(--color-enemy);
+  background: var(--import-enemy);
 }
 
 .shot-status {
