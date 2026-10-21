@@ -670,6 +670,7 @@ const handleForgetLearned = (): void => {
   --import-bad: #f28b82;
   --import-bad-tint: rgba(242, 139, 130, 0.14);
   --import-good: #81c995;
+  --import-columns: repeat(5, minmax(0, 1fr));
 
   display: flex;
   flex-direction: column;
@@ -737,7 +738,8 @@ const handleForgetLearned = (): void => {
   color: var(--import-label);
 }
 
-.field-input {
+.field-input,
+.toggle {
   font: inherit;
   font-size: max(0.85rem, var(--field-min-font-size));
   padding: 7px 10px;
@@ -753,15 +755,7 @@ const handleForgetLearned = (): void => {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
-/* The inputs' metrics, so the row stays level. */
 .toggle {
-  padding: 7px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius-medium);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--import-text);
-  font: inherit;
-  font-size: max(0.85rem, var(--field-min-font-size));
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
