@@ -1,9 +1,7 @@
 <script setup lang="ts">
-/* The unit picker an import review opens on a tile of its screenshot: the
-   side's heroes as a row of portraits over the rest, and a Clear tile while
-   the tile holds a unit. Placed in a positioned box around the drawn board; a
-   click inside it stops there, so a review closing it on clicks elsewhere
-   leaves it open. */
+/* The unit picker an import review opens on a tile of its screenshot, placed
+   in a positioned box around the drawn board. A click inside it stops there,
+   so a review closing it on clicks elsewhere leaves it open. */
 
 import type { PickerItem, TilePicker } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
@@ -38,7 +36,7 @@ const { unitName, unitImage } = useUnitLabels()
         class="picker-item hero"
         :class="{ on: item.unitId === pickedHere }"
         role="menuitem"
-        @click.stop="emit('pick', item.unitId)"
+        @click="emit('pick', item.unitId)"
       >
         <img class="picker-portrait" :src="unitImage(item.unitId)" alt="" />
         <span class="picker-name">{{ unitName(item.unitId) }}</span>
@@ -57,7 +55,7 @@ const { unitName, unitImage } = useUnitLabels()
         role="menuitem"
         :title="unitName(item.unitId)"
         :aria-label="unitName(item.unitId)"
-        @click.stop="emit('pick', item.unitId)"
+        @click="emit('pick', item.unitId)"
       >
         <img class="picker-portrait" :src="unitImage(item.unitId)" alt="" />
       </button>
@@ -67,7 +65,7 @@ const { unitName, unitImage } = useUnitLabels()
       type="button"
       class="picker-item clear"
       role="menuitem"
-      @click.stop="emit('pick', null)"
+      @click="emit('pick', null)"
     >
       {{ i18n.t('app.import-clear-tile') }}
     </button>

@@ -140,8 +140,8 @@ const tabOutOfList = (e: KeyboardEvent): void => {
 
 // Only a floating list needs these: in place it is inside the root, where
 // leaving it for the trigger would start the close timer. A click in a
-// floating list stops there, as one in a modal's container does, since the
-// surface around the dropdown would take it for an outside click and close.
+// floating list stops there, since the surface around the dropdown would take
+// it for an outside click and close.
 const listEvents = floating
   ? {
       mouseenter: onMouseEnter,

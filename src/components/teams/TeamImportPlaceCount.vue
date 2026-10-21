@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* How many of a side's units an import review has on a tile, amber until every one is. */
+/* How many of a side's units an import review has on a tile. */
 
 import { useI18nStore } from '@/stores/i18n'
 

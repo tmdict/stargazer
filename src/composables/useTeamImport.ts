@@ -126,9 +126,8 @@ const referenceStatus = ref<ReferenceStatus>('idle')
 const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
 const names = reactive<RecordNames>(defaultNames())
 // Swap sides: whether every result screenshot's columns land on the opposite
-// board sides. The formation shots set it when they tell, and the user can
-// change it. One choice per match (see buildTeamImportPlan), and not a reader
-// correction.
+// board sides. One choice per match (see buildTeamImportPlan), and not a
+// reader correction.
 const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.

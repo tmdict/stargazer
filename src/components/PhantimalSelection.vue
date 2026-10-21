@@ -123,9 +123,8 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 // Hover tooltip: whether the phantimal can currently be deployed on the side a
-// click fills (else the first in fill order), with the faction unit count. One
-// shared popup follows the hovered icon; portraits are action triggers (tap
-// places), so touch gets none.
+// click fills, with the faction unit count. One shared popup follows the
+// hovered icon; portraits are action triggers (tap places), so touch gets none.
 const {
   anchor: hoveredEl,
   payload: hovered,

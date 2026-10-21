@@ -2,13 +2,10 @@
 /* A replay frame's review: Stargazer's board drawn where the battle camera
    puts it on the paused frame, every tile numbered, each team's deployment
    tiles tinted and the blocked ones hatched (they should sit on the walls).
-   A click on a free deployment tile places that side's next unit there: the
-   one chosen in the lists, else the first one without a tile in the side's
-   placing order: the heroes of the map's result screenshot, each with its
-   companions, then the phantimal the picks field. A click on a placed unit,
-   or with nothing to place, opens a picker of the side's units instead; a
-   tile number typed beside a unit in the lists places it too, Enter moving
-   on to the next.
+   Each side's units are placed on its tiles by click or typed tile number
+   (useTilePlacing), in the side's placing order: the heroes of the map's
+   result screenshot, each with its companions, then the phantimal the picks
+   field.
    Heroes may have moved before the pause, so the tile is the reviewer's
    call. The "As placed" board beside the frame shows the sides as the plan
    will place them. Every pick is an edit on the shot; nothing here touches a
@@ -61,7 +58,7 @@ type TileKind = 'ally' | 'enemy' | 'blocked' | 'neutral'
 // tile's kind is its board side whether or not the match's sides are swapped.
 const KIND_SIDE: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Team.ENEMY }
 
-// A placed unit's portrait spans this share of its tile's width; a larger
+// A placed unit's portrait radius as a share of its tile's width; a larger
 // one hides the units standing next to it on the frame.
 const MARK = 0.2
 // An empty tile's edge, lighter than a deployment tile's, and the blocked
@@ -98,9 +95,11 @@ interface TileView {
   unitId: number | null
 }
 
-const sidePlacing = (side: Team) =>
-  replayPlacing(sides[side].heroes, sides[side].options, shot.tilePicks[side] ?? {})
-const placings = computed(() => ({
+const sidePlacing = (side: Team): PlacingSide => {
+  const { heroes, options } = sides[side]
+  return { ...replayPlacing(heroes, options, shot.tilePicks[side] ?? {}), heroes, options }
+}
+const placings = computed((): Record<Team, PlacingSide> => ({
   [Team.ALLY]: sidePlacing(Team.ALLY),
   [Team.ENEMY]: sidePlacing(Team.ENEMY),
 }))
@@ -139,16 +138,6 @@ const view = computed(() => {
 
 // ---------- placing ----------
 
-const placingSides = computed((): Record<Team, PlacingSide> => {
-  const side = (team: Team): PlacingSide => ({
-    order: placings.value[team].order,
-    heroes: sides[team].heroes,
-    options: sides[team].options,
-    picks: placings.value[team].picks,
-  })
-  return { [Team.ALLY]: side(Team.ALLY), [Team.ENEMY]: side(Team.ENEMY) }
-})
-
 const {
   nextUnits,
   choose,
@@ -164,7 +153,7 @@ const {
   typeTile,
   typeTileAndNext,
 } = useTilePlacing({
-  sides: () => placingSides.value,
+  sides: () => placings.value,
   refusal: (side, hexId, text) =>
     KIND_SIDE[tileKinds.value.get(hexId) ?? 'neutral'] === side
       ? null

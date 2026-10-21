@@ -375,8 +375,6 @@ describe('buildTeamImportPlan with formation shots', () => {
   it('places the units a formation shot misses on the tiles picked for them', () => {
     const phantimal = toPhantimalId(1)
     const missing = { ...formationShot(Team.ALLY, [unit(1, 7)]), picks: { [Team.ALLY]: { 2: 9 } } }
-    // A pick on a portrait's tile or of a unit a portrait shows places nothing.
-    const refused = { [Team.ALLY]: { 1: 9, 3: 7 } }
     const plan = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, { formations: [missing] })
     expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
@@ -391,8 +389,9 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
     expect(picked.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: phantimal, hexId: 4 })
     expect(picked.boards[0]!.formations).toEqual([Team.ALLY])
+    // A pick on a portrait's tile or of a unit a portrait shows places nothing.
     const ignored = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
-      formations: [{ ...missing, picks: refused }],
+      formations: [{ ...missing, picks: { [Team.ALLY]: { 1: 9, 3: 7 } } }],
     })
     expect(ignored.boards[0]!.sides[Team.ALLY]!.mains[1]!.hexId).toBeUndefined()
     // A pick of another phantimal does not take the place of the one whose

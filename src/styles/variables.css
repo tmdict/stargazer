@@ -39,9 +39,6 @@
   /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
-  /* Team colours for text and thin marks on the dark surfaces: the ally teal
-     is the brand accent, and the enemy red is lifted the same way, from 46% to
-     65% lightness, since #c82333 fails AA contrast (~2.8:1) there. */
   --color-ally-on-dark: var(--color-accent);
   --color-enemy-on-dark: #e46773;
 

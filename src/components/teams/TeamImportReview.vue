@@ -344,10 +344,6 @@ const shotTiles = computed(() => {
   }
 })
 
-/* The units the screenshot misses, placed like a replay frame's: the units
- * of the side's placing order no portrait is taken for (heroes, companions,
- * and the phantimal and its companions once fielded), each on a tile picked
- * for it. */
 const missing = computed((): PlacingSide | null => {
   const tiles = shotTiles.value
   const placed = units?.placed
@@ -399,26 +395,21 @@ const placeCount = computed(() => {
   }
 })
 
-// The side's free deployment tiles on the screenshot's board, with the unit
-// picked for each.
 const pickTiles = computed(() => {
+  const placing = missing.value
   const tiles = shotTiles.value
   const reading = shot.reading
-  if (!missing.value || !tiles || !reading || !isFormationReading(reading) || !reading.board) {
-    return []
-  }
+  if (!placing || !tiles || !reading || !isFormationReading(reading) || !reading.board) return []
   const fit = reading.board
   return BOARD_HEXES.filter(
     (hex) => tiles.deploy.has(hex.getId()) && !tiles.shown.has(hex.getId()),
-  ).map((hex) => {
-    return {
-      hexId: hex.getId(),
-      side: tiles.team,
-      ...tileOutline(hexCorners(fit, hex)),
-      ...hexCentre(fit, hex),
-      unitId: missing.value!.picks.get(hex.getId()) ?? null,
-    }
-  })
+  ).map((hex) => ({
+    hexId: hex.getId(),
+    side: tiles.team,
+    ...tileOutline(hexCorners(fit, hex)),
+    ...hexCentre(fit, hex),
+    unitId: placing.picks.get(hex.getId()) ?? null,
+  }))
 })
 
 // A picked unit's portrait, drawn where and as large as the screenshot draws
@@ -597,7 +588,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
       <div class="boards">
         <figure v-if="shotBoard" class="board">
           <div ref="boardFrame" class="board-frame">
-            <svg class="board-view" :viewBox="shotBoard.viewBox" @click="tilePicker = null">
+            <svg class="board-view" :viewBox="shotBoard.viewBox">
               <image
                 :href="shot.thumb"
                 x="0"

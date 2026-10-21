@@ -88,7 +88,7 @@ const PHANTIMAL_FLOOR = 0.6
 export const SURE_SCORE = 0.6
 const SURE_MARGIN = 0.08
 
-export type UnitState = 'sure' | 'review' | 'none'
+type UnitState = 'sure' | 'review' | 'none'
 
 export interface UnitAssignment {
   // The unit the portrait is taken for; null when it is none of the side's.
@@ -116,7 +116,7 @@ export function assignUnits(
     const top = unit.candidates[0]
     if (!top || !isPhantimalId(top.characterId) || top.score < PHANTIMAL_FLOOR) continue
     if (!phantimalFits(top.characterId)) unfit.add(i)
-    else if (top.score >= (phantimal?.score ?? PHANTIMAL_FLOOR)) {
+    else if (!phantimal || top.score >= phantimal.score) {
       phantimal = { id: top.characterId, score: top.score }
     }
   }
@@ -235,9 +235,7 @@ function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
   return id === undefined ? null : phantimalOwnerId(id)
 }
 
-// The units a side places in turn on a screenshot's tiles: each hero, then
-// its companions, and last the phantimal the units seen field, with that
-// phantimal's companions.
+// The units a side places in turn on a screenshot's tiles.
 function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
   const phantimal = fieldedPhantimal(picked)
   return [...heroes, ...(phantimal === null ? [] : [phantimal])].flatMap((unitId) => [

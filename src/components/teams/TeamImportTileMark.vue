@@ -1,6 +1,5 @@
 <script lang="ts">
-// A unit's ring as a share of its tile's width, wider while the unit is
-// pointed at in a list. The game's camera draws near rows wider.
+// A unit's ring as a share of its tile's width.
 const RING = 0.025
 const POINTED_RING = 0.05
 
@@ -9,8 +8,8 @@ export const ringWidth = (tileWidth: number, pointed = false): number =>
 </script>
 
 <script setup lang="ts">
-/* A unit on a tile of an import review's screenshot, its portrait in a ring,
-   or as a preview the unit a click on that tile would place. */
+/* A unit on a tile of an import review's screenshot, or as a preview the unit
+   a click on that tile would place. */
 
 import { useId } from 'vue'
 

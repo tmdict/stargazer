@@ -21,8 +21,7 @@ const BAND_ROWS = 7
 // larger or smaller sits around the same card, so the row's top is this many
 // pixels above the box's centre whatever frame and scale matched (37.5 to 40.5
 // on labelled screenshots). The brightest band near the card's top is often
-// not the row: it settles on the winged frame's white band, or on hair or a
-// hat under the row.
+// not the row but the winged frame's white band, or hair or a hat under the row.
 const ROW_ABOVE_CENTRE = 39
 const ROW_SLACK = 2
 const BRIGHT = 0.78

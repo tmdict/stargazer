@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The badge on the unit an import review places next, in its side's colour. */
+/* The badge on the unit an import review places next. */
 
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
