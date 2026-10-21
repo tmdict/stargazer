@@ -2,15 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
-import { artifactTargetArrows, artifactTargetingRules } from '@/lib/skills/artifact'
+import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts } from '@/utils/dataLoader'
 import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
-const ENLIGHTENING = 3
-
-const targetHexIds = (grid: Grid, team: Team, artifactId: number | null) =>
-  artifactTargetArrows(grid, team, artifactId).map((arrow) => arrow.toHex.getId())
+const targetHexIds = (grid: Grid, team: Team, artifactName: string) =>
+  artifactTargetArrows(grid, team, artifactName).map((arrow) => arrow.toHex.getId())
 
 describe('artifact targeting', () => {
   let grid: Grid
@@ -27,48 +24,34 @@ describe('artifact targeting', () => {
   })
 
   it('enlightening points at the rearmost unit of its slot team', () => {
-    expect(targetHexIds(grid, Team.ALLY, ENLIGHTENING)).toEqual([5])
-    expect(targetHexIds(grid, Team.ENEMY, ENLIGHTENING)).toEqual([40])
+    expect(targetHexIds(grid, Team.ALLY, 'enlightening')).toEqual([5])
+    expect(targetHexIds(grid, Team.ENEMY, 'enlightening')).toEqual([40])
   })
 
   it('counts a phantimal as a unit', () => {
     placeOnTile(grid, 2, toPhantimalId(1), Team.ALLY)
-    expect(targetHexIds(grid, Team.ALLY, ENLIGHTENING)).toEqual([2])
+    expect(targetHexIds(grid, Team.ALLY, 'enlightening')).toEqual([2])
   })
 
   // Retire with the season's entries in src/lib/skills/artifact.ts.
   describe('season 8', () => {
-    const SOULSHOCK = 9
-    const THUNDERMIGHT = 12
-    const SOULBOUND = 14
-
     it('soulbound links the frontmost and rearmost allies, once for a lone unit', () => {
-      expect(targetHexIds(grid, Team.ALLY, SOULBOUND)).toEqual([20, 5])
+      expect(targetHexIds(grid, Team.ALLY, 'soulbound')).toEqual([20, 5])
       removeFromTile(grid, 5)
       removeFromTile(grid, 12)
-      expect(targetHexIds(grid, Team.ALLY, SOULBOUND)).toEqual([20])
+      expect(targetHexIds(grid, Team.ALLY, 'soulbound')).toEqual([20])
     })
 
     it('thundermight strikes the frontmost and rearmost enemies', () => {
-      expect(targetHexIds(grid, Team.ALLY, THUNDERMIGHT)).toEqual([30, 40])
-      expect(targetHexIds(grid, Team.ENEMY, THUNDERMIGHT)).toEqual([20, 5])
+      expect(targetHexIds(grid, Team.ALLY, 'thundermight')).toEqual([30, 40])
+      expect(targetHexIds(grid, Team.ENEMY, 'thundermight')).toEqual([20, 5])
     })
 
     it('soulshock stuns the two frontmost enemies', () => {
-      expect(targetHexIds(grid, Team.ENEMY, SOULSHOCK)).toEqual([20, 12])
-      expect(targetHexIds(grid, Team.ALLY, SOULSHOCK)).toEqual([30, 40])
+      expect(targetHexIds(grid, Team.ENEMY, 'soulshock')).toEqual([20, 12])
+      expect(targetHexIds(grid, Team.ALLY, 'soulshock')).toEqual([30, 40])
       removeFromTile(grid, 40)
-      expect(targetHexIds(grid, Team.ALLY, SOULSHOCK)).toEqual([30])
+      expect(targetHexIds(grid, Team.ALLY, 'soulshock')).toEqual([30])
     })
-  })
-})
-
-describe('artifact targeting rules', () => {
-  // Seasonal ids are reused, so a rule left behind at a cutover would name the
-  // outgoing artifact while its id now holds the incoming one.
-  it('names the artifact each rule is keyed to', () => {
-    const nameById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact.name]))
-    const stale = artifactTargetingRules().filter((rule) => nameById.get(rule.id) !== rule.name)
-    expect(stale).toEqual([])
   })
 })

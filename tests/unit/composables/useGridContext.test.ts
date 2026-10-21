@@ -5,6 +5,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
 import { BOARD_SIZE } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 
 /* The closest-target map seeds every namespaced unit's range (companion, synergy
@@ -49,6 +50,8 @@ describe('createGridContext artifact arrows', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
+    // A slot holds an artifact id, and its rule is found by the artifact's name.
+    useGameDataStore().initializeContentData()
   })
 
   it('follows the slot and the board', () => {

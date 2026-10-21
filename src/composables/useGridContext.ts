@@ -584,11 +584,13 @@ export function createGridContext(
     const closestEnemyMap = closestMap(Team.ALLY, Team.ENEMY)
     const closestAllyMap = closestMap(Team.ENEMY, Team.ALLY)
 
+    const slotArtifactName = (artifactId: number | null): string | undefined =>
+      artifactId === null ? undefined : gameDataStore.getArtifactById(artifactId)?.name
     // Derived like the closest-target maps: reading the slots and the grid's
     // tiles is what keeps the arrows current across placements and slot changes.
     const artifactArrows = computed<ArtifactArrow[]>(() => [
-      ...artifactTargetArrows(grid, Team.ALLY, artifacts.ally.value),
-      ...artifactTargetArrows(grid, Team.ENEMY, artifacts.enemy.value),
+      ...artifactTargetArrows(grid, Team.ALLY, slotArtifactName(artifacts.ally.value)),
+      ...artifactTargetArrows(grid, Team.ENEMY, slotArtifactName(artifacts.enemy.value)),
     ])
 
     const teamViewActive = computed(() => teamView.value)
