@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* The label of a two-step confirm button (useArmedConfirm). Both texts stay in
-   the layout, so the button keeps its width when armed and a quick second click
-   lands on it rather than on the button beside it. */
+/* The label of a two-step confirm button (useArmedConfirm). Armed, the label
+   stays in the layout under "Confirm", so the button never shrinks and a quick
+   second click lands on it rather than on the button beside it; a button
+   narrower than "Confirm" grows, which keeps it under the pointer too. */
 
 import { useI18nStore } from '@/stores/i18n'
 
@@ -13,7 +14,7 @@ const i18n = useI18nStore()
 <template>
   <span class="confirm-label">
     <span :class="{ hidden: armed }">{{ label }}</span>
-    <span :class="{ hidden: !armed }">{{ i18n.t('app.confirm') }}</span>
+    <span v-if="armed">{{ i18n.t('app.confirm') }}</span>
   </span>
 </template>
 
