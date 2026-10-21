@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportModal from '@/components/modals/TeamImportModal.vue'
 import { disposeTeamImport, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
-import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
+import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
 import { shownText } from '../fixtures/dom'

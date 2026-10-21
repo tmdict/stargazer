@@ -9,16 +9,16 @@
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
 import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
+import { readCards } from './card/card'
+import { heroDescriptor, rankHeroes } from './card/heroes'
+import type { HeroReading } from './card/types'
 import { cropResize, maskedNcc } from './core/image'
 import type { RgbaImage } from './core/types'
-import { heroDescriptor, rankHeroes } from './heroes'
-import { readCards } from './pipeline'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from './strip'
 import type {
   ArtifactReading,
   BoardFit,
   FormationReading,
-  HeroReading,
   ImportWarning,
   ReferenceSet,
   UnitReading,
