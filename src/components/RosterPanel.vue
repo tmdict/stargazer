@@ -852,7 +852,7 @@ const {
 }
 
 .roster-hint {
-  margin: calc(var(--spacing-sm) - var(--spacing-lg)) 0 0;
+  margin: calc(var(--picker-row-gap) / -2) 0 0;
   font-size: 0.8rem;
   color: var(--color-text-secondary);
 }

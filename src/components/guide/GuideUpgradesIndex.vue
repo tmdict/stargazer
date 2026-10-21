@@ -180,6 +180,7 @@ const bands = computed((): Band[] => [
 .track .bead {
   position: absolute;
   z-index: 1;
+  pointer-events: none;
   top: 50%;
   left: var(--v);
   transform: translate(-50%, -50%);
