@@ -5,7 +5,8 @@
  * count is the number of peaks across the band, and the colour family comes
  * from the bright pixels at the peaks. A row gains a star every five
  * exclusive-weapon levels, and refinement starts only once it holds six, so a
- * short row is R0, surely, whatever its colour.
+ * short row is R0. It waits for review when a refined family's colour is
+ * strong, as two stars can merge or one hide on a blurred capture.
  *
  * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
  * can add peaks at its ends and tint the colour toward a refined family, so
@@ -161,16 +162,14 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
     family = 'purple'
     level = 1
   }
-  if (stars <= SHORT_ROW) return { level: 0, stars, family, sure: true }
-  const sure =
+  const refined =
     level === 1
       ? purple >= SURE.purple
       : level === 2
         ? chroma >= SURE.chroma && gold >= SURE.gold
         : level === 3
           ? red >= SURE.red
-          : level === 4
-            ? pinkStarShare(shot, band, peaks) >= SURE.pinkStars
-            : magenta < SURE.r0Pink
-  return { level, stars, family, sure }
+          : level === 4 && pinkStarShare(shot, band, peaks) >= SURE.pinkStars
+  if (stars <= SHORT_ROW) return { level: 0, stars, family, sure: !refined }
+  return { level, stars, family, sure: level === 0 ? magenta < SURE.r0Pink : refined }
 }
