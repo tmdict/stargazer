@@ -7,6 +7,7 @@ import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import { useScrollLock } from '@/composables/useScrollLock'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { deepSearchMinLength, useSkillSearch, type SearchHit } from '@/composables/useSkillSearch'
+import { useVisualViewport } from '@/composables/useVisualViewport'
 import { isSkillLocale, SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { SPLIT_MIN_WIDTH } from '@/utils/breakpoints'
@@ -340,6 +341,18 @@ const inputRef = ref<HTMLInputElement | null>(null)
 
 useScrollLock(isOpen)
 
+// The full-screen panel (768px and under) fits the part of the screen the
+// keyboard leaves visible, so every result can scroll above the keyboard.
+const visible = useVisualViewport(isOpen)
+const visibleBox = computed(() =>
+  visible.height.value === null
+    ? {}
+    : {
+        '--sso-visible-height': `${visible.height.value}px`,
+        '--sso-visible-top': `${visible.offsetTop.value}px`,
+      },
+)
+
 // The overlay is the topmost layer (the shortcut can open it above SkillModal),
 // Escape is handled in capture phase and stopped before any other listener,
 // document-level ones included: one press closes only the overlay, never
@@ -417,7 +430,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 <template>
   <Teleport v-if="mounted" to="body">
     <Transition name="sso">
-      <div v-if="isOpen" class="sso-backdrop" @click="onBackdropClick">
+      <div v-if="isOpen" class="sso-backdrop" :style="visibleBox" @click="onBackdropClick">
         <div
           class="sso-panel"
           :class="{ wide: paneVisible }"
@@ -941,12 +954,12 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
 @media (max-width: 768px) {
   .sso-backdrop {
-    padding-top: 0;
+    padding-top: var(--sso-visible-top, 0px);
   }
   .sso-panel {
     width: 100%;
     max-height: none;
-    height: 100dvh;
+    height: var(--sso-visible-height, 100dvh);
     border: none;
     border-radius: 0;
     padding-top: env(safe-area-inset-top);
