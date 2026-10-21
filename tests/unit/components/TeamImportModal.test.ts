@@ -153,22 +153,22 @@ describe('match import review and save', () => {
       const { api } = await mountImport()
       expect(document.querySelector('.cell.review')).not.toBeNull()
       if (action === 'confirm') {
-        document.querySelector<HTMLButtonElement>('.confirm-hero')!.click()
+        document.querySelector<HTMLButtonElement>('.cell.review .confirm-choice')!.click()
       } else {
         api.setHero('sample', 1, 0, 9)
       }
       await nextTick()
       const characterId = action === 'confirm' ? 5 : 9
       expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId })
-      expect(document.querySelector('.confirm-hero')).toBeNull()
+      expect(document.querySelector('.cell.review .confirm-choice')).toBeNull()
       expect(document.querySelector('.selection-popup')).toBeNull()
-      const confirm = document.querySelector<HTMLButtonElement>('.confirm-paragon')!
+      const confirm = document.querySelector<HTMLButtonElement>('.cell.paragon .confirm-choice')!
       expect(confirm.textContent).toContain('Confirm P4')
       expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
       confirm.click()
       await nextTick()
       expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId, paragon: 4 })
-      expect(document.querySelector('.confirm-paragon')).toBeNull()
+      expect(document.querySelector('.cell.paragon .confirm-choice')).toBeNull()
       expect(document.querySelector('.cell.sure .edited')).not.toBeNull()
       expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
     },
@@ -196,10 +196,10 @@ describe('match import review and save', () => {
       sure: false,
     }
     await nextTick()
-    document.querySelector<HTMLButtonElement>('.confirm-artifact')!.click()
+    document.querySelector<HTMLButtonElement>('.artifact .confirm-choice')!.click()
     await nextTick()
     expect(api.shots.value[0]!.artifactOverrides).toEqual({ 1: 1 })
-    expect(document.querySelector('.confirm-artifact')).toBeNull()
+    expect(document.querySelector('.artifact .confirm-choice')).toBeNull()
     expect(document.querySelector('.selection-popup')).toBeNull()
   })
 })

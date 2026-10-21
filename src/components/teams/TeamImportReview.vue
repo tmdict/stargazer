@@ -13,6 +13,10 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import TeamImportCell from '@/components/teams/TeamImportCell.vue'
+import TeamImportCellGrid from '@/components/teams/TeamImportCellGrid.vue'
+import TeamImportCellState from '@/components/teams/TeamImportCellState.vue'
+import TeamImportSideHead from '@/components/teams/TeamImportSideHead.vue'
 import TeamImportUnits, { type FormationUnits } from '@/components/teams/TeamImportUnits.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -217,128 +221,105 @@ const closePickers = (event: MouseEvent): void => {
   picker.value = null
   artifactPicker.value = null
 }
-
-const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>, string> = {
-  review: 'app.import-review',
-  none: 'app.import-unrecognised',
-  duplicate: 'app.picked-twice',
-}
 </script>
 
 <template>
   <div class="review-grid" @click="closePickers">
     <div v-for="team in sides" :key="team" class="side">
-      <div class="side-head">
-        <span class="side-label">{{ sideLabel(team) }}</span>
-        <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
-        <span v-if="swapSides" class="side-board">
-          {{ i18n.t('app.import-board-side', { side: sideLabel(getOpposingTeam(team)) }) }}
-        </span>
-        <span class="artifact">
-          <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
-          <img
-            v-if="shot.artifactCards[team]"
-            class="artifact-card"
-            :src="shot.artifactCards[team]"
-            alt=""
-          />
-          <button
-            type="button"
-            class="artifact-btn"
-            :class="{ unsure: !sideArtifacts[team].sure, open: artifactPicker?.team === team }"
-            :title="artifactName(sideArtifacts[team].artifact)"
-            @click="toggleArtifactPicker(team, $event)"
-          >
-            <span class="artifact-icon" :class="{ empty: sideArtifacts[team].artifact === null }">
-              <ArtifactImage
-                v-if="sideArtifacts[team].artifact"
-                :artifact="sideArtifacts[team].artifact!"
-              />
-            </span>
-            <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
-          </button>
-          <button
-            v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
-            type="button"
-            class="cell-state review confirm-choice confirm-artifact"
-            :title="artifactName(sideArtifacts[team].artifact)"
-            @click="emit('setArtifact', shot.id, team, sideArtifacts[team].artifact!.id)"
-          >
-            {{
-              i18n.t('app.import-confirm', { value: artifactName(sideArtifacts[team].artifact) })
-            }}
-          </button>
-          <span v-else-if="!sideArtifacts[team].sure" class="cell-state review">
-            {{ i18n.t('app.import-review') }}
+      <TeamImportSideHead :label="sideLabel(team)">
+        <template #default>
+          <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
+          <span v-if="swapSides" class="side-board">
+            {{ i18n.t('app.import-board-side', { side: sideLabel(getOpposingTeam(team)) }) }}
           </span>
-          <span v-else-if="sideArtifacts[team].edited" class="cell-state edited">
-            {{ i18n.t('app.import-edited') }}
-          </span>
-        </span>
-      </div>
-      <div class="cells">
-        <div v-for="view in sideCells[team]" :key="view.key" class="cell" :class="view.state">
-          <div class="cell-images">
-            <img v-if="view.card" class="cell-card" :src="view.card" alt="" />
+          <span class="artifact">
+            <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
             <img
-              v-if="view.characterId !== null"
-              class="cell-portrait"
-              :src="heroImage(view.characterId)"
+              v-if="shot.artifactCards[team]"
+              class="artifact-card"
+              :src="shot.artifactCards[team]"
               alt=""
             />
-            <span v-else class="cell-portrait empty" />
-          </div>
-          <button
-            type="button"
-            class="cell-name"
-            :class="{ open: picker?.key === view.key }"
-            :title="heroName(view.characterId)"
-            @click="togglePicker(team, view.row, view.key, $event)"
-          >
-            {{ heroName(view.characterId) }}
-          </button>
-          <div class="cell-meta">
-            <UpgradePill
-              :paragon="view.paragon"
-              :refinement="view.refinement"
-              editable
-              @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
-              @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
+            <button
+              type="button"
+              class="artifact-btn"
+              :class="{ unsure: !sideArtifacts[team].sure, open: artifactPicker?.team === team }"
+              :title="artifactName(sideArtifacts[team].artifact)"
+              @click="toggleArtifactPicker(team, $event)"
+            >
+              <span class="artifact-icon" :class="{ empty: sideArtifacts[team].artifact === null }">
+                <ArtifactImage
+                  v-if="sideArtifacts[team].artifact"
+                  :artifact="sideArtifacts[team].artifact!"
+                />
+              </span>
+              <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
+            </button>
+            <TeamImportCellState
+              v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
+              state="review"
+              :reading="artifactName(sideArtifacts[team].artifact)"
+              :title="artifactName(sideArtifacts[team].artifact)"
+              @confirm="emit('setArtifact', shot.id, team, sideArtifacts[team].artifact!.id)"
             />
-            <button
-              v-if="view.state === 'review' && view.characterId !== null"
-              type="button"
-              class="cell-state review confirm-choice confirm-hero"
-              :title="heroName(view.characterId)"
-              @click="emit('setHero', shot.id, team, view.row, view.characterId)"
-            >
-              {{ i18n.t('app.import-confirm', { value: heroName(view.characterId) }) }}
-            </button>
-            <button
-              v-else-if="view.state === 'paragon'"
-              type="button"
-              class="cell-state review confirm-choice confirm-paragon"
-              @click="emit('setLevel', shot.id, team, view.row, 'paragon', view.paragon)"
-            >
-              {{ i18n.t('app.import-confirm', { value: `P${view.paragon}` }) }}
-            </button>
-            <button
-              v-else-if="view.state === 'refinement'"
-              type="button"
-              class="cell-state review confirm-choice confirm-refinement"
-              @click="emit('setLevel', shot.id, team, view.row, 'refinement', view.refinement)"
-            >
-              {{ i18n.t('app.import-confirm', { value: `R${view.refinement}` }) }}
-            </button>
-            <span v-else-if="view.state !== 'sure'" class="cell-state" :class="view.state">
-              {{ i18n.t(STATE_LABEL[view.state]) }}
-            </span>
-            <span v-else-if="view.edited" class="cell-state edited">{{
-              i18n.t('app.import-edited')
-            }}</span>
-          </div>
-        </div>
-      </div>
+            <TeamImportCellState v-else-if="!sideArtifacts[team].sure" state="review" />
+            <TeamImportCellState v-else-if="sideArtifacts[team].edited" state="edited" />
+          </span>
+        </template>
+      </TeamImportSideHead>
+      <TeamImportCellGrid>
+        <template #default>
+          <TeamImportCell
+            v-for="view in sideCells[team]"
+            :key="view.key"
+            :class="view.state"
+            :card="view.card"
+            :portrait="view.characterId === null ? null : heroImage(view.characterId)"
+          >
+            <template #name>
+              <button
+                type="button"
+                class="cell-name"
+                :class="{ open: picker?.key === view.key }"
+                :title="heroName(view.characterId)"
+                @click="togglePicker(team, view.row, view.key, $event)"
+              >
+                {{ heroName(view.characterId) }}
+              </button>
+            </template>
+            <template #meta>
+              <UpgradePill
+                :paragon="view.paragon"
+                :refinement="view.refinement"
+                editable
+                @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
+                @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
+              />
+              <TeamImportCellState
+                v-if="view.state === 'review' && view.characterId !== null"
+                state="review"
+                :reading="heroName(view.characterId)"
+                :title="heroName(view.characterId)"
+                @confirm="emit('setHero', shot.id, team, view.row, view.characterId)"
+              />
+              <TeamImportCellState
+                v-else-if="view.state === 'paragon'"
+                state="review"
+                :reading="`P${view.paragon}`"
+                @confirm="emit('setLevel', shot.id, team, view.row, 'paragon', view.paragon)"
+              />
+              <TeamImportCellState
+                v-else-if="view.state === 'refinement'"
+                state="review"
+                :reading="`R${view.refinement}`"
+                @confirm="emit('setLevel', shot.id, team, view.row, 'refinement', view.refinement)"
+              />
+              <TeamImportCellState v-else-if="view.state !== 'sure'" :state="view.state" />
+              <TeamImportCellState v-else-if="view.edited" state="edited" />
+            </template>
+          </TeamImportCell>
+        </template>
+      </TeamImportCellGrid>
     </div>
 
     <TeamImportUnits
@@ -392,8 +373,6 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
     </Teleport>
   </div>
 </template>
-
-<style scoped src="./teamImportCells.css"></style>
 
 <style scoped>
 .review-grid {
