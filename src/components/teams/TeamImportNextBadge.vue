@@ -10,7 +10,7 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <span class="next-badge" :class="side === Team.ALLY ? 'left' : 'right'">
+  <span class="next-badge" :class="side === Team.ALLY ? 'ally' : 'enemy'">
     {{ i18n.t('app.next') }}
   </span>
 </template>
@@ -24,11 +24,11 @@ const i18n = useI18nStore()
   color: #fff;
 }
 
-.next-badge.left {
-  background: var(--import-left);
+.next-badge.ally {
+  background: var(--color-ally);
 }
 
-.next-badge.right {
-  background: var(--import-right);
+.next-badge.enemy {
+  background: var(--color-enemy);
 }
 </style>

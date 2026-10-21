@@ -204,8 +204,8 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             class="seg-btn side"
             :class="{
               on: shotWinner(shot) === team,
-              left: team === Team.ALLY,
-              right: team === Team.ENEMY,
+              ally: team === Team.ALLY,
+              enemy: team === Team.ENEMY,
             }"
             :aria-pressed="shotWinner(shot) === team"
             :disabled="shot.status !== 'ready'"
@@ -417,13 +417,12 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   text-overflow: ellipsis;
 }
 
-/* The game's own result colours: orange for the left player, blue for the right. */
-.seg-btn.side.on.left {
-  background: var(--import-left);
+.seg-btn.side.on.ally {
+  background: var(--color-ally);
 }
 
-.seg-btn.side.on.right {
-  background: var(--import-right);
+.seg-btn.side.on.enemy {
+  background: var(--color-enemy);
 }
 
 .shot-status {
