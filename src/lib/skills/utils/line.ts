@@ -47,7 +47,7 @@ export function laneSpan(hexes: Hex[], s: number): [Hex, Hex] | null {
   return min && max && min.getId() !== max.getId() ? [min, max] : null
 }
 
-export interface HexEdge {
+interface HexEdge {
   hex: Hex
   fromCorner: number
   toCorner: number
