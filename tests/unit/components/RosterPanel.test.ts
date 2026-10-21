@@ -13,7 +13,7 @@ import { useRosters } from '@/stores/rosters'
 /* Select mode on the Rosters tab: which heroes a level chip reaches, and when
  * the ticks reset. Dragging across heroes: which heroes a stroke changes. */
 
-// jsdom has neither; the level chips call both for the pill pulse.
+// jsdom has no matchMedia, which useNarrowViewport reads.
 beforeAll(() => {
   window.matchMedia ??= ((media: string) => ({
     matches: false,
@@ -21,7 +21,6 @@ beforeAll(() => {
     addEventListener: () => {},
     removeEventListener: () => {},
   })) as never
-  Element.prototype.animate ??= (() => ({})) as never
 })
 
 let teardown: (() => void) | undefined
