@@ -6,6 +6,7 @@ import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import RosterMenu from './RosterMenu.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
+import PickerSearchRow from '@/components/ui/PickerSearchRow.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -131,9 +132,11 @@ const handleResultSelect = (slug: string) => {
     class="character-selection panel-min-height"
     :class="{ 'panel-fill': scrollable }"
   >
-    <div class="search-row">
-      <SkillSearchTrigger :select="handleResultSelect" />
-    </div>
+    <PickerSearchRow>
+      <template #default>
+        <SkillSearchTrigger :select="handleResultSelect" />
+      </template>
+    </PickerSearchRow>
 
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
@@ -183,29 +186,15 @@ const handleResultSelect = (slug: string) => {
   gap: var(--picker-row-gap);
 }
 
-.search-row {
-  display: flex;
-  padding-right: var(--picker-scrollbar-inset);
-}
-
 @media (max-width: 768px) {
   .character-selection {
     --filter-inset: var(--spacing-md);
-  }
-  .search-row {
-    padding: var(--spacing-sm) var(--spacing-md) 0;
-  }
-  .search-row :deep(.search-trigger) {
-    max-width: none;
   }
 }
 
 @media (max-width: 480px) {
   .character-selection {
     --filter-inset: var(--spacing-sm);
-  }
-  .search-row {
-    padding: var(--spacing-sm) var(--spacing-sm) 0;
   }
 }
 </style>

@@ -2,11 +2,11 @@
 import { computed } from 'vue'
 
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
-import MapInvertToggle from '@/components/MapInvertToggle.vue'
 import ClearButton, { type ClearSide } from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -80,33 +80,13 @@ const clearSides = computed((): ClearSide[] =>
     <!-- Row 1: grid display toggles (plus the page's own, e.g. the mode picker) -->
     <div class="controls-row">
       <slot name="toggles-start" />
-      <label v-if="showWrapToggle" class="grid-toggle-btn" :class="{ active: wrap }">
-        <input type="checkbox" v-model="wrap" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.wrap') }}</span>
-      </label>
+      <ToggleChip v-if="showWrapToggle" v-model="wrap" :label="i18n.t('app.wrap')" />
       <GridInfoToggle v-if="!hideGridInfo" />
-      <label class="grid-toggle-btn" :class="{ active: showSkills }">
-        <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
-      </label>
-      <label v-if="showSynToggle" class="grid-toggle-btn" :class="{ active: synergyView }">
-        <input type="checkbox" v-model="synergyView" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.syn') }}</span>
-      </label>
-      <label class="grid-toggle-btn" :class="{ active: flatView }">
-        <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
-      </label>
-      <MapInvertToggle />
-      <label class="grid-toggle-btn" :class="{ active: teamView, disabled: disableTeamView }">
-        <input
-          type="checkbox"
-          v-model="teamView"
-          :disabled="disableTeamView"
-          class="grid-toggle-checkbox"
-        />
-        <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
-      </label>
+      <ToggleChip v-model="showSkills" :label="i18n.t('app.skills')" />
+      <ToggleChip v-if="showSynToggle" v-model="synergyView" :label="i18n.t('app.syn')" />
+      <ToggleChip v-model="flatView" :label="i18n.t('app.flat')" />
+      <ToggleChip v-model="grids.inverted" :label="i18n.t('app.invert')" />
+      <ToggleChip v-model="teamView" :disabled="disableTeamView" :label="i18n.t('app.team-view')" />
     </div>
 
     <!-- Row 2: action buttons (plus the page's own, e.g. team save actions) -->
@@ -152,54 +132,12 @@ const clearSides = computed((): ClearSide[] =>
   gap: var(--spacing-lg);
 }
 
-.grid-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  cursor: pointer;
-  font-size: var(--control-font-size);
-  font-weight: var(--control-font-weight);
-  user-select: none;
-  border: 2px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  padding: var(--spacing-xs) var(--spacing-md);
-  transition: all var(--transition-fast);
-  min-height: var(--control-height);
-  flex-shrink: 0;
-  white-space: nowrap;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-primary);
-}
-
-.grid-toggle-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.grid-toggle-btn.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.grid-toggle-checkbox {
-  width: 0.9rem;
-  height: 0.9rem;
-  cursor: pointer;
-  accent-color: var(--color-primary);
-  margin: 0;
-}
-
 /* Touch tablets: iPadOS renders the chips' native checkboxes and text wider
    than desktop browsers, enough to push the last chip onto a second line in
    the two-column layout's 660px grid column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .controls-row {
     gap: var(--spacing-sm);
-  }
-  .grid-toggle-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
   }
 }
 
@@ -213,26 +151,6 @@ const clearSides = computed((): ClearSide[] =>
   .controls-row.controls-actions {
     gap: 18px;
   }
-
-  .grid-toggle-btn {
-    border-radius: 999px;
-    border-width: 1px;
-    border-color: var(--color-border-primary);
-    background: var(--color-bg-secondary);
-    color: var(--color-text-secondary);
-    padding: 5px 11px;
-    min-height: var(--control-height-tablet);
-    gap: 0;
-    font-size: 0.78rem;
-  }
-  .grid-toggle-btn.active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
-  }
-  .grid-toggle-checkbox {
-    display: none;
-  }
 }
 
 @media (max-width: 480px) {
@@ -241,11 +159,6 @@ const clearSides = computed((): ClearSide[] =>
   }
   .controls-row.controls-actions {
     gap: 16px;
-  }
-  .grid-toggle-btn {
-    padding: 4px 10px;
-    min-height: var(--control-height-mobile);
-    font-size: 0.74rem;
   }
 }
 </style>

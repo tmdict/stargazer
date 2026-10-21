@@ -16,10 +16,10 @@ import RosterMenu from './RosterMenu.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
-import IconEdit from '@/components/ui/IconEdit.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconTrash from '@/components/ui/IconTrash.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
+import RenameButton from '@/components/ui/RenameButton.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import UpgradeBulkActions from '@/components/ui/UpgradeBulkActions.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
@@ -429,16 +429,11 @@ const {
             @keydown.esc="cancelRename"
             @blur="commitRename"
           />
-          <button
+          <RenameButton
             v-else
-            type="button"
-            class="rename-btn"
-            :title="i18n.t('app.rename')"
-            :aria-label="i18n.t('app.rename')"
+            class="roster-rename"
             @click="startRename(rosters.active.id, rosters.active.name)"
-          >
-            <IconEdit :size="14" />
-          </button>
+          />
         </template>
         <HelpLink class="roster-help" section="rosters" />
       </span>
@@ -782,29 +777,6 @@ const {
   gap: var(--spacing-sm);
 }
 
-.rename-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-small);
-  color: var(--color-text-secondary);
-  opacity: 0.55;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.rename-btn:hover,
-.rename-btn:focus-visible {
-  opacity: 1;
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
 .roster-name-input {
   min-width: 0;
   min-height: 28px;
@@ -823,7 +795,7 @@ const {
 }
 
 @media (max-width: 420px) {
-  :is(.rename-btn, .roster-name-input) + .roster-help {
+  :is(.roster-rename, .roster-name-input) + .roster-help {
     display: none;
   }
 }

@@ -5,6 +5,7 @@ import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import TileSwatch from '@/components/grid/TileSwatch.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
 import IconFill from '@/components/ui/IconFill.vue'
+import ToggleChip from '@/components/ui/ToggleChip.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -63,10 +64,12 @@ const handleArenaSelected = (mapKey: string) => {
         </span>
       </h3>
 
-      <label class="editor-toggle">
-        <input v-model="editorEnabled" type="checkbox" class="editor-toggle-checkbox" />
-        <span>{{ i18n.t('app.edit-tiles') }}</span>
-      </label>
+      <ToggleChip
+        v-model="editorEnabled"
+        standalone
+        class="editor-toggle"
+        :label="i18n.t('app.edit-tiles')"
+      />
 
       <p v-if="editorEnabled" class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
 
@@ -141,35 +144,8 @@ const handleArenaSelected = (mapKey: string) => {
 }
 
 .editor-toggle {
-  display: flex;
   width: fit-content;
   margin: 0 auto 1rem;
-  align-items: center;
-  gap: var(--spacing-xs);
-  cursor: pointer;
-  font-size: var(--control-font-size);
-  font-weight: var(--control-font-weight);
-  user-select: none;
-  border: 2px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  padding: var(--spacing-xs) var(--spacing-md);
-  color: var(--color-text-secondary);
-  background: var(--color-bg-primary);
-  transition: all var(--transition-fast);
-}
-
-.editor-toggle:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.editor-toggle-checkbox {
-  width: 0.9rem;
-  height: 0.9rem;
-  cursor: pointer;
-  accent-color: var(--color-primary);
-  margin: 0;
 }
 
 .editor-description {

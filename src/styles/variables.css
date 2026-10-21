@@ -106,6 +106,10 @@
   --control-height: 36px;
   --control-height-tablet: 34px;
   --control-height-mobile: 30px;
+  --toggle-chip-padding-tablet: 5px 11px;
+  --toggle-chip-padding-mobile: 4px 10px;
+  --toggle-chip-font-size-tablet: 0.78rem;
+  --toggle-chip-font-size-mobile: 0.74rem;
 
   /* iOS zooms the page when a text field under 16px gains focus, and the zoom
      outlives the field. A field sets `font-size: max(<its size>,
