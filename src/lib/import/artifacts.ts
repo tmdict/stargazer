@@ -10,7 +10,8 @@
  * to find its own place can win a crop beside the art (over the disc's rim)
  * and narrow a clear lead to a doubtful one. A reading is sure only when it
  * leads clearly, its shapes match well enough, and the crop holds art at all:
- * the colour term alone still ranks a black or empty disc. */
+ * the colour term alone still ranks a black or empty disc. A player who
+ * fields no artifact gets no badge, and that header reads as none. */
 
 import { cropResize, dot, normalizedVectorMasked } from './image'
 import { HEADER_ICON } from './layout'
@@ -41,6 +42,13 @@ const SHAPE_FLOOR = 0.34
 const SPREAD_FLOOR = 24
 const DARK_LEVEL = 20
 const DARK_SHARE = 0.5
+// No badge: the search window shows the header's own background and the name,
+// with no dark frame in it, and nothing matches it. On labelled screenshots a
+// badge leaves at least 3% of the window darker than BADGE_DARK and its icon
+// scores 1.43 or more; a header without one, no dark pixel and at most 0.76.
+const NONE_SCORE = 1
+const NONE_DARK_SHARE = 0.01
+const BADGE_DARK = 60
 // The review card shows the disc with its frame around it.
 const CARD_SCALE = 1.8
 
@@ -58,13 +66,16 @@ function colourHistogram(img: RgbaImage): Float32Array {
   return h
 }
 
+const luma = (img: RgbaImage, p: number): number =>
+  0.299 * img.data[p * 4]! + 0.587 * img.data[p * 4 + 1]! + 0.114 * img.data[p * 4 + 2]!
+
 // Whether a disc crop has art in it: a black, flat or empty disc does not.
 function holdsArt(img: RgbaImage): boolean {
   let sum = 0
   let sq = 0
   let dark = 0
   for (const p of MASKED) {
-    const l = 0.299 * img.data[p * 4]! + 0.587 * img.data[p * 4 + 1]! + 0.114 * img.data[p * 4 + 2]!
+    const l = luma(img, p)
     sum += l
     sq += l * l
     if (l < DARK_LEVEL) dark++
@@ -72,6 +83,21 @@ function holdsArt(img: RgbaImage): boolean {
   const n = MASKED.length
   const spread = Math.sqrt(Math.max(0, sq / n - (sum / n) ** 2))
   return spread >= SPREAD_FLOOR && dark / n <= DARK_SHARE
+}
+
+// The share of the search window, every disc place and size included, darker
+// than BADGE_DARK.
+function darkShare(shot: RgbaImage, cx: number, cy: number, diameter: number): number {
+  const half = REACH + (diameter + SIZES[SIZES.length - 1]!) / 2
+  let dark = 0
+  let n = 0
+  for (let y = Math.max(0, Math.round(cy - half)); y < Math.min(shot.height, cy + half); y++) {
+    for (let x = Math.max(0, Math.round(cx - half)); x < Math.min(shot.width, cx + half); x++) {
+      n++
+      if (luma(shot, y * shot.width + x) < BADGE_DARK) dark++
+    }
+  }
+  return n ? dark / n : 0
 }
 
 const square = (cx: number, cy: number, size: number): Rect => ({
@@ -149,6 +175,15 @@ export function readArtifact(
     }
   }
   const { disc } = top
+  const cardSize = Math.round(top.rect.w * CARD_SCALE)
+  const card = square(top.rect.x + top.rect.w / 2, top.rect.y + top.rect.h / 2, cardSize)
+  const cardImage = cropResize(shot, card, card.w, card.h)
+  if (
+    disc &&
+    top.score < NONE_SCORE &&
+    darkShare(shot, centreX, centreY, diameter) < NONE_DARK_SHARE
+  )
+    return { candidates: [], margin: 0, sure: true, card: cardImage }
   const candidates = disc
     ? table.ids
         .map((artifactId, i) => ({ artifactId, score: scoreOn(disc, table, i).score }))
@@ -158,7 +193,5 @@ export function readArtifact(
   const margin = candidates.length > 1 ? candidates[0]!.score - candidates[1]!.score : 0
   const sure =
     disc !== null && margin >= SURE_MARGIN && top.shape >= SHAPE_FLOOR && holdsArt(disc.crop)
-  const cardSize = Math.round(top.rect.w * CARD_SCALE)
-  const card = square(top.rect.x + top.rect.w / 2, top.rect.y + top.rect.h / 2, cardSize)
-  return { candidates, margin, sure, card: cropResize(shot, card, card.w, card.h) }
+  return { candidates, margin, sure, card: cardImage }
 }

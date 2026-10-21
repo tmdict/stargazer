@@ -73,9 +73,11 @@ export interface HeroReading extends HeroIdentity {
 export interface ArtifactReading {
   // The icon with its frame, for the review.
   card: RgbaImage
+  // Best first; empty for a header with no badge (no artifact, sure) or with
+  // the icon's place outside the shot (not sure).
   candidates: { artifactId: number; score: number }[]
   margin: number
-  // A clear lead, a good shape match, and art in the crop.
+  // A clear lead, a good shape match, and art in the crop; or no badge at all.
   sure: boolean
 }
 
