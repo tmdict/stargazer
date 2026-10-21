@@ -77,7 +77,7 @@ const emit = defineEmits<{
   save: []
   saveAsNew: [name: string]
   rename: [name: string]
-  importMatch: [plan: TeamImportPlan]
+  importMatch: [plan: TeamImportPlan, name: string]
 }>()
 
 const grids = useGrids()
@@ -195,7 +195,11 @@ const {
           @save-as-new="emit('saveAsNew', $event)"
         />
         <TeamLoadMenu :active-mode />
-        <TeamImportButton :active-mode :variant @import-match="emit('importMatch', $event)" />
+        <TeamImportButton
+          :active-mode
+          :variant
+          @import-match="(plan, name) => emit('importMatch', plan, name)"
+        />
       </template>
     </GridControls>
 

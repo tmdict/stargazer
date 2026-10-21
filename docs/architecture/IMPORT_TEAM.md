@@ -75,7 +75,7 @@ A hero correction teaches the face only when the reader was unsure of the hero a
 
 ## Plan and save
 
-Player names are optional. Without both, the record name stays blank and the library picks its automatic name. With both, the name follows the form `S7 - GNX > 10 (1,3,4,5 > 2)`: the ally-side player first, `>` when they won more maps, and each player's map numbers. The name follows board sides, so after a swap it reads `S7 - 10 < GNX (2 < 1,3,4,5)`.
+Player names are optional. Without both, the record name stays blank and the library picks its automatic name. With both, the name follows the form `S7 - GNX > 10 (1,3,4,5 > 2)`: the ally-side player first, `>` when they won more maps, and each player's map numbers. The name follows board sides, so after a swap it reads `S7 - 10 < GNX (2 < 1,3,4,5)`. The review can type a name of its own in its place; that name stays until the field is cleared, is not stored past the import, and holds only the library's length limit, since the characters the built name keeps out matter only to its form.
 
 The prefix and names persist in `stargazer.import.names`. A missing or non-string field takes its default: the current season as `S<season>`, and empty names.
 
