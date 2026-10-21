@@ -186,7 +186,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             :key="team"
             type="button"
             class="seg-btn side"
-            :class="{ on: shownTeam(shot) === team }"
+            :class="{
+              on: shownTeam(shot) === team,
+              ally: team === Team.ALLY,
+              enemy: team === Team.ENEMY,
+            }"
             :aria-pressed="shownTeam(shot) === team"
             disabled
           >

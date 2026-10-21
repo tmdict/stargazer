@@ -97,6 +97,11 @@ describe('assignUnits', () => {
       { unitId: 11, state: 'sure' },
       { unitId: null, state: 'none' },
     ])
+    // A review pick of it, made while they qualified, is none of them either.
+    expect(assignUnits(units, [11, 12], { 1: WEDGE }, () => false)[1]).toEqual({
+      unitId: null,
+      state: 'none',
+    })
   })
 })
 

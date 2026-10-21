@@ -338,6 +338,17 @@ export function formationsSwapped(
   return lean === 0 ? null : lean > 0
 }
 
+// What a plan is built from beside the result shots and the record name.
+export interface PlanInputs {
+  swapSides: boolean
+  formations: readonly FormationAssignment[]
+  replays: readonly ReplayAssignment[]
+  // Whether result screenshots make this a match, counting unread ones.
+  matchImport: boolean
+  // Whether heroes qualify for a phantimal, the board's faction rule.
+  phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean
+}
+
 /* `swapSides` puts every result shot's Ally column on the enemy side of its
  * board and its Enemy column on the ally side: the game's Ally tab is the
  * viewing player whichever half they fought from. Formation shots and replay
@@ -354,12 +365,7 @@ export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
   names: RecordNames,
-  swapSides = false,
-  formations: readonly FormationAssignment[] = [],
-  replays: readonly ReplayAssignment[] = [],
-  // Whether result screenshots make this a match, counting unread ones.
-  matchImport = shots.length > 0,
-  phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean = () => true,
+  { swapSides, formations, replays, matchImport, phantimalFits }: PlanInputs,
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)

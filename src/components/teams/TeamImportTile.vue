@@ -1,6 +1,9 @@
 <script lang="ts">
 import type { Point } from '@/lib/layout'
 
+// A deployment tile's edge as a share of the tile's width.
+export const TILE_EDGE = 0.0114
+
 // A tile's outline on an import review's screenshot, and its width, which
 // sizes what is drawn on the tile: the game's camera draws near rows wider.
 export function tileOutline(corners: readonly Point[]): { points: string; width: number } {
@@ -25,9 +28,6 @@ defineProps<{
   // The tile the picker is open for.
   active?: boolean
 }>()
-
-// The edge's width as a share of the tile's.
-const EDGE = 0.0114
 </script>
 
 <template>
@@ -35,7 +35,7 @@ const EDGE = 0.0114
     class="pick-tile"
     :class="[side === Team.ALLY ? 'ally' : 'enemy', { active }]"
     :points
-    :style="{ '--edge': `${tileWidth * EDGE}px` }"
+    :style="{ '--edge': `${tileWidth * TILE_EDGE}px` }"
   />
 </template>
 
