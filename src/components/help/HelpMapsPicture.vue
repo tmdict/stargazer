@@ -110,7 +110,7 @@ const PAINT = [
 }
 
 .help-editor-btn.danger {
-  background: #c05b4d;
+  background: var(--color-danger);
 }
 
 .help-maps-board {

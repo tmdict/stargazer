@@ -437,23 +437,23 @@ defineExpose({
 }
 
 .state-available-ally {
-  background: #d4edda;
-  color: #155724;
+  background: color-mix(in srgb, var(--color-ally) 12%, transparent);
+  color: var(--color-ally);
 }
 
 .state-available-enemy {
-  background: #fff3cd;
-  color: #856404;
+  background: color-mix(in srgb, var(--color-enemy) 12%, transparent);
+  color: var(--color-enemy);
 }
 
 .state-occupied-ally {
-  background: #cce7ff;
-  color: #004085;
+  background: color-mix(in srgb, var(--color-ally) 28%, transparent);
+  color: var(--color-ally);
 }
 
 .state-occupied-enemy {
-  background: #f8d7da;
-  color: #721c24;
+  background: color-mix(in srgb, var(--color-enemy) 28%, transparent);
+  color: var(--color-enemy);
 }
 
 .state-blocked {
@@ -559,7 +559,7 @@ defineExpose({
 }
 
 .remove-artifact-btn {
-  background: #c05b4d;
+  background: var(--color-danger);
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
@@ -577,7 +577,7 @@ defineExpose({
 }
 
 .remove-artifact-btn:hover {
-  background: var(--color-enemy);
+  background: var(--color-danger-hover);
 }
 
 .debug-toggle-inline {
