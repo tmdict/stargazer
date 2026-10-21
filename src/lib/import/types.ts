@@ -1,23 +1,10 @@
 /* Match screenshot import: the readings a result or formation screenshot
  * yields, and the reference tables the readers match against. Pure data,
  * shared by the worker, the composable, and the plan builder in
- * lib/teams/teamImport. Every pixel buffer is an RGBA `RgbaImage` (the shape
- * of a canvas ImageData), so nothing here depends on the DOM. */
+ * lib/teams/teamImport. */
 
 import type { Team } from '@/lib/types/team'
-
-export interface RgbaImage {
-  width: number
-  height: number
-  data: Uint8ClampedArray
-}
-
-export interface Rect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
+import type { Rect, RgbaImage } from './core/types'
 
 export interface HeroCandidate {
   characterId: number

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { cropResize } from '@/lib/import/core/image'
+import type { RgbaImage } from '@/lib/import/core/types'
 import { paragonFromMatch, prepareFrameRefs } from '@/lib/import/frames'
 import {
   assignUnique,
@@ -10,14 +12,13 @@ import {
   heroDescriptor,
   rankHeroes,
 } from '@/lib/import/heroes'
-import { cropResize } from '@/lib/import/image'
 import {
   addLearnedIcon,
   dropLearnedIcon,
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
-import type { HeroCandidate, RgbaImage } from '@/lib/import/types'
+import type { HeroCandidate } from '@/lib/import/types'
 import { createImage } from '../../fixtures/image'
 
 const cand = (

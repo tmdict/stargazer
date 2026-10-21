@@ -1,4 +1,4 @@
-import type { RgbaImage } from '@/lib/import/types'
+import type { RgbaImage } from '@/lib/import/core/types'
 
 // A blank, fully transparent picture for the import readers to draw on.
 export const createImage = (width: number, height: number): RgbaImage => ({

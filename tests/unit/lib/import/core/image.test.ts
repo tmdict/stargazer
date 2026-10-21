@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { cropResize, maskedNcc, resample } from '@/lib/import/image'
-import type { RgbaImage } from '@/lib/import/types'
-import { createImage } from '../../fixtures/image'
+import { cropResize, maskedNcc, resample } from '@/lib/import/core/image'
+import type { RgbaImage } from '@/lib/import/core/types'
+import { createImage } from '../../../fixtures/image'
 
 const paint = (img: RgbaImage, x: number, y: number, rgb: [number, number, number], a = 255) => {
   const i = (y * img.width + x) * 4

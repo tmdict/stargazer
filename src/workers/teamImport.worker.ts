@@ -6,6 +6,7 @@
  * message each way; the other holds only the arena and sorts pastes. */
 
 import { buildArtifactTable } from '@/lib/import/artifacts'
+import type { RgbaImage } from '@/lib/import/core/types'
 import { readFormation } from '@/lib/import/formation'
 import { prepareFrameRefs } from '@/lib/import/frames'
 import { buildHeroTable } from '@/lib/import/heroes'
@@ -19,7 +20,6 @@ import {
   type LearnedIcon,
   type PortraitRef,
   type ReferenceSet,
-  type RgbaImage,
   type ScreenshotReading,
   type ShotKind,
 } from '@/lib/import/types'

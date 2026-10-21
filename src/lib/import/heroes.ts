@@ -9,7 +9,8 @@
  * its best window from any of them counts. Descriptors learned from
  * corrections join the table as extra rows. */
 
-import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from './image'
+import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
 import type {
   CropWindow,
   HeroCandidate,
@@ -17,8 +18,6 @@ import type {
   HeroTable,
   LearnedIcon,
   PortraitRef,
-  Rect,
-  RgbaImage,
 } from './types'
 
 // Worker-resident portrait size: half of the 180 × 248 art, which loses

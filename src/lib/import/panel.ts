@@ -6,10 +6,10 @@
  * whole phone screen). A tab cut by the shot's left edge has neither, and
  * such a crop is taken as starting at the panel, like a shot without tabs. */
 
-import { resample } from './image'
+import { resample } from './core/image'
+import type { RgbaImage } from './core/types'
 import { CANONICAL_WIDTH, TABS } from './layout'
 import { findTabs, type TabBlock, type TabPair } from './strip'
-import type { RgbaImage } from './types'
 
 export interface FramedPanel {
   image: RgbaImage
