@@ -20,7 +20,7 @@ The hard part is that screenshots vary. Players crop them, phones have different
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
 
-Shots are decoded to pixels on the main thread and read in the worker by canvas-free code. `scripts/check-import.ts` drives the same readers and reference assembly from Node, so the checker and the app cannot drift apart.
+Shots are decoded to pixels on the main thread and read in the worker by canvas-free code. The readers and the reference assembly also run in Node, against labelled screenshots kept outside this repo, so both stay free of browser-only APIs.
 
 ## Decisions
 
@@ -133,7 +133,7 @@ The camera, the arena picture and the strip's circles were measured on the frame
 
 ## Reference descriptors
 
-Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the checker alike. Portraits and costumes give general coverage. The bundled [`hero-icons.json`](../../src/data/import/hero-icons.json) holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
+Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and costumes give general coverage. The bundled [`hero-icons.json`](../../src/data/import/hero-icons.json) holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
 
 The bundled file and browser storage (`stargazer.import.learned`) share one object, validated by `readLearnedIcons`:
 
@@ -166,69 +166,7 @@ The bundled file and browser storage (`stargazer.import.learned`) share one obje
 
 Each descriptor appears once. A local lesson for identical descriptor bytes overrides the bundled label, and forgetting local learning restores it. Different crops of one hero stay separate examples, and nothing is averaged or voted. No client correction ever edits the bundled file.
 
-## Checking against real screenshots
-
-The checker is the only regression check on real images and the first thing to run when the game changes its result screen. `scripts/lib/importTooling.ts` decodes references the way the app does (EXIF applied, portraits re-encoded as WebP, icons capped at 128 px), from the image host or from a local copy of its `img/` tree.
-
-```sh
-npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]
-```
-
-Truth defaults to `truth.json` beside the samples. Cells `a1` to `a5` and `e1` to `e5` score hero, paragon and refinement separately, and every field is optional, since an omitted field is unreviewed. Artifacts score only where labelled, and a strip count that disagrees with `maps` is flagged. Every hero and artifact slug must be in the current data, and the checker stops on one that is not, such as a retired season's artifact.
-
-```json
-{
-  "match-1.png": {
-    "maps": 5,
-    "cells": {
-      "a1": { "hero": "gunnar", "p": 4, "r": 4 },
-      "e1": { "hero": "phraesto", "p": 2 }
-    },
-    "artifacts": { "a": "<artifact slug>", "e": null }
-  }
-}
-```
-
-Truth data measures the reader, and reference data changes it. Fixing a wrong expected label changes the evaluation, not the matcher. A descriptor update is judged by which cells it fixes and which it newly breaks, never by its total score alone.
-
-Formation screenshots have a checker of their own. It builds the plan as the app does, so it runs the app modules through Vite's server-side loader (the map registry and skills load with `import.meta.glob`). A set folder holds the formation screenshots under `formations/` and the same match's result screenshots, which name each board's lineup, under `results/`.
-
-```sh
-npm run check:formation -- --samples <dir> [--truth <json>] [--references <dir>] [--mode 5v5]
-```
-
-Its truth defaults to `formations/truth.json`, keyed by file name:
-
-```json
-{
-  "sl-1.png": {
-    "slots": 5,
-    "slot": 1,
-    "side": "ally",
-    "map": "arena1",
-    "artifact": "soulshock",
-    "phantimal": "wedge-of-matter",
-    "units": [
-      { "hex": 16, "hero": "dunlingr" },
-      { "hex": 3, "phantimal": "wedge-of-matter" },
-      { "hex": 5, "companionOf": "wedge-of-matter" }
-    ]
-  }
-}
-```
-
-| Field       | Rule                                                                                                                                                                                                                                                                                     |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slots`     | How many slot circles the strip has.                                                                                                                                                                                                                                                     |
-| `slot`      | The selected circle, numbered from 1 as in game.                                                                                                                                                                                                                                         |
-| `side`      | `"ally"` or `"enemy"`: the team the screenshot shows.                                                                                                                                                                                                                                    |
-| `map`       | The map key the lit tiles are, under `src/data/arena/`.                                                                                                                                                                                                                                  |
-| `artifact`  | The artifact card's slug, or `null` for none.                                                                                                                                                                                                                                            |
-| `phantimal` | The phantimal fielded, or `null` for none.                                                                                                                                                                                                                                               |
-| `cards`     | For a set without result screenshots: `c1` to `c5` left to right, each `{ hero, p, r }` as a result truth's cells. Left out where the result screenshots' truth holds the lineup.                                                                                                        |
-| `units`     | Every unit on the board, so a tile not listed is empty. Each has `hex` (1 to 45, as the board shows it) and one of `hero`, `phantimal`, or `companionOf` naming an owner listed in the same array; `index` (from 1) pins one of an owner's companions, which otherwise compare as a set. |
-
-Every field is optional, an omitted one is unreviewed, and every slug must be in the current data.
+## Hosted references
 
 `importReferenceUrl` fetches the import references from the image host under `img/import/`: the paragon frames `frame-p0` to `frame-p4-crown`, a `skins.json` manifest shaped `{ "<hero slug>": ["<file>", …] }`, and the costume captures under `skin/`. A missing manifest means no costumes. Artifact references are the bundled permanent icons plus the hosted seasonal set, capped at 128 px.
 
