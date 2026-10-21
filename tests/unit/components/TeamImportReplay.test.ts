@@ -147,7 +147,7 @@ describe('a tile click', () => {
     const { picks } = await mountReplay()
     const [a0, a1, a2, a3] = deploymentTiles(State.AVAILABLE_ALLY)
     const enemy = deploymentTile(State.AVAILABLE_ENEMY)
-    const allyRows = () => [...document.querySelectorAll<HTMLElement>('.lineup.left .lineup-pick')]
+    const allyRows = () => [...document.querySelectorAll<HTMLElement>('.lineup.ally .lineup-pick')]
 
     await clickTile(a0!)
     await clickTile(enemy)
@@ -169,7 +169,7 @@ describe('a tile click', () => {
   it('uses up a chosen hero placed by typing its tile', async () => {
     const { picks } = await mountReplay()
     const [a0, a1] = deploymentTiles(State.AVAILABLE_ALLY)
-    document.querySelectorAll<HTMLElement>('.lineup.left .lineup-pick')[1]!.click()
+    document.querySelectorAll<HTMLElement>('.lineup.ally .lineup-pick')[1]!.click()
     await nextTick()
     const box = document.querySelectorAll<HTMLInputElement>('.tile-box')[1]!
     await type(box, String(a0), new Event('change'))
@@ -215,7 +215,7 @@ describe('the tile picker', () => {
     document.addEventListener('keydown', modal)
     const ally = deploymentTile(State.AVAILABLE_ALLY)
     // Choosing the highlighted hero again stops placing, so a click opens the picker.
-    document.querySelector<HTMLElement>('.lineup.left li.next .lineup-pick')!.click()
+    document.querySelector<HTMLElement>('.lineup.ally li.next .lineup-pick')!.click()
     await nextTick()
     const open = async () => {
       await clickTile(ally)

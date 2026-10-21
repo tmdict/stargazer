@@ -300,7 +300,7 @@ const tileBoxes = (): HTMLInputElement[] => [
           v-for="lineup in lineups"
           :key="lineup.side"
           class="lineup"
-          :class="lineup.side === Team.ALLY ? 'left' : 'right'"
+          :class="lineup.side === Team.ALLY ? 'ally' : 'enemy'"
         >
           <div class="lineup-head">
             <span class="lineup-label">{{ i18n.t(teamLabelKey(lineup.side)) }}</span>
@@ -451,12 +451,12 @@ const tileBoxes = (): HTMLInputElement[] => [
   font-weight: 700;
 }
 
-.lineup.left .lineup-label {
-  color: var(--import-left);
+.lineup.ally .lineup-label {
+  color: var(--color-ally);
 }
 
-.lineup.right .lineup-label {
-  color: var(--import-right);
+.lineup.enemy .lineup-label {
+  color: var(--color-enemy);
 }
 
 .lineup-units {
@@ -482,12 +482,12 @@ const tileBoxes = (): HTMLInputElement[] => [
   background: var(--import-surface);
 }
 
-.lineup.left li.next {
-  box-shadow: inset 3px 0 0 var(--import-left);
+.lineup.ally li.next {
+  box-shadow: inset 3px 0 0 var(--color-ally);
 }
 
-.lineup.right li.next {
-  box-shadow: inset 3px 0 0 var(--import-right);
+.lineup.enemy li.next {
+  box-shadow: inset 3px 0 0 var(--color-enemy);
 }
 
 .lineup-pick {
