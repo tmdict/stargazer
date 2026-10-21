@@ -16,8 +16,9 @@ import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { FIT_WIDTH } from '@/lib/import/board'
+import { FRAME_NAMES } from '@/lib/import/card/frames'
+import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
-import { FRAME_NAMES } from '@/lib/import/frames'
 import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
   addLearnedIcon,
@@ -25,12 +26,11 @@ import {
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
+import type { CellOverride } from '@/lib/import/review'
 import {
   isFormationReading,
   isReplayReading,
   type FormationReading,
-  type LearnedIcon,
-  type PortraitRef,
   type ReplayReading,
   type ScreenshotReading,
   type ShotKind,
@@ -42,7 +42,6 @@ import {
   buildTeamImportPlan,
   formationsSwapped,
   overrideKey,
-  type CellOverride,
   type FormationAssignment,
   type PlanInputs,
   type RecordNames,

@@ -24,7 +24,8 @@ import type { ImportShot } from '@/composables/useTeamImport'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
-import type { HeroReading } from '@/lib/import/types'
+import type { HeroReading } from '@/lib/import/card/types'
+import type { CellState } from '@/lib/import/review'
 import {
   artifactState,
   cellArtifactId,
@@ -32,7 +33,6 @@ import {
   overrideKey,
   reviewStates,
   SIDES,
-  type CellState,
   type RecordNames,
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'

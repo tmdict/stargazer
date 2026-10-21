@@ -9,8 +9,8 @@
  * its best window from any of them counts. Descriptors learned from
  * corrections join the table as extra rows. */
 
-import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from './core/image'
-import type { Rect, RgbaImage } from './core/types'
+import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from '../core/image'
+import type { Rect, RgbaImage } from '../core/types'
 import type {
   CropWindow,
   HeroCandidate,

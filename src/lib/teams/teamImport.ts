@@ -9,10 +9,17 @@
  * player's own levels, never a match's, so the two never mix. Pure data
  * mapping, a sibling of sideLoad. */
 
-import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
+import type { AttrRecord } from '@/lib/characters/attributes'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
-import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
+import {
+  cellState,
+  reviewedAttrs,
+  reviewedCharacterId,
+  type CellOverride,
+  type CellState,
+} from '@/lib/import/review'
+import type { FormationReading, ScreenshotReading } from '@/lib/import/types'
 import {
   assignedPortraits,
   assignUnits,
@@ -29,12 +36,6 @@ import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 
 export const SIDES = [Team.ALLY, Team.ENEMY] as const
-
-export interface CellOverride {
-  characterId?: number | null
-  paragon?: number
-  refinement?: number
-}
 
 export interface ShotAssignment {
   reading: ScreenshotReading
@@ -147,19 +148,12 @@ export const isBlockingIssue = (issue: PlanIssue): boolean =>
 // those four characters are the only ones a name cannot carry.
 export const NAME_FORBIDDEN = /[<>()]/
 
-/* The hero a cell contributes: the override when one was made (null =
- * removed), else the top candidate. */
 export const cellCharacterId = (
   reading: ScreenshotReading,
   team: Team,
   row: number,
   overrides: Record<string, CellOverride>,
-): number | null => {
-  const override = overrides[overrideKey(team, row)]
-  if (override && override.characterId !== undefined) return override.characterId
-  const cell = reading.sides[team][row]
-  return cell?.recognised ? (cell.candidates[0]?.characterId ?? null) : null
-}
+): number | null => reviewedCharacterId(reading.sides[team][row], overrides[overrideKey(team, row)])
 
 const columnIds = (
   reading: ScreenshotReading,
@@ -173,16 +167,7 @@ const cellAttrs = (
   team: Team,
   row: number,
   overrides: Record<string, CellOverride>,
-): AttrRecord => {
-  const cell = reading.sides[team][row]
-  const override = overrides[overrideKey(team, row)] ?? {}
-  const attrs: AttrRecord = {}
-  const paragon = override.paragon ?? cell?.paragon.level ?? 0
-  const refinement = override.refinement ?? cell?.refinement.level ?? 0
-  if (paragon) attrs[ATTR_PARAGON] = paragon
-  if (refinement) attrs[ATTR_REFINEMENT] = refinement
-  return attrs
-}
+): AttrRecord => reviewedAttrs(reading.sides[team][row], overrides[overrideKey(team, row)])
 
 /* The artifact a side contributes: the override when one was made (null =
  * removed), else the top candidate. */
@@ -207,24 +192,6 @@ export const artifactState = (
   if (overrides[team] !== undefined) return 'sure'
   const artifact = reading.artifacts[team]
   return !artifact || artifact.sure ? 'sure' : 'review'
-}
-
-export type CellState = 'sure' | 'review' | 'paragon' | 'refinement' | 'none' | 'duplicate'
-
-/* The state the review shows for a cell. A cell removed in review has nothing
- * left to check; one nobody recognised or picked is `none`; otherwise the
- * hero, the paragon and the refinement each stand once read surely or edited,
- * asked about in that order (a doubtful frame match puts the whole card in
- * doubt, levels included). */
-const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
-  if (override.characterId === null) return 'sure'
-  if (override.characterId === undefined && !cell.recognised) return 'none'
-  const heroSure = override.characterId !== undefined || cell.sure
-  const paragonSure = override.paragon !== undefined || cell.paragon.sure
-  const refinementSure = override.refinement !== undefined || cell.refinement.sure
-  if (!heroSure) return 'review'
-  if (!paragonSure) return 'paragon'
-  return refinementSure ? 'sure' : 'refinement'
 }
 
 /* Every cell's state on one side; a hero on two of its cells marks both. */

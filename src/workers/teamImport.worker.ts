@@ -6,10 +6,11 @@
  * message each way; the other holds only the arena and sorts pastes. */
 
 import { buildArtifactTable } from '@/lib/import/artifacts'
+import { prepareFrameRefs } from '@/lib/import/card/frames'
+import { buildHeroTable } from '@/lib/import/card/heroes'
+import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
 import { readFormation } from '@/lib/import/formation'
-import { prepareFrameRefs } from '@/lib/import/frames'
-import { buildHeroTable } from '@/lib/import/heroes'
 import { readScreenshot } from '@/lib/import/pipeline'
 import { buildImportHeroTable } from '@/lib/import/references'
 import { prepareArena, readReplay } from '@/lib/import/replay'
@@ -17,8 +18,6 @@ import { sortScreenshot } from '@/lib/import/sort'
 import {
   isFormationReading,
   type ArenaRef,
-  type LearnedIcon,
-  type PortraitRef,
   type ReferenceSet,
   type ScreenshotReading,
   type ShotKind,

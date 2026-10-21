@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import { readStars } from '@/lib/import/card/stars'
 import type { RgbaImage } from '@/lib/import/core/types'
-import { readStars } from '@/lib/import/stars'
-import { createImage } from '../../fixtures/image'
+import { createImage } from '../../../fixtures/image'
 
 type Rgb = [number, number, number]
 

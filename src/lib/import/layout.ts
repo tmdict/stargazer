@@ -39,11 +39,6 @@ export const CARD_TOP = 237
 export const PANEL_GAP = 710
 export const PANEL_GAP_RANGE = [620, 900] as const
 
-// The face inside a matched frame: fractions of the frame box. Only the upper
-// part of the art is used, since the badges and the frame's white swirl
-// cover the rest.
-export const ART_BOX = { x: 0.23, y: 0.2, w: 0.69, aspect: 36 / 48 } as const
-
 // The art disc of the round artifact icon under each player name: its
 // nominal centre relative to the ally column anchor, and its diameter. The
 // header's distance from the cards varies by a few pixels, which the

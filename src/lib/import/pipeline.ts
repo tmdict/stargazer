@@ -7,21 +7,10 @@
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
-import { cropResize } from './core/image'
-import type { Rect, RgbaImage } from './core/types'
+import { readCards } from './card/card'
+import type { FrameRef, HeroReading } from './card/types'
+import type { RgbaImage } from './core/types'
 import {
-  ANCHOR_FLOOR,
-  findPanelAnchor,
-  LANDMARK_FLOOR,
-  matchCard,
-  paragonFromMatch,
-  scanForColumns,
-  TAB_ANCHOR_OX,
-  type PanelAnchor,
-} from './frames'
-import { assignUnique, heroDescriptor, rankHeroes } from './heroes'
-import {
-  ART_BOX,
   CARD_COLUMN_X,
   CARD_PITCH,
   CARD_ROWS,
@@ -32,46 +21,20 @@ import {
   TABS,
 } from './layout'
 import { framePanel } from './panel'
-import { readStars } from './stars'
+import {
+  ANCHOR_FLOOR,
+  findPanelAnchor,
+  LANDMARK_FLOOR,
+  scanForColumns,
+  TAB_ANCHOR_OX,
+  type PanelAnchor,
+} from './screens/result/columns'
 import { readStrip, readTab, type TabPair } from './strip'
-import type {
-  ArtifactReading,
-  FrameRef,
-  HeroCandidate,
-  HeroIdentity,
-  HeroReading,
-  ImportWarning,
-  ReferenceSet,
-  ScreenshotReading,
-} from './types'
+import type { ArtifactReading, ImportWarning, ReferenceSet, ScreenshotReading } from './types'
 
 // A result screen never shows a companion or phantimal, so its reading needs
 // no unit table.
 type ResultReferences = Omit<ReferenceSet, 'units'>
-
-// Small offsets of the face crop, centre first, absorbing the frame match's
-// residual error.
-const ALIGNMENTS: readonly [number, number][] = [
-  [0, 0],
-  [-2, -3],
-  [0, -3],
-  [2, -3],
-  [-2, 0],
-  [2, 0],
-  [-2, 3],
-  [0, 3],
-  [2, 3],
-]
-
-export const artBoxOf = (box: Rect): Rect => {
-  const w = Math.round(box.w * ART_BOX.w)
-  return {
-    x: Math.round(box.x + box.w * ART_BOX.x),
-    y: Math.round(box.y + box.h * ART_BOX.y),
-    w,
-    h: Math.round(w * ART_BOX.aspect),
-  }
-}
 
 interface Columns {
   tabs: TabPair | null
@@ -124,44 +87,6 @@ const placeColumns = (
     },
     floor: LANDMARK_FLOOR,
   }
-}
-
-/* Five cards from where each is expected (its frame's top-left): each card's
- * frame pins its box, and the face, the star row and a crop for the review
- * come from there. Without a trusted placement the boxes are guesses, so the
- * cells are offered empty for the picker rather than with a stranger's face.
- * A side fields five different heroes, so the faces are settled together. */
-export const readCards = (
-  shot: RgbaImage,
-  refs: ResultReferences,
-  seeds: readonly { x: number; y: number }[],
-  trusted: boolean,
-): HeroReading[] => {
-  const cells: Omit<HeroReading, keyof HeroIdentity>[] = []
-  const rankings: HeroCandidate[][] = []
-  for (const seed of seeds) {
-    const match = matchCard(shot, refs.frames, { ...seed, pitch: 0 }, 0)
-    const art = artBoxOf(match.box)
-    const alignments = ALIGNMENTS.map(([dx, dy]) =>
-      heroDescriptor(shot, { ...art, x: art.x + dx, y: art.y + dy }),
-    )
-    rankings.push(trusted ? rankHeroes(refs.heroes, alignments) : [])
-    const cardRect = {
-      x: match.box.x - 3,
-      y: match.box.y - 3,
-      w: match.box.w + 6,
-      h: match.box.h + 6,
-    }
-    cells.push({
-      box: match.box,
-      card: cropResize(shot, cardRect, cardRect.w, cardRect.h),
-      descriptor: alignments[0]!,
-      paragon: paragonFromMatch(match),
-      refinement: readStars(shot, match.box),
-    })
-  }
-  const identities = assignUnique(rankings)
-  return cells.map((cell, row) => ({ ...cell, ...identities[row]! }))
 }
 
 // A panel's five cards stacked under its anchor.
