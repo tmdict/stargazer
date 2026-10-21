@@ -214,7 +214,6 @@ onUnmounted(() => {
   --in: #e07070;
 }
 
-/* Two deliberate rows: reading direction, then line strengths. */
 .key {
   display: flex;
   flex-wrap: wrap;
@@ -257,11 +256,8 @@ onUnmounted(() => {
   height: calc(var(--rows) * var(--row));
   max-width: 780px;
   margin: 22px auto 0;
-  /* Centred on the drawing's extremes, not the node column (see layout). */
   transform: translateX(var(--offset));
 }
-/* Transparent to the pointer except along the curves' hit strokes, so a
-   click between curves reaches the ladder and clears the selection. */
 .graph > svg {
   position: absolute;
   inset: 0;
@@ -379,8 +375,6 @@ onUnmounted(() => {
   stroke-width: 5px;
 }
 
-/* Arrowheads: a curve on the left side arrives at the loser's left edge
-   pointing right, and vice versa. */
 .point {
   position: absolute;
   width: 0;
@@ -472,7 +466,6 @@ onUnmounted(() => {
   opacity: 0.16;
 }
 
-/* Selection feedback for assistive tech only. */
 .status {
   position: absolute;
   width: 1px;
@@ -482,7 +475,6 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* Compact ladder when its panel is narrow (a side column or a phone). */
 @container (max-width: 700px) {
   .content {
     --row: 92px;

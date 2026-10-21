@@ -112,8 +112,6 @@ const bands = computed((): Band[] => [
   margin-top: 6px;
 }
 
-/* A fixed name column keeps every track starting and ending on the same x,
-   so bead positions compare across rows. */
 .band {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
@@ -134,7 +132,6 @@ const bands = computed((): Band[] => [
   white-space: nowrap;
 }
 
-/* The ring is the panel background, so overlapped icons read as separate discs. */
 .factions {
   display: inline-flex;
   margin-left: 6px;
@@ -150,7 +147,6 @@ const bands = computed((): Band[] => [
   margin-left: -5px;
 }
 
-/* Inset by half a bead so the P0 and max pills sit inside the row. */
 .track {
   position: relative;
   height: 22px;

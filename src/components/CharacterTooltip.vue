@@ -68,7 +68,6 @@ const rows = computed(() => [
   white-space: nowrap;
 }
 
-/* The energy icon is darker than the others. */
 :deep(.energy-icon) {
   filter: brightness(1.5);
 }

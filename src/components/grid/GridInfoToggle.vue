@@ -183,7 +183,6 @@ const panelShift = usePanelClamp(
   flex-shrink: 0;
 }
 
-/* Split chip, sized like GridControls' .grid-toggle-btn so the row stays even. */
 .chip {
   display: inline-flex;
   align-items: stretch;
@@ -237,15 +236,12 @@ const panelShift = usePanelClamp(
   background: var(--color-bg-secondary);
 }
 
-/* GridControls' touch-tablet compact tier: match the row's chip padding so
-   the row stays one line in the 660px column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .chip-body {
     padding-left: var(--spacing-sm);
   }
 }
 
-/* Narrow trigger: matches GridControls' mobile choice chips. */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -281,7 +277,6 @@ const panelShift = usePanelClamp(
   }
 }
 
-/* ShareView: compact, translucent-on-dark, matching the Edit/Close buttons. */
 .grid-info-toggle.share .chip {
   min-height: 32px;
   border-width: 1px;
@@ -305,8 +300,6 @@ const panelShift = usePanelClamp(
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ShareView panel: the share chrome is dark, so the popover follows it
-   instead of the app's light dropdown surface. */
 .grid-info-toggle.share .panel {
   background: rgba(20, 20, 20, 0.92);
   backdrop-filter: blur(10px);
@@ -322,8 +315,6 @@ const panelShift = usePanelClamp(
   color: rgba(255, 255, 255, 0.95);
 }
 
-/* Children panel, centered under the trigger (or left-aligned) and clamped to
-   the viewport. */
 .panel {
   position: absolute;
   top: calc(100% + 4px);
@@ -384,9 +375,8 @@ const panelShift = usePanelClamp(
   margin: 0;
 }
 
-/* Chip tray (narrow): master first, one divider, then the children. The base
-   panel's min-width: max-content would beat max-width and defeat the wrap,
-   running the tray off the phone screen. */
+/* The base panel's min-width: max-content would beat max-width and defeat the
+   wrap, running the tray off the phone screen. */
 .panel.tray {
   display: flex;
   flex-wrap: wrap;

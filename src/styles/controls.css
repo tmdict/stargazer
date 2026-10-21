@@ -1,8 +1,5 @@
-/* Control-bar action buttons, shared by GridControls and the components that
-   render into its rows (ClearButton, TeamSaveActions). One design decision in
-   one place: filled 36px buttons that collapse to round icon-only buttons on
-   mobile. Buttons outside the control bar (popovers, cards) must not use this
-   class, or the mobile collapse would hide their text. */
+/* Buttons in popovers and cards must not use this class, or the mobile
+   collapse would hide their text. */
 
 .control-btn {
   display: inline-flex;
@@ -60,17 +57,12 @@
   border-color: var(--color-danger-hover);
 }
 
-/* Armed step of a two-step confirm (useArmedConfirm). The ping makes the state
-   read even on a small icon-only circle, where a static ring is easy to miss.
-   Icon buttons outside the control bar add .confirm-armed and darken their own
-   fill. */
 .control-btn.danger.armed,
 .confirm-armed {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
   animation: confirm-ping 0.9s ease-out infinite;
 }
 
-/* The first shadow keeps the static ring; the second expands and fades. */
 @keyframes confirm-ping {
   from {
     box-shadow:
@@ -95,9 +87,6 @@
   flex-shrink: 0;
 }
 
-/* Compact: panel bars (the Rosters tab), level with a pill dropdown the way
-   the Saved Teams buttons sit level with their chips. Phones keep the round
-   icon buttons below. */
 @media (min-width: 769px) {
   .control-btn.compact {
     min-height: 28px;

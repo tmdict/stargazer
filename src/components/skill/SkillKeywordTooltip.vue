@@ -109,7 +109,6 @@ onUnmounted(() => {
 
 <style scoped>
 .keyword-tip {
-  /* Game tooltip strings carry literal newlines. */
   white-space: pre-line;
 }
 </style>

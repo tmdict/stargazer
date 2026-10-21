@@ -169,9 +169,6 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
   color: var(--color-primary);
 }
 
-/* The active underline sits under the word, not on the button's bottom edge,
-   where "All" would read as bottom-aligned beside the icons. The matching top
-   border keeps the bare word on the icons' centre line. */
 .clear-label {
   padding: 3px 1px;
   border-block: 2px solid transparent;
@@ -181,8 +178,6 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
   transition: translate var(--transition-fast);
 }
 
-/* An optical correction: with the underline showing, the pair looks low at
-   the word's true centre, so both are lifted. */
 .clear-option.active .clear-label {
   border-bottom-color: var(--active-border-color, var(--color-bg-white));
   translate: 0 -2px;

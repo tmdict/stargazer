@@ -270,7 +270,6 @@ nav ul li {
   transform: scale(1.25);
 }
 
-/* Utility icons (language, source, about). */
 .menu {
   display: flex;
   list-style: none;
@@ -299,15 +298,10 @@ nav ul li {
   color: #f7d87c;
 }
 
-/* Wide headers: the search pill leads the right-side cluster and its auto
-   margin is the push off the logo. Below 921px the full pill overflows the
-   bar (natural width ~836px), so search swaps to the .menu-search icon in
-   the utility cluster and the push returns to the tab row. */
 .nav-search {
   margin-left: auto;
 }
 
-/* Section tabs; sit at the right ahead of the icons on desktop. */
 .nav-tabs {
   display: flex;
   align-items: flex-end;
@@ -331,9 +325,6 @@ nav ul li {
   }
 }
 
-/* The magnifier's handle hangs bottom-right, so box-centering leaves the
-   circle (what the eye reads) ~1px above its siblings; nudge to optically
-   align. */
 .menu-search svg {
   transform: translateY(1px);
 }
@@ -373,9 +364,6 @@ nav ul li {
   transition: color 0.2s ease;
 }
 
-/* Mobile: two rows (logo + icons on top, a full-width segmented tab strip
-   below) instead of cramming everything into one shrunken row. The icons
-   (order 1) stay on the logo row; the tabs (order 2, full-width) wrap beneath. */
 @media (max-width: 768px) {
   nav {
     align-items: center;
@@ -393,9 +381,8 @@ nav ul li {
     gap: 1rem;
   }
 
-  /* This row centers vertically: neutralize base.css's prose li metrics
-     (4px top margin + a 1.6 line-height strut), which otherwise sink the
-     icons a few px below the row's center. */
+  /* base.css's li top margin and 1.6 line-height would otherwise sink the
+     icons below the row's center. */
   .menu li {
     margin: 0;
     display: flex;

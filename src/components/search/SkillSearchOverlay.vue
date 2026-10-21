@@ -583,9 +583,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
-/* --sso-width is the panel's width with its detail pane. Its width without
-   the pane and its height cap are both 640/820 of that, the proportions it
-   was drawn with, so a wider panel keeps its shape. */
 .sso-panel {
   --sso-width: 820px;
   --sso-short: calc(var(--sso-width) * 640 / 820);
@@ -692,8 +689,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   padding-bottom: 4px;
 }
 
-/* Subtle thin scrollbars instead of the default high-contrast ones (same
-   treatment as the locale menu panel). */
 .sso-list,
 .sso-pane {
   scrollbar-width: thin;
@@ -738,9 +733,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   cursor: pointer;
 }
 
-/* The row cursor above stays visible everywhere (arrow keys work with the
-   hardware keyboards tablets often have); this secondary Tab cursor hides on
-   hover-less devices, where it reads as a stuck selection. */
 @media (hover: hover) {
   .sso-pane-hit.on {
     border-left-color: var(--color-accent);
@@ -760,8 +752,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   line-height: 1.6;
 }
 
-/* Keyword color alone lacks contrast on the dark panel; pane-body matches can
-   wrap, hence the cloned per-line decoration. */
 .sso-panel mark {
   padding: 1px 3px;
   border-radius: 4px;
@@ -838,8 +828,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   color: #fff;
 }
 
-/* An accent tint vanishes on the accent-active row, so the mark shares the
-   selected chip's white wash. */
 .sso-row.sel .sso-snip mark {
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
@@ -928,7 +916,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   clip-path: inset(50%);
 }
 
-/* open/close motion; opacity-only under reduced motion */
 .sso-enter-active {
   transition: opacity 0.15s ease;
 }
@@ -956,7 +943,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   }
 }
 
-/* Mobile: the overlay becomes a full-screen layer. */
 @media (max-width: 768px) {
   .sso-backdrop {
     padding-top: 0;
@@ -983,7 +969,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   .sso-portrait {
     height: 42px;
   }
-  /* Matched text outranks the slot label when row width is scarce. */
   .sso-chip {
     display: none;
   }

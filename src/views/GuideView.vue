@@ -67,8 +67,6 @@ const latest = PVP_SEASONS[0]
       'report upgrades'
       'ladder mechanics';
   }
-  /* The top pair shares a row: the shorter panel stretches to it rather
-     than floating above a gap. */
   .report,
   .upgrades {
     align-self: stretch;

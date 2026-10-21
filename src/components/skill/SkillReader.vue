@@ -163,7 +163,6 @@ watch(
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* On mobile the empty placeholder is a tap target that reveals the hero list. */
 @media (max-width: 768px) {
   .empty-state {
     cursor: pointer;

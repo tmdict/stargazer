@@ -319,7 +319,6 @@ const pressSegment = (): void => {
   min-width: 100%;
   max-width: 16rem;
   padding: var(--dropdown-list-padding);
-  /* Scrolls only past the viewport (usePanelFit). */
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -465,7 +464,7 @@ const pressSegment = (): void => {
   padding-block: var(--spacing-md);
 }
 
-/* ---- dark: matches the popup's translucent search box ---- */
+/* ---- dark ---- */
 
 .dark {
   font-size: 12px;

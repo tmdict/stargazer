@@ -123,7 +123,6 @@ const seasonLabel = (season: number): string =>
   color: var(--color-text-secondary, var(--color-text-primary));
 }
 
-/* Small column gap: the name-wide cells already space the icons. */
 .artifacts {
   display: flex;
   flex-wrap: wrap;
@@ -133,7 +132,6 @@ const seasonLabel = (season: number): string =>
   border-radius: var(--radius-large);
 }
 
-/* Fits the longest one-word names; fixed width and two lines keep the grid even. */
 .artifact-cell {
   display: flex;
   flex-direction: column;

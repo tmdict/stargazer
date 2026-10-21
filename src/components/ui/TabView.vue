@@ -72,7 +72,7 @@ if (import.meta.env.DEV) {
 <style scoped>
 .tab-view {
   /* Negative margin = the surface's own padding (via --tabview-inset-*), so the
-     strip bleeds to the surface edge; .tab-content re-applies its own inset. */
+     strip bleeds to the surface edge. */
   margin: calc(-1 * var(--tabview-inset-y, 0px)) calc(-1 * var(--tabview-inset-x, 0px));
   display: flex;
   flex-direction: column;
@@ -85,11 +85,9 @@ if (import.meta.env.DEV) {
 }
 
 .tab-content {
-  /* Horizontal inset shared with the BottomSheet card (--content-padding-x). */
   padding: var(--spacing-2xl) var(--content-padding-x);
 }
 
-/* Just the flex shell: each slotted panel owns its own internal scroll. */
 .tab-view.fill .tab-content {
   flex: 1;
   min-height: 0;

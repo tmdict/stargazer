@@ -30,7 +30,6 @@ const onClick = () => {
 </template>
 
 <style scoped>
-/* A button dressed as a search input; the real input lives in the overlay. */
 .search-trigger {
   display: flex;
   align-items: center;
@@ -76,7 +75,6 @@ const onClick = () => {
   text-overflow: ellipsis;
 }
 
-/* The min-width absorbs the "Ctrl K" to "⌘ K" swap on Macs. */
 .trigger-kbd {
   flex-shrink: 0;
   min-width: 46px;
@@ -90,7 +88,6 @@ const onClick = () => {
   padding: 2px 7px;
 }
 
-/* Shortcut chips mean nothing on touch devices. */
 @media (hover: none) {
   .trigger-kbd {
     display: none;

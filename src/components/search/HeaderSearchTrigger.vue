@@ -25,11 +25,6 @@ const shortcut = useShortcutLabel()
 </template>
 
 <style scoped>
-/* Wide headers only: App.vue swaps this pill for a plain utility-cluster
-   icon below 921px (see .nav-search / .menu-search there, which also own
-   the nav push). Dressed in the header's own component language (nav-pill
-   surface, gold hover); the overlay's teal stays the identity of the opened
-   panel. */
 .header-search {
   display: flex;
   align-items: center;
@@ -81,7 +76,6 @@ const shortcut = useShortcutLabel()
   color: #cbb46a;
 }
 
-/* Shortcut chips mean nothing on touch devices. */
 @media (hover: none) {
   .search-kbd {
     display: none;

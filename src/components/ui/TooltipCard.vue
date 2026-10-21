@@ -54,7 +54,6 @@ defineProps<{
   color: var(--tooltip-muted);
 }
 
-/* Labels without an icon line up with the ones that have one. */
 .tooltip-card-rows:has(.tooltip-card-icon) .tooltip-card-label:not(:has(.tooltip-card-icon)) {
   padding-left: 28px;
 }
