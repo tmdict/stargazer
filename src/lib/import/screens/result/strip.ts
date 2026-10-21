@@ -11,16 +11,11 @@
  * result, not the map's, and are not read. */
 
 import { Team } from '@/lib/types/team'
-import { hsvAt } from './core/image'
-import type { Rect, RgbaImage } from './core/types'
+import { hsvAt } from '../../core/image'
+import type { Rect, RgbaImage } from '../../core/types'
+import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
 import { STRIP, SUMMARY_BAR, TAB_REGION, TABS, type Region } from './layout'
 
-// The ring is two thin lines inside its band, a few percent of the band's
-// area on a sharp capture and about one on a soft one.
-export const GREEN_RING_FLOOR = 0.012
-
-export const isGreen = (r: number, g: number, b: number): boolean =>
-  g > r + 30 && g > b + 30 && g > 90
 const isCream = (r: number, g: number, b: number): boolean =>
   r > 190 && g > 180 && b > 160 && Math.max(r, g, b) - Math.min(r, g, b) < 50
 
@@ -39,23 +34,6 @@ export interface StripReading {
   mapResults: (Team | null)[]
   // How many circles the strip has: three or five.
   mapCount: number
-}
-
-// Green fraction in a circle's ring band.
-export const ringGreen = (shot: RgbaImage, cx: number, cy: number, radius: number): number => {
-  let inRing = 0
-  let green = 0
-  for (let y = cy - radius - 4; y <= cy + radius + 4; y++) {
-    for (let x = Math.round(cx - radius - 4); x <= cx + radius + 4; x++) {
-      if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      const d = Math.hypot(x - cx, y - cy) / radius
-      if (d < 0.85 || d > 1.1) continue
-      inRing++
-      const p = (y * shot.width + x) * 4
-      if (isGreen(shot.data[p]!, shot.data[p + 1]!, shot.data[p + 2]!)) green++
-    }
-  }
-  return inRing ? green / inRing : 0
 }
 
 // Cream fraction of a circle's inner disc: present on the strip, absent

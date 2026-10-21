@@ -11,10 +11,11 @@
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
-import { cropResize } from './core/image'
-import type { RgbaImage } from './core/types'
-import { ringGreen } from './strip'
-import type { ArenaRef, GreyImage, ImportWarning, ReplayPlacement, ReplayReading } from './types'
+import { cropResize } from '../../core/image'
+import type { RgbaImage } from '../../core/types'
+import { ringGreen } from '../match/ring'
+import type { ImportWarning } from '../match/types'
+import type { ArenaRef, GreyImage, ReplayPlacement, ReplayReading } from './types'
 
 // The reference frame's size; the arena picture is a quarter of it.
 const REPLAY_REFERENCE = { width: 1400, height: 1940 } as const
