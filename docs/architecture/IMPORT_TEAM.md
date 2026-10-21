@@ -13,7 +13,7 @@ The hard part is that screenshots vary. Players crop them, phones have different
 └───────────────────┬──┬───┘            └──────────────────────────┘
        shots, edits │  ▲
                     ▼  │  readings, plan
-┌─ useTeamImport ───┴──┴───┐            ┌─ teamImport.worker ──────┐
+┌─ useTeamImport ───┴──┴───┐            ┌─ import.worker ──────────┐
 │ shots and overrides      │───────────▶│ lib/import readers       │
 │ learned icons            │   images   │ hero table               │
 │ buildTeamImportPlan      │◀───────────│ artifact table           │
