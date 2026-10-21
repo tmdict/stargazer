@@ -4,6 +4,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { HeroReading, ScreenshotReading, UnitReading } from '@/lib/import/types'
+import type { TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,
   cellState,
@@ -14,11 +15,29 @@ import {
   reviewStates,
   suggestRecordName,
   type FormationAssignment,
+  type PlanInputs,
   type PlanIssue,
+  type RecordNames,
   type ShotAssignment,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
+
+// A plan with the inputs a test leaves out at their plain values.
+const planOf = (
+  shots: readonly ShotAssignment[],
+  mode: TeamModeKey,
+  names: RecordNames,
+  inputs: Partial<PlanInputs> = {},
+): TeamImportPlan =>
+  buildTeamImportPlan(shots, mode, names, {
+    swapSides: false,
+    formations: [],
+    replays: [],
+    matchImport: shots.length > 0,
+    phantimalFits: () => true,
+    ...inputs,
+  })
 
 const hero = (characterId: number, paragon = 4, refinement = 0): HeroReading => ({
   box: { x: 0, y: 0, w: 1, h: 1 },
@@ -114,7 +133,7 @@ describe('mapResultsFrom', () => {
 
 describe('buildTeamImportPlan', () => {
   it('allows unnamed imports without a record-name result warning', () => {
-    const plan = buildTeamImportPlan([shot(0, reading([1], [2], { winner: null }))], '1v1', {
+    const plan = planOf([shot(0, reading([1], [2], { winner: null }))], '1v1', {
       prefix: 'S7',
       left: '',
       right: '',
@@ -130,7 +149,7 @@ describe('buildTeamImportPlan', () => {
       cell.candidates = []
       cell.recognised = false
     }
-    const plan = buildTeamImportPlan([shot(0, r)], '3v3', NAMES)
+    const plan = planOf([shot(0, r)], '3v3', NAMES)
     expect(plan.boards[0]).toBeNull()
     expect(plan.issues).toEqual([{ kind: 'empty', count: 1 }])
   })
@@ -138,7 +157,7 @@ describe('buildTeamImportPlan', () => {
   it('maps screenshots to boards with attrs, overrides, and artifacts', () => {
     const r = reading([1, 2, 3], [4, 5, 6])
     r.sides[Team.ALLY][0]!.refinement.level = 4
-    const plan = buildTeamImportPlan(
+    const plan = planOf(
       [shot(1, r, { [overrideKey(Team.ENEMY, 0)]: { characterId: 40, paragon: 2 } })],
       '3v3',
       NAMES,
@@ -155,7 +174,7 @@ describe('buildTeamImportPlan', () => {
   it('drops a removed cell and flags duplicate maps, unmapped shots, and cross-board duplicates', () => {
     const r1 = reading([1, 2], [3])
     const r2 = reading([2, 9], [8])
-    const plan = buildTeamImportPlan(
+    const plan = planOf(
       [
         shot(0, r1, { [overrideKey(Team.ALLY, 0)]: { characterId: null } }),
         shot(1, r2),
@@ -178,7 +197,7 @@ describe('buildTeamImportPlan', () => {
 
   it('blocks a hero picked for two cells of one side and keeps its first cell', () => {
     const r = reading([1, 2, 3], [4])
-    const plan = buildTeamImportPlan(
+    const plan = planOf(
       [shot(0, r, { [overrideKey(Team.ALLY, 2)]: { characterId: 1 } })],
       '3v3',
       NAMES,
@@ -195,11 +214,7 @@ describe('buildTeamImportPlan', () => {
   })
 
   it('blocks the same artifact on the same side of two boards', () => {
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([1], [2])), shot(2, reading([3], [4]))],
-      '3v3',
-      NAMES,
-    )
+    const plan = planOf([shot(0, reading([1], [2])), shot(2, reading([3], [4]))], '3v3', NAMES)
     const issue: PlanIssue = {
       kind: 'cross-board-artifact',
       team: Team.ALLY,
@@ -211,20 +226,20 @@ describe('buildTeamImportPlan', () => {
   })
 
   it('counts a map beyond the mode as unmapped', () => {
-    const plan = buildTeamImportPlan([shot(4, reading([1], [2]))], '3v3', NAMES)
+    const plan = planOf([shot(4, reading([1], [2]))], '3v3', NAMES)
     expect(plan.boards.every((b) => b === null)).toBe(true)
     expect(plan.issues).toContainEqual({ kind: 'unmapped', count: 1 })
   })
 
   it('fills the opposite board sides when swapped, with issues named by board side', () => {
-    const plan = buildTeamImportPlan(
+    const plan = planOf(
       [
         shot(0, reading([1, 2], [3]), { [overrideKey(Team.ALLY, 1)]: { characterId: 1 } }),
         shot(1, reading([1], [4])),
       ],
       '3v3',
       NAMES,
-      true,
+      { swapSides: true },
     )
     const { sides } = plan.boards[0]!
     expect(heroesOn(plan, 0, Team.ALLY)).toEqual([3])
@@ -254,21 +269,21 @@ describe('buildTeamImportPlan', () => {
   })
 
   it('says when the map wins are equal or unread instead of claiming a winner', () => {
-    const unread = buildTeamImportPlan([shot(0, reading([1], [2], { winner: null }))], '1v1', NAMES)
+    const unread = planOf([shot(0, reading([1], [2], { winner: null }))], '1v1', NAMES)
     expect(unread.suggestedName).toBe('S7 SL5 Group - GNX > 10')
     expect(unread.issues).toEqual([{ kind: 'result-undecided' }])
     expect(isBlockingIssue({ kind: 'result-undecided' })).toBe(false)
 
-    const tied = buildTeamImportPlan(
+    const tied = planOf(
       [shot(0, reading([1], [2])), shot(1, reading([3], [4], { winner: Team.ENEMY }))],
       '3v3',
       NAMES,
     )
     expect(tied.issues).toContainEqual({ kind: 'result-undecided' })
 
-    const decided = buildTeamImportPlan([shot(0, reading([1], [2]))], '3v3', NAMES)
+    const decided = planOf([shot(0, reading([1], [2]))], '3v3', NAMES)
     expect(decided.issues).toEqual([])
-    expect(buildTeamImportPlan([], '3v3', NAMES).issues).toEqual([])
+    expect(planOf([], '3v3', NAMES).issues).toEqual([])
   })
 })
 
@@ -316,13 +331,7 @@ describe('buildTeamImportPlan with formation shots', () => {
     const formations = [
       formationShot(Team.ALLY, [unit(1, ZANIE), unit(2, 1), unit(5, TURRET), unit(3, TURRET)]),
     ]
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([ZANIE, 1], [2]))],
-      '5v5',
-      NAMES,
-      false,
-      formations,
-    )
+    const plan = planOf([shot(0, reading([ZANIE, 1], [2]))], '5v5', NAMES, { formations })
     const board = plan.boards[0]!
     expect(board.sides[Team.ALLY]!.mains).toEqual([
       { unitId: ZANIE, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
@@ -341,7 +350,7 @@ describe('buildTeamImportPlan with formation shots', () => {
   it('fills only the side a formation shot shows, from its own cards, when its board has no result', () => {
     const cards = [hero(1, 3, 2), hero(2, 0, 0)]
     const formations = [formationShot(Team.ENEMY, [unit(40, 1)], cards)]
-    const plan = buildTeamImportPlan([], '5v5', NAMES, false, formations)
+    const plan = planOf([], '5v5', NAMES, { formations })
     const { sides } = plan.boards[0]!
     expect(sides[Team.ALLY]).toBeUndefined()
     expect(sides[Team.ENEMY]!.mains).toEqual([
@@ -357,9 +366,9 @@ describe('buildTeamImportPlan with formation shots', () => {
   })
 
   it('leaves the phantimal to the lineup when a formation shot misses a hero and shows none', () => {
-    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
-      formationShot(Team.ALLY, [unit(1, 7)]),
-    ])
+    const plan = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
+      formations: [formationShot(Team.ALLY, [unit(1, 7)])],
+    })
     expect(plan.boards[0]!.formations).toEqual([])
   })
 
@@ -368,9 +377,7 @@ describe('buildTeamImportPlan with formation shots', () => {
     const missing = { ...formationShot(Team.ALLY, [unit(1, 7)]), picks: { [Team.ALLY]: { 2: 9 } } }
     // A pick on a portrait's tile or of a unit a portrait shows places nothing.
     const refused = { [Team.ALLY]: { 1: 9, 3: 7 } }
-    const plan = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
-      missing,
-    ])
+    const plan = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, { formations: [missing] })
     expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
       { unitId: 9, hexId: 2, attrs: { [ATTR_PARAGON]: 4 } },
@@ -379,26 +386,28 @@ describe('buildTeamImportPlan with formation shots', () => {
     // Placing the missing hero still leaves the phantimal the panel may have
     // dropped to the lineup, until one is picked.
     expect(plan.boards[0]!.formations).toEqual([])
-    const picked = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
-      { ...missing, picks: { [Team.ALLY]: { 2: 9, 4: phantimal } } },
-    ])
+    const picked = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
+      formations: [{ ...missing, picks: { [Team.ALLY]: { 2: 9, 4: phantimal } } }],
+    })
     expect(picked.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: phantimal, hexId: 4 })
     expect(picked.boards[0]!.formations).toEqual([Team.ALLY])
-    const ignored = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
-      { ...missing, picks: refused },
-    ])
+    const ignored = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
+      formations: [{ ...missing, picks: refused }],
+    })
     expect(ignored.boards[0]!.sides[Team.ALLY]!.mains[1]!.hexId).toBeUndefined()
     // A pick of another phantimal does not take the place of the one whose
     // companion a portrait is taken for.
     const wedge = toPhantimalId(5)
     const wedgePower = COMPANION_ID_OFFSET + wedge
-    const shown = buildTeamImportPlan([shot(0, reading([7, 9], [8]))], '5v5', NAMES, false, [
-      {
-        ...formationShot(Team.ALLY, [unit(1, 7), unit(3, 9)]),
-        unitOverrides: { 1: wedgePower },
-        picks: { [Team.ALLY]: { 4: phantimal } },
-      },
-    ])
+    const shown = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
+      formations: [
+        {
+          ...formationShot(Team.ALLY, [unit(1, 7), unit(3, 9)]),
+          unitOverrides: { 1: wedgePower },
+          picks: { [Team.ALLY]: { 4: phantimal } },
+        },
+      ],
+    })
     expect(shown.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({
       unitId: wedge,
       hexId: undefined,
@@ -415,16 +424,10 @@ describe('buildTeamImportPlan with formation shots', () => {
       picks: { [Team.ALLY]: { 4: toPhantimalId(2) } },
     }
     const plan = (fits: boolean) =>
-      buildTeamImportPlan(
-        [shot(0, reading([7], [8]))],
-        '5v5',
-        NAMES,
-        false,
-        [formation],
-        [],
-        true,
-        () => fits,
-      )
+      planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+        formations: [formation],
+        phantimalFits: () => fits,
+      })
     expect(plan(true).boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: wedge, hexId: 2 })
     expect(plan(false).units[0]![1]).toEqual({ unitId: null, state: 'none' })
     expect(plan(false).boards[0]!.sides[Team.ALLY]!.phantimal).toBeNull()
@@ -433,9 +436,10 @@ describe('buildTeamImportPlan with formation shots', () => {
   it("keeps a formation shot's team on its own tiles when the sides are swapped", () => {
     // The Enemy column's hero on the ally half: the viewing player fought from
     // the enemy half.
-    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, true, [
-      formationShot(Team.ALLY, [unit(1, 8)]),
-    ])
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+      swapSides: true,
+      formations: [formationShot(Team.ALLY, [unit(1, 8)])],
+    })
     expect(plan.boards[0]!.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 8, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
     ])
@@ -482,7 +486,7 @@ describe('buildTeamImportPlan with formation shots', () => {
 
   it('leaves out a formation shot whose map has no result shot in a match import', () => {
     const formations = [formationShot(Team.ALLY, [unit(1, 7)], [hero(7)], 1)]
-    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, formations)
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, { formations })
     expect(plan.boards[1]).toBeNull()
     const issue: PlanIssue = { kind: 'formation-unused', team: Team.ALLY, mapIndex: 1 }
     expect(plan.issues).toContainEqual(issue)
@@ -490,9 +494,9 @@ describe('buildTeamImportPlan with formation shots', () => {
   })
 
   it('names no match record for formation shots alone', () => {
-    const plan = buildTeamImportPlan([], '5v5', NAMES, false, [
-      formationShot(Team.ALLY, [unit(1, 7)], [hero(7)]),
-    ])
+    const plan = planOf([], '5v5', NAMES, {
+      formations: [formationShot(Team.ALLY, [unit(1, 7)], [hero(7)])],
+    })
     expect(plan.suggestedName).toBe('')
     expect(plan.issues.map((i) => i.kind)).not.toContain('result-undecided')
   })
@@ -502,7 +506,7 @@ describe('buildTeamImportPlan with formation shots', () => {
       formationShot(Team.ALLY, [unit(1, 7)]),
       formationShot(Team.ALLY, [unit(2, 7)]),
     ]
-    const plan = buildTeamImportPlan([shot(0, reading([7], [8]))], '5v5', NAMES, false, formations)
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, { formations })
     const issue: PlanIssue = { kind: 'duplicate-formation', team: Team.ALLY, mapIndex: 0 }
     expect(plan.issues).toContainEqual(issue)
     expect(isBlockingIssue(issue)).toBe(true)
@@ -522,13 +526,7 @@ describe('buildTeamImportPlan with formation shots', () => {
         unmatched(formationShot(Team.ALLY, [unit(1, 7)])),
         unmatched(formationShot(Team.ENEMY, [unit(40, 8)])),
       ]
-      const plan = buildTeamImportPlan(
-        [shot(0, reading([7], [8]))],
-        '5v5',
-        NAMES,
-        false,
-        formations,
-      )
+      const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, { formations })
       expect(plan.boards[0]!.map).toBeNull()
       expect(mapIssues(plan)).toEqual([{ kind: 'unknown-map', mapIndex: 0, keepsMap: true }])
     })
@@ -538,13 +536,7 @@ describe('buildTeamImportPlan with formation shots', () => {
         unmatched(formationShot(Team.ALLY, [unit(1, 7)])),
         formationShot(Team.ENEMY, [unit(40, 8)]),
       ]
-      const plan = buildTeamImportPlan(
-        [shot(0, reading([7], [8]))],
-        '5v5',
-        NAMES,
-        false,
-        formations,
-      )
+      const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, { formations })
       expect(plan.boards[0]!.map).toBe('arena1')
       expect(mapIssues(plan)).toEqual([{ kind: 'unknown-map', mapIndex: 0, keepsMap: false }])
     })
@@ -553,14 +545,9 @@ describe('buildTeamImportPlan with formation shots', () => {
 
 describe('buildTeamImportPlan with replay frames', () => {
   it("places each column's heroes on the tiles picked for them, the rest on random tiles", () => {
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([7, 9], [8]))],
-      '5v5',
-      NAMES,
-      false,
-      [],
-      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7 }, [Team.ENEMY]: { 40: 8 } } }],
-    )
+    const plan = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
+      replays: [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7 }, [Team.ENEMY]: { 40: 8 } } }],
+    })
     const board = plan.boards[0]!
     expect(board.sides[Team.ALLY]!.mains).toEqual([
       { unitId: 7, hexId: 1, attrs: { [ATTR_PARAGON]: 4 } },
@@ -578,14 +565,10 @@ describe('buildTeamImportPlan with replay frames', () => {
     const phantimal = toPhantimalId(1)
     // Swapped, the enemy half fields the Ally column's heroes, so the pick of
     // the Enemy column's 8 there, made before the swap, places nothing.
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([7], [8]))],
-      '5v5',
-      NAMES,
-      true,
-      [],
-      [{ mapIndex: 0, picks: { [Team.ENEMY]: { 45: 7, 43: phantimal, 44: 8 } } }],
-    )
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+      swapSides: true,
+      replays: [{ mapIndex: 0, picks: { [Team.ENEMY]: { 45: 7, 43: phantimal, 44: 8 } } }],
+    })
     const { sides } = plan.boards[0]!
     expect(sides[Team.ENEMY]!.mains).toEqual([
       { unitId: 7, hexId: 45, attrs: { [ATTR_PARAGON]: 4 } },
@@ -600,14 +583,9 @@ describe('buildTeamImportPlan with replay frames', () => {
   it('fields the phantimal of a companion picked without it, on a random tile', () => {
     const wedge = toPhantimalId(5)
     const wedgePower = COMPANION_ID_OFFSET + wedge
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([7], [8]))],
-      '5v5',
-      NAMES,
-      false,
-      [],
-      [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7, 5: wedgePower } } }],
-    )
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+      replays: [{ mapIndex: 0, picks: { [Team.ALLY]: { 1: 7, 5: wedgePower } } }],
+    })
     const ally = plan.boards[0]!.sides[Team.ALLY]!
     expect(ally.phantimal).toEqual({ unitId: wedge, hexId: undefined })
     expect(ally.companions).toEqual([{ unitId: wedgePower, hexId: 5, mainUnitId: wedge }])
@@ -616,38 +594,27 @@ describe('buildTeamImportPlan with replay frames', () => {
 
   it('fields no phantimal picked on a frame for heroes that do not qualify for it', () => {
     const wedge = toPhantimalId(5)
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([7], [8]))],
-      '5v5',
-      NAMES,
-      false,
-      [],
-      [
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+      replays: [
         {
           mapIndex: 0,
           picks: { [Team.ALLY]: { 1: 7, 5: wedge }, [Team.ENEMY]: { 40: 8, 41: wedge } },
         },
       ],
-      true,
-      (_, heroIds) => heroIds.includes(7),
-    )
+      phantimalFits: (_, heroIds) => heroIds.includes(7),
+    })
     expect(plan.boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: wedge, hexId: 5 })
     expect(plan.boards[0]!.sides[Team.ENEMY]!.phantimal).toBeNull()
   })
 
   it('blocks two replay frames of one board and leaves out one whose map has no result', () => {
-    const plan = buildTeamImportPlan(
-      [shot(0, reading([7], [8]))],
-      '5v5',
-      NAMES,
-      false,
-      [],
-      [
+    const plan = planOf([shot(0, reading([7], [8]))], '5v5', NAMES, {
+      replays: [
         { mapIndex: 0, picks: {} },
         { mapIndex: 0, picks: {} },
         { mapIndex: 1, picks: {} },
       ],
-    )
+    })
     const duplicate: PlanIssue = { kind: 'duplicate-replay', mapIndex: 0 }
     const unused: PlanIssue = { kind: 'replay-unused', mapIndex: 1 }
     expect(plan.issues).toContainEqual(duplicate)

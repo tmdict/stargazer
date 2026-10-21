@@ -98,9 +98,9 @@ export interface UnitAssignment {
 
 /* Each portrait's unit among the lineup's heroes, their companions and the
  * phantimal the portraits show, when the heroes qualify for it, best matches
- * first; a review pick (a unit id, or null for none) stands as made.
- * Companions of one owner that share an image cannot be told apart, so they
- * take their ids in tile order. */
+ * first; a review pick (a unit id, or null for none) stands as made while
+ * the side can field it. Companions of one owner that share an image cannot
+ * be told apart, so they take their ids in tile order. */
 export function assignUnits(
   units: readonly UnitReading[],
   heroIds: readonly number[],
@@ -126,6 +126,11 @@ export function assignUnits(
   const out: UnitAssignment[] = units.map((_, i) => {
     const pick = overrides[i]
     if (pick === undefined) return { unitId: null, state: 'none' }
+    // A pick of a phantimal's unit fields nothing while the heroes do not
+    // qualify for it, and counts again once they do.
+    if (pick !== null && inPhantimalBand(pick) && !phantimalFits(phantimalOwnerId(pick))) {
+      return { unitId: null, state: 'none' }
+    }
     if (pick !== null) taken.add(pick)
     return { unitId: pick, state: 'sure' }
   })

@@ -10,6 +10,7 @@ const i18n = useI18nStore()
 
 <template>
   <span
+    v-if="total > 0"
     class="place-count"
     :class="{ done: placed === total }"
     :title="placed < total ? i18n.t('app.import-to-place', { count: total - placed }) : undefined"

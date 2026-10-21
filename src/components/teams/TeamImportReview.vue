@@ -22,7 +22,7 @@ import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
 import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
-import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
+import TeamImportTileMark, { ringWidth } from '@/components/teams/TeamImportTileMark.vue'
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
@@ -297,18 +297,21 @@ const shotBoard = computed(() => {
   const pad = fit.scale * 0.3
   const x = Math.min(...xs) - pad
   const y = Math.min(...ys) - pad
+  const widths = new Map(
+    BOARD_HEXES.map((hex) => [hex.getId(), tileOutline(hexCorners(fit, hex)).width]),
+  )
   return {
     viewBox: `${x} ${y} ${Math.max(...xs) + pad - x} ${Math.max(...ys) + pad - y}`,
     size: reading.size,
-    scale: fit.scale,
     numbers: BOARD_HEXES.map((hex) => ({
       hexId: hex.getId(),
       ...hexCentre(fit, hex),
-      width: tileOutline(hexCorners(fit, hex)).width,
+      width: widths.get(hex.getId())!,
     })),
-    rings: reading.units.map(({ ring }, index) => ({
+    rings: reading.units.map(({ ring, hexId }, index) => ({
       index,
       ...ring,
+      width: widths.get(hexId)!,
       state: units?.assignments[index]?.state ?? 'none',
     })),
   }
@@ -625,7 +628,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
                 :cx="ring.x"
                 :cy="ring.y"
                 :r="ring.radius"
-                :stroke-width="shotBoard.scale * (hovered === ring.index ? 0.14 : 0.06)"
+                :stroke-width="ringWidth(ring.width, hovered === ring.index)"
               />
               <template v-for="tile in pickTiles" :key="`mark-${tile.hexId}`">
                 <TeamImportTileMark
