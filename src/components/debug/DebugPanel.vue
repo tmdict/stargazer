@@ -481,13 +481,13 @@ defineExpose({
 
 .closest-enemy {
   font-size: 0.75rem;
-  color: #c82333;
+  color: var(--color-enemy);
   font-style: italic;
 }
 
 .closest-ally {
   font-size: 0.75rem;
-  color: #36958e;
+  color: var(--color-ally);
   font-style: italic;
 }
 
@@ -543,11 +543,11 @@ defineExpose({
 }
 
 .artifact-team.ally {
-  border-left-color: #36958e;
+  border-left-color: var(--color-ally);
 }
 
 .artifact-team.enemy {
-  border-left-color: #c82333;
+  border-left-color: var(--color-enemy);
 }
 
 .team-label {
@@ -585,7 +585,7 @@ defineExpose({
 }
 
 .remove-artifact-btn:hover {
-  background: #c82333;
+  background: var(--color-enemy);
 }
 
 .debug-toggle-inline {

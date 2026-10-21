@@ -5,7 +5,9 @@ import { Grid, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { Layout, POINTY } from '@/lib/layout'
 import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 import { loadCharacterImages } from '@/utils/dataLoader'
+import { teamTint } from '@/utils/tileStateFormatting'
 
 interface GridStyleConfig {
   numericLabel?: Record<number, number>
@@ -73,9 +75,9 @@ const getHexFill = (tile: GridTile): string => {
 
   switch (tile.state) {
     case State.AVAILABLE_ALLY:
-      return 'rgba(54, 149, 142, 0.15)'
+      return teamTint(Team.ALLY, 0.15)
     case State.AVAILABLE_ENEMY:
-      return 'rgba(200, 35, 51, 0.15)'
+      return teamTint(Team.ENEMY, 0.15)
     case State.BLOCKED:
       return 'rgba(128, 128, 128, 0.3)'
     default:
