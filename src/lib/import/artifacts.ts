@@ -85,10 +85,12 @@ function holdsArt(img: RgbaImage): boolean {
   return spread >= SPREAD_FLOOR && dark / n <= DARK_SHARE
 }
 
-// The share of the search window, every disc place and size included, darker
-// than BADGE_DARK.
+// Half the search window's side: every disc place and size it tries.
+const windowHalf = (diameter: number): number => REACH + (diameter + SIZES[SIZES.length - 1]!) / 2
+
+// The share of the search window darker than BADGE_DARK.
 function darkShare(shot: RgbaImage, cx: number, cy: number, diameter: number): number {
-  const half = REACH + (diameter + SIZES[SIZES.length - 1]!) / 2
+  const half = windowHalf(diameter)
   let dark = 0
   let n = 0
   for (let y = Math.max(0, Math.round(cy - half)); y < Math.min(shot.height, cy + half); y++) {
@@ -178,8 +180,17 @@ export function readArtifact(
   const cardSize = Math.round(top.rect.w * CARD_SCALE)
   const card = square(top.rect.x + top.rect.w / 2, top.rect.y + top.rect.h / 2, cardSize)
   const cardImage = cropResize(shot, card, card.w, card.h)
+  // A window that runs off the shot (a crop through the badge) shows too little
+  // of it to call the header empty.
+  const half = windowHalf(diameter)
+  const inShot =
+    centreX - half >= 0 &&
+    centreY - half >= 0 &&
+    centreX + half <= shot.width &&
+    centreY + half <= shot.height
   if (
     disc &&
+    inShot &&
     top.score < NONE_SCORE &&
     darkShare(shot, centreX, centreY, diameter) < NONE_DARK_SHARE
   )
