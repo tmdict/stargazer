@@ -56,11 +56,7 @@ import {
 } from '@/utils/artifactImage'
 import { loadMatcherPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
-import type {
-  ReferenceImages,
-  TeamImportRequest,
-  TeamImportResponse,
-} from '@/workers/teamImport.worker'
+import type { ImportRequest, ImportResponse, ReferenceImages } from '@/workers/import.worker'
 
 const NAMES_KEY = 'stargazer.import.names'
 const LEARNED_KEY = 'stargazer.import.learned'
@@ -330,7 +326,7 @@ async function loadReferences(): Promise<ReferenceImages> {
   }
 }
 
-const post = (message: TeamImportRequest, transfer: Transferable[] = []): void => {
+const post = (message: ImportRequest, transfer: Transferable[] = []): void => {
   worker?.postMessage(message, transfer)
 }
 
@@ -348,7 +344,7 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
   if (isFormationReading(reading)) shot.unitCards = reading.units.map((u) => imageToDataUrl(u.card))
 }
 
-const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
+const onMessage = (event: MessageEvent<ImportResponse>): void => {
   const msg = event.data
   if (msg.type === 'ready') {
     referenceStatus.value = 'ready'
@@ -385,10 +381,10 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
 }
 
 const startSorter = async (): Promise<Worker> => {
-  const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
+  const started = new Worker(new URL('../workers/import.worker.ts', import.meta.url), {
     type: 'module',
   })
-  started.onmessage = (event: MessageEvent<TeamImportResponse>) => {
+  started.onmessage = (event: MessageEvent<ImportResponse>) => {
     const msg = event.data
     if (msg.type !== 'sorted' && msg.type !== 'error') return
     if (msg.id === null) return
@@ -405,7 +401,7 @@ const startSorter = async (): Promise<Worker> => {
   }
   try {
     const image = copyImage(await loadArena())
-    const message: TeamImportRequest = { type: 'arena', image }
+    const message: ImportRequest = { type: 'arena', image }
     started.postMessage(message, [image.data.buffer])
   } catch {
     // Pastes are still sorted between formations and results.
@@ -437,13 +433,13 @@ const sortShot = async (file: Blob, replay: boolean): Promise<ShotKind | null> =
   const id = `sort-${nextId++}`
   return new Promise((resolve) => {
     sorting.set(id, resolve)
-    const message: TeamImportRequest = { type: 'sort', id, image, replay }
+    const message: ImportRequest = { type: 'sort', id, image, replay }
     target.postMessage(message, [image.data.buffer])
   })
 }
 
 const startWorker = (): Worker => {
-  const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
+  const started = new Worker(new URL('../workers/import.worker.ts', import.meta.url), {
     type: 'module',
   })
   started.onmessage = onMessage

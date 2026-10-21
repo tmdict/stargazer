@@ -1,9 +1,10 @@
-/* Match-import worker: holds the reference tables and reads screenshots off
- * the main thread. Everything it runs is lib/import, which never touches a
- * canvas: the composable decodes images and hands over RGBA buffers, so the
- * same code runs under vitest and in the check script. Two run per page
- * visit: one reads, its references arriving once and then each read one
- * message each way; the other holds only the arena and sorts pastes. */
+/* Screenshot import worker: holds the reference tables and reads screenshots
+ * off the main thread, each kind with its own reader. Everything it runs is
+ * lib/import, which never touches a canvas: the composable decodes images and
+ * hands over RGBA buffers, so the same code runs under vitest and in offline
+ * checks. Two run per page visit: one reads, its references arriving once and
+ * then each read one message each way; the other holds only the arena and
+ * sorts pastes. */
 
 import { prepareFrameRefs } from '@/lib/import/card/frames'
 import { buildHeroTable } from '@/lib/import/card/heroes'
@@ -32,7 +33,7 @@ export interface ReferenceImages {
   arena: RgbaImage | null
 }
 
-export type TeamImportRequest =
+export type ImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
   | { type: 'read'; id: string; image: RgbaImage; kind: ShotKind }
@@ -40,7 +41,7 @@ export type TeamImportRequest =
   | { type: 'arena'; image: RgbaImage }
   | { type: 'sort'; id: string; image: RgbaImage; replay: boolean }
 
-export type TeamImportResponse =
+export type ImportResponse =
   | { type: 'ready' }
   | { type: 'reading'; id: string; reading: ScreenshotReading }
   | { type: 'sorted'; id: string; kind: ShotKind }
@@ -49,17 +50,24 @@ export type TeamImportResponse =
 // The app compiles under the DOM lib, where `self` is a Window and its
 // postMessage wants a target origin; the worker's takes a transfer list.
 const scope = self as unknown as {
-  postMessage(message: TeamImportResponse, transfer?: Transferable[]): void
-  addEventListener(
-    type: 'message',
-    listener: (event: MessageEvent<TeamImportRequest>) => void,
-  ): void
+  postMessage(message: ImportResponse, transfer?: Transferable[]): void
+  addEventListener(type: 'message', listener: (event: MessageEvent<ImportRequest>) => void): void
 }
 
 let refs: ReferenceSet | null = null
 let portraits: ReferenceImages['portraits'] = []
 // From the references in the reader, from its own message in the sorter.
 let arena: ArenaRef | null = null
+
+// The reader for each kind of screenshot; a replay frame needs only the arena.
+const readers: Record<ShotKind, (image: RgbaImage, refs: ReferenceSet) => ScreenshotReading> = {
+  result: readScreenshot,
+  formation: readFormation,
+  replay: (image) => {
+    if (!arena) throw new Error('arena not loaded')
+    return readReplay(image, arena)
+  },
+}
 
 const transferablesOf = (reading: ScreenshotReading): Transferable[] => {
   const out: Transferable[] = []
@@ -115,11 +123,7 @@ scope.addEventListener('message', (event) => {
       scope.postMessage({ type: 'error', id, message: 'references not loaded' })
       return
     }
-    let reading: ScreenshotReading
-    if (msg.kind === 'formation') reading = readFormation(msg.image, refs)
-    else if (msg.kind === 'result') reading = readScreenshot(msg.image, refs)
-    else if (arena) reading = readReplay(msg.image, arena)
-    else throw new Error('arena not loaded')
+    const reading = readers[msg.kind](msg.image, refs)
     scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))
   } catch (error) {
     scope.postMessage({
