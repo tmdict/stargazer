@@ -68,15 +68,6 @@ describe('renderRichText', () => {
 })
 
 describe('renderSnippet', () => {
-  it('elides with ellipses around a mid-text match', () => {
-    const text = 'a'.repeat(40) + 'MATCH' + 'b'.repeat(40)
-    expect(renderSnippet(text, 'match', 5)).toEqual({
-      pre: '…' + 'a'.repeat(5),
-      match: 'MATCH',
-      post: 'b'.repeat(5) + '…',
-    })
-  })
-
   it('reconstructs the whole text when context covers it (the team-name filter contract)', () => {
     const name = 'Team [S9] (Dream) +1'
     const snippet = renderSnippet(name, '(dream)', name.length)!

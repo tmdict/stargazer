@@ -74,8 +74,8 @@ describe('place.ts', () => {
       expect(performPlace(grid, 1, NaN, Team.ALLY)).toBe(false)
     })
 
-    // Rule variants live in character.test.ts (canPlaceCharacterOnTile/OnTeam);
-    // these two pin only that performPlace consults those rules.
+    // Tile-rule variants live in character.test.ts (canPlaceCharacterOnTile);
+    // this pins only that performPlace consults them.
     it('should reject placement on wrong-team, blocked, or default tiles', () => {
       expect(performPlace(grid, 4, ALLY_A, Team.ALLY)).toBe(false)
       expect(performPlace(grid, 1, ENEMY_A, Team.ENEMY)).toBe(false)

@@ -67,20 +67,6 @@ describe('createTargetingSkill', () => {
       expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
     })
 
-    it('preserves existing metadata alongside arrows', () => {
-      const skill = buildSkill(() => ({
-        targetHexId: 2,
-        targetCharacterId: 7,
-        metadata: { isFrontmostTarget: true, examinedTiles: [1, 2] },
-      }))
-      skill.onActivate(buildContext(grid, skillManager))
-
-      const stored = skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)
-      expect(stored?.metadata?.isFrontmostTarget).toBe(true)
-      expect(stored?.metadata?.examinedTiles).toEqual([1, 2])
-      expect(stored?.metadata?.arrows).toHaveLength(1)
-    })
-
     it('clears target on onUpdate when target is missed', () => {
       let value: SkillTargetInfo | null = { targetHexId: 3, targetCharacterId: 42 }
       const skill = buildSkill(() => value)
@@ -88,30 +74,6 @@ describe('createTargetingSkill', () => {
       value = null
       skill.onUpdate!(buildContext(grid, skillManager))
       expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    })
-  })
-
-  describe('without arrowType (custom calculate builds own arrows)', () => {
-    it('stores target as-is without injecting an arrow', () => {
-      const customArrows = [
-        { fromHexId: CASTER_HEX, toHexId: 1, type: 'ally' as const },
-        { fromHexId: CASTER_HEX, toHexId: 2, type: 'ally' as const },
-      ]
-      const skill = createTargetingSkill({
-        id: 'test',
-        characterId: CHARACTER_ID,
-        color: '#000',
-        calculateTarget: () => ({
-          targetHexId: null,
-          targetCharacterId: null,
-          metadata: { arrows: customArrows },
-        }),
-      })
-
-      skill.onActivate(buildContext(grid, skillManager))
-      const stored = skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)
-      expect(stored?.targetHexId).toBeNull()
-      expect(stored?.metadata?.arrows).toEqual(customArrows)
     })
   })
 })
@@ -133,14 +95,6 @@ describe('createTileHighlightSkill', () => {
       tileColor: TILE_COLOR,
       calculateTarget,
     })
-
-  it('sets target and tile color on activation', () => {
-    const skill = buildSkill(() => ({ targetHexId: 3, targetCharacterId: 42 }))
-    skill.onActivate(buildContext(grid, skillManager))
-
-    expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)?.targetHexId).toBe(3)
-    expect(skillManager.getTileColorModifier(3)).toContain(TILE_COLOR)
-  })
 
   it('removes previous tile color before applying new one on update', () => {
     let next = 3

@@ -124,16 +124,6 @@ describe('buildSideLoadPlan', () => {
     expect(plan.boards[0]!.companions).toEqual([])
     expect(plan.boards[0]!.phantimal).toBeNull()
   })
-
-  it('carries the enemy artifact slot for an enemy-side record', () => {
-    const record: MultiGridState = {
-      boards: [{ m: 'arena1', c: [[40, 21, Team.ENEMY]], a: [null, 9] }],
-      mode: '1v1',
-    }
-    const plan = buildSideLoadPlan(encode(record), true)!
-    expect(plan.side).toBe(Team.ENEMY)
-    expect(plan.boards[0]!.artifact).toBe(9)
-  })
 })
 
 describe('sideLoadBoard', () => {

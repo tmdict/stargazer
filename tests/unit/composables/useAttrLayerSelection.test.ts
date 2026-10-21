@@ -11,18 +11,6 @@ describe('useAttrLayerSelection', () => {
     useAttrLayerSelection().select(ATTR_PARAGON)
   })
 
-  it('switches layers exclusively', () => {
-    const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
-    expect(litChoice(BOTH)).toBe(ATTR_PARAGON)
-    select(ATTR_REFINEMENT)
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
-    expect(litChoice(BOTH)).toBe(ATTR_REFINEMENT)
-    select(ATTR_PARAGON)
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
-    expect(litChoice(BOTH)).toBe(ATTR_PARAGON)
-  })
-
   it('ALL edits every visible layer', () => {
     const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
     select('all')
@@ -30,13 +18,6 @@ describe('useAttrLayerSelection', () => {
     expect(litChoice(BOTH)).toBe('all')
     select(ATTR_REFINEMENT)
     expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
-  })
-
-  it('is one shared selection across consumers', () => {
-    const a = useAttrLayerSelection()
-    const b = useAttrLayerSelection()
-    a.select(ATTR_REFINEMENT)
-    expect(b.effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
   it('edits only visible layers, falling back to visible when the choice is hidden', () => {

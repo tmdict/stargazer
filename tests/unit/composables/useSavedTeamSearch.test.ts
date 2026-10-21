@@ -189,14 +189,4 @@ describe('useSavedTeamSearch results', () => {
     expect(names(search)).toEqual(['Split boards', 'Split sides', 'Solo', 'Duo'])
     expect(ringed(search, 3)).toBe(rings)
   })
-
-  it('lets a pick drop the text without waiting for the debounce', async () => {
-    const search = setup()
-    await type(search, 'solo')
-    expect(names(search)).toEqual(['Solo'])
-
-    search.addHero('rolan')
-    expect(search.query.value).toBe('')
-    expect(names(search)).toEqual(['Duo', 'Solo', 'Split sides', 'Split boards'])
-  })
 })

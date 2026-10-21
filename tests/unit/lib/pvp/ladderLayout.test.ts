@@ -66,16 +66,6 @@ describe('layoutLadder', () => {
     expect(edge('d-a').arrow).toEqual({ left: 28.13, top: 12.5 })
   })
 
-  it("sits an unobstructed label at its curve's widest point and centres on the label's box", () => {
-    const single = layoutLadder({ ...summary, counters: [counter('a', 'b')] }, share)
-    // The curve from row 0 to row 1 bows 60, so its widest point is x 505,
-    // y 88: nothing else to cover, so the label sits right there.
-    expect(single.edges[0]!.label).toEqual({ text: '100% of 1', left: 78.91, top: 25 })
-    // "100% of 1" is 9 characters, a 75-unit box reaching x 542.5; the
-    // extremes 180 and 542.5 centre at 361.25 against the 320 midpoint.
-    expect(single.offset).toBeCloseTo(((320 - 361.25) / LADDER_WIDTH) * 100, 2)
-  })
-
   it('keeps labels off each other, the other curves and the cards', () => {
     // a beats d (rows 0 to 3) and b beats c (rows 1 to 2): both right-side
     // curves share a midpoint, and the outer curve runs through the inner

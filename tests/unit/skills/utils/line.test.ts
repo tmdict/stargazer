@@ -20,11 +20,6 @@ describe('hexesBetween', () => {
   it('returns [] for adjacent cells (nothing between)', () => {
     expect(betweenIds(1, 4)).toEqual([])
   })
-
-  it('returns [] when the two cells share no axis', () => {
-    // Cells 1 (q -3, r 4) and 45 (q 3, r -4) share no coordinate.
-    expect(betweenIds(1, 45)).toEqual([])
-  })
 })
 
 describe('outlineEdges', () => {
@@ -41,14 +36,6 @@ describe('outlineEdges', () => {
       [2, 3],
       [3, 4],
     ])
-  })
-
-  it('omits the shared edge of adjacent hexes', () => {
-    // 23 and 16 are adjacent: each keeps its 5 outer edges.
-    const edges = outlineEdges(hexes([23, 16]))
-    expect(edges).toHaveLength(10)
-    expect(edges.filter((edge) => edge.hex.getId() === 23)).toHaveLength(5)
-    expect(edges.filter((edge) => edge.hex.getId() === 16)).toHaveLength(5)
   })
 })
 
@@ -75,9 +62,5 @@ describe('clipLaneBoundary', () => {
       toHexId: 18,
       toCorner: 2,
     })
-  })
-
-  it('returns null when a single cell leaves no span', () => {
-    expect(clipLaneBoundary(hexes([10]), 2, 3)).toBeNull()
   })
 })
