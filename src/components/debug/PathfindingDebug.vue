@@ -78,10 +78,10 @@ const pathElements = computed(() => {
 }
 
 .ally-path {
-  stroke: #4caf50;
+  stroke: var(--color-ally);
 }
 
 .enemy-path {
-  stroke: #f44336;
+  stroke: var(--color-enemy);
 }
 </style>
