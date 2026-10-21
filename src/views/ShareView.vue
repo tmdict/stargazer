@@ -23,6 +23,7 @@ import { useUrlStateStore } from '@/stores/urlState'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { decodeLinkFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
+import '@/styles/content.css'
 import '@/styles/modal.css'
 
 const gridStore = useGridStore()
@@ -133,7 +134,7 @@ const editLink = computed(() =>
     <a :href="dismissLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
 
     <!-- Content container -->
-    <div v-if="hasValidGrid" class="grid-wrapper" :class="{ multi: isMultiBoard }">
+    <div v-if="hasValidGrid" class="grid-wrapper glass-panel" :class="{ multi: isMultiBoard }">
       <!-- Edit opens the shared setup in its editable page; close dismisses to it. -->
       <div class="buttons">
         <GridInfoToggle share />
@@ -188,7 +189,7 @@ const editLink = computed(() =>
     </div>
 
     <!-- Empty state -->
-    <div v-else class="empty-state">
+    <div v-else class="empty-state glass-panel">
       <p>{{ i18nStore.t('app.share-invalid') }}</p>
       <a href="/" class="rowan-link" aria-label="Stargazer" title="Stargazer">
         <img src="@/assets/rowan.gif" alt="logo" class="rowan-gif" />
@@ -199,20 +200,11 @@ const editLink = computed(() =>
 
 <style scoped>
 .grid-wrapper {
-  position: relative;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  box-shadow:
-    var(--shadow-float),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   padding: 56px 10px 10px;
   /* The overlay's align-items: center would center a box taller than the
      overlay too, leaving its top half beyond scroll reach; auto margins
      collapse instead, so the box starts at the top and scrolls. */
   margin: auto;
-  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -237,14 +229,9 @@ const editLink = computed(() =>
 }
 
 .empty-state {
-  position: relative;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  box-shadow: none;
   padding: 60px 40px;
   text-align: center;
-  z-index: 1;
 }
 
 .empty-state p {

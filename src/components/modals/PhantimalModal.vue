@@ -57,8 +57,8 @@ const pendingLabel = computed(
       <LocaleMenu :current="displayLocale" in-modal @select="displayLocale = $event" />
     </template>
 
-    <h1>{{ title }}</h1>
-    <div class="phantimal-meta">
+    <h1 class="detail-title">{{ title }}</h1>
+    <div class="meta-chips">
       <span class="meta-chip">{{ gameLabel(phantimal.faction) }}</span>
     </div>
 
@@ -73,22 +73,9 @@ const pendingLabel = computed(
 </template>
 
 <style scoped>
-.phantimal-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 4px;
-}
-
 .details-pending {
   margin: 16px 0 0;
   color: rgba(255, 255, 255, 0.55);
   font-style: italic;
-}
-
-@media (max-width: 768px) {
-  h1 {
-    text-align: left;
-  }
 }
 </style>

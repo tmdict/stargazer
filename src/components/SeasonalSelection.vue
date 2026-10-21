@@ -54,7 +54,11 @@ const shownArtifacts = computed(() => shown(artifacts))
 </script>
 
 <template>
-  <div v-scroll-chain class="seasonal-selection" :class="{ scrollable }">
+  <div
+    v-scroll-chain
+    class="seasonal-selection panel-min-height"
+    :class="{ 'panel-fill': scrollable }"
+  >
     <div v-if="chips.length" class="tag-chips">
       <span class="tag-chips-label">{{ i18n.t('app.filters') }}</span>
       <FilterChip
@@ -76,7 +80,6 @@ const shownArtifacts = computed(() => shown(artifacts))
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  min-height: var(--panel-min-height);
 }
 
 .tag-chips {
@@ -94,14 +97,6 @@ const shownArtifacts = computed(() => shown(artifacts))
   font-weight: 600;
   color: var(--color-text-secondary);
   opacity: 0.75;
-}
-
-@media (min-width: 1220px) {
-  .seasonal-selection.scrollable {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }
 
 @media (max-width: 768px) {
