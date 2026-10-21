@@ -68,6 +68,8 @@
   --radius-large: 8px;
   --radius-round: 50%;
 
+  --section-radius: var(--radius-large);
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -95,16 +97,27 @@
 
   --color-bg-reading: #262626;
 
+  --scrollbar-thumb-on-dark: rgba(255, 255, 255, 0.15);
+
   --tab-font-size: 0.85rem;
 
   --control-font-size: 0.85rem;
   --control-font-weight: 600;
+  --control-height: 36px;
+  --control-height-tablet: 34px;
+  --control-height-mobile: 30px;
 
   /* iOS zooms the page when a text field under 16px gains focus, and the zoom
      outlives the field. A field sets `font-size: max(<its size>,
      var(--field-min-font-size))`, which is 1rem on touch screens. The 0px
      keeps its unit: max() rejects a bare 0. */
   --field-min-font-size: 0px;
+
+  --field-dark-font-size: 12px;
+  --field-dark-padding: 4px 8px;
+  --field-dark-border: 1px solid rgba(255, 255, 255, 0.15);
+  --field-dark-radius: var(--radius-medium);
+  --field-dark-background: rgba(255, 255, 255, 0.08);
 
   /* Large pills */
   --pill-large-height: 36px;
@@ -125,6 +138,10 @@
   --chip-font-size: 0.8rem;
   --chip-line-height: 1.4;
   --chip-padding-block: 3px;
+  --chip-height: calc(
+    var(--chip-line-height) * var(--chip-font-size) + 2 *
+      (var(--chip-padding-block) + var(--chip-border))
+  );
 
   /* Dropdowns */
   --dropdown-large-width: 12.5rem;
@@ -133,12 +150,26 @@
   --dropdown-row-hover: var(--color-bg-secondary);
 
   --picker-row-gap: var(--spacing-lg);
+  --picker-scrollbar-inset: var(--spacing-lg);
+
+  --palette-icon-size: 45px;
+  --palette-icon-ring: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  --palette-inset: 4px;
+
+  --hero-icon-size: 70px;
 
   --skill-popup-width: 960px;
 
   --stack-gap: var(--spacing-xl);
 
   --panel-min-height: 656px;
+  --panel-inset: var(--spacing-lg);
+
+  --board-gutter: var(--spacing-md);
+  --bottom-sheet-clearance: 64px;
+
+  --tile-highlight-stroke-width: 3;
+  --invalid-drop-glow: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
 
   /* Transitions */
   --transition-fast: 0.2s ease;
@@ -149,6 +180,7 @@
   --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.22);
   --shadow-float: 0 1px 3px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
+  --confirm-armed-ring: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
 
   /* Z-index scale */
   --z-arrows: 15;
@@ -165,6 +197,7 @@
 @media (max-width: 768px) {
   :root {
     --picker-row-gap: var(--spacing-md);
+    --section-radius: var(--radius-medium);
     --stack-gap: var(--spacing-md);
     --reading-title-size: 22px;
     --reading-heading-size: 17px;
@@ -173,6 +206,8 @@
 
 @media (max-width: 480px) {
   :root {
+    --board-gutter: var(--spacing-xs);
+    --section-radius: 0;
     --stack-gap: var(--spacing-xs);
     --tab-font-size: 0.8rem;
     --reading-title-size: 20px;

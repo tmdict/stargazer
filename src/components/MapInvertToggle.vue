@@ -33,7 +33,7 @@ const onToggle = () => {
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
-  min-height: 36px;
+  min-height: var(--control-height);
   flex-shrink: 0;
   white-space: nowrap;
   color: var(--color-text-secondary);
@@ -73,7 +73,7 @@ const onToggle = () => {
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     padding: 5px 11px;
-    min-height: 34px;
+    min-height: var(--control-height-tablet);
     gap: 0;
     font-size: 0.78rem;
     font-weight: 500;
@@ -90,7 +90,7 @@ const onToggle = () => {
 @media (max-width: 480px) {
   .invert-toggle {
     padding: 4px 10px;
-    min-height: 30px;
+    min-height: var(--control-height-mobile);
     font-size: 0.74rem;
   }
 }

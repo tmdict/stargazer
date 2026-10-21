@@ -764,10 +764,10 @@ const {
 
 @media (min-width: 769px) {
   .roster-bar {
-    padding-right: var(--spacing-lg);
+    padding-right: var(--picker-scrollbar-inset);
   }
   .roster-dock {
-    margin-right: var(--spacing-lg);
+    margin-right: var(--picker-scrollbar-inset);
   }
 }
 

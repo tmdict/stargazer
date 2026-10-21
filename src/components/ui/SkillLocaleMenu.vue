@@ -154,7 +154,7 @@ const pickSelect = (locale: SkillLocale) => {
   min-width: 100%;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--scrollbar-thumb-on-dark) transparent;
   padding: 6px;
   background: #15171c;
   border: 1px solid rgba(255, 255, 255, 0.14);

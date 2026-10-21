@@ -602,7 +602,7 @@ onUnmounted(() => {
 .grid-event-layer.drop-target.drag-hover polygon,
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
   fill: rgba(255, 255, 255, 0.3);
-  stroke-width: 3;
+  stroke-width: var(--tile-highlight-stroke-width);
 }
 
 .grid-event-layer.drop-target.drag-hover:not(.occupied):not(.invalid-drop) polygon {
@@ -616,8 +616,8 @@ onUnmounted(() => {
 }
 
 .grid-event-layer.drop-target.drag-hover.invalid-drop polygon {
-  stroke: #c05b4d;
-  filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
+  stroke: var(--color-danger);
+  filter: var(--invalid-drop-glow);
 }
 
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
@@ -627,12 +627,12 @@ onUnmounted(() => {
 .grid-event-layer.targeted polygon {
   fill: rgba(247, 216, 124, 0.35);
   stroke: #f7d87c;
-  stroke-width: 3;
+  stroke-width: var(--tile-highlight-stroke-width);
 }
 
 .grid-event-layer.lifted polygon {
   fill: rgba(54, 149, 142, 0.3);
   stroke: #36958e;
-  stroke-width: 3;
+  stroke-width: var(--tile-highlight-stroke-width);
 }
 </style>

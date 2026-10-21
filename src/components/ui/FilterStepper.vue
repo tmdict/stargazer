@@ -204,10 +204,7 @@ function onKeydown(e: KeyboardEvent) {
 /* ---- compact: the buttons alone ---- */
 
 .compact {
-  min-height: calc(
-    var(--chip-line-height) * var(--chip-font-size) + 2 *
-      (var(--chip-padding-block) + var(--chip-border))
-  );
+  min-height: var(--chip-height);
   border-width: var(--chip-border);
   font-size: var(--chip-font-size);
 }

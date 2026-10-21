@@ -35,14 +35,8 @@ const { wrap, canWrap } = defineProps<{
 
 @media (max-width: 768px) {
   .boards {
-    padding-left: var(--spacing-md);
-    padding-right: var(--spacing-md);
-  }
-}
-@media (max-width: 480px) {
-  .boards {
-    padding-left: var(--spacing-xs);
-    padding-right: var(--spacing-xs);
+    padding-left: var(--board-gutter);
+    padding-right: var(--board-gutter);
   }
 }
 

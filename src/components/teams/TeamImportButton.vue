@@ -79,7 +79,7 @@ const handleImport = (plan: TeamImportPlan): void => {
    scoped rule outranks its collapse to a round icon button. */
 .import-btn {
   padding: 0;
-  width: 36px;
+  width: var(--control-height);
   justify-content: center;
   opacity: 0.75;
 }
@@ -91,13 +91,13 @@ const handleImport = (plan: TeamImportPlan): void => {
 
 @media (max-width: 768px) {
   .import-btn {
-    width: 34px;
+    width: var(--control-height-tablet);
   }
 }
 
 @media (max-width: 480px) {
   .import-btn {
-    width: 30px;
+    width: var(--control-height-mobile);
   }
 }
 </style>

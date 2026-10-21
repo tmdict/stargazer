@@ -179,7 +179,7 @@
     max-width: 100% !important;
     border: none;
     box-shadow: none;
-    border-radius: var(--radius-medium);
+    border-radius: var(--section-radius);
   }
 
   .page-panel > * {
@@ -188,10 +188,6 @@
 }
 
 @media (max-width: 480px) {
-  .page-panel {
-    border-radius: 0;
-  }
-
   .page-panel > * {
     padding: var(--spacing-md);
   }

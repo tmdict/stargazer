@@ -260,10 +260,6 @@ const {
 }
 
 .team-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -303,15 +299,19 @@ const {
 
 .team-title-input {
   font: inherit;
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--color-text-primary);
   width: min(60vw, 320px);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-small);
   padding: 0 4px;
   background: var(--color-bg-white);
+}
+
+.team-title,
+.team-title-input {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
 }
 
 .team-title-input:focus {

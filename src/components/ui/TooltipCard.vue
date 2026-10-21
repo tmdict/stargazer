@@ -41,6 +41,8 @@ defineProps<{
 }
 
 .tooltip-card-rows {
+  --icon-size: 20px;
+  --label-gap: 8px;
   display: grid;
   grid-template-columns: max-content 1fr;
   align-items: center;
@@ -50,18 +52,18 @@ defineProps<{
 .tooltip-card-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--label-gap);
   color: var(--tooltip-muted);
 }
 
 .tooltip-card-rows:has(.tooltip-card-icon) .tooltip-card-label:not(:has(.tooltip-card-icon)) {
-  padding-left: 28px;
+  padding-left: calc(var(--icon-size) + var(--label-gap));
 }
 
 .tooltip-card-icon {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: var(--icon-size);
+  height: var(--icon-size);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
 }

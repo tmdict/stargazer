@@ -160,7 +160,7 @@ const renderedRefinements = computed(() =>
 
 .skill-level-badge {
   flex: 0 0 auto;
-  line-height: 23.25px;
+  line-height: calc(var(--reading-secondary-size) * var(--reading-leading));
   color: rgba(255, 255, 255, 0.55);
   font-size: 10px;
   font-weight: 700;

@@ -469,9 +469,9 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 }
 
 .artifact-cell.invalid-drop {
-  stroke: #c05b4d;
-  stroke-width: 3;
-  filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
+  stroke: var(--color-danger);
+  stroke-width: var(--tile-highlight-stroke-width);
+  filter: var(--invalid-drop-glow);
 }
 
 .grid-artifact.invalid-drop {

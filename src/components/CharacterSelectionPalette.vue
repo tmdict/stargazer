@@ -138,16 +138,16 @@ function handleEnter(event: KeyboardEvent) {
 
 <style scoped>
 .search-input {
-  width: calc(100% - 8px);
+  width: calc(100% - 2 * var(--palette-inset));
   box-sizing: border-box;
-  margin: 0 4px 8px;
-  padding: 4px 8px;
+  margin: 0 var(--palette-inset) 8px;
+  padding: var(--field-dark-padding);
   font: inherit;
-  font-size: max(12px, var(--field-min-font-size));
+  font-size: max(var(--field-dark-font-size), var(--field-min-font-size));
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  background: var(--field-dark-background);
+  border: var(--field-dark-border);
+  border-radius: var(--field-dark-radius);
   transition: border-color 0.15s ease;
 }
 
@@ -193,7 +193,7 @@ function handleEnter(event: KeyboardEvent) {
   overflow-y: auto;
   max-height: 280px;
   min-height: 0;
-  padding: 2px 4px;
+  padding: 2px var(--palette-inset);
 }
 
 .pinned-row {
@@ -220,9 +220,9 @@ function handleEnter(event: KeyboardEvent) {
 }
 
 .character-item :deep(.character-display) {
-  width: 45px !important;
-  height: 45px !important;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+  width: var(--palette-icon-size) !important;
+  height: var(--palette-icon-size) !important;
+  box-shadow: var(--palette-icon-ring) !important;
 }
 
 .character-item :deep(.portrait) {
@@ -250,7 +250,7 @@ function handleEnter(event: KeyboardEvent) {
   display: flex;
   align-items: center;
   gap: 5px;
-  margin: 8px 4px 0;
+  margin: 8px var(--palette-inset) 0;
   padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 11px;

@@ -185,8 +185,8 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 .character-display {
-  width: 70px;
-  height: 70px;
+  width: var(--hero-icon-size);
+  height: var(--hero-icon-size);
   border-radius: 50%;
   display: flex;
   flex-direction: column;
