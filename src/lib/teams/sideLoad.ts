@@ -54,6 +54,10 @@ export interface SideLoadBoard {
   companions: SideLoadCompanion[]
   phantimal: SideLoadUnit | null
   artifact: number | null
+  // Heroes the record holds on this side that the destination can't take (a
+  // synergy hero where the mode has no Syn), present only when there are some;
+  // they count as skipped.
+  leftOut?: number
 }
 
 export interface SideLoadPlan {
@@ -97,7 +101,7 @@ export function savedTeamSide(data: string): Team | null {
  * main's skill rather than placing directly, so they're carried as settle
  * targets, not mains. The synergy hero rides in `mains` under its band id
  * (place/autoPlace resolve it like any unit), included with its companions
- * only when `allowSynergy`. */
+ * only when `allowSynergy`, and counted in `leftOut` otherwise. */
 export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolean): SideLoadBoard {
   const attrsByHero = new Map<number, AttrRecord>()
   for (const [team, characterId, attrId, value] of board.u ?? []) {
@@ -127,19 +131,21 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
       mains.push(attrs ? { unitId: characterId, hexId, attrs } : { unitId: characterId, hexId })
     }
   }
-  if (allowSynergy) {
-    for (const [hexId, localId, team] of board.y ?? []) {
-      if (team !== side || hexId === undefined || localId === undefined) continue
-      if (localId >= PHANTIMAL_ID_OFFSET) continue
-      if (localId >= COMPANION_ID_OFFSET) {
-        companions.push({
-          unitId: toSynergyId(localId),
-          hexId,
-          mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
-        })
-      } else {
-        mains.push({ unitId: toSynergyId(localId), hexId })
-      }
+  let leftOut = 0
+  for (const [hexId, localId, team] of board.y ?? []) {
+    if (team !== side || hexId === undefined || localId === undefined) continue
+    if (localId >= PHANTIMAL_ID_OFFSET) continue
+    if (localId >= COMPANION_ID_OFFSET) {
+      if (!allowSynergy) continue
+      companions.push({
+        unitId: toSynergyId(localId),
+        hexId,
+        mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
+      })
+    } else if (allowSynergy) {
+      mains.push({ unitId: toSynergyId(localId), hexId })
+    } else {
+      leftOut++
     }
   }
 
@@ -162,12 +168,12 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
   }
 
   const artifact = (side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null
-  return { mains, companions, phantimal, artifact }
+  return { mains, companions, phantimal, artifact, ...(leftOut > 0 ? { leftOut } : {}) }
 }
 
 /* Null when the record isn't a one-sided team. The synergy hero and its
  * companions are included only when the destination mode offers the Syn
- * affordance. */
+ * affordance; otherwise the hero is left out and counted. */
 export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoadPlan | null {
   const raw = decodeMultiGridStateFromUrl(data)
   if (!raw) return null

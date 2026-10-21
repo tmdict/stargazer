@@ -812,6 +812,17 @@ describe('useGrids.loadTeamSide', () => {
     expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
   })
 
+  it('counts the units a side leaves out as skipped', () => {
+    const { grids } = setupBoards(1)
+
+    const result = grids.loadTeamSide(
+      { side: Team.ALLY, boards: [board([[12, 2]], { leftOut: 1 })] },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(result).toEqual({ placed: 1, skipped: 1 })
+  })
+
   it('derives the Syn affordance from a loaded synergy hero', () => {
     const { grids, a: ctx } = setupBoards(1)
     expect(grids.synergy).toBe(false)
