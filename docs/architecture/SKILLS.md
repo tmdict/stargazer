@@ -109,7 +109,7 @@ Some artifacts act on specific units, such as Enlightening on the rearmost ally,
 
 `ARTIFACT_TARGETING` (`src/lib/skills/artifact.ts`) is keyed by artifact id. A rule receives the team whose slot holds the artifact and may pick units on either team, using the same whole-team helpers as hero skills (`frontmostUnit`, `frontmostUnits`, `rearmostUnit` in `src/lib/skills/utils/distance.ts`), so phantimals and companions count the same way. An artifact draws exactly when it has an entry, and only its base-level targets are drawn. Each entry names its artifact, and a test fails when the name no longer matches the data file holding that id, because seasonal ids are reused.
 
-The arrows render in `SkillTargeting` in the team colors (`TEAM_ARROW_COLORS`) and share the Skills toggle. Team view hides the enemy slot's arrows, and also any arrow whose target tile it crops out, such as an ally artifact pointing at enemies. `GridArrow` prefixes its SVG marker id with the board id, because marker ids are document-wide and the Teams page renders several boards.
+The arrows render in `SkillTargeting` in the team colors (`TEAM_COLORS`) and share the Skills toggle. Team view hides the enemy slot's arrows, and also any arrow whose target tile it crops out, such as an ally artifact pointing at enemies. `GridArrow` prefixes its SVG marker id with the board id, because marker ids are document-wide and the Teams page renders several boards.
 
 If an artifact ever needs a side effect such as a spawned unit or a capacity change, give skills a caster-agnostic source instead of extending this table.
 
