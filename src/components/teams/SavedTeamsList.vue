@@ -11,6 +11,7 @@ import { computed, ref, watch } from 'vue'
 
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
 import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
+import SegmentedPicker from '@/components/teams/SegmentedPicker.vue'
 import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
@@ -66,6 +67,13 @@ type SortKey = 'recent' | 'name'
 const SORT_KEYS: SortKey[] = ['recent', 'name']
 const sortBy = ref<SortKey>(readStorage(SORT_STORAGE_KEY) === 'name' ? 'name' : 'recent')
 watch(sortBy, (value) => writeStorage(SORT_STORAGE_KEY, value))
+const sortSegments = computed(() =>
+  SORT_KEYS.map((key) => ({
+    key,
+    label: i18n.t(`app.sort-${key}`),
+    selected: sortBy.value === key,
+  })),
+)
 
 // numeric:true keeps auto-names in counting order ("Team 2" before "Team 10").
 const nameCollator = computed(
@@ -87,6 +95,13 @@ const MODE_FILTERS: ModeFilter[] = ['all', ...TEAM_MODE_ORDER]
 // Unlike the sort preference this stays out of storage: a filter restored on
 // load would read as missing teams.
 const modeFilter = ref<ModeFilter>('all')
+const modeSegments = computed(() =>
+  MODE_FILTERS.map((key) => ({
+    key,
+    label: key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey),
+    selected: modeFilter.value === key,
+  })),
+)
 
 const modeFiltered = computed(() =>
   modeFilter.value === 'all'
@@ -313,24 +328,14 @@ const actionTipText = computed((): string => {
         >
           <IconInfo :size="15" />
         </button>
-        <div
+        <SegmentedPicker
           v-if="library.count > 1"
-          class="seg-group"
-          role="group"
+          small
+          class="sort-picker"
+          :segments="sortSegments"
           :aria-label="i18n.t('app.sort')"
-        >
-          <button
-            v-for="key in SORT_KEYS"
-            :key
-            type="button"
-            :aria-pressed="sortBy === key"
-            class="seg-btn"
-            :class="{ active: sortBy === key }"
-            @click="sortBy = key"
-          >
-            {{ i18n.t(`app.sort-${key}`) }}
-          </button>
-        </div>
+          @select="sortBy = $event"
+        />
         <SavedTeamsSearch
           v-if="searchVisible"
           v-model="searchQuery"
@@ -392,19 +397,12 @@ const actionTipText = computed((): string => {
     <!-- The filters, in pipeline order (mode, type, one-sided), on their own
          row so the bar keeps the library-wide controls. -->
     <div class="filter-row">
-      <div class="seg-group" role="group" :aria-label="i18n.t('app.teams')">
-        <button
-          v-for="key in MODE_FILTERS"
-          :key
-          type="button"
-          :aria-pressed="modeFilter === key"
-          class="seg-btn"
-          :class="{ active: modeFilter === key }"
-          @click="modeFilter = key"
-        >
-          {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
-        </button>
-      </div>
+      <SegmentedPicker
+        small
+        :segments="modeSegments"
+        :aria-label="i18n.t('app.teams')"
+        @select="modeFilter = $event"
+      />
       <!-- Wrapping chips rather than a pill segment: a board count may grow
            many types, and the row must stay readable in the phone-width sheet. -->
       <div
@@ -426,17 +424,12 @@ const actionTipText = computed((): string => {
           {{ key === 'all' ? i18n.t('app.all') : typeLabel(key) }}
         </button>
       </div>
-      <div class="seg-group" role="group" :aria-label="i18n.t('app.one-sided')">
-        <button
-          type="button"
-          :aria-pressed="oneSideOnly"
-          class="seg-btn"
-          :class="{ active: oneSideOnly }"
-          @click="oneSideOnly = !oneSideOnly"
-        >
-          {{ i18n.t('app.one-sided') }}
-        </button>
-      </div>
+      <SegmentedPicker
+        small
+        :segments="[{ key: 'one-sided', label: i18n.t('app.one-sided'), selected: oneSideOnly }]"
+        :aria-label="i18n.t('app.one-sided')"
+        @select="oneSideOnly = !oneSideOnly"
+      />
     </div>
 
     <p v-if="library.count === 0" class="empty-state">
@@ -629,37 +622,8 @@ const actionTipText = computed((): string => {
   color: var(--color-warning);
 }
 
-.seg-group {
-  display: inline-flex;
+.sort-picker {
   margin-left: var(--spacing-sm);
-  background: var(--color-bg-secondary);
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: 999px;
-  padding: 2px;
-  gap: 2px;
-}
-
-.seg-btn {
-  border: none;
-  background: transparent;
-  border-radius: 999px;
-  padding: 3px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.seg-btn:hover:not(.active) {
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-.seg-btn.active {
-  background: var(--color-primary);
-  color: #fff;
 }
 
 .filter-row {
@@ -667,10 +631,6 @@ const actionTipText = computed((): string => {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-sm) var(--spacing-md);
-}
-
-.filter-row > .seg-group {
-  margin-left: 0;
 }
 
 .type-group {

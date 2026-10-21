@@ -6,6 +6,7 @@ import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
+import PickerSearchRow from '@/components/ui/PickerSearchRow.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { fromMechanicQuery, toMechanicQuery } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
@@ -54,9 +55,11 @@ watch(mechanicFilter, (pick) => {
 
 <template>
   <div v-scroll-chain class="skills-selection panel-min-height panel-fill">
-    <div class="search-row">
-      <SkillSearchTrigger />
-    </div>
+    <PickerSearchRow>
+      <template #default>
+        <SkillSearchTrigger />
+      </template>
+    </PickerSearchRow>
 
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
@@ -93,11 +96,6 @@ watch(mechanicFilter, (pick) => {
   overscroll-behavior: contain;
 }
 
-.search-row {
-  display: flex;
-  padding-right: var(--spacing-lg);
-}
-
 .character-cell {
   cursor: pointer;
   text-decoration: none;
@@ -112,21 +110,12 @@ watch(mechanicFilter, (pick) => {
     padding: 0 0 var(--spacing-lg);
     --filter-inset: var(--spacing-md);
   }
-  .search-row {
-    padding: var(--spacing-sm) var(--spacing-md) 0;
-  }
-  .search-row :deep(.search-trigger) {
-    max-width: none;
-  }
 }
 
 @media (max-width: 480px) {
   .skills-selection {
     padding: 0 0 var(--spacing-md);
     --filter-inset: var(--spacing-sm);
-  }
-  .search-row {
-    padding: var(--spacing-sm) var(--spacing-sm) 0;
   }
 }
 </style>

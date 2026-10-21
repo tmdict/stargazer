@@ -17,7 +17,7 @@ import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
-import IconEdit from '@/components/ui/IconEdit.vue'
+import RenameButton from '@/components/ui/RenameButton.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
@@ -144,16 +144,7 @@ const {
           <span class="team-title" :class="{ unsaved: sourceName === null }">
             {{ sourceName ?? pendingName ?? i18n.t('app.unsaved-team') }}
           </span>
-          <button
-            v-if="sourceName !== null"
-            type="button"
-            class="title-rename-btn"
-            :title="i18n.t('app.rename')"
-            :aria-label="i18n.t('app.rename')"
-            @click="startRename"
-          >
-            <IconEdit :size="14" />
-          </button>
+          <RenameButton v-if="sourceName !== null" class="title-rename" @click="startRename" />
         </template>
         <HelpLink class="title-help" section="teams" />
         <span
@@ -269,28 +260,8 @@ const {
   color: var(--color-text-secondary);
 }
 
-.title-rename-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
+.title-rename {
   margin-left: var(--spacing-xs);
-  flex-shrink: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-small);
-  color: var(--color-text-secondary);
-  opacity: 0.55;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.title-rename-btn:hover,
-.title-rename-btn:focus-visible {
-  opacity: 1;
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
 }
 
 .title-help {
