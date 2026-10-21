@@ -13,15 +13,13 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
-import TeamImportCell from '@/components/teams/TeamImportCell.vue'
-import TeamImportCellGrid from '@/components/teams/TeamImportCellGrid.vue'
-import TeamImportCellState from '@/components/teams/TeamImportCellState.vue'
-import TeamImportSideHead from '@/components/teams/TeamImportSideHead.vue'
+import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
+import ImportCellState from '@/components/import/ImportCellState.vue'
+import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
+import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import TeamImportUnits, { type FormationUnits } from '@/components/teams/TeamImportUnits.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/card/types'
@@ -71,8 +69,6 @@ const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
 const sideLabel = (team: Team): string => i18n.t(teamLabelKey(team))
-
-const { heroName, heroImage } = useUnitLabels()
 
 const artifactName = (artifact: ArtifactType | null): string =>
   artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-none')
@@ -226,7 +222,7 @@ const closePickers = (event: MouseEvent): void => {
 <template>
   <div class="review-grid" @click="closePickers">
     <div v-for="team in sides" :key="team" class="side">
-      <TeamImportSideHead :label="sideLabel(team)">
+      <ImportSideHead :label="sideLabel(team)">
         <template #default>
           <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
           <span v-if="swapSides" class="side-board">
@@ -255,71 +251,37 @@ const closePickers = (event: MouseEvent): void => {
               </span>
               <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
             </button>
-            <TeamImportCellState
+            <ImportCellState
               v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
               state="review"
               :reading="artifactName(sideArtifacts[team].artifact)"
               :title="artifactName(sideArtifacts[team].artifact)"
               @confirm="emit('setArtifact', shot.id, team, sideArtifacts[team].artifact!.id)"
             />
-            <TeamImportCellState v-else-if="!sideArtifacts[team].sure" state="review" />
-            <TeamImportCellState v-else-if="sideArtifacts[team].edited" state="edited" />
+            <ImportCellState v-else-if="!sideArtifacts[team].sure" state="review" />
+            <ImportCellState v-else-if="sideArtifacts[team].edited" state="edited" />
           </span>
         </template>
-      </TeamImportSideHead>
-      <TeamImportCellGrid>
+      </ImportSideHead>
+      <ImportCellGrid>
         <template #default>
-          <TeamImportCell
+          <ImportHeroCell
             v-for="view in sideCells[team]"
             :key="view.key"
-            :class="view.state"
             :card="view.card"
-            :portrait="view.characterId === null ? null : heroImage(view.characterId)"
-          >
-            <template #name>
-              <button
-                type="button"
-                class="cell-name"
-                :class="{ open: picker?.key === view.key }"
-                :title="heroName(view.characterId)"
-                @click="togglePicker(team, view.row, view.key, $event)"
-              >
-                {{ heroName(view.characterId) }}
-              </button>
-            </template>
-            <template #meta>
-              <UpgradePill
-                :paragon="view.paragon"
-                :refinement="view.refinement"
-                editable
-                @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
-                @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
-              />
-              <TeamImportCellState
-                v-if="view.state === 'review' && view.characterId !== null"
-                state="review"
-                :reading="heroName(view.characterId)"
-                :title="heroName(view.characterId)"
-                @confirm="emit('setHero', shot.id, team, view.row, view.characterId)"
-              />
-              <TeamImportCellState
-                v-else-if="view.state === 'paragon'"
-                state="review"
-                :reading="`P${view.paragon}`"
-                @confirm="emit('setLevel', shot.id, team, view.row, 'paragon', view.paragon)"
-              />
-              <TeamImportCellState
-                v-else-if="view.state === 'refinement'"
-                state="review"
-                :reading="`R${view.refinement}`"
-                @confirm="emit('setLevel', shot.id, team, view.row, 'refinement', view.refinement)"
-              />
-              <TeamImportCellState v-else-if="view.state !== 'sure'" :state="view.state" />
-              <TeamImportCellState v-else-if="view.edited" state="edited" />
-            </template>
-          </TeamImportCell>
+            :character-id="view.characterId"
+            :paragon="view.paragon"
+            :refinement="view.refinement"
+            :state="view.state"
+            :edited="view.edited"
+            :open="picker?.key === view.key"
+            @pick="togglePicker(team, view.row, view.key, $event)"
+            @hero="emit('setHero', shot.id, team, view.row, $event)"
+            @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
+            @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
+          />
         </template>
-      </TeamImportCellGrid>
+      </ImportCellGrid>
     </div>
 
     <TeamImportUnits
