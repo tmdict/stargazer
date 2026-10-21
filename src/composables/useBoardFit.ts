@@ -29,19 +29,17 @@ export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): 
     cancelAnimationFrame(frame)
     frame = requestAnimationFrame(fit)
   }
-  let observer: ResizeObserver | null = null
+  const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleFit)
 
   // The column can render after mount (a shared board's card waits on its link).
   onMounted(() => {
-    const resizes = new ResizeObserver(scheduleFit)
-    observer = resizes
     watch(
       () => toValue(column),
       (columnEl, previous) => {
-        if (previous) resizes.unobserve(previous)
+        if (previous) observer?.unobserve(previous)
         if (!columnEl) return
         fit()
-        resizes.observe(columnEl)
+        observer?.observe(columnEl)
       },
       { immediate: true, flush: 'post' },
     )

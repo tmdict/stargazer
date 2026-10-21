@@ -135,17 +135,18 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
   for (const [hexId, localId, team] of board.y ?? []) {
     if (team !== side || hexId === undefined || localId === undefined) continue
     if (localId >= PHANTIMAL_ID_OFFSET) continue
+    if (!allowSynergy) {
+      if (localId < COMPANION_ID_OFFSET) leftOut++
+      continue
+    }
     if (localId >= COMPANION_ID_OFFSET) {
-      if (!allowSynergy) continue
       companions.push({
         unitId: toSynergyId(localId),
         hexId,
         mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
       })
-    } else if (allowSynergy) {
-      mains.push({ unitId: toSynergyId(localId), hexId })
     } else {
-      leftOut++
+      mains.push({ unitId: toSynergyId(localId), hexId })
     }
   }
 
