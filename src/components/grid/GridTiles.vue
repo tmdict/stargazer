@@ -607,7 +607,7 @@ onUnmounted(() => {
 
 .grid-event-layer.drop-target.drag-hover:not(.occupied):not(.invalid-drop) polygon {
   stroke: var(--color-primary);
-  filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.4));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent));
 }
 
 .grid-event-layer.drop-target.drag-hover.occupied:not(.invalid-drop) polygon {
