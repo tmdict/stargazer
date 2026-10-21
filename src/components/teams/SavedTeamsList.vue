@@ -379,7 +379,7 @@ const actionTipText = computed((): string => {
           v-if="library.count > 0"
           type="button"
           class="library-btn solid-btn delete-all-btn"
-          :class="{ armed: armed === 'all' }"
+          :class="{ 'confirm-armed': armed === 'all' }"
           @click="handleDeleteAll"
         >
           <ConfirmLabel :armed="armed === 'all'" :label="i18n.t('app.delete-all')" />
@@ -523,7 +523,7 @@ const actionTipText = computed((): string => {
           <button
             type="button"
             class="card-btn danger"
-            :class="{ armed: armed === team.id }"
+            :class="{ 'confirm-armed': armed === team.id }"
             @click="handleDelete(team)"
           >
             <ConfirmLabel :armed="armed === team.id" :label="i18n.t('app.delete')" />
@@ -705,7 +705,7 @@ const actionTipText = computed((): string => {
 }
 
 .delete-all-btn:hover,
-.delete-all-btn.armed {
+.delete-all-btn.confirm-armed {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
 }
@@ -918,11 +918,10 @@ const actionTipText = computed((): string => {
   color: #fff;
 }
 
-.card-btn.armed,
-.card-btn.armed:hover {
+.card-btn.confirm-armed,
+.card-btn.confirm-armed:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
   color: #fff;
-  box-shadow: var(--confirm-armed-ring);
 }
 </style>

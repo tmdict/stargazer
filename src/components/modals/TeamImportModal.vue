@@ -648,7 +648,7 @@ const handleForgetLearned = (): void => {
         <button
           type="button"
           class="footer-btn danger"
-          :class="{ armed: armed === 'save' }"
+          :class="{ 'confirm-armed': armed === 'save' }"
           :disabled="blocked"
           @click="handleSaveAsNew"
         >
@@ -664,7 +664,7 @@ const handleForgetLearned = (): void => {
           v-if="learnedCount > 0"
           type="button"
           class="link-btn"
-          :class="{ armed: armed === 'forget' }"
+          :class="{ 'confirm-armed': armed === 'forget' }"
           @click="handleForgetLearned"
         >
           <ConfirmLabel
@@ -908,10 +908,9 @@ const handleForgetLearned = (): void => {
   border-color: var(--color-danger-hover);
 }
 
-.footer-btn.danger.armed {
+.footer-btn.danger.confirm-armed {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
-  box-shadow: var(--confirm-armed-ring);
 }
 
 .footer-btn:disabled {
@@ -932,6 +931,7 @@ const handleForgetLearned = (): void => {
 .link-btn {
   margin-left: auto;
   border: none;
+  border-radius: var(--radius-medium);
   background: none;
   color: var(--import-text-dim);
   font: inherit;
@@ -944,8 +944,10 @@ const handleForgetLearned = (): void => {
   color: var(--import-text);
 }
 
-.link-btn.armed {
-  color: var(--import-bad);
+.link-btn.confirm-armed {
+  background: var(--color-danger-hover);
+  color: #fff;
+  text-decoration: none;
 }
 
 @media (pointer: coarse) {

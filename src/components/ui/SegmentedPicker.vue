@@ -34,7 +34,7 @@ defineSlots<{ default?(props: { segment: T }): unknown }>()
       type="button"
       :aria-pressed="segment.selected"
       class="segment"
-      :class="{ active: segment.selected, armed: segment.armed }"
+      :class="{ active: segment.selected, 'confirm-armed': segment.armed }"
       @click="emit('select', segment.key)"
     >
       <slot :segment>{{ segment.label }}</slot>
@@ -75,7 +75,7 @@ defineSlots<{ default?(props: { segment: T }): unknown }>()
   font-size: 0.78rem;
 }
 
-.segment:hover:not(.active):not(.armed) {
+.segment:hover:not(.active):not(.confirm-armed) {
   color: var(--color-primary);
   background: var(--color-bg-tertiary);
 }
@@ -85,7 +85,7 @@ defineSlots<{ default?(props: { segment: T }): unknown }>()
   color: #fff;
 }
 
-.segment.armed {
+.segment.confirm-armed {
   background: var(--color-danger-hover);
   color: #fff;
 }
