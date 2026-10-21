@@ -461,11 +461,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally .lineup-label {
-  color: var(--color-ally);
+  color: var(--color-ally-on-dark);
 }
 
 .lineup.enemy .lineup-label {
-  color: var(--color-enemy);
+  color: var(--color-enemy-on-dark);
 }
 
 .lineup-units {
