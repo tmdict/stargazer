@@ -16,6 +16,7 @@ import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
+import { useBoardFit } from '@/composables/useBoardFit'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import {
@@ -129,6 +130,10 @@ watch(liftedHexId, (id) => {
 const showDebug = computed(() => activeTab.value === 'debug')
 
 const { showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
+
+const boardPanel = ref<HTMLElement>()
+const boardContainer = ref<InstanceType<typeof GridContainer>>()
+useBoardFit(boardPanel, () => boardContainer.value?.$el)
 
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 
@@ -278,9 +283,10 @@ const handleResetMap = () => {
   <main>
     <DragDropProvider>
       <div class="sections-container">
-        <div class="section">
+        <div ref="boardPanel" class="section">
           <SeasonNotice />
           <GridContainer
+            ref="boardContainer"
             :context="activeContext"
             :characters="gameDataStore.characters"
             :info
@@ -362,12 +368,27 @@ const handleResetMap = () => {
 
 @media (max-width: 768px) {
   main {
-    padding-bottom: var(--bottom-sheet-clearance);
+    padding-bottom: 0;
+  }
+
+  .sections-container {
+    flex: 1;
   }
 
   .sections-container > .section:first-child {
+    flex: 1;
     padding-left: var(--board-gutter);
     padding-right: var(--board-gutter);
+    padding-bottom: calc(var(--tabview-inset-y) + var(--bottom-sheet-clearance));
+  }
+}
+
+/* A phone's board box is wider than the screen, past which it holds only empty
+   margin. */
+@media (max-width: 480px) {
+  .sections-container > .section:first-child {
+    padding-top: var(--board-gutter);
+    overflow-x: clip;
   }
 }
 
