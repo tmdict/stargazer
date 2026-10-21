@@ -73,12 +73,12 @@ export const useGridStore = defineStore('grid', () => {
   const getCurrentMapConfig = (): MapConfig | null => getMapByKey(active().currentMap) ?? null
 
   let breakpoint: Breakpoint = 'desktop'
-  // The hex radius the Arena fits its board to on a phone; null keeps the
-  // mobile size.
+  // The hex radius a page fits its single board to on a phone (useBoardFit);
+  // null keeps the mobile size.
   let mobileFit: number | null = null
 
-  // No-op while the page pins a fixed hex size (5 v 5); honored on the Arena. A
-  // phone's fit stays between the mobile and tablet sizes.
+  // No-op while the page pins a fixed hex size (5 v 5). A phone's fit stays
+  // between the mobile and tablet sizes.
   const applySize = (): void => {
     if (grids.hexSizeMode !== 'breakpoint') return
     const { mobile, tablet } = BREAKPOINT_SIZES
