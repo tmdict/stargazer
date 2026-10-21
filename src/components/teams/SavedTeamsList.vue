@@ -347,7 +347,7 @@ const actionTipText = computed((): string => {
              library is exactly when it's needed. -->
         <button
           type="button"
-          class="library-btn"
+          class="library-btn solid-btn"
           @click="fileInput?.click()"
           @mouseenter="showActionTip($event, 'import')"
           @touchstart.passive="actionTipTouchStart"
@@ -358,7 +358,7 @@ const actionTipText = computed((): string => {
         <button
           v-if="library.count > 0"
           type="button"
-          class="library-btn"
+          class="library-btn solid-btn"
           @click="handleExport"
           @mouseenter="showActionTip($event, 'export')"
           @touchstart.passive="actionTipTouchStart"
@@ -373,7 +373,7 @@ const actionTipText = computed((): string => {
         <button
           v-if="library.count > 0"
           type="button"
-          class="library-btn delete-all-btn"
+          class="library-btn solid-btn delete-all-btn"
           :class="{ armed: armed === 'all' }"
           @click="handleDeleteAll"
         >
@@ -742,24 +742,11 @@ const actionTipText = computed((): string => {
 }
 
 .library-btn {
-  border: 2px solid var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-medium);
   padding: 4px 12px;
   font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
-.library-btn:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-/* Must stay after .library-btn: equal specificity, so source order decides. */
 .delete-all-btn {
   background: var(--color-danger);
   border-color: var(--color-danger);

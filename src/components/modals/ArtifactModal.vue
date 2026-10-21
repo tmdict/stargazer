@@ -63,8 +63,8 @@ const pendingLabel = computed(
       <LocaleMenu :current="displayLocale" in-modal @select="displayLocale = $event" />
     </template>
 
-    <h1>{{ title }}</h1>
-    <div class="artifact-stats">
+    <h1 class="detail-title">{{ title }}</h1>
+    <div class="artifact-stats meta-chips">
       <span class="meta-chip stat-chip">{{ gameLabel('season') }} {{ artifact.season }}</span>
       <span v-for="stat in stats" :key="stat.key" class="meta-chip stat-chip">
         {{ stat.label }} <strong>{{ stat.value }}</strong>
@@ -78,10 +78,6 @@ const pendingLabel = computed(
 
 <style scoped>
 .artifact-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 4px;
   padding-bottom: 16px;
   border-bottom: 2px solid var(--color-border-primary);
 }
@@ -100,11 +96,5 @@ const pendingLabel = computed(
   margin: 16px 0 0;
   color: rgba(255, 255, 255, 0.55);
   font-style: italic;
-}
-
-@media (max-width: 768px) {
-  h1 {
-    text-align: left;
-  }
 }
 </style>

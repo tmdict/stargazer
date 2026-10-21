@@ -104,6 +104,7 @@ const handleDragEnd = (event: DragEvent) => {
         :class="{
           draggable: isDraggable,
           dimmed,
+          'greyed-out': dimmed,
           selected: isSelected,
           ticked: tickable && ticked,
           inspectable: inspectTarget,
@@ -252,18 +253,6 @@ const handleDragEnd = (event: DragEvent) => {
 
 .draggable:active {
   cursor: grabbing;
-}
-
-.character-display.dimmed {
-  filter: var(--placed-filter);
-}
-.character-display.dimmed::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--placed-overlay);
-  pointer-events: none;
 }
 
 .character-display.selected {

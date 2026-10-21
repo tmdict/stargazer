@@ -409,7 +409,11 @@ const {
 </script>
 
 <template>
-  <div v-scroll-chain class="roster-panel" :class="{ scrollable, selecting }">
+  <div
+    v-scroll-chain
+    class="roster-panel panel-min-height"
+    :class="{ 'panel-fill': scrollable, selecting }"
+  >
     <div class="roster-bar">
       <span class="roster-info">
         <RosterMenu />
@@ -680,7 +684,6 @@ const {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
-  min-height: var(--panel-min-height);
 }
 
 .roster-bar {
@@ -873,14 +876,6 @@ const {
   }
   .roster-name-input {
     min-height: 34px;
-  }
-}
-
-@media (min-width: 1220px) {
-  .roster-panel.scrollable {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
   }
 }
 </style>

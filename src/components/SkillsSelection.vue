@@ -53,7 +53,7 @@ watch(mechanicFilter, (pick) => {
 </script>
 
 <template>
-  <div v-scroll-chain class="skills-selection">
+  <div v-scroll-chain class="skills-selection panel-min-height panel-fill">
     <div class="search-row">
       <SkillSearchTrigger />
     </div>
@@ -89,17 +89,8 @@ watch(mechanicFilter, (pick) => {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
-  min-height: var(--panel-min-height);
   /* Contain overscroll so collapsing the sheet doesn't pull/refresh the page. */
   overscroll-behavior: contain;
-}
-
-@media (min-width: 1220px) {
-  .skills-selection {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }
 
 .search-row {

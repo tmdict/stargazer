@@ -20,6 +20,8 @@ import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useI18nStore } from '@/stores/i18n'
 
+import '@/styles/modal.css'
+
 const { share = false } = defineProps<{
   // ShareView presentation: right-aligned, checklist everywhere.
   share?: boolean
@@ -104,7 +106,12 @@ const panelShift = usePanelClamp(
     </button>
 
     <!-- Wide + ShareView: split chip, body toggles the master, caret opens. -->
-    <span v-else ref="triggerRef" class="chip" :class="{ active: prefs.master }">
+    <span
+      v-else
+      ref="triggerRef"
+      class="chip"
+      :class="{ active: prefs.master, 'glass-button': share }"
+    >
       <label class="chip-body">
         <input
           type="checkbox"
@@ -186,11 +193,7 @@ const panelShift = usePanelClamp(
 .chip {
   display: inline-flex;
   align-items: stretch;
-  border: 2px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
   min-height: var(--control-height);
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
   font-size: var(--control-font-size);
   font-weight: var(--control-font-weight);
   white-space: nowrap;
@@ -198,7 +201,14 @@ const panelShift = usePanelClamp(
   transition: all var(--transition-fast);
 }
 
-.chip:hover {
+.grid-info-toggle:not(.share) .chip {
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--radius-medium);
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+}
+
+.grid-info-toggle:not(.share) .chip:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-primary);
   color: var(--color-primary);
@@ -279,17 +289,7 @@ const panelShift = usePanelClamp(
 
 .grid-info-toggle.share .chip {
   min-height: 32px;
-  border-width: 1px;
-  border-color: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
   font-size: 0.78rem;
-}
-
-.grid-info-toggle.share .chip:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .grid-info-toggle.share .chip-caret {

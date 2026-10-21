@@ -54,7 +54,7 @@ const handleArenaSelected = (mapKey: string) => {
 </script>
 
 <template>
-  <div v-scroll-chain class="map-editor">
+  <div v-scroll-chain class="map-editor panel-min-height panel-fill">
     <section class="map-section">
       <h3 class="section-title">
         <span class="section-title-text">
@@ -109,15 +109,6 @@ const handleArenaSelected = (mapKey: string) => {
 .map-editor {
   padding: var(--panel-inset);
   gap: var(--spacing-lg);
-  min-height: var(--panel-min-height);
-}
-
-@media (min-width: 1220px) {
-  .map-editor {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }
 
 .map-section + .map-section {

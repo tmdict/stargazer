@@ -132,7 +132,7 @@ defineExpose({
 </script>
 
 <template>
-  <div v-scroll-chain class="grid-stats">
+  <div v-scroll-chain class="grid-stats panel-fill">
     <h3>Debug Info</h3>
     <p>
       Total Hexes: {{ gridStore.hexes.length }}; Characters Placed:
@@ -326,14 +326,6 @@ defineExpose({
   padding: var(--spacing-lg);
   background: var(--color-bg-light-gray);
   border-radius: var(--radius-large);
-}
-
-@media (min-width: 1220px) {
-  .grid-stats {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }
 
 .grid-stats h3 {

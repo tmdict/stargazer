@@ -126,7 +126,11 @@ const handleResultSelect = (slug: string) => {
 </script>
 
 <template>
-  <div v-scroll-chain class="character-selection" :class="{ scrollable }">
+  <div
+    v-scroll-chain
+    class="character-selection panel-min-height"
+    :class="{ 'panel-fill': scrollable }"
+  >
     <div class="search-row">
       <SkillSearchTrigger :select="handleResultSelect" />
     </div>
@@ -177,7 +181,6 @@ const handleResultSelect = (slug: string) => {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
-  min-height: var(--panel-min-height);
 }
 
 .search-row {
@@ -203,14 +206,6 @@ const handleResultSelect = (slug: string) => {
   }
   .search-row {
     padding: var(--spacing-sm) var(--spacing-sm) 0;
-  }
-}
-
-@media (min-width: 1220px) {
-  .character-selection.scrollable {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
   }
 }
 </style>
