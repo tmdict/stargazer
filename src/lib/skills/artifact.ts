@@ -1,7 +1,6 @@
 /* Artifact targeting: the units an artifact in a team's slot acts on, drawn as
  * arrows from the slot's host cell. An artifact draws exactly when it has an
- * entry here: adding its mechanic turns it on, deleting the entry at a cutover
- * turns it off.
+ * entry here, so adding its mechanic turns it on.
  *
  * Not a Skill: a Skill is owned by a placed unit and lives with its placement,
  * while an artifact is owned by board-level slot state and has no hex for the
@@ -27,13 +26,12 @@ export interface ArtifactArrow {
   toHex: Hex
 }
 
-// Keyed by artifact id (src/data/artifact, src/data/seasonal/artifact). Each
-// entry names its artifact, and a test requires that name to match the data
-// file holding the id: seasonal ids are reused, so an entry left behind at a
-// cutover fails the test instead of drawing for the next season's artifact.
-const ARTIFACT_TARGETING: Record<number, { name: string; targets: ArtifactTargeting }> = {
+// Keyed by artifact name (src/data/artifact, src/data/seasonal/artifact).
+// Seasonal ids are reused, so a rule left behind at a cutover matches no
+// artifact instead of drawing for the next season's artifact under the same id.
+const ARTIFACT_TARGETING = new Map<string, ArtifactTargeting>([
   // Enlightening: buffs the rearmost ally.
-  3: { name: 'enlightening', targets: (grid, team) => [rearmostUnit(grid, team)] },
+  ['enlightening', (grid, team) => [rearmostUnit(grid, team)]],
 
   /* Seasonal entries go below under a season comment, deleted (with the
    * season's cases in tests/unit/skills/artifact.test.ts) along with the
@@ -42,48 +40,34 @@ const ARTIFACT_TARGETING: Record<number, { name: string; targets: ArtifactTarget
 
   // Season 8.
   // Candleflame: a flame follows the frontmost ally from the start of battle.
-  7: { name: 'candleflame', targets: (grid, team) => [frontmostUnit(grid, team)] },
+  ['candleflame', (grid, team) => [frontmostUnit(grid, team)]],
   // Soulshock: stuns the two frontmost enemies.
-  9: {
-    name: 'soulshock',
-    targets: (grid, team) => frontmostUnits(grid, getOpposingTeam(team), 2),
-  },
+  ['soulshock', (grid, team) => frontmostUnits(grid, getOpposingTeam(team), 2)],
   // Thundermight: chain lightning at the frontmost and rearmost enemies.
-  12: {
-    name: 'thundermight',
-    targets: (grid, team) => {
+  [
+    'thundermight',
+    (grid, team) => {
       const enemy = getOpposingTeam(team)
       return [frontmostUnit(grid, enemy), rearmostUnit(grid, enemy)]
     },
-  },
+  ],
   // Bladesummon: portal swords strike the frontmost enemy.
-  13: {
-    name: 'bladesummon',
-    targets: (grid, team) => [frontmostUnit(grid, getOpposingTeam(team))],
-  },
+  ['bladesummon', (grid, team) => [frontmostUnit(grid, getOpposingTeam(team))]],
   // Soulbound: links the frontmost and rearmost allies.
-  14: {
-    name: 'soulbound',
-    targets: (grid, team) => [frontmostUnit(grid, team), rearmostUnit(grid, team)],
-  },
+  ['soulbound', (grid, team) => [frontmostUnit(grid, team), rearmostUnit(grid, team)]],
   // Coreforge: a sigil beneath the rearmost ally.
-  18: { name: 'coreforge', targets: (grid, team) => [rearmostUnit(grid, team)] },
-}
-
-// Every rule's id and artifact name, for data consistency checks.
-export function artifactTargetingRules(): { id: number; name: string }[] {
-  return Object.entries(ARTIFACT_TARGETING).map(([id, { name }]) => ({ id: Number(id), name }))
-}
+  ['coreforge', (grid, team) => [rearmostUnit(grid, team)]],
+])
 
 export function artifactTargetArrows(
   grid: Grid,
   team: Team,
-  artifactId: number | null,
+  artifactName: string | undefined,
 ): ArtifactArrow[] {
-  const rule = artifactId === null ? undefined : ARTIFACT_TARGETING[artifactId]
+  const rule = artifactName === undefined ? undefined : ARTIFACT_TARGETING.get(artifactName)
   if (!rule) return []
   const fromHex = artifactHostHex(grid, team)
   // Distinct hexes: a lone unit is both the frontmost and the rearmost pick.
-  const hexIds = new Set(rule.targets(grid, team).flatMap((pick) => (pick ? [pick.hexId] : [])))
+  const hexIds = new Set(rule(grid, team).flatMap((pick) => (pick ? [pick.hexId] : [])))
   return [...hexIds].map((hexId) => ({ team, fromHex, toHex: grid.getHexById(hexId) }))
 }

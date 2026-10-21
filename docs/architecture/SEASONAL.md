@@ -44,7 +44,7 @@ The arena autosave is stored without a season, so `runSeasonRotationPass` (`src/
 
 Share links carry no season, so an old link shows whatever the current season has under its ids. Links are treated as disposable, so this is accepted.
 
-Code keyed by id has the same problem: a leftover phantimal skill or artifact rule would apply to the next season's unit with that id. Each registration therefore names its unit (`phantimal-<slug>` for skills, `name` on each `ARTIFACT_TARGETING` entry), and tests fail when a name no longer matches the data file holding its id. Another test requires every seasonal data file's `season` to equal `CURRENT_SEASON`, so a partial bump fails too.
+Phantimal skills are keyed by id, so they have the same problem: a leftover skill would run on the next season's phantimal with that id. Each registration therefore names its phantimal (`phantimal-<slug>`), and a test fails when a name no longer matches the data file holding its id. Artifact rules are keyed by artifact name instead, so a leftover rule matches no artifact and draws nothing. Another test requires every seasonal data file's `season` to equal `CURRENT_SEASON`, so a partial bump fails too.
 
 ## Phantimals
 
@@ -72,7 +72,7 @@ Links store phantimals in each board's `s` section by local id, with companions 
 
 ## Seasonal artifacts
 
-The six pre-season artifacts (`season: 0`) never rotate. `season` orders the artifact picker newest first and picks the icon source: pre-season icons are bundled, all others load from the image host (`isRemoteArtifact`). An artifact draws targeting arrows exactly when `ARTIFACT_TARGETING` has an entry for it, so adding the rule turns it on and deleting it at a cutover turns it off.
+The six pre-season artifacts (`season: 0`) never rotate. `season` orders the artifact picker newest first and picks the icon source: pre-season icons are bundled, all others load from the image host (`isRemoteArtifact`). An artifact draws targeting arrows exactly when `ARTIFACT_TARGETING` has an entry under its name, so adding the rule turns it on, and the artifact leaving the data at a cutover turns it off.
 
 ## Phantimal and artifact tags
 
