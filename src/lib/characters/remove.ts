@@ -88,7 +88,7 @@ export function performRemove(grid: Grid, hexId: number): boolean {
 }
 
 // Performs atomic clear of all characters
-export function performClearAll(grid: Grid): boolean {
+function performClearAll(grid: Grid): boolean {
   // Collect all current placements for potential rollback
   const currentPlacements = getTilesWithCharacters(grid).map((tile) => ({
     hexId: tile.hex.getId(),

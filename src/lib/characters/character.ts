@@ -15,7 +15,7 @@ export function hasCharacter(grid: Grid, hexId: number): boolean {
   return getCharacter(grid, hexId) !== undefined
 }
 
-export function tileHasCharacter(tile: GridTile): boolean {
+function tileHasCharacter(tile: GridTile): boolean {
   return tile.characterId !== undefined
 }
 
