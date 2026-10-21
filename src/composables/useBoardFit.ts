@@ -1,13 +1,13 @@
-import { onMounted, onUnmounted, toValue, type MaybeRefOrGetter } from 'vue'
+import { onMounted, onUnmounted, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 
-/* Sizes the Arena's board to a phone's width (the grid store applies it only at
- * the mobile breakpoint): the board fills its column, and only the column's width
- * changes it, so a shorter screen or content above the board pushes the board
- * down instead of resizing it. The column's width doesn't depend on the board's
- * size, so the fit never feeds back into itself. */
+/* Sizes a page's single board to a phone's width (the grid store applies it only
+ * at the mobile breakpoint): the board fills its column, and only the column's
+ * width changes it, so a shorter screen or content above the board pushes the
+ * board down instead of resizing it. The column's width doesn't depend on the
+ * board's size, so the fit never feeds back into itself. */
 export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): void {
   const gridStore = useGridStore()
   const grids = useGrids()
@@ -31,11 +31,20 @@ export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): 
   }
   let observer: ResizeObserver | null = null
 
+  // The column can render after mount (a shared board's card waits on its link).
   onMounted(() => {
-    fit()
-    observer = new ResizeObserver(scheduleFit)
-    const columnEl = toValue(column)
-    if (columnEl) observer.observe(columnEl)
+    const resizes = new ResizeObserver(scheduleFit)
+    observer = resizes
+    watch(
+      () => toValue(column),
+      (columnEl, previous) => {
+        if (previous) resizes.unobserve(previous)
+        if (!columnEl) return
+        fit()
+        resizes.observe(columnEl)
+      },
+      { immediate: true, flush: 'post' },
+    )
   })
 
   onUnmounted(() => {

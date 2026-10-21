@@ -10,6 +10,7 @@ import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
+import { useBoardFit } from '@/composables/useBoardFit'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -61,8 +62,11 @@ useHead({
 })
 
 // Breakpoint drives responsive sizing only (don't auto-flatten on mobile). Multi
-// pins the Teams board size per breakpoint; single is sized by useBreakpoint.
+// pins the Teams board size per breakpoint; single is sized by useBreakpoint, and
+// on a phone to the card's width.
 const { currentBreakpoint, showPerspective } = useBreakpoint({ autoFlattenOnMobile: false })
+const card = ref<HTMLElement>()
+useBoardFit(card)
 const canWrap = computed(() => currentBreakpoint.value === 'desktop')
 const applyMultiSize = () => {
   if (isMultiBoard.value) grids.hexSize = teamsBoardSize(currentBreakpoint.value)
@@ -134,7 +138,12 @@ const editLink = computed(() =>
     <a :href="dismissLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
 
     <!-- Content container -->
-    <div v-if="hasValidGrid" class="grid-wrapper glass-panel" :class="{ multi: isMultiBoard }">
+    <div
+      v-if="hasValidGrid"
+      ref="card"
+      class="grid-wrapper glass-panel"
+      :class="{ multi: isMultiBoard }"
+    >
       <!-- Edit opens the shared setup in its editable page; close dismisses to it. -->
       <div class="buttons">
         <GridInfoToggle share />
@@ -271,12 +280,18 @@ const editLink = computed(() =>
   }
 }
 
+/* On a phone the card spans the overlay, so its width never follows the board,
+   and the board's box, wider than the screen there, runs past it only as empty
+   margin. */
 @media (max-width: 480px) {
   .overlay {
     align-items: flex-start;
+    overflow-x: hidden;
   }
 
   .grid-wrapper {
+    flex: 1;
+    min-width: 0;
     margin: 80px 4px;
     padding: 52px 4px 4px;
   }
