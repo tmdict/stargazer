@@ -72,17 +72,19 @@ describe('readArtifact', () => {
 
   // A player who fields no artifact gets no badge: the header's background and
   // the start of the name fill the search window.
-  it('reads a header with no badge as no artifact', () => {
-    const cx = 200
-    const cy = 100
-    const shot = image(400, 200, (x, y) =>
-      x > cx - 10 && x < cx + 30 && y > cy - 8 && y < cy + 8 && x % 7 < 2
-        ? [250, 250, 250]
-        : [205, 125, 70],
-    )
-    const reading = readArtifact(shot, cx, cy, table)
+  it('reads a header with no badge as no artifact, unless the shot is cropped through it', () => {
+    const header = (cx: number, cy: number): RgbaImage =>
+      image(400, 200, (x, y) =>
+        x > cx - 10 && x < cx + 30 && y > cy - 8 && y < cy + 8 && x % 7 < 2
+          ? [250, 250, 250]
+          : [205, 125, 70],
+      )
+    const reading = readArtifact(header(200, 100), 200, 100, table)
     expect(reading.candidates).toEqual([])
     expect(reading.sure).toBe(true)
+    // Near the top edge the search window runs off the shot, where a badge
+    // could be, so the header is not called empty.
+    expect(readArtifact(header(200, 25), 200, 25, table).sure).toBe(false)
   })
 
   // A rival's art beside the disc, still inside the search, must not count as
