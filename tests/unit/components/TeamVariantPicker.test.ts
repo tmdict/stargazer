@@ -55,7 +55,7 @@ const mountPicker = async (overrides: Partial<PickerState> = {}) => {
 }
 
 const segment = (label: string): HTMLButtonElement =>
-  [...document.querySelectorAll<HTMLButtonElement>('.variant-seg')].find(
+  [...document.querySelectorAll<HTMLButtonElement>('.segment')].find(
     (button) => shownText(button) === label,
   )!
 

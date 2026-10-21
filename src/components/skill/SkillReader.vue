@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import SkillSections from './SkillSections.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import NoticeBanner from '@/components/ui/NoticeBanner.vue'
 import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
@@ -69,18 +70,13 @@ watch(
   <!-- .container + .content from content.css: visual match to SkillModal. -->
   <div class="container page-panel">
     <div class="content">
-      <div v-if="visibleSlug && showLocaleHint" class="locale-hint">
-        <IconGlobe :size="15" class="locale-hint-icon" aria-hidden="true" />
-        <span>{{ i18n.t('app.skill-locale-hint') }}</span>
-        <button
-          type="button"
-          class="locale-hint-dismiss"
-          aria-label="Close"
-          @click="dismissLocaleHint"
-        >
-          ✕
-        </button>
-      </div>
+      <NoticeBanner
+        v-if="visibleSlug && showLocaleHint"
+        dark
+        :icon="IconGlobe"
+        :message="i18n.t('app.skill-locale-hint')"
+        @dismiss="dismissLocaleHint"
+      />
       <SkillSections v-if="visibleSlug" :key="sectionsKey" :slug="visibleSlug" :lang />
       <div v-else class="empty-state" @click="emit('emptyClick')">
         <IconInfo :size="40" class="empty-icon" />
@@ -131,36 +127,6 @@ watch(
   margin: var(--spacing-sm) 0 0;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.4);
-}
-
-.locale-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-  border-radius: var(--radius-medium);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  color: var(--color-accent-text);
-  font-size: 12.5px;
-}
-
-.locale-hint-icon {
-  flex-shrink: 0;
-}
-
-.locale-hint-dismiss {
-  margin-left: auto;
-  padding: 0 2px;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-}
-
-.locale-hint-dismiss:hover {
-  color: rgba(255, 255, 255, 0.9);
 }
 
 @media (max-width: 768px) {

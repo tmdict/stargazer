@@ -8,6 +8,7 @@
 
 import { computed, watch } from 'vue'
 
+import SegmentedPicker from '@/components/teams/SegmentedPicker.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import {
@@ -52,6 +53,14 @@ watch([() => activeMode, () => match, () => sourceId], disarm)
 
 const armedKey = (choice: TeamVariantChoice): string => `${activeMode}:${choice}`
 
+const segments = computed(() =>
+  choices.value.map((choice) => ({
+    ...choice,
+    selected: match === choice.key,
+    armed: armed.value === armedKey(choice.key),
+  })),
+)
+
 const select = (choice: TeamVariantChoice): void => {
   if (choice === match) return
   if (hasContent && !confirm(armedKey(choice))) return
@@ -60,70 +69,14 @@ const select = (choice: TeamVariantChoice): void => {
 </script>
 
 <template>
-  <!-- Toggle-button semantics, like TeamModePicker: plain buttons already give
-       the full keyboard interaction. -->
-  <div
-    v-if="choices.length > 1"
-    class="variant-picker"
-    role="group"
+  <SegmentedPicker
+    v-if="segments.length > 1"
+    :segments
     :aria-label="i18n.t('app.type')"
+    @select="select"
   >
-    <button
-      v-for="choice in choices"
-      :key="choice.key"
-      type="button"
-      :aria-pressed="match === choice.key"
-      class="variant-seg"
-      :class="{ active: match === choice.key, armed: armed === armedKey(choice.key) }"
-      @click="select(choice.key)"
-    >
-      <ConfirmLabel :armed="armed === armedKey(choice.key)" :label="choice.label" />
-    </button>
-  </div>
+    <template #default="{ segment }">
+      <ConfirmLabel :armed="segment.armed" :label="segment.label" />
+    </template>
+  </SegmentedPicker>
 </template>
-
-<style scoped>
-.variant-picker {
-  display: inline-flex;
-  background: var(--color-bg-secondary);
-  border: 2px solid var(--color-border-primary);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.variant-seg {
-  border: none;
-  background: transparent;
-  border-radius: 999px;
-  padding: 5px 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.variant-seg:hover:not(.active):not(.armed) {
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-.variant-seg.active {
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.variant-seg.armed {
-  background: var(--color-danger-hover);
-  color: #fff;
-}
-
-@media (max-width: 480px) {
-  .variant-seg {
-    padding: 4px 10px;
-    font-size: 0.78rem;
-  }
-}
-</style>

@@ -95,7 +95,7 @@ const cardNames = (): string[] =>
 describe('SavedTeamsList type filter', () => {
   it('filters by the derived type and resets to All on every Teams-filter change', async () => {
     await mountList()
-    byText('.seg-btn', '5v5').click()
+    byText('.segment', '5v5').click()
     await nextTick()
     expect(cardNames()).toEqual(['Custom', 'S7 SL'])
 
@@ -105,7 +105,7 @@ describe('SavedTeamsList type filter', () => {
     expect(cardNames()).toEqual(['S7 SL'])
 
     // 3v3 has its own types: the row stays, the selection does not.
-    byText('.seg-btn', '3v3').click()
+    byText('.segment', '3v3').click()
     await nextTick()
     expect(typeChips()).toEqual(['All', 'Default', 'GD'])
     expect(byText('.type-chip', 'All').classList.contains('active')).toBe(true)
