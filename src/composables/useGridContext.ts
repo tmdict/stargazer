@@ -119,6 +119,7 @@ export interface GridContext {
   layout: Layout
   visibleHexes: Hex[]
   cropHexes: Hex[]
+  flatWidthInRadii: number
   drawnBounds: ViewBoxBounds
   viewBoxBounds: ViewBoxBounds
   charactersPlaced: number
@@ -509,15 +510,22 @@ export function createGridContext(
     // What the board draws also covers the artifact host cells beside the tiles,
     // which sit a row outside the formation: both in the full view, and the ally
     // one in team view, which hides the enemy slot.
+    const boardHexes = computed<Hex[]>(() => [
+      ...grid.keys(),
+      artifactHostHex(grid, Team.ALLY),
+      artifactHostHex(grid, Team.ENEMY),
+    ])
     const cropHexes = computed<Hex[]>(() =>
-      teamView.value
-        ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY)]
-        : [
-            ...visibleHexes.value,
-            artifactHostHex(grid, Team.ALLY),
-            artifactHostHex(grid, Team.ENEMY),
-          ],
+      teamView.value ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY)] : boardHexes.value,
     )
+
+    // The full flat board's drawn width in hex radii, side pads included, so a
+    // board sized to its column keeps one size whichever view is on.
+    const flatWidthInRadii = computed(() => {
+      const unit = new Layout(POINTY, { x: 1, y: 1 }, { x: 0, y: 0 })
+      const xs = boardHexes.value.flatMap((hex) => unit.polygonCorners(hex).map((c) => c.x))
+      return Math.max(...xs) - Math.min(...xs) + 2 * CROP_SIDE_PAD_MULTIPLIER
+    })
 
     // The padded extent of what the board draws (cropHexes): breathing room on the
     // sides and bottom, and a top pad that also clears the portraits standing above
@@ -671,6 +679,7 @@ export function createGridContext(
       layout,
       visibleHexes,
       cropHexes,
+      flatWidthInRadii,
       drawnBounds,
       viewBoxBounds,
       placements,
