@@ -7,7 +7,7 @@
    level on every ticked hero. A mouse drag across heroes gives each the
    first hero's change, as dragging paints tiles on the map. */
 
-import { computed, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
@@ -211,40 +211,8 @@ const sharedLevel = (attrId: number): number | null => {
   return rest.every(({ levels }) => levelOf(levels, attrId) === level) ? level : null
 }
 
-const pills = new Map<number, Element>()
-const trackPill = (id: number, pill: Element | ComponentPublicInstance | null): void => {
-  if (pill) pills.set(id, (pill as ComponentPublicInstance).$el)
-  else pills.delete(id)
-}
-
-const PULSE: Keyframe[] = [
-  { transform: 'scale(1)' },
-  {
-    transform: 'scale(1.2)',
-    boxShadow:
-      'var(--upgrade-pill-rim), 0 0 0 4px color-mix(in srgb, var(--color-primary) 45%, transparent)',
-    offset: 0.35,
-  },
-  {
-    transform: 'scale(1)',
-    boxShadow: 'var(--upgrade-pill-rim), 0 0 0 10px transparent',
-  },
-]
-const pulse = (ids: readonly number[]): void => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  ids.forEach((id, i) =>
-    pills.get(id)?.animate(PULSE, {
-      duration: 600,
-      delay: i * 40,
-      easing: 'cubic-bezier(0.3, 1.5, 0.5, 1)',
-    }),
-  )
-}
-
 const setTicked = (attrId: number, level: number): void => {
-  const targets = tickedLevels.value
-  editLevels(targets, [attrId], () => level)
-  pulse(targets.map(({ id }) => id))
+  editLevels(tickedLevels.value, [attrId], () => level)
 }
 
 // Esc leaves selecting unless a modal is open: the modal takes the key, and
@@ -647,7 +615,6 @@ const {
               @click.capture="onPillClick(character, $event)"
             >
               <UpgradePill
-                :ref="(pill) => trackPill(character.id, pill)"
                 :reserved="!levelsOf(character)"
                 :paragon="levelsOf(character)?.[ATTR_PARAGON] ?? 0"
                 :refinement="levelsOf(character)?.[ATTR_REFINEMENT] ?? 0"
