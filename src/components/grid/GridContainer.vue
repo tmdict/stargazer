@@ -158,7 +158,10 @@ const shiftStyle = computed(() => {
   align-items: flex-start;
 }
 
+/* A shrunken board would clip its tiles while the units on them, placed in
+   pixels, keep their full-size positions. */
 .board {
+  flex-shrink: 0;
   transform-origin: top;
 }
 

@@ -72,11 +72,31 @@ export const useGridStore = defineStore('grid', () => {
 
   const getCurrentMapConfig = (): MapConfig | null => getMapByKey(active().currentMap) ?? null
 
-  // No-op while the page pins a fixed hex size (5 v 5); honored on the Arena.
-  const updateBreakpoint = (breakpoint: Breakpoint): void => {
+  let breakpoint: Breakpoint = 'desktop'
+  // The hex radius the Arena fits its board to on a phone; null keeps the
+  // mobile size.
+  let mobileFit: number | null = null
+
+  // No-op while the page pins a fixed hex size (5 v 5); honored on the Arena. A
+  // phone's fit stays between the mobile and tablet sizes.
+  const applySize = (): void => {
     if (grids.hexSizeMode !== 'breakpoint') return
-    const newSize = BREAKPOINT_SIZES[breakpoint]
-    if (grids.hexSize.x !== newSize.x) grids.hexSize = newSize
+    const { mobile, tablet } = BREAKPOINT_SIZES
+    const x =
+      breakpoint === 'mobile' && mobileFit !== null
+        ? Math.min(tablet.x, Math.max(mobile.x, mobileFit))
+        : BREAKPOINT_SIZES[breakpoint].x
+    if (grids.hexSize.x !== x) grids.hexSize = { x, y: x }
+  }
+
+  const updateBreakpoint = (next: Breakpoint): void => {
+    breakpoint = next
+    applySize()
+  }
+
+  const fitMobileBoard = (radius: number | null): void => {
+    mobileFit = radius
+    applySize()
   }
 
   const getHexScale = (): number => grids.hexSize.x / BASE_HEX_RADIUS
@@ -99,6 +119,7 @@ export const useGridStore = defineStore('grid', () => {
     refreshSkills,
     getCurrentMapConfig,
     updateBreakpoint,
+    fitMobileBoard,
     getHexScale,
     _getGrid: () => active().grid,
   }
