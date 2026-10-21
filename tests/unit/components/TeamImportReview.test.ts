@@ -4,13 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
-import { disposeTeamImport, useTeamImport } from '@/composables/useTeamImport'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { FormationReading } from '@/lib/import/screens/formation/types'
 import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
+import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 vi.mock('@/stores/gameData', () => ({
   useGameDataStore: () => ({
@@ -32,7 +32,7 @@ let teardown: (() => void) | undefined
 afterEach(() => {
   teardown?.()
   teardown = undefined
-  disposeTeamImport()
+  leaveTeamImport()
 })
 
 // A formation shot of the ally side showing hero 5 on the first ally tile
@@ -63,7 +63,7 @@ const mountFormation = async (withPortrait = true) => {
       card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
     })),
   }
-  const api = useTeamImport(
+  const api = holdTeamImport(
     () => '5v5',
     () => false,
   )

@@ -1,13 +1,7 @@
 import { nextTick } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  disposeTeamImport,
-  shotMapIndex,
-  shotWinner,
-  useTeamImport,
-  type ImportShot,
-} from '@/composables/useTeamImport'
+import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
@@ -15,6 +9,7 @@ import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading } from '@/lib/import/screens/formation/types'
 import type { ReplayReading } from '@/lib/import/screens/replay/types'
 import { stubLocalStorage } from '../fixtures/storage'
+import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
 vi.mock('@/utils/dataLoader', () => ({
@@ -74,11 +69,11 @@ const shot = (): ImportShot => ({
 })
 
 afterEach(() => {
-  useTeamImport(
+  holdTeamImport(
     () => '5v5',
     () => false,
   ).forgetLearned()
-  disposeTeamImport()
+  leaveTeamImport()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
 })
@@ -87,7 +82,7 @@ describe('learning from corrections', () => {
   it('teaches an unsure cell, replaces the lesson on a second pick, and takes it back', () => {
     vi.stubEnv('SSR', false)
     const { storage } = stubLocalStorage()
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -110,7 +105,7 @@ describe('learning from corrections', () => {
   })
 
   it('never teaches a sure cell or one whose frame match was doubtful', () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -134,7 +129,7 @@ describe('shot map and winner', () => {
     expect(shotMapIndex(s, 1)).toBe(0)
     expect(shotWinner(s)).toBe(1)
 
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -151,7 +146,7 @@ describe('shot map and winner', () => {
 
   it('keeps a map chosen before the reading arrived', () => {
     const s: ImportShot = { ...shot(), reading: null, status: 'reading' }
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -164,7 +159,7 @@ describe('shot map and winner', () => {
 
 describe('board sides', () => {
   it("swaps the result screenshot's columns onto the opposite sides until the shots go", () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -179,7 +174,7 @@ describe('board sides', () => {
   })
 
   it('sets Swap sides from the formation shots and leaves it to the user after', async () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -228,7 +223,7 @@ describe('board sides', () => {
 
 describe('a match import', () => {
   it('leaves out a formation shot when the only result shot failed to read', () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -266,7 +261,7 @@ describe('a match import', () => {
 
 describe('replay tile picks', () => {
   it('moves a unit picked for another tile and replaces what a tile held', () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -283,7 +278,7 @@ describe('replay tile picks', () => {
   })
 
   it("drops a side's picks of another phantimal's units, as the side fields one", () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -302,7 +297,7 @@ describe('replay tile picks', () => {
   })
 
   it("starts a frame's picks over when it moves to another board", () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -320,7 +315,7 @@ describe('replay tile picks', () => {
   })
 
   it('leaves out a frame the arena was not found in', () => {
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )
@@ -339,7 +334,7 @@ describe('clearing an import', () => {
   it('drops unsaved name edits back to the names last saved', () => {
     vi.stubEnv('SSR', false)
     stubLocalStorage()
-    const api = useTeamImport(
+    const api = holdTeamImport(
       () => '5v5',
       () => false,
     )

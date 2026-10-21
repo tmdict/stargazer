@@ -24,7 +24,6 @@ import { loadTeamsDisplayPrefs, saveTeamsDisplayPrefs } from '@/composables/useG
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
-import { disposeTeamImport } from '@/composables/useTeamImport'
 import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
@@ -248,7 +247,6 @@ onScopeDispose(() => {
   clearTargetHex()
   clearLiftedHex()
   cancelSwap() // drop any in-flight swap + its document listeners on leave
-  disposeTeamImport()
 })
 
 // Capture all boards as one image (the full-width track, so boards scrolled

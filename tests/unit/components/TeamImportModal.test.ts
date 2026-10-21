@@ -4,11 +4,12 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportModal from '@/components/modals/TeamImportModal.vue'
-import { disposeTeamImport, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
+import type { ImportShot } from '@/composables/useTeamImport'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
 import { shownText } from '../fixtures/dom'
+import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 vi.mock('@/stores/grids', () => ({
   useGrids: () => ({ boardsHaveContent: () => false }),
@@ -73,7 +74,7 @@ let teardown: (() => void) | undefined
 afterEach(() => {
   teardown?.()
   teardown = undefined
-  disposeTeamImport()
+  leaveTeamImport()
   localStorage.clear()
   vi.useRealTimers()
   vi.unstubAllGlobals()
@@ -89,7 +90,7 @@ const mountImport = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
-  const api = useTeamImport(
+  const api = holdTeamImport(
     () => '3v3',
     () => false,
   )
