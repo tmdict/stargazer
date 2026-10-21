@@ -1,31 +1,34 @@
-.side-head {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-  margin-bottom: var(--spacing-sm);
-}
+<script setup lang="ts">
+/* One reading in an import review's grid: the card as the screenshot shows
+   it beside the unit it is taken for, the control naming that unit, and a
+   meta row. The parent sets the look with classes on it: the reading's state
+   (review, paragon, refinement, none, duplicate), `unit` for a formation
+   portrait's square crop, and `missing` with `next` or `unplaced` for a unit
+   the screenshot misses, whose `next` border takes the side's `--pick-colour`. */
 
-.side-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--import-label);
-}
+defineProps<{
+  // The card's crop, empty when the screenshot shows none.
+  card: string
+  portrait: string | null
+}>()
+</script>
 
-.cells {
-  display: grid;
-  grid-template-columns: var(--import-columns);
-  gap: var(--spacing-sm);
-}
+<template>
+  <div class="cell">
+    <div class="cell-images">
+      <img v-if="card" class="cell-card" :src="card" alt="" />
+      <span v-else class="cell-card empty" />
+      <img v-if="portrait !== null" class="cell-portrait" :src="portrait" alt="" />
+      <span v-else class="cell-portrait empty" />
+    </div>
+    <slot name="name" />
+    <div class="cell-meta">
+      <slot name="meta" />
+    </div>
+  </div>
+</template>
 
-@media (max-width: 720px) {
-  .cells {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
+<style scoped>
 .cell {
   display: flex;
   flex-direction: column;
@@ -43,6 +46,10 @@
 .cell.missing.unplaced {
   border-color: var(--import-warn);
   background: var(--import-warn-tint);
+}
+
+.cell.missing.next {
+  border-color: var(--pick-colour);
 }
 
 .cell.none,
@@ -72,7 +79,13 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-.cell-name {
+.cell.unit .cell-card,
+.cell.unit .cell-portrait {
+  aspect-ratio: 1;
+  object-position: top;
+}
+
+:slotted(.cell-name) {
   width: 100%;
   padding: 4px 6px;
   border: 1px solid var(--import-border);
@@ -92,9 +105,9 @@
     color var(--transition-fast);
 }
 
-.cell-name:hover,
-.cell-name:focus-visible,
-.cell-name.open {
+:slotted(.cell-name:hover),
+:slotted(.cell-name:focus-visible),
+:slotted(.cell-name.open) {
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
@@ -107,49 +120,9 @@
   flex-wrap: wrap;
 }
 
-.cell-state {
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.cell-state.review {
-  color: var(--import-warn);
-}
-
-.confirm-choice {
-  max-width: 100%;
-  padding: 4px 6px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius-medium);
-  background: transparent;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.confirm-choice:hover,
-.confirm-choice:focus-visible {
-  background: var(--import-warn-tint);
-}
-
-.cell-state.none,
-.cell-state.duplicate {
-  color: var(--import-bad);
-}
-
-.cell-state.edited {
-  color: var(--color-accent);
-}
-
 @media (pointer: coarse) {
-  .confirm-choice {
-    min-height: 32px;
-  }
-
-  .cell-name {
+  :slotted(.cell-name) {
     padding: 8px 6px;
   }
 }
+</style>
