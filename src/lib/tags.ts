@@ -13,7 +13,7 @@ import {
 const PINS: readonly TagPin[] = [...SLOT_ORDER, 'charm']
 
 /** The slot or charm tier an attachment pins; null when it pins none. */
-export function entryPin(entry: TagAttachment): { pin: TagPin; level: number } | null {
+function entryPin(entry: TagAttachment): { pin: TagPin; level: number } | null {
   for (const pin of PINS) {
     const level = entry[pin]
     if (level !== undefined) return { pin, level }

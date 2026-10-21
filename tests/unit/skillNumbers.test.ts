@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   energyMismatches,
-  heroSkillNumbers,
   skillNumbers,
   type FeedHeroNumbers,
   type FeedLevelNumbers,
@@ -21,9 +20,10 @@ const levels = (overrides: Partial<FeedLevelNumbers>, count = 4) =>
   skills,
 })
 
-const numbersOf = (skills: FeedHeroNumbers['skills']) => heroSkillNumbers('x', hero(skills)).numbers
+const numbersOf = (skills: FeedHeroNumbers['skills']) =>
+  skillNumbers({ x: hero(skills) }, ['x']).numbers.x
 
-describe('heroSkillNumbers', () => {
+describe("a hero's slots", () => {
     expect(
       numbersOf({
       }),
@@ -67,8 +67,8 @@ describe('heroSkillNumbers', () => {
   })
 
   it('reports a value a later level removes', () => {
-    const { numbers, problems } = heroSkillNumbers('x', hero({ skill2 }))
-    expect(numbers).toEqual({ skill2: { cooldown: 5, initialCooldown: 0 } })
+    const { numbers, problems } = skillNumbers({ x: hero({ skill2 }) }, ['x'])
+    expect(numbers.x).toEqual({ skill2: { cooldown: 5, initialCooldown: 0 } })
     expect(problems).toEqual([
       'x/skill2: cooldown disappears at Lv 2',
       'x/skill2: initialCooldown disappears at Lv 2',

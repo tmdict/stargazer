@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { performPlace } from '@/lib/characters/place'
-import { isPlaceholderId, PLACEHOLDER_ID_OFFSET, PLACEHOLDERS } from '@/lib/characters/placeholder'
+import { isPlaceholderId, PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
@@ -38,7 +38,7 @@ describe('placeholder definitions', () => {
       expect(isPlaceholderId(p.id)).toBe(true)
       expect(p.id).toBeLessThan(COMPANION_ID_OFFSET)
     }
-    expect(isPlaceholderId(PLACEHOLDER_ID_OFFSET - 1)).toBe(false)
+    expect(isPlaceholderId(8999)).toBe(false)
     expect(isPlaceholderId(COMPANION_ID_OFFSET)).toBe(false)
   })
 
@@ -50,7 +50,7 @@ describe('placeholder definitions', () => {
       expect(real.some((c) => c.id === p.id)).toBe(false)
     }
     // Real ids stay far below the band, so the reservation holds long-term.
-    expect(Math.max(...real.map((c) => c.id))).toBeLessThan(PLACEHOLDER_ID_OFFSET)
+    expect(Math.max(...real.map((c) => c.id))).toBeLessThan(9000)
   })
 })
 

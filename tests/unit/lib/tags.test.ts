@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   addModifier,
   chipActive,
-  entryPin,
   fromTagQuery,
   headingTags,
   heroChips,
@@ -14,7 +13,7 @@ import {
   toggleChip,
   toTagQuery,
 } from '@/lib/tags'
-import type { CharacterTags, TagPick } from '@/lib/types/skill'
+import { SLOT_ORDER, type CharacterTags, type TagPick } from '@/lib/types/skill'
 import { loadAppLocales, loadCharacters } from '@/utils/dataLoader'
 import { isHeroModifier } from '@/utils/tagData'
 
@@ -200,7 +199,9 @@ describe('hero tag data', () => {
         for (const entry of entries) {
           const pins = Object.keys(entry).filter((key) => key !== 'mods')
           expect(pins, `${name} ${tag}`).toHaveLength(1)
-          expect(entryPin(entry), `${name} ${tag}: "${pins[0]}" is no slot`).not.toBeNull()
+          expect([...SLOT_ORDER, 'charm'], `${name} ${tag}: "${pins[0]}" is no slot`).toContain(
+            pins[0],
+          )
         }
       }
     }

@@ -1,16 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { DESCRIPTOR_LENGTH, encodeLearned, rankHeroes } from '@/lib/import/heroes'
-import { createImage } from '@/lib/import/image'
-import { learnedIconEnvelope, readLearnedIcons } from '@/lib/import/learned'
+import { readLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
 import { buildImportHeroTable } from '@/lib/import/references'
 import type { LearnedIcon } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 vi.mock('@/data/import/hero-icons.json', async () => {
   const { DESCRIPTOR_LENGTH, encodeLearned } = await import('@/lib/import/heroes')
-  const { learnedIconEnvelope } = await import('@/lib/import/learned')
+  const { serializeLearnedIcons } = await import('@/lib/import/learned')
   const descriptor = encodeLearned(new Float32Array(DESCRIPTOR_LENGTH).fill(0.02))
-  return { default: learnedIconEnvelope([{ characterId: 7, descriptor, learnedAt: 1 }]) }
+  return {
+    default: JSON.parse(serializeLearnedIcons([{ characterId: 7, descriptor, learnedAt: 1 }])),
+  }
 })
 
 const face = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
@@ -55,7 +57,7 @@ describe('curated hero references', () => {
       '@/data/import/hero-icons.json',
     )
     const icons = readLearnedIcons(data)
-    expect(data).toEqual(learnedIconEnvelope(icons))
+    expect(data).toEqual(JSON.parse(serializeLearnedIcons(icons)))
     expect(new Set(icons.map((icon) => icon.descriptor)).size).toBe(icons.length)
     const heroes = Object.values(
       import.meta.glob<{ id: number }>('@/data/character/*.json', {

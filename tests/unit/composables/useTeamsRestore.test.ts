@@ -2,7 +2,7 @@ import { nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { teamsSlotKey, type ActiveSlot } from '@/composables/useGridPersistence'
+import { type ActiveSlot } from '@/composables/useGridPersistence'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
@@ -20,7 +20,7 @@ import {
   encodeMultiGridStateToLinkUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
-import { stubLocalStorage } from '../fixtures/storage'
+import { stubLocalStorage, teamsSlotKey } from '../fixtures/storage'
 
 /* The mode-switch regression suite: per-mode slot isolation (one mode's edits
  * must never overwrite another mode's save), the type switch and New on top

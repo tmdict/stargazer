@@ -18,3 +18,6 @@ export function stubLocalStorage() {
   })
   return { storage, setItemSpy }
 }
+
+// The stored key of a Teams mode's live boards.
+export const teamsSlotKey = (mode: string): string => `stargazer.teams.active.${mode}`

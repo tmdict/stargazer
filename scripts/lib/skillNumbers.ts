@@ -69,7 +69,7 @@ function slotNumbers(levels: readonly FeedLevelNumbers[]): {
   return { numbers, problems }
 }
 
-export function heroSkillNumbers(
+function heroSkillNumbers(
   slug: string,
   hero: FeedHeroNumbers,
 ): { numbers: Partial<Record<SlotKey, SlotNumbers>>; problems: string[] } {

@@ -61,7 +61,7 @@ export interface HexEdge {
  * from lower-right). Membership is by coordinates, so passing only on-board
  * hexes outlines a board-clipped region along the board edge too.
  */
-export function outlineEdges(zone: Hex[]): HexEdge[] {
+function outlineEdges(zone: Hex[]): HexEdge[] {
   const inZone = new Set(zone.map((hex) => hex.toString()))
   const edges: HexEdge[] = []
   for (const hex of zone) {

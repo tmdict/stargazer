@@ -25,7 +25,7 @@ export interface WireMode {
 
 // The Arena page's single board is wire mode 0, a first-class mode on the
 // wire rather than a special case.
-export const WIRE_MODES: readonly WireMode[] = [
+const WIRE_MODES: readonly WireMode[] = [
   { wireId: 0, key: 'arena', boardCount: 1 },
   { wireId: 1, key: '1v1', boardCount: 1 },
   { wireId: 2, key: '3v3', boardCount: 3 },

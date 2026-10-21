@@ -6,14 +6,25 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { pinnedLevels } from '@/lib/tags'
 import { APP_LOCALES } from '@/lib/types/i18n'
-import {
-  getSkillCharms,
-  loadAppLocales,
-  loadCharacters,
-  loadCharms,
-  loadCharmTags,
-  loadSkillLocale,
-} from '@/utils/dataLoader'
+import type { CharmData, CharmTags } from '@/lib/types/skill'
+import { getSkillCharms, loadAppLocales, loadCharacters, loadSkillLocale } from '@/utils/dataLoader'
+
+// The import's output files; a season between charm feeds has neither.
+const charmFile = <T>(modules: Record<string, T>): T | undefined => Object.values(modules)[0]
+const loadCharms = (): CharmData =>
+  charmFile(
+    import.meta.glob<CharmData>('@/data/seasonal/charm/charms.json', {
+      eager: true,
+      import: 'default',
+    }),
+  ) ?? {}
+const loadCharmTags = (): CharmTags =>
+  charmFile(
+    import.meta.glob<CharmTags>('@/data/seasonal/charm/tags.json', {
+      eager: true,
+      import: 'default',
+    }),
+  ) ?? {}
 
 describe('charm data', () => {
   const charms = loadCharms()

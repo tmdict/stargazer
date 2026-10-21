@@ -10,17 +10,19 @@ import { describe, expect, it } from 'vitest'
 
 import { MAPS } from '@/lib/maps'
 import { TEAM_MODES } from '@/lib/teams/modes'
-import { mapKeyByWireId, WIRE_MODES, wireModeByKey } from '@/lib/teams/wire'
+import { mapKeyByWireId, wireModeById, wireModeByKey } from '@/lib/teams/wire'
 
 describe('wire registry', () => {
   it('pins the mode wire ids: arena plus exactly the TEAM_MODES board counts', () => {
-    expect(WIRE_MODES).toEqual([
+    // Every id the 3-bit mode field can carry.
+    const modes = Array.from({ length: 8 }, (_, id) => wireModeById(id)).filter(Boolean)
+    expect(modes).toEqual([
       { wireId: 0, key: 'arena', boardCount: 1 },
       { wireId: 1, key: '1v1', boardCount: 1 },
       { wireId: 2, key: '3v3', boardCount: 3 },
       { wireId: 3, key: '5v5', boardCount: 5 },
     ])
-    expect(WIRE_MODES.map((mode) => mode.key)).toEqual(['arena', ...Object.keys(TEAM_MODES)])
+    expect(modes.map((mode) => mode!.key)).toEqual(['arena', ...Object.keys(TEAM_MODES)])
   })
 
   it('covers every team mode with the real board count', () => {
@@ -31,13 +33,7 @@ describe('wire registry', () => {
     }
   })
 
-  it('keeps mode and map ids inside their wire fields (3 and 6 bits)', () => {
-    for (const mode of WIRE_MODES) {
-      expect(mode.wireId).toBeLessThan(8)
-      // The 3-bit active field indexes boards 0-7; a larger mode needs a
-      // format change, not just a registry entry.
-      expect(mode.boardCount).toBeLessThanOrEqual(8)
-    }
+  it('keeps map ids inside their 6-bit wire field', () => {
     for (const [key, { id }] of Object.entries(MAPS)) {
       expect(id, `map ${key}`).toBeLessThan(64)
     }

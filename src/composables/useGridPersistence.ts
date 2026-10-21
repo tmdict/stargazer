@@ -33,7 +33,7 @@ const ARENA_KEY = 'stargazer.arena'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
 
-export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
+const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
 
 /* Device-level Teams view preferences: all display toggles, shared across every
  * team mode (they are reading preferences, not board content). Stored as the

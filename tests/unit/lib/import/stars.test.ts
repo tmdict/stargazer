@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { createImage } from '@/lib/import/image'
 import { readStars } from '@/lib/import/stars'
 import type { RgbaImage } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 type Rgb = [number, number, number]
 

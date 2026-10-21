@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { LADDER_ROW, LADDER_WIDTH, layoutLadder } from '@/lib/pvp/ladderLayout'
+import { layoutLadder } from '@/lib/pvp/ladderLayout'
 import type { PvpCounter, PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 
 // A four-team season small enough to work the rules out by hand: a beats b
@@ -35,7 +35,7 @@ const LABEL_H = 16
 const box = (layout: ReturnType<typeof layoutLadder>, anchor: string) => {
   const { label } = layout.edges.find((e) => e.counter.anchor === anchor)!
   const w = label.text.length * 7 + 12
-  const x = (label.left / 100) * LADDER_WIDTH
+  const x = (label.left / 100) * layout.width
   const y = (label.top / 100) * layout.height
   return { x0: x - w / 2, x1: x + w / 2, y0: y - LABEL_H / 2, y1: y + LABEL_H / 2 }
 }
@@ -49,7 +49,7 @@ describe('layoutLadder', () => {
 
   it('stacks rows by rating, rules the tier change, and curves each counter by the rules', () => {
     expect(layout.rows.map((row) => row.team.id)).toEqual(['a', 'b', 'c', 'd'])
-    expect(layout.height).toBe(LADDER_ROW * 4)
+    expect(layout.rows.map((row) => row.top)).toEqual([12.5, 37.5, 62.5, 87.5])
     expect(layout.tiers).toEqual([
       { tier: 1, top: 0 },
       { tier: 2, top: 50 },

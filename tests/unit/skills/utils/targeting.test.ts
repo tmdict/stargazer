@@ -1,35 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
-import {
-  directlyBehindHexId,
-  findAdjacentPriorityTarget,
-  findUnitBehind,
-} from '@/lib/skills/utils/targeting'
+import { findAdjacentPriorityTarget, findUnitBehind } from '@/lib/skills/utils/targeting'
 import { Team } from '@/lib/types/team'
 import { makeSkillContext, placeOnTile } from '../../fixtures/skills'
-
-describe('directlyBehindHexId', () => {
-  let grid: Grid
-
-  beforeEach(() => {
-    grid = new Grid()
-  })
-
-  it('picks the back-row neighbor for an interior tile', () => {
-    expect(directlyBehindHexId(grid, 23, Team.ALLY)).toBe(16)
-    // Enemies face the other way: the same tile's behind is the mirror neighbor.
-    expect(directlyBehindHexId(grid, 23, Team.ENEMY)).toBe(30)
-  })
-
-  it('is undefined when the behind tile is off the board, even with a back-row diagonal', () => {
-    // Hexes 4 and 14 keep a bottom-right neighbour (1 and 10), but their true
-    // behind tile lies outside the board; the diagonal never substitutes.
-    expect(directlyBehindHexId(grid, 4, Team.ALLY)).toBeUndefined()
-    expect(directlyBehindHexId(grid, 14, Team.ALLY)).toBeUndefined()
-    expect(directlyBehindHexId(grid, 42, Team.ENEMY)).toBeUndefined()
-  })
-})
 
 const CASTER = 500
 
@@ -52,6 +26,29 @@ describe('findUnitBehind', () => {
   it('ignores a unit from the other team on the tile behind', () => {
     placeOnTile(grid, 16, 200, Team.ENEMY)
     expect(findUnitBehind(makeSkillContext(grid, 23, Team.ALLY, CASTER))).toBeNull()
+  })
+
+  it('looks the other way for an enemy', () => {
+    const board = new Grid()
+    placeOnTile(board, 23, CASTER, Team.ENEMY)
+    placeOnTile(board, 30, 200, Team.ENEMY)
+    expect(findUnitBehind(makeSkillContext(board, 23, Team.ENEMY, CASTER))?.targetHexId).toBe(30)
+  })
+
+  // Hexes 4 and 14 keep a bottom-right neighbour (1 and 10), but their true
+  // behind tile lies outside the board; no neighbour substitutes.
+  it.each([
+    [4, Team.ALLY],
+    [14, Team.ALLY],
+    [42, Team.ENEMY],
+  ])('finds nothing behind %i when that tile is off the board', (hexId, team) => {
+    const board = new Grid()
+    placeOnTile(board, hexId, CASTER, team)
+    for (let direction = 0; direction < 6; direction++) {
+      const tile = board.getTileOrUndefined(board.getHexById(hexId).neighbor(direction))
+      if (tile) placeOnTile(board, tile.hex.getId(), 100 + direction, team)
+    }
+    expect(findUnitBehind(makeSkillContext(board, hexId, team, CASTER))).toBeNull()
   })
 })
 
