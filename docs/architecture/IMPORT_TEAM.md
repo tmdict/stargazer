@@ -1,6 +1,6 @@
 # Team Import
 
-The team import reads the game's match result screenshots on the device and saves what they show as a new team: both lineups with each hero's paragon and refinement, both artifacts, and a record name. A match's formation screenshots add where each unit stands, and formation screenshots can also be imported on their own ([Formation screenshots](#formation-screenshots)). Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`), run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
+The team import reads the game's match result screenshots on the device and saves what they show as a new team: both lineups with each hero's paragon and refinement, both artifacts, and a record name. A match's formation screenshots add where each unit stands, and formation screenshots can also be imported on their own ([Formation screenshots](#formation-screenshots)). The screens are read by the shared screenshot import ([Screenshot Import](./IMPORT.md)), pure TypeScript over RGBA buffers run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
 
 The hard part is that screenshots vary. Players crop them, phones have different shapes, and the in-game card zooms each portrait slightly differently. The readers have to find the cards before they can read them, and say how sure they are.
 
@@ -25,8 +25,6 @@ The hard part is that screenshots vary. Players crop them, phones have different
 │ learned icons            │◀───────────│ artifact table           │
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
-
-Shots are decoded to pixels on the main thread and read in the worker by canvas-free code. The readers and the reference assembly also run in Node, against labelled screenshots kept outside this repo, so both stay free of browser-only APIs.
 
 ## Decisions
 
@@ -57,19 +55,11 @@ Each field of a reading comes from its own visual signal. The readers therefore 
 3. For each card, the best frame match (`matchCard`) gives both the paragon level and the card's exact box. `rankHeroes` ranks the face described at nine small offsets, `readStars` reads the star row a fixed distance above the card's centre, where it sits whichever frame and scale matched, and `assignUnique` settles each side so no hero is read twice.
 4. `readStrip` places the strip from the green ring around the current map, `readArtifact` matches the header icons, and the Ally tab's colour says who won the map.
 
-## Hero identity
-
-A descriptor is a 32 × 24 RGB face crop with each channel normalised to zero mean and unit norm, which cancels the warm tint the frame casts. It is stored as Int8 at ×400 in the worker table and in every saved descriptor.
-
-The table cuts every bundled portrait over a grid of crop windows, because the in-game card zooms the same painting differently per hero. A costume reference is captured from the game's skin card, where the face sits smaller, so it adds a second grid of smaller windows. Learned and bundled descriptors join as extra rows. Ranking scores the whole table at the centre offset, re-scores the leaders at the other offsets, and gives the top portrait candidates (`REFINE_KEEP`) a finer window search. Learned rows keep their scores and do not use up that budget.
-
-A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best candidate of any other hero, learned or bundled. The lead must reach `COSTUME_SURE_MARGIN` when the winning window came from a costume, since the looser costume framing fits strangers more easily.
-
 ## Review
 
 `cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), needs its refinement confirmed (hero and paragon settled but the star colour doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. `artifactState` treats each side's artifact the same way: settled once read surely or edited, otherwise counted in the card's review number, with the icon crop from the screenshot shown beside it.
 
-Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. The import engine (`useImportEngine`) keeps the worker, its references and the learned faces at module level for the page visit: the modal holds it while mounted, and leaving the page unmounts the modal and disposes it. References are fetched on first open and posted once. Decoded shots wait in the engine and go to the worker one at a time once it is ready, so closing the modal drops the reads still waiting, and a failed load retries on the next open.
+Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. The engine, its references and the learned faces stay for the page visit ([Screenshot Import](./IMPORT.md#the-engine)).
 
 A swap puts every result screenshot's Ally column on the enemy side of its board. The game's Ally tab is always the viewing player, whichever side of the board they fought from, while formation screenshots and replay frames show each team on the half it fought from. Those halves are the board's sides, so a swap changes only which result column's lineup a formation shot or replay frame takes, never its half or its tiles. It is one choice per match, since a player keeps one side for every map and the boards hold a hero once per side page-wide.
 
@@ -77,7 +67,7 @@ Swap sides (`swapSides`) holds the choice, offered once result screenshots make 
 
 ### Learning
 
-A hero correction teaches the face only when the reader was unsure of the hero and sure of the frame. A doubtful frame means the crop may be off the face, and storing it would teach noise. Picking the reader's own top candidate, or no hero, takes back an earlier lesson for that face. Lessons persist in `stargazer.import.learned`, capped at `LEARNED_ICONS_CAP` with the oldest dropped first, and the worker rebuilds its table on every change.
+A hero correction teaches the face only when the reader was unsure of the hero and sure of the frame. A doubtful frame means the crop may be off the face, and storing it would teach noise. Picking the reader's own top candidate, or no hero, takes back an earlier lesson for that face. Lessons go to the store of learned faces every import shares ([Reference descriptors](./IMPORT.md#reference-descriptors)).
 
 ## Plan and save
 
@@ -102,7 +92,7 @@ A formation screenshot is the game's formation panel for one team: the board und
 - A match starts from its result screenshots, which give both sides' heroes, upgrades and artifacts. Its formation screenshots, each filling one side of the board its slot names, add the tile every unit stands on, its companions and its phantimal, and their cards are not read. A formation screenshot of a map with no result screenshot has no heroes to place and is left out, with a warning. A match saves without them, its heroes on random tiles, so once result screenshots are in, the formation and replay-frame drops are marked optional.
 - Formation screenshots dropped first are imported on their own, and close the result drop until they are removed. Each fills its side with the heroes, upgrades and artifact of its card row, or, without a card row, the portraits' heroes at paragon and refinement 0. Sides and boards no screenshot shows stay empty, and no record name is made.
 
-A paste lands in no drop area, so each pasted screenshot goes to the section of its kind (`sortScreenshot`): a formation screenshot when `fitBoard` finds a whole board in it, else a result screen or, while that step is open, a replay frame (below). A second instance of the import worker does the sorting, so a paste is sorted at once while the first worker reads. A result screenshot pasted while formation screenshots are imported alone is refused, and the toast says why.
+A paste lands in no drop area, so each pasted screenshot goes to the section of its kind (`sortScreenshot`): a formation screenshot when `fitBoard` finds a whole board in it, else a result screen or, while that step is open, a replay frame (below). A result screenshot pasted while formation screenshots are imported alone is refused, and the toast says why.
 
 `readFormation` (`src/lib/import/screens/formation/formation.ts`) places every region from the board, so a capture's size and padding do not matter:
 
@@ -137,47 +127,9 @@ The plan places a replay frame's sides the way formation shots place theirs (`fo
 
 The camera, the arena picture and the strip's circles were measured on the frames of one match. Supreme League maps change every couple of months, apart from the seasons. A change needs frames of the new maps checked against the reader and, when the arena around the fight changes, a new picture and camera.
 
-## Reference descriptors
-
-Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and costumes give general coverage. The bundled [`hero-icons.json`](../../src/data/import/hero-icons.json) holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
-
-The bundled file and browser storage (`stargazer.import.learned`) share one object, validated by `readLearnedIcons`:
-
-```json
-{
-  "spec": {
-    "descriptor": [32, 24],
-    "box": [0.23, 0.2, 0.69]
-  },
-  "icons": [
-    {
-      "characterId": 104,
-      "descriptor": "<base64 of 2304 bytes>",
-      "learnedAt": 1789347604297
-    }
-  ]
-}
-```
-
-| Field                 | Type      | Rule                                                                                                        |
-| --------------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
-| `spec.descriptor`     | [w, h]    | Must equal the app's descriptor size, `[32, 24]`.                                                           |
-| `spec.box`            | [x, y, w] | Must equal the app's face box, as fractions of the card.                                                    |
-| `icons`               | array     | Must be an array. At most `LEARNED_ICONS_CAP` (100) entries in browser storage, oldest dropped first.       |
-| `icons[].characterId` | integer   | The hero. Not an integer: that face is dropped.                                                             |
-| `icons[].descriptor`  | string    | The face descriptor: 2304 signed bytes, base64 encoded. Not decodable to that length: that face is dropped. |
-| `icons[].learnedAt`   | number    | Milliseconds since the epoch. Not a finite number: that face is dropped.                                    |
-
-`spec` pins how the descriptors were made, so data whose `spec` differs, or that is not an object with an `icons` array, reads as nothing learned. The reference-file test rejects unknown hero ids, invalid files and duplicate descriptors.
-
-Each descriptor appears once. A local lesson for identical descriptor bytes overrides the bundled label, and forgetting local learning restores it. Different crops of one hero stay separate examples, and nothing is averaged or voted. No client correction ever edits the bundled file.
-
-## Hosted references
-
-`importReferenceUrl` fetches the import references from the image host under `img/import/`: the paragon frames `frame-p0` to `frame-p4-crown`, a `skins.json` manifest shaped `{ "<hero slug>": ["<file>", …] }`, and the costume captures under `skin/`. A missing manifest means no costumes. Artifact references are the bundled permanent icons plus the hosted seasonal set, capped at 128 px.
-
 ## Related documentation
 
+- [Screenshot Import](./IMPORT.md): the engine, worker, hero cards and references every import shares
 - [Teams](./TEAMS.md): where the import lands, and how it applies and saves
 - [Grid & Characters](./GRID.md): page-wide uniqueness and the pickers the review reuses
 - [Seasonal Content](./SEASONAL.md): seasonal artifact icons on the image host
