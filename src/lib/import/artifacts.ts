@@ -88,7 +88,6 @@ function holdsArt(img: RgbaImage): boolean {
 // Half the search window's side: every disc place and size it tries.
 const windowHalf = (diameter: number): number => REACH + (diameter + SIZES[SIZES.length - 1]!) / 2
 
-// The share of the search window darker than BADGE_DARK.
 function darkShare(shot: RgbaImage, cx: number, cy: number, diameter: number): number {
   const half = windowHalf(diameter)
   let dark = 0
