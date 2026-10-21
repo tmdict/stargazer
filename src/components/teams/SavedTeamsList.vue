@@ -16,9 +16,9 @@ import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPrev
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
-import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import MountOnVisible from '@/components/ui/MountOnVisible.vue'
+import RenameButton from '@/components/ui/RenameButton.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -480,15 +480,7 @@ const actionTipText = computed((): string => {
                 ({{ i18n.t('app.loaded') }})
               </span>
             </button>
-            <button
-              type="button"
-              class="rename-btn"
-              :title="i18n.t('app.rename')"
-              :aria-label="i18n.t('app.rename')"
-              @click="startRename(team)"
-            >
-              <IconEdit :size="13" />
-            </button>
+            <RenameButton small @click="startRename(team)" />
           </template>
         </div>
 
@@ -841,28 +833,6 @@ const actionTipText = computed((): string => {
 
 .team-name-input:focus {
   outline: none;
-}
-
-.rename-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-small);
-  color: var(--color-text-secondary);
-  opacity: 0.55;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.rename-btn:hover {
-  opacity: 1;
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
 }
 
 .card-meta-row {
