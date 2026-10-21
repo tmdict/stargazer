@@ -2,9 +2,9 @@
  * Curated examples stay separate from the browser's disposable learning. */
 
 import heroIcons from '@/data/import/hero-icons.json'
-import { buildHeroTable } from './heroes'
+import { buildHeroTable } from './card/heroes'
+import type { HeroTable, LearnedIcon, PortraitRef } from './card/types'
 import { readLearnedIcons } from './learned'
-import type { HeroTable, LearnedIcon, PortraitRef } from './types'
 
 const curated = readLearnedIcons(heroIcons)
 

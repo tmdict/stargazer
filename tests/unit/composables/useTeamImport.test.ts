@@ -10,7 +10,7 @@ import {
 } from '@/composables/useTeamImport'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
+import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading, ReplayReading } from '@/lib/import/types'
 import { stubLocalStorage } from '../fixtures/storage'

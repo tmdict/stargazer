@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { DESCRIPTOR_LENGTH, encodeLearned, rankHeroes } from '@/lib/import/heroes'
+import { DESCRIPTOR_LENGTH, encodeLearned, rankHeroes } from '@/lib/import/card/heroes'
+import type { LearnedIcon } from '@/lib/import/card/types'
 import { readLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
 import { buildImportHeroTable } from '@/lib/import/references'
-import type { LearnedIcon } from '@/lib/import/types'
 import { createImage } from '../../fixtures/image'
 
 vi.mock('@/data/import/hero-icons.json', async () => {
-  const { DESCRIPTOR_LENGTH, encodeLearned } = await import('@/lib/import/heroes')
+  const { DESCRIPTOR_LENGTH, encodeLearned } = await import('@/lib/import/card/heroes')
   const { serializeLearnedIcons } = await import('@/lib/import/learned')
   const descriptor = encodeLearned(new Float32Array(DESCRIPTOR_LENGTH).fill(0.02))
   return {

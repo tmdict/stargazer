@@ -15,8 +15,8 @@
  * rainbow, stands out from R0 mainly by a faint pink tint, which resampling
  * can halve, so R0 is sure only when the row has none. */
 
-import { hsvAt } from './core/image'
-import type { Rect, RgbaImage } from './core/types'
+import { hsvAt } from '../core/image'
+import type { Rect, RgbaImage } from '../core/types'
 import type { RefinementReading, StarFamily } from './types'
 
 const BAND_ROWS = 7

@@ -3,9 +3,9 @@
  * change to normalisation or quantisation must add a field to SPEC and
  * specMatches, so faces encoded the old way stop matching. */
 
-import { decodeLearned, DESCRIPTOR_SIZE, encodeLearned } from './heroes'
-import { ART_BOX } from './layout'
-import type { LearnedIcon } from './types'
+import { ART_BOX } from './card/card'
+import { decodeLearned, DESCRIPTOR_SIZE, encodeLearned } from './card/heroes'
+import type { LearnedIcon } from './card/types'
 
 const LEARNED_ICONS_CAP = 100
 
