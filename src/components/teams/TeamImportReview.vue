@@ -894,7 +894,6 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   background: var(--import-warn-tint);
 }
 
-/* The grid's round white-backed icon, at chip size. */
 .artifact-icon {
   position: relative;
   flex-shrink: 0;
@@ -917,7 +916,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 
 .cells {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: var(--import-columns);
   gap: var(--spacing-sm);
 }
 

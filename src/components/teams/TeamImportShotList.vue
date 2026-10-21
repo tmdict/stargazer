@@ -235,13 +235,9 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 </template>
 
 <style scoped>
-/* The review grid's columns, gap, and breakpoint (TeamImportReview's .cells),
-   so the cards line up with the hero cells below and a full 5v5 set fits one
-   row. Below the breakpoint the cards wrap on a fixed minimum instead, since
-   five map buttons at touch size need the width. */
 .shot-list {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: var(--import-columns);
   gap: var(--spacing-sm);
 }
 
@@ -330,9 +326,6 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   }
 }
 
-/* The card's keyboard handle: the whole card selects on click, the name
-   carries focus and the pressed state, and the nested controls keep their own
-   activation. */
 .shot-name {
   width: 100%;
   padding: 0;
@@ -348,8 +341,6 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   cursor: pointer;
 }
 
-/* At a fifth of the modal the map segments need the card's full width, so the
-   label sits above its control. */
 .shot-row {
   display: flex;
   flex-direction: column;

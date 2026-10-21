@@ -1,25 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import {
-  countTeamFaction,
-  lineupQualifies,
-  requiredFactions,
-} from '@/lib/characters/phantimalFaction'
+import { countTeamFaction, lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('phantimalFaction', () => {
-  describe('requiredFactions', () => {
-    it('counts every qualifying faction when the data lists them', () => {
-      expect(
-        requiredFactions({ faction: 'hypogean', qualifyingFactions: ['hypogean', 'celestial'] }),
-      ).toEqual(['hypogean', 'celestial'])
-    })
-  })
-
   describe('countTeamFaction', () => {
     let grid: Grid
     const factionOf = (id: number): string | undefined =>
