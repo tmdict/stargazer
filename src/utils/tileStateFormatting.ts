@@ -65,7 +65,7 @@ export const getTeamFromTileState = (state: State): Team | null => {
 // token; the same as --color-ally and --color-enemy.
 export const TEAM_COLORS: Record<Team, string> = {
   [Team.ALLY]: '#36958e',
-  [Team.ENEMY]: '#dc3545',
+  [Team.ENEMY]: '#c82333',
 }
 
 export const teamTint = (team: Team, alpha: number): string => {
