@@ -3,8 +3,10 @@
  * their upgrades come from its result shot when there is one, else from the
  * formation's own card row; with neither, from the portraits alone. The units
  * are matched against that lineup with the companions and phantimal it can
- * bring, so a portrait only has to tell a handful of units apart. Pure data
- * mapping, joined to the result shots by teamImport. */
+ * bring, so a portrait only has to tell a handful of units apart. It also
+ * holds the placing rules both reviews share, a formation shot's and a replay
+ * frame's: the order a side's units are placed in and which picks count. Pure
+ * data mapping, joined to the result shots by teamImport. */
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
@@ -106,15 +108,15 @@ export function assignUnits(
   phantimalFits: (phantimalId: number) => boolean,
 ): UnitAssignment[] {
   const pool = heroIds.flatMap(slotsOf)
+  // A portrait showing a phantimal the heroes do not qualify for is none of
+  // the side's units, rather than a hero taken by elimination.
+  const unfit = new Set<number>()
   let phantimal: { id: number; score: number } | null = null
-  for (const unit of units) {
+  for (const [i, unit] of units.entries()) {
     const top = unit.candidates[0]
-    if (
-      top &&
-      isPhantimalId(top.characterId) &&
-      phantimalFits(top.characterId) &&
-      top.score >= (phantimal?.score ?? PHANTIMAL_FLOOR)
-    ) {
+    if (!top || !isPhantimalId(top.characterId) || top.score < PHANTIMAL_FLOOR) continue
+    if (!phantimalFits(top.characterId)) unfit.add(i)
+    else if (top.score >= (phantimal?.score ?? PHANTIMAL_FLOOR)) {
       phantimal = { id: top.characterId, score: top.score }
     }
   }
@@ -129,7 +131,7 @@ export function assignUnits(
   })
   const pairs: { i: number; slot: Slot; score: number }[] = []
   units.forEach((unit, i) => {
-    if (overrides[i] !== undefined) return
+    if (overrides[i] !== undefined || unfit.has(i)) return
     for (const slot of pool) {
       const score = scoreOf(unit, slot.art)
       if (score >= ASSIGN_FLOOR) pairs.push({ i, slot, score })
@@ -151,7 +153,7 @@ export function assignUnits(
   // likeness to its own art (Lailah, drawn on her own in game but beside
   // Elijah in the app's art) is matched last by elimination, for review.
   const leftover = units.flatMap((unit, i) =>
-    out[i]!.state === 'none' && overrides[i] === undefined
+    out[i]!.state === 'none' && overrides[i] === undefined && !unfit.has(i)
       ? pool
           .filter((slot) => !taken.has(slot.unitId))
           .map((slot) => ({ i, slot, score: Math.max(-1, scoreOf(unit, slot.art)) }))
@@ -212,6 +214,14 @@ export interface PlacedUnit {
   hexId: number
 }
 
+// A formation shot's portraits as the units they are taken for.
+export function assignedPortraits(
+  units: readonly UnitReading[],
+  assignments: readonly UnitAssignment[],
+): PlacedUnit[] {
+  return units.map((unit, i) => ({ unitId: assignments[i]?.unitId ?? null, hexId: unit.hexId }))
+}
+
 // The phantimal a side fields from the units seen on its tiles: one seen
 // itself, else the owner of a companion seen, which exists only with it.
 function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
@@ -223,7 +233,7 @@ function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
 // The units a side places in turn on a screenshot's tiles: each hero, then
 // its companions, and last the phantimal the units seen field, with that
 // phantimal's companions.
-export function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
+function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
   const phantimal = fieldedPhantimal(picked)
   return [...heroes, ...(phantimal === null ? [] : [phantimal])].flatMap((unitId) => [
     unitId,
@@ -231,10 +241,10 @@ export function placingOrder(heroes: readonly number[], picked: readonly number[
   ])
 }
 
-/* A replay frame side's picks that count, those of units the side fields (a
- * swap that gives the side the other team's heroes hides the rest until
- * swapped back), and its placing order from them. Shared by the replay
- * review and its card's count. */
+/* A replay frame side's picks that count, those of units the side fields,
+ * and its placing order from them. A pick of a unit the side no longer
+ * fields, after a swap or a lineup edit, is hidden and counts again once the
+ * side fields its unit. Shared by the replay review and its card's count. */
 export function replayPlacing(
   heroes: readonly number[],
   options: readonly number[],
@@ -251,7 +261,7 @@ export function replayPlacing(
 /* Whether a formation shot's review may pick a unit for a tile: one no
  * portrait is taken for, and while the portraits field a phantimal, none of
  * another phantimal's, which would take the place of the one shown. */
-export function pickableUnit(unitId: number, shown: readonly (number | null)[]): boolean {
+function pickableUnit(unitId: number, shown: readonly (number | null)[]): boolean {
   if (shown.includes(unitId)) return false
   const phantimal = fieldedPhantimal(shown)
   return phantimal === null || !inPhantimalBand(unitId) || phantimalOwnerId(unitId) === phantimal

@@ -20,7 +20,7 @@ import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vu
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
-import TeamImportTile from '@/components/teams/TeamImportTile.vue'
+import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
@@ -35,9 +35,8 @@ import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
 import { isFormationReading, type HeroReading } from '@/lib/import/types'
-import type { Point } from '@/lib/layout'
 import { deploymentTiles } from '@/lib/maps'
-import { missingUnits, type UnitAssignment } from '@/lib/teams/formationImport'
+import { assignedPortraits, missingUnits, type UnitAssignment } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
   artifactState,
@@ -280,13 +279,6 @@ const pickUnit = (index: number, key: string): void => {
 // The unit pointed at in the list, ringed on both boards.
 const hovered = ref<number | null>(null)
 
-// Near rows draw wider under the camera's tilt, so the overlay takes each
-// tile's own width.
-const tileWidth = (corners: readonly Point[]): number => {
-  const xs = corners.map((c) => c.x)
-  return Math.max(...xs) - Math.min(...xs)
-}
-
 // The screenshot's board with its portraits, in the read image's pixels: the
 // screenshot fills that box, so the board fit places tile numbers and rings on it.
 const shotBoard = computed(() => {
@@ -312,7 +304,7 @@ const shotBoard = computed(() => {
     numbers: BOARD_HEXES.map((hex) => ({
       hexId: hex.getId(),
       ...hexCentre(fit, hex),
-      width: tileWidth(hexCorners(fit, hex)),
+      width: tileOutline(hexCorners(fit, hex)).width,
     })),
     rings: reading.units.map(({ ring }, index) => ({
       index,
@@ -358,10 +350,7 @@ const missing = computed((): PlacingSide | null => {
   const placed = units?.placed
   const reading = shot.reading
   if (!units || !placed || !tiles || !reading || !isFormationReading(reading)) return null
-  const portraits = reading.units.map((unit, i) => ({
-    unitId: units.assignments[i]?.unitId ?? null,
-    hexId: unit.hexId,
-  }))
+  const portraits = assignedPortraits(reading.units, units.assignments)
   const lineup = placed.side.mains.map((unit) => unit.unitId)
   const side = missingUnits(lineup, portraits, units.options, shot.tilePicks[tiles.team] ?? {})
   if (side.order.length === 0 && side.picks.size === 0) return null
@@ -419,13 +408,11 @@ const pickTiles = computed(() => {
   return BOARD_HEXES.filter(
     (hex) => tiles.deploy.has(hex.getId()) && !tiles.shown.has(hex.getId()),
   ).map((hex) => {
-    const corners = hexCorners(fit, hex)
     return {
       hexId: hex.getId(),
       side: tiles.team,
-      points: corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' '),
+      ...tileOutline(hexCorners(fit, hex)),
       ...hexCentre(fit, hex),
-      width: tileWidth(corners),
       unitId: missing.value!.picks.get(hex.getId()) ?? null,
     }
   })

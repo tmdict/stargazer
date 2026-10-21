@@ -25,7 +25,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
-import { missingUnits, replayPlacing } from '@/lib/teams/formationImport'
+import { assignedPortraits, missingUnits, replayPlacing } from '@/lib/teams/formationImport'
 import {
   DEFAULT_VARIANT,
   newTeamMaps,
@@ -205,14 +205,9 @@ const formationToPlace = (shot: ImportShot): number => {
   const placed = placedSide(shot)
   const reading = shot.reading
   if (!placed || !reading || !isFormationReading(reading)) return 0
-  const assignments = unitsOf(shot.id)
-  const portraits = reading.units.map((unit, i) => ({
-    unitId: assignments[i]?.unitId ?? null,
-    hexId: unit.hexId,
-  }))
   const { order, picks } = missingUnits(
     placed.side.mains.map((unit) => unit.unitId),
-    portraits,
+    assignedPortraits(reading.units, unitsOf(shot.id)),
     unitOptions(shot),
     shot.tilePicks[placed.team] ?? {},
   )

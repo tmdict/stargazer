@@ -1,7 +1,20 @@
+<script lang="ts">
+import type { Point } from '@/lib/layout'
+
+// A tile's outline on an import review's screenshot, and its width, which
+// sizes what is drawn on the tile: the game's camera draws near rows wider.
+export function tileOutline(corners: readonly Point[]): { points: string; width: number } {
+  const xs = corners.map((c) => c.x)
+  return {
+    points: corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' '),
+    width: Math.max(...xs) - Math.min(...xs),
+  }
+}
+</script>
+
 <script setup lang="ts">
 /* A deployment tile an import review places units on, tinted in its side's
-   colour. Its edge follows the tile's width, as the game's camera draws near
-   rows wider. */
+   colour, its edge a share of the tile's width. */
 
 import { Team } from '@/lib/types/team'
 
