@@ -35,6 +35,26 @@ const table = buildArtifactTable(
   Object.entries(REFS).map(([id, img]) => ({ artifactId: Number(id), image: img })),
 )
 
+// Draws `id`'s art as a disc centred at (x, y), as the header shows it: the
+// middle 71% of the reference filling the disc. Below 1, `strength` blends it
+// into what is under it.
+const disc = (shot: RgbaImage, id: number, x: number, y: number, strength = 1): void => {
+  const ref = REFS[id]!
+  const r = HEADER_ICON.diameter / 2
+  const zoom = (ref.width * 0.71) / HEADER_ICON.diameter
+  for (let py = Math.ceil(y - r); py < y + r; py++)
+    for (let px = Math.ceil(x - r); px < x + r; px++) {
+      if (Math.hypot(px - x, py - y) > r) continue
+      const u = Math.min(ref.width - 1, Math.round(ref.width / 2 + (px - x) * zoom))
+      const v = Math.min(ref.height - 1, Math.round(ref.height / 2 + (py - y) * zoom))
+      const i = (py * shot.width + px) * 4
+      for (let c = 0; c < 3; c++)
+        shot.data[i + c] = Math.round(
+          strength * ref.data[(v * ref.width + u) * 4 + c]! + (1 - strength) * shot.data[i + c]!,
+        )
+    }
+}
+
 describe('readArtifact', () => {
   it('is not sure of a black disc even when its colours lead clearly', () => {
     // A red header badge with a black disc where the art would be, a few
@@ -48,5 +68,18 @@ describe('readArtifact', () => {
     expect(reading.candidates[0]!.artifactId).toBe(4)
     expect(reading.margin).toBeGreaterThan(0.1)
     expect(reading.sure).toBe(false)
+  })
+
+  // A rival's art beside the disc, still inside the search, must not count as
+  // the rival matching the disc.
+  it('scores every reference on the disc the best match settled on', () => {
+    const cx = 200
+    const cy = 100
+    const shot = image(400, 200, () => [181, 81, 70])
+    disc(shot, 1, cx - 17, cy)
+    disc(shot, 2, cx + 17, cy, 0.8)
+    const reading = readArtifact(shot, cx, cy, table)
+    expect(reading.candidates[0]!.artifactId).toBe(1)
+    expect(reading.margin).toBeGreaterThan(1)
   })
 })
