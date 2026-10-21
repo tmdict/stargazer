@@ -10,7 +10,7 @@
   color: #fff;
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
-  min-height: 36px;
+  min-height: var(--control-height);
   font-size: var(--control-font-size);
   font-weight: var(--control-font-weight);
   cursor: pointer;
@@ -59,19 +59,19 @@
 
 .control-btn.danger.armed,
 .confirm-armed {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  box-shadow: var(--confirm-armed-ring);
   animation: confirm-ping 0.9s ease-out infinite;
 }
 
 @keyframes confirm-ping {
   from {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent),
+      var(--confirm-armed-ring),
       0 0 0 2px color-mix(in srgb, var(--color-danger) 45%, transparent);
   }
   to {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent),
+      var(--confirm-armed-ring),
       0 0 0 12px transparent;
   }
 }
@@ -99,8 +99,8 @@
   .control-btn {
     border-radius: 999px;
     padding: 0;
-    width: 34px;
-    height: 34px;
+    width: var(--control-height-tablet);
+    height: var(--control-height-tablet);
     min-height: 0;
     justify-content: center;
   }
@@ -115,8 +115,8 @@
 
 @media (max-width: 480px) {
   .control-btn {
-    width: 30px;
-    height: 30px;
+    width: var(--control-height-mobile);
+    height: var(--control-height-mobile);
   }
   .control-btn .btn-icon {
     width: 16px;

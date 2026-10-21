@@ -332,7 +332,7 @@ const hoveredStat = computed(
 .hero {
   flex: 0 0 calc((100% - 4 * var(--hero-gap)) / 5);
   min-width: 0;
-  max-width: 70px;
+  max-width: var(--hero-icon-size);
   display: flex;
   flex-direction: column;
   align-items: center;

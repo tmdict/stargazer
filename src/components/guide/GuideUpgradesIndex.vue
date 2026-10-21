@@ -148,9 +148,10 @@ const bands = computed((): Band[] => [
 }
 
 .track {
+  --bead-min-width: 28px;
   position: relative;
   height: 22px;
-  margin: 0 14px;
+  margin: 0 calc(var(--bead-min-width) / 2);
 }
 .track::before,
 .track::after {
@@ -184,7 +185,7 @@ const bands = computed((): Band[] => [
   top: 50%;
   left: var(--v);
   transform: translate(-50%, -50%);
-  min-width: 28px;
+  min-width: var(--bead-min-width);
   padding: 2.5px 4px;
   font-size: 9.5px;
 }

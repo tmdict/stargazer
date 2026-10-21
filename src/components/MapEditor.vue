@@ -107,7 +107,7 @@ const handleArenaSelected = (mapKey: string) => {
 
 <style scoped>
 .map-editor {
-  padding: 1rem;
+  padding: var(--panel-inset);
   gap: var(--spacing-lg);
   min-height: var(--panel-min-height);
 }

@@ -692,7 +692,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 .sso-list,
 .sso-pane {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--scrollbar-thumb-on-dark) transparent;
 }
 
 .sso-list::-webkit-scrollbar,
@@ -702,7 +702,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
 .sso-list::-webkit-scrollbar-thumb,
 .sso-pane::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb-on-dark);
   border-radius: 3px;
 }
 
@@ -828,11 +828,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   color: #fff;
 }
 
-.sso-row.sel .sso-snip mark {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
 .sso-chip {
   flex-shrink: 0;
   font-size: 0.63rem;
@@ -845,6 +840,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border-radius: 999px;
 }
 
+.sso-row.sel .sso-snip mark,
 .sso-row.sel .sso-chip {
   background: rgba(255, 255, 255, 0.18);
   color: #fff;

@@ -898,7 +898,7 @@ const handleForgetLearned = (): void => {
 .footer-btn.danger.armed {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  box-shadow: var(--confirm-armed-ring);
 }
 
 .footer-btn:disabled {

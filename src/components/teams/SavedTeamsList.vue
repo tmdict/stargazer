@@ -583,7 +583,7 @@ const actionTipText = computed((): string => {
 
 @media (max-width: 768px) {
   .saved-teams {
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--panel-inset);
   }
 }
 
@@ -1006,6 +1006,6 @@ const actionTipText = computed((): string => {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
   color: #fff;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  box-shadow: var(--confirm-armed-ring);
 }
 </style>

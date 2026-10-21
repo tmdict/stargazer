@@ -182,7 +182,7 @@ const handleResultSelect = (slug: string) => {
 
 .search-row {
   display: flex;
-  padding-right: var(--spacing-lg);
+  padding-right: var(--picker-scrollbar-inset);
 }
 
 @media (max-width: 768px) {

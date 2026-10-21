@@ -362,12 +362,12 @@ const handleResetMap = () => {
 
 @media (max-width: 768px) {
   main {
-    padding-bottom: 64px;
+    padding-bottom: var(--bottom-sheet-clearance);
   }
 
   .sections-container > .section:first-child {
-    padding-left: var(--spacing-md);
-    padding-right: var(--spacing-md);
+    padding-left: var(--board-gutter);
+    padding-right: var(--board-gutter);
   }
 }
 
@@ -384,16 +384,6 @@ const handleResetMap = () => {
   .sections-container > .section:first-child {
     flex: 0 0 660px;
     width: 660px;
-  }
-}
-
-@media (max-width: 480px) {
-  main {
-    padding-bottom: 64px;
-  }
-  .sections-container > .section:first-child {
-    padding-left: var(--spacing-xs);
-    padding-right: var(--spacing-xs);
   }
 }
 </style>

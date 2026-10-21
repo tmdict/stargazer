@@ -352,7 +352,7 @@ const handleCopyLink = () => {
 
 @media (max-width: 768px) {
   main {
-    padding-bottom: 64px;
+    padding-bottom: var(--bottom-sheet-clearance);
   }
 }
 </style>
