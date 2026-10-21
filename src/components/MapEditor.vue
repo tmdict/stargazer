@@ -254,8 +254,8 @@ const handleArenaSelected = (mapKey: string) => {
 }
 
 .clear-button:not(:disabled):hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
 }
 
 @media (max-width: 768px) {
