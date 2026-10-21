@@ -29,7 +29,6 @@ npm run test          # all tests (test:unit, test:it, test:watch)
 npm run import:seasonal  # skills, charms, artifacts, phantimals from the data feed
 npm run import:structure # a season's artifact and phantimal data files, from the data feed
 npm run import:skills    # skill text only (also import:charms, :artifacts, :phantimals)
-npm run check:import     # run the screenshot-import readers over a folder of images
 ```
 
 The importers read an upstream data feed that is not part of this repo. To run them, copy `.env.example` to `.env.local` (gitignored) and set `DATA_FEED_DIR` to the feed's directory, or pass `--src-dir <PATH>`; see [Seasonal Content](./architecture/SEASONAL.md).
