@@ -3,8 +3,9 @@
  * bright pixels within ROW_SLACK rows of there absorbs the frame match's
  * residual error. Stars are bright blobs with dark gaps between them: the
  * count is the number of peaks across the band, and the colour family comes
- * from the bright pixels at the peaks. Fewer than six stars cannot be
- * refined, so a short row is R0 whatever its colour.
+ * from the bright pixels at the peaks. A row gains a star every five
+ * exclusive-weapon levels, and refinement starts only once it holds six, so a
+ * short row is R0, surely, whatever its colour.
  *
  * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
  * can add peaks at its ends and tint the colour toward a refined family, so
@@ -30,9 +31,9 @@ const PEAK_MIN_DISTANCE = 6
 // Evidence a refined reading needs to be sure, about 85% of the weakest
 // correctly read row of each level on labelled screenshots: the purple share
 // (R1), colour strength and gold share (R2), red share (R3), and the share of
-// stars that carry the pink tint on their own (R4). An R0 row is sure under
-// a pink share of `r0Pink`: unrefined rows measure below 0.005, R4 rows above
-// 0.04.
+// stars that carry the pink tint on their own (R4). A full R0 row is sure
+// under a pink share of `r0Pink`: unrefined rows measure below 0.005, R4 rows
+// above 0.04.
 const SURE = {
   purple: 0.58,
   chroma: 0.29,
@@ -42,9 +43,9 @@ const SURE = {
   r0Pink: 0.01,
 } as const
 const PINK = 0.03
-// Six stars span most of the frame width; four or fewer peaks is a short row
-// beyond doubt, five may be two merged stars, so only four gates.
-const SHORT_ROW = 4
+// Read where the card puts it, every refined row on labelled screenshots counts
+// six peaks, so five is a short row rather than two stars merged.
+const SHORT_ROW = 5
 
 const findBand = (shot: RgbaImage, box: Rect): Rect => {
   const x0 = box.x + Math.round(box.w * 0.1)
@@ -160,7 +161,7 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
     family = 'purple'
     level = 1
   }
-  if (stars <= SHORT_ROW) level = 0
+  if (stars <= SHORT_ROW) return { level: 0, stars, family, sure: true }
   const sure =
     level === 1
       ? purple >= SURE.purple

@@ -106,6 +106,16 @@ describe('readStars', () => {
     expect(readStars(...args(f))).toMatchObject({ stars: 6, family: 'red', level: 3 })
   })
 
+  // Five stars, an unrefined hero's fullest row, under a hat or hair that
+  // tints it pink.
+  it('reads a row of five as R0, surely, whatever its colour', () => {
+    expect(readStars(...args(frameWithStars(5, [250, 200, 245])))).toMatchObject({
+      stars: 5,
+      level: 0,
+      sure: true,
+    })
+  })
+
   it('reads a short row as R0 whatever its colour', () => {
     const r = readStars(...args(frameWithStars(3, [250, 210, 60])))
     expect(r.stars).toBe(3)
