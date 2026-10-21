@@ -4,7 +4,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
-import { disposeTeamImport, useTeamImport } from '@/composables/useTeamImport'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { ReplayReading } from '@/lib/import/screens/replay/types'
@@ -12,6 +11,7 @@ import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
+import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 vi.mock('@/stores/gameData', () => ({
   useGameDataStore: () => ({
@@ -38,7 +38,7 @@ let teardown: (() => void) | undefined
 afterEach(() => {
   teardown?.()
   teardown = undefined
-  disposeTeamImport()
+  leaveTeamImport()
 })
 
 type Sides = Record<Team, { heroes: number[]; options: number[] }>
@@ -63,7 +63,7 @@ const mountReplay = async (
     size: { width: 1400, height: 1940 },
     placement: { scale: 1, x: 0, y: 0, score: 1 },
   }
-  const api = useTeamImport(
+  const api = holdTeamImport(
     () => '5v5',
     () => true,
   )

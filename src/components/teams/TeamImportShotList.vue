@@ -11,12 +11,8 @@ import { ref } from 'vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
-import {
-  shotMapIndex,
-  shotWinner,
-  type ImportShot,
-  type ShotError,
-} from '@/composables/useTeamImport'
+import type { ShotError } from '@/composables/useImportEngine'
+import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
 import { Team, teamLabelKey } from '@/lib/types/team'
