@@ -15,11 +15,9 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { FIT_WIDTH } from '@/lib/import/board'
 import { FRAME_NAMES } from '@/lib/import/card/frames'
 import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
-import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
   addLearnedIcon,
   dropLearnedIcon,
@@ -27,14 +25,12 @@ import {
   serializeLearnedIcons,
 } from '@/lib/import/learned'
 import type { CellOverride } from '@/lib/import/review'
-import {
-  isFormationReading,
-  isReplayReading,
-  type FormationReading,
-  type ReplayReading,
-  type ScreenshotReading,
-  type ShotKind,
-} from '@/lib/import/types'
+import { FIT_WIDTH } from '@/lib/import/screens/formation/board'
+import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH } from '@/lib/import/screens/formation/formation'
+import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
+import type { ScreenshotReading, ShotKind } from '@/lib/import/screens/match/types'
+import { isReplayReading, type ReplayReading } from '@/lib/import/screens/replay/types'
+import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { withTilePick } from '@/lib/teams/formationImport'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'

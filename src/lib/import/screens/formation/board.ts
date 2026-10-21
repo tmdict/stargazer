@@ -11,8 +11,8 @@
 import type { Hex } from '@/lib/hex'
 import { Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { FULL_GRID, presetHexes } from '@/lib/types/grid'
-import { cropResize } from './core/image'
-import type { RgbaImage } from './core/types'
+import { cropResize } from '../../core/image'
+import type { RgbaImage } from '../../core/types'
 import type { BoardFit } from './types'
 
 export const BOARD_HEXES: readonly Hex[] = presetHexes(FULL_GRID)

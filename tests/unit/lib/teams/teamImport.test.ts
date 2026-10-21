@@ -5,7 +5,8 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { CellOverride, CellState } from '@/lib/import/review'
-import type { ScreenshotReading, UnitReading } from '@/lib/import/types'
+import type { UnitReading } from '@/lib/import/screens/formation/types'
+import type { ScreenshotReading } from '@/lib/import/screens/match/types'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,

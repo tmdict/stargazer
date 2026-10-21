@@ -25,8 +25,14 @@ import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelec
 import type { ImportShot } from '@/composables/useTeamImport'
 import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
-import { BOARD_HEXES, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from '@/lib/import/board'
-import { isFormationReading } from '@/lib/import/types'
+import {
+  BOARD_HEXES,
+  hexCentre,
+  hexCorners,
+  RING_RADIUS,
+  RING_RISE,
+} from '@/lib/import/screens/formation/board'
+import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { deploymentTiles } from '@/lib/maps'
 import {
   assignedPortraits,

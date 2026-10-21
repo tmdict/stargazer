@@ -1,6 +1,6 @@
 /* Geometry of a result screenshot, in the pixels of the shot framed to
  * CANONICAL_WIDTH by its tabs (panel.ts). Nominal positions only seed the
- * searches (strip.ts finds the Ally and Enemy tabs, frames.ts settles each
+ * searches (strip.ts finds the Ally and Enemy tabs, columns.ts settles each
  * card column under its tab, and every other region derives from those
  * anchors); the ratios are the game's layout and hold across the phone and
  * desktop captures measured. */
@@ -12,11 +12,6 @@ export const CANONICAL_WIDTH = 1150
 // A result shot is read at its own size up to this width, so a panel that
 // fills only part of a large capture keeps its pixels until it is framed.
 export const RESULT_MAX_WIDTH = 4096
-
-// A formation shot is read at its own size, which the board fit measures, up
-// to a width that keeps a full-resolution phone capture quick to read.
-export const FORMATION_MAX_WIDTH = 1200
-export const FORMATION_MIN_WIDTH = 400
 
 // A region at a fixed offset from a landmark point.
 export interface Region {

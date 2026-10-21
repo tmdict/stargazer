@@ -17,7 +17,7 @@ import {
   type ImportShot,
   type ShotError,
 } from '@/composables/useTeamImport'
-import { isFormationReading } from '@/lib/import/types'
+import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'

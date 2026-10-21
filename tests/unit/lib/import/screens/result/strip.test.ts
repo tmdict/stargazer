@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { STRIP } from '@/lib/import/layout'
-import { findTabs, readStrip, readTab } from '@/lib/import/strip'
+import { STRIP } from '@/lib/import/screens/result/layout'
+import { findTabs, readStrip, readTab } from '@/lib/import/screens/result/strip'
 import { Team } from '@/lib/types/team'
-import { createImage } from '../../fixtures/image'
+import { createImage } from '../../../../fixtures/image'
 
 const W = 1150
 const H = 1660

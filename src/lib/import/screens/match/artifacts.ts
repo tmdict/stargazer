@@ -13,9 +13,8 @@
  * the colour term alone still ranks a black or empty disc. A player who
  * fields no artifact gets no badge, and that header reads as none. */
 
-import { cropResize, dot, normalizedVectorMasked } from './core/image'
-import type { Rect, RgbaImage } from './core/types'
-import { HEADER_ICON } from './layout'
+import { cropResize, dot, normalizedVectorMasked } from '../../core/image'
+import type { Rect, RgbaImage } from '../../core/types'
 import type { ArtifactReading, ArtifactTable } from './types'
 
 const T = 40
@@ -148,7 +147,7 @@ export function readArtifact(
   centreX: number,
   centreY: number,
   table: ArtifactTable,
-  diameter: number = HEADER_ICON.diameter,
+  diameter: number,
 ): ArtifactReading {
   let top: { score: number; shape: number; rect: Rect; disc: Disc | null } = {
     score: -Infinity,

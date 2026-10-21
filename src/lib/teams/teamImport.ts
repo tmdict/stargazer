@@ -19,7 +19,8 @@ import {
   type CellOverride,
   type CellState,
 } from '@/lib/import/review'
-import type { FormationReading, ScreenshotReading } from '@/lib/import/types'
+import type { FormationReading } from '@/lib/import/screens/formation/types'
+import type { ScreenshotReading } from '@/lib/import/screens/match/types'
 import {
   assignedPortraits,
   assignUnits,

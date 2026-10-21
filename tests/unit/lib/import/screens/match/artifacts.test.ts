@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildArtifactTable, readArtifact } from '@/lib/import/artifacts'
 import type { RgbaImage } from '@/lib/import/core/types'
-import { HEADER_ICON } from '@/lib/import/layout'
-import { createImage } from '../../fixtures/image'
+import { buildArtifactTable, readArtifact } from '@/lib/import/screens/match/artifacts'
+import { HEADER_ICON } from '@/lib/import/screens/result/layout'
+import { createImage } from '../../../../fixtures/image'
 
 type Paint = (x: number, y: number) => [number, number, number]
 
@@ -64,7 +64,7 @@ describe('readArtifact', () => {
     const shot = image(400, 200, (x, y) =>
       Math.hypot(x - cx - 7, y - cy + 5) <= HEADER_ICON.diameter / 2 ? [0, 0, 0] : [181, 81, 70],
     )
-    const reading = readArtifact(shot, cx, cy, table)
+    const reading = readArtifact(shot, cx, cy, table, HEADER_ICON.diameter)
     expect(reading.candidates[0]!.artifactId).toBe(4)
     expect(reading.margin).toBeGreaterThan(0.1)
     expect(reading.sure).toBe(false)
@@ -79,12 +79,12 @@ describe('readArtifact', () => {
           ? [250, 250, 250]
           : [205, 125, 70],
       )
-    const reading = readArtifact(header(200, 100), 200, 100, table)
+    const reading = readArtifact(header(200, 100), 200, 100, table, HEADER_ICON.diameter)
     expect(reading.candidates).toEqual([])
     expect(reading.sure).toBe(true)
     // Near the top edge the search window runs off the shot, where a badge
     // could be, so the header is not called empty.
-    expect(readArtifact(header(200, 25), 200, 25, table).sure).toBe(false)
+    expect(readArtifact(header(200, 25), 200, 25, table, HEADER_ICON.diameter).sure).toBe(false)
   })
 
   // A rival's art beside the disc, still inside the search, must not count as
@@ -95,7 +95,7 @@ describe('readArtifact', () => {
     const shot = image(400, 200, () => [181, 81, 70])
     disc(shot, 1, cx - 17, cy)
     disc(shot, 2, cx + 17, cy, 0.8)
-    const reading = readArtifact(shot, cx, cy, table)
+    const reading = readArtifact(shot, cx, cy, table, HEADER_ICON.diameter)
     expect(reading.candidates[0]!.artifactId).toBe(1)
     expect(reading.margin).toBeGreaterThan(1)
   })

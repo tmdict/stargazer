@@ -7,22 +7,21 @@
  * scale at which its cards meet the frame templates. */
 
 import { Team } from '@/lib/types/team'
-import { readArtifact } from './artifacts'
+import { readCards } from '../../card/card'
+import { heroDescriptor, rankHeroes } from '../../card/heroes'
+import type { HeroReading } from '../../card/types'
+import { cropResize, maskedNcc } from '../../core/image'
+import type { RgbaImage } from '../../core/types'
+import { readArtifact } from '../match/artifacts'
+import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
+import type { ArtifactReading, ImportWarning, ReferenceSet } from '../match/types'
 import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
-import { readCards } from './card/card'
-import { heroDescriptor, rankHeroes } from './card/heroes'
-import type { HeroReading } from './card/types'
-import { cropResize, maskedNcc } from './core/image'
-import type { RgbaImage } from './core/types'
-import { GREEN_RING_FLOOR, isGreen, ringGreen } from './strip'
-import type {
-  ArtifactReading,
-  BoardFit,
-  FormationReading,
-  ImportWarning,
-  ReferenceSet,
-  UnitReading,
-} from './types'
+import type { BoardFit, FormationReading, UnitReading } from './types'
+
+// A formation shot is read at its own size, which the board fit measures, up
+// to a width that keeps a full-resolution phone capture quick to read.
+export const FORMATION_MAX_WIDTH = 1200
+export const FORMATION_MIN_WIDTH = 400
 
 const luminance = (img: RgbaImage, x: number, y: number): number => {
   const xi = Math.round(x)
