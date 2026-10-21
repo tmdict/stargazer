@@ -391,7 +391,8 @@ export const useGrids = defineStore('grids', () => {
    * map change): a unit stands on its own hex when the board gives that hex
    * to `dest`, else on a random free tile that no other unit of the side
    * keeps. `invert` 180-rotates every hex. Units page-wide uniqueness already
-   * claims, or with no tile left, are skipped and counted. */
+   * claims, units with no tile left, and the side's left-out units are skipped
+   * and counted. */
   const placeSide = (
     ctx: GridContext,
     side: SideLoadBoard,
@@ -444,7 +445,7 @@ export const useGrids = defineStore('grids', () => {
     }
 
     let placed = 0
-    let skipped = 0
+    let skipped = side.leftOut ?? 0
     // An occupied own hex holds a unit this batch could not move off it;
     // replacing would cascade-remove that unit, so the incomer goes random.
     const land = (

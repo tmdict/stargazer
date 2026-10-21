@@ -99,10 +99,12 @@ describe('buildSideLoadPlan', () => {
     expect(board.artifact).toBe(7)
   })
 
-  it('strips the synergy hero and its companions when the mode has no Syn affordance', () => {
+  it('leaves out the synergy hero and its companions when the mode has no Syn affordance', () => {
     const plan = buildSideLoadPlan(encode(ALLY_RECORD), false)!
     expect(plan.boards[0]!.mains.map((unit) => unit.unitId)).toEqual([11, 12])
     expect(plan.boards[0]!.companions).toEqual([{ unitId: 10012, hexId: 3, mainUnitId: 12 }])
+    // The hero counts once, so the load reports it skipped; its companion goes with it.
+    expect(plan.boards[0]!.leftOut).toBe(1)
   })
 
   it('drops crafted phantimal- and synergy-band values from the c section', () => {
