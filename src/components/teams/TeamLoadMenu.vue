@@ -526,6 +526,7 @@ const tipText = computed((): string =>
   display: block;
 }
 
+/* Over the thumbnail, so arming moves nothing under the pointer before the confirming click. */
 .card-confirm {
   position: absolute;
   inset: 0;

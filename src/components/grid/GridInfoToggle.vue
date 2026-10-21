@@ -21,8 +21,6 @@ import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useI18nStore } from '@/stores/i18n'
 
-import '@/styles/modal.css'
-
 const { share = false } = defineProps<{
   // ShareView presentation: right-aligned, checklist everywhere.
   share?: boolean
@@ -115,7 +113,7 @@ const panelShift = usePanelClamp(
       v-else
       v-model="master"
       class="chip"
-      :class="{ 'glass-button': share }"
+      :glass="share"
       :label="i18n.t('app.grid-info')"
     >
       <template #caret>

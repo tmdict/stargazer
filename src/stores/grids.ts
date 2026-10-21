@@ -622,10 +622,10 @@ export const useGrids = defineStore('grids', () => {
    * show (moveToMap). Each side places as a loaded team does (placeSide):
    * heroes with their upgrade records on the tiles the plan gives them, else
    * on random free ones. A side in `board.formations` re-seeds its phantimal
-   * baseline once placed, so it keeps the phantimal its screenshot showed,
-   * or none; any other side gets the one its lineup qualifies for. A hero
-   * with no free tile left, or a hero or artifact already on that team on
-   * another board, is skipped and counted. Boards without a screenshot stay
+   * baseline once placed, so it keeps the phantimal its screenshot showed or
+   * its review picked, or none; any other side gets the one its lineup
+   * qualifies for. A hero with no free tile left, or a hero or artifact
+   * already on that team on another board, is skipped and counted. Boards without a screenshot stay
    * empty. */
   const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
     const targets = plan.boards.flatMap((board, i) => {

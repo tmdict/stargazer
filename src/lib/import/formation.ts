@@ -8,7 +8,7 @@
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
-import { BOARD_HEXES, fitBoard, hexCentre, hexCorners } from './board'
+import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
 import { heroDescriptor, rankHeroes } from './heroes'
 import { cropResize, maskedNcc } from './image'
 import { readCards } from './pipeline'
@@ -45,12 +45,6 @@ const saturation = (img: RgbaImage, x: number, y: number): number => {
 
 // ---------- units ----------
 
-// A portrait stands on its tile with its pointer's tip at the tile centre, so
-// its ring sits RING_RISE hex radii above that centre on every row, and is
-// RING_RADIUS across. Measured on 128 units over four capture sets: rise 0.75
-// to 0.91, radius 0.63.
-const RING_RISE = 0.83
-const RING_RADIUS = 0.63
 // Each tile's ring is searched this far either side of its nominal centre.
 const RING_REACH = 0.3
 const RING_STEP = 0.04
