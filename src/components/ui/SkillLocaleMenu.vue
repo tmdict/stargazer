@@ -109,7 +109,6 @@ const pickSelect = (locale: SkillLocale) => {
   display: inline-block;
 }
 
-/* Mirrors the modal header's 32px translucent .button chrome. */
 .trigger {
   display: inline-flex;
   align-items: center;
@@ -141,7 +140,6 @@ const pickSelect = (locale: SkillLocale) => {
   opacity: 0.8;
 }
 
-/* The globe alone reads as a menu button on mobile. */
 @media (max-width: 768px) {
   .trigger-caret {
     display: none;
@@ -152,11 +150,8 @@ const pickSelect = (locale: SkillLocale) => {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  /* Content-sized: just wider than the longest native name, never narrower
-     than the trigger. */
   width: max-content;
   min-width: 100%;
-  /* Scrolls only past the viewport (usePanelFit). */
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;

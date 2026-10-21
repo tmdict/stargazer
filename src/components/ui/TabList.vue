@@ -54,8 +54,6 @@ const select = (tab: TabItem) => {
 </template>
 
 <style scoped>
-/* Two distinct looks by width: underline on desktop, a boxed bar on mobile.
-   .tab-bar holds the tablist plus an optional trailing actions slot. */
 .tab-bar {
   display: flex;
   flex-wrap: wrap;
@@ -104,7 +102,6 @@ const select = (tab: TabItem) => {
 }
 
 @media (min-width: 769px) {
-  /* Baseline the active ink-bar sits on; spans the full strip incl. the actions slot. */
   .tab-bar {
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
@@ -115,11 +112,8 @@ const select = (tab: TabItem) => {
   }
 
   .tab-btn {
-    /* Transparent bar reserves the active height (no shift on select); -1px
-       lands the active bar on the strip's baseline. */
     border-bottom: 2.5px solid transparent;
     margin-bottom: -1px;
-    /* Bottom < top to optically center the label over the ink-bar. */
     padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
   }
 
@@ -194,10 +188,9 @@ const select = (tab: TabItem) => {
   }
 }
 
-/* Phones: the strip stays one row (a wrapped tab drops below the collapsed
-   sheet), so tabs share the width and pad tighter instead of keeping a
-   minimum width. The row needs its own floor lifted too, or its tabs' full
-   widths hold it wider than a narrow screen. */
+/* Phones: a wrapped tab drops below the collapsed sheet, so the strip stays
+   one row. The row needs min-width: 0 as well, or its tabs' full widths hold
+   it wider than a narrow screen. */
 @media (max-width: 480px) {
   .tab-buttons {
     flex-wrap: nowrap;

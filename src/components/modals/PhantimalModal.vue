@@ -86,8 +86,6 @@ const pendingLabel = computed(
   font-style: italic;
 }
 
-/* base.css centers h1; on a narrow popup the title lines up with the
-   left-aligned chips and sections instead, like the skill modal. */
 @media (max-width: 768px) {
   h1 {
     text-align: left;

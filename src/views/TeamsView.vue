@@ -336,7 +336,6 @@ const handleCopyLink = () => {
 </template>
 
 <style scoped>
-/* Single column: the boards card on top, the side panel card/sheet below. */
 .teams-layout {
   display: flex;
   flex-direction: column;
@@ -351,7 +350,6 @@ const handleCopyLink = () => {
   color: var(--color-text-primary);
 }
 
-/* Clear the collapsed panel sheet's peek so page content isn't hidden behind it. */
 @media (max-width: 768px) {
   main {
     padding-bottom: 64px;

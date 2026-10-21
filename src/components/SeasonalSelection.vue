@@ -96,8 +96,6 @@ const shownArtifacts = computed(() => shown(artifacts))
   opacity: 0.75;
 }
 
-/* See CharacterSelection.vue: wide-screen flex-fill with own scroll, narrow
-   stacks naturally and lets the page scroll. */
 @media (min-width: 1220px) {
   .seasonal-selection.scrollable {
     flex: 1;

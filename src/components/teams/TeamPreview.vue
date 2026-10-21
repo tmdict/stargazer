@@ -166,9 +166,6 @@ const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? f
   min-height: 120px;
 }
 
-/* Boards wrap at three per row (5v5 renders 3+2); with the card grid's column
-   minimum, each board renders large enough that the hero portraits inside its
-   hexes read at a glance. */
 .board-thumb {
   flex: 0 1 30%;
   min-width: 0;
@@ -180,8 +177,6 @@ const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? f
   opacity: 0.35;
 }
 
-/* Fixed basis, not a percentage: boards render full-size at any board count,
-   wrapping to fit. Unplated, like the rest of the modal's content. */
 .team-preview.large {
   gap: 10px;
   padding: 0;

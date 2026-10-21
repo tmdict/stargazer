@@ -18,7 +18,6 @@ const { svgDimensions, layerStyle, layerTransform } = useArrowLayer()
 </template>
 
 <style scoped>
-/* Visible overflow: a lifted arrow to the far row rises above the box. */
 .grid-arrow-layer {
   position: absolute;
   top: 0;

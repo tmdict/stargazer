@@ -99,7 +99,6 @@ const download = () => downloadImage(stitchedBlob(), 'teams')
   border-radius: var(--radius-medium);
   padding: var(--spacing-md);
   min-height: 160px;
-  /* Checkerboard so transparent output is readable. */
   background-image:
     linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
     linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
@@ -184,7 +183,6 @@ const download = () => downloadImage(stitchedBlob(), 'teams')
   flex-shrink: 0;
 }
 
-/* Mobile: icon-only round actions, matching the arena grid controls. */
 @media (max-width: 768px) {
   .actions {
     gap: 18px;

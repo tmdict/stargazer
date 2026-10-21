@@ -29,11 +29,10 @@ const emit = defineEmits<{
   grid-template-columns: repeat(5, 1fr);
   gap: 5px;
   /* overflow-y:auto forces overflow-x to auto; pin it hidden so the hover
-     scale-up can't add a horizontal scrollbar. Padding gives edge icons room. */
+     scale-up can't add a horizontal scrollbar. */
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 300px;
-  /* Shrinks first when the popup's cap is reached (SelectionPopup is a column). */
   min-height: 0;
   padding: 2px 4px;
 }
@@ -48,7 +47,6 @@ const emit = defineEmits<{
   transition: all 0.15s ease;
 }
 
-/* The icon grows itself on hover (ArtifactIcon); the cell only brightens. */
 .artifact-item:hover {
   filter: brightness(1.2);
 }
@@ -57,8 +55,6 @@ const emit = defineEmits<{
   margin-top: 0;
 }
 
-/* Match the character-popup icon style: smaller, borderless, subtle 1px ring
-   (no thick white edge or white wash). */
 .artifact-item :deep(.artifact) {
   width: 45px;
   height: 45px;

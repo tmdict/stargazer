@@ -117,8 +117,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Tooltip-family chrome (TooltipPopup's frosted look), sized as a small
-   centered panel; the modal layer index keeps it under open tooltips. */
 .contact-panel {
   position: fixed;
   left: 50%;
@@ -205,8 +203,6 @@ onUnmounted(() => {
   background: var(--color-primary-hover);
 }
 
-/* Solid when disabled; the darker teal reads inactive next to the enabled
-   primary, and hover styling never applies to a disabled button. */
 .send-btn:disabled {
   background: var(--color-primary-hover);
   cursor: default;

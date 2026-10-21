@@ -153,12 +153,10 @@ const onSheetClickCapture = (e: MouseEvent) => {
 </template>
 
 <style scoped>
-/* Desktop: a plain card column (matches base.css `.section` chrome). */
 .bottom-sheet {
   width: 100%;
-  /* The inset vars ARE the card's padding (horizontal uses the shared token so a
-     plain panel's inset matches a TabView's); TabView reads them to bleed its
-     strip to the card edge, so the two can't drift apart. */
+  /* The inset vars are the card's padding; TabView reads them to bleed its
+     strip to the card edge. */
   --tabview-inset-y: 2em;
   --tabview-inset-x: var(--content-padding-x);
   padding: var(--tabview-inset-y) var(--tabview-inset-x);
@@ -172,17 +170,10 @@ const onSheetClickCapture = (e: MouseEvent) => {
   display: none;
 }
 
-/* display: contents. Hosts the drag listeners without affecting layout, so the
-   slotted content stays a direct flex child with its own fill/scroll. */
 .sheet-content {
   display: contents;
 }
 
-/* Wide screens (side-column use only): height-cap the column so long content
-   scrolls within it rather than stretching the page. container queries let the
-   slotted content respond to the column's real width. The content flex-fills via
-   its own scoped styles (it owns its scroll, which differs per content). Without
-   desktopRail the sheet stays a full-width card that flows in the page. */
 @media (min-width: 1220px) {
   .bottom-sheet.desktop-rail {
     flex: 1 1 auto;
@@ -208,9 +199,7 @@ const onSheetClickCapture = (e: MouseEvent) => {
   }
 }
 
-/* Mobile/tablet (<=768px, mirrors TABLET_MAX_WIDTH): the column becomes a pull-up
-   sheet. Layout is CSS-driven so SSG markup hydrates without a mismatch;
-   useBottomSheet adds the drag transform inline once mounted. */
+/* 768px mirrors TABLET_MAX_WIDTH, the breakpoint useBottomSheet uses. */
 @media (max-width: 768px) {
   .bottom-sheet {
     position: fixed;
@@ -218,30 +207,25 @@ const onSheetClickCapture = (e: MouseEvent) => {
     right: 0;
     bottom: 0;
     height: var(--sheet-expanded);
-    /* Mobile sheet has no padding to escape (zero vars zero the padding too). */
     --tabview-inset-y: 0;
     --tabview-inset-x: 0;
     border-radius: var(--radius-large) var(--radius-large) 0 0;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     z-index: 800;
     overflow: hidden;
-    /* Collapsed peek before the composable engages; it overrides this inline. */
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
-    /* Fast start, long decelerating tail (the iOS-sheet curve): a released
-       drag glides into its snap point instead of stopping flat. The duration
-       must stay in sync with useBottomSheet's TRANSITION_MS. */
+    /* The duration must stay in sync with useBottomSheet's TRANSITION_MS. */
     transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   }
-  /* No transition while dragging, or while snapping to a new viewport size: a
-     resize (mobile toolbar show/hide) must reposition the sheet instantly so the
-     collapsed peek can't jiggle as height (layout) and transform (compositor)
+  /* A resize (mobile toolbar show/hide) must reposition the sheet instantly, or
+     the collapsed peek jiggles as height (layout) and transform (compositor)
      animate out of sync. See useBottomSheet's onResize. */
   .bottom-sheet.is-dragging,
   .bottom-sheet.is-snapping {
     transition: none;
   }
-  /* Collapsed peek is drag-only: block native scroll so a swipe there drives the
-     sheet, not the page (iOS ignores overscroll-behavior on the non-scrollable peek). */
+  /* iOS ignores overscroll-behavior on the non-scrollable peek, so without this
+     a swipe there scrolls the page instead of the sheet. */
   .bottom-sheet.is-collapsed {
     touch-action: none;
   }

@@ -1,9 +1,4 @@
-/* Overlay/popup chrome for the modal popups (BaseModal) and the share overlay.
-   Pairs with content.css, which supplies the inner content box and prose
-   typography. */
-
-/* Overlay styles. Base rules cover SSG-page surfaces (no z-index). The
-   `.is-modal` modifier layers above other UI for popup modal usage. */
+/* Overlay styles */
 .overlay {
   position: fixed;
   top: 0;
@@ -22,15 +17,12 @@
   z-index: 9998;
 }
 
-/* Focus lands on the panel itself when a modal opens (useFocusTrap); its
-   border already frames it, so it draws no ring of its own. */
 .overlay.is-modal > .container:focus {
   outline: none;
 }
 
-/* Top-anchored variant. `.container` uses `margin: auto`, which in a flex
-   parent absorbs free space evenly top/bottom and overrides `align-items`, so
-   we have to zero the vertical autos in addition to setting flex-start. */
+/* `.container` uses `margin: auto`, which in a flex parent overrides
+   `align-items`, so the vertical autos are zeroed as well. */
 .overlay.is-top-anchored {
   align-items: flex-start;
 }
@@ -40,7 +32,6 @@
   margin-bottom: auto;
 }
 
-/* Backdrop link - covers entire overlay for click-to-close */
 .backdrop-link {
   position: absolute;
   top: 0;
@@ -50,7 +41,6 @@
   cursor: pointer;
 }
 
-/* Button container */
 .buttons {
   position: absolute;
   top: 12px;
@@ -68,8 +58,6 @@
   color: rgba(255, 255, 255, 0.6);
   width: 32px;
   height: 32px;
-  /* Reset native <button> padding so the SVG sizes identically whether the
-     wrapper is an <a> or a <button>. */
   padding: 0;
   display: flex;
   align-items: center;
@@ -87,9 +75,7 @@
   transform: scale(0.95);
 }
 
-/* Responsive styles. The button cluster is absolutely positioned at the top, so
-   on mobile `.content` inside an overlay needs extra top padding to clear it.
-   The non-overlay reader panel has no buttons and keeps content.css's padding. */
+/* Responsive styles */
 @media (max-width: 768px) {
   .overlay {
     padding: 20px;

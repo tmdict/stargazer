@@ -23,8 +23,6 @@ const { season, dismiss } = useSeasonNotice()
 </template>
 
 <style scoped>
-/* The skill reader's locale-hint banner shape, retinted for the light board
-   pages (the accent tokens it uses are tuned for the dark skill surfaces). */
 .season-notice {
   display: flex;
   align-items: center;

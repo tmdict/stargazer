@@ -75,10 +75,8 @@ const handleImport = (plan: TeamImportPlan): void => {
 </template>
 
 <style scoped>
-/* Deliberately quieter than the labelled controls: no text, a square at the
-   row's height, the secondary tint, dimmed until hovered. The widths below
-   mirror .control-btn's sizes at each breakpoint, since this scoped rule
-   outranks its collapse to a round icon button. */
+/* The widths below mirror .control-btn's sizes at each breakpoint, since this
+   scoped rule outranks its collapse to a round icon button. */
 .import-btn {
   padding: 0;
   width: 36px;

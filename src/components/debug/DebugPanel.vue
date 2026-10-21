@@ -328,9 +328,6 @@ defineExpose({
   border-radius: var(--radius-large);
 }
 
-/* On wide screens the right column is height-capped to viewport. Flex-fill
-   and own the scroll so debug content (long character lists) scrolls within
-   the panel rather than overflowing the column. */
 @media (min-width: 1220px) {
   .grid-stats {
     flex: 1;

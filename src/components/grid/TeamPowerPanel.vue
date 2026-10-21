@@ -244,8 +244,6 @@ const hoveredStat = computed(
 </template>
 
 <style scoped>
-/* A flat strip seated between the grid and the controls. Sized by container width
-   so it reads well both wide (Arena) and narrow (a 5 v 5 board). */
 .team-power {
   container-type: inline-size;
   display: flex;
@@ -266,12 +264,9 @@ const hoveredStat = computed(
   background: rgba(200, 35, 51, 0.05);
   border-left: 1px solid var(--color-border-primary);
 }
-/* A lone side fills the full width, so spread its heroes rather than let the
-   missing half read as empty. Takes effect only when the row has slack. */
 .team-power.single .heroes {
   justify-content: space-evenly;
 }
-/* Enemy-only: no second block, so no seam. */
 .team-power.single .tp-block.enemy {
   border-left: none;
 }
@@ -281,8 +276,6 @@ const hoveredStat = computed(
   min-height: 28px;
   margin-bottom: var(--spacing-md);
 }
-/* Mirror the sides: each stat sits at its block's outer edge, number
-   outermost, caption toward the center seam. */
 .tp-block.enemy .tp-head {
   justify-content: flex-end;
 }
@@ -290,13 +283,11 @@ const hoveredStat = computed(
   flex-direction: row-reverse;
 }
 
-/* Number beside caption on the shared baseline. */
 .stat {
   display: inline-flex;
   align-items: baseline;
   gap: var(--spacing-sm);
 }
-/* Subtle: the label is a quiet caption and the tooltip handle, not the headline. */
 .stat-label {
   font-size: 0.62rem;
   font-weight: 600;
@@ -311,8 +302,6 @@ const hoveredStat = computed(
     display: none;
   }
 }
-/* Headline number, colored by sign. The negative uses the calmer danger red (not the
-   alert enemy red) so it balances the teal rather than dominating it. */
 .stat-num {
   font-weight: 700;
   font-size: 1.05rem;
@@ -340,10 +329,6 @@ const hoveredStat = computed(
   justify-content: flex-end;
 }
 
-/* Each team has up to 5 heroes: a fixed fifth-of-the-column basis (no grow, no wrap)
-   makes them fill exactly one row when full, stays a consistent size when fewer, and
-   tracks the column width without wrapping. Capped at the picker icon size (70px, see
-   CharacterIcon) so they never grow larger than a character-selection icon. */
 .hero {
   flex: 0 0 calc((100% - 4 * var(--hero-gap)) / 5);
   min-width: 0;
@@ -366,9 +351,6 @@ const hoveredStat = computed(
   position: relative;
   width: 100%;
 }
-/* Oversized image centered in an overflow-clipped circle (mirrors CharacterIcon)
-   so the portrait frames the face instead of sitting too high. The circle fills its
-   flex-sized cell, so it scales with the column width. */
 .portrait {
   display: flex;
   align-items: center;
@@ -390,15 +372,12 @@ const hoveredStat = computed(
 .hero:hover .portrait {
   transform: scale(1.06);
 }
-/* Not editable (share view, or no layer visible): no click affordance. */
 .hero.static {
   cursor: default;
 }
 .hero.static:hover .portrait {
   transform: none;
 }
-/* The upgrade pill seats on the portrait's bottom edge (no corner overhang, so
-   neighboring heroes can never collide). */
 .pill {
   margin-top: -6px;
   position: relative;
@@ -419,8 +398,6 @@ const hoveredStat = computed(
   text-overflow: ellipsis;
 }
 
-/* Wider container (the Arena): roomier padding, a bigger stat number, and visible
-   hero names. Icon sizing stays flex-driven so the row never wraps. */
 @container (min-width: 480px) {
   .tp-block {
     padding: var(--spacing-md) var(--spacing-lg);

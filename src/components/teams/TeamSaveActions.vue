@@ -237,8 +237,8 @@ const tipText = computed((): string => {
   gap: var(--spacing-sm);
 }
 
-/* Compact dialog buttons; deliberately not .control-btn, so the control bar's
-   mobile icon-only collapse never applies inside the popover. */
+/* Not .control-btn, so the control bar's mobile icon-only collapse never
+   applies inside the popover. */
 .popover-btn {
   flex: 1;
   display: inline-flex;

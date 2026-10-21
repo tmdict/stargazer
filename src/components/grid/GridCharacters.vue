@@ -585,8 +585,6 @@ const liftedMode = computed(() =>
   cursor: default;
 }
 
-/* Readonly keeps pointer events (the hover card needs them, mirroring the
-   artifact icons); drag and click are gated in the template. */
 .character.readonly {
   cursor: default;
 }
@@ -599,8 +597,7 @@ const liftedMode = computed(() =>
 }
 
 /* Lift styling lives on the inner element because the wrapper's inline
-   transform carries the perspective skew. No color or brightness change:
-   elevation is conveyed only by the slight scale and a soft diffuse shadow. */
+   transform carries the perspective skew. */
 .character.lifted .character-content {
   transform: scale(1.08);
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));

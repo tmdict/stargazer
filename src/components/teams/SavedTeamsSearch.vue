@@ -172,8 +172,6 @@ const onKeydown = (event: KeyboardEvent): void => {
   border-color: var(--color-primary);
 }
 
-/* Pills and the input share one wrapping row, so a full row of pills pushes
-   the input onto the next line rather than off the edge. */
 .search-field {
   display: flex;
   flex-wrap: wrap;

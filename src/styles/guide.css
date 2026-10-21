@@ -1,8 +1,3 @@
-/* Guide pages: the dark panels the index and its sub-pages stack, and the
-   title link and blurb every panel opens with. Pairs with content.css, which
-   supplies the `.page-panel` box and `.content` typography; the panel is a
-   size container so its parts can compact to the column they sit in. */
-
 .guide-panel {
   --guide-panel-bg: var(--color-bg-reading);
   margin: 0;
@@ -34,21 +29,16 @@
   text-decoration: none;
 }
 
-/* No transitions on the hover state: the box should answer the pointer at
-   once; only the chevron's slide eases. */
 .content .guide-title svg {
   flex: none;
   color: rgba(255, 255, 255, 0.4);
   transition: transform 0.1s;
 }
 
-/* A panel whose whole body opens its page: `.guide-link` is the hit area
-   (the content box, or one season block of the report), covered by the
-   title link's stretched pseudo-element, which sits above the area's
-   positioned decorations (the upgrade tracks) at z-index 1. Links inside
-   the area (chips, tiles) raise themselves above it with `position:
-   relative; z-index: 2`. Hovering anywhere on the area lights the title and
-   the panel border, so the box reads as one link. */
+/* `.guide-link` is the hit area, covered by the title link's stretched
+   pseudo-element, which sits above the area's positioned decorations (the
+   upgrade track bars) at z-index 1. Links inside the area (chips, tiles)
+   raise themselves above it with `position: relative; z-index: 2`. */
 .guide-link {
   position: relative;
   cursor: pointer;
