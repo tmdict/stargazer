@@ -198,3 +198,28 @@ main {
 .content {
   font-family: var(--font-content);
 }
+
+.greyed-out {
+  filter: var(--placed-filter);
+}
+
+.greyed-out::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--placed-overlay);
+  pointer-events: none;
+}
+
+.panel-min-height {
+  min-height: var(--panel-min-height);
+}
+
+@media (min-width: 1220px) {
+  .panel-fill {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}

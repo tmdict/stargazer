@@ -8,6 +8,8 @@ import { usePanelFit } from '@/composables/usePanelFit'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
+import '@/styles/modal.css'
+
 // Globe dropdown for the skill-text language, distinct from the header's
 // site-language menu. `links` mode (skill pages) renders real hrefs to the
 // sibling locale URLs; `select` mode (skill modal) emits and lets the caller
@@ -59,7 +61,7 @@ const pickSelect = (locale: SkillLocale) => {
   >
     <button
       type="button"
-      class="trigger"
+      class="trigger glass-button"
       :class="{ 'is-active': isActive }"
       :aria-label="i18n.t('app.skill-locale')"
       :aria-expanded="open"
@@ -116,17 +118,8 @@ const pickSelect = (locale: SkillLocale) => {
   height: 32px;
   min-width: 32px;
   padding: 0 9px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.6);
   font-size: 13px;
   cursor: pointer;
-}
-
-.trigger:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .trigger.is-active {

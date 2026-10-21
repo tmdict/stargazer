@@ -83,11 +83,11 @@ describe('a phantimal click', () => {
     }
 
     // The enemy side has room, so the wedge goes there too.
-    expect(wedge.classList.contains('placed')).toBe(false)
+    expect(wedge.classList.contains('greyed-out')).toBe(false)
     await click(wedge)
     expect(phantimalOn(Team.ENEMY)).toBe(toPhantimalId(WEDGE.id))
     // With no side open, the next click takes it off the side filled last.
-    expect(wedge.classList.contains('placed')).toBe(true)
+    expect(wedge.classList.contains('greyed-out')).toBe(true)
     await click(wedge)
     expect(phantimalOn(Team.ENEMY)).toBeNull()
     expect(phantimalOn(Team.ALLY)).toBe(toPhantimalId(WEDGE.id))

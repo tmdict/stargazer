@@ -398,19 +398,8 @@ const intro = computed((): string => {
 }
 
 .faction-icons {
-  display: inline-flex;
   vertical-align: middle;
   margin-left: 8px;
-}
-.faction-icons img {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--color-bg-reading);
-  box-shadow: 0 0 0 1.5px var(--color-bg-reading);
-}
-.faction-icons img + img {
-  margin-left: -5px;
 }
 .visually-hidden {
   position: absolute;

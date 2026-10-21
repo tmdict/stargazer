@@ -46,7 +46,7 @@ const {
     <div
       ref="artifactElement"
       class="artifact"
-      :class="{ placed: isPlaced, inspectable }"
+      :class="{ 'greyed-out': isPlaced, inspectable }"
       @click="emit('artifactClick', artifact)"
       @pointerdown="inspectable && startHold($event, artifact)"
       @contextmenu="inspectable && onContextMenu($event, artifact)"
@@ -112,17 +112,5 @@ const {
 
 .artifact:hover {
   transform: scale(1.05);
-}
-
-.artifact.placed {
-  filter: var(--placed-filter);
-}
-.artifact.placed::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--placed-overlay);
-  pointer-events: none;
 }
 </style>

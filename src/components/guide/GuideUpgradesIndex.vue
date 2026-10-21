@@ -80,7 +80,7 @@ const bands = computed((): Band[] => [
         <div v-for="band in bands" :key="band.key" class="band" :class="band.kind">
           <span class="band-head">
             {{ band.title }}
-            <span v-if="band.factions.length" class="factions">
+            <span v-if="band.factions.length" class="faction-icons">
               <img
                 v-for="faction in band.factions"
                 :key="faction"
@@ -132,19 +132,8 @@ const bands = computed((): Band[] => [
   white-space: nowrap;
 }
 
-.factions {
-  display: inline-flex;
+.faction-icons {
   margin-left: 6px;
-}
-.factions img {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--guide-panel-bg);
-  box-shadow: 0 0 0 1.5px var(--guide-panel-bg);
-}
-.factions img + img {
-  margin-left: -5px;
 }
 
 .track {

@@ -180,7 +180,7 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
           class="phantimal"
-          :class="{ draggable: isDraggable, placed: removableHex(phantimal) !== null }"
+          :class="{ draggable: isDraggable, 'greyed-out': removableHex(phantimal) !== null }"
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
           @dragend="handleDragEnd"
@@ -276,18 +276,6 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
 
 .phantimal:hover {
   transform: scale(1.05);
-}
-
-.phantimal.placed {
-  filter: var(--placed-filter);
-}
-.phantimal.placed::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--placed-overlay);
-  pointer-events: none;
 }
 
 .portrait {

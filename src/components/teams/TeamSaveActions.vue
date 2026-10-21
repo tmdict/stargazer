@@ -165,10 +165,14 @@ const tipText = computed((): string => {
           @keydown.esc="popoverOpen = false"
         />
         <div class="name-popover-actions">
-          <button type="button" class="popover-btn" @click="commitPopover">
+          <button type="button" class="popover-btn solid-btn" @click="commitPopover">
             {{ i18n.t('app.save') }}
           </button>
-          <button type="button" class="popover-btn secondary" @click="popoverOpen = false">
+          <button
+            type="button"
+            class="popover-btn solid-btn secondary"
+            @click="popoverOpen = false"
+          >
             {{ i18n.t('app.cancel') }}
           </button>
         </div>
@@ -244,21 +248,9 @@ const tipText = computed((): string => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-medium);
   min-height: 30px;
   padding: 4px 8px;
   font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.popover-btn:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
 }
 
 .popover-btn.secondary {
