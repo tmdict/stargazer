@@ -24,7 +24,12 @@ import { useUnitLabels } from '@/composables/useUnitLabels'
 import { BOARD_HEXES, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from '@/lib/import/board'
 import { isFormationReading } from '@/lib/import/types'
 import { deploymentTiles } from '@/lib/maps'
-import { assignedPortraits, missingUnits, type UnitAssignment } from '@/lib/teams/formationImport'
+import {
+  assignedPortraits,
+  missingUnits,
+  portraitOptions,
+  type UnitAssignment,
+} from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
@@ -65,6 +70,7 @@ interface UnitView {
 const unitViews = computed((): UnitView[] => {
   const reading = shot.reading
   if (!reading || !isFormationReading(reading)) return []
+  const assigned = units.assignments.map((assignment) => assignment.unitId)
   return units.assignments.map((assignment, index) => ({
     index,
     unitId: assignment.unitId,
@@ -73,7 +79,7 @@ const unitViews = computed((): UnitView[] => {
     tile: reading.units[index]?.hexId ?? 0,
     card: shot.unitCards[index] ?? '',
     items: [
-      ...units.options.map((id) => ({
+      ...portraitOptions(units.options, assigned, index).map((id) => ({
         key: String(id),
         label: unitName(id),
         selected: id === assignment.unitId,

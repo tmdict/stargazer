@@ -8,6 +8,7 @@ import {
   heroesFromUnits,
   identifyMap,
   missingUnits,
+  portraitOptions,
 } from '@/lib/teams/formationImport'
 import { Team } from '@/lib/types/team'
 
@@ -136,6 +137,19 @@ describe('missingUnits', () => {
       {},
     )
     expect(companion.order).toEqual([WEDGE])
+  })
+})
+
+describe('portraitOptions', () => {
+  it("offers the other portraits' phantimal family only, and each portrait its own unit", () => {
+    const other = toPhantimalId(1)
+    const options = [11, WEDGE, WEDGE_POWER, other]
+    // A companion on another portrait fields its phantimal too.
+    expect(portraitOptions(options, [11, WEDGE_POWER, null], 2)).toEqual([11, WEDGE, WEDGE_POWER])
+    // The one phantimal portrait may change to another phantimal.
+    expect(portraitOptions(options, [11, WEDGE, null], 1)).toEqual(options)
+    // Two phantimals read: either portrait can be corrected.
+    expect(portraitOptions(options, [other, WEDGE], 0)).toEqual(options)
   })
 })
 
