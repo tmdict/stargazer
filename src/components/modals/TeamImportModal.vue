@@ -9,7 +9,7 @@
    clears it, so each opening is a new import. The modal only renders and
    emits the finished plan upward. */
 
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
@@ -20,12 +20,16 @@ import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { shotMapIndex, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
-import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { isFormationReading, type ShotKind } from '@/lib/import/types'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
-import { assignedPortraits, missingUnits, replayPlacing } from '@/lib/teams/formationImport'
+import {
+  assignedPortraits,
+  fieldableUnits,
+  missingUnits,
+  replayPlacing,
+} from '@/lib/teams/formationImport'
 import {
   DEFAULT_VARIANT,
   newTeamMaps,
@@ -133,15 +137,12 @@ const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
     ? []
     : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
 
-// The units a side can field: its heroes with their companions, and the
-// phantimals its heroes qualify for with theirs.
 const fieldable = (heroes: readonly number[]): number[] =>
-  [
-    ...heroes,
-    ...gameData.phantimals
-      .map(({ id }) => toPhantimalId(id))
-      .filter((id) => phantimalFits(id, heroes)),
-  ].flatMap((id) => [id, ...companionIdsOf(id)])
+  fieldableUnits(
+    heroes,
+    gameData.phantimals.map(({ id }) => toPhantimalId(id)),
+    (id) => phantimalFits(id, heroes),
+  )
 
 // The units a formation shot's portraits can be.
 const unitOptions = (shot: ImportShot): number[] =>
@@ -246,12 +247,13 @@ watch(
 )
 
 // A drop or paste opens the first of its screenshots to be read for review,
-// unless another screenshot with a review was opened while they read.
-const toOpen = ref<{ known: Set<string>; before: string | null } | null>(null)
+// unless another screenshot with a review was opened while they read. The
+// latest drop that adds a screenshot is the one that opens.
+const toOpen = ref<{ ids: string[]; before: string | null } | null>(null)
 watch(
   () => {
-    const known = toOpen.value?.known
-    return known && shots.value.find((s) => !known.has(s.id) && s.reading)
+    const ids = toOpen.value?.ids
+    return ids && shots.value.find((s) => ids.includes(s.id) && s.reading)
   },
   (shot) => {
     if (!shot || !toOpen.value) return
@@ -263,8 +265,11 @@ watch(
 )
 
 const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
-  toOpen.value = { known: new Set(shots.value.map((s) => s.id)), before: selectedId.value }
-  const { added, refused } = await addFiles(files, kind)
+  const batch = reactive({ ids: [] as string[], before: selectedId.value })
+  const { added, refused } = await addFiles(files, kind, (id) => {
+    if (batch.ids.length === 0) toOpen.value = batch
+    batch.ids.push(id)
+  })
   if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))

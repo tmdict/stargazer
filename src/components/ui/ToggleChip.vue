@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* A checkbox drawn as a chip: the grid controls bar's display toggles, the
-   Grid Info chip (split by its `caret` slot) and the Map Editor's Edit Tiles.
-   A root given the global .glass-button class (modal.css) keeps that look in
-   place of the light one. */
+   Grid Info chip (split by its `caret` slot) and the Map Editor's Edit Tiles. */
+
+import '@/styles/modal.css'
 
 const checked = defineModel<boolean>()
 
@@ -12,15 +12,17 @@ defineProps<{
   // Outside the grid controls bar: sized by its text, without the bar's
   // touch-tablet and phone looks.
   standalone?: boolean
+  // The dark overlay's glass look (modal.css) in place of the light one.
+  glass?: boolean
 }>()
 
 defineSlots<{ caret?(): unknown }>()
 </script>
 
 <template>
-  <span v-if="$slots.caret" class="toggle-chip split">
+  <span v-if="$slots.caret" class="toggle-chip split" :class="{ 'glass-button': glass, disabled }">
     <label class="toggle-chip-body">
-      <input v-model="checked" type="checkbox" class="toggle-chip-checkbox" />
+      <input v-model="checked" type="checkbox" :disabled class="toggle-chip-checkbox" />
       <span>{{ label }}</span>
     </label>
     <slot name="caret" />
@@ -28,7 +30,7 @@ defineSlots<{ caret?(): unknown }>()
   <label
     v-else
     class="toggle-chip toggle-chip-body"
-    :class="{ bar: !standalone, active: checked, disabled }"
+    :class="{ bar: !standalone, active: checked, disabled, 'glass-button': glass }"
   >
     <input v-model="checked" type="checkbox" :disabled class="toggle-chip-checkbox" />
     <span>{{ label }}</span>

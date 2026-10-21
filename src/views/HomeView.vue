@@ -371,9 +371,9 @@ const handleResetMap = () => {
   }
 }
 
-/* This breakpoint must stay in sync with `.panel-fill` in base.css, which gives
-   the tab-content panels their flex-fill and internal scroll on the same
-   condition. */
+/* This breakpoint must stay in sync with `.panel-fill` in base.css (the tab
+   panels' flex-fill and internal scroll), BottomSheet's desktop rail and
+   SkillsBrowser's layout, which switch on the same condition. */
 @media (min-width: 1220px) {
   .sections-container {
     flex-direction: row;

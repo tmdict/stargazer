@@ -30,6 +30,13 @@ export const hexCentre = (fit: BoardFit, hex: Hex): Point => toScreen(fit, UNIT.
 export const hexCorners = (fit: BoardFit, hex: Hex): Point[] =>
   UNIT.polygonCorners(hex).map((p) => toScreen(fit, p))
 
+// A portrait stands on its tile with its pointer's tip at the tile centre, so
+// its ring sits RING_RISE hex radii above that centre on every row, and is
+// RING_RADIUS across. Measured on 128 units over four capture sets: rise 0.75
+// to 0.91, radius 0.63.
+export const RING_RISE = 0.83
+export const RING_RADIUS = 0.63
+
 // ---------- the outline ----------
 
 // Points on the board's outline and just off it (either side of each sample

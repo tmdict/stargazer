@@ -223,17 +223,17 @@ const handleClear = (): void => {
   justify-content: center;
   border-radius: var(--radius-large);
   border: 2px dashed var(--color-primary);
-  background: rgba(54, 149, 142, 0.12);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   cursor: pointer;
   transition: background var(--transition-fast);
 }
 
 .board-swap-overlay:hover {
-  background: rgba(54, 149, 142, 0.22);
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
 .board-swap-overlay.pending {
-  background: rgba(54, 149, 142, 0.22);
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
   border-style: solid;
 }
 

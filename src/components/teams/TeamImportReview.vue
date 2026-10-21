@@ -33,7 +33,7 @@ import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
-import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/board'
+import { BOARD_HEXES, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from '@/lib/import/board'
 import { isFormationReading, type HeroReading } from '@/lib/import/types'
 import { deploymentTiles } from '@/lib/maps'
 import { assignedPortraits, missingUnits, type UnitAssignment } from '@/lib/teams/formationImport'
@@ -413,7 +413,8 @@ const pickTiles = computed(() => {
 })
 
 // A picked unit's portrait, drawn where and as large as the screenshot draws
-// its own: the portraits' mean size and offset from their tile's centre.
+// its own: the portraits' mean size and offset from their tile's centre, or
+// where the reader looks for a portrait when it found none.
 const mark = computed(() => {
   const reading = shot.reading
   if (!reading || !isFormationReading(reading) || !reading.board) return { radius: 0, dx: 0, dy: 0 }
@@ -424,8 +425,10 @@ const mark = computed(() => {
     const centre = hexCentre(fit, hex)
     return [{ radius: ring.radius, dx: ring.x - centre.x, dy: ring.y - centre.y }]
   })
+  if (offsets.length === 0)
+    return { radius: RING_RADIUS * fit.scale, dx: 0, dy: -RING_RISE * fit.scale }
   const mean = (key: 'radius' | 'dx' | 'dy'): number =>
-    offsets.reduce((sum, o) => sum + o[key], 0) / Math.max(offsets.length, 1)
+    offsets.reduce((sum, o) => sum + o[key], 0) / offsets.length
   return { radius: mean('radius'), dx: mean('dx'), dy: mean('dy') }
 })
 
@@ -580,7 +583,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
       </div>
     </div>
 
-    <div v-if="unitViews.length" class="side">
+    <div v-if="unitViews.length || missingRows.length" class="side">
       <div class="side-head">
         <span class="side-label">{{ i18n.t('app.import-units') }}</span>
         <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />

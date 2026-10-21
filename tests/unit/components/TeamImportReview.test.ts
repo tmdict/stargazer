@@ -35,9 +35,9 @@ afterEach(() => {
   disposeTeamImport()
 })
 
-// A formation shot of the ally side showing hero 5 on the first ally tile,
-// whose lineup also fields hero 6.
-const mountFormation = async () => {
+// A formation shot of the ally side showing hero 5 on the first ally tile
+// (or no portrait at all), whose lineup also fields hero 6.
+const mountFormation = async (withPortrait = true) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -55,15 +55,13 @@ const mountFormation = async () => {
     side: Team.ALLY,
     tiles: ALLY_TILES,
     unclear: [],
-    units: [
-      {
-        hexId: portraitTile,
-        ring: { x: 0, y: 0, radius: 8 },
-        score: 1,
-        candidates: [{ characterId: 5, score: 0.9, learned: false, costume: false }],
-        card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
-      },
-    ],
+    units: (withPortrait ? [portraitTile] : []).map(() => ({
+      hexId: portraitTile,
+      ring: { x: 0, y: 0, radius: 8 },
+      score: 1,
+      candidates: [{ characterId: 5, score: 0.9, learned: false, costume: false }],
+      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+    })),
   }
   const api = useTeamImport(
     () => '5v5',
@@ -99,13 +97,16 @@ const mountFormation = async () => {
         swapSides: false,
         sides: [],
         units: {
-          assignments: [{ unitId: 5, state: 'sure' }],
+          assignments: withPortrait ? [{ unitId: 5, state: 'sure' }] : [],
           options: [5, 6, toPhantimalId(1)],
           placed: {
             mapKey: DEFAULT_MAP_KEY,
             team: Team.ALLY,
             side: {
-              mains: [{ unitId: 5, hexId: portraitTile }, { unitId: 6 }],
+              mains: [
+                withPortrait ? { unitId: 5, hexId: portraitTile } : { unitId: 5 },
+                { unitId: 6 },
+              ],
               companions: [],
               phantimal: null,
               artifact: null,
@@ -161,5 +162,18 @@ describe('the units a formation shot misses', () => {
     await nextTick()
     expect(picks()).toEqual({ [free!]: 6 })
     expect(document.querySelector('[role="alert"]')?.textContent).toContain(String(portraitTile))
+  })
+
+  it('offers every unit to place when the screenshot shows no portrait', async () => {
+    const { picks } = await mountFormation(false)
+    expect(document.querySelectorAll('.cell.missing')).toHaveLength(2)
+    expect(document.querySelector('.cell.missing.next .cell-name')?.textContent).toContain('Hero5')
+
+    await clickTile(ALLY_TILES[0]!)
+    expect(picks()).toEqual({ [ALLY_TILES[0]!]: 5 })
+    // With no portrait to measure, the mark takes the reader's own ring size.
+    expect(Number(document.querySelector('.tile-mark circle')?.getAttribute('r'))).toBeGreaterThan(
+      0,
+    )
   })
 })

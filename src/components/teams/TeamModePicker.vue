@@ -4,7 +4,7 @@
 
 import { computed } from 'vue'
 
-import SegmentedPicker from './SegmentedPicker.vue'
+import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { TEAM_MODE_ORDER, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 

@@ -203,6 +203,7 @@ main {
   filter: var(--placed-filter);
 }
 
+/* The overlay covers the nearest positioned ancestor, so a host sets its own position. */
 .greyed-out::after {
   content: '';
   position: absolute;

@@ -811,7 +811,7 @@ const {
 
 @media (max-width: 768px) {
   .roster-panel {
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--panel-inset);
   }
   .roster-name-input {
     min-height: 34px;

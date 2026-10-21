@@ -261,6 +261,40 @@ export function replayPlacing(
   return { order: placingOrder(heroes, [...counted.values()]), picks: counted }
 }
 
+/* A side's tile picks after picking a unit for a tile, or clearing it (null).
+ * A unit starts on one tile, so it leaves any other, and the tile's previous
+ * unit comes off it. A side fields one phantimal, so a unit of another
+ * phantimal takes the place of the side's earlier phantimal picks. */
+export function withTilePick(
+  picks: Readonly<Record<number, number>>,
+  hexId: number,
+  unitId: number | null,
+): Record<number, number> {
+  const otherPhantimal = (picked: number): boolean =>
+    unitId !== null &&
+    inPhantimalBand(unitId) &&
+    inPhantimalBand(picked) &&
+    phantimalOwnerId(picked) !== phantimalOwnerId(unitId)
+  const next: Record<number, number> = Object.fromEntries(
+    Object.entries(picks).filter(
+      ([hex, picked]) => Number(hex) !== hexId && picked !== unitId && !otherPhantimal(picked),
+    ),
+  )
+  if (unitId !== null) next[hexId] = unitId
+  return next
+}
+
+// The units a side can field: its heroes with their companions, and the
+// phantimals its heroes qualify for (`fits`, the board's faction rule) with
+// theirs.
+export function fieldableUnits(
+  heroes: readonly number[],
+  phantimals: readonly number[],
+  fits: (phantimalId: number) => boolean,
+): number[] {
+  return [...heroes, ...phantimals.filter(fits)].flatMap((id) => [id, ...companionIdsOf(id)])
+}
+
 /* Whether a formation shot's review may pick a unit for a tile: one no
  * portrait is taken for, and while the portraits field a phantimal, none of
  * another phantimal's, which would take the place of the one shown. */

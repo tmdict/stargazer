@@ -79,8 +79,8 @@ export interface BoardLineup {
   // The sides the import fills, as the side-load places them; a side no
   // screenshot shows stays empty on the new team.
   sides: Partial<Record<Team, SideLoadBoard>>
-  // Sides whose phantimal is the one a screenshot shows (or none); another
-  // side gets the phantimal its lineup qualifies for.
+  // Sides whose phantimal is the one a screenshot shows or a review picks (or
+  // none); another side gets the phantimal its lineup qualifies for.
   formations: Team[]
   // The map the board's formation shots show; null to keep the board's own.
   map: string | null
@@ -104,8 +104,8 @@ export type PlanIssue =
   // A formation shot's tiles are no map of the mode's. The board takes the map
   // of its other formation shot when that one has a map, else keeps its own.
   | { kind: 'unknown-map'; mapIndex: number; keepsMap: boolean }
-  // Heroes of the lineup with no portrait on the formation shot, which take
-  // random free tiles.
+  // Heroes of the lineup that no portrait or pick on a formation shot or
+  // replay frame places, which take random free tiles.
   | { kind: 'unplaced'; team: Team; mapIndex: number; count: number }
   // In a match import, a formation shot of a map with no result shot: it has
   // no match heroes to place, and is left out.
