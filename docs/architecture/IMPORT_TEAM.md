@@ -13,10 +13,16 @@ The hard part is that screenshots vary. Players crop them, phones have different
 └───────────────────┬──┬───┘            └──────────────────────────┘
        shots, edits │  ▲
                     ▼  │  readings, plan
-┌─ useTeamImport ───┴──┴───┐            ┌─ import.worker ──────────┐
-│ shots and overrides      │───────────▶│ lib/import readers       │
-│ learned icons            │   images   │ hero table               │
-│ buildTeamImportPlan      │◀───────────│ artifact table           │
+┌─ useTeamImport ───┴──┴───┐
+│ shots and overrides      │
+│ buildTeamImportPlan      │
+└───────────────────┬──┬───┘
+              files │  ▲
+                    ▼  │  readings
+┌─ useImportEngine ─┴──┴───┐            ┌─ import.worker ──────────┐
+│ decoding, read queue     │───────────▶│ lib/import readers       │
+│ references               │   images   │ hero table               │
+│ learned icons            │◀───────────│ artifact table           │
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
 
@@ -63,7 +69,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 `cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. A cell is sure, needs its hero confirmed, needs its paragon confirmed (hero settled but the frame match doubtful), needs its refinement confirmed (hero and paragon settled but the star colour doubtful), has no candidate over the floor, or is a duplicate of another cell on its side after edits. Confirming or picking a hero settles identity separately from the paragon level. `artifactState` treats each side's artifact the same way: settled once read surely or edited, otherwise counted in the card's review number, with the icon crop from the screenshot shown beside it.
 
-Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. `useTeamImport` keeps the worker, its references and the learned faces at module level for the page visit, and `TeamsView` calls `disposeTeamImport` when the page is left. References are fetched on first open and posted once, shots dropped meanwhile queue until the worker is ready, and a failed load retries on the next open.
+Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`), so the next opening starts from the names last saved and nothing else. The import engine (`useImportEngine`) keeps the worker, its references and the learned faces at module level for the page visit: the modal holds it while mounted, and leaving the page unmounts the modal and disposes it. References are fetched on first open and posted once. Decoded shots wait in the engine and go to the worker one at a time once it is ready, so closing the modal drops the reads still waiting, and a failed load retries on the next open.
 
 A swap puts every result screenshot's Ally column on the enemy side of its board. The game's Ally tab is always the viewing player, whichever side of the board they fought from, while formation screenshots and replay frames show each team on the half it fought from. Those halves are the board's sides, so a swap changes only which result column's lineup a formation shot or replay frame takes, never its half or its tiles. It is one choice per match, since a player keeps one side for every map and the boards hold a hero once per side page-wide.
 
