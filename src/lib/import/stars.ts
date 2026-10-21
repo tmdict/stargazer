@@ -44,8 +44,8 @@ const SURE = {
   r0Pink: 0.01,
 } as const
 const PINK = 0.03
-// Read where the card puts it, every refined row on labelled screenshots counts
-// six peaks, so five is a short row rather than two stars merged.
+// Read where the card puts the row, every refined row on labelled screenshots
+// counts six peaks, so a row of five peaks is short.
 const SHORT_ROW = 5
 
 const findBand = (shot: RgbaImage, box: Rect): Rect => {

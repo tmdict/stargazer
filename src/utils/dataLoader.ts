@@ -106,7 +106,7 @@ export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
   return loadAssetsDict(modules)
 }
 
-export function loadArtifactImages(): Record<string, string> {
+function loadArtifactImages(): Record<string, string> {
   return artifactImages
 }
 
@@ -200,7 +200,7 @@ export function loadPhantimalLocales(): Record<string, PhantimalLocale> {
 
 // Per-artifact effect descriptions, keyed by artifact name (matches the JSON filename).
 // Each entry is an ordered list of localized effect strings.
-export function loadArtifactEffects(): Record<string, LocaleData[]> {
+function loadArtifactEffects(): Record<string, LocaleData[]> {
   if (artifactEffectsCache) {
     return artifactEffectsCache
   }
@@ -226,7 +226,7 @@ export function loadArtifactEffects(): Record<string, LocaleData[]> {
   return result
 }
 
-export function loadIcons(): Record<string, string> {
+function loadIcons(): Record<string, string> {
   if (iconsCache) {
     return iconsCache
   }
@@ -242,7 +242,7 @@ export function loadIcons(): Record<string, string> {
   return icons
 }
 
-export function getCharacterRanges(): Map<number, number> {
+function getCharacterRanges(): Map<number, number> {
   if (!characterRangesCache) {
     // Ensure characters are loaded first
     loadCharacters()

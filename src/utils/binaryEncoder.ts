@@ -145,8 +145,7 @@ const isPhantimalBandLocal = (value: unknown): boolean => {
 /* Filter a state down to entries the bit fields can carry exactly. Invalid
  * entries drop with a warning (never a throw), each list is capped at its
  * count field's maximum so the encoded count can't wrap, and an emptied
- * section is omitted entirely — the decoder's zero-count rejection relies on
- * that. */
+ * section is omitted entirely, since the decoder rejects a zero count. */
 function validateGridState(state: GridState): GridState {
   if (!state || typeof state !== 'object' || Array.isArray(state)) {
     return {}

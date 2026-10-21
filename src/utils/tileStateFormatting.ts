@@ -46,7 +46,7 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   },
 }
 
-export const getStateFormat = (state: State): StateFormat =>
+const getStateFormat = (state: State): StateFormat =>
   STATE_FORMATS[state] || STATE_FORMATS[State.DEFAULT]
 
 export const getStateName = (state: State): string => getStateFormat(state).name
