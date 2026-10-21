@@ -129,7 +129,7 @@ let heroCharmCache: Map<string, string> | null = null
 /** Seasonal charm registry: charm slug → the heroes sharing it. After
  * seasonal removal the unmatched glob compiles to an empty module map, so this
  * degrades to {}. */
-export function loadCharms(): CharmData {
+function loadCharms(): CharmData {
   if (charmsCache) return charmsCache
   const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/charms.json', {
     eager: true,
@@ -141,7 +141,7 @@ export function loadCharms(): CharmData {
 
 /** Hand-written charm tags; {} when the season's charms are untagged or
  * retired. */
-export function loadCharmTags(): CharmTags {
+function loadCharmTags(): CharmTags {
   const modules = import.meta.glob<CharmTags>('@/data/seasonal/charm/tags.json', {
     eager: true,
     import: 'default',

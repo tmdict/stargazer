@@ -10,15 +10,15 @@ import {
   heroDescriptor,
   rankHeroes,
 } from '@/lib/import/heroes'
-import { createImage, cropResize } from '@/lib/import/image'
+import { cropResize } from '@/lib/import/image'
 import {
   addLearnedIcon,
   dropLearnedIcon,
-  LEARNED_ICONS_CAP,
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
 import type { HeroCandidate, RgbaImage } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 const cand = (
   characterId: number,
@@ -173,12 +173,13 @@ describe('learned icon envelope', () => {
     // A distinct face per lesson, since the same face taught again replaces
     // its earlier lesson rather than adding one.
     let icons: ReturnType<typeof addLearnedIcon> = []
-    for (let i = 0; i <= LEARNED_ICONS_CAP; i++) {
+    const cap = 100
+    for (let i = 0; i <= cap; i++) {
       const face = new Float32Array(DESCRIPTOR_LENGTH)
       face[i] = 0.1
       icons = addLearnedIcon(icons, i, face, i)
     }
-    expect(icons.length).toBe(LEARNED_ICONS_CAP)
+    expect(icons.length).toBe(cap)
     expect(icons[0]!.learnedAt).toBe(1)
   })
 

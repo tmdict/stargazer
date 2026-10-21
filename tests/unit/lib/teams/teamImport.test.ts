@@ -7,13 +7,12 @@ import type { HeroReading, ScreenshotReading, UnitReading } from '@/lib/import/t
 import type { TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,
-  cellState,
   formationsSwapped,
   isBlockingIssue,
-  mapResultsFrom,
   overrideKey,
   reviewStates,
-  suggestRecordName,
+  type CellOverride,
+  type CellState,
   type FormationAssignment,
   type PlanInputs,
   type PlanIssue,
@@ -88,31 +87,46 @@ const shot = (
 
 const NAMES = { prefix: 'S7 SL5 Group', left: 'GNX', right: '10' }
 
+// A cell's review state, as the review grid reads it.
+const stateOf = (cell: HeroReading, override?: CellOverride): CellState => {
+  const r = reading([], [])
+  r.sides[Team.ALLY] = [cell]
+  return reviewStates(r, Team.ALLY, override ? { [overrideKey(Team.ALLY, 0)]: override } : {})[0]!
+}
+
+// The record name a match gets from its plan, one result screenshot per map.
+const nameOf = (names: RecordNames, winners: readonly (Team | null)[]): string =>
+  planOf(
+    winners.map((winner, map) => shot(map, reading([], [], { winner }))),
+    winners.length === 1 ? '1v1' : winners.length <= 3 ? '3v3' : '5v5',
+    names,
+  ).suggestedName
+
 // The heroes a plan puts on one side of a board, in card order.
 const heroesOn = (plan: TeamImportPlan, mapIndex: number, team: Team): number[] =>
   plan.boards[mapIndex]?.sides[team]?.mains.map((unit) => unit.unitId) ?? []
 
-describe('suggestRecordName', () => {
+describe('record name', () => {
   it.each([
     { prefix: '', left: '', right: '' },
     { ...NAMES, left: '  ' },
     { ...NAMES, right: '' },
   ])('leaves the record name blank without both players: %j', (names) => {
-    expect(suggestRecordName(names, [Team.ALLY, Team.ENEMY, Team.ALLY])).toBe('')
+    expect(nameOf(names, [Team.ALLY, Team.ENEMY, Team.ALLY])).toBe('')
   })
 
   it("formats the match's record name", () => {
     const results = [Team.ALLY, Team.ENEMY, Team.ALLY, Team.ALLY, Team.ALLY]
-    expect(suggestRecordName(NAMES, results)).toBe('S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)')
-    expect(suggestRecordName(NAMES, [Team.ENEMY, Team.ENEMY, Team.ALLY])).toBe(
+    expect(nameOf(NAMES, results)).toBe('S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)')
+    expect(nameOf(NAMES, [Team.ENEMY, Team.ENEMY, Team.ALLY])).toBe(
       'S7 SL5 Group - GNX < 10 (3 < 1,2)',
     )
-    expect(suggestRecordName({ ...NAMES, prefix: '' }, [null, Team.ALLY])).toBe('GNX > 10 (2 > )')
-    expect(suggestRecordName(NAMES, [Team.ENEMY])).toBe('S7 SL5 Group - GNX < 10')
+    expect(nameOf({ ...NAMES, prefix: '' }, [null, Team.ALLY])).toBe('GNX > 10 (2 > )')
+    expect(nameOf(NAMES, [Team.ENEMY])).toBe('S7 SL5 Group - GNX < 10')
   })
 })
 
-describe('mapResultsFrom', () => {
+describe('map results', () => {
   it("prefers a mapped screenshot's own tab, then the strip majority", () => {
     const a = shot(
       0,
@@ -122,12 +136,12 @@ describe('mapResultsFrom', () => {
       2,
       reading([], [], { winner: Team.ALLY, mapResults: [Team.ALLY, Team.ALLY, Team.ALLY] }),
     )
-    expect(mapResultsFrom([a, b], 3)).toEqual([Team.ENEMY, Team.ALLY, Team.ALLY])
+    expect(planOf([a, b], '3v3', NAMES).suggestedName).toBe('S7 SL5 Group - GNX > 10 (2,3 > 1)')
   })
 
   it('takes the reviewed winner over the reading', () => {
     const a = { ...shot(0, reading([], [], { winner: Team.ALLY })), winner: Team.ENEMY }
-    expect(mapResultsFrom([a], 1)).toEqual([Team.ENEMY])
+    expect(planOf([a], '1v1', NAMES).suggestedName).toBe('S7 SL5 Group - GNX < 10')
   })
 })
 
@@ -621,23 +635,23 @@ describe('review state', () => {
   it('asks about an unsure refinement last, and lets an edit settle it', () => {
     const cell = hero(1, 4, 1)
     cell.refinement.sure = false
-    expect(cellState(cell)).toBe('refinement')
-    expect(cellState(cell, { refinement: 1 })).toBe('sure')
+    expect(stateOf(cell)).toBe('refinement')
+    expect(stateOf(cell, { refinement: 1 })).toBe('sure')
     cell.paragon.sure = false
-    expect(cellState(cell)).toBe('paragon')
-    expect(cellState(cell, { paragon: 4 })).toBe('refinement')
-    expect(cellState(cell, { characterId: null })).toBe('sure')
+    expect(stateOf(cell)).toBe('paragon')
+    expect(stateOf(cell, { paragon: 4 })).toBe('refinement')
+    expect(stateOf(cell, { characterId: null })).toBe('sure')
   })
 
   it('identifies the remaining paragon check after the hero is corrected', () => {
     const cell = hero(1)
     cell.sure = false
     cell.paragon.sure = false
-    expect(cellState(cell)).toBe('review')
-    expect(cellState(cell, { characterId: 9 })).toBe('paragon')
-    expect(cellState(cell, { characterId: 9, paragon: 4 })).toBe('sure')
-    expect(cellState(cell, { paragon: 4 })).toBe('review')
-    expect(cellState(cell, { characterId: null })).toBe('sure')
+    expect(stateOf(cell)).toBe('review')
+    expect(stateOf(cell, { characterId: 9 })).toBe('paragon')
+    expect(stateOf(cell, { characterId: 9, paragon: 4 })).toBe('sure')
+    expect(stateOf(cell, { paragon: 4 })).toBe('review')
+    expect(stateOf(cell, { characterId: null })).toBe('sure')
   })
 
   it('is none for an unrecognised cell until a hero is picked', () => {
@@ -645,9 +659,9 @@ describe('review state', () => {
     cell.candidates = []
     cell.recognised = false
     cell.sure = false
-    expect(cellState(cell)).toBe('none')
-    expect(cellState(cell, { characterId: 5 })).toBe('sure')
-    expect(cellState(cell, { paragon: 3 })).toBe('none')
+    expect(stateOf(cell)).toBe('none')
+    expect(stateOf(cell, { characterId: 5 })).toBe('sure')
+    expect(stateOf(cell, { paragon: 3 })).toBe('none')
   })
 
   it('marks both cells that end up with the same hero', () => {

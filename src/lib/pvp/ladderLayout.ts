@@ -11,8 +11,8 @@
 import { ladderTeams } from '@/lib/pvp/summary'
 import type { PvpCounter, PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 
-export const LADDER_WIDTH = 640
-export const LADDER_ROW = 88
+const LADDER_WIDTH = 640
+const LADDER_ROW = 88
 // The node column; curves leave and enter at its edges.
 const NODE_LEFT = 180
 const NODE_RIGHT = 460

@@ -2,16 +2,12 @@ import { nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  teamsSlotKey,
-  useTeamsPersistence,
-  type ActiveSlot,
-} from '@/composables/useGridPersistence'
+import { useTeamsPersistence, type ActiveSlot } from '@/composables/useGridPersistence'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
-import { stubLocalStorage } from '../fixtures/storage'
+import { stubLocalStorage, teamsSlotKey } from '../fixtures/storage'
 
 /* Per-mode ActiveSlot persistence: slot routing, envelope round-trips, and
  * pause semantics. Runs headless: node env + in-memory localStorage stub,

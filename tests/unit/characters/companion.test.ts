@@ -28,8 +28,7 @@ describe('companion', () => {
     it('identifies companion IDs correctly', () => {
       expect(isCompanionId(grid, 10000)).toBe(true)
       expect(isCompanionId(grid, 10001)).toBe(true)
-      // Upper-bounded by the phantimal namespace so phantimal IDs aren't treated
-      // as companions.
+      // A phantimal reads on its band-local id, below the companion range.
       expect(isCompanionId(grid, grid.phantimalIdOffset - 1)).toBe(true)
       expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
       expect(isCompanionId(grid, grid.phantimalIdOffset + 5)).toBe(false)

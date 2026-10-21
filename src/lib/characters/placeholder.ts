@@ -18,7 +18,7 @@ import type { CharacterType } from '@/lib/types/character'
  * (N * 10000 + mainId, N >= 1), and fits the serializer's 16-bit character
  * field, so share links and saved teams work without codec changes.
  */
-export const PLACEHOLDER_ID_OFFSET = 9000
+const PLACEHOLDER_ID_OFFSET = 9000
 
 export function isPlaceholderId(id: number): boolean {
   return id >= PLACEHOLDER_ID_OFFSET && id < PLACEHOLDER_ID_OFFSET + 1000

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { BOARD_HEXES } from '@/lib/import/board'
-import { createImage } from '@/lib/import/image'
 import { isReplayFrame, prepareArena, readReplay, replayHexCentre } from '@/lib/import/replay'
 import type { RgbaImage } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 // A grey picture of overlapping soft blobs, the same for one seed.
 function texture(width: number, height: number, seed: number): RgbaImage {

@@ -8,7 +8,8 @@ import {
   useTeamImport,
   type ImportShot,
 } from '@/composables/useTeamImport'
-import { PHANTIMAL_COMPANION_STRIDE, toPhantimalId } from '@/lib/characters/phantimal'
+import { toPhantimalId } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading, ReplayReading } from '@/lib/import/types'
@@ -287,7 +288,7 @@ describe('replay tile picks', () => {
     )
     api.shots.value = [{ ...shot(), kind: 'replay' }]
     const [first, second] = [toPhantimalId(1), toPhantimalId(2)]
-    const companionOf = (phantimal: number): number => phantimal + PHANTIMAL_COMPANION_STRIDE
+    const companionOf = (phantimal: number): number => phantimal + COMPANION_ID_OFFSET
     api.setTilePick('sample', 1, 1, first)
     api.setTilePick('sample', 1, 2, companionOf(first))
     api.setTilePick('sample', 1, 3, 7)

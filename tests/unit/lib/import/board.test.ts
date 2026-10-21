@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { BOARD_HEXES, fitBoard, hexCorners } from '@/lib/import/board'
-import { createImage } from '@/lib/import/image'
 import type { BoardFit, RgbaImage } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 // A formation board as the game draws it: dark tiles with faint edges inside a
 // light outline, through the camera at `fit`.

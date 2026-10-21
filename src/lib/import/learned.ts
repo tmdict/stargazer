@@ -7,7 +7,7 @@ import { decodeLearned, DESCRIPTOR_SIZE, encodeLearned } from './heroes'
 import { ART_BOX } from './layout'
 import type { LearnedIcon } from './types'
 
-export const LEARNED_ICONS_CAP = 100
+const LEARNED_ICONS_CAP = 100
 
 interface LearnedEnvelope {
   spec: { descriptor: [number, number]; box: [number, number, number] }
@@ -53,7 +53,7 @@ export function parseLearnedIcons(raw: string | null): LearnedIcon[] {
   }
 }
 
-export const learnedIconEnvelope = (icons: readonly LearnedIcon[]): LearnedEnvelope => ({
+const learnedIconEnvelope = (icons: readonly LearnedIcon[]): LearnedEnvelope => ({
   spec: SPEC,
   icons: [...icons],
 })

@@ -37,8 +37,8 @@ export function companionImages(): { unitId: number; image: string }[] {
 
 export function isCompanionId(grid: Grid, characterId: number): boolean {
   // Classified on the band-local id, so companions of synergy heroes and
-  // phantimals (offset + N * 10000 + owner) count too. The upper bound keeps a
-  // raw phantimal-band value from reading as a base-band companion.
+  // phantimals (offset + N * 10000 + owner) count too. An id above every band
+  // comes back unstripped, and the upper bound stops it reading as a companion.
   const localId = companionLocalId(characterId)
   return localId >= grid.companionIdOffset && localId < grid.phantimalIdOffset
 }

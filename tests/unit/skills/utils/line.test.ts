@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
-import { clipLaneBoundary, hexesBetween, outlineEdges } from '@/lib/skills/utils/line'
+import { clipLaneBoundary, hexesBetween, zoneOutline } from '@/lib/skills/utils/line'
 
 describe('hexesBetween', () => {
   const grid = new Grid()
@@ -22,13 +22,10 @@ describe('hexesBetween', () => {
   })
 })
 
-describe('outlineEdges', () => {
-  const grid = new Grid()
-  const hexes = (ids: number[]) => ids.map((id) => grid.getHexById(id))
-
+describe('zoneOutline', () => {
   it('outlines a single hex with all six edges, corners clockwise per direction', () => {
-    const edges = outlineEdges(hexes([23]))
-    expect(edges.map((edge) => [edge.fromCorner, edge.toCorner])).toEqual([
+    const lines = zoneOutline(new Grid(), 23, 0, 'red')
+    expect(lines.map((line) => [line.fromCorner, line.toCorner])).toEqual([
       [4, 5],
       [5, 0],
       [0, 1],

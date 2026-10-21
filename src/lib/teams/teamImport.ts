@@ -216,7 +216,7 @@ export type CellState = 'sure' | 'review' | 'paragon' | 'refinement' | 'none' | 
  * hero, the paragon and the refinement each stand once read surely or edited,
  * asked about in that order (a doubtful frame match puts the whole card in
  * doubt, levels included). */
-export const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
+const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
   if (override.characterId === null) return 'sure'
   if (override.characterId === undefined && !cell.recognised) return 'none'
   const heroSure = override.characterId !== undefined || cell.sure
@@ -243,10 +243,7 @@ export function reviewStates(
 
 /* Who won each map, as far as the screenshots say: a mapped screenshot's own
  * result first, then the strip badges of every screenshot by majority. */
-export function mapResultsFrom(
-  shots: readonly ShotAssignment[],
-  mapCount: number,
-): (Team | null)[] {
+function mapResultsFrom(shots: readonly ShotAssignment[], mapCount: number): (Team | null)[] {
   return Array.from({ length: mapCount }, (_, map) => {
     const own = shots.find((s) => s.mapIndex === map && s.winner !== null)
     if (own) return own.winner
@@ -262,7 +259,7 @@ export function mapResultsFrom(
   })
 }
 
-export function suggestRecordName(names: RecordNames, results: readonly (Team | null)[]): string {
+function suggestRecordName(names: RecordNames, results: readonly (Team | null)[]): string {
   const left = names.left.trim()
   const right = names.right.trim()
   if (!left || !right) return ''

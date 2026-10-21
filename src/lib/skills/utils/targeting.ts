@@ -76,7 +76,7 @@ export function getCandidates(
  * straight-behind convention findAdjacentPriorityTarget leads with. Undefined
  * when that tile is off the board, even if the other back-row diagonal exists.
  */
-export function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
+function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
   const center = grid.getHexById(hexId)
   const behind = center.neighbor(team === Team.ALLY ? 3 : 0)
   return grid.getTileOrUndefined(behind)?.hex.getId()

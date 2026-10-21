@@ -1,12 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  bytesToUrlSafe,
-  decodeLink,
-  encodeLink,
-  urlSafeToBytes,
-  validateGridState,
-} from '@/utils/binaryEncoder'
+import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
 import {
   packDisplayFlags,
   unpackDisplayFlags,
@@ -262,7 +256,11 @@ describe('binaryEncoder', () => {
     })
   })
 
-  describe('validateGridState', () => {
+  // Encoding validates first, so these read what a link keeps of a board.
+  describe('encoding invalid entries', () => {
+    const roundTrip = (board: GridState): BoardState =>
+      decodeLink(arenaLink(board as BoardState))!.boards[0]!
+
     it('passes a valid state through and strips invalid entries', () => {
       const valid: GridState = {
         t: [
@@ -272,7 +270,7 @@ describe('binaryEncoder', () => {
         c: [[2, 100, 1]],
         a: [2, 4],
       }
-      expect(validateGridState(valid)).toEqual(valid)
+      expect(roundTrip(valid)).toEqual(valid)
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const state: GridState = {
@@ -286,7 +284,7 @@ describe('binaryEncoder', () => {
           [2, 100, 1],
         ], // Invalid: charId > 65535
       }
-      const result = validateGridState(state)
+      const result = roundTrip(state)
       expect(result).toEqual({
         t: [[1, 2]],
         c: [[2, 100, 1]],
@@ -296,7 +294,7 @@ describe('binaryEncoder', () => {
 
     it('nulls out-of-range artifact IDs instead of truncating them', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const result = validateGridState({ a: [64, 18] })
+      const result = roundTrip({ a: [64, 18] })
       expect(result).toEqual({ a: [null, 18] })
       consoleSpy.mockRestore()
     })
@@ -326,9 +324,7 @@ describe('binaryEncoder', () => {
       ],
     ])('caps %s at the count field maximum', (_, state, key, max) => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(validateGridState(state as GridState)[key as keyof GridState]).toHaveLength(
-        max as number,
-      )
+      expect(roundTrip(state as GridState)[key as keyof GridState]).toHaveLength(max as number)
       consoleSpy.mockRestore()
     })
 
@@ -347,7 +343,7 @@ describe('binaryEncoder', () => {
           [1, 12, 3, 1], // skill mode on a hero without modes drops
         ],
       }
-      expect(validateGridState(state).u).toEqual([
+      expect(roundTrip(state).u).toEqual([
         [1, 11, 1, 4],
         [1, 57, 3, 1],
       ])
@@ -363,7 +359,7 @@ describe('binaryEncoder', () => {
         [1, 70000, 1],
         [1, 50, 3],
       ]
-      const validated = validateGridState({ y: [...bad, ...good] })
+      const validated = roundTrip({ y: [...bad, ...good] })
       expect(validated.y).toHaveLength(15)
       expect(validated.y![0]).toEqual([1, 100, 1])
       consoleSpy.mockRestore()
@@ -373,17 +369,17 @@ describe('binaryEncoder', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       // Invalid tile structure
-      expect(validateGridState({ t: 'invalid' } as unknown as GridState)).toEqual({})
-      expect(validateGridState({ t: null } as unknown as GridState)).toEqual({})
+      expect(roundTrip({ t: 'invalid' } as unknown as GridState)).toEqual({})
+      expect(roundTrip({ t: null } as unknown as GridState)).toEqual({})
 
       // Invalid character structure
-      expect(validateGridState({ c: 'invalid' } as unknown as GridState)).toEqual({})
-      expect(validateGridState({ c: [[1, 2]] } as unknown as GridState)).toEqual({}) // Missing team
+      expect(roundTrip({ c: 'invalid' } as unknown as GridState)).toEqual({})
+      expect(roundTrip({ c: [[1, 2]] } as unknown as GridState)).toEqual({}) // Missing team
 
       // Invalid artifact structure
-      expect(validateGridState({ a: [1] } as unknown as GridState)).toEqual({}) // Not exactly 2 elements
-      expect(validateGridState({ a: [1, 2, 3] } as unknown as GridState)).toEqual({}) // Too many elements
-      expect(validateGridState({ a: 'invalid' } as unknown as GridState)).toEqual({})
+      expect(roundTrip({ a: [1] } as unknown as GridState)).toEqual({}) // Not exactly 2 elements
+      expect(roundTrip({ a: [1, 2, 3] } as unknown as GridState)).toEqual({}) // Too many elements
+      expect(roundTrip({ a: 'invalid' } as unknown as GridState)).toEqual({})
 
       consoleSpy.mockRestore()
     })

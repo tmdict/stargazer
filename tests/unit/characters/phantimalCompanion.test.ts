@@ -22,7 +22,6 @@ import {
   inPhantimalBand,
   isPhantimalId,
   joinPhantimalBandLocal,
-  PHANTIMAL_COMPANION_STRIDE,
   phantimalBandLocal,
   phantimalOwnerId,
   splitPhantimalBandLocal,
@@ -89,12 +88,11 @@ describe('phantimal companion ids', () => {
   // The leaf module spells the stride as a literal; the generic companion
   // arithmetic uses COMPANION_ID_OFFSET, so the two must agree.
   it('mirrors the companion stride of the base band', () => {
-    expect(PHANTIMAL_COMPANION_STRIDE).toBe(COMPANION_ID_OFFSET)
-    expect(splitPhantimalBandLocal(10000 + OWNER_LOCAL)).toEqual({
+    expect(splitPhantimalBandLocal(COMPANION_ID_OFFSET + OWNER_LOCAL)).toEqual({
       ownerLocal: OWNER_LOCAL,
       index: 1,
     })
-    expect(joinPhantimalBandLocal(OWNER_LOCAL, 1)).toBe(10000 + OWNER_LOCAL)
+    expect(joinPhantimalBandLocal(OWNER_LOCAL, 1)).toBe(COMPANION_ID_OFFSET + OWNER_LOCAL)
   })
 
   it('classifies the companion like any companion, owned by its phantimal', () => {

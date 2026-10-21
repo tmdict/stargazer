@@ -4,7 +4,7 @@
 
 import type { Rect, RgbaImage } from './types'
 
-export const createImage = (width: number, height: number): RgbaImage => ({
+const createImage = (width: number, height: number): RgbaImage => ({
   width,
   height,
   data: new Uint8ClampedArray(width * height * 4),
