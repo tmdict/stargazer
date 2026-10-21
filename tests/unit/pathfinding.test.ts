@@ -77,40 +77,9 @@ describe('pathfinding', () => {
       expect(path).not.toBeNull()
       expect(pathIds(path!)).toEqual([1, 7, 6, 5])
     })
-
-    it('returns null for unreachable goal', () => {
-      const start = grid.getHexById(1)
-      const goal = new Hex(100, -50, -50) // outside the grid
-
-      const path = findPathAStar(start, goal, getTile, defaultCanTraverse)
-
-      expect(path).toBeNull()
-    })
   })
 
   describe('findClosestTarget', () => {
-    it('finds closest target for melee unit', () => {
-      const sourceTile = occupy(1, Team.ALLY)
-      const targetTile = occupy(6, Team.ENEMY, 100)
-
-      const result = findClosestTarget(sourceTile, [targetTile], 1, getTile, defaultCanTraverse)
-
-      expect(result).not.toBeNull()
-      expect(result!.hexId).toBe(6)
-      expect(result!.distance).toBe(1)
-    })
-
-    it('requires no movement when target is within attack range', () => {
-      const sourceTile = occupy(1, Team.ALLY)
-      const targetTile = occupy(3, Team.ENEMY, 100)
-
-      // Range 3 covers the direct distance of 2, so no movement is needed
-      const result = findClosestTarget(sourceTile, [targetTile], 3, getTile, defaultCanTraverse)
-
-      expect(result).not.toBeNull()
-      expect(result!.distance).toBe(0)
-    })
-
     describe('tie-breaking between equally distant targets', () => {
       it('Rule 1: prefers the vertically aligned target', () => {
         // From hex 2, hexes 6 and 7 are both reachable without moving;

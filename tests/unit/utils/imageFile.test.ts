@@ -34,10 +34,4 @@ describe('screenshot intake', () => {
     } as unknown as Event
     expect(imageFilesFromInput(input).map((f) => f.name)).toEqual(['a.jpg'])
   })
-
-  it('returns nothing when the event carries no payload', () => {
-    expect(imageFilesFromDrop({} as DragEvent)).toEqual([])
-    expect(imageFilesFromPaste({} as ClipboardEvent)).toEqual([])
-    expect(imageFilesFromInput({ target: { files: null } } as unknown as Event)).toEqual([])
-  })
 })

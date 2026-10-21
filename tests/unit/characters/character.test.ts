@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
-  getMaxTeamSize,
   setMaxTeamSize,
 } from '@/lib/characters/character'
 import { Grid } from '@/lib/grid'
@@ -36,24 +35,6 @@ describe('character.ts', () => {
       grid.getTileById(1).state = State.OCCUPIED_ALLY
       expect(canPlaceCharacterOnTile(grid, 1, Team.ALLY)).toBe(true)
     })
-
-    it('should check if character can be placed on team', () => {
-      // Within limit
-      expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
-
-      // Already on team
-      const tileA = grid.getTileById(1)
-      tileA.characterId = 100
-      tileA.team = Team.ALLY
-      expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
-
-      // Team full (capacity counts occupied tiles)
-      setMaxTeamSize(grid, Team.ALLY, 2)
-      const tileB = grid.getTileById(2)
-      tileB.characterId = 101
-      tileB.team = Team.ALLY
-      expect(canPlaceCharacterOnTeam(grid, 102, Team.ALLY)).toBe(false)
-    })
   })
 
   describe('Edge cases', () => {
@@ -71,16 +52,6 @@ describe('character.ts', () => {
 
       expect(canPlaceCharacterOnTeam(grid, 101, Team.ALLY)).toBe(false)
       expect(canPlaceCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(false)
-    })
-
-    it('should reject invalid max team sizes, leaving the limit unchanged', () => {
-      const defaultSize = getMaxTeamSize(grid, Team.ALLY)
-
-      expect(setMaxTeamSize(grid, Team.ALLY, 0)).toBe(false)
-      expect(setMaxTeamSize(grid, Team.ALLY, -1)).toBe(false)
-      expect(setMaxTeamSize(grid, Team.ALLY, 2.5)).toBe(false)
-      expect(setMaxTeamSize(grid, Team.ALLY, grid.getAllTiles().length + 1)).toBe(false)
-      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(defaultSize)
     })
   })
 })

@@ -67,7 +67,7 @@ afterEach(() => {
 })
 
 describe('useGrids.swapBoards', () => {
-  it('exchanges the two boards lineups, keeping each unit on its own team', () => {
+  it('trades the two boards formations as they stand, keeping each unit on its own team', () => {
     const { grids, a, b } = setupBoards()
 
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
@@ -85,19 +85,10 @@ describe('useGrids.swapBoards', () => {
       { characterId: ALLY_A, team: Team.ALLY },
       { characterId: ENEMY_A, team: Team.ENEMY },
     ])
-  })
-
-  it('trades formations as they stand between boards on one map', () => {
-    const { grids, a, b } = setupBoards()
-    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    expect(a!.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
-    expect(b!.place(9, ALLY_B, Team.ALLY)).toBe(true)
-
-    grids.swapBoards(0, 1)
-
     expect(findCharacterHex(b!.grid, ALLY_A, Team.ALLY)).toBe(1)
     expect(findCharacterHex(b!.grid, ENEMY_A, Team.ENEMY)).toBe(40)
-    expect(findCharacterHex(a!.grid, ALLY_B, Team.ALLY)).toBe(9)
+    expect(findCharacterHex(a!.grid, ALLY_B, Team.ALLY)).toBe(2)
+    expect(findCharacterHex(a!.grid, ENEMY_B, Team.ENEMY)).toBe(41)
   })
 
   it('swaps each board artifacts, keeping the team side', () => {

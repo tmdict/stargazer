@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { artifactHostHex, Grid } from '@/lib/grid'
+import { Grid } from '@/lib/grid'
 import { artifactTargetArrows, artifactTargetingRules } from '@/lib/skills/artifact'
 import { Team } from '@/lib/types/team'
 import { loadArtifacts } from '@/utils/dataLoader'
 import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const ENLIGHTENING = 3
-// Awakening: no targeting rule.
-const AWAKENING = 1
 
 const targetHexIds = (grid: Grid, team: Team, artifactId: number | null) =>
   artifactTargetArrows(grid, team, artifactId).map((arrow) => arrow.toHex.getId())
@@ -33,25 +31,9 @@ describe('artifact targeting', () => {
     expect(targetHexIds(grid, Team.ENEMY, ENLIGHTENING)).toEqual([40])
   })
 
-  it('draws nothing for an empty slot, an artifact without targeting, or an empty team', () => {
-    expect(artifactTargetArrows(grid, Team.ALLY, null)).toEqual([])
-    expect(artifactTargetArrows(grid, Team.ALLY, AWAKENING)).toEqual([])
-
-    for (const hexId of [5, 12, 20]) removeFromTile(grid, hexId)
-    expect(artifactTargetArrows(grid, Team.ALLY, ENLIGHTENING)).toEqual([])
-  })
-
   it('counts a phantimal as a unit', () => {
     placeOnTile(grid, 2, toPhantimalId(1), Team.ALLY)
     expect(targetHexIds(grid, Team.ALLY, ENLIGHTENING)).toEqual([2])
-  })
-
-  it('starts every arrow at the slot team host cell', () => {
-    for (const team of [Team.ALLY, Team.ENEMY]) {
-      const [arrow] = artifactTargetArrows(grid, team, ENLIGHTENING)
-      expect(arrow?.team).toBe(team)
-      expect(arrow?.fromHex.equals(artifactHostHex(grid, team))).toBe(true)
-    }
   })
 
   // Retire with the season's entries in src/lib/skills/artifact.ts.

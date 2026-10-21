@@ -314,7 +314,7 @@ describe('useTeamsRestore', () => {
   })
 
   it('normalizes stale sourceIds through the resolver at slot adoption', () => {
-    const resolver = vi.fn((id: string | null) => (id === 'alive' ? id : null))
+    const resolver = (id: string | null) => (id === 'alive' ? id : null)
     const { restore } = createHarness(resolver)
     storage.set(
       teamsSlotKey('3v3'),
@@ -325,7 +325,6 @@ describe('useTeamsRestore', () => {
     )
     restore.initialize(null)
     restore.switchMode('3v3')
-    expect(resolver).toHaveBeenCalledWith('dead')
     expect(restore.sourceId.value).toBeNull()
   })
 

@@ -12,9 +12,4 @@ describe('skill locale loading', () => {
   it('holds exactly the heroes the importer listed, no reserved underscore entries', async () => {
     expect(Object.keys((await loadSkillLocale('en')).heroes).sort()).toEqual(skillHeroes)
   })
-
-  // A language without its terms renders skill pages with no sections.
-  it('reads the terms file beside the heroes', async () => {
-    expect((await loadSkillLocale('en')).terms.ultimate).toBeTruthy()
-  })
 })

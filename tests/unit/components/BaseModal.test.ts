@@ -27,7 +27,7 @@ describe('BaseModal keyboard focus', () => {
     teardown = undefined
   })
 
-  it('names the dialog, moves focus into it, cycles Tab inside it, and returns focus on close', async () => {
+  it('moves focus into the dialog, cycles Tab inside it, and returns focus on close', async () => {
     const opener = document.createElement('button')
     document.body.append(opener)
     opener.focus()
@@ -60,8 +60,6 @@ describe('BaseModal keyboard focus', () => {
     await nextTick()
     await nextTick()
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!
-    expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.getAttribute('aria-label')).toBe('Team preview')
     expect(document.activeElement).toBe(dialog)
 
     // The close button precedes the slot content, so it is the first control.

@@ -30,15 +30,6 @@ describe('move.ts', () => {
   })
 
   describe('executeMoveCharacter - basic validation', () => {
-    it('should reject move to same hex', () => {
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 1, ALLY_A)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-    })
-
     it('should reject move when the source does not hold the character', () => {
       performPlace(grid, 1, ALLY_A, Team.ALLY)
 

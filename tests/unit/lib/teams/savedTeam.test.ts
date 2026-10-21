@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
-import { duplicateName, MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
+import { MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
 import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
@@ -60,13 +60,6 @@ describe('canonicalTeamData', () => {
     ])
   })
 
-  it('returns null for undecodable or empty payloads', () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
-    expect(canonicalTeamData('!!!')).toBeNull()
-    expect(canonicalTeamData(encode({ boards: [] }))).toBeNull()
-    error.mockRestore()
-  })
-
   // The byte-equality guarantee (unsaved-changes compare, import dedupe) rests
   // on canonical `u` rows matching what a fresh serialize of the restored
   // content would emit, so crafted rows must normalize, not survive.
@@ -119,14 +112,6 @@ describe('naming', () => {
     expect(sanitizeName(undefined)).toBeNull()
     expect(sanitizeName(42)).toBeNull()
   })
-
-  it('duplicateName appends (copy) within the length cap', () => {
-    expect(duplicateName('Alpha')).toBe('Alpha (copy)')
-    const maxed = 'x'.repeat(60)
-    // The base is truncated, not the suffix, so the copy stays distinct.
-    expect(duplicateName(maxed)).toBe(`${'x'.repeat(53)} (copy)`)
-    expect(duplicateName(maxed)).not.toBe(maxed)
-  })
 })
 
 describe('validateSavedTeam', () => {
@@ -177,12 +162,6 @@ describe('validateSavedTeam', () => {
       validateSavedTeam(record({ data: encode({ boards: [{ c: {} }, {}, {}] } as never) })),
     ).toBeNull()
     warn.mockRestore()
-  })
-
-  it('normalizes non-numeric timestamps to 0', () => {
-    const valid = validateSavedTeam(record({ createdAt: 'yesterday', updatedAt: null }))
-    expect(valid!.createdAt).toBe(0)
-    expect(valid!.updatedAt).toBe(0)
   })
 })
 

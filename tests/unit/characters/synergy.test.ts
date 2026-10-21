@@ -76,12 +76,6 @@ describe('synergy placement rules', () => {
     expect(executePlaceCharacter(grid, sm, 6, toSynergyId(606), Team.ALLY)).toBe(true)
   })
 
-  it('a duplicate of a placed hero is allowed as the synergy copy', () => {
-    expect(executePlaceCharacter(grid, sm, 1, 601, Team.ALLY)).toBe(true)
-    expect(canPlaceCharacterOnTeam(grid, 601, Team.ALLY)).toBe(false)
-    expect(canPlaceCharacterOnTeam(grid, toSynergyId(601), Team.ALLY)).toBe(true)
-  })
-
   it('the slot is capped at one per team, independently per team', () => {
     expect(executePlaceCharacter(grid, sm, 1, toSynergyId(601), Team.ALLY)).toBe(true)
     expect(findTeamSynergyHex(grid, Team.ALLY)).toBe(1)

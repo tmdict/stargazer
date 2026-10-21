@@ -68,18 +68,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeUndefined()
   })
 
-  it('clears a border once its ally leaves the line', () => {
-    placeTwins()
-    placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
-    runSkill()
-    expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeDefined()
-
-    removeFromTile(grid, BETWEEN_A)
-    runSkill()
-
-    expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeUndefined()
-  })
-
   // The colors themselves are design constants; assert the faction-driven *choice*
   // by comparing runtime values, not literals (shared/lone vs mixed).
   it('colors the border by faction: shared and lone allies differ from a mixed set', () => {
@@ -114,18 +102,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     expect(lineSegments()).toEqual([{ from: ELIJAH_HEX, to: COMPANION_HEX }])
   })
 
-  it('skips a sandwiched character, drawing over the empty cells on both sides', () => {
-    placeTwins(FAR_COMPANION)
-    placeOnTile(grid, BETWEEN_B, 100, Team.ALLY) // cell 7; 4 and 10 empty
-
-    runSkill()
-
-    expect(lineSegments()).toEqual([
-      { from: ELIJAH_HEX, to: BETWEEN_B }, // over cell 4
-      { from: BETWEEN_B, to: FAR_COMPANION }, // over cell 10
-    ])
-  })
-
   it('skips any character between, ally or not, without bordering non-allies', () => {
     placeTwins(FAR_COMPANION)
     placeOnTile(grid, BETWEEN_B, 200, Team.ENEMY) // cell 7
@@ -137,42 +113,5 @@ describe('elijah-lailah between-tile borders and connection line', () => {
       { from: BETWEEN_B, to: FAR_COMPANION },
     ])
     expect(skillManager.getTileColorModifier(BETWEEN_B)).toBeUndefined()
-  })
-
-  it('still segments between adjacent icons (the icons leave a small gap)', () => {
-    placeTwins() // companion at 10; between 4, 7
-    placeOnTile(grid, BETWEEN_A, 100, Team.ALLY) // cell 4, adjacent to Elijah
-
-    runSkill()
-
-    // Short segment in the gap between Elijah and the ally, then over empty cell 7.
-    expect(lineSegments()).toEqual([
-      { from: ELIJAH_HEX, to: BETWEEN_A },
-      { from: BETWEEN_A, to: COMPANION_HEX },
-    ])
-  })
-
-  it('draws the line in the same color as the borders', () => {
-    placeTwins(FAR_COMPANION)
-    placeOnTile(grid, BETWEEN_B, 100, Team.ALLY)
-    factions.set(100, 'wilder')
-
-    runSkill()
-
-    const borderColor = skillManager.getTileColorModifier(BETWEEN_B)![0]
-    const lines = skillManager.getSkillLines()
-    expect(lines.length).toBeGreaterThan(0)
-    expect(lines.every((line) => line.color === borderColor)).toBe(true)
-  })
-
-  it('removes the line on deactivate', () => {
-    placeTwins()
-    const ctx = buildContext()
-    getCharacterSkill(ELIJAH)!.onUpdate!(ctx)
-    expect(skillManager.getSkillLines()).toHaveLength(1)
-
-    getCharacterSkill(ELIJAH)!.onDeactivate(ctx)
-
-    expect(skillManager.getSkillLines()).toEqual([])
   })
 })

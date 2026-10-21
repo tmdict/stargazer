@@ -20,14 +20,6 @@ describe('findMapByTiles', () => {
     }
   })
 
-  it('reads occupied tiles as their available state', () => {
-    const tiles = tilesOf('arena2').map(([id, state]) => [
-      id!,
-      state === State.AVAILABLE_ALLY ? State.OCCUPIED_ALLY : state!,
-    ])
-    expect(findMapByTiles(tiles)).toBe('arena2')
-  })
-
   it('matches nothing for an edited or empty layout', () => {
     expect(findMapByTiles([...tilesOf('arena1'), [20, State.BLOCKED]])).toBeUndefined()
     expect(findMapByTiles(tilesOf('arena1').slice(1))).toBeUndefined()

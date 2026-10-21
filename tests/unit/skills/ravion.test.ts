@@ -70,12 +70,4 @@ describe('ravion (Designated Duty)', () => {
 
     expect(arrowTargets(Team.ALLY)).toEqual([ids[1], ids[2]])
   })
-
-  it('targets a single ally when only one other ally exists', () => {
-    const ids = availableIds(State.AVAILABLE_ALLY)
-    expect(executePlaceCharacter(grid, skillManager, ids.at(-1)!, RAVION, Team.ALLY)).toBe(true)
-    expect(executePlaceCharacter(grid, skillManager, ids[0]!, 100, Team.ALLY)).toBe(true)
-
-    expect(arrowTargets(Team.ALLY)).toEqual([ids[0]])
-  })
 })

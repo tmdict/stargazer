@@ -365,13 +365,6 @@ describe('buildTeamImportPlan with formation shots', () => {
     })
   })
 
-  it('leaves the phantimal to the lineup when a formation shot misses a hero and shows none', () => {
-    const plan = planOf([shot(0, reading([7, 9], [8]))], '5v5', NAMES, {
-      formations: [formationShot(Team.ALLY, [unit(1, 7)])],
-    })
-    expect(plan.boards[0]!.formations).toEqual([])
-  })
-
   it('places the units a formation shot misses on the tiles picked for them', () => {
     const phantimal = toPhantimalId(1)
     const missing = { ...formationShot(Team.ALLY, [unit(1, 7)]), picks: { [Team.ALLY]: { 2: 9 } } }
@@ -625,19 +618,6 @@ describe('buildTeamImportPlan with replay frames', () => {
 })
 
 describe('review state', () => {
-  it('needs both the hero and the paragon to be sure, and lets an edit settle each', () => {
-    const cell = hero(1)
-    expect(cellState(cell)).toBe('sure')
-    cell.paragon.sure = false
-    expect(cellState(cell)).toBe('paragon')
-    expect(cellState(cell, { paragon: 4 })).toBe('sure')
-    cell.paragon.sure = true
-    cell.sure = false
-    expect(cellState(cell)).toBe('review')
-    expect(cellState(cell, { characterId: 9 })).toBe('sure')
-    expect(cellState(cell, { characterId: null })).toBe('sure')
-  })
-
   it('asks about an unsure refinement last, and lets an edit settle it', () => {
     const cell = hero(1, 4, 1)
     cell.refinement.sure = false

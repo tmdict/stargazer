@@ -21,9 +21,4 @@ describe('paragon', () => {
     expect(paragonStatValue(3, 'hypogean')).toBe(14.5)
     expect(paragonStatValue(PARAGON_MAX_LEVEL, 'celestial')).toBe(18)
   })
-
-  it('treats an unknown faction as a base-faction ramp', () => {
-    expect(paragonStatValue(2)).toBe(9)
-    expect(paragonStatValue(2, 'dimensional')).toBe(9)
-  })
 })

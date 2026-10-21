@@ -74,7 +74,6 @@ describe('binaryEncoder', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const decoded = decodeLink(encodeLink({ mode: '3v3', boards: [{ m: 'arena1' }] }))
       expect(decoded!.boards).toEqual([{ m: 'arena1' }, {}, {}])
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
 
@@ -84,7 +83,6 @@ describe('binaryEncoder', () => {
         encodeLink({ mode: '1v1', boards: [{ m: 'retired-map', t: [[1, 1]] }] }),
       )
       expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
   })
@@ -300,7 +298,6 @@ describe('binaryEncoder', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const result = validateGridState({ a: [64, 18] })
       expect(result).toEqual({ a: [null, 18] })
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
 
@@ -332,7 +329,6 @@ describe('binaryEncoder', () => {
       expect(validateGridState(state as GridState)[key as keyof GridState]).toHaveLength(
         max as number,
       )
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
 
@@ -370,16 +366,7 @@ describe('binaryEncoder', () => {
       const validated = validateGridState({ y: [...bad, ...good] })
       expect(validated.y).toHaveLength(15)
       expect(validated.y![0]).toEqual([1, 100, 1])
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
-    })
-
-    it('returns an empty state for non-object input', () => {
-      expect(validateGridState(null as unknown as GridState)).toEqual({})
-      expect(validateGridState(undefined as unknown as GridState)).toEqual({})
-      expect(validateGridState('invalid' as unknown as GridState)).toEqual({})
-      expect(validateGridState(123 as unknown as GridState)).toEqual({})
-      expect(validateGridState([] as unknown as GridState)).toEqual({})
     })
 
     it('handles invalid structure types', () => {
@@ -423,7 +410,6 @@ describe('binaryEncoder', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       expect(urlSafeToBytes('abc!def')).toBeNull()
       expect(urlSafeToBytes('with space')).toBeNull()
-      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
   })

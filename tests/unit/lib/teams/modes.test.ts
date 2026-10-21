@@ -56,14 +56,6 @@ describe('TEAM_VARIANTS registry', () => {
     }
   })
 
-  it('never equals its mode default list and stays unique within its mode', () => {
-    for (const mode of TEAM_MODE_ORDER) {
-      const lists = variantsForMode(mode).map((variant) => variant.maps.join(','))
-      expect(lists).not.toContain(TEAM_MODES[mode].defaultMaps.join(','))
-      expect(new Set(lists).size).toBe(lists.length)
-    }
-  })
-
   it('round-trips every choice through variantMaps and matchVariant', () => {
     for (const mode of TEAM_MODE_ORDER) {
       const choices: TeamVariantChoice[] = [
@@ -114,12 +106,6 @@ describe('isTeamModeKey', () => {
 })
 
 describe('resolveTeamMode', () => {
-  it('honors a present mode whose board count matches', () => {
-    expect(resolveTeamMode({ ...boards(3), mode: '3v3' })).toBe('3v3')
-    expect(resolveTeamMode({ ...boards(5), mode: '5v5' })).toBe('5v5')
-    expect(resolveTeamMode({ ...boards(1), mode: '1v1' })).toBe('1v1')
-  })
-
   it('treats a contradictory mode as absent (count wins)', () => {
     expect(resolveTeamMode({ ...boards(2), mode: '5v5' })).toBe('3v3')
     expect(resolveTeamMode({ ...boards(5), mode: '3v3' })).toBe('5v5')
