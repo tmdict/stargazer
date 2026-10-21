@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import GridArrow from './grid/GridArrow.vue'
 import GridArrowLayer from './grid/GridArrowLayer.vue'
 import GridLine from './grid/GridLine.vue'
-import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
+import { useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import type { Hex } from '@/lib/hex'
@@ -12,6 +12,7 @@ import { ARTIFACT_RADIUS } from '@/lib/layout'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
+import { TEAM_COLORS } from '@/utils/tileStateFormatting'
 
 const ctx = useGridContext()
 
@@ -140,7 +141,7 @@ const linesToRender = computed(() =>
         :key="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
         :start-hex="arrow.fromHex"
         :end-hex="arrow.toHex"
-        :color="TEAM_ARROW_COLORS[arrow.team]"
+        :color="TEAM_COLORS[arrow.team]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :start-radius="ARTIFACT_RADIUS"

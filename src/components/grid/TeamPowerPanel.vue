@@ -258,10 +258,10 @@ const hoveredStat = computed(
   padding: var(--spacing-md) var(--spacing-md);
 }
 .tp-block.ally {
-  background: rgba(54, 149, 142, 0.05);
+  background: color-mix(in srgb, var(--color-ally) 5%, transparent);
 }
 .tp-block.enemy {
-  background: rgba(200, 35, 51, 0.05);
+  background: color-mix(in srgb, var(--color-enemy) 5%, transparent);
   border-left: 1px solid var(--color-border-primary);
 }
 .team-power.single .heroes {

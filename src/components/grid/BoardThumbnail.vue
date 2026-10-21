@@ -10,6 +10,8 @@ import { Team } from '@/lib/types/team'
 import {
   getTileHatchFill,
   getTileHatchPoints,
+  TEAM_COLORS,
+  teamTint,
   TILE_STROKE_COLOR,
 } from '@/utils/tileStateFormatting'
 
@@ -115,10 +117,10 @@ function getTileFill(state: State | undefined): string {
     // zone's backing.
     case State.AVAILABLE_ALLY:
     case State.OCCUPIED_ALLY:
-      return 'rgba(54, 149, 142, 0.35)'
+      return teamTint(Team.ALLY, 0.35)
     case State.AVAILABLE_ENEMY:
     case State.OCCUPIED_ENEMY:
-      return 'rgba(200, 35, 51, 0.35)'
+      return teamTint(Team.ENEMY, 0.35)
     case State.BLOCKED:
       return 'rgba(128, 128, 128, 0.45)'
     case State.BLOCKED_BREAKABLE:
@@ -128,7 +130,7 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c82333')
+const teamColor = (team: Team): string => TEAM_COLORS[team]
 
 /* The crisp look, for the preview modal: the thumbnail's own fills and team
    colours, with one border on every deployment and wall tile (open ground

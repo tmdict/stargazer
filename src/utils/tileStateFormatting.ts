@@ -61,6 +61,18 @@ export const getTeamFromTileState = (state: State): Team | null => {
   return null
 }
 
+// Team colours for SVG drawing, which takes a colour value rather than a CSS
+// token; the same as --color-ally and --color-enemy.
+export const TEAM_COLORS: Record<Team, string> = {
+  [Team.ALLY]: '#36958e',
+  [Team.ENEMY]: '#dc3545',
+}
+
+export const teamTint = (team: Team, alpha: number): string => {
+  const rgb = parseInt(TEAM_COLORS[team].slice(1), 16)
+  return `rgba(${rgb >> 16}, ${(rgb >> 8) & 255}, ${rgb & 255}, ${alpha})`
+}
+
 // Tile outlines on the light boards. The strong one rings a tile that holds a
 // hero and outlines a tile drawn on its own.
 export const TILE_STROKE_COLOR = '#a9afb6'

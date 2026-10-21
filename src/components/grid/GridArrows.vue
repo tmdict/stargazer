@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import GridArrow from './GridArrow.vue'
 import GridArrowLayer from './GridArrowLayer.vue'
-import { TEAM_ARROW_COLORS, useArrowStyle } from '@/composables/useArrowLayer'
+import { useArrowStyle } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { Team } from '@/lib/types/team'
+import { TEAM_COLORS } from '@/utils/tileStateFormatting'
 
 const ctx = useGridContext()
 
@@ -35,7 +36,7 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
         :key="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
         :start-hex="ctx.grid.getHexById(allyHexId)"
         :end-hex="ctx.grid.getHexById(enemyInfo.enemyHexId!)"
-        :color="TEAM_ARROW_COLORS[Team.ALLY]"
+        :color="TEAM_COLORS[Team.ALLY]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :curve-scale="ALLY_CURVE_SCALE"
@@ -49,7 +50,7 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
         :key="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
         :start-hex="ctx.grid.getHexById(enemyHexId)"
         :end-hex="ctx.grid.getHexById(allyInfo.allyHexId!)"
-        :color="TEAM_ARROW_COLORS[Team.ENEMY]"
+        :color="TEAM_COLORS[Team.ENEMY]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :invert-curve="true"
