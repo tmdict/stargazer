@@ -5,7 +5,10 @@
  * signals: per-channel correlation follows the art's shapes, and a colour
  * histogram keeps its palette, which per-channel normalisation discards. The
  * header does not keep a fixed distance from the cards the anchor comes from,
- * so the disc is searched around its nominal centre. A reading is sure only
+ * so the disc is searched around its nominal centre, placed by the best match
+ * of any reference, and every reference is scored on that one disc: one left
+ * to find its own place can win a crop beside the art (over the disc's rim)
+ * and narrow a clear lead to a doubtful one. A reading is sure only
  * when it leads clearly, its shapes match well enough, and the crop holds art
  * at all: the colour term alone still ranks a black or empty disc. */
 
@@ -100,6 +103,18 @@ export function buildArtifactTable(
   return { ids, vectors, colours }
 }
 
+// A disc crop with the two descriptors every reference is scored against.
+interface Disc {
+  crop: RgbaImage
+  shapes: Float32Array
+  colour: Float32Array
+}
+
+const scoreOn = (disc: Disc, table: ArtifactTable, i: number) => {
+  const shape = dot(disc.shapes, table.vectors[i]!)
+  return { shape, score: shape + COLOUR_WEIGHT * dot(disc.colour, table.colours[i]!) }
+}
+
 export function readArtifact(
   shot: RgbaImage,
   centreX: number,
@@ -107,12 +122,11 @@ export function readArtifact(
   table: ArtifactTable,
   diameter: number = HEADER_ICON.diameter,
 ): ArtifactReading {
-  const best = new Map<number, number>()
-  let top: { score: number; shape: number; rect: Rect; crop: RgbaImage | null } = {
+  let top: { score: number; shape: number; rect: Rect; disc: Disc | null } = {
     score: -Infinity,
     shape: 0,
     rect: square(centreX, centreY, diameter),
-    crop: null,
+    disc: null,
   }
   for (const ds of SIZES) {
     const size = diameter + ds
@@ -122,24 +136,28 @@ export function readArtifact(
         if (rect.x < 0 || rect.y < 0 || rect.x + size > shot.width || rect.y + size > shot.height)
           continue
         const crop = cropResize(shot, rect, T, T)
-        const shapes = normalizedVectorMasked(crop, MASK)
-        const colour = colourHistogram(crop)
-        table.ids.forEach((id, i) => {
-          const shape = dot(shapes, table.vectors[i]!)
-          const score = shape + COLOUR_WEIGHT * dot(colour, table.colours[i]!)
-          if (score > top.score) top = { score, shape, rect, crop }
-          if ((best.get(id) ?? -Infinity) < score) best.set(id, score)
+        const disc = {
+          crop,
+          shapes: normalizedVectorMasked(crop, MASK),
+          colour: colourHistogram(crop),
+        }
+        table.ids.forEach((_, i) => {
+          const { shape, score } = scoreOn(disc, table, i)
+          if (score > top.score) top = { score, shape, rect, disc }
         })
       }
     }
   }
-  const candidates = [...best.entries()]
-    .map(([artifactId, score]) => ({ artifactId, score }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+  const { disc } = top
+  const candidates = disc
+    ? table.ids
+        .map((artifactId, i) => ({ artifactId, score: scoreOn(disc, table, i).score }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+    : []
   const margin = candidates.length > 1 ? candidates[0]!.score - candidates[1]!.score : 0
   const sure =
-    top.crop !== null && margin >= SURE_MARGIN && top.shape >= SHAPE_FLOOR && holdsArt(top.crop)
+    disc !== null && margin >= SURE_MARGIN && top.shape >= SHAPE_FLOOR && holdsArt(disc.crop)
   const cardSize = Math.round(top.rect.w * CARD_SCALE)
   const card = square(top.rect.x + top.rect.w / 2, top.rect.y + top.rect.h / 2, cardSize)
   return { candidates, margin, sure, card: cropResize(shot, card, card.w, card.h) }
