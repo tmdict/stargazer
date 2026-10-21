@@ -207,11 +207,13 @@ async function main(): Promise<void> {
       results,
       mode,
       { prefix: '', left: '', right: '' },
-      swapSides,
-      assignments,
-      [],
-      results.length > 0,
-      phantimalFits,
+      {
+        swapSides,
+        formations: assignments,
+        replays: [],
+        matchImport: results.length > 0,
+        phantimalFits,
+      },
     )
     console.log(
       `references from ${source.label}; ${resultFiles.length} result and ${formationFiles.length} formation shots`,

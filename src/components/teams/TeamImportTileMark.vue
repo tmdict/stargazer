@@ -1,7 +1,16 @@
+<script lang="ts">
+// A unit's ring as a share of its tile's width, wider while the unit is
+// pointed at in a list. The game's camera draws near rows wider.
+const RING = 0.025
+const POINTED_RING = 0.05
+
+export const ringWidth = (tileWidth: number, pointed = false): number =>
+  tileWidth * (pointed ? POINTED_RING : RING)
+</script>
+
 <script setup lang="ts">
 /* A unit on a tile of an import review's screenshot, its portrait in a ring,
-   or as a preview the unit a click on that tile would place. The ring follows
-   the tile's width, as the game's camera draws near rows wider. */
+   or as a preview the unit a click on that tile would place. */
 
 import { useId } from 'vue'
 
@@ -18,9 +27,7 @@ defineProps<{
 
 const clipId = useId()
 
-// Ring widths and the preview's dashes as shares of the tile's width.
-const RING = 0.025
-const POINTED_RING = 0.05
+// The preview's ring and dashes as shares of the tile's width.
 const PREVIEW_RING = 0.03
 const DASH = 0.06
 const GAP = 0.045
@@ -45,7 +52,7 @@ const GAP = 0.045
       :cx="x"
       :cy="y"
       :r="radius"
-      :stroke-width="tileWidth * (preview ? PREVIEW_RING : pointed ? POINTED_RING : RING)"
+      :stroke-width="preview ? tileWidth * PREVIEW_RING : ringWidth(tileWidth, pointed)"
       :stroke-dasharray="preview ? `${tileWidth * DASH} ${tileWidth * GAP}` : undefined"
     />
   </g>

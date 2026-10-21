@@ -43,6 +43,7 @@ import {
   overrideKey,
   type CellOverride,
   type FormationAssignment,
+  type PlanInputs,
   type RecordNames,
   type ReplayAssignment,
   type ShotAssignment,
@@ -557,14 +558,11 @@ export function useTeamImport(
   learnedCount: ComputedRef<number>
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
-  // Whether heroes qualify for a phantimal, the board's faction rule.
-  phantimalFits: (phantimalId: number, heroIds: readonly number[]) => boolean
+  phantimalFits: PlanInputs['phantimalFits']
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
-  // `onFirst` hears the first shot added, before it is read.
   addFiles: (
     files: File[],
     kind: ShotKind | 'sort',
-    onFirst?: (id: string) => void,
   ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
@@ -617,7 +615,6 @@ export function useTeamImport(
   const addFiles = async (
     files: File[],
     kind: ShotKind | 'sort',
-    onFirst?: (id: string) => void,
   ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
     void ensureReferences()
     const mine = opening
@@ -657,7 +654,6 @@ export function useTeamImport(
         tilePicks: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
-      if (added === 0) onFirst?.(shot.id)
       added++
       await readShot(shot, file)
     }
@@ -829,16 +825,13 @@ export function useTeamImport(
     // A result shot that failed to read still makes the import a match, as the
     // modal shows it, so formations never fall back to their own upgrades.
     const match = shots.value.some((s) => s.kind === 'result')
-    return buildTeamImportPlan(
-      resultAssignments.value,
-      mode(),
-      names,
-      swapSides.value,
-      formationAssignments.value,
+    return buildTeamImportPlan(resultAssignments.value, mode(), names, {
+      swapSides: swapSides.value,
+      formations: formationAssignments.value,
       replays,
-      match,
+      matchImport: match,
       phantimalFits,
-    )
+    })
   })
 
   // Who each unit of a formation shot is taken for, from the plan.

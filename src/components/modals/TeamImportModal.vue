@@ -245,12 +245,26 @@ watch(
   { immediate: true },
 )
 
-// A drop or paste opens its first screenshot for review. The rest of the
-// batch, read after it, leaves the review on it.
+// A drop or paste opens the first of its screenshots to be read for review,
+// unless another screenshot with a review was opened while they read.
+const toOpen = ref<{ known: Set<string>; before: string | null } | null>(null)
+watch(
+  () => {
+    const known = toOpen.value?.known
+    return known && shots.value.find((s) => !known.has(s.id) && s.reading)
+  },
+  (shot) => {
+    if (!shot || !toOpen.value) return
+    if (selectedId.value === toOpen.value.before || !selected.value?.reading) {
+      selectedId.value = shot.id
+    }
+    toOpen.value = null
+  },
+)
+
 const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
-  const { added, refused } = await addFiles(files, kind, (id) => {
-    selectedId.value = id
-  })
+  toOpen.value = { known: new Set(shots.value.map((s) => s.id)), before: selectedId.value }
+  const { added, refused } = await addFiles(files, kind)
   if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))

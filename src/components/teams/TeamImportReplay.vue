@@ -19,7 +19,7 @@ import { computed, ref } from 'vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
-import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
+import TeamImportTile, { TILE_EDGE, tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
@@ -64,6 +64,11 @@ const KIND_SIDE: Partial<Record<TileKind, Team>> = { ally: Team.ALLY, enemy: Tea
 // A placed unit's portrait spans this share of its tile's width; a larger
 // one hides the units standing next to it on the frame.
 const MARK = 0.2
+// An empty tile's edge, lighter than a deployment tile's, and the blocked
+// tiles' hatching, its spacing and line, as shares of a tile's width.
+const NEUTRAL_EDGE = TILE_EDGE * 0.75
+const HATCH = 0.07
+const HATCH_LINE = 0.0175
 
 const tileKinds = computed(() => {
   const kinds = new Map<number, TileKind>()
@@ -123,11 +128,13 @@ const view = computed(() => {
   const corners = BOARD_HEXES.flatMap((hex) => replayHexCorners(placement, hex))
   const tile = Math.max(...tiles.map((t) => t.width))
   const { width, height } = reading.size
+  const mean = tiles.reduce((sum, t) => sum + t.width, 0) / tiles.length
+  const hatch = { size: mean * HATCH, line: mean * HATCH_LINE }
   const x0 = Math.max(0, Math.min(...corners.map((c) => c.x)) - tile * 0.5)
   const y0 = Math.max(0, Math.min(...corners.map((c) => c.y)) - tile * 1.6)
   const x1 = Math.min(width, Math.max(...corners.map((c) => c.x)) + tile * 0.5)
   const y1 = Math.min(height, Math.max(...corners.map((c) => c.y)) + tile * 0.4)
-  return { box: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, width, height, tiles }
+  return { box: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, width, height, tiles, hatch }
 })
 
 // ---------- placing ----------
@@ -222,12 +229,19 @@ const tileBoxes = (): HTMLInputElement[] => [
             <pattern
               :id="`hatch-${shot.id}`"
               patternUnits="userSpaceOnUse"
-              width="12"
-              height="12"
+              :width="view.hatch.size"
+              :height="view.hatch.size"
               patternTransform="rotate(45)"
             >
-              <rect width="12" height="12" class="hatch-ground" />
-              <line x1="0" y1="0" x2="0" y2="12" class="hatch-line" />
+              <rect :width="view.hatch.size" :height="view.hatch.size" class="hatch-ground" />
+              <line
+                x1="0"
+                y1="0"
+                x2="0"
+                :y2="view.hatch.size"
+                class="hatch-line"
+                :stroke-width="view.hatch.line"
+              />
             </pattern>
           </defs>
           <image :href="shot.thumb" x="0" y="0" :width="view.width" :height="view.height" />
@@ -252,6 +266,7 @@ const tileBoxes = (): HTMLInputElement[] => [
               :class="tile.kind"
               :points="tile.points"
               :fill="tile.kind === 'blocked' ? `url(#hatch-${shot.id})` : undefined"
+              :stroke-width="tile.width * (tile.kind === 'blocked' ? TILE_EDGE : NEUTRAL_EDGE)"
               @click.stop="clickFrameTile(tile)"
             />
             <TeamImportTileMark
@@ -384,7 +399,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 .tile {
   stroke: rgba(255, 255, 255, 0.45);
-  stroke-width: 1.5;
 }
 
 .tile.neutral {
@@ -393,7 +407,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 .tile.blocked {
   stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 2;
 }
 
 .hatch-ground {
@@ -402,7 +415,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 .hatch-line {
   stroke: rgba(255, 255, 255, 0.45);
-  stroke-width: 3;
 }
 
 .lineup-portrait {
