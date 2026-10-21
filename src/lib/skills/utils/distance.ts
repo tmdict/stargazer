@@ -201,10 +201,7 @@ export function findRearmostTarget(
  * Find the frontmost target of `targetTeam`. Always excludes the caster when it
  * targets its own team.
  */
-export function findFrontmostTarget(
-  context: SkillContext,
-  targetTeam: Team,
-): SkillTargetInfo | null {
+function findFrontmostTarget(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
   const { grid, team, hexId, characterId } = context
 
   const candidates = getCandidates(grid, targetTeam, targetTeam === team ? characterId : undefined)

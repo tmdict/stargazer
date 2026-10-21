@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, ATTR_SKILL_MODE } from '@/lib/characters/attributes'
-import { PLACEHOLDER_ID_OFFSET } from '@/lib/characters/placeholder'
+import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { parseRostersImport, validateRoster, type Roster } from '@/lib/rosters'
 
 const roster = (overrides: Partial<Roster> = {}): Roster => ({
@@ -25,7 +25,7 @@ describe('validateRoster', () => {
         '43': { [ATTR_REFINEMENT]: 9, [ATTR_PARAGON]: 0, 99: 3 },
         '5': {},
         '57': { [ATTR_SKILL_MODE]: 1 },
-        [PLACEHOLDER_ID_OFFSET]: {},
+        [PLACEHOLDERS[0]!.id]: {},
         '0': {},
         abc: {},
       },

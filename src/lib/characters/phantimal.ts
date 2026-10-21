@@ -23,7 +23,7 @@
 import { decomposeUnitId, SYNERGY_ID_OFFSET } from './synergy'
 
 export const PHANTIMAL_ID_OFFSET = 100000
-export const PHANTIMAL_COMPANION_STRIDE = 10000
+const PHANTIMAL_COMPANION_STRIDE = 10000
 
 // A phantimal or a companion it spawned. Bounded above like isCompanionId: the
 // synergy band starts at SYNERGY_ID_OFFSET and must not read as phantimals.

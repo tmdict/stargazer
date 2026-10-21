@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createImage } from '@/lib/import/image'
 import { CANONICAL_WIDTH, TABS } from '@/lib/import/layout'
 import { framePanel } from '@/lib/import/panel'
 import { findTabs } from '@/lib/import/strip'
 import type { RgbaImage } from '@/lib/import/types'
+import { createImage } from '../../fixtures/image'
 
 const ORANGE: [number, number, number] = [225, 147, 90]
 const BLUE: [number, number, number] = [124, 148, 188]

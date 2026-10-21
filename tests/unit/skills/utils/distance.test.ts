@@ -2,12 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import type { SkillContext } from '@/lib/skills/skill'
-import {
-  findFrontmostTarget,
-  findRearmostTarget,
-  findTarget,
-  TargetingMethod,
-} from '@/lib/skills/utils/distance'
+import { findRearmostTarget, findTarget, TargetingMethod } from '@/lib/skills/utils/distance'
 import { Team } from '@/lib/types/team'
 import { TARGETING_ARENA, TARGETING_GRID } from '../../fixtures/grid'
 import { makeSkillContext, placeOnTile, removeFromTile } from '../../fixtures/skills'
@@ -16,6 +11,9 @@ import { makeSkillContext, placeOnTile, removeFromTile } from '../../fixtures/sk
 // from hex 1 → hex 11 = 2, hex 10 = 3, hex 2 = 1
 // from hex 5 → hex 10 = 1, hex 11 = 2
 // from hex 7 → hex 5 = hex 9 = 2 (a true tie)
+const frontmost = (context: SkillContext, targetTeam: Team) =>
+  findTarget(context, { targetTeam, targetingMethod: TargetingMethod.FRONTMOST })
+
 describe('distance targeting', () => {
   let grid: Grid
 
@@ -140,7 +138,7 @@ describe('distance targeting', () => {
     })
   })
 
-  describe('findFrontmostTarget', () => {
+  describe('frontmost targeting', () => {
     beforeEach(() => {
       placeOnTile(grid, 1, 100, Team.ALLY)
       placeOnTile(grid, 3, 101, Team.ALLY)
@@ -151,23 +149,23 @@ describe('distance targeting', () => {
     // The scan direction depends on the target team, not the caster team:
     // allies are scanned from the largest hex ID, enemies from the smallest.
     it('finds frontmost ally (largest hex ID) regardless of caster team', () => {
-      const sameTeam = findFrontmostTarget(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ALLY)
+      const sameTeam = frontmost(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ALLY)
       expect(sameTeam?.targetHexId).toBe(3)
       expect(sameTeam?.targetCharacterId).toBe(101)
       expect(sameTeam?.metadata?.isFrontmostTarget).toBe(true)
 
-      const crossTeam = findFrontmostTarget(makeSkillContext(grid, 11, Team.ENEMY, 200), Team.ALLY)
+      const crossTeam = frontmost(makeSkillContext(grid, 11, Team.ENEMY, 200), Team.ALLY)
       expect(crossTeam?.targetHexId).toBe(3)
       expect(crossTeam?.targetCharacterId).toBe(101)
     })
 
     it('finds frontmost enemy (smallest hex ID) regardless of caster team', () => {
-      const sameTeam = findFrontmostTarget(makeSkillContext(grid, 13, Team.ENEMY, 201), Team.ENEMY)
+      const sameTeam = frontmost(makeSkillContext(grid, 13, Team.ENEMY, 201), Team.ENEMY)
       expect(sameTeam?.targetHexId).toBe(11)
       expect(sameTeam?.targetCharacterId).toBe(200)
       expect(sameTeam?.metadata?.isFrontmostTarget).toBe(true)
 
-      const crossTeam = findFrontmostTarget(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ENEMY)
+      const crossTeam = frontmost(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ENEMY)
       expect(crossTeam?.targetHexId).toBe(11)
       expect(crossTeam?.targetCharacterId).toBe(200)
       expect(crossTeam?.metadata?.examinedTiles).toContain(11)
@@ -179,7 +177,7 @@ describe('distance targeting', () => {
 
       const context = makeSkillContext(grid, 1, Team.ALLY, 100)
 
-      expect(findFrontmostTarget(context, Team.ALLY)).toBeNull()
+      expect(frontmost(context, Team.ALLY)).toBeNull()
     })
   })
 })

@@ -146,8 +146,8 @@ const isPhantimalBandLocal = (value: unknown): boolean => {
  * entries drop with a warning (never a throw), each list is capped at its
  * count field's maximum so the encoded count can't wrap, and an emptied
  * section is omitted entirely — the decoder's zero-count rejection relies on
- * that. Exported for direct testing; encodeBoard is its one live caller. */
-export function validateGridState(state: GridState): GridState {
+ * that. */
+function validateGridState(state: GridState): GridState {
   if (!state || typeof state !== 'object' || Array.isArray(state)) {
     return {}
   }

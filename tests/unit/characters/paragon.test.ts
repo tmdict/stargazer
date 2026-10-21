@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, attrMax } from '@/lib/characters/attributes'
-import { paragonStatValue } from '@/lib/characters/paragon'
+import { teamPowerNet } from '@/lib/characters/paragon'
 
 const PARAGON_MAX_LEVEL = attrMax(ATTR_PARAGON)
+
+// One hero's paragon stat, as the team power panel sums it.
+const paragonStatValue = (level: number, faction: string): number =>
+  teamPowerNet([{ level, faction }], [])
 
 describe('paragon', () => {
   it('ramps base factions from 0 in 4.5 steps', () => {
