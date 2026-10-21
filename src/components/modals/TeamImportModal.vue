@@ -664,7 +664,7 @@ const handleForgetLearned = (): void => {
           v-if="learnedCount > 0"
           type="button"
           class="link-btn"
-          :class="{ 'confirm-armed': armed === 'forget' }"
+          :class="{ armed: armed === 'forget' }"
           @click="handleForgetLearned"
         >
           <ConfirmLabel
@@ -931,7 +931,6 @@ const handleForgetLearned = (): void => {
 .link-btn {
   margin-left: auto;
   border: none;
-  border-radius: var(--radius-medium);
   background: none;
   color: var(--import-text-dim);
   font: inherit;
@@ -944,10 +943,8 @@ const handleForgetLearned = (): void => {
   color: var(--import-text);
 }
 
-.link-btn.confirm-armed {
-  background: var(--color-danger-hover);
-  color: #fff;
-  text-decoration: none;
+.link-btn.armed {
+  color: var(--import-bad);
 }
 
 @media (pointer: coarse) {
