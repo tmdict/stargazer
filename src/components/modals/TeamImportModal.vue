@@ -64,7 +64,7 @@ const { show, activeMode, variant } = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  importMatch: [plan: TeamImportPlan]
+  importMatch: [plan: TeamImportPlan, name: string]
 }>()
 
 const gameData = useGameDataStore()
@@ -241,7 +241,10 @@ watch(
   () => show,
   (open) => {
     if (open) void ensureReferences()
-    else clearImport()
+    else {
+      clearImport()
+      customName.value = null
+    }
   },
   { immediate: true },
 )
@@ -288,13 +291,24 @@ const handlePaste = (event: ClipboardEvent): void => {
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
+// The saved team's name: the one built from the names above until the reviewer
+// types their own, which only the length limit holds; clearing it goes back.
+const customName = ref<string | null>(null)
+const recordName = computed(() => (customName.value ?? plan.value.suggestedName).trim())
+const settleRecordName = (): void => {
+  if (customName.value?.trim() === '') customName.value = null
+}
+
 const nameInvalid = computed(
   () =>
+    customName.value === null &&
     plan.value.suggestedName !== '' &&
     [names.prefix, names.left, names.right].some((name) => NAME_FORBIDDEN.test(name)),
 )
 // The library would clip the name, losing the map lists at its end.
-const nameTooLong = computed(() => plan.value.suggestedName.length > MAX_NAME_LENGTH)
+const nameTooLong = computed(
+  () => customName.value === null && plan.value.suggestedName.length > MAX_NAME_LENGTH,
+)
 
 const heroLabel = (characterId: number): string => {
   const slug = gameData.getCharacterNameById(characterId)
@@ -383,7 +397,7 @@ const handleSaveAsNew = (): void => {
   if (blocked.value) return
   if (grids.boardsHaveContent() && !confirm('save')) return
   saveNames()
-  emit('importMatch', plan.value)
+  emit('importMatch', plan.value, recordName.value)
 }
 
 const handleForgetLearned = (): void => {
@@ -552,16 +566,18 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-sides-from-formations') }}
           </small>
         </div>
-        <div class="field wide">
-          <span id="import-record-name" class="field-label">{{
-            i18n.t('app.import-record-name')
-          }}</span>
-          <output
-            class="record-name"
+        <label class="field wide">
+          <span class="field-label">{{ i18n.t('app.import-record-name') }}</span>
+          <input
+            class="field-input"
             :class="{ invalid: nameInvalid || nameTooLong }"
-            aria-labelledby="import-record-name"
-            >{{ plan.suggestedName }}</output
-          >
+            type="text"
+            spellcheck="false"
+            :maxlength="MAX_NAME_LENGTH"
+            :value="customName ?? plan.suggestedName"
+            @input="customName = ($event.target as HTMLInputElement).value"
+            @blur="settleRecordName"
+          />
           <small v-if="nameInvalid" class="error">{{ i18n.t('app.import-name-invalid') }}</small>
           <small v-else-if="nameTooLong" class="error">{{
             i18n.t('app.import-name-too-long', {
@@ -569,7 +585,7 @@ const handleForgetLearned = (): void => {
               max: MAX_NAME_LENGTH,
             })
           }}</small>
-        </div>
+        </label>
       </section>
 
       <section v-if="selected?.reading" class="review-section">
@@ -784,17 +800,7 @@ const handleForgetLearned = (): void => {
   color: #fff;
 }
 
-.record-name {
-  font-size: 0.85rem;
-  padding: 7px 10px;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  border-radius: var(--radius-medium);
-  background: var(--import-surface);
-  color: var(--import-text);
-  overflow-wrap: anywhere;
-}
-
-.record-name.invalid {
+.field-input.invalid {
   border-color: var(--import-bad);
 }
 

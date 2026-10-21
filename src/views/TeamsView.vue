@@ -206,18 +206,16 @@ const handleLoadTeam = (team: SavedTeam) => {
 // first when it has content. The save waits a tick so the reconcile watcher
 // has placed the phantimals; a full library leaves the boards as an unsaved
 // team that still offers the name.
-const handleImportMatch = async (plan: TeamImportPlan) => {
+const handleImportMatch = async (plan: TeamImportPlan, name: string) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.newTeam()
   const { placed, skipped } = grids.applyLineups(plan)
   const maps = plan.boards.flatMap((board, i) => (board === null ? [] : [i + 1])).join(', ')
   await nextTick()
   const canonical = canonicalActive.value
-  const team = canonical
-    ? teamLibrary.saveAsNew(activeMode.value, canonical, plan.suggestedName)
-    : null
+  const team = canonical ? teamLibrary.saveAsNew(activeMode.value, canonical, name) : null
   if (!team) {
-    pendingName.value = plan.suggestedName
+    pendingName.value = name
     success(i18n.t('app.import-applied', { maps, heroes: placed }))
     error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
   } else {
