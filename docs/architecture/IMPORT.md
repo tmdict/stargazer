@@ -29,7 +29,7 @@ The pixel layer (`core/`) holds the RGBA and rectangle types and the image primi
 
 The card layer (`card/`) reads a hero card wherever a screen shows one. The frame match names the paragon level and pins the card's box, the face inside it is ranked against the hero table, and the star row above the face gives the refinement. `readCards` reads each card on its own, then settles the cards shown together (`assignUnique`), since they show different heroes.
 
-The screen layer (`screens/`) has one reader per screen, each finding the screen's own landmark before reading its cards: the result screen's tabs, the formation panel's board outline, the replay frame's arena. The match screens share their reading type, the green ring of their map strips and the artifact reader (`screens/match/`).
+The screen layer (`screens/`) has one reader per screen, each finding the screen's own landmark before reading its cards: the result screen's tabs, the formation panel's board outline, the replay frame's arena, and on the hero roster (the Resonating Hall) the cream gutters between the cards, which a comb of columns is fitted to. The match screens share their reading type, the green ring of their map strips and the artifact reader (`screens/match/`).
 
 The review rules (`review.ts`) are what every import's review asks of a card: its state, and the hero and levels it contributes once corrected. On top sit the reference assembly, the learned-face store and the paste sorter.
 
