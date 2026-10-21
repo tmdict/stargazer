@@ -52,7 +52,7 @@ describe('phantimalFaction', () => {
       expect(countTeamFaction(grid, Team.ENEMY, ['lightbearer', 'graveborn'], factionOf)).toBe(1)
     })
 
-    it('excludes companions — only distinct heroes count', () => {
+    it('excludes companions, counting only distinct heroes', () => {
       const g = new Grid(STANDARD_GRID, STANDARD_ARENA)
       performPlace(g, 1, 100, Team.ALLY) // lightbearer hero
       // The companion resolves to a matching faction, so this fails if the

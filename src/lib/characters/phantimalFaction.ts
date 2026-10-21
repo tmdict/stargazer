@@ -18,9 +18,8 @@ export function requiredFactions(
   return phantimal.qualifyingFactions ?? [phantimal.faction]
 }
 
-// Counts the heroes in a lineup whose faction is in `factions`. `factionOf`
-// resolves a character's faction; it lives in the data store, so it's injected
-// to keep this pure.
+// `factionOf` resolves a character's faction; it lives in the data store, so
+// it's injected to keep this pure.
 function countFaction(
   heroIds: Iterable<number>,
   factions: readonly string[],
@@ -34,8 +33,6 @@ function countFaction(
   return count
 }
 
-// The distinct hero units on a team. Only main characters count: companions
-// and phantimals are excluded.
 const teamHeroIds = (grid: Grid, team: Team): number[] =>
   getTilesWithCharacters(grid).flatMap(({ team: owner, characterId }) =>
     owner === team &&

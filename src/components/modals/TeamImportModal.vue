@@ -657,9 +657,6 @@ const handleForgetLearned = (): void => {
 </template>
 
 <style scoped>
-/* One palette for the import's own pieces (shot list, review) on the modal's
-   dark glass: white text at a few opacities, frosted fills, the accent for
-   selection, and the status colours. Set here so the children inherit. */
 .import {
   --import-text: #fff;
   --import-text-dim: rgba(255, 255, 255, 0.65);
