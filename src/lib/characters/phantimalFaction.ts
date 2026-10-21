@@ -21,7 +21,7 @@ export function requiredFactions(
 // Counts the heroes in a lineup whose faction is in `factions`. `factionOf`
 // resolves a character's faction; it lives in the data store, so it's injected
 // to keep this pure.
-export function countFaction(
+function countFaction(
   heroIds: Iterable<number>,
   factions: readonly string[],
   factionOf: (characterId: number) => string | undefined,
@@ -34,15 +34,10 @@ export function countFaction(
   return count
 }
 
-// Counts distinct hero units on a team whose faction is in `factions`. Only main
-// characters count: companions and phantimals are excluded.
-export function countTeamFaction(
-  grid: Grid,
-  team: Team,
-  factions: readonly string[],
-  factionOf: (characterId: number) => string | undefined,
-): number {
-  const heroes = getTilesWithCharacters(grid).flatMap(({ team: owner, characterId }) =>
+// The distinct hero units on a team. Only main characters count: companions
+// and phantimals are excluded.
+const teamHeroIds = (grid: Grid, team: Team): number[] =>
+  getTilesWithCharacters(grid).flatMap(({ team: owner, characterId }) =>
     owner === team &&
     characterId !== undefined &&
     !isPhantimalId(characterId) &&
@@ -50,16 +45,37 @@ export function countTeamFaction(
       ? [characterId]
       : [],
   )
-  return countFaction(heroes, factions, factionOf)
+
+// Counts distinct hero units on a team whose faction is in `factions`.
+export function countTeamFaction(
+  grid: Grid,
+  team: Team,
+  factions: readonly string[],
+  factionOf: (characterId: number) => string | undefined,
+): number {
+  return countFaction(teamHeroIds(grid, team), factions, factionOf)
 }
 
 // Whether a lineup of heroes fields enough of a phantimal's faction(s) for it.
+// A phantimal with no data is retired content: it has no faction to count, and
+// the board keeps it.
 export function lineupQualifies(
-  phantimal: Pick<PhantimalType, 'faction' | 'qualifyingFactions'>,
+  phantimal: Pick<PhantimalType, 'faction' | 'qualifyingFactions'> | undefined,
   heroIds: Iterable<number>,
   factionOf: (characterId: number) => string | undefined,
 ): boolean {
   return (
+    !phantimal ||
     countFaction(heroIds, requiredFactions(phantimal), factionOf) >= PHANTIMAL_FACTION_REQUIREMENT
   )
+}
+
+// Whether a team on the board fields enough of a phantimal's faction(s) for it.
+export function teamQualifies(
+  grid: Grid,
+  team: Team,
+  phantimal: Pick<PhantimalType, 'faction' | 'qualifyingFactions'> | undefined,
+  factionOf: (characterId: number) => string | undefined,
+): boolean {
+  return lineupQualifies(phantimal, teamHeroIds(grid, team), factionOf)
 }

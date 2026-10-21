@@ -2,6 +2,10 @@
 /* A tile's number on an import review's screenshot, sized to the tile. */
 
 defineProps<{ x: number; y: number; tileWidth: number; hexId: number }>()
+
+// The number's size and its dark outline as shares of the tile's width.
+const FONT = 0.2
+const OUTLINE = 0.06
 </script>
 
 <template>
@@ -9,8 +13,8 @@ defineProps<{ x: number; y: number; tileWidth: number; hexId: number }>()
     class="tile-number"
     :x
     :y
-    :font-size="tileWidth * 0.2"
-    :stroke-width="tileWidth * 0.06"
+    :font-size="tileWidth * FONT"
+    :stroke-width="tileWidth * OUTLINE"
     text-anchor="middle"
     dominant-baseline="central"
   >
