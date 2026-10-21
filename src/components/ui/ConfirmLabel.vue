@@ -21,6 +21,7 @@ const i18n = useI18nStore()
 .confirm-label {
   display: inline-grid;
   place-items: center;
+  text-decoration: inherit;
 }
 
 .confirm-label > span {

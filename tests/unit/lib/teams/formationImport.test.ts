@@ -88,6 +88,16 @@ describe('assignUnits', () => {
     const assigned = assignUnits(units, [11], { 0: null, 3: 11 }, () => true)
     expect(assigned.map((a) => a.unitId)).toEqual([null, WEDGE, WEDGE_POWER, 11])
   })
+
+  it('takes a portrait of a phantimal the heroes do not qualify for as none of their units', () => {
+    // Hero 12 misread on the result shot: the shown phantimal no longer fits,
+    // and its portrait still resembles hero 12 enough to be taken for it.
+    const units = [unit(1, { 11: 0.9 }), unit(2, { [WEDGE]: 0.85, 12: 0.3 })]
+    expect(assignUnits(units, [11, 12], {}, () => false)).toEqual([
+      { unitId: 11, state: 'sure' },
+      { unitId: null, state: 'none' },
+    ])
+  })
 })
 
 describe('heroesFromUnits', () => {

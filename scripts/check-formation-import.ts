@@ -142,10 +142,8 @@ async function main(): Promise<void> {
     // The board's faction rule, as the app hands it to the plan.
     const factions = new Map(loadCharacters().map((c) => [c.id, c.faction]))
     const phantimals = new Map(loadPhantimals().map((p) => [toPhantimalId(p.id), p]))
-    const phantimalFits = (phantimalId: number, lineup: readonly number[]): boolean => {
-      const phantimal = phantimals.get(phantimalId)
-      return !phantimal || lineupQualifies(phantimal, lineup, (id) => factions.get(id))
-    }
+    const phantimalFits = (phantimalId: number, lineup: readonly number[]): boolean =>
+      lineupQualifies(phantimals.get(phantimalId), lineup, (id) => factions.get(id))
     const heroIds = new Map([...heroNames].map(([id, slug]) => [slug, id]))
     const unitIds = new Map([...unitNames].map(([id, slug]) => [slug, id]))
     const ownerId = (slug: string): number | undefined => heroIds.get(slug) ?? unitIds.get(slug)

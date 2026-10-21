@@ -426,7 +426,7 @@ describe('buildTeamImportPlan with formation shots', () => {
         () => fits,
       )
     expect(plan(true).boards[0]!.sides[Team.ALLY]!.phantimal).toEqual({ unitId: wedge, hexId: 2 })
-    expect(plan(false).units[0]![1]!.unitId).not.toBe(wedge)
+    expect(plan(false).units[0]![1]).toEqual({ unitId: null, state: 'none' })
     expect(plan(false).boards[0]!.sides[Team.ALLY]!.phantimal).toBeNull()
   })
 

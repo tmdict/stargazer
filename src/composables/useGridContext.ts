@@ -45,8 +45,8 @@ import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import {
   countTeamFaction,
-  PHANTIMAL_FACTION_REQUIREMENT,
   requiredFactions,
+  teamQualifies,
 } from '@/lib/characters/phantimalFaction'
 import {
   executeAutoPlaceCharacter,
@@ -268,13 +268,13 @@ export function createGridContext(
   // A phantimal may only join a team that fields enough of its faction(s). An id
   // with no data is retired content: it has no faction to count and is kept as a
   // removable "?" (GridCharacters).
-  const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean => {
-    const phantimal = gameDataStore.getPhantimalById(phantimalId)
-    if (!phantimal) return true
-    const factions = requiredFactions(phantimal)
-    const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
-    return count >= PHANTIMAL_FACTION_REQUIREMENT
-  }
+  const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean =>
+    teamQualifies(
+      grid,
+      team,
+      gameDataStore.getPhantimalById(phantimalId),
+      gameDataStore.getCharacterFaction,
+    )
 
   const phantimalFactionCount = (phantimalId: number, team: Team): number => {
     const phantimal = gameDataStore.getPhantimalById(phantimalId)
@@ -289,9 +289,9 @@ export function createGridContext(
   // the earlier-qualified one keeps its seat either way.
   const findQualifyingPhantimalId = (team: Team): number | null => {
     for (const phantimal of gameDataStore.phantimals) {
-      const factions = requiredFactions(phantimal)
-      const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
-      if (count >= PHANTIMAL_FACTION_REQUIREMENT) return toPhantimalId(phantimal.id)
+      if (teamQualifies(grid, team, phantimal, gameDataStore.getCharacterFaction)) {
+        return toPhantimalId(phantimal.id)
+      }
     }
     return null
   }

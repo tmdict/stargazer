@@ -14,6 +14,7 @@ import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import type { FormationReading, HeroReading, ScreenshotReading } from '@/lib/import/types'
 import {
+  assignedPortraits,
   assignUnits,
   formationSide,
   heroesFromUnits,
@@ -494,10 +495,7 @@ export function buildTeamImportPlan(
         phantimalFits(phantimalId, heroIds),
       )
       units[formations.indexOf(formation)] = assignments
-      const seen: PlacedUnit[] = reading.units.map((unit, i) => ({
-        unitId: assignments[i]?.unitId ?? null,
-        hexId: unit.hexId,
-      }))
+      const seen = assignedPortraits(reading.units, assignments)
       const short = heroes.some(({ characterId }) => !seen.some((u) => u.unitId === characterId))
       const placed = formationSide(
         fielded([...seen, ...placedPicks(formation.picks[side] ?? {}, seen)], heroIds),

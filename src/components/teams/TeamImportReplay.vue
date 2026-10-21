@@ -19,7 +19,7 @@ import { computed, ref } from 'vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
-import TeamImportTile from '@/components/teams/TeamImportTile.vue'
+import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
@@ -106,17 +106,14 @@ const view = computed(() => {
   const placement = reading.placement
   const tiles: TileView[] = BOARD_HEXES.map((hex) => {
     const id = hex.getId()
-    const corners = replayHexCorners(placement, hex)
     const centre = replayHexCentre(placement, hex)
-    const xs = corners.map((c) => c.x)
     const kind = tileKinds.value.get(id) ?? 'neutral'
     const side = KIND_SIDE[kind] ?? null
     return {
       id,
-      points: corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' '),
+      ...tileOutline(replayHexCorners(placement, hex)),
       x: centre.x,
       y: centre.y,
-      width: Math.max(...xs) - Math.min(...xs),
       kind,
       side,
       unitId: side === null ? null : (placings.value[side].picks.get(id) ?? null),

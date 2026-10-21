@@ -805,11 +805,13 @@ export function useTeamImport(
     for (const shot of shots.value) shot.unitOverrides = {}
   })
 
-  // An id with no data is retired content, which the board keeps too.
   const phantimalFits = (phantimalId: number, heroIds: readonly number[]): boolean => {
     const gameData = useGameDataStore()
-    const phantimal = gameData.getPhantimalById(phantimalId)
-    return !phantimal || lineupQualifies(phantimal, heroIds, gameData.getCharacterFaction)
+    return lineupQualifies(
+      gameData.getPhantimalById(phantimalId),
+      heroIds,
+      gameData.getCharacterFaction,
+    )
   }
 
   const plan = computed<TeamImportPlan>(() => {
