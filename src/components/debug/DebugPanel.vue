@@ -436,24 +436,30 @@ defineExpose({
   color: #495057;
 }
 
+.state-available-ally,
+.state-occupied-ally {
+  color: color-mix(in srgb, var(--color-ally) 65%, black);
+}
+
+.state-available-enemy,
+.state-occupied-enemy {
+  color: color-mix(in srgb, var(--color-enemy) 65%, black);
+}
+
 .state-available-ally {
   background: color-mix(in srgb, var(--color-ally) 12%, transparent);
-  color: var(--color-ally);
 }
 
 .state-available-enemy {
   background: color-mix(in srgb, var(--color-enemy) 12%, transparent);
-  color: var(--color-enemy);
 }
 
 .state-occupied-ally {
   background: color-mix(in srgb, var(--color-ally) 28%, transparent);
-  color: var(--color-ally);
 }
 
 .state-occupied-enemy {
   background: color-mix(in srgb, var(--color-enemy) 28%, transparent);
-  color: var(--color-enemy);
 }
 
 .state-blocked {
