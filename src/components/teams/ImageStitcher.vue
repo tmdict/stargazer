@@ -72,7 +72,7 @@ const handleAdd = async (files: File[]) => {
 
 @media (max-width: 768px) {
   .stitcher {
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--panel-inset);
   }
 }
 </style>

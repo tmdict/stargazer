@@ -96,13 +96,7 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
 
 @media (max-width: 768px) {
   main {
-    padding-bottom: 64px;
-  }
-}
-
-@media (max-width: 480px) {
-  main {
-    padding-bottom: 64px;
+    padding-bottom: var(--bottom-sheet-clearance);
   }
 }
 </style>

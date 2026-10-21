@@ -129,7 +129,7 @@ const handleArenaSelected = (mapKey: string) => {
 
 @media (max-width: 768px) {
   .maps-tab {
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--panel-inset);
   }
 }
 </style>

@@ -188,7 +188,7 @@ const panelShift = usePanelClamp(
   align-items: stretch;
   border: 2px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
-  min-height: 36px;
+  min-height: var(--control-height);
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
   font-size: var(--control-font-size);
@@ -251,7 +251,7 @@ const panelShift = usePanelClamp(
   background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
   padding: 5px 11px;
-  min-height: 34px;
+  min-height: var(--control-height-tablet);
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
@@ -272,7 +272,7 @@ const panelShift = usePanelClamp(
 @media (max-width: 480px) {
   .pill {
     padding: 4px 10px;
-    min-height: 30px;
+    min-height: var(--control-height-mobile);
     font-size: 0.74rem;
   }
 }

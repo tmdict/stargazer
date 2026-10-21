@@ -100,6 +100,6 @@ function handleSelect(character: CharacterType): void {
 
 <style scoped>
 .popup-roster-menu {
-  margin: 0 4px 8px;
+  margin: 0 var(--palette-inset) 8px;
 }
 </style>

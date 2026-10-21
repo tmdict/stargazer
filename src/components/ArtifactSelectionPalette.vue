@@ -34,7 +34,7 @@ const emit = defineEmits<{
   overflow-y: auto;
   max-height: 300px;
   min-height: 0;
-  padding: 2px 4px;
+  padding: 2px var(--palette-inset);
 }
 
 .artifact-item {
@@ -56,10 +56,10 @@ const emit = defineEmits<{
 }
 
 .artifact-item :deep(.artifact) {
-  width: 45px;
-  height: 45px;
+  width: var(--palette-icon-size);
+  height: var(--palette-icon-size);
   border: none;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: var(--palette-icon-ring);
 }
 
 .artifact-item :deep(.artifact::before) {

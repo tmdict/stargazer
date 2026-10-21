@@ -81,9 +81,13 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   letter-spacing: 0.03em;
 }
 
+.segmented,
+.setting-input {
+  min-height: 34px;
+}
+
 .segmented {
   display: inline-flex;
-  min-height: 34px;
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-medium);
   overflow: hidden;
@@ -112,7 +116,6 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   color: var(--color-text-primary);
   font-size: max(0.85rem, var(--field-min-font-size));
   padding: var(--spacing-xs) var(--spacing-sm);
-  min-height: 34px;
 }
 
 select.setting-input {
