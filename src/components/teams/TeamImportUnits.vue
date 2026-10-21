@@ -9,9 +9,13 @@
 
 import { computed, ref } from 'vue'
 
+import TeamImportCell from '@/components/teams/TeamImportCell.vue'
+import TeamImportCellGrid from '@/components/teams/TeamImportCellGrid.vue'
+import TeamImportCellState from '@/components/teams/TeamImportCellState.vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
+import TeamImportSideHead from '@/components/teams/TeamImportSideHead.vue'
 import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark, { ringWidth } from '@/components/teams/TeamImportTileMark.vue'
@@ -279,18 +283,19 @@ const clickShotTile = (hexId: number, event: Event): void => {
   })
 }
 
-const cellsEl = ref<HTMLElement>()
+const sectionEl = ref<HTMLElement>()
 const tileBoxes = (): HTMLInputElement[] => [
-  ...(cellsEl.value?.querySelectorAll<HTMLInputElement>('.tile-box') ?? []),
+  ...(sectionEl.value?.querySelectorAll<HTMLInputElement>('.tile-box') ?? []),
 ]
 </script>
 
 <template>
-  <div v-if="unitViews.length || missingRows.length" class="side">
-    <div class="side-head">
-      <span class="side-label">{{ i18n.t('app.import-units') }}</span>
-      <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
-    </div>
+  <div v-if="unitViews.length || missingRows.length" ref="sectionEl" class="side">
+    <TeamImportSideHead :label="i18n.t('app.import-units')">
+      <template #default>
+        <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
+      </template>
+    </TeamImportSideHead>
     <div class="boards">
       <figure v-if="shotBoard" class="board">
         <div ref="boardFrame" class="board-frame">
@@ -374,106 +379,88 @@ const tileBoxes = (): HTMLInputElement[] => [
       />
     </div>
     <p v-if="missingRows.length" class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
-    <div ref="cellsEl" class="cells" :class="sideClass">
-      <div
-        v-for="view in unitViews"
-        :key="view.index"
-        class="cell unit"
-        :class="view.state"
-        @mouseenter="hovered = view.index"
-        @mouseleave="hovered = null"
-        @focusin="hovered = view.index"
-        @focusout="hovered = null"
-      >
-        <div class="cell-images">
-          <img v-if="view.card" class="cell-card" :src="view.card" alt="" />
-          <img
-            v-if="view.unitId !== null"
-            class="cell-portrait"
-            :src="unitImage(view.unitId)"
-            alt=""
-          />
-          <span v-else class="cell-portrait empty" />
-        </div>
-        <DropdownSelect
-          :label="unitName(view.unitId)"
-          :items="view.items"
-          variant="dark"
-          floating
-          click-only
-          class="unit-pick"
-          @select="pickUnit(view.index, $event)"
-        />
-        <div class="cell-meta">
-          <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
-          <button
-            v-if="view.state === 'review' && view.unitId !== null"
-            type="button"
-            class="cell-state review confirm-choice"
-            :title="unitName(view.unitId)"
-            @click="emit('setUnit', shot.id, view.index, view.unitId)"
-          >
-            {{ i18n.t('app.import-confirm', { value: unitName(view.unitId) }) }}
-          </button>
-          <span v-else-if="view.state === 'none'" class="cell-state none">
-            {{ i18n.t('app.import-unrecognised') }}
-          </span>
-          <span v-else-if="view.edited" class="cell-state edited">{{
-            i18n.t('app.import-edited')
-          }}</span>
-        </div>
-      </div>
-      <template v-if="shotTeam !== null">
-        <div
-          v-for="row in missingRows"
-          :key="row.unitId"
-          class="cell unit missing"
-          :class="{ next: nextUnits[shotTeam] === row.unitId, unplaced: row.tile === null }"
-          @mouseenter="pointedMissing = row.unitId"
-          @mouseleave="pointedMissing = null"
+    <TeamImportCellGrid :class="sideClass">
+      <template #default>
+        <TeamImportCell
+          v-for="view in unitViews"
+          :key="view.index"
+          class="unit"
+          :class="view.state"
+          :card="view.card"
+          :portrait="view.unitId === null ? null : unitImage(view.unitId)"
+          @mouseenter="hovered = view.index"
+          @mouseleave="hovered = null"
+          @focusin="hovered = view.index"
+          @focusout="hovered = null"
         >
-          <div class="cell-images">
-            <span class="cell-card empty" />
-            <img class="cell-portrait" :src="unitImage(row.unitId)" alt="" />
-          </div>
-          <button
-            type="button"
-            class="cell-name"
-            :aria-pressed="nextUnits[shotTeam] === row.unitId"
-            :title="unitName(row.unitId)"
-            @click="choose(shotTeam, row.unitId)"
-          >
-            {{ unitName(row.unitId) }}
-          </button>
-          <div class="cell-meta">
-            <TeamImportTileBox
-              :tile="row.tile"
-              :label="i18n.t('app.import-tile-for', { name: unitName(row.unitId) })"
-              @focus="pointedMissing = row.unitId"
-              @blur="pointedMissing = null"
-              @change="typeTile(shotTeam, row.unitId, $event.target as HTMLInputElement)"
-              @keydown.enter.prevent="typeTileAndNext(shotTeam, row.unitId, $event, tileBoxes())"
+          <template #name>
+            <DropdownSelect
+              :label="unitName(view.unitId)"
+              :items="view.items"
+              variant="dark"
+              floating
+              click-only
+              class="unit-pick"
+              @select="pickUnit(view.index, $event)"
             />
-            <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
-          </div>
-        </div>
+          </template>
+          <template #meta>
+            <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
+            <TeamImportCellState
+              v-if="view.state === 'review' && view.unitId !== null"
+              state="review"
+              :reading="unitName(view.unitId)"
+              :title="unitName(view.unitId)"
+              @confirm="emit('setUnit', shot.id, view.index, view.unitId)"
+            />
+            <TeamImportCellState v-else-if="view.state === 'none'" state="none" />
+            <TeamImportCellState v-else-if="view.edited" state="edited" />
+          </template>
+        </TeamImportCell>
+        <template v-if="shotTeam !== null">
+          <TeamImportCell
+            v-for="row in missingRows"
+            :key="row.unitId"
+            class="unit missing"
+            :class="{ next: nextUnits[shotTeam] === row.unitId, unplaced: row.tile === null }"
+            card=""
+            :portrait="unitImage(row.unitId)"
+            @mouseenter="pointedMissing = row.unitId"
+            @mouseleave="pointedMissing = null"
+          >
+            <template #name>
+              <button
+                type="button"
+                class="cell-name"
+                :aria-pressed="nextUnits[shotTeam] === row.unitId"
+                :title="unitName(row.unitId)"
+                @click="choose(shotTeam, row.unitId)"
+              >
+                {{ unitName(row.unitId) }}
+              </button>
+            </template>
+            <template #meta>
+              <TeamImportTileBox
+                :tile="row.tile"
+                :label="i18n.t('app.import-tile-for', { name: unitName(row.unitId) })"
+                @focus="pointedMissing = row.unitId"
+                @blur="pointedMissing = null"
+                @change="typeTile(shotTeam, row.unitId, $event.target as HTMLInputElement)"
+                @keydown.enter.prevent="typeTileAndNext(shotTeam, row.unitId, $event, tileBoxes())"
+              />
+              <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
+            </template>
+          </TeamImportCell>
+        </template>
       </template>
-    </div>
+    </TeamImportCellGrid>
     <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
   </div>
 </template>
 
-<style scoped src="./teamImportCells.css"></style>
-
 <style scoped>
 .side-head > .place-count {
   margin-left: auto;
-}
-
-.cell.unit .cell-card,
-.cell.unit .cell-portrait {
-  aspect-ratio: 1;
-  object-position: top;
 }
 
 .unit-pick {
@@ -539,10 +526,6 @@ const tileBoxes = (): HTMLInputElement[] => [
   margin: var(--spacing-sm) 0;
   font-size: 0.78rem;
   color: var(--import-text-dim);
-}
-
-.cell.missing.next {
-  border-color: var(--pick-colour);
 }
 
 .type-error {
