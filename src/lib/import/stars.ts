@@ -15,8 +15,9 @@
  * rainbow, stands out from R0 mainly by a faint pink tint, which resampling
  * can halve, so R0 is sure only when the row has none. */
 
-import { hsvAt } from './image'
-import type { Rect, RefinementReading, RgbaImage, StarFamily } from './types'
+import { hsvAt } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
+import type { RefinementReading, StarFamily } from './types'
 
 const BAND_ROWS = 7
 // The framed shot gives every card one size, and a frame matched a little

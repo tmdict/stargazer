@@ -9,8 +9,9 @@
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
 import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
+import { cropResize, maskedNcc } from './core/image'
+import type { RgbaImage } from './core/types'
 import { heroDescriptor, rankHeroes } from './heroes'
-import { cropResize, maskedNcc } from './image'
 import { readCards } from './pipeline'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from './strip'
 import type {
@@ -20,7 +21,6 @@ import type {
   HeroReading,
   ImportWarning,
   ReferenceSet,
-  RgbaImage,
   UnitReading,
 } from './types'
 

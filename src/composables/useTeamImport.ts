@@ -16,6 +16,7 @@ import { companionImages } from '@/lib/characters/companion'
 import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { FIT_WIDTH } from '@/lib/import/board'
+import type { RgbaImage } from '@/lib/import/core/types'
 import { FRAME_NAMES } from '@/lib/import/frames'
 import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH, RESULT_MAX_WIDTH } from '@/lib/import/layout'
 import {
@@ -31,7 +32,6 @@ import {
   type LearnedIcon,
   type PortraitRef,
   type ReplayReading,
-  type RgbaImage,
   type ScreenshotReading,
   type ShotKind,
 } from '@/lib/import/types'

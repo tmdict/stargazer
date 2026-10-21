@@ -11,9 +11,9 @@
  * result, not the map's, and are not read. */
 
 import { Team } from '@/lib/types/team'
-import { hsvAt } from './image'
+import { hsvAt } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
 import { STRIP, SUMMARY_BAR, TAB_REGION, TABS, type Region } from './layout'
-import type { Rect, RgbaImage } from './types'
 
 // The ring is two thin lines inside its band, a few percent of the band's
 // area on a sharp capture and about one on a soft one.

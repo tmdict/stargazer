@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildArtifactTable, readArtifact } from '@/lib/import/artifacts'
+import type { RgbaImage } from '@/lib/import/core/types'
 import { HEADER_ICON } from '@/lib/import/layout'
-import type { RgbaImage } from '@/lib/import/types'
 import { createImage } from '../../fixtures/image'
 
 type Paint = (x: number, y: number) => [number, number, number]
