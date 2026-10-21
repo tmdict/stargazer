@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import type { RgbaImage } from '@/lib/import/core/types'
 import { CANONICAL_WIDTH, TABS } from '@/lib/import/layout'
 import { framePanel } from '@/lib/import/panel'
 import { findTabs } from '@/lib/import/strip'
-import type { RgbaImage } from '@/lib/import/types'
 import { createImage } from '../../fixtures/image'
 
 const ORANGE: [number, number, number] = [225, 147, 90]

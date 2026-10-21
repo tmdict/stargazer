@@ -13,9 +13,10 @@
  * the colour term alone still ranks a black or empty disc. A player who
  * fields no artifact gets no badge, and that header reads as none. */
 
-import { cropResize, dot, normalizedVectorMasked } from './image'
+import { cropResize, dot, normalizedVectorMasked } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
 import { HEADER_ICON } from './layout'
-import type { ArtifactReading, ArtifactTable, Rect, RgbaImage } from './types'
+import type { ArtifactReading, ArtifactTable } from './types'
 
 const T = 40
 const MASK: boolean[] = []

@@ -5,10 +5,11 @@
  * together, because a single frame (the plain brown P0 above all) correlates
  * with orange UI regions about as well as with a real card. */
 
-import { cropResize, maskedNcc } from './image'
+import { cropResize, maskedNcc } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
 import { CARD_PITCH_RANGE, CARD_ROWS, PANEL_GAP_RANGE } from './layout'
 import { hasSummaryBar } from './strip'
-import type { FrameRef, ParagonReading, Rect, RgbaImage } from './types'
+import type { FrameRef, ParagonReading } from './types'
 
 export const FRAME_NAMES = ['p0', 'p1', 'p2', 'p3', 'p4', 'p4-crown'] as const
 const FRAME_LEVELS = [0, 1, 2, 3, 4, 4] as const

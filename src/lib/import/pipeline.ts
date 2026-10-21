@@ -7,6 +7,8 @@
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
+import { cropResize } from './core/image'
+import type { Rect, RgbaImage } from './core/types'
 import {
   ANCHOR_FLOOR,
   findPanelAnchor,
@@ -18,7 +20,6 @@ import {
   type PanelAnchor,
 } from './frames'
 import { assignUnique, heroDescriptor, rankHeroes } from './heroes'
-import { cropResize } from './image'
 import {
   ART_BOX,
   CARD_COLUMN_X,
@@ -40,9 +41,7 @@ import type {
   HeroIdentity,
   HeroReading,
   ImportWarning,
-  Rect,
   ReferenceSet,
-  RgbaImage,
   ScreenshotReading,
 } from './types'
 
