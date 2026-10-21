@@ -8,7 +8,7 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { getTilesWithCharacters } from '@/lib/characters/character'
+import { findTeamPhantimalHex, getTilesWithCharacters } from '@/lib/characters/character'
 import type { GridTile } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
 import { useGrids } from './grids'
@@ -38,6 +38,9 @@ export const useCharacterStore = defineStore('character', () => {
   const autoPlacePhantimal = (phantimalId: number, team: Team): boolean =>
     active().autoPlacePhantimal(phantimalId, team)
 
+  const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean =>
+    active().phantimalCanJoinTeam(phantimalId, team)
+
   const phantimalFactionCount = (phantimalId: number, team: Team): number =>
     active().phantimalFactionCount(phantimalId, team)
 
@@ -45,14 +48,19 @@ export const useCharacterStore = defineStore('character', () => {
 
   const getTilesWithCharactersStore = (): GridTile[] => getTilesWithCharacters(active().grid)
 
+  const findTeamPhantimalHexStore = (team: Team): number | null =>
+    findTeamPhantimalHex(active().grid, team)
+
   return {
     charactersPlaced,
     placeCharacterOnHex,
     removeCharacterFromHex,
     clearAllCharacters,
     getTilesWithCharacters: getTilesWithCharactersStore,
+    findTeamPhantimalHex: findTeamPhantimalHexStore,
     placePhantimalOnHex,
     autoPlacePhantimal,
+    phantimalCanJoinTeam,
     phantimalFactionCount,
     seedPhantimalBaseline,
   }

@@ -11,7 +11,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useUnitTooltipRows } from '@/composables/useUnitTooltipRows'
-import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -49,21 +49,18 @@ const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   return tile ? tile.hex.getId() : null
 }
 
-const teamHasPhantimal = (team: Team): boolean =>
-  characterStore
-    .getTilesWithCharacters()
-    .some((t) => t.team === team && t.characterId !== undefined && isPhantimalId(t.characterId))
-
-const factionCount = (phantimal: PhantimalType, team: Team): number =>
-  characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), team)
-
 // The side a click fills. Each side fields one phantimal, and both may field
 // the same one.
-const openTeam = (phantimal: PhantimalType): Team | null =>
-  fillOrder.find(
-    (team) =>
-      !teamHasPhantimal(team) && factionCount(phantimal, team) >= PHANTIMAL_FACTION_REQUIREMENT,
-  ) ?? null
+const openTeam = (phantimal: PhantimalType): Team | null => {
+  const id = toPhantimalId(phantimal.id)
+  return (
+    fillOrder.find(
+      (team) =>
+        characterStore.findTeamPhantimalHex(team) === null &&
+        characterStore.phantimalCanJoinTeam(id, team),
+    ) ?? null
+  )
+}
 
 // With no side open, a click takes the phantimal off where it stands, the side
 // filled last first; the picker greys it out to say so.
@@ -142,9 +139,12 @@ const tooltipName = computed(() => {
 const tooltipRows = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return []
-  const count = factionCount(phantimal, openTeam(phantimal) ?? fillOrder[0])
-  const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
-  const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
+  const id = toPhantimalId(phantimal.id)
+  const team = openTeam(phantimal) ?? fillOrder[0]
+  const count = characterStore.phantimalFactionCount(id, team)
+  const key = characterStore.phantimalCanJoinTeam(id, team)
+    ? 'app.phantimal-deployable'
+    : 'app.phantimal-locked'
   return [
     traitRow('faction', phantimal.faction),
     traitRow('damage', phantimal.damage),
