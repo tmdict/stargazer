@@ -8,8 +8,8 @@
 
 import { computed, watch } from 'vue'
 
-import SegmentedPicker from '@/components/teams/SegmentedPicker.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
+import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import {
   DEFAULT_VARIANT,

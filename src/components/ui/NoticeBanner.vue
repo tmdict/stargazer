@@ -4,6 +4,8 @@
 
 import type { Component } from 'vue'
 
+import { useI18nStore } from '@/stores/i18n'
+
 defineProps<{
   icon: Component
   message: string
@@ -11,13 +13,20 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ dismiss: [] }>()
+
+const i18n = useI18nStore()
 </script>
 
 <template>
   <div class="notice-banner" :class="{ dark }">
     <component :is="icon" :size="15" class="notice-banner-icon" aria-hidden="true" />
     <span>{{ message }}</span>
-    <button type="button" class="notice-banner-dismiss" aria-label="Close" @click="emit('dismiss')">
+    <button
+      type="button"
+      class="notice-banner-dismiss"
+      :aria-label="i18n.t('app.close')"
+      @click="emit('dismiss')"
+    >
       ✕
     </button>
   </div>

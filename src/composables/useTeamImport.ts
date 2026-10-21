@@ -13,7 +13,7 @@ import { computed, reactive, ref, shallowRef, watch, type ComputedRef } from 'vu
 import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
-import { inPhantimalBand, phantimalOwnerId, toPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { FIT_WIDTH } from '@/lib/import/board'
 import { FRAME_NAMES } from '@/lib/import/frames'
@@ -36,6 +36,7 @@ import {
   type ShotKind,
 } from '@/lib/import/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import { withTilePick } from '@/lib/teams/formationImport'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
   buildTeamImportPlan,
@@ -559,9 +560,11 @@ export function useTeamImport(
   unitsOf: (id: string) => TeamImportPlan['units'][number]
   phantimalFits: PlanInputs['phantimalFits']
   // Files of no stated kind ('sort': a paste) are sorted by what they show.
+  // `onAdd` hears each shot added, before it is read.
   addFiles: (
     files: File[],
     kind: ShotKind | 'sort',
+    onAdd?: (id: string) => void,
   ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
@@ -614,6 +617,7 @@ export function useTeamImport(
   const addFiles = async (
     files: File[],
     kind: ShotKind | 'sort',
+    onAdd?: (id: string) => void,
   ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
     void ensureReferences()
     const mine = opening
@@ -653,6 +657,7 @@ export function useTeamImport(
         tilePicks: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
+      onAdd?.(shot.id)
       added++
       await readShot(shot, file)
     }
@@ -726,24 +731,13 @@ export function useTeamImport(
     if (shot) shot.unitOverrides[index] = unitId
   }
 
-  // A unit starts on one tile, so picking it for a tile takes it off any other.
   const setTilePick = (id: string, side: Team, hexId: number, unitId: number | null): void => {
     const shot = findShot(id)
     if (!shot) return
-    // A side fields one phantimal, so a unit of another takes the place of
-    // the side's earlier phantimal picks.
-    const otherPhantimal = (picked: number): boolean =>
-      unitId !== null &&
-      inPhantimalBand(unitId) &&
-      inPhantimalBand(picked) &&
-      phantimalOwnerId(picked) !== phantimalOwnerId(unitId)
-    const picks = Object.fromEntries(
-      Object.entries(shot.tilePicks[side] ?? {}).filter(
-        ([hex, picked]) => Number(hex) !== hexId && picked !== unitId && !otherPhantimal(picked),
-      ),
-    )
-    if (unitId !== null) picks[hexId] = unitId
-    shot.tilePicks = { ...shot.tilePicks, [side]: picks }
+    shot.tilePicks = {
+      ...shot.tilePicks,
+      [side]: withTilePick(shot.tilePicks[side] ?? {}, hexId, unitId),
+    }
   }
 
   const forgetLearned = (): void => {
@@ -800,14 +794,9 @@ export function useTeamImport(
     for (const shot of shots.value) shot.unitOverrides = {}
   })
 
-  const phantimalFits = (phantimalId: number, heroIds: readonly number[]): boolean => {
-    const gameData = useGameDataStore()
-    return lineupQualifies(
-      gameData.getPhantimalById(phantimalId),
-      heroIds,
-      gameData.getCharacterFaction,
-    )
-  }
+  const gameData = useGameDataStore()
+  const phantimalFits = (phantimalId: number, heroIds: readonly number[]): boolean =>
+    lineupQualifies(gameData.getPhantimalById(phantimalId), heroIds, gameData.getCharacterFaction)
 
   const plan = computed<TeamImportPlan>(() => {
     // A frame the arena was not found in has no board to place, and its card

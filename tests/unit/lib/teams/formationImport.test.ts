@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/types'
-import { assignUnits, heroesFromUnits, identifyMap } from '@/lib/teams/formationImport'
+import {
+  assignUnits,
+  heroesFromUnits,
+  identifyMap,
+  missingUnits,
+} from '@/lib/teams/formationImport'
 import { Team } from '@/lib/types/team'
 
 // Code-registered companion skills: Zanie's two turrets share an image of
@@ -102,6 +107,35 @@ describe('assignUnits', () => {
       unitId: null,
       state: 'none',
     })
+  })
+})
+
+describe('missingUnits', () => {
+  it('places the family of the phantimal the portraits field and offers no other phantimal', () => {
+    const other = toPhantimalId(1)
+    const options = [11, WEDGE, WEDGE_POWER, other]
+    const shown = missingUnits(
+      [11],
+      [
+        { unitId: 11, hexId: 1 },
+        { unitId: WEDGE, hexId: 2 },
+      ],
+      options,
+      {},
+    )
+    expect(shown.options).not.toContain(other)
+    expect(shown.order).toEqual([WEDGE_POWER])
+    // A companion shown alone still fields its phantimal, which then goes to a tile.
+    const companion = missingUnits(
+      [11],
+      [
+        { unitId: 11, hexId: 1 },
+        { unitId: WEDGE_POWER, hexId: 3 },
+      ],
+      options,
+      {},
+    )
+    expect(companion.order).toEqual([WEDGE])
   })
 })
 

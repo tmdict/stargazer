@@ -130,8 +130,6 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-const teamColor = (team: Team): string => TEAM_COLORS[team]
-
 /* The crisp look, for the preview modal: the thumbnail's own fills and team
    colours, with one border on every deployment and wall tile (open ground
    drawn first, so a shared edge never shows two colours), a dark bevel line
@@ -288,7 +286,7 @@ const placedUnits = computed(() =>
       ...unit,
       center: geometry.value.centers.get(unit.hexId)!,
       corners: geometry.value.points.get(unit.hexId)!,
-      color: teamColor(unit.team),
+      color: TEAM_COLORS[unit.team],
       imageSize: hexSize * 2.2,
       // The crisp look clips the portrait under the rim, inside the frame.
       inner: hexAt(geometry.value.centers.get(unit.hexId)!, hexSize - hexSize * CRISP.inset),
@@ -311,7 +309,7 @@ const placedArtifacts = computed(() =>
         title: placeholder?.title,
         center: geometry.value.artifactCenters[side],
         radius: hexSize * ARTIFACT_RADIUS_RATIO,
-        color: teamColor(team),
+        color: TEAM_COLORS[team],
       },
     ]
   }),
