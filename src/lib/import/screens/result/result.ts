@@ -6,10 +6,24 @@
  * game's own history view. */
 
 import { Team } from '@/lib/types/team'
-import { readArtifact } from './artifacts'
-import { readCards } from './card/card'
-import type { FrameRef, HeroReading } from './card/types'
-import type { RgbaImage } from './core/types'
+import { readCards } from '../../card/card'
+import type { FrameRef, HeroReading } from '../../card/types'
+import type { RgbaImage } from '../../core/types'
+import { readArtifact } from '../match/artifacts'
+import type {
+  ArtifactReading,
+  ImportWarning,
+  ReferenceSet,
+  ScreenshotReading,
+} from '../match/types'
+import {
+  ANCHOR_FLOOR,
+  findPanelAnchor,
+  LANDMARK_FLOOR,
+  scanForColumns,
+  TAB_ANCHOR_OX,
+  type PanelAnchor,
+} from './columns'
 import {
   CARD_COLUMN_X,
   CARD_PITCH,
@@ -21,16 +35,7 @@ import {
   TABS,
 } from './layout'
 import { framePanel } from './panel'
-import {
-  ANCHOR_FLOOR,
-  findPanelAnchor,
-  LANDMARK_FLOOR,
-  scanForColumns,
-  TAB_ANCHOR_OX,
-  type PanelAnchor,
-} from './screens/result/columns'
 import { readStrip, readTab, type TabPair } from './strip'
-import type { ArtifactReading, ImportWarning, ReferenceSet, ScreenshotReading } from './types'
 
 // A result screen never shows a companion or phantimal, so its reading needs
 // no unit table.
@@ -123,7 +128,13 @@ export function readScreenshot(capture: RgbaImage, refs: ResultReferences): Scre
     artifacts[team] =
       refs.artifacts.ids.length === 0
         ? null
-        : readArtifact(shot, ally.x + HEADER_ICON.dx[team], ally.y + HEADER_ICON.dy, refs.artifacts)
+        : readArtifact(
+            shot,
+            ally.x + HEADER_ICON.dx[team],
+            ally.y + HEADER_ICON.dy,
+            refs.artifacts,
+            HEADER_ICON.diameter,
+          )
   }
 
   return {

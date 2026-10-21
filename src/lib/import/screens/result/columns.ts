@@ -6,8 +6,8 @@
 import { bestFrameAt, FRAME_SCALES, range } from '../../card/frames'
 import type { FrameRef } from '../../card/types'
 import type { RgbaImage } from '../../core/types'
-import { CARD_PITCH_RANGE, CARD_ROWS, PANEL_GAP_RANGE } from '../../layout'
-import { hasSummaryBar } from '../../strip'
+import { CARD_PITCH_RANGE, CARD_ROWS, PANEL_GAP_RANGE } from './layout'
+import { hasSummaryBar } from './strip'
 
 // Offsets tried around a column seed. Each card is then searched finely
 // around its place in the column (matchCard), so its box does not depend on
