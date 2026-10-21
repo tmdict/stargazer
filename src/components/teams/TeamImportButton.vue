@@ -20,7 +20,7 @@ const TeamImportModal = defineAsyncComponent(
 defineProps<{ activeMode: TeamModeKey; variant: VariantMatch }>()
 
 const emit = defineEmits<{
-  importMatch: [plan: TeamImportPlan]
+  importMatch: [plan: TeamImportPlan, name: string]
 }>()
 
 const i18n = useI18nStore()
@@ -41,9 +41,9 @@ const openModal = (): void => {
   open.value = true
 }
 
-const handleImport = (plan: TeamImportPlan): void => {
+const handleImport = (plan: TeamImportPlan, name: string): void => {
   open.value = false
-  emit('importMatch', plan)
+  emit('importMatch', plan, name)
 }
 </script>
 
