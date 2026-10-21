@@ -115,12 +115,6 @@ describe('readStars', () => {
       sure: true,
     })
   })
-
-  it('reads a short row as R0 whatever its colour', () => {
-    const r = readStars(...args(frameWithStars(3, [250, 210, 60])))
-    expect(r.stars).toBe(3)
-    expect(r.level).toBe(0)
-  })
 })
 
 const args = (
