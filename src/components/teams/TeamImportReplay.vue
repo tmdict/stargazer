@@ -492,11 +492,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally li.next {
-  box-shadow: inset 3px 0 0 var(--color-ally);
+  box-shadow: inset 3px 0 0 var(--color-ally-on-dark);
 }
 
 .lineup.enemy li.next {
-  box-shadow: inset 3px 0 0 var(--color-enemy);
+  box-shadow: inset 3px 0 0 var(--color-enemy-on-dark);
 }
 
 .lineup-pick {

@@ -1040,11 +1040,11 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 }
 
 .cells.ally {
-  --pick-colour: var(--color-ally);
+  --pick-colour: var(--color-ally-on-dark);
 }
 
 .cells.enemy {
-  --pick-colour: var(--color-enemy);
+  --pick-colour: var(--color-enemy-on-dark);
 }
 
 .units-note {
