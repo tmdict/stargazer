@@ -450,11 +450,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally .lineup-label {
-  color: var(--color-ally-on-dark);
+  color: var(--import-ally);
 }
 
 .lineup.enemy .lineup-label {
-  color: var(--color-enemy-on-dark);
+  color: var(--import-enemy);
 }
 
 .lineup-units {
@@ -481,11 +481,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally li.next {
-  box-shadow: inset 3px 0 0 var(--color-ally-on-dark);
+  box-shadow: inset 3px 0 0 var(--import-ally);
 }
 
 .lineup.enemy li.next {
-  box-shadow: inset 3px 0 0 var(--color-enemy-on-dark);
+  box-shadow: inset 3px 0 0 var(--import-enemy);
 }
 
 .lineup-pick {

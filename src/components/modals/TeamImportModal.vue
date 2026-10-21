@@ -670,6 +670,8 @@ const handleForgetLearned = (): void => {
   --import-bad: #f28b82;
   --import-bad-tint: rgba(242, 139, 130, 0.14);
   --import-good: #81c995;
+  --import-ally: #d9782f;
+  --import-enemy: #4f78c0;
   --import-columns: repeat(5, minmax(0, 1fr));
 
   display: flex;

@@ -1030,11 +1030,11 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
 }
 
 .cells.ally {
-  --pick-colour: var(--color-ally-on-dark);
+  --pick-colour: var(--import-ally);
 }
 
 .cells.enemy {
-  --pick-colour: var(--color-enemy-on-dark);
+  --pick-colour: var(--import-enemy);
 }
 
 .units-note {
