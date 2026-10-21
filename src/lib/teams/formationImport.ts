@@ -295,13 +295,32 @@ export function fieldableUnits(
   return [...heroes, ...phantimals.filter(fits)].flatMap((id) => [id, ...companionIdsOf(id)])
 }
 
+// Whether a unit may join the units seen, which field at most one phantimal.
+const ofFieldedPhantimal = (unitId: number, seen: readonly (number | null)[]): boolean => {
+  const phantimal = fieldedPhantimal(seen)
+  return phantimal === null || !inPhantimalBand(unitId) || phantimalOwnerId(unitId) === phantimal
+}
+
 /* Whether a formation shot's review may pick a unit for a tile: one no
  * portrait is taken for, and while the portraits field a phantimal, none of
  * another phantimal's, which would take the place of the one shown. */
 function pickableUnit(unitId: number, shown: readonly (number | null)[]): boolean {
-  if (shown.includes(unitId)) return false
-  const phantimal = fieldedPhantimal(shown)
-  return phantimal === null || !inPhantimalBand(unitId) || phantimalOwnerId(unitId) === phantimal
+  return !shown.includes(unitId) && ofFieldedPhantimal(unitId, shown)
+}
+
+/* The units a formation shot's portrait may be taken for: the side's units,
+ * less another phantimal's family while the other portraits field one. The
+ * unit it is taken for stays offered, so a reading of two phantimals can be
+ * corrected on either portrait. */
+export function portraitOptions(
+  options: readonly number[],
+  assigned: readonly (number | null)[],
+  index: number,
+): number[] {
+  const others = assigned.filter((_, i) => i !== index)
+  return options.filter(
+    (unitId) => unitId === assigned[index] || ofFieldedPhantimal(unitId, others),
+  )
 }
 
 /* A formation shot's review picks that place a unit: one the review may pick,
