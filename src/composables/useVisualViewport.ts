@@ -34,7 +34,10 @@ export function useVisualViewport(active: Ref<boolean>): {
     (on) => {
       const view = window.visualViewport
       if (!view) return
-      if (!on) return stop()
+      if (!on) {
+        stop()
+        return
+      }
       read()
       view.addEventListener('resize', read)
       view.addEventListener('scroll', read)

@@ -280,8 +280,8 @@ const editLink = computed(() =>
   }
 }
 
-/* On a phone the card spans the overlay, so its width never follows the board,
-   and the board's box, wider than the screen there, runs past it only as empty
+/* On a phone the card spans the overlay, so its width never follows the board.
+   The board's box is wider than the screen there and runs past it only as empty
    margin. */
 @media (max-width: 480px) {
   .overlay {
