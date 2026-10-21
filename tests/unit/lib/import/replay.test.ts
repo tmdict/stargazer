@@ -76,7 +76,9 @@ describe('replay frames', () => {
     }
   })
 
-  it("finds a frame's scale and shift from the arena around it", () => {
+  // Full-size matching takes about 2 s alone, past the default limit while the
+  // whole suite runs in parallel.
+  it("finds a frame's scale and shift from the arena around it", { timeout: 15_000 }, () => {
     const arena = prepareArena(ARENA)
     // The noise lowers the fine copies' scores more than the coarse ones'.
     const frame = frameOf(ARENA, 0.95, -30, 20, 1290, 1800, 120)
