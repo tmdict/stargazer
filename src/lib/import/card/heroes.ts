@@ -254,14 +254,24 @@ const HERO_SURE_MARGIN = 0.1
 // stranger's face more closely than the art grid can, so its lead must be larger.
 const COSTUME_SURE_MARGIN = 0.15
 
-/* A side fields five different heroes, so the same hero read twice on a
- * side goes to the surer cell and the other takes its next candidate. Returns
- * each cell's candidates reordered so the pick comes first, with its margin
- * over the best remaining candidate of another hero, learned or bundled, and
- * whether that margin clears the bar. Learned rows rank as their own
- * candidates, so two faces taught as different heroes contest each other
- * here instead of one of them passing as sure. */
-export function assignUnique(rankings: readonly HeroCandidate[][]): HeroIdentity[] {
+// Which other heroes a pick's lead is measured over: those no other cell took, or
+// every one it was ranked against.
+export type Rivals = 'untaken' | 'all'
+
+/* Cards shown together field different heroes (a side's five), so the same
+ * hero read twice goes to the surer cell and the other takes its next
+ * candidate. Returns each cell's candidates reordered so the pick comes first,
+ * with its margin over the best candidate of another hero, learned or bundled,
+ * and whether that margin clears the bar. Learned rows rank as their own
+ * candidates, so two faces taught as different heroes contest each other here
+ * instead of one of them passing as sure. With `rivals` 'untaken' the margin is
+ * over the candidates left once other cells took theirs; with 'all' over every
+ * other hero, so a cell is never sure only because stronger cells took its
+ * rivals, which on a screen of thirty cards would pass weak ones as sure. */
+export function assignUnique(
+  rankings: readonly HeroCandidate[][],
+  rivals: Rivals = 'untaken',
+): HeroIdentity[] {
   const order = rankings
     .map((cands, i) => ({
       i,
@@ -291,7 +301,9 @@ export function assignUnique(rankings: readonly HeroCandidate[][]): HeroIdentity
     const rest = cands.filter(
       (c) => c.characterId !== pick.characterId && !taken.has(c.characterId),
     )
-    const next = rest[0]
+    const next = (
+      rivals === 'all' ? cands.filter((c) => c.characterId !== pick.characterId) : rest
+    )[0]
     const margin = next ? pick.score - next.score : pick.score
     out[i] = {
       candidates: [pick, ...rest],

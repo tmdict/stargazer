@@ -10,10 +10,14 @@
  * of pixel rows where the cards' side edges show, cut at the row pitch where crowns
  * bridge two rows, and trimmed where the bottom bar covers the margin left of the
  * first column. The Hands of Resonance are a comb of five fitted above the first
- * row. Each card is then read with `readCards` on a copy scaled so its frame meets
- * the templates, at the scale where the first cards' frames match best. */
+ * row. Each card is then read with the card reader on a copy scaled so its frame
+ * meets the templates, at the scale where the first cards' frames match best, and
+ * the shot's cards, the Hands and the grid together, are settled against each
+ * other: the screen shows each hero once. A card is sure of its hero only when it
+ * leads every other hero it was ranked against, since among some thirty cards the
+ * elimination the match screens settle by would pass weak readings as sure. */
 
-import { readCards } from '../../card/card'
+import { readCard, settleCards, type CardRead } from '../../card/card'
 import type { CardReferences, HeroReading } from '../../card/types'
 import { maskedNcc, resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
@@ -558,22 +562,22 @@ const OPAQUE_SHARE = 261 / 280
 // template's width among these factors of it.
 const SCALES = [0.91, 0.94, 0.97, 1, 1.03, 1.06, 1.09] as const
 
-/* The cards of one size read together, as readCards reads a column: on a copy
- * where they meet the frame templates, the box's top-left the seed. The copy's
- * scale is the one at which the frames of the first cards match best. */
+/* The cards of one size, each read on a copy where they meet the frame
+ * templates, the box's top-left the seed. The copy's scale is the one at which
+ * the frames of the first cards match best. */
 function readSlots(
   img: RgbaImage,
   slots: Slot[],
   refs: CardReferences,
-): { cells: HeroReading[]; width: number } {
-  if (slots.length === 0) return { cells: [], width: 0 }
+): { reads: CardRead[]; width: number } {
+  if (slots.length === 0) return { reads: [], width: 0 }
   const margin = 0.3 * slots[0]!.box.w
   const x0 = Math.max(0, Math.min(...slots.map((s) => s.box.x)) - margin)
   const y0 = Math.max(0, Math.min(...slots.map((s) => s.box.y)) - margin)
   const x1 = Math.min(img.width, Math.max(...slots.map((s) => s.box.x + s.box.w)) + margin)
   const y1 = Math.min(img.height, Math.max(...slots.map((s) => s.box.y + s.box.h)) + margin)
   const region = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
-  if (region.w < 4 || region.h < 4) return { cells: [], width: 0 }
+  if (region.w < 4 || region.h < 4) return { reads: [], width: 0 }
   const at = (k: number) => {
     const scaled = resample(img, region, Math.round(region.w * k), Math.round(region.h * k))
     // The template box at this scale, about the slot's centre.
@@ -603,25 +607,32 @@ function readSlots(
     if (sum / probe.length > best.score) best = { k, score: sum / probe.length }
   }
   const { scaled, seeds } = at(best.k)
-  return { cells: readCards(scaled, refs, seeds, true), width: READ_WIDTH / best.k }
+  return {
+    reads: seeds.map((seed) => readCard(scaled, refs, seed, true)),
+    width: READ_WIDTH / best.k,
+  }
 }
 
-/* A roster screenshot read: the grid's whole cards together, then the Hands of
- * Resonance, whose cards are another size. Clipped cards are not read: a card the
- * scroll cuts is whole in another screenshot, or not counted. */
+/* A roster screenshot read: the grid's whole cards, then the Hands of
+ * Resonance, whose cards are another size, settled together. Clipped cards are
+ * not read: a card the scroll cuts is whole in another screenshot, or not
+ * counted. */
 export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading {
   const { grid, slots } = locate(img)
+  const gridSlots = slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : []))
+  const handSlots = slots.flatMap((s, i) => (s.hands ? [i] : []))
+  const gridRead = readSlots(
+    img,
+    gridSlots.map((i) => slots[i]!),
+    refs,
+  )
+  const handsRead = readSlots(
+    img,
+    handSlots.map((i) => slots[i]!),
+    refs,
+  )
+  const settled = settleCards([...gridRead.reads, ...handsRead.reads], 'all')
   const cells: (HeroReading | null)[] = slots.map(() => null)
-  const readGroup = (indices: number[]): number => {
-    const read = readSlots(
-      img,
-      indices.map((i) => slots[i]!),
-      refs,
-    )
-    read.cells.forEach((cell, k) => (cells[indices[k]!] = cell))
-    return read.width
-  }
-  const width = readGroup(slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : [])))
-  readGroup(slots.flatMap((s, i) => (s.hands ? [i] : [])))
-  return { grid, slots, cells, width }
+  ;[...gridSlots, ...handSlots].forEach((slot, k) => (cells[slot] = settled[k]!))
+  return { grid, slots, cells, width: gridRead.width }
 }

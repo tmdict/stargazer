@@ -78,6 +78,22 @@ describe('assignUnique', () => {
     expect(out[0]!.sure).toBe(false)
   })
 
+  it('counting every rival, makes no cell sure by elimination alone', () => {
+    // The first cell takes hero 7. The second's best hero left, 3, leads what remains
+    // by far, but hero 7 scored higher on the second's own face.
+    const rows = [
+      [cand(7, 0.9), cand(9, 0.4)],
+      [cand(7, 0.8), cand(3, 0.7), cand(4, 0.4)],
+    ]
+    const usual = assignUnique(rows)
+    expect(usual[1]!.candidates[0]!.characterId).toBe(3)
+    expect(usual[1]!.sure).toBe(true)
+    const strict = assignUnique(rows, 'all')
+    expect(strict[1]!.candidates[0]!.characterId).toBe(3)
+    expect(strict[1]!.sure).toBe(false)
+    expect(strict[0]!.sure).toBe(true)
+  })
+
   it('holds a costume-backed pick to the higher bar', () => {
     expect(assignUnique([[cand(5, 0.8, false, true), cand(6, 0.68)]])[0]!.sure).toBe(false)
     expect(assignUnique([[cand(5, 0.8), cand(6, 0.68)]])[0]!.sure).toBe(true)
