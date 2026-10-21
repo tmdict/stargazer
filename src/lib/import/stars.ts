@@ -1,7 +1,8 @@
-/* Refinement from the star row above the face. Stars are bright blobs with
- * dark gaps between them: the row is the brightest seven-row band in the
- * outer thirds of the frame's top (the centre crown never reaches there),
- * the count is the number of peaks across it, and the colour family comes
+/* Refinement from the star row above the face. The row starts a fixed
+ * distance above the card box's centre, and the seven-row band with the most
+ * bright pixels within ROW_SLACK rows of there absorbs the frame match's
+ * residual error. Stars are bright blobs with dark gaps between them: the
+ * count is the number of peaks across the band, and the colour family comes
  * from the bright pixels at the peaks. Fewer than six stars cannot be
  * refined, so a short row is R0 whatever its colour.
  *
@@ -16,7 +17,14 @@ import { hsvAt } from './image'
 import type { Rect, RefinementReading, RgbaImage, StarFamily } from './types'
 
 const BAND_ROWS = 7
-const SEARCH_DEPTH = 0.24
+// The framed shot gives every card one size, and a frame matched a little
+// larger or smaller sits around the same card, so the row's top is this many
+// pixels above the box's centre whatever frame and scale matched (37.5 to 40.5
+// on labelled screenshots). The brightest band near the card's top is often
+// not the row: it settles on the winged frame's white band, or on hair or a
+// hat under the row.
+const ROW_ABOVE_CENTRE = 39
+const ROW_SLACK = 2
 const BRIGHT = 0.78
 const PEAK_BRIGHT = 0.72
 const PEAK_MIN_DISTANCE = 6
@@ -42,31 +50,22 @@ const SHORT_ROW = 4
 const findBand = (shot: RgbaImage, box: Rect): Rect => {
   const x0 = box.x + Math.round(box.w * 0.1)
   const x1 = box.x + Math.round(box.w * 0.9)
-  const inner0 = box.x + box.w * 0.36
-  const inner1 = box.x + box.w * 0.64
-  const depth = Math.round(box.h * SEARCH_DEPTH)
-  const rowScore: number[] = []
-  for (let y = box.y; y < box.y + depth; y++) {
-    let c = 0
-    if (y >= 0 && y < shot.height) {
-      for (let x = x0; x < x1; x++) {
-        if (x < 0 || x >= shot.width || (x > inner0 && x < inner1)) continue
-        if (hsvAt(shot, x, y)[2] > BRIGHT) c++
+  const at = box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE
+  let bestTop = at
+  let bestSum = -1
+  for (let top = at - ROW_SLACK; top <= at + ROW_SLACK; top++) {
+    let sum = 0
+    for (let y = Math.max(0, top); y < Math.min(shot.height, top + BAND_ROWS); y++) {
+      for (let x = Math.max(0, x0); x < Math.min(shot.width, x1); x++) {
+        if (hsvAt(shot, x, y)[2] > BRIGHT) sum++
       }
     }
-    rowScore.push(c)
-  }
-  let bestTop = 0
-  let bestSum = -1
-  for (let k = 0; k + BAND_ROWS <= rowScore.length; k++) {
-    let sum = 0
-    for (let r = 0; r < BAND_ROWS; r++) sum += rowScore[k + r]!
     if (sum > bestSum) {
       bestSum = sum
-      bestTop = k
+      bestTop = top
     }
   }
-  return { x: x0, y: box.y + bestTop, w: x1 - x0, h: BAND_ROWS }
+  return { x: x0, y: bestTop, w: x1 - x0, h: BAND_ROWS }
 }
 
 /* Column peaks of the band's bright pixels: one per star. */

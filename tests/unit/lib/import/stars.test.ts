@@ -6,9 +6,12 @@ import type { RgbaImage } from '@/lib/import/types'
 
 type Rgb = [number, number, number]
 
-// A dark frame box with a centred row of `count` bright stars near its top,
-// roughly the size a frame match returns (74 × 100); one colour for every
-// star, or one per star.
+// The row's top, in pixels above the frame box's centre.
+const ROW_ABOVE_CENTRE = 39
+
+// A dark frame box with a centred row of `count` bright stars where the card
+// puts its star row, roughly the size a frame match returns (74 × 100); one
+// colour for every star, or one per star.
 const frameWithStars = (
   count: number,
   colour: Rgb | Rgb[],
@@ -26,7 +29,8 @@ const frameWithStars = (
   for (let k = 0; k < count; k++) {
     const rgb = Array.isArray(colour[0]) ? (colour as Rgb[])[k]! : (colour as Rgb)
     const cx = Math.round(startX + k * pitch)
-    for (let y = box.y + 8; y < box.y + 13; y++) {
+    const top = box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE + 1
+    for (let y = top; y < top + 5; y++) {
       for (let x = cx - 3; x <= cx + 3; x++) {
         const i = (y * shot.width + x) * 4
         shot.data[i] = rgb[0]
@@ -87,9 +91,19 @@ describe('readStars', () => {
   it('is not sure of an R0 row with a faint pink tint', () => {
     const f = frameWithStars(6, [225, 240, 250])
     // Four pink pixels in the first star (centred at x 33): about 2% of the row.
-    for (let x = 31; x <= 34; x++)
-      f.shot.data.set([250, 200, 245], ((f.box.y + 10) * f.shot.width + x) * 4)
+    const y = f.box.y + Math.round(f.box.h / 2) - ROW_ABOVE_CENTRE + 3
+    for (let x = 31; x <= 34; x++) f.shot.data.set([250, 200, 245], (y * f.shot.width + x) * 4)
     expect(readStars(...args(f))).toMatchObject({ level: 0, sure: false })
+  })
+
+  // The winged P4 frame's white wings sit just above its star row and are
+  // brighter than it.
+  it('reads the row where the card puts it, not a brighter band above it', () => {
+    const f = frameWithStars(6, [250, 90, 110])
+    for (let y = f.box.y + 2; y < f.box.y + 9; y++)
+      for (let x = f.box.x; x < f.box.x + f.box.w; x++)
+        f.shot.data.set([245, 245, 250], (y * f.shot.width + x) * 4)
+    expect(readStars(...args(f))).toMatchObject({ stars: 6, family: 'red', level: 3 })
   })
 
   it('reads a short row as R0 whatever its colour', () => {
