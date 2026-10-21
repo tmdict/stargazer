@@ -198,7 +198,6 @@ const editLink = computed(() =>
 </template>
 
 <style scoped>
-/* Grid wrapper - uses modal container styles */
 .grid-wrapper {
   position: relative;
   background: rgba(20, 20, 20, 0.85);
@@ -208,13 +207,10 @@ const editLink = computed(() =>
   box-shadow:
     var(--shadow-float),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  /* Top padding clears the absolutely positioned action cluster (modal.css
-     .buttons: 12px offset + 32px buttons) so the board starts below it. */
   padding: 56px 10px 10px;
   /* The overlay's align-items: center would center a box taller than the
-     overlay too, leaving its top half beyond scroll reach; auto margins (as on
-     content.css .container) collapse instead, so the box starts at the top and
-     scrolls. */
+     overlay too, leaving its top half beyond scroll reach; auto margins
+     collapse instead, so the box starts at the top and scrolls. */
   margin: auto;
   z-index: 1;
   display: flex;
@@ -222,30 +218,24 @@ const editLink = computed(() =>
   align-items: center;
 }
 
-/* Multi-board (5 v 5): let the boards row own the width and scroll horizontally
-   (and grow to two rows when wrapped) rather than centering a single grid. As a
-   flex item its automatic minimum width would be the full five-board row, so
-   zero it to let the box shrink to the overlay. */
+/* As a flex item its automatic minimum width would be the full five-board row,
+   so zero it to let the box shrink to the overlay. */
 .grid-wrapper.multi {
   display: block;
   min-width: 0;
 }
 
-/* Each board stacks its grid over its read-only team-power panel. */
 .share-board {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* The panel is built for light pages; on the dark share modal give it a translucent
-   light surface so the captions and numbers stay legible without glaring white. */
 .share-board :deep(.team-power) {
   background: rgba(255, 255, 255, 0.85);
   border-radius: 6px;
 }
 
-/* Empty state styling */
 .empty-state {
   position: relative;
   background: rgba(20, 20, 20, 0.85);
@@ -280,7 +270,6 @@ const editLink = computed(() =>
   border-radius: 8px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .overlay {
     align-items: flex-start;

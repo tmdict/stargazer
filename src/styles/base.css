@@ -1,11 +1,9 @@
-/* Universal box-sizing - safe and useful for all elements */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Reset margins and padding selectively */
 body,
 h1,
 h2,
@@ -26,13 +24,10 @@ dd {
   padding: 0;
 }
 
-/* Buttons don't inherit the page font (the UA stylesheet sets its own); keep
-   them on the body font so button text matches the labels beside it. */
 button {
   font-family: inherit;
 }
 
-/* Reset font-weight only for elements that should be normal, not buttons or their children */
 p,
 div,
 section,
@@ -74,8 +69,7 @@ body {
 
 /* Apple SD Gothic Neo, the Mac's Korean font, sets its letters above the
    middle of its line box, so the line is measured from a Latin font named
-   first. Without that font the list falls through to sans-serif. <body lang>
-   is the interface language. */
+   first. */
 body:lang(ko) {
   --font-ui: 'Helvetica Neue', sans-serif;
 }
@@ -191,8 +185,6 @@ main {
 }
 
 .section {
-  /* The inset vars ARE the surface's padding; TabView reads them to bleed its
-     strip to the surface edge, so the two can't drift apart. */
   --tabview-inset-y: 2em;
   --tabview-inset-x: 2em;
   padding: var(--tabview-inset-y) var(--tabview-inset-x);

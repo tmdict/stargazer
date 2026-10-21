@@ -138,7 +138,6 @@ function handleEnter(event: KeyboardEvent) {
 
 <style scoped>
 .search-input {
-  /* 4px side margin lines the box up with the character grid's content padding. */
   width: calc(100% - 8px);
   box-sizing: border-box;
   margin: 0 4px 8px;
@@ -180,8 +179,6 @@ function handleEnter(event: KeyboardEvent) {
   margin-bottom: 8px;
 }
 
-/* FilterIcons defaults to --color-text-secondary (dark gray), which disappears
-   on this popup's dark backdrop. Override the "All" button color for legibility. */
 .filter-row :deep(.clear-option) {
   color: rgba(255, 255, 255, 0.75);
 }
@@ -191,11 +188,10 @@ function handleEnter(event: KeyboardEvent) {
   grid-template-columns: repeat(5, 1fr);
   gap: 5px;
   /* overflow-y:auto forces overflow-x to auto; pin it hidden so the hover
-     scale-up can't add a horizontal scrollbar. Padding gives edge icons room. */
+     scale-up can't add a horizontal scrollbar. */
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 280px;
-  /* Shrinks first when the popup's cap is reached (SelectionPopup is a column). */
   min-height: 0;
   padding: 2px 4px;
 }
@@ -219,7 +215,6 @@ function handleEnter(event: KeyboardEvent) {
   transition: all 0.15s ease;
 }
 
-/* The portrait grows itself on hover (CharacterIcon); the cell only brightens. */
 .character-item:hover {
   filter: brightness(1.2);
 }
@@ -235,7 +230,6 @@ function handleEnter(event: KeyboardEvent) {
   height: 50px !important;
 }
 
-/* Only visible badge content should add height to a grid row. */
 .character-item :deep(.portrait-badge) {
   margin-top: 0;
 }
@@ -248,7 +242,6 @@ function handleEnter(event: KeyboardEvent) {
   font-size: 14px;
 }
 
-/* !important to outrank the base .character-display override above. */
 .character-item.enter-target :deep(.character-display) {
   box-shadow: 0 0 0 2px var(--color-primary) !important;
 }
@@ -265,7 +258,6 @@ function handleEnter(event: KeyboardEvent) {
   animation: enter-hint-in 0.15s ease;
 }
 
-/* system-ui rather than the content font, which lacks the ↵ glyph. */
 .enter-hint kbd {
   display: inline-flex;
   align-items: center;

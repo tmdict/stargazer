@@ -599,8 +599,6 @@ onUnmounted(() => {
     stroke-width 0.2s ease;
 }
 
-/* Hover overlay: a single neutral tint that lightens any tile color.
-   Per-state stroke and drop-shadow below carry the validity signal. */
 .grid-event-layer.drop-target.drag-hover polygon,
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
   fill: rgba(255, 255, 255, 0.3);
@@ -626,16 +624,12 @@ onUnmounted(() => {
   stroke: #36958e;
 }
 
-/* Mobile: the tile tapped to target placement gets a persistent gold highlight
-   until a hero fills it. */
 .grid-event-layer.targeted polygon {
   fill: rgba(247, 216, 124, 0.35);
   stroke: #f7d87c;
   stroke-width: 3;
 }
 
-/* A lifted hero's source tile, teal so it can't be confused with the gold
-   placement target. */
 .grid-event-layer.lifted polygon {
   fill: rgba(54, 149, 142, 0.3);
   stroke: #36958e;

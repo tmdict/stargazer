@@ -41,10 +41,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Layout for the locale content files. They render as child components, so
-   the rules reach them through :deep. Their text styles come from .content. */
 .help {
-  /* Picture background, read by HelpScene and HelpBasicsPicture. */
+  /* Read by HelpScene and HelpBasicsPicture. */
   --help-panel: rgba(255, 255, 255, 0.06);
   container: help / inline-size;
   max-width: 1180px;
@@ -52,7 +50,6 @@ onMounted(() => {
 
 /* ---- Mouse / Touch wording ---- */
 
-/* Hide-only, so each element keeps its own display when shown. */
 .help:not(.touch) :deep(.help-touch),
 .help.touch :deep(.help-mouse) {
   display: none;
@@ -113,7 +110,6 @@ onMounted(() => {
   color: #fff;
 }
 
-/* Copy of TabList's open tab. */
 .help :deep(.help-tab) {
   padding: 2px 1px 4px;
   border-bottom: 2px solid var(--color-accent);
@@ -135,7 +131,6 @@ onMounted(() => {
   gap: 16px 24px;
 }
 
-/* base.css centers h1. */
 .help :deep(.help-title) {
   margin: 0;
   text-align: left;
@@ -276,7 +271,6 @@ onMounted(() => {
   grid-template-columns: 7.25rem minmax(0, 1fr);
   align-items: center;
   gap: 10px 14px;
-  /* For the key cells; the descriptions are paragraphs. */
   font-size: var(--reading-body-size);
 }
 
@@ -288,7 +282,6 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Full size, the upgrade bar is wider than the key column. */
 .help :deep(.help-rows .upgrade-dock) {
   zoom: 0.8;
 }

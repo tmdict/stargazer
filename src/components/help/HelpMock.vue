@@ -10,7 +10,6 @@ defineProps<{ caption: string }>()
 </template>
 
 <style scoped>
-/* 80% so both screens fit side by side. */
 .help-mock {
   zoom: 0.8;
   flex: 1;

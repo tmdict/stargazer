@@ -203,8 +203,7 @@ watch([() => route.query.tag, () => route.query.mods, () => route.query.energy],
 </template>
 
 <style scoped>
-/* The icon filters read these two for their All label; on this dark panel
-   they are relit instead of restyling the component. */
+/* The icon filters read these two for their All label. */
 .toolbar {
   --color-text-secondary: rgba(255, 255, 255, 0.6);
   --color-primary: var(--color-accent);

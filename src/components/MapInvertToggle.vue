@@ -47,8 +47,6 @@ const onToggle = () => {
   color: var(--color-primary);
 }
 
-/* GridControls' touch-tablet compact tier: match the row's chip padding so
-   the row stays one line in the 660px column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .invert-toggle {
     padding: var(--spacing-xs) var(--spacing-sm);
@@ -67,8 +65,6 @@ const onToggle = () => {
   font-weight: 600;
 }
 
-/* Mobile: match the grid-control toggles (Flat, Grid Info, ...): a pill chip whose
-   fill is the on/off state, so the checkbox is dropped. */
 @media (max-width: 768px) {
   .invert-toggle {
     border-radius: 999px;

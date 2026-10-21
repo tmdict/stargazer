@@ -201,7 +201,7 @@ function onKeydown(e: KeyboardEvent) {
   padding: var(--chip-dark-padding-block) 2px;
 }
 
-/* ---- compact: the buttons alone, as tall as a filter chip ---- */
+/* ---- compact: the buttons alone ---- */
 
 .compact {
   min-height: calc(

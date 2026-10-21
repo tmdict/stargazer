@@ -54,7 +54,6 @@ const select = (label: string): void => {
 </template>
 
 <style scoped>
-/* Desktop-only quick switcher; below 1320px the Map Editor tab is the arena picker. */
 .arena-dropdown {
   display: none;
 }

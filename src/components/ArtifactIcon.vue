@@ -75,13 +75,11 @@ const {
   margin-top: var(--spacing-xs);
 }
 
-/* Under the phantimals' 70px: full-bleed art looks bigger at equal size. */
 .artifact {
   width: 58px;
   height: 58px;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-white);
-  /* White backing for every season (icons may have transparency). */
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -116,8 +114,6 @@ const {
   transform: scale(1.05);
 }
 
-/* Placed on either team: desaturate + dim the fill like the character picker,
-   keeping the white border/ring. */
 .artifact.placed {
   filter: var(--placed-filter);
 }

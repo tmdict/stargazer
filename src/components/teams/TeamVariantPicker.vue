@@ -83,7 +83,6 @@ const select = (choice: TeamVariantChoice): void => {
 </template>
 
 <style scoped>
-/* Mirrors TeamModePicker so the two read as one control pair. */
 .variant-picker {
   display: inline-flex;
   background: var(--color-bg-secondary);
@@ -116,7 +115,6 @@ const select = (choice: TeamVariantChoice): void => {
   color: #fff;
 }
 
-/* Danger-tinted like every armed destructive control. */
 .variant-seg.armed {
   background: var(--color-danger-hover);
   color: #fff;

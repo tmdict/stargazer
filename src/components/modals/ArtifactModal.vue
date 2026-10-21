@@ -77,8 +77,6 @@ const pendingLabel = computed(
 </template>
 
 <style scoped>
-/* Compact single-row info, like the skill modal's filter chips. The bottom
-   border is the divider between the info and effects sections. */
 .artifact-stats {
   display: flex;
   flex-wrap: wrap;
@@ -88,8 +86,7 @@ const pendingLabel = computed(
   border-bottom: 2px solid var(--color-border-primary);
 }
 
-/* Doubled class outweighs the shared `.content .meta-chip` rule; the dimmed
-   label lets the value read first. */
+/* Doubled class outweighs the shared `.content .meta-chip` rule. */
 .meta-chip.stat-chip {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -105,8 +102,6 @@ const pendingLabel = computed(
   font-style: italic;
 }
 
-/* base.css centers h1; on a narrow popup the title lines up with the
-   left-aligned chips and sections instead, like the skill modal. */
 @media (max-width: 768px) {
   h1 {
     text-align: left;

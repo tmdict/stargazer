@@ -62,7 +62,6 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
 </template>
 
 <style scoped>
-/* Mirrors HomeView's .sections-container split layout. */
 .skills-layout {
   display: flex;
   flex-direction: column;
@@ -81,7 +80,6 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
   }
 }
 
-/* Widen the reader on larger monitors; the right column keeps the remainder. */
 @media (min-width: 1600px) {
   .skills-layout > .skills-reader {
     flex-basis: 860px;
@@ -96,8 +94,6 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
   }
 }
 
-/* Mobile: clear the collapsed sheet peek. The hero list sheet chrome lives in
-   BottomSheet; SkillsSelection owns its own in-sheet fill/scroll/inset. */
 @media (max-width: 768px) {
   main {
     padding-bottom: 64px;

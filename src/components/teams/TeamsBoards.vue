@@ -246,7 +246,6 @@ const {
 </template>
 
 <style scoped>
-/* Document-style title: plain text, deliberately unlike the buttons below it. */
 .team-title-row {
   display: flex;
   justify-content: center;
@@ -302,7 +301,6 @@ const {
   margin-left: var(--spacing-sm);
 }
 
-/* Matches the title's type so entering/leaving edit mode doesn't shift the row. */
 .team-title-input {
   font: inherit;
   font-size: 1.3rem;
@@ -320,8 +318,6 @@ const {
   outline: none;
 }
 
-/* Anchored beside the title, out of flow, so appearing/disappearing never
-   shifts the centered name. */
 .team-title-status {
   position: absolute;
   left: calc(100% + 12px);
@@ -352,20 +348,15 @@ const {
   .team-title-input {
     font-size: 1.05rem;
   }
-  /* The dot alone signals unsaved changes: the text would overflow narrow
-     viewports from its out-of-flow anchor. */
   .team-title-status .status-text {
     display: none;
   }
 }
 
-/* The card's own padding already spaces the controls; the margin GridControls
-   carries for the Arena (where it sits below the grid) would double it. */
 .teams-boards :deep(.grid-controls) {
   margin-top: 0;
 }
 
-/* Floating label that tracks the cursor during a swap drag (desktop only). */
 .swap-drag-ghost {
   position: fixed;
   z-index: 1000;

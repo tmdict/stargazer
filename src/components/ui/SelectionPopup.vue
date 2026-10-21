@@ -113,7 +113,6 @@ watch(() => props.position, reposition)
   z-index: var(--z-dropdown);
 }
 
-/* Shared slim scrollbar for any scrollable grid the consumer renders inside. */
 .selection-popup :deep(::-webkit-scrollbar) {
   width: 4px;
 }

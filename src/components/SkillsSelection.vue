@@ -102,7 +102,6 @@ watch(mechanicFilter, (pick) => {
   }
 }
 
-/* Clear the panel's scrollbar on desktop (mobile sets its own inset below). */
 .search-row {
   display: flex;
   padding-right: var(--spacing-lg);
@@ -115,9 +114,6 @@ watch(mechanicFilter, (pick) => {
 }
 
 @media (max-width: 768px) {
-  /* Fill the mobile hero list sheet and scroll within it. No panel inset: the grid
-     insets itself (CharacterGrid) and the filter/results go edge-to-edge; the
-     search row keeps its own horizontal inset (see .search-row below). */
   .skills-selection {
     flex: 1;
     min-height: 0;
@@ -125,7 +121,6 @@ watch(mechanicFilter, (pick) => {
     padding: 0 0 var(--spacing-lg);
     --filter-inset: var(--spacing-md);
   }
-  /* The panel goes edge-to-edge in the sheet; inset the trigger row itself. */
   .search-row {
     padding: var(--spacing-sm) var(--spacing-md) 0;
   }

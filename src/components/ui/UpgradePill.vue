@@ -88,7 +88,6 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   box-shadow:
     var(--upgrade-pill-rim),
     0 1px 3px rgba(0, 0, 0, 0.22);
-  /* Size knobs a host sets on the pill: the board panel sizes it per container width. */
   font-size: var(--upill-font-size, 10px);
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -113,7 +112,6 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   cursor: inherit;
 }
 
-/* Hidden, it also takes no clicks. */
 .reserved {
   visibility: hidden;
 }
@@ -122,7 +120,6 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   color: #fff;
 }
 
-/* Wider tap targets on touch screens (the pill is the only control for levels). */
 @media (pointer: coarse) {
   .editable .useg {
     min-width: 40px;

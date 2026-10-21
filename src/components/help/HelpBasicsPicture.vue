@@ -204,7 +204,6 @@ const narrow = useNarrowViewport()
   gap: 8px;
 }
 
-/* Copy of CharacterSelectionPopup. */
 .help-popup {
   position: absolute;
   top: 16px;
@@ -297,7 +296,6 @@ const narrow = useNarrowViewport()
   fill: var(--color-primary);
 }
 
-/* Copy of SkillModal, cut down. */
 .help-skill-card {
   width: 170px;
   padding: 10px 12px 11px;

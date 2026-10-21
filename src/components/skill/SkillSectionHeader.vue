@@ -20,7 +20,6 @@ const i18n = useI18nStore()
 </template>
 
 <style scoped>
-/* Border lives on the wrapper (not the h2) so it spans full section width. */
 .skill-section-header {
   display: flex;
   align-items: center;

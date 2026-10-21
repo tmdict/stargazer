@@ -81,8 +81,6 @@ const tiles = loadMechanicGroups().map((group) => {
   margin-top: 14px;
 }
 
-/* Name on top, portrait stack and count beneath, so long names never wrap
-   into uneven rows. */
 .tile {
   position: relative;
   z-index: 2;
@@ -132,7 +130,6 @@ const tiles = loadMechanicGroups().map((group) => {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Two fixed columns when the panel is narrow (a side column or a phone). */
 @container (max-width: 560px) {
   .tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));

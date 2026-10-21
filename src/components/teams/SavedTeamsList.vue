@@ -581,8 +581,6 @@ const actionTipText = computed((): string => {
   min-height: var(--panel-min-height);
 }
 
-/* The mobile sheet zeroes the card inset, so the panel owns its side padding
-   (the same inset as the sibling maps tab). */
 @media (max-width: 768px) {
   .saved-teams {
     padding: 0 var(--spacing-lg);
@@ -593,7 +591,6 @@ const actionTipText = computed((): string => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Three actions plus the sort picker and search box outgrow a phone-width bar. */
   flex-wrap: wrap;
   gap: var(--spacing-sm) var(--spacing-lg);
 }
@@ -632,7 +629,6 @@ const actionTipText = computed((): string => {
   color: var(--color-warning);
 }
 
-/* Sized down from TeamModePicker's segmented style to fit the library panel. */
 .seg-group {
   display: inline-flex;
   margin-left: var(--spacing-sm);
@@ -673,7 +669,6 @@ const actionTipText = computed((): string => {
   gap: var(--spacing-sm) var(--spacing-md);
 }
 
-/* The row's gap spaces the groups; the bar's segment inset does not apply. */
 .filter-row > .seg-group {
   margin-left: 0;
 }
@@ -719,7 +714,6 @@ const actionTipText = computed((): string => {
   color: #fff;
 }
 
-/* Widen via max-width: a larger basis wraps the bar before the box can shrink. */
 .team-search {
   flex: 1 1 120px;
   min-width: 70px;
@@ -727,15 +721,12 @@ const actionTipText = computed((): string => {
   margin-left: var(--spacing-sm);
 }
 
-/* Room for several hero pills beside the text once the bar stops wrapping. */
 @media (min-width: 769px) {
   .team-search {
     max-width: 480px;
   }
 }
 
-/* The phone sheet leaves the box a sliver beside the count and sort, too
-   narrow for a pill and the text together, so it takes a row of its own. */
 @media (max-width: 768px) {
   .team-search {
     flex-basis: 100%;
@@ -750,8 +741,6 @@ const actionTipText = computed((): string => {
   gap: var(--spacing-sm);
 }
 
-/* Solid fill (the .popover-btn treatment) so the actions stay legible beside the
-   sort picker and search box sharing the bar. */
 .library-btn {
   border: 2px solid var(--color-primary);
   background: var(--color-primary);
@@ -798,9 +787,6 @@ const actionTipText = computed((): string => {
 
 .team-grid {
   display: grid;
-  /* The column minimum keeps cards wide enough for legible thumbnail heroes;
-     wide monitors fit more columns of the same card size rather than
-     stretching a fixed count. */
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
@@ -827,8 +813,6 @@ const actionTipText = computed((): string => {
   flex-direction: column;
   gap: var(--spacing-sm);
   transition: border-color var(--transition-fast);
-  /* Offscreen cards skip layout/paint; the placeholder box keeps scroll stable
-     (auto remembers each card's real rendered size after first paint). */
   content-visibility: auto;
   contain-intrinsic-size: auto 460px;
 }
@@ -863,7 +847,6 @@ const actionTipText = computed((): string => {
 .card-title-row {
   display: flex;
   align-items: center;
-  /* The name's own 4px side padding already separates it from the pencil. */
   gap: 2px;
 }
 
@@ -876,8 +859,6 @@ const actionTipText = computed((): string => {
   border-radius: var(--radius-small);
   padding: 0 4px;
   cursor: text;
-  /* Shrink-to-fit so the rename pencil sits right after the text; only a
-     too-long name pushes it to the card edge (and ellipsizes). */
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -961,7 +942,6 @@ const actionTipText = computed((): string => {
   margin-left: auto;
 }
 
-/* Equal-width actions so Load/Duplicate/Delete align across cards. */
 .card-actions {
   display: flex;
   gap: var(--spacing-sm);
@@ -1010,8 +990,6 @@ const actionTipText = computed((): string => {
   border-color: var(--color-primary-hover);
 }
 
-/* Danger outline at rest (a filled button on every card reads too loud across
-   a large library); the fill arrives on hover and the armed confirm step. */
 .card-btn.danger {
   color: var(--color-danger);
   border-color: var(--color-danger);
@@ -1023,8 +1001,6 @@ const actionTipText = computed((): string => {
   color: #fff;
 }
 
-/* Armed step of the two-step confirm: darkened with a ring, the control bar's
-   armed treatment. */
 .card-btn.armed,
 .card-btn.armed:hover {
   background: var(--color-danger-hover);

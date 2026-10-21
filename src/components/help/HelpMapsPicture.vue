@@ -68,7 +68,6 @@ const PAINT = [
 </template>
 
 <style scoped>
-/* Copy of MapEditor's tile type buttons, smaller. */
 .help-tile-types {
   display: flex;
   flex-wrap: wrap;
@@ -97,7 +96,6 @@ const PAINT = [
   background: rgba(59, 130, 246, 0.15);
 }
 
-/* Copy of MapEditor's Fill and Clear, which keep their text on phones. */
 .help-editor-btn {
   display: inline-flex;
   align-items: center;

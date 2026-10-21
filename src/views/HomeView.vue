@@ -360,9 +360,6 @@ const handleResetMap = () => {
   width: 100%;
 }
 
-/* Mobile: clear the collapsed sheet peek and trim the grid card's side padding
-   so the grid claims the narrow viewport. The panel sheet chrome lives in
-   BottomSheet; TabView owns its own in-sheet fill/scroll. */
 @media (max-width: 768px) {
   main {
     padding-bottom: 64px;
@@ -374,15 +371,10 @@ const handleResetMap = () => {
   }
 }
 
-/* Side-by-side layout. Floor is dictated by the left column's fixed width:
-   grid (600px) + padding pushes it to ~660px. Below ~1220px the columns stack.
-   The right column's height-cap + flex-fill (so long tab content scrolls within
-   it) lives in BottomSheet.
-
-   NOTE: this breakpoint must stay in sync with the @media rules in each
-   tab-content panel component (CharacterSelection, SeasonalSelection,
-   MapEditor, RosterPanel, DebugPanel): they own the flex-fill + internal scroll on the same
-   condition (TabView provides the flex shell; the panels scroll). */
+/* This breakpoint must stay in sync with the @media rules in each tab-content
+   panel component (CharacterSelection, SeasonalSelection, MapEditor,
+   RosterPanel, DebugPanel): they own the flex-fill and internal scroll on the
+   same condition. */
 @media (min-width: 1220px) {
   .sections-container {
     flex-direction: row;

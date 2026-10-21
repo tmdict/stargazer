@@ -13,7 +13,6 @@
 </template>
 
 <style scoped>
-/* Visually detached ("pop") from the flat panel strip above it. */
 .upgrade-dock {
   display: flex;
   align-items: center;

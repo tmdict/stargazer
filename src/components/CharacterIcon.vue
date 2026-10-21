@@ -229,7 +229,6 @@ const handleDragEnd = (event: DragEvent) => {
     0 0 3px #fff;
 }
 
-/* Every portrait acts on click (or drag), so every one grows on hover. */
 .character-display {
   transition:
     transform 0.2s ease,
@@ -255,16 +254,10 @@ const handleDragEnd = (event: DragEvent) => {
   cursor: grabbing;
 }
 
-/* Desaturate the icon and dim only the fill (the ::after overlay) so the white
-   ring survives, since a whole-element filter/opacity would dim it too.
-   Distinct from the red selected ring; --placed-* tokens are shared with the
-   phantimal/artifact pickers. */
 .character-display.dimmed {
   filter: var(--placed-filter);
 }
 .character-display.dimmed::after {
-  /* Clipped to the circle by the parent's overflow: hidden; z-index clears the
-     z-index:1 portrait. */
   content: '';
   position: absolute;
   inset: 0;
@@ -331,9 +324,6 @@ const handleDragEnd = (event: DragEvent) => {
   }
 }
 
-/* The portrait's 5px ring sits outside its box, so this small pull seats the
-   badge over the ring's visible edge by about a third of its height, as the
-   board hero card's pill does. */
 .portrait-badge {
   position: relative;
   z-index: 3;

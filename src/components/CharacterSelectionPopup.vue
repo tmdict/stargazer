@@ -99,7 +99,6 @@ function handleSelect(character: CharacterType): void {
 </template>
 
 <style scoped>
-/* Lines up with the palette's search box. */
 .popup-roster-menu {
   margin: 0 4px 8px;
 }

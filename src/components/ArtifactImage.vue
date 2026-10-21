@@ -40,8 +40,7 @@ const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
 </template>
 
 <style scoped>
-/* Square art the parent clips to a circle: fill the parent's box so the inscribed
-   circle shows the art at full size. z-index keeps it above any parent ::before. */
+/* z-index keeps it above any parent ::before. */
 .artifact-img {
   width: 100%;
   height: 100%;

@@ -162,7 +162,6 @@ const searchHeroes = computed(() => [
   color: #fff;
 }
 
-/* Copy of a SavedTeamsList card. */
 .help-card {
   display: flex;
   flex-direction: column;

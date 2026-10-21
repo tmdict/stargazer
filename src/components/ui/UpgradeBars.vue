@@ -51,7 +51,6 @@ const tracks = computed(() => [
   display: grid;
   gap: 2px;
   width: 35px;
-  /* Clear the portrait's outline even while it grows on hover. */
   margin-top: 3px;
 }
 

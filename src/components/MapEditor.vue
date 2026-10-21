@@ -112,8 +112,6 @@ const handleArenaSelected = (mapKey: string) => {
   min-height: var(--panel-min-height);
 }
 
-/* See CharacterSelection.vue: wide-screen flex-fill with own scroll, narrow
-   stacks naturally. */
 @media (min-width: 1220px) {
   .map-editor {
     flex: 1;
@@ -169,8 +167,6 @@ const handleArenaSelected = (mapKey: string) => {
   transition: all var(--transition-fast);
 }
 
-/* Checkbox carries the on state (matches the grid-control toggles); the button
-   itself only reacts to hover. */
 .editor-toggle:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-primary);

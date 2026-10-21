@@ -278,8 +278,6 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
   transform: scale(1.05);
 }
 
-/* Placed on either team: desaturate + dim the fill like the character picker,
-   keeping the white border/ring. */
 .phantimal.placed {
   filter: var(--placed-filter);
 }

@@ -709,9 +709,6 @@ const {
   gap: var(--spacing-sm);
 }
 
-/* Too narrow for one line (English needs about 470px, and the selection bar
-   about 540px): each group takes a row, labels in one column so the controls
-   line up, instead of wrapping mid-group. */
 @container (max-width: 490px) {
   .dock-rows {
     display: grid;
@@ -765,8 +762,6 @@ const {
   margin-left: auto;
 }
 
-/* Clear the panel's scrollbar on desktop, as CharacterSelection's search row
-   does. */
 @media (min-width: 769px) {
   .roster-bar {
     padding-right: var(--spacing-lg);
@@ -784,7 +779,6 @@ const {
   gap: var(--spacing-sm);
 }
 
-/* The Teams page title's rename icon. */
 .rename-btn {
   display: inline-flex;
   align-items: center;
@@ -848,7 +842,6 @@ const {
   pointer-events: none;
 }
 
-/* A tap edits the roster, so heroes read as buttons, not drag handles. */
 .roster-panel :deep(.character-display) {
   cursor: pointer;
 }
@@ -858,7 +851,6 @@ const {
   transform: none;
 }
 
-/* Half the panel gap, so the hint reads as the control bar's caption. */
 .roster-hint {
   margin: calc(var(--spacing-sm) - var(--spacing-lg)) 0 0;
   font-size: 0.8rem;
@@ -875,7 +867,6 @@ const {
   margin: 0;
 }
 
-/* The mobile sheet zeroes the card inset, so the panel owns its side padding. */
 @media (max-width: 768px) {
   .roster-panel {
     padding: 0 var(--spacing-lg);
@@ -885,7 +876,6 @@ const {
   }
 }
 
-/* Same breakpoint as CharacterSelection: the Arena's height-capped column. */
 @media (min-width: 1220px) {
   .roster-panel.scrollable {
     flex: 1;

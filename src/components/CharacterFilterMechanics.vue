@@ -268,8 +268,6 @@ function toggle(item: { key: string; pick: MechanicPick }) {
 </template>
 
 <style scoped>
-/* The dropdown and the chip group are separate items of the host's row, so a
-   long chip group wraps to its own line and the dropdown stays put. */
 .mechanics {
   display: contents;
 }

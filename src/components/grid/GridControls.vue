@@ -152,7 +152,6 @@ const clearSides = computed((): ClearSide[] =>
   gap: var(--spacing-lg);
 }
 
-/* Sized like .control-btn (controls.css) so both rows stay 36px. */
 .grid-toggle-btn {
   display: flex;
   align-items: center;
@@ -192,12 +191,9 @@ const clearSides = computed((): ClearSide[] =>
   margin: 0;
 }
 
-/* Touch tablets: the two-column layout (HomeView, ≥1220px) fixes the grid
-   column at 660px, which fits the toggle row with little slack under desktop
-   metrics — and iPadOS renders the chips' native checkboxes and text wider,
-   enough to push the last chip onto a second line. Tighter gap and chip
-   padding restore real headroom; MapInvertToggle and GridInfoToggle compact
-   their chips on the same condition. */
+/* Touch tablets: iPadOS renders the chips' native checkboxes and text wider
+   than desktop browsers, enough to push the last chip onto a second line in
+   the two-column layout's 660px grid column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .controls-row {
     gap: var(--spacing-sm);
@@ -207,9 +203,6 @@ const clearSides = computed((): ClearSide[] =>
   }
 }
 
-/* Mobile: a native-first toolbar. Display toggles become filled/outlined
-   choice chips (the fill is the on/off state, so the checkbox is dropped) and
-   the link/copy/download actions become icon-only round buttons. */
 @media (max-width: 768px) {
   .grid-controls {
     gap: var(--spacing-md);
@@ -217,8 +210,6 @@ const clearSides = computed((): ClearSide[] =>
   .controls-row {
     gap: 6px;
   }
-  /* Row 2 (link/copy/download + clear) breathes more; row 1's chips stay tight
-     so they don't re-wrap. */
   .controls-row.controls-actions {
     gap: 18px;
   }
@@ -230,7 +221,6 @@ const clearSides = computed((): ClearSide[] =>
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     padding: 5px 11px;
-    /* Shared with the round action buttons so the rows align. */
     min-height: 34px;
     gap: 0;
     font-size: 0.78rem;

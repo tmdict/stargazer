@@ -59,8 +59,6 @@ const items = computed((): DropdownItem[] => [
 </template>
 
 <style scoped>
-/* Fixed width so the bar doesn't shift as rosters change; in the popup it
-   spans the palette like the search box. */
 .roster-menu {
   --dropdown-trigger-width: 10rem;
 }

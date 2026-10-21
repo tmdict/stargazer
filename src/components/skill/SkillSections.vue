@@ -262,9 +262,6 @@ provide(
   text-align: left;
 }
 
-/* Clicks anywhere in the header (hero name, gaps, chip-strip background)
-   clear the active chips; chip buttons themselves stop propagation. Pointer
-   cursor only when there's actually something to reset. */
 .skill-header.resettable {
   cursor: pointer;
 }
@@ -300,9 +297,5 @@ provide(
   background: var(--color-accent-active);
   color: #fff;
   border-color: var(--color-accent-active);
-}
-
-.skill-snippet-anchor {
-  /* Teleport target: empty when no snippet present. */
 }
 </style>

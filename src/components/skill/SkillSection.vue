@@ -99,7 +99,6 @@ const renderedRefinements = computed(() =>
 <style scoped>
 .skill-section {
   margin: var(--spacing-lg) 0;
-  /* Hash-targeted sections (search deep links) land clear of the header. */
   scroll-margin-top: 80px;
 }
 
@@ -123,7 +122,6 @@ const renderedRefinements = computed(() =>
   top: -1px;
 }
 
-/* The arrow as text, for screen readers and copied text. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -148,7 +146,6 @@ const renderedRefinements = computed(() =>
   border-top: none;
 }
 
-/* The tint bleeds into the container's gutter so the text keeps the other rows' column. */
 .skill-level.tagged {
   margin: 0 calc(-1 * var(--spacing-md));
   padding: 6px var(--spacing-md);
@@ -163,8 +160,6 @@ const renderedRefinements = computed(() =>
 
 .skill-level-badge {
   flex: 0 0 auto;
-  /* Matches body first-line height (15px × 1.55) so the small label is
-     vertically centered against the first line of description text. */
   line-height: 23.25px;
   color: rgba(255, 255, 255, 0.55);
   font-size: 10px;
@@ -173,9 +168,6 @@ const renderedRefinements = computed(() =>
   text-transform: uppercase;
 }
 
-/* EX refinement tiers (R2 / R4). Distinct teal so they read as a different
-   tier class from the numeric LV badges above without competing with the
-   per-section chip strip. */
 .skill-level-badge.refine-badge {
   color: var(--color-accent);
 }

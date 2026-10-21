@@ -67,14 +67,12 @@ const rows = computed(() =>
   border-top: none;
 }
 
-/* The tint bleeds into the container's gutter so the text keeps the other tiers' column. */
 .charm-tier.tagged {
   margin: 0 calc(-1 * var(--spacing-md));
   padding: 6px var(--spacing-md);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-/* On its own line so the description keeps the full section width. */
 .charm-tier-badge {
   display: block;
   margin-bottom: 2px;

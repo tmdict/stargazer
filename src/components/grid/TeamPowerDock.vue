@@ -137,9 +137,6 @@ const clearTeam = (team: Team): void => {
 </template>
 
 <style scoped>
-/* Relative so the selector can center on the bar's true midline regardless
-   of how the flanking clusters differ in width. With team view's single
-   cluster, space-between keeps it at the start, clear of the selector. */
 .tp-dock {
   container-type: inline-size;
   position: relative;
@@ -152,23 +149,17 @@ const clearTeam = (team: Team): void => {
   align-items: center;
   gap: var(--spacing-sm);
 }
-/* Mirror the enemy side: trash at the outer edge, max innermost, matching the
-   ally order read outward-in. */
+
 .dock-cluster.enemy {
   flex-direction: row-reverse;
 }
 
-/* Centered on the bar's midline; the flanking clusters flow around it. The
-   lit chip's fill is the whole selection signal: the portrait pills stay
-   plain labels and the bulk chips stay neutral regardless of layer. */
 .dock-selector {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-/* Narrow boards (the 5 v 5 columns): the labels go first, then gaps tighten,
-   so the ~12 controls never wrap the bar. */
 @container (max-width: 479px) {
   .dock-label {
     display: none;
@@ -181,7 +172,6 @@ const clearTeam = (team: Team): void => {
   .dock-divider {
     display: none;
   }
-  /* Three chips must still clear the flanking clusters. */
   .tp-dock .dock-selector {
     gap: 4px;
   }

@@ -292,8 +292,6 @@ const intro = computed((): string => {
 </template>
 
 <style scoped>
-/* Sized as a container so the layout follows the panel, not the viewport
-   (the panel fills the window minus the page padding, so the two differ). */
 .upgrade-section {
   container-type: inline-size;
 }
@@ -329,8 +327,6 @@ const intro = computed((): string => {
   font-variant-numeric: tabular-nums;
   vertical-align: middle;
 }
-/* Top padding lets the max column's tint clear the pill instead of starting
-   at its edge; the band row above gives up the same amount. */
 .stat-table thead th,
 .stat-table thead td {
   padding: 6px 4px 8px;
@@ -346,7 +342,6 @@ const intro = computed((): string => {
 .stat-table tbody tr:last-child td {
   border-bottom: none;
 }
-/* Stats sharing a ramp sit together; a heavier rule marks the group edge. */
 .stat-table tr.group-end th,
 .stat-table tr.group-end td {
   border-bottom-color: rgba(255, 255, 255, 0.2);
@@ -377,8 +372,6 @@ const intro = computed((): string => {
   color: rgba(255, 255, 255, 0.22);
 }
 
-/* The max column answers "what do I get fully upgraded", so it carries the
-   pill's max tint. */
 .max-col {
   font-weight: 700;
 }
@@ -389,7 +382,6 @@ const intro = computed((): string => {
   background: color-mix(in srgb, var(--upgrade-pill-refinement-max) 13%, transparent);
 }
 
-/* Each stat wears the skill text's stat-tag look. */
 .stat-name {
   display: inline-block;
   padding: 1px 7px;
@@ -410,8 +402,6 @@ const intro = computed((): string => {
   vertical-align: middle;
   margin-left: 8px;
 }
-/* The ring is the guide panel's background (GuideView), so overlapped icons
-   read as separate discs. */
 .faction-icons img {
   width: 18px;
   height: 18px;
@@ -431,8 +421,6 @@ const intro = computed((): string => {
   white-space: nowrap;
 }
 
-/* Narrow panels: the matrix needs about 940px, so below that one table per
-   band takes over. */
 .stack {
   display: none;
 }
@@ -457,7 +445,6 @@ const intro = computed((): string => {
   }
 }
 
-/* Six columns must still fit a 360px phone. */
 @container (max-width: 420px) {
   .stat-table {
     font-size: 13px;

@@ -437,7 +437,6 @@ const tipText = computed((): string =>
   transition:
     border-color var(--transition-fast),
     background var(--transition-fast);
-  /* Offscreen cards skip layout/paint inside the scrolling body. */
   content-visibility: auto;
   contain-intrinsic-size: auto 200px;
 }
@@ -503,8 +502,6 @@ const tipText = computed((): string =>
   opacity: 0.7;
 }
 
-/* Deliberately quieter than SavedTeamsList's primary-colored mode chip: the
-   side badge is the loud element on these cards. */
 .card-mode {
   font-size: 0.62rem;
   font-weight: 700;
@@ -529,9 +526,6 @@ const tipText = computed((): string =>
   display: block;
 }
 
-/* The armed confirm overlays the thumbnail rather than occupying a footer:
-   no layout shift, so the grid can't move between the arming click and the
-   confirming one. The second click anywhere on the card loads. */
 .card-confirm {
   position: absolute;
   inset: 0;
@@ -540,7 +534,6 @@ const tipText = computed((): string =>
   justify-content: center;
   text-align: center;
   padding: var(--spacing-sm);
-  /* Matches the thumbnail's own rounding. */
   border-radius: var(--radius-medium);
   background: color-mix(in srgb, var(--color-danger) 85%, transparent);
   color: #fff;

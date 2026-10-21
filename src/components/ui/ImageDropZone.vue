@@ -106,7 +106,6 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
   transition: all var(--transition-fast);
 }
 
-/* All interactive states lift the background; focus and drag also cue the border. */
 .drop-zone:hover,
 .drop-zone:focus-visible,
 .drop-zone.dragging {
@@ -174,7 +173,6 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
   font-size: 0.85rem;
 }
 
-/* Touch screens can't drag files in or use the paste shortcut. */
 .pointer-coarse {
   display: none;
 }

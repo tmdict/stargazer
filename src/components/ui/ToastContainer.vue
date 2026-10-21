@@ -36,9 +36,8 @@ const { toasts, remove } = useToast()
   pointer-events: auto;
 }
 
-/* List transitions: enter/leave slide from the right; remaining toasts
-   slide up via the move class. The leaving toast goes absolute so the
-   stack can close the gap while it animates out. */
+/* The leaving toast goes absolute so the stack can close the gap while it
+   animates out. */
 .toast-enter-active,
 .toast-leave-active,
 .toast-move {

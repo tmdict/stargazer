@@ -439,8 +439,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   overflow: visible;
 }
 
-/* Beneath the in-flow tile layer so tiles cover shared edges (see template).
-   .grid-map sets isolation: isolate so this z-index can't escape the board. */
+/* .grid-map sets isolation: isolate so this z-index can't escape the board. */
 .artifact-cell-border-layer {
   z-index: -1;
 }
@@ -455,7 +454,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   stroke: #8a8f98;
 }
 
-/* Empty host cells invite a click to open the artifact picker. */
 .artifact-cell.clickable {
   pointer-events: auto;
   cursor: pointer;
@@ -466,14 +464,10 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   fill: rgba(255, 255, 255, 0.16);
 }
 
-/* An empty cell receives drops via its polygon; a filled cell via its icon (which
-   already has pointer-events: auto). On an interactive empty cell .droppable and
-   .clickable coincide by construction. */
 .artifact-cell.droppable {
   pointer-events: auto;
 }
 
-/* Hovered drop target the router would reject (mirrors the tiles' invalid-drop cue). */
 .artifact-cell.invalid-drop {
   stroke: #c05b4d;
   stroke-width: 3;
@@ -499,7 +493,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   transition: transform var(--transition-perspective);
 }
 
-/* Ally artifact paints above the character layer (which is a later sibling). */
 .grid-artifact.front {
   z-index: 2;
 }
@@ -508,8 +501,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   cursor: default;
 }
 
-/* The circular, clipped visual. The wrapper stays overflow-visible so the
-   perspective pointer can extend below it. */
 .retired-artifact {
   color: var(--color-text-secondary);
   font-size: 1.1rem;
@@ -526,7 +517,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   justify-content: center;
   overflow: hidden;
   border: var(--artifact-border-width, 2px) solid var(--color-bg-white);
-  /* White backing for every season (icons may have transparency). */
   background: #fff;
 }
 </style>

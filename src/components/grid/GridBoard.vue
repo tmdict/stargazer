@@ -150,14 +150,12 @@ const handleClear = (): void => {
   padding: var(--spacing-sm);
   border: 2px solid transparent;
   border-radius: var(--radius-large);
-  /* The whole board is clickable to make it the active board. */
   cursor: pointer;
   transition:
     border-color var(--transition-fast),
     background var(--transition-fast);
 }
 
-/* A single border conveys board state: grey on hover, primary (teal) when active. */
 .grid-board.active {
   border-color: var(--color-primary);
 }
@@ -167,9 +165,6 @@ const handleClear = (): void => {
   background: var(--color-bg-light-gray);
 }
 
-/* Icon controls: Swap, then export (Copy, Download), with the destructive Clear
-   set apart at the right. Solid-filled circular buttons; the white icon inherits
-   the button color via currentColor. */
 .board-actions {
   display: flex;
   gap: var(--spacing-md);
@@ -209,7 +204,6 @@ const handleClear = (): void => {
   background: var(--color-danger-hover);
 }
 
-/* Export actions read as neutral utilities, distinct from the colored swap/clear. */
 .board-copy,
 .board-download {
   background: var(--color-text-secondary);
@@ -220,8 +214,6 @@ const handleClear = (): void => {
   background: var(--color-text-primary);
 }
 
-/* Covers the whole board while a swap is being aimed: targets invite a click,
-   the source reads as a cancel zone. */
 .board-swap-overlay {
   position: absolute;
   inset: 0;
@@ -240,8 +232,6 @@ const handleClear = (): void => {
   background: rgba(54, 149, 142, 0.22);
 }
 
-/* Tap layout: the previewed target awaiting its confirming tap, the touch counterpart
-   of the desktop drag-over hover. A solid border sets it apart from the dashed targets. */
 .board-swap-overlay.pending {
   background: rgba(54, 149, 142, 0.22);
   border-style: solid;

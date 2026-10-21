@@ -116,8 +116,6 @@ const onTrayFocusOut = (e: FocusEvent): void => {
   display: inline-flex;
 }
 
-/* Desktop-only side margin so Clear reads as slightly apart from the share
-   actions; on mobile spacing comes purely from the row's flex gap. */
 .clear-all-btn {
   margin: 0 5px;
 }

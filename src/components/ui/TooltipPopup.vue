@@ -98,8 +98,6 @@ onUnmounted(() => {
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   pointer-events: none;
   color: #fff;
-  /* Tooltip type: slot content inherits it, and TooltipCard reads the
-     colours, so callers don't restate either. */
   font-size: 14px;
   line-height: 1.4;
   --tooltip-muted: rgba(255, 255, 255, 0.7);

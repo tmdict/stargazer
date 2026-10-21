@@ -180,7 +180,6 @@ const handleResultSelect = (slug: string) => {
   min-height: var(--panel-min-height);
 }
 
-/* Clear the panel's scrollbar on desktop. */
 .search-row {
   display: flex;
   padding-right: var(--spacing-lg);
@@ -207,11 +206,6 @@ const handleResultSelect = (slug: string) => {
   }
 }
 
-/* On wide screens the right column is height-capped to the viewport, so the
-   panel flex-fills the column and owns its own scroll; at the scroll boundary
-   the wheel chains to the page (default overscroll behavior). On narrow screens
-   (column-stacked layout) the panel grows to natural content height and the
-   page handles scrolling: no internal scrollbar. */
 @media (min-width: 1220px) {
   .character-selection.scrollable {
     flex: 1;

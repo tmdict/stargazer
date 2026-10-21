@@ -81,7 +81,6 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   letter-spacing: 0.03em;
 }
 
-/* The fields' min-height, so every label in a row sits level. */
 .segmented {
   display: inline-flex;
   min-height: 34px;
@@ -116,7 +115,6 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   min-height: 34px;
 }
 
-/* Custom chevron so the dropdown arrow keeps a consistent gap from the edge. */
 select.setting-input {
   appearance: none;
   padding-right: 1.6rem;
