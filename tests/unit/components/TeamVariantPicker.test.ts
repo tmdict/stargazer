@@ -67,7 +67,7 @@ describe('TeamVariantPicker', () => {
     segment('Default').click()
     await nextTick()
     expect(selected).not.toHaveBeenCalled()
-    expect(segment('Confirm?').classList.contains('armed')).toBe(true)
+    expect(segment('Confirm?').classList.contains('confirm-armed')).toBe(true)
 
     segment('Confirm?').click()
     expect(selected).toHaveBeenCalledWith('default')
@@ -96,11 +96,11 @@ describe('TeamVariantPicker', () => {
 
     replace(state)
     await nextTick()
-    expect(document.querySelector('.armed')).toBeNull()
+    expect(document.querySelector('.confirm-armed')).toBeNull()
 
     segment('Default').click()
     await nextTick()
     expect(selected).not.toHaveBeenCalled()
-    expect(segment('Confirm?').classList.contains('armed')).toBe(true)
+    expect(segment('Confirm?').classList.contains('confirm-armed')).toBe(true)
   })
 })

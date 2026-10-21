@@ -107,7 +107,7 @@ const tipText = computed((): string => {
     <button
       type="button"
       class="control-btn danger"
-      :class="{ armed: armed !== null }"
+      :class="{ 'confirm-armed': armed !== null }"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.new')"
       @click="handleNew"
       @mouseenter="showTip($event, 'new')"

@@ -446,7 +446,7 @@ const {
           v-if="rosters.active"
           type="button"
           class="control-btn compact danger"
-          :class="{ armed: armed === rosters.active.id }"
+          :class="{ 'confirm-armed': armed === rosters.active.id }"
           :title="armed === rosters.active.id ? i18n.t('app.confirm') : i18n.t('app.delete')"
           @click="remove"
         >
