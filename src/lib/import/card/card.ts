@@ -6,7 +6,7 @@
 import { cropResize } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
 import { matchCard, paragonFromMatch } from './frames'
-import { assignUnique, heroDescriptor, rankHeroes } from './heroes'
+import { assignUnique, heroDescriptor, rankHeroes, type Rivals } from './heroes'
 import { readStars } from './stars'
 import type { CardReferences, HeroCandidate, HeroIdentity, HeroReading } from './types'
 
@@ -40,7 +40,7 @@ export const artBoxOf = (box: Rect): Rect => {
 }
 
 // A card read on its own, before the cards beside it settle who is who.
-interface CardRead {
+export interface CardRead {
   cell: Omit<HeroReading, keyof HeroIdentity>
   // The hero table's best matches for the face, best first; none without a
   // trusted placement.
@@ -49,8 +49,9 @@ interface CardRead {
 
 /* One card from where it is expected (its frame's top-left): its frame pins
  * its box, and the face, the star row and a crop for the review come from
- * there. */
-const readCard = (
+ * there. Without a trusted placement the box is a guess, and the face is not
+ * ranked. */
+export const readCard = (
   shot: RgbaImage,
   refs: CardReferences,
   seed: { x: number; y: number },
@@ -80,9 +81,15 @@ const readCard = (
 }
 
 // Cards shown together field different heroes, so their faces are settled
-// against each other.
-const settleCards = (cards: readonly CardRead[]): HeroReading[] => {
-  const identities = assignUnique(cards.map((card) => card.ranking))
+// against each other (assignUnique).
+export const settleCards = (
+  cards: readonly CardRead[],
+  rivals: Rivals = 'untaken',
+): HeroReading[] => {
+  const identities = assignUnique(
+    cards.map((card) => card.ranking),
+    rivals,
+  )
   return cards.map((card, i) => ({ ...card.cell, ...identities[i]! }))
 }
 
