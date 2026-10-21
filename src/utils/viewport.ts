@@ -35,20 +35,6 @@ export function dynamicViewportHeight(): number {
 }
 
 /**
- * Window height with mobile browsers' toolbars shown (CSS svh), which holds
- * while a toolbar collapses on scroll. No script API reports it, so a probe
- * measures it.
- */
-export function smallViewportHeight(): number {
-  const probe = document.createElement('div')
-  probe.style.cssText = 'position: fixed; top: 0; height: 100svh; visibility: hidden'
-  document.body.append(probe)
-  const height = probe.getBoundingClientRect().height
-  probe.remove()
-  return height
-}
-
-/**
  * Clamp a fixed box's left edge so the box stays inside the layout viewport,
  * pinning to the left margin when it cannot fit.
  */

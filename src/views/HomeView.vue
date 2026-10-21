@@ -132,8 +132,7 @@ const showDebug = computed(() => activeTab.value === 'debug')
 const { showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
 
 const boardPanel = ref<HTMLElement>()
-const boardContainer = ref<InstanceType<typeof GridContainer>>()
-useBoardFit(boardPanel, () => boardContainer.value?.$el)
+useBoardFit(boardPanel)
 
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 
@@ -286,7 +285,6 @@ const handleResetMap = () => {
         <div ref="boardPanel" class="section">
           <SeasonNotice />
           <GridContainer
-            ref="boardContainer"
             :context="activeContext"
             :characters="gameDataStore.characters"
             :info
