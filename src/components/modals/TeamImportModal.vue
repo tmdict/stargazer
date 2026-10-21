@@ -650,7 +650,7 @@ const handleForgetLearned = (): void => {
 <style scoped>
 /* One palette for the import's own pieces (shot list, review) on the modal's
    dark glass: white text at a few opacities, frosted fills, the accent for
-   selection, and the game's result colours. Set here so the children inherit. */
+   selection, and the status colours. Set here so the children inherit. */
 .import {
   --import-text: #fff;
   --import-text-dim: rgba(255, 255, 255, 0.65);
@@ -664,8 +664,6 @@ const handleForgetLearned = (): void => {
   --import-bad: #f28b82;
   --import-bad-tint: rgba(242, 139, 130, 0.14);
   --import-good: #81c995;
-  --import-left: #d9782f;
-  --import-right: #4f78c0;
 
   display: flex;
   flex-direction: column;

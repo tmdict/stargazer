@@ -20,7 +20,7 @@ const EDGE = 0.0114
 <template>
   <polygon
     class="pick-tile"
-    :class="[side === Team.ALLY ? 'left' : 'right', { active }]"
+    :class="[side === Team.ALLY ? 'ally' : 'enemy', { active }]"
     :points
     :style="{ '--edge': `${tileWidth * EDGE}px` }"
   />
@@ -33,14 +33,14 @@ const EDGE = 0.0114
   outline: none;
 }
 
-.pick-tile.left {
-  fill: color-mix(in srgb, var(--import-left) 22%, transparent);
-  stroke: color-mix(in srgb, var(--import-left) 85%, white);
+.pick-tile.ally {
+  fill: color-mix(in srgb, var(--color-ally) 22%, transparent);
+  stroke: color-mix(in srgb, var(--color-ally) 85%, white);
 }
 
-.pick-tile.right {
-  fill: color-mix(in srgb, var(--import-right) 24%, transparent);
-  stroke: color-mix(in srgb, var(--import-right) 70%, white);
+.pick-tile.enemy {
+  fill: color-mix(in srgb, var(--color-enemy) 24%, transparent);
+  stroke: color-mix(in srgb, var(--color-enemy) 70%, white);
 }
 
 .pick-tile:hover,

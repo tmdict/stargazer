@@ -395,7 +395,7 @@ const {
 })
 
 const shotTeam = computed(() => shotTiles.value?.team ?? null)
-const sideClass = computed(() => (shotTeam.value === Team.ALLY ? 'left' : 'right'))
+const sideClass = computed(() => (shotTeam.value === Team.ALLY ? 'ally' : 'enemy'))
 const missingRows = computed(() => (shotTeam.value === null ? [] : rows(shotTeam.value)))
 
 // The side's units on a tile, of every unit it fields: the portraits' and the missing ones.
@@ -1049,12 +1049,12 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon' | 'refinement'>,
   position: relative;
 }
 
-.cells.left {
-  --pick-colour: var(--import-left);
+.cells.ally {
+  --pick-colour: var(--color-ally);
 }
 
-.cells.right {
-  --pick-colour: var(--import-right);
+.cells.enemy {
+  --pick-colour: var(--color-enemy);
 }
 
 .units-note {
