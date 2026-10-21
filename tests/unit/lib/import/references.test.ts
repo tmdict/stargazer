@@ -50,18 +50,6 @@ describe('curated hero references', () => {
     expect(Array.from(table.ids)).not.toContain(999)
   })
 
-  it('rejects incompatible descriptors and skips malformed entries', () => {
-    const envelope = learnedIconEnvelope([icon])
-    expect(readLearnedIcons({ ...envelope, spec: { ...envelope.spec, box: [0, 0, 1] } })).toEqual(
-      [],
-    )
-    expect(readLearnedIcons({ ...envelope, spec: null })).toEqual([])
-    expect(readLearnedIcons(null)).toEqual([])
-    expect(
-      readLearnedIcons({ ...envelope, icons: [null, { ...icon, descriptor: 'invalid' }, icon] }),
-    ).toEqual([icon])
-  })
-
   it('ships a reference file compatible with the descriptor contract', async () => {
     const { default: data } = await vi.importActual<{ default: unknown }>(
       '@/data/import/hero-icons.json',

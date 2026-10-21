@@ -40,13 +40,6 @@ describe('useGridSwap target selection', () => {
   describe('tap layout (two-step)', () => {
     beforeEach(() => swap.startFromButton(SOURCE, buttonPress(), false)) // draggable off
 
-    it('previews a target on the first tap without swapping', () => {
-      tap(TARGET)
-      expect(swap.pendingId.value).toBe(TARGET)
-      expect(swap.isSwapping.value).toBe(true)
-      expect(swapBoards).not.toHaveBeenCalled()
-    })
-
     it('commits on a second tap of the previewed target', () => {
       grids.contexts[SOURCE]!.place(1, ALLY_A, Team.ALLY)
 

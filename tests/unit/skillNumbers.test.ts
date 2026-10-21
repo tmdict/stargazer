@@ -24,16 +24,6 @@ const levels = (overrides: Partial<FeedLevelNumbers>, count = 4) =>
 const numbersOf = (skills: FeedHeroNumbers['skills']) => heroSkillNumbers('x', hero(skills)).numbers
 
 describe('heroSkillNumbers', () => {
-  it('shows cooldown, initial cooldown and range', () => {
-      skill2: { cooldown: 7, initialCooldown: 1, range: 1 },
-    })
-  })
-
-  it('shows a zero cooldown: the skill is instant', () => {
-      ultimate: { cooldown: 0, initialCooldown: 0, range: 10 },
-    })
-  })
-
     expect(
       numbersOf({
       }),

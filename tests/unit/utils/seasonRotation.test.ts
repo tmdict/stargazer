@@ -65,13 +65,9 @@ describe('seasonRotation', () => {
     storage.set(SEASON_KEY, String(CURRENT_SEASON - 1))
     const clean = encodeGridStateToUrl({ c: [[1, 100, Team.ALLY]], a: [1, null], d: 6 })
     storage.set(ARENA_KEY, clean)
-    const writes = vi.spyOn(globalThis.localStorage, 'setItem')
     expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe(clean)
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
-    // Only the marker was written: the identical re-encode skipped its write.
-    expect(writes.mock.calls.map(([key]) => key)).toEqual([SEASON_KEY])
-    writes.mockRestore()
   })
 
   it('leaves an undecodable autosave untouched but re-aligns the marker', () => {

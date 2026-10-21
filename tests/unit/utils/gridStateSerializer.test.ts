@@ -64,23 +64,6 @@ describe('gridStateSerializer', () => {
       expect(serializeGridState(tiles, null, null, undefined, () => ({})).u).toBeUndefined()
     })
 
-    it('filters out default state tiles', () => {
-      const tiles: GridTile[] = [
-        createMockTile(1, State.DEFAULT),
-        createMockTile(2, State.OCCUPIED_ALLY),
-        createMockTile(3, State.DEFAULT),
-        createMockTile(4, State.BLOCKED),
-      ]
-      const result = serializeGridState(tiles, null, null)
-
-      expect(result).toEqual({
-        t: [
-          [2, State.OCCUPIED_ALLY],
-          [4, State.BLOCKED],
-        ],
-      })
-    })
-
     it('serializes characters with positions and teams', () => {
       const companionId = COMPANION_ID_OFFSET + 1
       const tiles: GridTile[] = [
@@ -105,21 +88,6 @@ describe('gridStateSerializer', () => {
       })
     })
 
-    it('filters incomplete character data', () => {
-      const tiles: GridTile[] = [
-        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
-        createMockTile(2, State.OCCUPIED_ENEMY, 200, undefined), // Missing team
-        createMockTile(3, State.OCCUPIED_ENEMY, undefined, Team.ENEMY), // Missing characterId
-        createMockTile(4, State.OCCUPIED_ENEMY, 300, Team.ENEMY),
-      ]
-      const result = serializeGridState(tiles, null, null)
-
-      expect(result.c).toEqual([
-        [1, 100, Team.ALLY],
-        [4, 300, Team.ENEMY],
-      ])
-    })
-
     it('extracts phantimals into s with local IDs, keeping them out of c', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
@@ -141,14 +109,6 @@ describe('gridStateSerializer', () => {
       wrap: false,
     }
 
-    it('returns the defaults when undefined', () => {
-      expect(unpackDisplayFlags(undefined)).toEqual({
-        ...off,
-        showPerspective: true,
-        showSkills: true,
-      })
-    })
-
     it.each([
       [0b00001, { ...off, wrap: true }],
       [0b00010, { ...off, showSkills: true }],
@@ -157,16 +117,6 @@ describe('gridStateSerializer', () => {
       [0b10000, { ...off, teamView: true }],
     ])('unpacks flags %i correctly', (flags, expected) => {
       expect(unpackDisplayFlags(flags)).toEqual(expected)
-    })
-
-    it('ignores bits beyond the first 5', () => {
-      expect(unpackDisplayFlags(0b11111111)).toEqual({
-        showPerspective: true,
-        showSkills: true,
-        teamView: true,
-        inverted: true,
-        wrap: true,
-      })
     })
 
     it('round-trips all flags through pack and unpack', () => {

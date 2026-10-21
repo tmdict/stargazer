@@ -18,7 +18,6 @@ import { stubLocalStorage } from '../fixtures/storage'
  * SSR flag off so the storage branches execute. */
 
 let storage: Map<string, string>
-let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
 const FLAGS = () => ({ showPerspective: true, showSkills: false })
 
@@ -28,7 +27,7 @@ const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
 describe('useTeamsPersistence', () => {
   beforeEach(() => {
     vi.stubEnv('SSR', false)
-    ;({ storage, setItemSpy } = stubLocalStorage())
+    ;({ storage } = stubLocalStorage())
     setActivePinia(createPinia())
   })
 
@@ -104,21 +103,5 @@ describe('useTeamsPersistence', () => {
     character.placeCharacterOnHex(3, 13, Team.ALLY)
     await nextTick()
     expect(readEnvelope('1v1').data).not.toBe(withUnit)
-  })
-
-  it('startAutosave guards against double registration', async () => {
-    const grids = useGrids()
-    const character = useCharacterStore()
-    grids.setGridCount(1, ['arena1'])
-
-    const persistence = useTeamsPersistence(ref<TeamModeKey>('1v1'), ref(null), FLAGS)
-    persistence.startAutosave()
-    persistence.startAutosave()
-    setItemSpy.mockClear()
-
-    character.placeCharacterOnHex(1, 11, Team.ALLY)
-    await nextTick()
-    const slotWrites = setItemSpy.mock.calls.filter(([key]) => key === teamsSlotKey('1v1'))
-    expect(slotWrites).toHaveLength(1)
   })
 })

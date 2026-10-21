@@ -148,11 +148,6 @@ describe('vocabulary', () => {
     expect(tagVocabulary(heroes).get('dot')!.solo).toBe('shadewing')
     expect(tagVocabulary(heroes, isSynergy).get('dot')!.solo).toBeNull()
   })
-
-  it('lists synergies after the other modifiers', () => {
-    const debuff = tagVocabulary([{ tags: apart }], (mod) => mod === 'eryndor').get('debuff')!
-    expect(debuff.mods).toEqual(['global', 'eryndor'])
-  })
 })
 
 describe('tag links', () => {

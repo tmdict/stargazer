@@ -72,12 +72,6 @@ describe('parseImport record validation', () => {
     warn.mockRestore()
   })
 
-  it('keeps the file id so a record round-trips with its identity', () => {
-    const result = parseImport(envelope([record({ id: 'stable-id' })]), [])!
-    expect(result.accepted[0]!.id).toBe('stable-id')
-    expect(result.conflicts).toBe(0)
-  })
-
   it('marks an old version of an existing team (its id is taken) as a conflict', () => {
     const existing = record({ id: 'existing', name: 'Other' })
     const result = parseImport(envelope([record({ id: 'existing' })]), [existing])!

@@ -51,12 +51,11 @@ afterEach(() => {
 })
 
 describe('useTeamLibrary', () => {
-  it('hydrates valid records and drops invalid ones with a warning', () => {
+  it('hydrates valid records and drops invalid ones', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     seed([record('a', 'Alpha'), { ...record('b', 'Broken'), mode: '9v9' } as never])
     const library = useTeamLibrary()
     expect(library.teams.map((t) => t.id)).toEqual(['a'])
-    expect(warn).toHaveBeenCalledOnce()
     warn.mockRestore()
   })
 

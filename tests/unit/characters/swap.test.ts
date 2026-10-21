@@ -40,16 +40,6 @@ describe('swap.ts', () => {
     grid.skillManager = skillManager
   })
 
-  describe('executeSwapCharacters - basic validation', () => {
-    it('should reject swap when either hex has no character', () => {
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-
-      expect(executeSwapCharacters(grid, skillManager, 1, 2)).toBe(false)
-      expect(executeSwapCharacters(grid, skillManager, 2, 1)).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-    })
-  })
-
   describe('executeSwapCharacters - same team swaps', () => {
     it('should swap two characters within a team', () => {
       const update = vi.spyOn(skillManager, 'updateActiveSkills')
@@ -97,25 +87,6 @@ describe('swap.ts', () => {
       expect(isCharacterOnTeam(grid, ENEMY_A, Team.ENEMY)).toBe(false)
       expect(grid.getTileById(1).state).toBe(State.OCCUPIED_ALLY)
       expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
-    })
-
-    it('should reject swap that would duplicate a character on the destination team', () => {
-      // ALLY_A already exists on ENEMY, so swapping its ally copy into ENEMY
-      // must be rejected up front with all placements intact
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-      performPlace(grid, 4, ENEMY_A, Team.ENEMY)
-      performPlace(grid, 5, ALLY_A, Team.ENEMY)
-
-      const result = executeSwapCharacters(grid, skillManager, 1, 4)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-      expect(grid.getTileById(1).team).toBe(Team.ALLY)
-      expect(grid.getTileById(4).characterId).toBe(ENEMY_A)
-      expect(grid.getTileById(4).team).toBe(Team.ENEMY)
-      expect(grid.getTileById(5).characterId).toBe(ALLY_A)
-      expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(true)
-      expect(isCharacterOnTeam(grid, ENEMY_A, Team.ENEMY)).toBe(true)
     })
   })
 

@@ -157,11 +157,14 @@ describe('hero table', () => {
 describe('learned icon envelope', () => {
   const v = new Float32Array(DESCRIPTOR_LENGTH).fill(0.01)
 
-  it('serialises, parses, and drops a store with a different descriptor spec', () => {
+  it('serialises, parses, drops a store with a different descriptor spec and skips malformed entries', () => {
     const icons = addLearnedIcon([], 80, v, 10)
     const raw = serializeLearnedIcons(icons)
     expect(parseLearnedIcons(raw)).toEqual(icons)
     expect(parseLearnedIcons(raw.replace('"box":[', '"box":[9,'))).toEqual([])
+    const envelope = JSON.parse(raw)
+    const malformed = [null, { ...envelope.icons[0], descriptor: 'invalid' }, ...envelope.icons]
+    expect(parseLearnedIcons(JSON.stringify({ ...envelope, icons: malformed }))).toEqual(icons)
     expect(parseLearnedIcons('{')).toEqual([])
     expect(parseLearnedIcons(null)).toEqual([])
   })

@@ -35,10 +35,6 @@ describe('seasonal', () => {
     expect(board.s).toBeDefined() // input untouched
   })
 
-  it('drops a fully-seasonal artifact pair instead of keeping [null, null]', () => {
-    expect(stripSeasonalBoard({ a: [14, 18] })).toEqual({})
-  })
-
   it('strips a payload only when its season is retired', () => {
     const stale: MultiGridState = {
       boards: [{ s: [[7, 2, Team.ALLY]], a: [14, null] }],

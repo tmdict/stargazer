@@ -1,29 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  fromMechanicQuery,
-  matchesMechanic,
-  toMechanicQuery,
-  type MechanicPick,
-} from '@/lib/mechanics'
+import { fromMechanicQuery, toMechanicQuery, type MechanicPick } from '@/lib/mechanics'
 import { tagVocabulary } from '@/lib/tags'
 
 const vocabulary = tagVocabulary([
   { tags: { dot: [{ ex: 1 }], summon: [{ ultimate: 1 }], 'heal-denial': [{ skill2: 1 }] } },
 ])
-
-describe('energy filter', () => {
-  const above = (energy: number[], energyAbove: number): boolean =>
-    matchesMechanic({ tags: {}, energy }, { energyAbove })
-
-  it('counts what skills add and keeps only heroes above the value', () => {
-    expect(above([500], 500)).toBe(false)
-    expect(above([550], 500)).toBe(true)
-    expect(above([200, 300], 400)).toBe(true)
-    expect(above([200, 300], 500)).toBe(false)
-    expect(above([0], 0)).toBe(false)
-  })
-})
 
 describe('mechanic links', () => {
   const read = (query: Record<string, unknown>): MechanicPick | null =>

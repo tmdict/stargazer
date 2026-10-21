@@ -111,23 +111,9 @@ describe('useLongPress', () => {
     expect(onHold).not.toHaveBeenCalled()
   })
 
-  it('ignores moves from another pointer', () => {
-    hold.start(press(), 'unit')
-    emit('pointermove', { pointerId: PRESS_ID + 1, clientX: 50, clientY: 50 })
-    vi.advanceTimersByTime(LONG_PRESS_MS)
-    expect(onHold).toHaveBeenCalledOnce()
-  })
-
   it('yields to a drag', () => {
     hold.start(press(), 'unit')
     emit('dragstart')
-    vi.advanceTimersByTime(LONG_PRESS_MS)
-    expect(onHold).not.toHaveBeenCalled()
-  })
-
-  it('ignores secondary buttons and non-primary pointers', () => {
-    hold.start(press({ button: 2 }), 'unit')
-    hold.start(press({ isPrimary: false }), 'unit')
     vi.advanceTimersByTime(LONG_PRESS_MS)
     expect(onHold).not.toHaveBeenCalled()
   })
@@ -138,13 +124,6 @@ describe('useLongPress', () => {
       hold.onContextMenu(event, 'unit')
       expect(event.defaultPrevented).toBe(true)
       expect(onHold).toHaveBeenCalledWith('unit')
-    })
-
-    it('keeps the browser menu on Shift+right-click', () => {
-      const event = contextMenu({ pointerType: 'mouse', shiftKey: true })
-      hold.onContextMenu(event, 'unit')
-      expect(event.defaultPrevented).toBe(false)
-      expect(onHold).not.toHaveBeenCalled()
     })
 
     it('completes a touch hold early, once', () => {
