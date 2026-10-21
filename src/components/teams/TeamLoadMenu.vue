@@ -239,7 +239,7 @@ const tipText = computed((): string =>
                 :key="team.id"
                 type="button"
                 class="load-card"
-                :class="{ armed: armed === team.id }"
+                :class="{ 'confirm-armed': armed === team.id }"
                 :title="i18n.t('app.load')"
                 @click="handlePick(team)"
               >
@@ -445,7 +445,7 @@ const tipText = computed((): string =>
   border-color: var(--color-primary);
 }
 
-.load-card.armed {
+.load-card.confirm-armed {
   border-color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 7%, var(--color-bg-secondary));
 }

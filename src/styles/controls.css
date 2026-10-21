@@ -56,13 +56,12 @@
   border-color: var(--color-danger-hover);
 }
 
-.control-btn.danger.armed,
-.control-btn.danger.armed:hover {
+.control-btn.danger.confirm-armed,
+.control-btn.danger.confirm-armed:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
 }
 
-.control-btn.danger.armed,
 .confirm-armed {
   box-shadow: var(--confirm-armed-ring);
   animation: confirm-ping 0.9s ease-out infinite;
@@ -82,7 +81,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .control-btn.danger.armed,
   .confirm-armed {
     animation: none;
   }

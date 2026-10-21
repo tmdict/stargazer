@@ -78,7 +78,7 @@ const onTrayFocusOut = (e: FocusEvent): void => {
       ref="buttonRef"
       @click="handleClick"
       class="control-btn danger clear-all-btn"
-      :class="{ armed: armed !== null }"
+      :class="{ 'confirm-armed': armed !== null }"
       :title="i18n.t(armed !== null ? 'app.confirm' : 'app.clear')"
     >
       <IconTrash :size="14" class="btn-icon" />
