@@ -9,13 +9,13 @@
 
 import { computed, ref } from 'vue'
 
-import TeamImportCell from '@/components/teams/TeamImportCell.vue'
-import TeamImportCellGrid from '@/components/teams/TeamImportCellGrid.vue'
-import TeamImportCellState from '@/components/teams/TeamImportCellState.vue'
+import ImportCell from '@/components/import/ImportCell.vue'
+import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
+import ImportCellState from '@/components/import/ImportCellState.vue'
+import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import TeamImportNextBadge from '@/components/teams/TeamImportNextBadge.vue'
 import TeamImportPlaceCount from '@/components/teams/TeamImportPlaceCount.vue'
 import TeamImportPlaced from '@/components/teams/TeamImportPlaced.vue'
-import TeamImportSideHead from '@/components/teams/TeamImportSideHead.vue'
 import TeamImportTile, { tileOutline } from '@/components/teams/TeamImportTile.vue'
 import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark, { ringWidth } from '@/components/teams/TeamImportTileMark.vue'
@@ -297,11 +297,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 <template>
   <div v-if="unitViews.length || missingRows.length" ref="sectionEl" class="side">
-    <TeamImportSideHead :label="i18n.t('app.import-units')">
+    <ImportSideHead :label="i18n.t('app.import-units')">
       <template #default>
         <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
       </template>
-    </TeamImportSideHead>
+    </ImportSideHead>
     <div class="boards">
       <figure v-if="shotBoard" class="board">
         <div ref="boardFrame" class="board-frame">
@@ -385,9 +385,9 @@ const tileBoxes = (): HTMLInputElement[] => [
       />
     </div>
     <p v-if="missingRows.length" class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
-    <TeamImportCellGrid :class="sideClass">
+    <ImportCellGrid :class="sideClass">
       <template #default>
-        <TeamImportCell
+        <ImportCell
           v-for="view in unitViews"
           :key="view.index"
           class="unit"
@@ -412,19 +412,19 @@ const tileBoxes = (): HTMLInputElement[] => [
           </template>
           <template #meta>
             <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
-            <TeamImportCellState
+            <ImportCellState
               v-if="view.state === 'review' && view.unitId !== null"
               state="review"
               :reading="unitName(view.unitId)"
               :title="unitName(view.unitId)"
               @confirm="emit('setUnit', shot.id, view.index, view.unitId)"
             />
-            <TeamImportCellState v-else-if="view.state === 'none'" state="none" />
-            <TeamImportCellState v-else-if="view.edited" state="edited" />
+            <ImportCellState v-else-if="view.state === 'none'" state="none" />
+            <ImportCellState v-else-if="view.edited" state="edited" />
           </template>
-        </TeamImportCell>
+        </ImportCell>
         <template v-if="shotTeam !== null">
-          <TeamImportCell
+          <ImportCell
             v-for="row in missingRows"
             :key="row.unitId"
             class="unit missing"
@@ -456,10 +456,10 @@ const tileBoxes = (): HTMLInputElement[] => [
               />
               <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
             </template>
-          </TeamImportCell>
+          </ImportCell>
         </template>
       </template>
-    </TeamImportCellGrid>
+    </ImportCellGrid>
     <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>
   </div>
 </template>

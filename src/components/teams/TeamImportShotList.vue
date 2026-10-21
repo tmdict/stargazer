@@ -1,16 +1,12 @@
 <script setup lang="ts">
-/* The dropped screenshots as cards: a thumbnail that opens the full image in
-   a lightbox, the map it fills (read from the strip, or from a formation
-   shot's slot circles), who won it (read from the Ally tab; for a formation
-   shot, the team it shows instead, read from its board; a replay frame has
-   neither), and the reading's state. Two cards on one map both turn red; the
-   modal blocks Save as New on it. */
+/* The dropped screenshots as cards (ImportShotCard), each with the map it
+   fills (read from the strip, or from a formation shot's slot circles), who
+   won it (read from the Ally tab; for a formation shot, the team it shows
+   instead, read from its board; a replay frame has neither), and the
+   reading's state. Two cards on one map both turn red; the modal blocks Save
+   as New on it. */
 
-import { ref } from 'vue'
-
-import IconClose from '@/components/ui/IconClose.vue'
-import IconExpand from '@/components/ui/IconExpand.vue'
-import ImageLightbox from '@/components/ui/ImageLightbox.vue'
+import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import type { ShotError } from '@/composables/useImportEngine'
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
@@ -52,8 +48,6 @@ const emit = defineEmits<{
 }>()
 
 const i18n = useI18nStore()
-
-const zoomed = ref<ImportShot | null>(null)
 
 const mapIndexOf = (shot: ImportShot): number | null => shotMapIndex(shot, mapCount)
 
@@ -127,106 +121,80 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 
 <template>
   <div class="shot-list">
-    <div
+    <ImportShotCard
       v-for="shot in shots"
       :key="shot.id"
-      class="shot"
-      :class="{ selected: shot.id === selectedId, failed: shot.status === 'failed' }"
-      role="group"
-      :aria-label="shot.name"
-      @click="selectedId = shot.id"
+      :name="shot.name"
+      :thumb="shot.thumb"
+      :selected="shot.id === selectedId"
+      :failed="shot.status === 'failed'"
+      :status="status(shot)"
+      @select="selectedId = shot.id"
+      @remove="emit('remove', shot.id)"
     >
-      <button
-        type="button"
-        class="shot-thumb"
-        :aria-label="i18n.t('app.import-view-full')"
-        :title="i18n.t('app.import-view-full')"
-        @click.stop="zoomed = shot"
-      >
-        <img :src="shot.thumb" alt="" />
-        <IconExpand :size="14" class="shot-zoom" />
-      </button>
-      <button
-        type="button"
-        class="shot-name"
-        :title="shot.name"
-        :aria-pressed="shot.id === selectedId"
-        @click.stop="selectedId = shot.id"
-      >
-        {{ shot.name }}
-      </button>
-      <div class="shot-row">
-        <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
-        <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
-          <button
-            v-for="i in mapCount"
-            :key="i"
-            type="button"
-            class="seg-btn"
-            :class="{
-              on: mapIndexOf(shot) === i - 1,
-              dup: mapIndexOf(shot) === i - 1 && duplicated(shot),
-            }"
-            :aria-pressed="mapIndexOf(shot) === i - 1"
-            @click.stop="emit('setMap', shot.id, mapIndexOf(shot) === i - 1 ? null : i - 1)"
-          >
-            {{ i }}
-          </button>
+      <template #default>
+        <div class="shot-row">
+          <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
+          <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
+            <button
+              v-for="i in mapCount"
+              :key="i"
+              type="button"
+              class="seg-btn"
+              :class="{
+                on: mapIndexOf(shot) === i - 1,
+                dup: mapIndexOf(shot) === i - 1 && duplicated(shot),
+              }"
+              :aria-pressed="mapIndexOf(shot) === i - 1"
+              @click.stop="emit('setMap', shot.id, mapIndexOf(shot) === i - 1 ? null : i - 1)"
+            >
+              {{ i }}
+            </button>
+          </div>
         </div>
-      </div>
-      <div v-if="formation" class="shot-row">
-        <span class="shot-label">{{ i18n.t('app.import-team') }}</span>
-        <div class="seg" role="group" :aria-label="i18n.t('app.import-team')">
-          <button
-            v-for="team in SIDES"
-            :key="team"
-            type="button"
-            class="seg-btn side"
-            :class="{
-              on: shownTeam(shot) === team,
-              ally: team === Team.ALLY,
-              enemy: team === Team.ENEMY,
-            }"
-            :aria-pressed="shownTeam(shot) === team"
-            disabled
-          >
-            {{ i18n.t(teamLabelKey(team)) }}
-          </button>
+        <div v-if="formation" class="shot-row">
+          <span class="shot-label">{{ i18n.t('app.import-team') }}</span>
+          <div class="seg" role="group" :aria-label="i18n.t('app.import-team')">
+            <button
+              v-for="team in SIDES"
+              :key="team"
+              type="button"
+              class="seg-btn side"
+              :class="{
+                on: shownTeam(shot) === team,
+                ally: team === Team.ALLY,
+                enemy: team === Team.ENEMY,
+              }"
+              :aria-pressed="shownTeam(shot) === team"
+              disabled
+            >
+              {{ i18n.t(teamLabelKey(team)) }}
+            </button>
+          </div>
         </div>
-      </div>
-      <div v-else-if="!replay" class="shot-row">
-        <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
-        <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
-          <button
-            v-for="team in SIDES"
-            :key="team"
-            type="button"
-            class="seg-btn side"
-            :class="{
-              on: shotWinner(shot) === team,
-              ally: team === Team.ALLY,
-              enemy: team === Team.ENEMY,
-            }"
-            :aria-pressed="shotWinner(shot) === team"
-            :disabled="shot.status !== 'ready'"
-            @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
-          >
-            {{ i18n.t(teamLabelKey(team)) }}
-          </button>
+        <div v-else-if="!replay" class="shot-row">
+          <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
+          <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
+            <button
+              v-for="team in SIDES"
+              :key="team"
+              type="button"
+              class="seg-btn side"
+              :class="{
+                on: shotWinner(shot) === team,
+                ally: team === Team.ALLY,
+                enemy: team === Team.ENEMY,
+              }"
+              :aria-pressed="shotWinner(shot) === team"
+              :disabled="shot.status !== 'ready'"
+              @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
+            >
+              {{ i18n.t(teamLabelKey(team)) }}
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="shot-status" :class="status(shot).tone">{{ status(shot).text }}</div>
-      <button
-        type="button"
-        class="shot-remove"
-        :aria-label="i18n.t('app.import-remove')"
-        :title="i18n.t('app.import-remove')"
-        @click.stop="emit('remove', shot.id)"
-      >
-        <IconClose :size="12" />
-      </button>
-    </div>
-    <ImageLightbox v-if="zoomed" :src="zoomed.thumb" :alt="zoomed.name" @close="zoomed = null" />
+      </template>
+    </ImportShotCard>
   </div>
 </template>
 
@@ -242,99 +210,6 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: var(--spacing-md);
   }
-}
-
-.shot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background: var(--import-surface);
-  border: 1px solid var(--import-border);
-  border-radius: var(--radius-large);
-  color: var(--import-text);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: border-color var(--transition-fast);
-}
-
-.shot:hover {
-  border-color: var(--import-border-strong);
-}
-
-.shot.selected {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 1px var(--color-accent);
-}
-
-.shot.failed {
-  border-color: var(--import-bad);
-}
-
-.shot-thumb {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 80px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-medium);
-  background: rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  cursor: zoom-in;
-}
-
-.shot-thumb img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
-  transition: filter var(--transition-fast);
-}
-
-.shot-thumb:hover img,
-.shot-thumb:focus-visible img {
-  filter: brightness(1.15);
-}
-
-.shot-zoom {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 3px;
-  border-radius: var(--radius-small);
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.shot-thumb:hover .shot-zoom,
-.shot-thumb:focus-visible .shot-zoom {
-  opacity: 1;
-}
-
-@media (pointer: coarse) {
-  .shot-zoom {
-    opacity: 1;
-  }
-}
-
-.shot-name {
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 600;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
 }
 
 .shot-row {
@@ -416,47 +291,9 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   background: var(--import-enemy);
 }
 
-.shot-status {
-  font-size: 0.75rem;
-  color: var(--import-text-dim);
-}
-
-.shot-status.warn {
-  color: var(--import-warn);
-}
-
-.shot-status.error {
-  color: var(--import-bad);
-}
-
-.shot-remove {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  cursor: pointer;
-}
-
-.shot-remove:hover {
-  background: var(--color-danger);
-}
-
 @media (pointer: coarse) {
   .seg-btn {
     padding: 8px 4px;
-  }
-
-  .shot-remove {
-    width: 28px;
-    height: 28px;
   }
 }
 </style>

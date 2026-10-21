@@ -680,20 +680,6 @@ const handleForgetLearned = (): void => {
 
 <style scoped>
 .import {
-  --import-text: #fff;
-  --import-text-dim: rgba(255, 255, 255, 0.65);
-  --import-label: rgba(255, 255, 255, 0.55);
-  --import-surface: rgba(255, 255, 255, 0.06);
-  --import-surface-hover: rgba(255, 255, 255, 0.12);
-  --import-border: rgba(255, 255, 255, 0.14);
-  --import-border-strong: rgba(255, 255, 255, 0.3);
-  --import-warn: #f6c453;
-  --import-warn-tint: rgba(246, 196, 83, 0.12);
-  --import-bad: #f28b82;
-  --import-bad-tint: rgba(242, 139, 130, 0.14);
-  --import-good: #81c995;
-  --import-ally: #d9782f;
-  --import-enemy: #4f78c0;
   --import-columns: repeat(5, minmax(0, 1fr));
 
   display: flex;
