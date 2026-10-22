@@ -195,7 +195,7 @@ const loadLearned = (): void => {
   learned.value = parseLearnedIcons(readStorage(LEARNED_KEY))
 }
 
-// ---------- image decoding (main thread) ----------
+// Image decoding, on the main thread.
 
 const drawToImage = (source: ImageBitmap, width: number, height: number): RgbaImage => {
   const canvas = document.createElement('canvas')
@@ -245,7 +245,7 @@ export const imageToDataUrl = (image: RgbaImage): string => {
   return canvas.toDataURL('image/jpeg', 0.85)
 }
 
-// ---------- references and the worker ----------
+// The references and the reading workers.
 
 // Costume references from the image host, or none when the manifest is missing; a
 // single file that fails to load is skipped, the rest still count.
@@ -572,7 +572,7 @@ async function ensurePart(part: ReferencePart): Promise<void> {
   }
 }
 
-// ---------- shots ----------
+// The shots: decoding, queueing and adding them.
 
 const decodeShot = async (file: Blob, kind: ImportKind): Promise<RgbaImage> => {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
