@@ -62,6 +62,18 @@ const CLOSED_OPEN = 1
 const PITCH_SHARE = [1 / 30, 1 / 5.4] as const
 // The shot is cut into about this many slabs, overlapping by half, to find the grid.
 const SLABS = 16
+// The scroll's top edge sits just under the grid's header, so a first row that runs
+// up under it has lost its frames' tops, where the paragon level shows, though its
+// sides look whole. On labelled screenshots the header's title is a band of 0.07 to
+// 0.12 of a card, and a whole first row's frame box clears it by 0.085 to 0.15 of a
+// card, a cut one by 0.046 or less.
+const HEADER = { length: [0.05, 0.2], clearance: 0.065 } as const
+// The faction filter button floats over the last rows' right columns as a white
+// pill. Near-white fills at most 0.08 of a card's box on labelled screenshots, and
+// 0.16 of the one the button covers, too much hidden to read.
+const COVERED = 0.12
+const isWhite = (r: number, g: number, b: number): boolean =>
+  Math.min(r, g, b) >= 243 && Math.max(r, g, b) - Math.min(r, g, b) <= 10
 
 const isCream = (r: number, g: number, b: number): boolean => {
   const max = Math.max(r, g, b)
@@ -412,6 +424,18 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
   // Slots are template boxes: the card's frame inside, centred.
   const w = comb.card / OPAQUE_SHARE
   const th = w * CARD_ASPECT
+  const whiteShare = (b: Rect): number => {
+    let n = 0
+    let white = 0
+    for (let y = Math.max(0, Math.round(b.y)); y < Math.min(m.h, Math.round(b.y + b.h)); y++) {
+      for (let x = Math.max(0, Math.round(b.x)); x < Math.min(m.w, Math.round(b.x + b.w)); x++) {
+        const i = (y * m.w + x) * 4
+        n++
+        if (isWhite(work.data[i]!, work.data[i + 1]!, work.data[i + 2]!)) white++
+      }
+    }
+    return n ? white / n : 0
+  }
   const slots: Slot[] = []
   let row = 0
   let other = 0
@@ -421,15 +445,29 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
     share(c.top, c.bottom, (y) => openAt[y]!) >= GUTTER_OPEN &&
     share(c.top, c.bottom, (y) => marginAt[y]!) >= MARGIN_OPEN
   const wholeRows = candidates.filter((c) => onGrid(c) && wholeLength(lengthOf(c), h))
+  // The first whole row, when it runs up under the header: the band right above it,
+  // past a few pixel rows of crest tips, is the header's, and the row's frame box
+  // comes too close to it.
+  const headerCut = ((c: Candidate | undefined): Candidate | null => {
+    if (!c) return null
+    const above = bands
+      .filter((b) => b.bottom <= c.top && !(c.top - b.bottom < 0.03 * h && lengthOf(b) < 0.1 * h))
+      .at(-1)
+    const length = above ? lengthOf(above) / h : 0
+    if (!above || above.closed || length < HEADER.length[0] || length > HEADER.length[1])
+      return null
+    const clearance = ((c.top + c.bottom) / 2 - th / 2 - above.bottom) / h
+    return clearance < HEADER.clearance ? c : null
+  })(wholeRows[0])
   for (const c of candidates) {
     const len = lengthOf(c)
-    const isWhole = wholeRows.includes(c)
+    const isWhole = wholeRows.includes(c) && c !== headerCut
     // A short row on the grid is cut on the side away from its whole neighbour: the
     // scroll's edge clips the row above the first whole one, the bottom bar the row
     // below the last; failing a neighbour, a split band, the bar or the shot's edge
     // says which.
-    let cut: 'above' | 'below' | null = null
-    if (!isWhole && onGrid(c) && len >= 0.25 * h && len < WHOLE_ROW[0] * h) {
+    let cut: 'above' | 'below' | null = c === headerCut ? 'above' : null
+    if (!isWhole && !cut && onGrid(c) && len >= 0.25 * h && len < WHOLE_ROW[0] * h) {
       const below = wholeRows.some((r) => r.top >= c.bottom && r.top - c.bottom < 0.6 * h)
       const above = wholeRows.some((r) => r.bottom <= c.top && c.top - r.bottom < 0.6 * h)
       cut =
@@ -457,15 +495,25 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
         ? c.bottom - h / 2
         : c.top + h / 2
     const top = centre - th / 2
+    const present = Array.from(
+      { length: COLUMNS },
+      (_, col) => share(c.top, c.bottom, (y) => (filled[y]![col] ? 1 : 0)) > 0.6,
+    )
+    // Each row of the grid fills from its first column, so a cut row whose cards do
+    // not is the bottom bar's Level Up All button, not cards.
+    if (!isWhole && present.some((on, col) => on && !present[col - 1] && col > 0)) {
+      other++
+      continue
+    }
     for (let col = 0; col < COLUMNS; col++) {
-      const present = share(c.top, c.bottom, (y) => (filled[y]![col] ? 1 : 0)) > 0.6
-      if (!present && !isWhole) continue
+      if (!present[col] && !isWhole) continue
+      const box = { x: at(col), y: top, w, h: th }
       slots.push({
         row,
         col,
         hands: false,
-        box: scaled({ x: at(col), y: top, w, h: th }),
-        kind: !present ? 'empty' : isWhole ? 'card' : 'clipped',
+        box: scaled(box),
+        kind: !present[col] ? 'empty' : isWhole && whiteShare(box) < COVERED ? 'card' : 'clipped',
         inView: isWhole ? 1 : Math.min(1, len / h),
       })
     }
