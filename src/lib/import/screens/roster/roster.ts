@@ -608,7 +608,8 @@ function handsOf(m: Mask, grid: Comb, h: number, yMax: number): Rect[] | null {
 const OPAQUE_SHARE = 261 / 280
 // The card width the grid gives is off by its gutter estimate; the frames settle the
 // template's width among these factors of it.
-const SCALES = [0.91, 0.94, 0.97, 1, 1.03, 1.06, 1.09] as const
+const SCALES = [0.94, 1, 1.06] as const
+const SCALE_STEP = 0.03
 
 /* The cards of one size, each read on a copy where they meet the frame
  * templates, the box's top-left the seed. The copy's scale is the one at which
@@ -633,8 +634,8 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRea
   }
   const middle = refs.frames.filter((r) => Math.abs(r.scale - 0.265) < 1e-6)
   const probe = slots.slice(0, 8)
-  let best = { k: READ_WIDTH / slots[0]!.box.w, score: -Infinity }
-  for (const factor of SCALES) {
+  // How well the first cards' frames match at a factor of the box's width.
+  const fit = (factor: number): { factor: number; k: number; score: number } => {
     const k = READ_WIDTH / (slots[0]!.box.w * factor)
     const { scaled, seeds } = at(k)
     let sum = 0
@@ -648,8 +649,14 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRea
       }
       sum += b
     }
-    if (sum / probe.length > best.score) best = { k, score: sum / probe.length }
+    return { factor, k, score: sum / probe.length }
   }
+  // Coarse, then a step either side of the best.
+  const better = <T extends { score: number }>(a: T, b: T): T => (b.score > a.score ? b : a)
+  const coarse = SCALES.map(fit).reduce(better)
+  const best = [coarse.factor - SCALE_STEP, coarse.factor + SCALE_STEP]
+    .map(fit)
+    .reduce(better, coarse)
   const { scaled, seeds } = at(best.k)
   return seeds.map((seed) => readCard(scaled, refs, seed, true))
 }
