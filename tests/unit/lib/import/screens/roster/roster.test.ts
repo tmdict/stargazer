@@ -82,8 +82,22 @@ describe('readRoster', () => {
     hands.forEach((s, k) =>
       expect(Math.abs(s.box.x + s.box.w / 2 - (80 + 120 * k))).toBeLessThan(10),
     )
-    // Whole cards are read, the rest are not.
-    for (const slot of reading.slots) expect(slot.cell !== null).toBe(slot.kind === 'card')
+    // Whole cards are read, the rest are not; a card's box is in the screenshot's
+    // pixels, over its slot, though the cards are read on a rescaled copy. The blank
+    // templates leave the frame match free within its search, hence the slack.
+    for (const slot of reading.slots) {
+      expect(slot.cell !== null).toBe(slot.kind === 'card')
+      if (!slot.cell) continue
+      const centre = (r: { x: number; y: number; w: number; h: number }) => [
+        r.x + r.w / 2,
+        r.y + r.h / 2,
+      ]
+      const [cx, cy] = centre(slot.cell.box)
+      const [sx, sy] = centre(slot.box)
+      expect(Math.hypot(cx! - sx!, cy! - sy!)).toBeLessThan(0.25 * slot.box.w)
+      expect(slot.cell.box.w / slot.box.w).toBeGreaterThan(0.8)
+      expect(slot.cell.box.w / slot.box.w).toBeLessThan(1.25)
+    }
     // A plain card with no frame is below S+, and so P0, R0 by rule.
     const card = reading.slots.find((s) => s.kind === 'card')!
     expect(card.frame).toEqual({ family: 'below', sure: true })
