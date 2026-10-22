@@ -367,11 +367,14 @@ const postPart = (reader: Reader, part: ReferencePart): void => {
 // How many workers a roster import reads with (one is enough for a match's
 // few screenshots): up to three, one fewer than the device's cores, and only
 // one where the device reports little memory, each holding its own copy of the
-// hero part.
+// hero part. Safari and Firefox report no memory, so a touch screen that does
+// not, most likely a phone, reads with two at most.
 const poolSize = (): number => {
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
   if (memory !== undefined && memory < 4) return 1
-  return Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1))
+  const cores = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1))
+  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+  return memory === undefined && touch ? Math.min(2, cores) : cores
 }
 
 // Each free reader takes the oldest waiting shot whose parts it holds; a
