@@ -35,9 +35,12 @@ afterEach(() => {
   leaveTeamImport()
 })
 
+const PHANTIMAL = toPhantimalId(1)
+
 // A formation shot of the ally side showing hero 5 on the first ally tile
-// (or no portrait at all), whose lineup also fields hero 6.
-const mountFormation = async (withPortrait = true) => {
+// (or no portrait at all), whose lineup also fields hero 6 and qualifies for
+// one phantimal.
+const mountFormation = async (withPortrait = true, state: 'sure' | 'review' = 'sure') => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -97,8 +100,8 @@ const mountFormation = async (withPortrait = true) => {
         swapSides: false,
         sides: [],
         units: {
-          assignments: withPortrait ? [{ unitId: 5, state: 'sure' }] : [],
-          options: [5, 6, toPhantimalId(1)],
+          assignments: withPortrait ? [{ unitId: 5, state }] : [],
+          options: [5, 6, PHANTIMAL],
           placed: {
             mapKey: DEFAULT_MAP_KEY,
             team: Team.ALLY,
@@ -114,6 +117,7 @@ const mountFormation = async (withPortrait = true) => {
           },
         },
         onSetPick: api.setTilePick,
+        onSetUnit: api.setUnit,
       }),
   })
   app.use(pinia)
@@ -123,7 +127,11 @@ const mountFormation = async (withPortrait = true) => {
     host.remove()
   }
   await nextTick()
-  return { portraitTile, picks: () => api.shots.value[0]!.tilePicks[Team.ALLY] }
+  return {
+    portraitTile,
+    picks: () => api.shots.value[0]!.tilePicks[Team.ALLY],
+    overrides: () => api.shots.value[0]!.unitOverrides,
+  }
 }
 
 const clickTile = async (hexId: number): Promise<void> => {
@@ -136,7 +144,7 @@ const clickTile = async (hexId: number): Promise<void> => {
 describe('the units a formation shot misses', () => {
   it('places the next one on a free tile, then offers the rest in the picker', async () => {
     const { portraitTile, picks } = await mountFormation()
-    const [, free, other] = ALLY_TILES
+    const [, free, other, spare] = ALLY_TILES
     const pickable = [...document.querySelectorAll('polygon.pick-tile')].map((p) =>
       p.getAttribute('aria-label'),
     )
@@ -145,10 +153,14 @@ describe('the units a formation shot misses', () => {
 
     await clickTile(free!)
     expect(picks()).toEqual({ [free!]: 6 })
+    // The shot is short of a hero, so it may have lost the lineup's phantimal
+    // with it, which comes next.
+    await clickTile(other!)
+    expect(picks()).toEqual({ [free!]: 6, [other!]: PHANTIMAL })
 
     // Nothing left to place: the picker offers the missing hero and the
     // phantimals, never the hero the screenshot shows.
-    await clickTile(other!)
+    await clickTile(spare!)
     const offered = [...document.querySelectorAll('.picker .picker-item')].map((item) =>
       item.textContent?.trim(),
     )
@@ -160,13 +172,13 @@ describe('the units a formation shot misses', () => {
     box.value = String(portraitTile)
     box.dispatchEvent(new Event('change'))
     await nextTick()
-    expect(picks()).toEqual({ [free!]: 6 })
+    expect(picks()).toEqual({ [free!]: 6, [other!]: PHANTIMAL })
     expect(document.querySelector('[role="alert"]')?.textContent).toContain(String(portraitTile))
   })
 
   it('offers every unit to place when the screenshot shows no portrait', async () => {
     const { picks } = await mountFormation(false)
-    expect(document.querySelectorAll('.cell.missing')).toHaveLength(2)
+    expect(document.querySelectorAll('.cell.missing')).toHaveLength(3)
     expect(document.querySelector('.cell.missing.next .cell-name')?.textContent).toContain('Hero5')
 
     await clickTile(ALLY_TILES[0]!)
@@ -175,5 +187,28 @@ describe('the units a formation shot misses', () => {
     expect(Number(document.querySelector('.tile-mark circle')?.getAttribute('r'))).toBeGreaterThan(
       0,
     )
+  })
+})
+
+describe('popups over the screenshot', () => {
+  it("confirms a portrait's reading from the screenshot, and closes on a click elsewhere", async () => {
+    const { overrides } = await mountFormation(true, 'review')
+    const ring = document.querySelector('circle.shot-ring')!
+    ring.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    const confirm = document.querySelector<HTMLButtonElement>('.picker .picker-item.confirm')!
+    expect(confirm.textContent).toContain('Hero5')
+    confirm.click()
+    await nextTick()
+    expect(overrides()).toEqual({ 0: 5 })
+    expect(document.querySelector('.picker')).toBeNull()
+
+    // A click outside the popup, anywhere in the window, closes it.
+    ring.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(document.querySelector('.picker')).not.toBeNull()
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(document.querySelector('.picker')).toBeNull()
   })
 })

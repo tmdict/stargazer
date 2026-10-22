@@ -5,8 +5,9 @@
  * opens a picker of the side's units instead, and a tile number typed beside a
  * unit places it as a click does. Every pick goes out through `setPick`. */
 
-import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, ref, type ComputedRef, type Ref } from 'vue'
 
+import { useBoardPopup } from '@/composables/useBoardPopup'
 import { SIDES } from '@/lib/teams/teamImport'
 import type { Team } from '@/lib/types/team'
 
@@ -101,16 +102,10 @@ export function useTilePlacing(config: {
   }
 
   const picker = ref<TilePicker | null>(null)
-
-  // Escape closes only the picker: heard on capture, before the modal's own
-  // listener would close the import and drop every shot with it.
-  const closeOnEscape = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape' || !picker.value) return
-    event.stopPropagation()
-    picker.value = null
-  }
-  onMounted(() => document.addEventListener('keydown', closeOnEscape, { capture: true }))
-  onUnmounted(() => document.removeEventListener('keydown', closeOnEscape, { capture: true }))
+  useBoardPopup(
+    () => picker.value !== null,
+    () => (picker.value = null),
+  )
 
   const clickTile = (target: TilePicker): void => {
     const free = !sideOf(target.side)?.picks.has(target.hexId)

@@ -4,8 +4,8 @@
    tiles tinted and the blocked ones hatched (they should sit on the walls).
    Each side's units are placed on its tiles by click or typed tile number
    (useTilePlacing), in the side's placing order: the heroes of the map's
-   result screenshot, each with its companions, then the phantimal the picks
-   field.
+   result screenshot, then the phantimal the picks field, else the one the
+   lineup qualifies for, each with its companions.
    Heroes may have moved before the pause, so the tile is the reviewer's
    call. The "As placed" board beside the frame shows the sides as the plan
    will place them. Every pick is an edit on the shot; nothing here touches a
@@ -161,16 +161,12 @@ const {
   setPick: (side, hexId, unitId) => emit('setPick', shot.id, side, hexId, unitId),
 })
 
-// A tile no team deploys on closes the picker, as a click on the frame does.
-const clickFrameTile = (tile: TileView): void => {
+const clickFrameTile = (tile: TileView, side: Team): void => {
   const box = view.value?.box
-  if (tile.side === null || !box) {
-    picker.value = null
-    return
-  }
+  if (!box) return
   clickTile({
     hexId: tile.id,
-    side: tile.side,
+    side,
     left: (tile.x - box.x) / box.w,
     top: (tile.y - box.y) / box.h,
   })
@@ -212,7 +208,6 @@ const tileBoxes = (): HTMLInputElement[] => [
           :viewBox="`${view.box.x} ${view.box.y} ${view.box.w} ${view.box.h}`"
           role="img"
           :aria-label="shot.name"
-          @click="picker = null"
         >
           <defs>
             <pattern
@@ -244,8 +239,8 @@ const tileBoxes = (): HTMLInputElement[] => [
               role="button"
               tabindex="0"
               :aria-label="i18n.t('app.import-tile', { tile: tile.id })"
-              @click.stop="clickFrameTile(tile)"
-              @keydown.enter.prevent="clickFrameTile(tile)"
+              @click.stop="clickFrameTile(tile, tile.side)"
+              @keydown.enter.prevent="clickFrameTile(tile, tile.side)"
               @mouseenter="hovered = { side: tile.side, hexId: tile.id }"
               @mouseleave="hovered = null"
             />
@@ -256,7 +251,6 @@ const tileBoxes = (): HTMLInputElement[] => [
               :points="tile.points"
               :fill="tile.kind === 'blocked' ? `url(#hatch-${shot.id})` : undefined"
               :stroke-width="tile.width * (tile.kind === 'blocked' ? TILE_EDGE : NEUTRAL_EDGE)"
-              @click.stop="clickFrameTile(tile)"
             />
             <TeamImportTileMark
               v-if="tile.unitId !== null"
@@ -439,7 +433,7 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 .lineup-head {
   display: flex;
-  justify-content: space-between;
+  align-items: baseline;
   gap: 6px;
   margin-bottom: 4px;
   font-size: 0.75rem;
@@ -450,11 +444,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally .lineup-label {
-  color: var(--import-ally);
+  color: var(--color-ally);
 }
 
 .lineup.enemy .lineup-label {
-  color: var(--import-enemy);
+  color: var(--color-enemy);
 }
 
 .lineup-units {
@@ -481,11 +475,11 @@ const tileBoxes = (): HTMLInputElement[] => [
 }
 
 .lineup.ally li.next {
-  box-shadow: inset 3px 0 0 var(--import-ally);
+  box-shadow: inset 3px 0 0 var(--color-ally);
 }
 
 .lineup.enemy li.next {
-  box-shadow: inset 3px 0 0 var(--import-enemy);
+  box-shadow: inset 3px 0 0 var(--color-enemy);
 }
 
 .lineup-pick {

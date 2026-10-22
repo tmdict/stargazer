@@ -2,9 +2,11 @@
 /* A formation shot's units in its review grid: each portrait as the shot
    shows it, its tile, and the unit it is taken for, picked from the units its
    side can field, over two numbered boards, the screenshot's and the side as
-   it will be placed, so a tile can be checked against both. The units it
-   misses are listed after, each placed on one of the side's free tiles as on
-   a replay frame (useTilePlacing).
+   it will be placed, so a tile can be checked against both. A portrait on the
+   screenshot opens its unit's choices too, the reading to confirm first, so a
+   unit is checked without scrolling to its card. The units it misses are
+   listed after, each placed on one of the side's free tiles as on a replay
+   frame (useTilePlacing).
    Every edit is an override on the shot; nothing here touches a board. */
 
 import { computed, ref } from 'vue'
@@ -22,9 +24,11 @@ import TeamImportTileMark, { ringWidth } from '@/components/teams/TeamImportTile
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
+import { useBoardPopup } from '@/composables/useBoardPopup'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
+import { useTilePlacing, type PickerItem, type PlacingSide } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
+import { isBaseHeroId } from '@/lib/characters/character'
 import {
   BOARD_HEXES,
   hexCentre,
@@ -209,13 +213,6 @@ const {
   setPick: (side, hexId, unitId) => emit('setPick', shot.id, side, hexId, unitId),
 })
 
-// The review grid closes the picker on a click anywhere in it, the hero cells included.
-defineExpose({
-  closeTilePicker: (): void => {
-    tilePicker.value = null
-  },
-})
-
 const shotTeam = computed(() => shotTiles.value?.team ?? null)
 const sideClass = computed(() => (shotTeam.value === Team.ALLY ? 'ally' : 'enemy'))
 const missingRows = computed(() => (shotTeam.value === null ? [] : rows(shotTeam.value)))
@@ -274,19 +271,74 @@ const previewMark = computed(() => {
 
 const boardFrame = ref<HTMLElement>()
 
-// The picker sits under the tile clicked, measured on screen, since the
-// board may be drawn smaller than its box.
-const clickShotTile = (hexId: number, event: Event): void => {
+// Where a popup opens: under the middle of what was clicked, measured on
+// screen, since the board may be drawn smaller than its box.
+const anchorAt = (event: Event, y: 'middle' | 'bottom'): { left: number; top: number } | null => {
   const frame = boardFrame.value?.getBoundingClientRect()
+  if (!frame) return null
+  const target = (event.currentTarget as Element).getBoundingClientRect()
+  return {
+    left: (target.left + target.width / 2 - frame.left) / frame.width,
+    top:
+      ((y === 'middle' ? target.top + target.height / 2 : target.bottom) - frame.top) /
+      frame.height,
+  }
+}
+
+const clickShotTile = (hexId: number, event: Event): void => {
   const team = shotTeam.value
-  if (!frame || team === null) return
-  const tile = (event.currentTarget as Element).getBoundingClientRect()
-  clickTile({
-    hexId,
-    side: team,
-    left: (tile.left + tile.width / 2 - frame.left) / frame.width,
-    top: (tile.top + tile.height / 2 - frame.top) / frame.height,
-  })
+  const at = anchorAt(event, 'middle')
+  if (!at || team === null) return
+  portraitPicker.value = null
+  clickTile({ hexId, side: team, ...at })
+}
+
+// A portrait clicked on the screenshot, whose choices open under it.
+const portraitPicker = ref<{ index: number; hexId: number; left: number; top: number } | null>(null)
+useBoardPopup(
+  () => portraitPicker.value !== null,
+  () => (portraitPicker.value = null),
+)
+
+const clickPortrait = (index: number, event: Event): void => {
+  const view = unitViews.value[index]
+  const at = anchorAt(event, 'bottom')
+  if (!view || !at) return
+  tilePicker.value = null
+  portraitPicker.value =
+    portraitPicker.value?.index === index ? null : { index, hexId: view.tile, ...at }
+}
+
+// The open portrait's unit, the units it may be taken for (heroes first,
+// then the rest, each with the tile it stands on), and its reading to confirm.
+const portraitChoices = computed(() => {
+  const target = portraitPicker.value
+  const view = target ? unitViews.value[target.index] : undefined
+  if (!target || !view) return null
+  const tileOf = (unitId: number): number | null =>
+    unitViews.value.find((v) => v.unitId === unitId)?.tile ??
+    missingRows.value.find((row) => row.unitId === unitId)?.tile ??
+    null
+  const options = portraitOptions(
+    units.options,
+    units.assignments.map((assignment) => assignment.unitId),
+    target.index,
+  )
+  const item = (unitId: number): PickerItem => ({ unitId, tile: tileOf(unitId) })
+  return {
+    view,
+    items: {
+      heroes: options.filter(isBaseHeroId).map(item),
+      extras: options.filter((unitId) => !isBaseHeroId(unitId)).map(item),
+    },
+    confirm: view.state === 'review' && view.unitId !== null ? view.unitId : undefined,
+  }
+})
+
+const setPortraitUnit = (unitId: number | null): void => {
+  const target = portraitPicker.value
+  portraitPicker.value = null
+  if (target) emit('setUnit', shot.id, target.index, unitId)
 }
 
 const sectionEl = ref<HTMLElement>()
@@ -332,11 +384,24 @@ const tileBoxes = (): HTMLInputElement[] => [
               v-for="ring in shotBoard.rings"
               :key="`ring-${ring.index}`"
               class="shot-ring"
-              :class="[ring.state, { pointed: hovered === ring.index }]"
+              :class="[
+                ring.state,
+                { pointed: hovered === ring.index, open: portraitPicker?.index === ring.index },
+              ]"
               :cx="ring.x"
               :cy="ring.y"
               :r="ring.radius"
               :stroke-width="ringWidth(ring.width, hovered === ring.index)"
+              role="button"
+              tabindex="0"
+              :aria-label="unitName(units.assignments[ring.index]?.unitId ?? null)"
+              data-board-popup-opener
+              @click.stop="clickPortrait(ring.index, $event)"
+              @keydown.enter.prevent="clickPortrait(ring.index, $event)"
+              @mouseenter="hovered = ring.index"
+              @mouseleave="hovered = null"
+              @focus="hovered = ring.index"
+              @blur="hovered = null"
             />
             <template v-for="tile in pickTiles" :key="`mark-${tile.hexId}`">
               <TeamImportTileMark
@@ -373,6 +438,16 @@ const tileBoxes = (): HTMLInputElement[] => [
             :items="pickerItems"
             :picked-here
             @pick="pickTile"
+          />
+          <TeamImportTilePicker
+            v-if="portraitPicker && portraitChoices"
+            :picker="portraitPicker"
+            :items="portraitChoices.items"
+            :picked-here="portraitChoices.view.unitId"
+            :confirm="portraitChoices.confirm"
+            clear-label="app.import-none"
+            @pick="setPortraitUnit"
+            @confirm="setPortraitUnit(portraitChoices.view.unitId)"
           />
         </div>
         <figcaption>{{ i18n.t('app.import-in-screenshot') }}</figcaption>
@@ -465,10 +540,6 @@ const tileBoxes = (): HTMLInputElement[] => [
 </template>
 
 <style scoped>
-.side-head > .place-count {
-  margin-left: auto;
-}
-
 .unit-pick {
   --dropdown-trigger-width: 100%;
 }
@@ -503,9 +574,13 @@ const tileBoxes = (): HTMLInputElement[] => [
   background: rgba(0, 0, 0, 0.35);
 }
 
+/* The portrait inside the ring takes clicks too. */
 .shot-ring {
   fill: none;
   stroke: var(--color-accent);
+  pointer-events: all;
+  cursor: pointer;
+  outline: none;
 }
 
 .shot-ring.review {
@@ -516,16 +591,20 @@ const tileBoxes = (): HTMLInputElement[] => [
   stroke: var(--import-bad);
 }
 
+.shot-ring.open {
+  stroke: #fff;
+}
+
 .board-frame {
   position: relative;
 }
 
 .cells.ally {
-  --pick-colour: var(--import-ally);
+  --pick-colour: var(--color-ally);
 }
 
 .cells.enemy {
-  --pick-colour: var(--import-enemy);
+  --pick-colour: var(--color-enemy);
 }
 
 .units-note {
