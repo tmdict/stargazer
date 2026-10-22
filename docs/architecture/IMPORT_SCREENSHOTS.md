@@ -1,4 +1,4 @@
-# Import Capabilities
+# Screenshots the Imports Read
 
 What the screenshot imports can read from the game's screens, how they say how sure they are, what a screenshot needs, and where they stop. How each screen is read lives in [Screenshot Import](./IMPORT.md), [Team Import](./IMPORT_TEAM.md) and [Roster Import](./IMPORT_ROSTER.md). This page is the map of what they deliver, for deciding whether a screen or a field is worth a new reader.
 
@@ -25,7 +25,7 @@ Save waits for what would put something wrong on a board or in a roster:
 - the roster import, for a hero whose cards disagree on its levels, or a hero read twice in one screenshot;
 - both, for screenshots still being added or read.
 
-Correcting the hero of an unsure card on a surely read paragon frame teaches that face, and every import reads with what any import learned. The browser keeps at most `LEARNED_ICONS_CAP` lessons, oldest out first, and the review's Forget control drops them.
+Correcting the hero of an unsure card on a surely placed paragon frame teaches that face, and every import reads with what any import learned. The browser keeps at most `LEARNED_ICONS_CAP` lessons, oldest out first, and the review's Forget control drops them.
 
 ## What a screenshot needs
 
@@ -40,7 +40,7 @@ Each import accepts only its own screens, on every way in. The sorter turns a ro
 - Seasonal artifacts are matched against icons from the image host, so a new season's artifacts read once their icons are published there ([Seasonal Content](./SEASONAL.md)).
 - The replay camera and arena were measured on one match. A Supreme League map change needs frames of the new maps checked, and a new arena picture when the fight's surroundings change.
 - A new hero reads once its portrait is in the app, and a costume once its capture is on the image host. A face neither covers stays unsure until a correction teaches it.
-- A whole roster of about seven screenshots reads in about 15 s on desktop, in up to three workers. A device reporting under 4 GB of memory reads with one, which is slower; phones have not been timed.
+- A whole roster of about seven screenshots reads in about 15 s on desktop, in up to three workers. A device reporting under 4 GB of memory reads with one, and a touch screen reporting none (Safari and Firefox report none) with two at most; phones have not been timed.
 
 ## Privacy
 

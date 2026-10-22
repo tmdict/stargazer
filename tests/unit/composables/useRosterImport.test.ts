@@ -111,11 +111,17 @@ describe('roster import', () => {
     expect(api.shots.value.map((s) => s.name)).toEqual(['roster.png'])
   })
 
-  it('never teaches the face of a card below S+', () => {
+  it('teaches on a surely placed paragon frame whatever its level, and never below S+', () => {
     const api = holdImport()
-    api.shots.value = [shot('a', [slot(0, unsure(0.1), 'below')])]
+    const levelUnsure: HeroReading = {
+      ...unsure(0.1),
+      paragon: { level: 2, score: 0.8, runnerUp: 0.79, sure: false },
+    }
+    api.shots.value = [shot('a', [slot(0, levelUnsure), slot(1, unsure(0.2), 'below')])]
     api.setHero([{ shotId: 'a', key: '1.1' }], 9)
-    expect(api.shots.value[0]!.overrides['1.1']).toEqual({ characterId: 9 })
-    expect(api.learnedCount.value).toBe(0)
+    expect(api.learnedCount.value).toBe(1)
+    api.setHero([{ shotId: 'a', key: '1.2' }], 9)
+    expect(api.shots.value[0]!.overrides['1.2']).toEqual({ characterId: 9 })
+    expect(api.learnedCount.value).toBe(1)
   })
 })

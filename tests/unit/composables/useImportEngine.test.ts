@@ -241,6 +241,16 @@ describe('import engine', () => {
     expect(new Set(frames).size).toBe(3)
   })
 
+  it('reads with two readers at most on a touch screen that reports no memory', async () => {
+    vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)' }))
+    const { add } = holdEngine(['roster'])
+    await add([1, 2, 3, 4].map((n) => file(`${n}.png`)))
+    answerReady(await partsPosted(['heroes']), ['heroes'])
+    answerReady(await partsPosted(['heroes'], () => readers()[1]), ['heroes'])
+    expect(readers().map((w) => w.reads().length)).toEqual([1, 1])
+  })
+
   it('drops a reader whose tables fail while another holds them, and grows the pool no further', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
     const { engine, shots, add } = holdEngine(['roster'])

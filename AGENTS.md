@@ -58,7 +58,7 @@ System docs:
 - [Screenshot Import](./docs/architecture/IMPORT.md) - The engine, worker, hero cards and references every screenshot import shares
 - [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match and formation screenshot import
 - [Roster Import](./docs/architecture/IMPORT_ROSTER.md) - Hero roster screenshot import
-- [Import Capabilities](./docs/architecture/IMPORT_CAPABILITIES.md) - What the screenshot imports read, what a screenshot needs, and their limits
+- [Screenshots the Imports Read](./docs/architecture/IMPORT_SCREENSHOTS.md) - What each game screen gives, what a screenshot needs, and the limits
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder
