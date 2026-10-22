@@ -1,5 +1,5 @@
 /* What a roster screenshot reads: where the grid and the Hands of Resonance lie,
- * every slot in them, and each whole card's reading. */
+ * every slot in them, and each whole card's frame family and reading. */
 
 import type { HeroReading } from '../../card/types'
 import type { Rect } from '../../core/types'
@@ -28,11 +28,18 @@ export interface Grid {
   other: number
 }
 
+// A paragon frame (S+, which the app calls P0, to P4), or a card below S+: a plate
+// with no frame, or a lower tier's frame.
+export type FrameFamily = 'paragon' | 'below'
+
+export interface RosterSlot extends Slot {
+  // A whole card's frame family and reading; null for a slot not read (empty or
+  // clipped). A card below S+ reads as P0, R0.
+  frame: { family: FrameFamily; sure: boolean } | null
+  cell: HeroReading | null
+}
+
 export interface RosterReading {
   grid: Grid | null
-  slots: Slot[]
-  // Each slot's reading, in slot order; null for a slot not read (empty or clipped).
-  cells: (HeroReading | null)[]
-  // The template width the grid's cards were read at, in the shot's pixels.
-  width: number
+  slots: RosterSlot[]
 }
