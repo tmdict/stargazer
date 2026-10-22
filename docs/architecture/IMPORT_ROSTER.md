@@ -26,7 +26,7 @@ A whole roster takes several screenshots: one per faction filter, or one per scr
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
 
-A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. The engine starts another reader for a roster screenshot left waiting while every reader is busy, up to three, fewer on a device with few cores or that reports under 4 GB of memory, each with its own copy of the references. Screenshots are sorted and decoded one after another as they are added, and read as readers come free. A status line counts the screenshots done while any is still being added or read.
+A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. The engine starts another reader for a roster screenshot left waiting while every reader is busy, up to three, fewer on a phone or a device short of cores or memory ([Screenshot Import](./IMPORT.md#the-engine)), each with its own copy of the references. Screenshots are sorted and decoded one after another as they are added, and read as readers come free. A status line counts the screenshots done while any is still being added or read.
 
 ## The screen
 
@@ -62,7 +62,7 @@ Cards no hero is taken for are listed apart, and a hero removed in review drops 
 
 ## Review and save
 
-The review lists what to check first (the cards no hero is taken for, then the heroes with an issue or a card left to check), then the heroes read with confidence in a compact grid. Every cell takes the hero picker and the level pills. A hero with an issue shows its cards one by one, each with its screenshot and key and corrected on its own, since one of them may be another hero; any other hero is one cell for all its cards, and a correction or a level set there goes to each of them. Correcting the hero of an unsure card whose paragon frame and level were read surely teaches that face to the learned store the team import uses ([Screenshot Import](./IMPORT.md#reference-descriptors)); a card below S+ never teaches, since its face is cut from a guessed box. The cards of one cell are one card seen again, so the first teaches its face and the others take back what each was taught on its own. Picking the reader's own top candidate, or no hero, takes back what was taught. The modal has the team import's control to forget the learned faces.
+The review lists what to check first (the cards no hero is taken for, then the heroes with an issue or a card left to check), then the heroes read with confidence in a compact grid. Every cell takes the hero picker and the level pills. A hero with an issue shows its cards one by one, each with its screenshot and key and corrected on its own, since one of them may be another hero; any other hero is one cell for all its cards, and a correction or a level set there goes to each of them. Correcting the hero of an unsure card on a surely placed paragon frame, whatever its level, teaches that face to the learned store the team import uses ([Screenshot Import](./IMPORT.md#reference-descriptors)); a card below S+ never teaches, since its face is cut from a guessed box. The cards of one cell are one card seen again, so the first teaches its face and the others take back what each was taught on its own. Picking the reader's own top candidate, or no hero, takes back what was taught. The modal has the team import's control to forget the learned faces.
 
 The footer names the roster (the next free automatic name until edited) and saves it as a new roster in one write (`rosters.create`), which becomes the active roster. Save waits while screenshots are added or read, while an entry's issue holds it back, and while no hero is found. At the roster limit the save is refused with a toast and the review stays open; a write the browser refuses keeps the roster for the visit, as the Rosters tab reports it.
 
@@ -73,6 +73,6 @@ Every screenshot added to either import is sorted (`sortScreenshot`, [Screenshot
 ## Related documentation
 
 - [Screenshot Import](./IMPORT.md): the engine, worker, hero cards and references every import shares
-- [Import Capabilities](./IMPORT_CAPABILITIES.md): what each screen gives, what a screenshot needs, and the limits
+- [Screenshots the Imports Read](./IMPORT_SCREENSHOTS.md): what each screen gives, what a screenshot needs, and the limits
 - [Team Import](./IMPORT_TEAM.md): the match screens, whose card reader the roster reuses
 - [Teams](./TEAMS.md#rosters): the roster format, the Rosters tab and the active roster

@@ -203,11 +203,12 @@ export function useRosterImport(): {
   }
 
   /* Take the cards for a hero, or for none. A correction of a card the reader
-   * was unsure of teaches its face, when a paragon frame placed it surely (a
-   * card below S+ never teaches, its face cut from a guessed box); picking the
-   * reader's own top candidate, or no hero, takes back what it was taught.
-   * The cards given are one card seen again, so the first teaches and the
-   * others take back what each was taught on its own, before they were one. */
+   * was unsure of teaches its face, when a paragon frame placed it surely,
+   * whatever its level (a card below S+ never teaches, its face cut from a
+   * guessed box); picking the reader's own top candidate, or no hero, takes
+   * back what it was taught. The cards given are one card seen again, so the
+   * first teaches and the others take back what each was taught on its own,
+   * before they were one. */
   const setHero = (cards: readonly CardRef[], characterId: number | null): void => {
     let first = true
     for (const card of cards) {
@@ -215,7 +216,7 @@ export function useRosterImport(): {
       if (!found) continue
       const { shot, cell, frame } = found
       shot.overrides[card.key] = { ...shot.overrides[card.key], characterId }
-      if (cell.sure || !cell.paragon.sure || frame.family !== 'paragon' || !frame.sure) continue
+      if (cell.sure || frame.family !== 'paragon' || !frame.sure) continue
       const teach = first && characterId !== null && cell.candidates[0]?.characterId !== characterId
       engine.learnFace(teach ? characterId : null, cell.descriptor)
       first = false
