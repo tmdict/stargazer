@@ -83,6 +83,7 @@ const {
   learnedCount,
   plan,
   addFiles,
+  adding,
   removeShot,
   clearImport,
   setMap,
@@ -384,7 +385,8 @@ const issueText = (issue: PlanIssue): string => {
 }
 
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
-const reading = computed(() => shots.value.some((s) => s.status === 'reading'))
+// Files still being sorted are not shots yet, and Save waits for them too.
+const reading = computed(() => adding.value > 0 || shots.value.some((s) => s.status === 'reading'))
 const blocked = computed(
   () =>
     mappedCount.value === 0 ||

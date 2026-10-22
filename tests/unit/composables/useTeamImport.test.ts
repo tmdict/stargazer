@@ -8,6 +8,7 @@ import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading } from '@/lib/import/screens/formation/types'
 import type { ReplayReading } from '@/lib/import/screens/replay/types'
+import { FakeWorker, file, stubImportBrowser } from '../fixtures/importBrowser'
 import { stubLocalStorage } from '../fixtures/storage'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
@@ -345,5 +346,49 @@ describe('clearing an import', () => {
     api.clearImport()
     expect(api.names.left).toBe('unii')
     expect(api.names.right).toBe('')
+  })
+})
+
+describe('adding screenshots', () => {
+  const hold = () =>
+    holdTeamImport(
+      () => '5v5',
+      () => false,
+    )
+
+  it("refuses a roster screenshot however it came, and reads a drop as its area's kind", async () => {
+    stubImportBrowser()
+    const api = hold()
+    FakeWorker.sortAs = 'roster'
+    expect(await api.addFiles([file('dropped.png')], 'result')).toEqual({
+      added: 0,
+      refused: { roster: 1 },
+    })
+    expect(await api.addFiles([file('pasted.png')], 'sort')).toEqual({
+      added: 0,
+      refused: { roster: 1 },
+    })
+    FakeWorker.sortAs = 'formation'
+    expect(await api.addFiles([file('result.png')], 'result')).toEqual({ added: 1, refused: {} })
+    expect(api.shots.value.map((s) => s.kind)).toEqual(['result'])
+  })
+
+  it('puts a paste the sorter cannot place with the results, or with formations imported alone', async () => {
+    stubImportBrowser()
+    const api = hold()
+    await api.addFiles([file('first.png')], 'sort')
+    expect(api.shots.value.map((s) => s.kind)).toEqual(['result'])
+    api.removeShot(api.shots.value[0]!.id)
+
+    FakeWorker.sortAs = 'formation'
+    await api.addFiles([file('formation.png')], 'sort')
+    FakeWorker.sortAs = null
+    await api.addFiles([file('unplaced.png')], 'sort')
+    FakeWorker.sortAs = 'result'
+    expect(await api.addFiles([file('result.png')], 'sort')).toEqual({
+      added: 0,
+      refused: { result: 1 },
+    })
+    expect(api.shots.value.map((s) => s.kind)).toEqual(['formation', 'formation'])
   })
 })

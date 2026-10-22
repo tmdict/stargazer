@@ -1,5 +1,6 @@
 /* The screenshot imports' modals: the parts both lay out alike (header, drop
- * sections, fields, review section, footer), under the .import class each
+ * sections, screenshot lists, labels and fields, review section, footer),
+ * under the .import class each
  * modal's root takes, and loaded with the modals. The pickers' Remove line is
  * rendered inside the teleported popup, so it goes by its own class and takes
  * the popup's palette rather than the modal's --import-* tokens. */
@@ -57,7 +58,8 @@
   flex-basis: 100%;
 }
 
-.import .field-label {
+.import .field-label,
+.import .group-label {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -95,6 +97,19 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.import .shot-list {
+  display: grid;
+  grid-template-columns: var(--import-columns);
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 720px) {
+  .import .shot-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+  }
 }
 
 .import .review-section {
