@@ -1,19 +1,24 @@
 <script setup lang="ts">
-/* The unit picker an import review opens on a tile of its screenshot, placed
-   in a positioned box around the drawn board. A click inside it stops there,
-   so a review closing it on clicks elsewhere leaves it open. */
+/* The unit picker an import review opens on a tile of its screenshot, or on
+   a portrait standing there, placed in a positioned box around the drawn
+   board (useBoardPopup closes it). A portrait's reading the reviewer may
+   confirm comes first. */
 
 import type { PickerItem, TilePicker } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { useI18nStore } from '@/stores/i18n'
 
-defineProps<{
-  picker: TilePicker
+const { clearLabel = 'app.import-clear-tile' } = defineProps<{
+  picker: Pick<TilePicker, 'hexId' | 'left' | 'top'>
   items: { heroes: readonly PickerItem[]; extras: readonly PickerItem[] }
   pickedHere: number | null
+  // The unit read for a portrait, to confirm as it is.
+  confirm?: number
+  // What taking the unit off says, as an i18n key.
+  clearLabel?: string
 }>()
 
-const emit = defineEmits<{ pick: [unitId: number | null] }>()
+const emit = defineEmits<{ pick: [unitId: number | null]; confirm: [] }>()
 
 const i18n = useI18nStore()
 const { unitName, unitImage } = useUnitLabels()
@@ -25,9 +30,18 @@ const { unitName, unitImage } = useUnitLabels()
     :style="{ '--tile-x': `${picker.left * 100}%`, top: `${picker.top * 100}%` }"
     role="menu"
     :aria-label="i18n.t('app.import-tile', { tile: picker.hexId })"
-    @click.stop
+    data-board-popup
   >
     <span class="picker-head">{{ i18n.t('app.import-tile', { tile: picker.hexId }) }}</span>
+    <button
+      v-if="confirm !== undefined"
+      type="button"
+      class="picker-item confirm"
+      role="menuitem"
+      @click="emit('confirm')"
+    >
+      {{ i18n.t('app.import-confirm', { value: unitName(confirm) }) }}
+    </button>
     <div class="picker-heroes">
       <button
         v-for="item in items.heroes"
@@ -67,7 +81,7 @@ const { unitName, unitImage } = useUnitLabels()
       role="menuitem"
       @click="emit('pick', null)"
     >
-      {{ i18n.t('app.import-clear-tile') }}
+      {{ i18n.t(clearLabel) }}
     </button>
   </div>
 </template>
@@ -126,6 +140,13 @@ const { unitName, unitImage } = useUnitLabels()
 .picker-item.clear {
   justify-content: center;
   color: var(--import-bad);
+}
+
+.picker-item.confirm {
+  justify-content: center;
+  border: 1px solid currentColor;
+  color: var(--import-warn);
+  font-weight: 700;
 }
 
 .picker-heroes {

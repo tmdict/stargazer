@@ -94,7 +94,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ## Review pieces
 
-An import's review is built from shared pieces (`src/components/import/`): a card cell with its state, the grid and section head around it, a hero card's editor that emits each correction for the import's plan to apply, the hero picker it opens, and a screenshot's card with its thumbnail, status and remove button, which leaves room for the import's own rows. The modals lay out alike from `src/styles/import.css`. Their colours are the `--import-*` tokens in `src/styles/variables.css`, the import modal's dark surfaces and the game's result colours.
+An import's review is built from shared pieces (`src/components/import/`): a card cell with its state, the grid and section head around it, a hero card's editor that emits each correction for the import's plan to apply, the hero picker it opens, and a screenshot's card with its thumbnail, status and remove button, which leaves room for the import's own rows. The modals lay out alike from `src/styles/import.css`. Their colours are the `--import-*` tokens in `src/styles/variables.css`: the import modal's dark surfaces, and the game's result colours for what mirrors the result screen. A board side takes the app's ally and enemy colours, as on the boards.
 
 ## Related documentation
 

@@ -16,7 +16,8 @@ export function tileOutline(corners: readonly Point[]): { points: string; width:
 </script>
 
 <script setup lang="ts">
-/* A deployment tile an import review places units on. */
+/* A deployment tile an import review places units on, in its board side's
+   colour, as the "As placed" board beside it draws the sides. */
 
 import { Team } from '@/lib/types/team'
 
@@ -35,6 +36,7 @@ defineProps<{
     :class="[side === Team.ALLY ? 'ally' : 'enemy', { active }]"
     :points
     :style="{ '--edge': `${tileWidth * TILE_EDGE}px` }"
+    data-board-popup-opener
   />
 </template>
 
@@ -46,13 +48,13 @@ defineProps<{
 }
 
 .pick-tile.ally {
-  fill: color-mix(in srgb, var(--import-ally) 22%, transparent);
-  stroke: color-mix(in srgb, var(--import-ally) 85%, white);
+  fill: color-mix(in srgb, var(--color-ally) 22%, transparent);
+  stroke: color-mix(in srgb, var(--color-ally) 85%, white);
 }
 
 .pick-tile.enemy {
-  fill: color-mix(in srgb, var(--import-enemy) 24%, transparent);
-  stroke: color-mix(in srgb, var(--import-enemy) 70%, white);
+  fill: color-mix(in srgb, var(--color-enemy) 24%, transparent);
+  stroke: color-mix(in srgb, var(--color-enemy) 70%, white);
 }
 
 .pick-tile:hover,

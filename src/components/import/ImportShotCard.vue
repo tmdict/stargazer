@@ -7,9 +7,11 @@
 
 import { ref } from 'vue'
 
+import IconCheckCircle from '@/components/ui/IconCheckCircle.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
+import type { ShotStatusView } from '@/components/import/shotStatus'
 import { useI18nStore } from '@/stores/i18n'
 
 const { selected } = defineProps<{
@@ -19,7 +21,7 @@ const { selected } = defineProps<{
   full?: string
   selected?: boolean
   failed: boolean
-  status: { text: string; tone: 'plain' | 'warn' | 'error' }
+  status: ShotStatusView
 }>()
 
 const emit = defineEmits<{ select: []; remove: [] }>()
@@ -59,7 +61,10 @@ const zoomed = ref(false)
     </button>
     <span v-else class="shot-name" :title="name">{{ name }}</span>
     <slot />
-    <div class="shot-status" :class="status.tone">{{ status.text }}</div>
+    <div class="shot-status" :class="status.tone">
+      <IconCheckCircle v-if="status.tone === 'done'" :size="12" />
+      {{ status.text }}
+    </div>
     <button
       type="button"
       class="shot-remove"
@@ -185,6 +190,14 @@ button.shot-name {
 
 .shot-status.error {
   color: var(--import-bad);
+}
+
+.shot-status.done {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--import-good);
+  font-weight: 700;
 }
 
 .shot-remove {

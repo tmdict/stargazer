@@ -7,7 +7,7 @@
    as New on it. */
 
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
-import { SHOT_ERROR_TEXT } from '@/components/import/shotError'
+import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
@@ -82,9 +82,7 @@ const cellReviewCount = (shot: ImportShot): number => {
   )
 }
 
-type StatusTone = 'plain' | 'warn' | 'error'
-
-const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
+const status = (shot: ImportShot): ShotStatusView => {
   if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
     return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
@@ -107,7 +105,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (review) return { text: i18n.t('app.import-to-review', { count: review }), tone: 'warn' }
   const place = placeCount?.(shot) ?? 0
   if (place) return { text: i18n.t('app.import-to-place', { count: place }), tone: 'warn' }
-  return { text: i18n.t('app.import-ready'), tone: 'plain' }
+  return { text: i18n.t('app.import-ready'), tone: 'done' }
 }
 </script>
 
@@ -151,7 +149,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
               v-for="team in SIDES"
               :key="team"
               type="button"
-              class="seg-btn side"
+              class="seg-btn side board"
               :class="{
                 on: shownTeam(shot) === team,
                 ally: team === Team.ALLY,
@@ -262,12 +260,22 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   text-overflow: ellipsis;
 }
 
+/* A map's winner is the result screen's, in its colours; the team a formation
+   shot shows is a board side, in the app's. */
 .seg-btn.side.on.ally {
   background: var(--import-ally);
 }
 
 .seg-btn.side.on.enemy {
   background: var(--import-enemy);
+}
+
+.seg-btn.side.board.on.ally {
+  background: var(--color-ally);
+}
+
+.seg-btn.side.board.on.enemy {
+  background: var(--color-enemy);
 }
 
 @media (pointer: coarse) {

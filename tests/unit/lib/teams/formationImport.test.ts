@@ -9,6 +9,7 @@ import {
   identifyMap,
   missingUnits,
   portraitOptions,
+  replayPlacing,
 } from '@/lib/teams/formationImport'
 import { Team } from '@/lib/types/team'
 
@@ -137,6 +138,34 @@ describe('missingUnits', () => {
       {},
     )
     expect(companion.order).toEqual([WEDGE])
+  })
+
+  it("places the lineup's phantimal for a shot short of heroes, and none for one showing every hero", () => {
+    const options = [11, 12, WEDGE, WEDGE_POWER]
+    // The panel cannot draw a hero the account lacks, and drops its phantimal with it.
+    const short = missingUnits([11, 12], [{ unitId: 11, hexId: 1 }], options, {})
+    expect(short.order).toEqual([12, WEDGE, WEDGE_POWER])
+    const whole = missingUnits(
+      [11, 12],
+      [
+        { unitId: 11, hexId: 1 },
+        { unitId: 12, hexId: 2 },
+      ],
+      options,
+      {},
+    )
+    expect(whole.order).toEqual([])
+  })
+})
+
+describe('replayPlacing', () => {
+  it("places the lineup's phantimal after the heroes until another is picked", () => {
+    const other = toPhantimalId(1)
+    const options = [11, 12, WEDGE, WEDGE_POWER, other]
+    expect(replayPlacing([11, 12], options, {}).order).toEqual([11, 12, WEDGE, WEDGE_POWER])
+    expect(replayPlacing([11, 12], options, { 3: other }).order).toEqual([11, 12, other])
+    // A lineup qualifying for none places its heroes alone.
+    expect(replayPlacing([11, 12], [11, 12], {}).order).toEqual([11, 12])
   })
 })
 

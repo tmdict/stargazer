@@ -190,13 +190,10 @@ const setArtifactPicked = (artifactId: number | null): void => {
   artifactPicker.value = null
 }
 
-const unitsSection = ref<InstanceType<typeof TeamImportUnits> | null>(null)
-
 // The modal stops clicks before they reach the document, where the popup's
-// own click-outside listens, so a tap elsewhere on the grid closes the
-// pickers here (a mouse leaving the popup already does).
+// own click-outside listens, so a tap elsewhere on the grid closes the hero
+// and artifact pickers here (a mouse leaving the popup already does).
 const closePickers = (event: MouseEvent): void => {
-  unitsSection.value?.closeTilePicker()
   if ((event.target as HTMLElement).closest('.cell-name, .artifact-btn')) return
   picker.value = null
   artifactPicker.value = null
@@ -270,7 +267,6 @@ const closePickers = (event: MouseEvent): void => {
 
     <TeamImportUnits
       v-if="units"
-      ref="unitsSection"
       :shot
       :units
       @set-unit="(id, index, unitId) => emit('setUnit', id, index, unitId)"
