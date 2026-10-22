@@ -31,16 +31,14 @@ export function fitComb(
     const i = Math.round(x)
     return Math.max(profile[i - 1] ?? 0, profile[i] ?? 0, profile[i + 1] ?? 0)
   }
+  // Running sums of the profile, so a card's middle is one subtraction.
+  const sums = new Float64Array(W + 1)
+  for (let i = 0; i < W; i++) sums[i + 1] = sums[i]! + profile[i]!
   const middleAt = (x: number, pitch: number): number => {
     const r = Math.max(1, Math.round(pitch * 0.1))
-    let sum = 0
-    let k = 0
-    for (let i = Math.round(x) - r; i <= Math.round(x) + r; i++) {
-      if (i < 0 || i >= W) continue
-      sum += profile[i]!
-      k++
-    }
-    return k ? sum / k : 1
+    const a = Math.max(0, Math.round(x) - r)
+    const b = Math.min(W - 1, Math.round(x) + r)
+    return b >= a ? (sums[b + 1]! - sums[a]!) / (b - a + 1) : 1
   }
   let best: Comb | null = null
   for (let pitch = pitchRange[0]; pitch <= pitchRange[1]; pitch += pitchStep) {
