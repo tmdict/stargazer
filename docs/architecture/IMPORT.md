@@ -1,6 +1,6 @@
 # Screenshot Import
 
-The screenshot imports read the game's own screens on the device and turn what they show into app data: the team import ([Team Import](./IMPORT_TEAM.md)) reads match result screens, formation panels and replay frames into a new team. Each import keeps its own plan and review. What lies under the screens is shared: the image code, the reading of hero cards, the worker that runs the readers, the references they match against and the faces learned from corrections.
+The screenshot imports read the game's own screens on the device and turn what they show into app data: the team import ([Team Import](./IMPORT_TEAM.md)) reads match result screens, formation panels and replay frames into a new team, and the roster import ([Roster Import](./IMPORT_ROSTER.md)) reads the hero roster into a new roster. Each import keeps its own plan and review. What lies under the screens is shared: the image code, the reading of hero cards, the worker that runs the readers, the references they match against and the faces learned from corrections.
 
 Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`). It runs unchanged in the worker, in unit tests and in offline checks against labelled screenshots kept outside this repo, so nothing under it touches the DOM.
 
@@ -31,17 +31,17 @@ The card layer (`card/`) reads a hero card wherever a screen shows one. The fram
 
 The screen layer (`screens/`) has one reader per screen, each finding the screen's own landmark before reading its cards: the result screen's tabs, the formation panel's board outline, the replay frame's arena, and on the hero roster (the Resonating Hall) the cream gutters between the cards, which a comb of columns is fitted to. The match screens share their reading type, the green ring of their map strips and the artifact reader (`screens/match/`).
 
-The review rules (`review.ts`) are what every import's review asks of a card: its state, and the hero and levels it contributes once corrected. On top sit the reference assembly, the learned-face store and the paste sorter.
+The review rules (`review.ts`) are what every import's review asks of a card: its state, and the hero and levels it contributes once corrected. On top sit the reference assembly, the learned-face store and the sorter, which tells which import and kind a screenshot shows (`sort.ts`).
 
 ## The engine
 
 `useImportEngine` is module-level state for one page visit. Each import composable holds it while the component using it is mounted, and the last to let go disposes it: leaving a page unmounts its import modal, which drops the workers and their references. The pages themselves never import it, so its code loads with the modal on first use.
 
-A screenshot is decoded on the main thread at its own size, within its kind's widths (a result screen or replay frame from 600 px wide up to `RESULT_MAX_WIDTH`, a formation panel from `FORMATION_MIN_WIDTH` up to `FORMATION_MAX_WIDTH`), and its pixels are handed to the worker. Decoded screenshots wait in the engine and go to the worker one at a time, so an import that closes drops the reads it still has waiting, and a reading that arrives for a removed shot is dropped. An import hands the engine its shots as a session: the engine moves each through reading, ready and failed, and gives the import each reading to keep.
+A screenshot is decoded on the main thread at its own size, within its kind's widths (a result screen or replay frame from 600 px wide up to `RESULT_MAX_WIDTH`, a formation panel from `FORMATION_MIN_WIDTH` up to `FORMATION_MAX_WIDTH`, a roster screenshot from `ROSTER_MIN_WIDTH` up to `ROSTER_MAX_WIDTH`), and its pixels are handed to a worker. Decoded screenshots wait in the engine and go to the workers one at a time each, so an import that closes drops the reads it still has waiting, and a reading that arrives for a removed shot is dropped. An import hands the engine its shots as a session: the engine moves each through reading, ready and failed, and gives the import each reading to keep.
 
-The references are fetched on first use and posted to the worker once. A screenshot added while they load waits for them. When they fail, the waiting screenshots fail too but stay queued, and the next one added retries the load. A worker that fails to start fails the screenshots being read, and the next attempt starts a fresh one.
+The references come in two parts (`lib/import/kinds.ts`): the hero part every kind reads with (the paragon frames, the portraits and costumes, the learned faces) and the match part the match screens add (artifacts, phantimals and companions, the arena), so a roster read never waits on the match part. Each part is fetched once per visit, on an import's first use, and each reading worker gets its own copy. A screenshot added while its parts load waits for them. When a part fails, the screenshots waiting on it fail too but stay queued, and the next one added retries the load. A worker that fails to start fails the screenshots being read, and the next attempt starts a fresh one.
 
-One worker script serves every kind of screenshot, with a reader for each. Two run per page visit: one reads, and the other holds only the arena and sorts pasted screenshots (`sortScreenshot`), so a paste is sorted at once while the first reads.
+One worker script serves every kind of screenshot, with a reader for each. One reads to begin with; while a roster screenshot waits with every reader busy, the engine starts another, up to three, fewer on a device with few cores or that reports under 4 GB of memory, so the several screenshots of a roster read in parallel. One more worker holds only the arena and sorts every screenshot added (`sortScreenshot`), so each is sorted at once while the readers work. It tells a roster screen by the roster's grid on a copy at most `SORT_WIDTH` wide, then a formation panel, a result screen and, when the import asks for one, a replay frame on one 480 px wide. Each import refuses a screenshot the sorter finds to be the other's, whether it was dropped, picked or pasted, and reads one the sorter cannot place as the kind of where it was added. On the labelled samples (36 roster screenshots, 20 formation screenshots, 58 result screens and crops, 9 replay frames) every screenshot sorts right but one washed-out capture of a result screen, whose tabs the sorter does not find, so it cannot place it.
 
 ## Hero identity
 
@@ -97,4 +97,5 @@ An import's review is built from shared pieces (`src/components/import/`): a car
 ## Related documentation
 
 - [Team Import](./IMPORT_TEAM.md): the match screens, their review and their plan
-- [Teams](./TEAMS.md): where an import lands
+- [Roster Import](./IMPORT_ROSTER.md): the hero roster screen, its review and its plan
+- [Teams](./TEAMS.md): where each import lands

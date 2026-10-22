@@ -1,0 +1,5 @@
+{
+  "en": "Add screenshots of the game's screen that lists all your heroes. Take one per faction filter, or scroll so each screenshot overlaps the last by a row: a hero cut off at an edge is read from the screenshot that shows it whole. Paste anywhere here.",
+  "zh": "添加游戏中列出你所有英雄的界面截图。每个阵营筛选截一张，或滚动时让每张截图与上一张重叠一行：在边缘被截断的英雄，会从完整显示它的那张截图中读取。可在此处任意位置粘贴。",
+  "ko": "보유한 모든 영웅이 나열된 게임 화면의 스크린샷을 추가하세요. 진영 필터마다 한 장씩 찍거나, 스크롤할 때 각 스크린샷이 앞의 것과 한 줄씩 겹치게 하세요: 가장자리에서 잘린 영웅은 온전히 보이는 스크린샷에서 읽습니다. 이곳 어디에나 붙여넣을 수 있습니다."
+}

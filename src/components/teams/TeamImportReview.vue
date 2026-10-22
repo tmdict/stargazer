@@ -430,26 +430,4 @@ const closePickers = (event: MouseEvent): void => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Rendered inside the teleported popup, hence the popup's own palette rather
-   than the modal's --import-* tokens. */
-.picker-remove {
-  display: block;
-  flex-shrink: 0;
-  width: calc(100% - 8px);
-  margin: 8px 4px 0;
-  padding: 6px 0 0;
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: none;
-  color: rgba(255, 255, 255, 0.6);
-  font: inherit;
-  font-size: 11px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.picker-remove:hover {
-  color: #fff;
-}
 </style>

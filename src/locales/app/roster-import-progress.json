@@ -1,0 +1,5 @@
+{
+  "en": "Reading screenshots: {read} of {total} done…",
+  "zh": "正在识别截图：已完成 {read}/{total}…",
+  "ko": "스크린샷 인식 중: {total}장 중 {read}장 완료…"
+}

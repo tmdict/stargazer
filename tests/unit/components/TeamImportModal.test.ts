@@ -87,6 +87,15 @@ const mountImport = async () => {
       static revokeObjectURL = vi.fn()
     },
   )
+  // The references never arrive: the review shows the shot's reading alone.
+  vi.stubGlobal(
+    'Worker',
+    class {
+      postMessage(): void {}
+      terminate(): void {}
+    },
+  )
+  vi.stubGlobal('fetch', () => new Promise(() => {}))
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -94,7 +103,6 @@ const mountImport = async () => {
     () => '3v3',
     () => false,
   )
-  api.referenceStatus.value = 'ready'
   api.shots.value = [reactive(sample())]
   Object.assign(api.names, { prefix: '', left: '', right: '' })
   const saved = vi.fn<(plan: TeamImportPlan) => void>()

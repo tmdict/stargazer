@@ -1,0 +1,226 @@
+/* The screenshot imports' modals: the parts both lay out alike (header, drop
+ * sections, fields, review section, footer), under the .import class each
+ * modal's root takes, and loaded with the modals. The pickers' Remove line is
+ * rendered inside the teleported popup, so it goes by its own class and takes
+ * the popup's palette rather than the modal's --import-* tokens. */
+
+.import {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  color: var(--import-text);
+}
+
+.import h1 {
+  margin: 0;
+}
+
+.import-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.import .meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.import .note {
+  font-size: 0.82rem;
+  color: var(--import-text-dim);
+}
+
+.import .error {
+  color: var(--import-bad);
+}
+
+.import .intro {
+  max-width: 42em;
+  margin: 0;
+  text-align: center;
+}
+
+.import .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.import .field.wide {
+  flex-basis: 100%;
+}
+
+.import .field-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--import-label);
+}
+
+.import .field-input {
+  font: inherit;
+  font-size: max(0.85rem, var(--field-min-font-size));
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-medium);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--import-text);
+}
+
+.import .field-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.import .field-input.invalid {
+  border-color: var(--import-bad);
+}
+
+.import .drop-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.import .drop-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.import .review-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--import-border);
+}
+
+.import .section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.import .section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.import .section-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--import-text-dim);
+}
+
+.import .footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--import-border);
+}
+
+.import .footer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-medium);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.import .footer-btn.danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.import .footer-btn.danger:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+.import .footer-btn.danger.confirm-armed {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+.import .footer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.import .footer-btn.secondary {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--import-text);
+}
+
+.import .footer-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.import .link-btn {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--import-text-dim);
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.import .link-btn:hover {
+  color: var(--import-text);
+}
+
+.import .link-btn.armed {
+  color: var(--import-bad);
+}
+
+@media (pointer: coarse) {
+  .import .link-btn {
+    min-height: 32px;
+  }
+}
+
+.picker-remove {
+  display: block;
+  flex-shrink: 0;
+  width: calc(100% - 8px);
+  margin: 8px 4px 0;
+  padding: 6px 0 0;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: none;
+  color: rgba(255, 255, 255, 0.6);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-remove:hover {
+  color: #fff;
+}

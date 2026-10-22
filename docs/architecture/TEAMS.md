@@ -174,6 +174,8 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
+The Rosters tab's Screenshots button reads a roster from screenshots of the game's hero roster ([Roster Import](./IMPORT_ROSTER.md)). Its Save creates the roster with its name and heroes in one write (`create`, which the tab's New calls with an automatic name and no heroes), and the new roster becomes the active one. At the limit nothing is created, and the import keeps its review.
+
 | Key                        | Holds                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------ |
 | `stargazer.rosters`        | a JSON array of rosters, at most `MAX_ROSTERS` (100); a value that is not an array reads as none |
@@ -237,3 +239,4 @@ The Rosters tab exports every roster, and imports merge with the backup-file rul
 - [URL Serialization](./URL_SERIALIZATION.md): the link format and the canonical team form
 - [Seasonal Content](./SEASONAL.md): season stamps and what loading strips
 - [Team Import](./IMPORT_TEAM.md): reading match screenshots
+- [Roster Import](./IMPORT_ROSTER.md): reading the hero roster into a new roster

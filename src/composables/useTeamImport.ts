@@ -24,6 +24,7 @@ import {
   type ShotStatus,
 } from '@/composables/useImportEngine'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
+import { isRosterReading, type ImportKind } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
 import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
 import type { ScreenshotReading, ShotKind } from '@/lib/import/screens/match/types'
@@ -148,10 +149,12 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
 }
 
 const session: ShotSession = {
+  parts: ['heroes', 'match'],
   shots: () => shots.value,
   apply: (id, reading) => {
     const shot = findShot(id)
-    if (shot) applyReading(shot, reading)
+    // Its shots are match screens, whose readers never give a roster's reading.
+    if (shot && !isRosterReading(reading)) applyReading(shot, reading)
   },
 }
 
@@ -170,13 +173,13 @@ export function useTeamImport(
   plan: ComputedRef<TeamImportPlan>
   unitsOf: (id: string) => TeamImportPlan['units'][number]
   phantimalFits: PlanInputs['phantimalFits']
-  // Files of no stated kind ('sort': a paste) are sorted by what they show.
-  // `onAdd` hears each shot added, before it is read.
+  // Files of no stated kind ('sort': a paste) go to the section of the kind
+  // they show. `onAdd` hears each shot added, before it is read.
   addFiles: (
     files: File[],
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
-  ) => Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }>
+  ) => Promise<{ added: number; refused: Partial<Record<ImportKind, number>> }>
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
   replayOpen: ComputedRef<boolean>
@@ -241,24 +244,32 @@ export function useTeamImport(
   )
   const formationsClosed = computed(() => shots.value.some((s) => s.kind === 'replay'))
 
-  // Shots refused because their drop is closed are counted by kind, so the
-  // caller can say why they were not added.
+  // Shots refused because their drop is closed, or because they are roster
+  // screenshots, are counted by kind, so the caller can say why they were not
+  // added. Every file is sorted, however it came: a dropped one is read as the
+  // kind of its drop unless the sorter finds a roster screen.
   const addFiles = async (
     files: File[],
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
-  ): Promise<{ added: number; refused: Partial<Record<ShotKind, number>> }> => {
+  ): Promise<{ added: number; refused: Partial<Record<ImportKind, number>> }> => {
     void engine.ensureReferences()
     const mine = opening
     let added = 0
-    const refused: Partial<Record<ShotKind, number>> = {}
+    const refused: Partial<Record<ImportKind, number>> = {}
     for (const file of files) {
       if (mine !== opening) break
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
-      const sorted =
-        kind === 'sort' ? await engine.sortShot(file, replayOpen.value).catch(() => null) : kind
+      const sorted = await engine
+        .sortShot(file, kind === 'sort' && replayOpen.value)
+        .catch(() => null)
       if (mine !== opening) break
-      const shotKind = sorted ?? (resultsClosed.value ? 'formation' : 'result')
+      if (sorted === 'roster') {
+        refused.roster = (refused.roster ?? 0) + 1
+        continue
+      }
+      const shotKind =
+        kind === 'sort' ? (sorted ?? (resultsClosed.value ? 'formation' : 'result')) : kind
       const closed =
         (shotKind === 'result' && resultsClosed.value) ||
         (shotKind === 'formation' && formationsClosed.value) ||

@@ -56,6 +56,8 @@ import { useI18nStore } from '@/stores/i18n'
 import { imageFilesFromPaste } from '@/utils/imageFile'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
+import '@/styles/import.css'
+
 const { show, activeMode, variant } = defineProps<{
   show: boolean
   activeMode: TeamModeKey
@@ -274,7 +276,8 @@ const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Pro
     if (batch.ids.length === 0) toOpen.value = batch
     batch.ids.push(id)
   })
-  if (refused.result) error(i18n.t('app.import-results-closed'))
+  if (refused.roster) error(i18n.t('app.import-roster-shots'))
+  else if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))
 }
@@ -681,45 +684,6 @@ const handleForgetLearned = (): void => {
 <style scoped>
 .import {
   --import-columns: repeat(5, minmax(0, 1fr));
-
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  color: var(--import-text);
-}
-
-.import h1 {
-  margin: 0;
-}
-
-.import-head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-}
-
-.note {
-  font-size: 0.82rem;
-  color: var(--import-text-dim);
-}
-
-.error {
-  color: var(--import-bad);
-}
-
-.intro {
-  max-width: 42em;
-  margin: 0;
-  text-align: center;
 }
 
 .names {
@@ -728,27 +692,6 @@ const handleForgetLearned = (): void => {
   gap: var(--spacing-md) var(--spacing-lg);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1 1 160px;
-  min-width: 0;
-}
-
-.field.wide {
-  flex-basis: 100%;
-}
-
-.field-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--import-label);
-}
-
-.field-input,
 .toggle {
   font: inherit;
   font-size: max(0.85rem, var(--field-min-font-size));
@@ -757,12 +700,6 @@ const handleForgetLearned = (): void => {
   border-radius: var(--radius-medium);
   background: rgba(255, 255, 255, 0.07);
   color: var(--import-text);
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .toggle {
@@ -787,44 +724,9 @@ const handleForgetLearned = (): void => {
   color: #fff;
 }
 
-.field-input.invalid {
-  border-color: var(--import-bad);
-}
-
-.drop-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.drop-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .note.closed {
   margin: 0;
   color: var(--import-warn);
-}
-
-.review-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--import-border);
-}
-
-.section-head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-sm);
-}
-
-.section-title {
-  font-size: 0.95rem;
-  font-weight: 600;
 }
 
 .section-title .optional {
@@ -834,15 +736,6 @@ const handleForgetLearned = (): void => {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--import-label);
-}
-
-.section-sub {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  color: var(--import-text-dim);
 }
 
 .issues {
@@ -858,85 +751,5 @@ const handleForgetLearned = (): void => {
 
 .issues .blocking {
   color: var(--import-bad);
-}
-
-.footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  align-items: center;
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--import-border);
-}
-
-.footer-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  padding: 4px 14px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-medium);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.footer-btn.danger {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-  color: #fff;
-}
-
-.footer-btn.danger:hover:not(:disabled) {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-}
-
-.footer-btn.danger.confirm-armed {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-}
-
-.footer-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.footer-btn.secondary {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--import-text);
-}
-
-.footer-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.link-btn {
-  margin-left: auto;
-  border: none;
-  background: none;
-  color: var(--import-text-dim);
-  font: inherit;
-  font-size: 0.78rem;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.link-btn:hover {
-  color: var(--import-text);
-}
-
-.link-btn.armed {
-  color: var(--import-bad);
-}
-
-@media (pointer: coarse) {
-  .link-btn {
-    min-height: 32px;
-  }
 }
 </style>

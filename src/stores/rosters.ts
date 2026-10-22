@@ -72,18 +72,27 @@ export const useRosters = defineStore('rosters', () => {
   }
 
   // A new roster becomes the active one, since the Rosters tab edits the
-  // active roster.
-  const create = (): Roster | null => {
+  // active roster. An import gives its name and heroes, written with it.
+  const create = (
+    init: { name?: string; heroes?: Record<string, AttrRecord> } = {},
+  ): Roster | null => {
     const created = mutate((fresh) => {
       if (fresh.length >= MAX_ROSTERS) return null
       const now = Date.now()
       const roster: Roster = {
         id: crypto.randomUUID(),
-        name: nextAutoName(
-          fresh.map((r) => r.name),
-          'Roster',
+        name:
+          sanitizeName(init.name) ||
+          nextAutoName(
+            fresh.map((r) => r.name),
+            'Roster',
+          ),
+        heroes: Object.fromEntries(
+          Object.entries(init.heroes ?? {}).map(([id, levels]) => [
+            id,
+            canonicalLevels(Number(id), levels),
+          ]),
         ),
-        heroes: {},
         createdAt: now,
         updatedAt: now,
       }
