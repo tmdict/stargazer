@@ -73,5 +73,6 @@ Every screenshot added to either import is sorted (`sortScreenshot`, [Screenshot
 ## Related documentation
 
 - [Screenshot Import](./IMPORT.md): the engine, worker, hero cards and references every import shares
+- [Import Capabilities](./IMPORT_CAPABILITIES.md): what each screen gives, what a screenshot needs, and the limits
 - [Team Import](./IMPORT_TEAM.md): the match screens, whose card reader the roster reuses
 - [Teams](./TEAMS.md#rosters): the roster format, the Rosters tab and the active roster
