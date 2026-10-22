@@ -40,7 +40,7 @@ Each import accepts only its own screens, on every way in. The sorter turns a ro
 - Seasonal artifacts are matched against icons from the image host, so a new season's artifacts read once their icons are published there ([Seasonal Content](./SEASONAL.md)).
 - The replay camera and arena were measured on one match. A Supreme League map change needs frames of the new maps checked, and a new arena picture when the fight's surroundings change.
 - A new hero reads once its portrait is in the app, and a costume once its capture is on the image host. A face neither covers stays unsure until a correction teaches it.
-- A whole roster of about seven screenshots reads in about 15 s on desktop, in up to three workers. A device reporting under 4 GB of memory reads with one, and a touch screen reporting none (Safari and Firefox report none) with two at most; phones have not been timed.
+- A roster reads in up to three workers at once. A device reporting under 4 GB of memory reads with one, and a touch screen reporting none (Safari and Firefox report none) with two at most, so a roster takes longer there; phones have not been timed.
 
 ## Privacy
 
