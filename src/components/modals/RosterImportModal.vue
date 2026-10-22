@@ -12,7 +12,7 @@ import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
-import { SHOT_ERROR_TEXT } from '@/components/import/shotError'
+import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { useToast } from '@/composables/useToast'
@@ -90,7 +90,7 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
 // A screenshot's card: reading, failed, or the cards it gave and those the
 // scroll cut, which another screenshot has to show whole.
-const status = (shot: RosterImportShot): { text: string; tone: 'plain' | 'warn' | 'error' } => {
+const status = (shot: RosterImportShot): ShotStatusView => {
   if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
     return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }

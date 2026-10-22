@@ -25,10 +25,10 @@ const i18n = useI18nStore()
 }
 
 .next-badge.ally {
-  background: var(--import-ally);
+  background: var(--color-ally);
 }
 
 .next-badge.enemy {
-  background: var(--import-enemy);
+  background: var(--color-enemy);
 }
 </style>

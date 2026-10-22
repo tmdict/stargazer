@@ -235,9 +235,20 @@ function fieldedPhantimal(unitIds: readonly (number | null)[]): number | null {
   return id === undefined ? null : phantimalOwnerId(id)
 }
 
-// The units a side places in turn on a screenshot's tiles.
-function placingOrder(heroes: readonly number[], picked: readonly number[]): number[] {
-  const phantimal = fieldedPhantimal(picked)
+// The phantimal the board gives a side that fields none it was shown: the
+// first its lineup qualifies for, which a side's options hold in data order.
+const lineupPhantimal = (options: readonly number[]): number | null =>
+  options.find(isPhantimalId) ?? null
+
+// The units a side places in turn on a screenshot's tiles: its heroes, then its
+// phantimal, each with its companions. The phantimal is the one seen or picked,
+// else `fallback`, the one the plan leaves the board to give the side.
+function placingOrder(
+  heroes: readonly number[],
+  picked: readonly number[],
+  fallback: number | null,
+): number[] {
+  const phantimal = fieldedPhantimal(picked) ?? fallback
   return [...heroes, ...(phantimal === null ? [] : [phantimal])].flatMap((unitId) => [
     unitId,
     ...companionIdsOf(unitId),
@@ -247,7 +258,9 @@ function placingOrder(heroes: readonly number[], picked: readonly number[]): num
 /* A replay frame side's picks that count, those of units the side fields,
  * and its placing order from them. A pick of a unit the side no longer
  * fields, after a swap or a lineup edit, is hidden and counts again once the
- * side fields its unit. Shared by the replay review and its card's count. */
+ * side fields its unit. A phantimal left unpicked comes from the lineup, so it
+ * is in the order from the start. Shared by the replay review and its card's
+ * count. */
 export function replayPlacing(
   heroes: readonly number[],
   options: readonly number[],
@@ -258,7 +271,10 @@ export function replayPlacing(
       .filter(([, unitId]) => options.includes(unitId))
       .map(([hexId, unitId]) => [Number(hexId), unitId] as const),
   )
-  return { order: placingOrder(heroes, [...counted.values()]), picks: counted }
+  return {
+    order: placingOrder(heroes, [...counted.values()], lineupPhantimal(options)),
+    picks: counted,
+  }
 }
 
 /* A side's tile picks after picking a unit for a tile, or clearing it (null).
@@ -342,8 +358,10 @@ export function placedPicks(
 /* The units a formation shot's review places on free tiles: the side's
  * placing order less the units portraits are taken for, the units it may
  * pick, and the picks that place one. A unit the side cannot field, such as
- * a phantimal its heroes stopped qualifying for, fields nothing. Shared by
- * the review and its card's count. */
+ * a phantimal its heroes stopped qualifying for, fields nothing. A shot that
+ * shows every hero and no phantimal fields none; one short of heroes may have
+ * lost its phantimal with them, so it places the lineup's (as the plan does).
+ * Shared by the review and its card's count. */
 export function missingUnits(
   lineup: readonly number[],
   portraits: readonly PlacedUnit[],
@@ -357,11 +375,13 @@ export function missingUnits(
       .filter(({ unitId }) => pickable.includes(unitId))
       .map(({ hexId, unitId }) => [hexId, unitId] as const),
   )
+  const short = lineup.some((unitId) => !shown.includes(unitId))
   const order = placingOrder(
     lineup,
     [...shown, ...placed.values()].filter(
       (id): id is number => id !== null && options.includes(id),
     ),
+    short ? lineupPhantimal(options) : null,
   ).filter((unitId) => !shown.includes(unitId))
   return { order, options: pickable, picks: placed }
 }
