@@ -29,17 +29,21 @@ const fill = (
 
 // The Resonating Hall drawn plainly: a cream ground, the five Hands of Resonance at a
 // pitch of their own, and a grid of six columns whose last slot of the second row is
-// empty and whose fourth row runs off the bottom of the shot.
-function drawRoster(): RgbaImage {
+// empty and whose fourth row runs off the bottom of the shot. `header` draws the
+// grid's title ending at that height; `pill` the filter button over the second row's
+// fifth card.
+function drawRoster({ header, pill = false }: { header?: number; pill?: boolean } = {}): RgbaImage {
   const img = createImage(640, 830)
   fill(img, 0, 0, 640, 830, CREAM)
   for (let k = 0; k < 5; k++) fill(img, 25 + 120 * k, 120, 110, Math.round(110 * ASPECT), CARD)
+  if (header !== undefined) fill(img, 24, header - 10, 180, 10, CARD)
   for (let row = 0; row < 4; row++) {
     for (let col = 0; col < 6; col++) {
       if (row === 1 && col === 5) continue
       fill(img, 24 + 100 * col, 330 + 145 * row, 92, Math.round(92 * ASPECT), CARD)
     }
   }
+  if (pill) fill(img, 430, 540, 70, 40, [255, 255, 255])
   return img
 }
 
@@ -85,4 +89,26 @@ describe('readRoster', () => {
     expect(card.frame).toEqual({ family: 'below', sure: true })
     expect([card.cell!.paragon.level, card.cell!.refinement.level]).toEqual([0, 0])
   })
+
+  // Three screenshots read take about 2 s alone, past the default limit while the
+  // whole suite runs in parallel.
+  it(
+    'skips a first row the scroll cuts under the header, and a card under the filter button',
+    { timeout: 15_000 },
+    () => {
+      const kinds = (reading: ReturnType<typeof readRoster>, row: number) =>
+        reading.slots.filter((s) => !s.hands && s.row === row).map((s) => s.kind)
+      // The title right above the first row's frames: the scroll has cut their tops.
+      expect(kinds(readRoster(drawRoster({ header: 322 }), refs), 0)).toEqual(
+        Array(6).fill('clipped'),
+      )
+      // The same title clear of the row.
+      expect(kinds(readRoster(drawRoster({ header: 298 }), refs), 0)).toEqual(Array(6).fill('card'))
+      expect(kinds(readRoster(drawRoster({ pill: true }), refs), 1)).toEqual([
+        ...Array(4).fill('card'),
+        'clipped',
+        'empty',
+      ])
+    },
+  )
 })
