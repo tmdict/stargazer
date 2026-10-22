@@ -391,7 +391,7 @@ const tileBoxes = (): HTMLInputElement[] => [
               :cx="ring.x"
               :cy="ring.y"
               :r="ring.radius"
-              :stroke-width="ringWidth(ring.width, hovered === ring.index)"
+              :stroke-width="ringWidth(ring.width, hovered === ring.index || ring.state !== 'sure')"
               role="button"
               tabindex="0"
               :aria-label="unitName(units.assignments[ring.index]?.unitId ?? null)"
@@ -574,7 +574,8 @@ const tileBoxes = (): HTMLInputElement[] => [
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* The portrait inside the ring takes clicks too. */
+/* The portrait inside the ring takes clicks too. A portrait to confirm or not
+   recognised is ringed as thick as a pointed one, to be found at a glance. */
 .shot-ring {
   fill: none;
   stroke: var(--color-accent);
