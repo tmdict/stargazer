@@ -18,11 +18,11 @@
  * elimination the match screens settle by would pass weak readings as sure. */
 
 import { readCard, settleCards, type CardRead } from '../../card/card'
-import type { CardReferences, HeroReading } from '../../card/types'
+import type { CardReferences, HeroReading, ParagonReading } from '../../card/types'
 import { maskedNcc, resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { fitComb, median, type Comb } from './comb'
-import type { Grid, RosterReading, Slot } from './types'
+import type { FrameFamily, Grid, RosterReading, RosterSlot, Slot } from './types'
 
 // The cream ground: about (235, 230, 220) on every set, saturation 0.05 to 0.08,
 // value 0.91 to 0.93. Grey (the empty slot's placeholder) counts as ground too;
@@ -565,19 +565,15 @@ const SCALES = [0.91, 0.94, 0.97, 1, 1.03, 1.06, 1.09] as const
 /* The cards of one size, each read on a copy where they meet the frame
  * templates, the box's top-left the seed. The copy's scale is the one at which
  * the frames of the first cards match best. */
-function readSlots(
-  img: RgbaImage,
-  slots: Slot[],
-  refs: CardReferences,
-): { reads: CardRead[]; width: number } {
-  if (slots.length === 0) return { reads: [], width: 0 }
+function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRead[] {
+  if (slots.length === 0) return []
   const margin = 0.3 * slots[0]!.box.w
   const x0 = Math.max(0, Math.min(...slots.map((s) => s.box.x)) - margin)
   const y0 = Math.max(0, Math.min(...slots.map((s) => s.box.y)) - margin)
   const x1 = Math.min(img.width, Math.max(...slots.map((s) => s.box.x + s.box.w)) + margin)
   const y1 = Math.min(img.height, Math.max(...slots.map((s) => s.box.y + s.box.h)) + margin)
   const region = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
-  if (region.w < 4 || region.h < 4) return { reads: [], width: 0 }
+  if (region.w < 4 || region.h < 4) return []
   const at = (k: number) => {
     const scaled = resample(img, region, Math.round(region.w * k), Math.round(region.h * k))
     // The template box at this scale, about the slot's centre.
@@ -607,9 +603,58 @@ function readSlots(
     if (sum / probe.length > best.score) best = { k, score: sum / probe.length }
   }
   const { scaled, seeds } = at(best.k)
+  return seeds.map((seed) => readCard(scaled, refs, seed, true))
+}
+
+// The frame family from the paragon frame match. On labelled roster cards a paragon
+// frame matches its template at 0.55 to 0.88 and a card below S+ at 0.22 to 0.56,
+// except the winged P4, which scores as low as 0.46 but leads the other levels by
+// 0.09 or more, where a card below S+ read as P4 leads by 0.06 or less (bar one at a
+// score of 0.36). Between the bounds the family is unsure.
+const PARAGON = { score: 0.565, sure: 0.62 } as const
+const WINGED = { score: 0.42, lead: 0.08, sureScore: 0.45, sureLead: 0.09 } as const
+const BELOW = { sure: 0.5, wingedLead: 0.07 } as const
+// A paragon level is sure on a roster card only when it leads the next level by
+// this much, whatever its score: P0, P2 and P3 frames match one another's templates
+// within 0.014 on misread roster cards, some at scores the match import takes as sure.
+const LEVEL_LEAD = 0.02
+
+const frameFamily = ({
+  level,
+  score,
+  runnerUp,
+}: ParagonReading): {
+  family: FrameFamily
+  sure: boolean
+} => {
+  const lead = score - runnerUp
+  const winged = level === 4 && lead >= WINGED.lead && score >= WINGED.score
+  if (score >= PARAGON.score || winged) {
+    const sure =
+      score >= PARAGON.sure || (level === 4 && lead >= WINGED.sureLead && score >= WINGED.sureScore)
+    return { family: 'paragon', sure }
+  }
   return {
-    reads: seeds.map((seed) => readCard(scaled, refs, seed, true)),
-    width: READ_WIDTH / best.k,
+    family: 'below',
+    sure: score <= BELOW.sure && !(level === 4 && lead >= BELOW.wingedLead),
+  }
+}
+
+/* A card's levels as its family has them: P0, R0 by rule below S+, and in doubt
+ * whenever the family is. */
+const withFamily = (cell: HeroReading, frame: NonNullable<RosterSlot['frame']>): HeroReading => {
+  if (frame.family === 'below') {
+    return {
+      ...cell,
+      paragon: { ...cell.paragon, level: 0, sure: frame.sure },
+      refinement: { ...cell.refinement, level: 0, sure: frame.sure },
+    }
+  }
+  const lead = cell.paragon.score - cell.paragon.runnerUp
+  return {
+    ...cell,
+    paragon: { ...cell.paragon, sure: frame.sure && lead >= LEVEL_LEAD },
+    refinement: { ...cell.refinement, sure: frame.sure && cell.refinement.sure },
   }
 }
 
@@ -619,20 +664,31 @@ function readSlots(
  * counted. */
 export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading {
   const { grid, slots } = locate(img)
-  const gridSlots = slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : []))
-  const handSlots = slots.flatMap((s, i) => (s.hands ? [i] : []))
-  const gridRead = readSlots(
-    img,
-    gridSlots.map((i) => slots[i]!),
-    refs,
+  const read = slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : []))
+  const hands = slots.flatMap((s, i) => (s.hands ? [i] : []))
+  const settled = settleCards(
+    [
+      ...readSlots(
+        img,
+        read.map((i) => slots[i]!),
+        refs,
+      ),
+      ...readSlots(
+        img,
+        hands.map((i) => slots[i]!),
+        refs,
+      ),
+    ],
+    'all',
   )
-  const handsRead = readSlots(
-    img,
-    handSlots.map((i) => slots[i]!),
-    refs,
-  )
-  const settled = settleCards([...gridRead.reads, ...handsRead.reads], 'all')
-  const cells: (HeroReading | null)[] = slots.map(() => null)
-  ;[...gridSlots, ...handSlots].forEach((slot, k) => (cells[slot] = settled[k]!))
-  return { grid, slots, cells, width: gridRead.width }
+  const cells = new Map([...read, ...hands].map((slot, k) => [slot, settled[k]!]))
+  return {
+    grid,
+    slots: slots.map((slot, i) => {
+      const cell = cells.get(i)
+      if (!cell) return { ...slot, frame: null, cell: null }
+      const frame = frameFamily(cell.paragon)
+      return { ...slot, frame, cell: withFamily(cell, frame) }
+    }),
+  }
 }

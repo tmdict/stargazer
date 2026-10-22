@@ -65,7 +65,7 @@ describe('fitComb', () => {
 })
 
 describe('readRoster', () => {
-  it('places the Hands of Resonance and every grid slot by kind', () => {
+  it('places the Hands of Resonance and every grid slot by kind, and reads the whole cards', () => {
     const reading = readRoster(drawRoster(), refs)
     expect(Math.abs(reading.grid!.comb.pitch - 100)).toBeLessThan(2)
     const kinds = (row: number) =>
@@ -79,8 +79,10 @@ describe('readRoster', () => {
       expect(Math.abs(s.box.x + s.box.w / 2 - (80 + 120 * k))).toBeLessThan(10),
     )
     // Whole cards are read, the rest are not.
-    reading.slots.forEach((slot, i) => {
-      expect(reading.cells[i] !== null).toBe(slot.kind === 'card')
-    })
+    for (const slot of reading.slots) expect(slot.cell !== null).toBe(slot.kind === 'card')
+    // A plain card with no frame is below S+, and so P0, R0 by rule.
+    const card = reading.slots.find((s) => s.kind === 'card')!
+    expect(card.frame).toEqual({ family: 'below', sure: true })
+    expect([card.cell!.paragon.level, card.cell!.refinement.level]).toEqual([0, 0])
   })
 })
