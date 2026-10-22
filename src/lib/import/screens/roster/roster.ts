@@ -658,7 +658,20 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRea
     .map(fit)
     .reduce(better, coarse)
   const { scaled, seeds } = at(best.k)
-  return seeds.map((seed) => readCard(scaled, refs, seed, true))
+  // A card's box back in the screenshot's pixels, as every screen gives it.
+  const sx = region.w / scaled.width
+  const sy = region.h / scaled.height
+  return seeds.map((seed) => {
+    const read = readCard(scaled, refs, seed, true)
+    const { x, y, w, h } = read.cell.box
+    const box = {
+      x: Math.round(x0 + x * sx),
+      y: Math.round(y0 + y * sy),
+      w: Math.round(w * sx),
+      h: Math.round(h * sy),
+    }
+    return { ...read, cell: { ...read.cell, box } }
+  })
 }
 
 // The frame family from the paragon frame match. On labelled roster cards a paragon
