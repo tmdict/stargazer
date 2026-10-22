@@ -30,7 +30,12 @@ import type { FrameFamily, Grid, RosterReading, RosterSlot, Slot } from './types
 // pure white (the filter button) does not.
 const CREAM = { vMin: 0.8, vMax: 0.985, greyS: 0.04, s: 0.13, h: [20, 65] } as const
 // The grid is found on a copy at most this wide.
-const WORK_MAX = 1000
+export const WORK_MAX = 1000
+// A roster shot is read at its own size up to this width: the grid is found on a
+// copy WORK_MAX wide and each card is read rescaled, so a wider capture only costs
+// decoding. Narrower than the least, its cards are too small to read.
+export const ROSTER_MAX_WIDTH = 2560
+export const ROSTER_MIN_WIDTH = 600
 // The frame's height over its width (the templates are 280 x 404).
 const CARD_ASPECT = 404 / 280
 // Cards are read on a copy where they are the frame templates' middle width.
@@ -68,6 +73,12 @@ const CLOSED_OPEN = 1
 const PITCH_SHARE = [1 / 30, 1 / 5.4] as const
 // The shot is cut into about this many slabs, overlapping by half, to find the grid.
 const SLABS = 16
+// The grid on the work copy of labelled screenshots: ground covers 0.21 to 0.75 of the
+// shot, the comb's cards fill 0.86 to 0.96 of its pitch, and the comb scores 0.52 to
+// 0.83. On match screens ground covers 0.17 at most (0.02 on result screens) and the
+// best combs score 0.32; on a flat profile a comb's gutters can run the whole pitch,
+// leaving no card to size the rows by. With less ground than `ground`, no comb is fitted.
+const GRID = { ground: 0.1, card: 0.75, score: 0.4 } as const
 // The scroll's top edge sits under the grid's header and its title, a band of 0.07 to
 // 0.12 of a card on labelled screenshots, so a first row that runs up under it loses
 // its frames' tops though its sides look whole. Going up from the row, the edge is the
@@ -291,7 +302,11 @@ function bandsOf(
  * with a card in each of its six columns somewhere counts: the Hands of Resonance
  * row fits a comb of six with its sixth column empty, and its wider gaps score well. */
 function gridComb(m: Mask): Comb | null {
-  return slabComb(m, COLUMNS, [m.w * PITCH_SHARE[0], m.w * PITCH_SHARE[1]], 0, m.h)
+  let ground = 0
+  for (const g of m.ground) ground += g
+  if (ground < GRID.ground * m.ground.length) return null
+  const comb = slabComb(m, COLUMNS, [m.w * PITCH_SHARE[0], m.w * PITCH_SHARE[1]], 0, m.h)
+  return comb && comb.card >= GRID.card * comb.pitch && comb.score >= GRID.score ? comb : null
 }
 
 /* A comb of `n` columns fitted slab by slab over rows y0 to y1, as gridComb does. */
@@ -778,6 +793,13 @@ const withFamily = (cell: HeroReading, frame: NonNullable<RosterSlot['frame']>):
     paragon: { ...cell.paragon, sure: frame.sure && lead >= LEVEL_LEAD },
     refinement: { ...cell.refinement, sure: frame.sure && cell.refinement.sure },
   }
+}
+
+/* Whether a shot shows the roster's grid, the comb of six columns on the cream
+ * ground that `readRoster` starts from. */
+export function isRosterScreen(img: RgbaImage): boolean {
+  const { work } = workCopy(img)
+  return gridComb({ ground: groundMask(work), w: work.width, h: work.height }) !== null
 }
 
 /* A roster screenshot read: the grid's whole cards, then the Hands of

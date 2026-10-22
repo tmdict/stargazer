@@ -1,0 +1,77 @@
+# Roster Import
+
+The roster import reads screenshots of the game's hero roster, the Resonating Hall, on the device and saves what they show as a new roster: every hero shown, with its paragon and refinement. It opens from the Rosters tab's Screenshots button on both the Arena and Teams pages, and loads on first use. The screens are read by the shared screenshot import ([Screenshot Import](./IMPORT.md)), the same engine, worker, card reader and references the team import runs on. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save changes the rosters.
+
+A whole roster takes several screenshots: one per faction filter, or one per scroll with each overlapping the last by a row. Players take them as desktop windows with other apps around the game, whole phone screens, or crops of a few rows, so the reader finds the grid with no fixed position.
+
+## How it fits together
+
+```
+┌─ RosterImportModal ──────┐            ┌─ RosterImportButton ─────┐
+│ drop zone, review,       │  heroes    │ rosters.create           │
+│ name, Save               │───────────▶│ (the new roster active)  │
+└───────────────────┬──┬───┘            └──────────────────────────┘
+       shots, edits │  ▲
+                    ▼  │  readings, plan
+┌─ useRosterImport ─┴──┴───┐
+│ shots and overrides      │
+│ buildRosterImportPlan    │
+└───────────────────┬──┬───┘
+              files │  ▲
+                    ▼  │  readings
+┌─ useImportEngine ─┴──┴───┐            ┌─ import.worker ×1–3 ─────┐
+│ decoding, read queue     │───────────▶│ readRoster               │
+│ the hero references      │   images   │ hero table, frames       │
+│ learned icons            │◀───────────│                          │
+└──────────────────────────┘  readings  └──────────────────────────┘
+```
+
+A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. The engine starts another reader for a roster screenshot left waiting while every reader is busy, up to three, fewer on a device with few cores or that reports under 4 GB of memory, each with its own copy of the references. Screenshots are decoded one after another as they are added and read as readers come free. A status line says how many are done while any is read.
+
+## The screen
+
+From the top, the Resonating Hall shows a season banner, the Soul Pact row of five round phantimal portraits (which a roster does not hold, so the reader skips it), the Hands of Resonance (five cards fixed above the scroll, larger than the grid's), and the grid of Resonance Heroes: six columns of cards scrolling under the grid's header and its title, on a flat cream ground whose gutters stay cream between the cards. The faction filter button floats over the last rows' right columns, the bottom bar (Artifacts, Level Up All, Equipment) covers the last row, and the list ends in empty slots. A hero in the Hands of Resonance is not listed again in the grid.
+
+Cards come in two families. Heroes at S+ (which Stargazer calls P0) and above wear the paragon frames the card reader's templates are: P0 to P4 and the winged P4. Heroes below S+ have no frame, on a coloured plate, or a lower tier's frame. Stargazer does not use heroes below S+, and the import takes them as P0, R0.
+
+## Reading one screenshot
+
+`readRoster` (`src/lib/import/screens/roster/roster.ts`) finds everything from the cream ground, on a copy at most 1000 px wide (`WORK_MAX`):
+
+1. The ground mask marks every cream pixel, grey ones (the empty slot's placeholder) included and pure white (the filter button) not, then drops the cream's own specks with a 3 × 3 majority vote.
+2. The grid's six columns are a comb (`fitComb`, `comb.ts`): a phase and a pitch whose gutters are as cream as possible and whose card middles are not, fitted to the share of cream in each pixel column. It is fitted on horizontal slabs down the shot, so other windows, the game's art and the Hands of Resonance do not pull it, then refitted over the slabs that agree with the best supported fit; only a fit with a card in each of its six columns somewhere counts. A shot is a roster screen only when cream covers at least a tenth of it, the comb's cards fill at least 0.75 of its pitch and the comb scores at least 0.4: roster screenshots measure 0.21 to 0.75 cream, 0.86 to 0.96 and 0.52 to 0.83, and match screens 0.17 cream at most and a best comb of 0.32. Otherwise the reading has no grid and no cards.
+3. Rows are the runs of pixel rows where the cards' side edges show, cut at the row pitch where crowns bridge two rows, and trimmed where the bottom bar covers the margin left of the first column. A row the scroll cuts at either edge is skipped and counted (`clipped`): its cards are whole in another screenshot. So is a card the filter button covers. A slot with no card is `empty`.
+4. A first row run up under the header's title loses its frames' tops though its sides look whole. The reader finds where the row's cards start to show under the title, reads them on the rows below that edge and the fade beneath it, and puts a covered card's frame, and with it its levels, in doubt. Once the edge reaches the row's star row, the row is skipped as cut.
+5. The Hands of Resonance are a comb of five fitted above the first row, at a pitch of their own.
+6. Each card is read with the card reader (`readCard`) on a copy scaled so its frame meets the frame templates, at the scale where the first whole cards' frames match best, and the screenshot's cards, the Hands and the grid together, are settled against each other (`settleCards`), since the screen shows each hero once. A card is sure of its hero only when it leads every other hero it was ranked against: among some thirty cards the elimination the match screens settle by would pass weak readings as sure.
+7. The frame match tells the family. A paragon frame matches its template at 0.565 or more, or is the winged P4 by its lead over the other levels; less is a card below S+, read as P0, R0. Between the bounds the family is unsure, and a paragon level is sure only when it leads the next level by 0.02, since the P0, P2 and P3 frames match one another's templates closely on roster cards.
+
+Each card's key is `h1` to `h5` for the Hands of Resonance and `row.col` down the grid (`slotKey`), and the screenshot's full image in the review outlines every card read with its key.
+
+## The plan
+
+`buildRosterImportPlan` (`src/lib/rosterImport.ts`) merges every screenshot's cards, each with the reviewer's correction beside it, into one entry per hero. A roster holds a hero once, so the hero is the key: the Hands and the grid are one pool, and one card seen in two overlapping screenshots is one entry. The plan is worked out again from the readings and corrections on every change, so the screenshots give the same plan whichever is read first, and removing a screenshot drops its cards and their corrections.
+
+An entry asks about three things (`EntryIssue`):
+
+- `repeat`: the hero is read on more than one card and one of them is unsure, usually a misreading of another hero.
+- `levels`: its cards disagree on the hero's paragon or refinement. It holds back Save until they agree.
+- `twice`: the hero is read on two cards of one screenshot, which never shows a hero twice. It holds back Save.
+
+Cards no hero is taken for are listed apart, and a hero removed in review drops the card. The entries with an issue or a card left to check come first, then the rest; Save writes each hero's levels with defaults left out, as the roster format stores them ([Teams](./TEAMS.md#rosters)).
+
+## Review and save
+
+The review lists what to check first (the cards no hero is taken for, then the heroes with an issue or a card left to check), then the heroes read with confidence in a compact grid. Every cell takes the hero picker and the level pills. A hero with an issue shows its cards one by one, each with its screenshot and key and corrected on its own, since one of them may be another hero; any other hero is one cell for all its cards, and a correction or a level set there goes to each of them. Correcting the hero of an unsure card on a surely placed paragon frame teaches that face to the learned store the team import uses ([Screenshot Import](./IMPORT.md#reference-descriptors)); a card below S+ never teaches, since its face is cut from a guessed box. One face is taught per correction, the cards of one cell being one card seen again. Picking the reader's own top candidate, or no hero, takes back what was taught. The modal has the team import's control to forget the learned faces.
+
+The footer names the roster (the next free automatic name until edited) and saves it as a new roster in one write (`rosters.create`), which becomes the active roster. Save waits while screenshots are read, while an entry's issue holds it back, and while no hero is found. At the roster limit the save is refused with a toast and the review stays open; a write the browser refuses keeps the roster for the visit, as the Rosters tab reports it.
+
+## Screenshots of the other import
+
+Every screenshot added to either import is sorted (`sortScreenshot`, [Screenshot Import](./IMPORT.md#the-engine)), on every way in: a drop area, the file picker or a paste. A match screenshot added here is refused with a toast pointing to the Teams page's import, and a roster screenshot added to the team import is refused with one pointing to the Rosters tab. A screenshot the sorter cannot place is read as the kind of where it was added.
+
+## Related documentation
+
+- [Screenshot Import](./IMPORT.md): the engine, worker, hero cards and references every import shares
+- [Team Import](./IMPORT_TEAM.md): the match screens, whose card reader the roster reuses
+- [Teams](./TEAMS.md#rosters): the roster format, the Rosters tab and the active roster

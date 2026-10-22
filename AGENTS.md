@@ -57,6 +57,7 @@ System docs:
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library, rosters
 - [Screenshot Import](./docs/architecture/IMPORT.md) - The engine, worker, hero cards and references every screenshot import shares
 - [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match and formation screenshot import
+- [Roster Import](./docs/architecture/IMPORT_ROSTER.md) - Hero roster screenshot import
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder

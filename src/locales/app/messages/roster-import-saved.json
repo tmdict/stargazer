@@ -1,0 +1,5 @@
+{
+  "en": "Saved {name} with {count} heroes",
+  "zh": "已保存“{name}”，共 {count} 名英雄",
+  "ko": "{name} 저장됨: 영웅 {count}명"
+}

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* One screenshot in an import's list: a thumbnail that opens the full image
-   in a lightbox, its name, the import's own rows about it (the slot), the
-   reading's state, and a button that removes it. */
+   in a lightbox (`full` when the import draws one of its own, else the file),
+   its name, the import's own rows about it (the slot), the reading's state,
+   and a button that removes it. */
 
 import { ref } from 'vue'
 
@@ -14,6 +15,7 @@ defineProps<{
   name: string
   // Object URL of the file.
   thumb: string
+  full?: string
   selected: boolean
   failed: boolean
   status: { text: string; tone: 'plain' | 'warn' | 'error' }
@@ -64,7 +66,7 @@ const zoomed = ref(false)
     >
       <IconClose :size="12" />
     </button>
-    <ImageLightbox v-if="zoomed" :src="thumb" :alt="name" @close="zoomed = false" />
+    <ImageLightbox v-if="zoomed" :src="full ?? thumb" :alt="name" @close="zoomed = false" />
   </div>
 </template>
 

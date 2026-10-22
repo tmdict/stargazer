@@ -12,6 +12,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
+import RosterImportButton from './RosterImportButton.vue'
 import RosterMenu from './RosterMenu.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
@@ -429,6 +430,12 @@ const {
           <IconUpload :size="13" class="btn-icon" />
           <span class="btn-text">{{ i18n.t('app.import') }}</span>
         </button>
+        <RosterImportButton
+          @click="hideTip"
+          @mouseenter="showTip($event, 'app.tooltip-roster-import')"
+          @touchstart.passive="tipTouchStart"
+          @mouseleave="hideTip"
+        />
         <button
           v-if="rosters.count > 0"
           type="button"
