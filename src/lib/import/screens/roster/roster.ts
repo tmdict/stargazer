@@ -18,8 +18,9 @@
  * elimination the match screens settle by would pass weak readings as sure. */
 
 import { readCard, settleCards, type CardRead } from '../../card/card'
+import { starRowTop } from '../../card/stars'
 import type { CardReferences, HeroReading, ParagonReading } from '../../card/types'
-import { maskedNcc, resample } from '../../core/image'
+import { cropResize, maskedNcc, resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { fitComb, median, type Comb } from './comb'
 import type { FrameFamily, Grid, RosterReading, RosterSlot, Slot } from './types'
@@ -34,6 +35,11 @@ const WORK_MAX = 1000
 const CARD_ASPECT = 404 / 280
 // Cards are read on a copy where they are the frame templates' middle width.
 const READ_WIDTH = 280 * 0.265
+// The star row's top as a share of a template box's height: the highest pixel row the
+// star reader looks at on the copy the cards are read from.
+const STAR_ROW =
+  starRowTop({ x: 0, y: 0, w: READ_WIDTH, h: READ_WIDTH * CARD_ASPECT }) /
+  (READ_WIDTH * CARD_ASPECT)
 const COLUMNS = 6
 // The Hands of Resonance row holds five cards.
 const HANDS = 5
@@ -62,12 +68,15 @@ const CLOSED_OPEN = 1
 const PITCH_SHARE = [1 / 30, 1 / 5.4] as const
 // The shot is cut into about this many slabs, overlapping by half, to find the grid.
 const SLABS = 16
-// The scroll's top edge sits just under the grid's header, so a first row that runs
-// up under it has lost its frames' tops, where the paragon level shows, though its
-// sides look whole. On labelled screenshots the header's title is a band of 0.07 to
-// 0.12 of a card, and a whole first row's frame box clears it by 0.085 to 0.15 of a
-// card, a cut one by 0.046 or less.
-const HEADER = { length: [0.05, 0.2], clearance: 0.065 } as const
+// The scroll's top edge sits under the grid's header and its title, a band of 0.07 to
+// 0.12 of a card on labelled screenshots, so a first row that runs up under it loses
+// its frames' tops though its sides look whole. Going up from the row, the edge is the
+// first pixel row where less than `shows` of the six cards' width is not ground (the
+// header leaves 0.016 or less). The row is under the edge when that lies less than
+// `edge` of a card below the title (0.071 to 0.094 on labelled rows under it, 0.108 or
+// more on whole rows, whose crests start there), and its cards fade in from the
+// header's cream over about `fade` of a template box's height.
+const HEADER = { length: [0.05, 0.2], shows: 0.02, edge: 0.1, fade: 0.056 } as const
 // The faction filter button floats over the last rows' right columns as a white
 // pill. Near-white fills at most 0.08 of a card's box on labelled screenshots, and
 // 0.16 of the one the button covers, too much hidden to read.
@@ -336,11 +345,11 @@ function slabComb(
 }
 
 /* The grid and the Hands of Resonance in a shot, in its own pixels. */
-function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
+function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[]; top: number } {
   const { work, f } = workCopy(img)
   const m: Mask = { ground: groundMask(work), w: work.width, h: work.height }
   const comb = gridComb(m)
-  if (!comb) return { grid: null, slots: [] }
+  if (!comb) return { grid: null, slots: [], top: 0 }
   const { bands, openAt, marginAt, filled } = bandsOf(m, comb, COLUMNS)
   const expected = comb.card * CARD_ASPECT
   const lengthOf = (b: { top: number; bottom: number }): number => b.bottom - b.top
@@ -445,10 +454,26 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
     share(c.top, c.bottom, (y) => openAt[y]!) >= GUTTER_OPEN &&
     share(c.top, c.bottom, (y) => marginAt[y]!) >= MARGIN_OPEN
   const wholeRows = candidates.filter((c) => onGrid(c) && wholeLength(lengthOf(c), h))
-  // The first whole row, when it runs up under the header: the band right above it,
-  // past a few pixel rows of crest tips, is the header's, and the row's frame box
-  // comes too close to it.
-  const headerCut = ((c: Candidate | undefined): Candidate | null => {
+  // The share of the six cards' width that is not ground on a pixel row.
+  const shown = (y: number): number => {
+    let not = 0
+    let all = 0
+    for (let k = 0; k < COLUMNS; k++) {
+      const x0 = Math.round(comb.phase + (k + 0.5) * comb.pitch - comb.card / 2)
+      for (let x = Math.max(0, x0); x < Math.min(m.w, x0 + Math.round(comb.card)); x++) {
+        all++
+        if (!m.ground[y * m.w + x]) not++
+      }
+    }
+    return all ? not / all : 0
+  }
+  // The first whole row, when it runs up under the header's title (the band right
+  // above it, past a few pixel rows of crest tips): its cards are read from where they
+  // show whole, below the edge and its fade, and the row is cut once the edge reaches
+  // its star row.
+  const header = ((
+    c: Candidate | undefined,
+  ): { row: Candidate; edge: number; view: number } | null => {
     if (!c) return null
     const above = bands
       .filter((b) => b.bottom <= c.top && !(c.top - b.bottom < 0.03 * h && lengthOf(b) < 0.1 * h))
@@ -456,9 +481,18 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
     const length = above ? lengthOf(above) / h : 0
     if (!above || above.closed || length < HEADER.length[0] || length > HEADER.length[1])
       return null
-    const clearance = ((c.top + c.bottom) / 2 - th / 2 - above.bottom) / h
-    return clearance < HEADER.clearance ? c : null
+    let edge = Math.round(c.top)
+    while (edge > above.bottom && shown(edge - 1) >= HEADER.shows) edge--
+    if (edge - above.bottom >= HEADER.edge * h) return null
+    return { row: c, edge, view: edge + HEADER.fade * th }
   })(wholeRows[0])
+  // How deep the edge runs is measured from the row's bottom, as a row cut above is
+  // placed: the header can hide the frames' sides too, and their top moves down with
+  // the edge.
+  const headerCut =
+    header && header.edge - (header.row.bottom - h / 2 - th / 2) >= STAR_ROW * th
+      ? header.row
+      : null
   for (const c of candidates) {
     const len = lengthOf(c)
     const isWhole = wholeRows.includes(c) && c !== headerCut
@@ -540,6 +574,7 @@ function locate(img: RgbaImage): { grid: Grid | null; slots: Slot[] } {
       other,
     },
     slots,
+    top: header && !headerCut ? header.view / f : 0,
   }
 }
 
@@ -613,8 +648,10 @@ const SCALE_STEP = 0.03
 
 /* The cards of one size, each read on a copy where they meet the frame
  * templates, the box's top-left the seed. The copy's scale is the one at which
- * the frames of the first cards match best. */
-function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRead[] {
+ * the frames of the first cards match best. A card whose box starts above `top`,
+ * where the header covers it, is read on the copy's rows from there down, so its
+ * frame is matched on what shows of it, as one at a shot's edge is. */
+function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences, top = 0): CardRead[] {
   if (slots.length === 0) return []
   const margin = 0.3 * slots[0]!.box.w
   const x0 = Math.max(0, Math.min(...slots.map((s) => s.box.x)) - margin)
@@ -633,13 +670,16 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRea
     return { scaled, seeds }
   }
   const middle = refs.frames.filter((r) => Math.abs(r.scale - 0.265) < 1e-6)
-  const probe = slots.slice(0, 8)
-  // How well the first cards' frames match at a factor of the box's width.
+  // The first cards the header leaves whole, then any.
+  const probe = [...slots.keys()]
+    .sort((i, j) => Number(slots[i]!.box.y < top) - Number(slots[j]!.box.y < top))
+    .slice(0, 8)
+  // How well the probe's frames match at a factor of the box's width.
   const fit = (factor: number): { factor: number; k: number; score: number } => {
     const k = READ_WIDTH / (slots[0]!.box.w * factor)
     const { scaled, seeds } = at(k)
     let sum = 0
-    for (const seed of seeds.slice(0, probe.length)) {
+    for (const seed of probe.map((i) => seeds[i]!)) {
       let b = -1
       for (let dy = -8; dy <= 8; dy += 2) {
         for (let dx = -6; dx <= 6; dx += 2) {
@@ -658,12 +698,26 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences): CardRea
     .map(fit)
     .reduce(better, coarse)
   const { scaled, seeds } = at(best.k)
+  const cut = Math.min(scaled.height, Math.max(0, Math.ceil((top - y0) * best.k)))
+  const below =
+    cut > 0
+      ? cropResize(
+          scaled,
+          { x: 0, y: cut, w: scaled.width, h: scaled.height - cut },
+          scaled.width,
+          scaled.height - cut,
+        )
+      : scaled
   // A card's box back in the screenshot's pixels, as every screen gives it.
   const sx = region.w / scaled.width
   const sy = region.h / scaled.height
   return seeds.map((seed) => {
-    const read = readCard(scaled, refs, seed, true)
-    const { x, y, w, h } = read.cell.box
+    const covered = seed.y < cut
+    const read = covered
+      ? readCard(below, refs, { x: seed.x, y: seed.y - cut }, true)
+      : readCard(scaled, refs, seed, true)
+    const { x, w, h } = read.cell.box
+    const y = read.cell.box.y + (covered ? cut : 0)
     const box = {
       x: Math.round(x0 + x * sx),
       y: Math.round(y0 + y * sy),
@@ -731,7 +785,7 @@ const withFamily = (cell: HeroReading, frame: NonNullable<RosterSlot['frame']>):
  * not read: a card the scroll cuts is whole in another screenshot, or not
  * counted. */
 export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading {
-  const { grid, slots } = locate(img)
+  const { grid, slots, top } = locate(img)
   const read = slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : []))
   const hands = slots.flatMap((s, i) => (s.hands ? [i] : []))
   const settled = settleCards(
@@ -740,6 +794,7 @@ export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading 
         img,
         read.map((i) => slots[i]!),
         refs,
+        top,
       ),
       ...readSlots(
         img,
@@ -755,7 +810,10 @@ export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading 
     slots: slots.map((slot, i) => {
       const cell = cells.get(i)
       if (!cell) return { ...slot, frame: null, cell: null }
-      const frame = frameFamily(cell.paragon)
+      // The header hides what tells a P0 frame from a P2 and a winged P4 from no
+      // frame, so a card it covers has its frame, and with it its levels, in doubt.
+      const family = frameFamily(cell.paragon)
+      const frame = !slot.hands && slot.box.y < top ? { ...family, sure: false } : family
       return { ...slot, frame, cell: withFamily(cell, frame) }
     }),
   }

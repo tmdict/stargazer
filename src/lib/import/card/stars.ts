@@ -49,13 +49,17 @@ const PINK = 0.03
 // counts six peaks, so a row of five peaks is short.
 const SHORT_ROW = 5
 
+/* The highest pixel row the star reader looks at for a card's box. */
+export const starRowTop = (box: Rect): number =>
+  box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE - ROW_SLACK
+
 const findBand = (shot: RgbaImage, box: Rect): Rect => {
   const x0 = box.x + Math.round(box.w * 0.1)
   const x1 = box.x + Math.round(box.w * 0.9)
   const at = box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE
   let bestTop = at
   let bestSum = -1
-  for (let top = at - ROW_SLACK; top <= at + ROW_SLACK; top++) {
+  for (let top = starRowTop(box); top <= at + ROW_SLACK; top++) {
     let sum = 0
     for (let y = Math.max(0, top); y < Math.min(shot.height, top + BAND_ROWS); y++) {
       for (let x = Math.max(0, x0); x < Math.min(shot.width, x1); x++) {
