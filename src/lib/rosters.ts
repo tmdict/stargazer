@@ -46,7 +46,7 @@ export function canonicalLevels(heroId: number, raw: unknown): AttrRecord {
 
 // Integer-like keys enumerate in ascending order, so rebuilding the object is
 // what sorts it.
-function canonicalHeroes(raw: unknown): Record<string, AttrRecord> | null {
+export function canonicalHeroes(raw: unknown): Record<string, AttrRecord> | null {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
   const heroes: Record<string, AttrRecord> = {}
   for (const [key, value] of Object.entries(raw)) {

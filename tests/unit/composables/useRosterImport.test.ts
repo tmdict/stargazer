@@ -6,6 +6,7 @@ import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { FrameFamily, RosterSlot } from '@/lib/import/screens/roster/types'
 import { createImage } from '../fixtures/image'
+import { FakeWorker, file, stubImportBrowser } from '../fixtures/importBrowser'
 
 vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
 vi.mock('@/utils/dataLoader', () => ({ loadMatcherPortraits: vi.fn() }))
@@ -59,6 +60,7 @@ afterEach(() => {
   holdImport().forgetLearned()
   scope?.stop()
   scope = null
+  vi.unstubAllGlobals()
 })
 
 describe('roster import', () => {
@@ -83,6 +85,30 @@ describe('roster import', () => {
 
     api.removeShot('a')
     expect(api.plan.value.entries.map((e) => e.cards.map((c) => c.shotId))).toEqual([['b']])
+  })
+
+  it('takes back what each card of a hero was taught when they are corrected as one', () => {
+    const api = holdImport()
+    api.shots.value = [shot('a', [slot(0, unsure(0.1))]), shot('b', [slot(2, unsure(0.2))])]
+    const a = { shotId: 'a', key: '1.1' }
+    const b = { shotId: 'b', key: '1.3' }
+    // Corrected apart while they disagreed, each teaches its own face.
+    api.setHero([b], 9)
+    api.setHero([a], 9)
+    expect(api.learnedCount.value).toBe(2)
+
+    api.setHero([a, b], null)
+    expect(api.learnedCount.value).toBe(0)
+  })
+
+  it('refuses a screenshot the sorter finds to be a match screen, and reads one it cannot place', async () => {
+    stubImportBrowser()
+    const api = holdImport()
+    FakeWorker.sortAs = 'result'
+    expect(await api.addFiles([file('match.png')])).toEqual({ added: 0, refused: 1 })
+    FakeWorker.sortAs = null
+    expect(await api.addFiles([file('roster.png')])).toEqual({ added: 1, refused: 0 })
+    expect(api.shots.value.map((s) => s.name)).toEqual(['roster.png'])
   })
 
   it('never teaches the face of a card below S+', () => {

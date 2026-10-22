@@ -6,9 +6,11 @@
  * disposed when none holds it, so leaving the page drops the workers and
  * their references; the learned faces stay in storage. Decoded screenshots
  * wait here and go to a reading worker one at a time each, so closing an
- * import drops the reads it still has waiting. The references come in two
- * parts (lib/import/kinds), each fetched once per visit, and every reading
- * worker holds its own copy of each. Images never leave the device: the
+ * import drops the reads it still has waiting. Every import adds its files
+ * through `addFiles`, which sorts each before the import places it. The
+ * references come in two parts (lib/import/kinds), each fetched once per
+ * visit, and every reading worker holds its own copy of each. Images never
+ * leave the device: the
  * references are fetched, the screenshots are drawn to a canvas and handed to
  * the workers as pixels. */
 
@@ -65,30 +67,51 @@ import type {
 const LEARNED_KEY = 'stargazer.import.learned'
 
 export type ShotStatus = 'reading' | 'ready' | 'failed'
-// Why a shot failed: its file, the references (not loaded, or the worker
-// itself did not start), or the reading throwing on it.
+// Why a shot failed: its file, the references (not loaded), a reading worker
+// that failed to start or stopped while reading it, or the reading throwing
+// on it.
 export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 'read'
 
 export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
 // What the engine needs of an import's screenshot: it moves the shot through
-// reading, ready and failed.
+// reading, ready and failed. A file of the same name and size is the same
+// screenshot added again.
 export interface EngineShot {
   id: string
   kind: ImportKind
-  // The file's name, for the console when its reading fails.
   name: string
+  size: number
   status: ShotStatus
   error: ShotError | null
 }
 
 // An import's own screenshots: the engine finds them here, and hands each
-// reading to `apply` for the import to keep. `parts`: the references its
-// screenshots wait for.
+// reading to `apply` for the import to keep. `kinds`: the kinds it reads,
+// which set the references its screenshots wait for.
 export interface ShotSession {
-  parts: readonly ReferencePart[]
+  kinds: readonly ImportKind[]
   shots: () => readonly EngineShot[]
   apply: (id: string, reading: ImportReading) => void
+}
+
+// Where an import puts an added file once the sorter has looked at it: read as
+// `kind`, or turned away and counted under the kind given.
+export type Placement<K extends ImportKind> = { kind: K } | { refused: ImportKind }
+
+export interface Intake<K extends ImportKind, S extends EngineShot> {
+  // False once the opening of the import that added the files has ended.
+  current: () => boolean
+  // Whether the sorter may tell a replay frame, asked for each file.
+  replay: () => boolean
+  place: (sorted: ImportKind | null) => Placement<K>
+  // The import's shot for a file it reads, added to its list.
+  add: (file: File, kind: K) => S
+}
+
+export interface IntakeResult {
+  added: number
+  refused: Partial<Record<ImportKind, number>>
 }
 
 // The widths each kind is read within: narrower is refused, wider is drawn
@@ -127,6 +150,10 @@ interface Reader {
   reading: string | null
 }
 const readers: Reader[] = []
+// A reader failed this visit. The pool then stops growing: a device short of
+// memory would fail every new reader the same way, each after copying the
+// references.
+let readerFailed = false
 // One more worker of the same kind sorts the screenshots added, so each is
 // sorted at once even while the readers are busy. It is ready once it holds
 // the arena that tells a replay frame.
@@ -361,6 +388,7 @@ const dispatch = (): void => {
   }
   if (
     readers.length > 0 &&
+    !readerFailed &&
     readers.length < poolSize() &&
     readers.every((r) => r.reading !== null) &&
     queue.some((read) => read.kind === 'roster')
@@ -385,12 +413,10 @@ const onMessage = (reader: Reader, msg: ImportResponse): void => {
   }
   if (msg.type === 'error') {
     if (msg.id === null) {
-      // A part's tables themselves failed to build.
+      // A part's tables failed to build in this reader. The others may hold
+      // them, so only this one goes.
       console.error('Screenshot import references failed', msg.message)
-      if (msg.part) {
-        partStatus[msg.part].value = 'failed'
-        failReadingShots('references', msg.part)
-      }
+      if (msg.part) dropReader(reader, 'references')
       return
     }
     if (reader.reading === msg.id) reader.reading = null
@@ -482,29 +508,35 @@ const startReader = (): Reader => {
     reading: null,
   }
   reader.worker.onmessage = (event: MessageEvent<ImportResponse>) => onMessage(reader, event.data)
-  // A reader that fails is dropped, and the shot it was reading goes with it;
-  // with none left the references count as failed, and the next attempt starts
-  // a fresh one.
-  reader.worker.onerror = () => {
-    reader.worker.terminate()
-    readers.splice(readers.indexOf(reader), 1)
-    const lost = reader.reading === null ? null : findShot(reader.reading)
-    if (lost) {
-      lost.shot.status = 'failed'
-      lost.shot.error = 'worker'
-    }
-    if (readers.length > 0) {
-      dispatch()
-      return
-    }
-    for (const part of PARTS) {
-      if (partStatus[part].value !== 'idle') partStatus[part].value = 'failed'
-    }
-    failReadingShots('worker')
-  }
+  reader.worker.onerror = () => dropReader(reader, 'worker')
   readers.push(reader)
   for (const part of PARTS) postPart(reader, part)
   return reader
+}
+
+/* A reader that fails is dropped, and the shot it was reading goes with it;
+ * with none left the references count as failed, and the next attempt starts
+ * a fresh one. */
+function dropReader(reader: Reader, error: ShotError): void {
+  const at = readers.indexOf(reader)
+  // Already dropped: a crash can follow the error that dropped it.
+  if (at < 0) return
+  readers.splice(at, 1)
+  reader.worker.terminate()
+  readerFailed = true
+  const lost = reader.reading === null ? null : findShot(reader.reading)
+  if (lost) {
+    lost.shot.status = 'failed'
+    lost.shot.error = 'worker'
+  }
+  if (readers.length > 0) {
+    dispatch()
+    return
+  }
+  for (const part of PARTS) {
+    if (partStatus[part].value !== 'idle') partStatus[part].value = 'failed'
+  }
+  failReadingShots(error)
 }
 
 // Fetch a part once and give every reader its copy; ready once one says so.
@@ -515,9 +547,17 @@ async function ensurePart(part: ReferencePart): Promise<void> {
   const mine = visit
   try {
     if (readers.length === 0) startReader()
-    if (part === 'heroes') loaded.heroes = await loadHeroPart()
-    else loaded.match = await loadMatchPart()
-    if (mine !== visit) return
+    // Kept only for the visit that asked: a page left meanwhile has dropped
+    // its readers, and the next visit fetches its own.
+    if (part === 'heroes') {
+      const heroes = await loadHeroPart()
+      if (mine !== visit) return
+      loaded.heroes = heroes
+    } else {
+      const match = await loadMatchPart()
+      if (mine !== visit) return
+      loaded.match = match
+    }
     for (const reader of readers) postPart(reader, part)
   } catch (error) {
     if (mine !== visit) return
@@ -571,8 +611,6 @@ const dropShot = (id: string): void => {
   if (at >= 0) queue.splice(at, 1)
 }
 
-// ---------- learned faces ----------
-
 const saveLearned = (next: LearnedIcon[]): void => {
   learned.value = next
   writeStorage(LEARNED_KEY, serializeLearnedIcons(next))
@@ -598,6 +636,7 @@ const dispose = (): void => {
   visit++
   for (const reader of readers) reader.worker.terminate()
   readers.length = 0
+  readerFailed = false
   queue.length = 0
   loaded.heroes = null
   loaded.match = null
@@ -620,9 +659,13 @@ const statusOf = (parts: readonly ReferencePart[]): ReferenceStatus => {
 export interface ImportEngine {
   referenceStatus: ComputedRef<ReferenceStatus>
   learnedCount: ComputedRef<number>
+  // Files an `addFiles` call has yet to sort and add.
+  adding: ComputedRef<number>
   ensureReferences: () => Promise<void>
-  readShot: (shot: EngineShot, file: Blob) => Promise<void>
-  sortShot: (file: Blob, replay: boolean) => Promise<ImportKind | null>
+  addFiles: <K extends ImportKind, S extends EngineShot>(
+    files: File[],
+    intake: Intake<K, S>,
+  ) => Promise<IntakeResult>
   dropShot: (id: string) => void
   learnFace: (characterId: number | null, descriptor: Float32Array) => void
   forgetLearned: () => void
@@ -642,14 +685,60 @@ export function useImportEngine(session: ShotSession): ImportEngine {
       if (holders === 0) dispose()
     })
   }
+  const parts = [...new Set(session.kinds.flatMap(partsOf))]
+  const ensureReferences = async (): Promise<void> => {
+    await Promise.all(parts.map(ensurePart))
+  }
+  const adding = ref(0)
+
+  /* Each file is sorted, then placed by the import: read as the kind it
+   * gives, or turned away. A file already among the shots is skipped. One at
+   * a time, so the shots keep the files' order. Adding stops when the import's
+   * opening ends or the page is left. */
+  const addFiles = async <K extends ImportKind, S extends EngineShot>(
+    files: File[],
+    { current, replay, place, add }: Intake<K, S>,
+  ): Promise<IntakeResult> => {
+    void ensureReferences()
+    const mine = visit
+    const open = (): boolean => mine === visit && current()
+    const result: IntakeResult = { added: 0, refused: {} }
+    adding.value += files.length
+    let settled = 0
+    const settle = (): void => {
+      settled++
+      adding.value--
+    }
+    try {
+      for (const file of files) {
+        if (!open()) break
+        if (session.shots().some((s) => s.name === file.name && s.size === file.size)) {
+          settle()
+          continue
+        }
+        const sorted = await sortShot(file, replay()).catch(() => null)
+        if (!open()) break
+        const placed = place(sorted)
+        settle()
+        if ('refused' in placed) {
+          result.refused[placed.refused] = (result.refused[placed.refused] ?? 0) + 1
+          continue
+        }
+        result.added++
+        await readShot(add(file, placed.kind), file)
+      }
+    } finally {
+      adding.value -= files.length - settled
+    }
+    return result
+  }
+
   return {
-    referenceStatus: computed(() => statusOf(session.parts)),
+    referenceStatus: computed(() => statusOf(parts)),
     learnedCount,
-    ensureReferences: async () => {
-      await Promise.all(session.parts.map(ensurePart))
-    },
-    readShot,
-    sortShot,
+    adding: computed(() => adding.value),
+    ensureReferences,
+    addFiles,
     dropShot,
     learnFace,
     forgetLearned,

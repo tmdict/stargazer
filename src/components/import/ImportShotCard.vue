@@ -2,7 +2,8 @@
 /* One screenshot in an import's list: a thumbnail that opens the full image
    in a lightbox (`full` when the import draws one of its own, else the file),
    its name, the import's own rows about it (the slot), the reading's state,
-   and a button that removes it. */
+   and a button that removes it. Where the import opens one screenshot's
+   review at a time (`selected` given), the card selects it. */
 
 import { ref } from 'vue'
 
@@ -11,12 +12,12 @@ import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
 import { useI18nStore } from '@/stores/i18n'
 
-defineProps<{
+const { selected } = defineProps<{
   name: string
   // Object URL of the file.
   thumb: string
   full?: string
-  selected: boolean
+  selected?: boolean
   failed: boolean
   status: { text: string; tone: 'plain' | 'warn' | 'error' }
 }>()
@@ -31,10 +32,10 @@ const zoomed = ref(false)
 <template>
   <div
     class="shot"
-    :class="{ selected, failed }"
+    :class="{ selected, failed, selectable: selected !== undefined }"
     role="group"
     :aria-label="name"
-    @click="emit('select')"
+    @click="selected !== undefined && emit('select')"
   >
     <button
       type="button"
@@ -47,6 +48,7 @@ const zoomed = ref(false)
       <IconExpand :size="14" class="shot-zoom" />
     </button>
     <button
+      v-if="selected !== undefined"
       type="button"
       class="shot-name"
       :title="name"
@@ -55,6 +57,7 @@ const zoomed = ref(false)
     >
       {{ name }}
     </button>
+    <span v-else class="shot-name" :title="name">{{ name }}</span>
     <slot />
     <div class="shot-status" :class="status.tone">{{ status.text }}</div>
     <button
@@ -82,11 +85,14 @@ const zoomed = ref(false)
   border-radius: var(--radius-large);
   color: var(--import-text);
   font-size: 0.78rem;
-  cursor: pointer;
   transition: border-color var(--transition-fast);
 }
 
-.shot:hover {
+.shot.selectable {
+  cursor: pointer;
+}
+
+.shot.selectable:hover {
   border-color: var(--import-border-strong);
 }
 
@@ -150,6 +156,7 @@ const zoomed = ref(false)
 }
 
 .shot-name {
+  display: block;
   width: 100%;
   padding: 0;
   border: none;
@@ -161,6 +168,9 @@ const zoomed = ref(false)
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+button.shot-name {
   cursor: pointer;
 }
 

@@ -12,16 +12,15 @@ import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
-import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
 import ImportCellState from '@/components/import/ImportCellState.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
+import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
 import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import TeamImportUnits, { type FormationUnits } from '@/components/teams/TeamImportUnits.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
-import { compareFaction } from '@/lib/filterOrder'
+import { getOpposingTeam } from '@/lib/characters/character'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { CellState } from '@/lib/import/review'
 import {
@@ -34,7 +33,6 @@ import {
   type RecordNames,
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
-import type { CharacterType } from '@/lib/types/character'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -113,14 +111,6 @@ const sideCells = computed(() => ({
 
 // ---------- hero picker ----------
 
-// Every real hero in hero list order; a cell may take any of them, since the
-// review is board-free and page-wide uniqueness is settled on Save as New.
-const heroes = computed(() =>
-  gameData.characters
-    .filter((c) => isBaseHeroId(c.id) && !c.placeholder)
-    .sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id),
-)
-
 interface PickerTarget {
   team: Team
   row: number
@@ -144,12 +134,6 @@ const pickerView = computed(() => {
   const target = picker.value
   return target ? (sideCells.value[target.team][target.row] ?? null) : null
 })
-
-const pinned = computed(() =>
-  (pickerView.value?.cell.candidates ?? [])
-    .map((c) => gameData.getCharacterById(c.characterId))
-    .filter((c): c is CharacterType => c !== undefined),
-)
 
 const pickerHasHero = computed(
   () => pickerView.value !== null && pickerView.value.characterId !== null,
@@ -293,27 +277,17 @@ const closePickers = (event: MouseEvent): void => {
       @set-pick="(id, side, hexId, unitId) => emit('setPick', id, side, hexId, unitId)"
     />
 
-    <!-- Outside the modal's container, so their clicks and Escape are stopped
+    <ImportHeroPicker
+      v-if="picker"
+      :position="picker.position"
+      :candidates="pickerView?.cell.candidates ?? []"
+      :removable="pickerHasHero"
+      @pick="setPicked"
+      @close="picker = null"
+    />
+    <!-- Outside the modal's container, so its clicks and Escape are stopped
          here rather than reaching the modal's own close listeners on document. -->
     <Teleport to="body">
-      <SelectionPopup
-        v-if="picker"
-        :position="picker.position"
-        over-modal
-        @close="picker = null"
-        @click.stop
-        @keydown.esc.stop="picker = null"
-      >
-        <CharacterSelectionPalette
-          :characters="heroes"
-          :pinned
-          :enter-hint="i18n.t('app.import-pick-hero')"
-          @pick="setPicked($event.id)"
-        />
-        <button v-if="pickerHasHero" type="button" class="picker-remove" @click="setPicked(null)">
-          {{ i18n.t('app.remove-hero') }}
-        </button>
-      </SelectionPopup>
       <SelectionPopup
         v-if="artifactPicker"
         :position="artifactPicker.position"

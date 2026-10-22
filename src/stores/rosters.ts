@@ -13,6 +13,7 @@ import { importInto, type ImportOutcome } from '@/lib/exportFile'
 import { nextAutoName, sanitizeName } from '@/lib/names'
 import {
   buildRostersExport,
+  canonicalHeroes,
   canonicalLevels,
   MAX_ROSTERS,
   parseRostersImport,
@@ -87,12 +88,7 @@ export const useRosters = defineStore('rosters', () => {
             fresh.map((r) => r.name),
             'Roster',
           ),
-        heroes: Object.fromEntries(
-          Object.entries(init.heroes ?? {}).map(([id, levels]) => [
-            id,
-            canonicalLevels(Number(id), levels),
-          ]),
-        ),
+        heroes: canonicalHeroes(init.heroes ?? {}) ?? {},
         createdAt: now,
         updatedAt: now,
       }

@@ -29,8 +29,8 @@ export interface RosterImportShot {
   size: number
   // Object URL of the file, for the card thumbnail.
   thumb: string
-  // Object URL of the screenshot with every slot read outlined and numbered,
-  // once read.
+  // Object URL of the screenshot with every slot outlined and numbered, once
+  // read.
   marked: string | null
   status: ShotStatus
   error: ShotError | null
@@ -52,12 +52,17 @@ let nextId = 1
 // Shots belong to one opening of the modal; clearImport ends it, and an
 // addFiles still sorting or decoding for that opening stops adding.
 let opening = 0
+// The cards read are outlined in yellow; a slot cut by the scroll or covered,
+// and an empty one, in grey and dashed, so a card counted as cut off can be
+// found on the screenshot.
+const READ_COLOUR = '#ffd54a'
+const SKIPPED_COLOUR = '#b8b8b8'
 
 const findShot = (id: string): RosterImportShot | undefined => shots.value.find((s) => s.id === id)
 
-/* The screenshot as the review numbers it: each card read outlined with its
- * key, H1 to H5 for the Hands of Resonance and row.col down the grid. Boxes
- * are in the decoded image's pixels, which a wide capture was drawn down to. */
+/* The screenshot as the review numbers it: every slot outlined with its key,
+ * H1 to H5 for the Hands of Resonance and row.col down the grid. Boxes are in
+ * the decoded image's pixels, which a wide capture was drawn down to. */
 const markSlots = async (shot: RosterImportShot, reading: RosterReading): Promise<void> => {
   const image = new Image()
   image.src = shot.thumb
@@ -73,11 +78,12 @@ const markSlots = async (shot: RosterImportShot, reading: RosterReading): Promis
   ctx.font = `700 ${unit * 7}px sans-serif`
   ctx.textBaseline = 'top'
   for (const slot of reading.slots) {
-    if (!slot.cell) continue
     const { x, y, w, h } = slot.box
     const key = slotKey(slot).toUpperCase()
+    const colour = slot.cell ? READ_COLOUR : SKIPPED_COLOUR
     ctx.lineWidth = unit
-    ctx.strokeStyle = '#ffd54a'
+    ctx.strokeStyle = colour
+    ctx.setLineDash(slot.cell ? [] : [unit * 3, unit * 2])
     ctx.strokeRect(x * scale, y * scale, w * scale, h * scale)
     const label = {
       x: x * scale + unit,
@@ -86,7 +92,7 @@ const markSlots = async (shot: RosterImportShot, reading: RosterReading): Promis
     }
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
     ctx.fillRect(label.x, label.y, label.w, unit * 9)
-    ctx.fillStyle = '#ffd54a'
+    ctx.fillStyle = colour
     ctx.fillText(key, label.x + unit, label.y + unit)
   }
   const blob = await new Promise<Blob | null>((resolve) =>
@@ -108,7 +114,7 @@ const applyReading = (shot: RosterImportShot, reading: RosterReading): void => {
 }
 
 const session: ShotSession = {
-  parts: ['heroes'],
+  kinds: ['roster'],
   shots: () => shots.value,
   apply: (id, reading) => {
     const shot = findShot(id)
@@ -127,7 +133,7 @@ export function useRosterImport(): {
   referenceStatus: ImportEngine['referenceStatus']
   learnedCount: ComputedRef<number>
   plan: ComputedRef<RosterImportPlan>
-  // The screenshots read and to read, while any is reading.
+  // The screenshots read and to read, while any is still being added or read.
   progress: ComputedRef<{ read: number; total: number } | null>
   addFiles: (files: File[]) => Promise<{ added: number; refused: number }>
   removeShot: (id: string) => void
@@ -153,40 +159,34 @@ export function useRosterImport(): {
   // Leaving the page unmounts the modal, and its shots go with the engine.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
-  // A screenshot added twice is read once. One the sorter finds to be a match
-  // screen is refused and counted; one it cannot place is read as a roster.
+  // One the sorter finds to be a match screen is refused and counted; one it
+  // cannot place is read as a roster.
   const addFiles = async (files: File[]): Promise<{ added: number; refused: number }> => {
-    void engine.ensureReferences()
     const mine = opening
-    let added = 0
-    let refused = 0
-    for (const file of files) {
-      if (mine !== opening) break
-      if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
-      const sorted = await engine.sortShot(file, true).catch(() => null)
-      if (mine !== opening) break
-      if (sorted && sorted !== 'roster') {
-        refused++
-        continue
-      }
-      const shot: RosterImportShot = reactive({
-        id: `roster-${nextId++}`,
-        kind: 'roster',
-        name: file.name,
-        size: file.size,
-        thumb: URL.createObjectURL(file),
-        marked: null,
-        status: 'reading',
-        error: null,
-        reading: null,
-        overrides: {},
-        cards: {},
-      }) as RosterImportShot
-      shots.value = [...shots.value, shot]
-      added++
-      await engine.readShot(shot, file)
-    }
-    return { added, refused }
+    const { added, refused } = await engine.addFiles(files, {
+      current: () => mine === opening,
+      replay: () => true,
+      place: (sorted) =>
+        sorted && sorted !== 'roster' ? { refused: sorted } : { kind: 'roster' as const },
+      add: (file) => {
+        const shot = reactive({
+          id: `roster-${nextId++}`,
+          kind: 'roster',
+          name: file.name,
+          size: file.size,
+          thumb: URL.createObjectURL(file),
+          marked: null,
+          status: 'reading',
+          error: null,
+          reading: null,
+          overrides: {},
+          cards: {},
+        }) as RosterImportShot
+        shots.value = [...shots.value, shot]
+        return shot
+      },
+    })
+    return { added, refused: Object.values(refused).reduce((sum, n) => sum + n, 0) }
   }
 
   const removeShot = (id: string): void => {
@@ -205,21 +205,20 @@ export function useRosterImport(): {
   /* Take the cards for a hero, or for none. A correction of a card the reader
    * was unsure of teaches its face, when a paragon frame placed it surely (a
    * card below S+ never teaches, its face cut from a guessed box); picking the
-   * reader's own top candidate, or no hero, takes back what it was taught. One
-   * face is taught for the cards of one hero, which are one card seen again. */
+   * reader's own top candidate, or no hero, takes back what it was taught.
+   * The cards given are one card seen again, so the first teaches and the
+   * others take back what each was taught on its own, before they were one. */
   const setHero = (cards: readonly CardRef[], characterId: number | null): void => {
-    let taught = false
+    let first = true
     for (const card of cards) {
       const found = cellOf(card)
       if (!found) continue
       const { shot, cell, frame } = found
       shot.overrides[card.key] = { ...shot.overrides[card.key], characterId }
-      if (taught || cell.sure || !cell.paragon.sure || frame.family !== 'paragon' || !frame.sure) {
-        continue
-      }
-      const teach = characterId !== null && cell.candidates[0]?.characterId !== characterId
+      if (cell.sure || !cell.paragon.sure || frame.family !== 'paragon' || !frame.sure) continue
+      const teach = first && characterId !== null && cell.candidates[0]?.characterId !== characterId
       engine.learnFace(teach ? characterId : null, cell.descriptor)
-      taught = true
+      first = false
     }
   }
 
@@ -244,9 +243,9 @@ export function useRosterImport(): {
   )
 
   const progress = computed(() => {
-    const total = shots.value.length
-    const reading = shots.value.filter((s) => s.status === 'reading').length
-    return reading ? { read: total - reading, total } : null
+    const waiting = engine.adding.value + shots.value.filter((s) => s.status === 'reading').length
+    const total = shots.value.length + engine.adding.value
+    return waiting ? { read: total - waiting, total } : null
   })
 
   return {

@@ -71,16 +71,14 @@ describe('import worker', () => {
     expect(posted[5]).toMatchObject({ id: 'late', reading: { warnings: [{ kind: 'no-board' }] } })
   })
 
-  it('rebuilds the hero table for learned faces only once it has one', async () => {
+  it('takes learned faces into the hero table at the next read', async () => {
     const { posted, send } = await startWorker()
     send({ type: 'learned', learned: [] })
-    expect(posted).toEqual([])
     send(heroes())
     send({ type: 'learned', learned: [] })
-    expect(posted).toEqual([
-      { type: 'ready', part: 'heroes' },
-      { type: 'ready', part: 'heroes' },
-    ])
+    send({ type: 'learned', learned: [] })
+    send({ type: 'read', id: 'roster', image: createImage(400, 300), kind: 'roster' })
+    expect(posted.map((m) => m.type)).toEqual(['ready', 'reading'])
   })
 
   it('fails a replay frame when the arena did not load', async () => {

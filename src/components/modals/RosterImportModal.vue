@@ -12,8 +12,8 @@ import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
+import { SHOT_ERROR_TEXT } from '@/components/import/shotError'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import type { ShotError } from '@/composables/useImportEngine'
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
@@ -88,20 +88,12 @@ const handlePaste = (event: ClipboardEvent): void => {
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
-const ERROR_TEXT: Record<ShotError, string> = {
-  'too-small': 'app.import-failed-small',
-  unsupported: 'app.import-failed-unsupported',
-  references: 'app.import-failed-references',
-  worker: 'app.import-failed-references',
-  read: 'app.import-failed-unsupported',
-}
-
 // A screenshot's card: reading, failed, or the cards it gave and those the
 // scroll cut, which another screenshot has to show whole.
 const status = (shot: RosterImportShot): { text: string; tone: 'plain' | 'warn' | 'error' } => {
   if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
-    return { text: i18n.t(ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
+    return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
   }
   const slots = shot.reading?.slots ?? []
   const read = slots.filter((s) => s.cell).length
@@ -169,7 +161,6 @@ const handleForgetLearned = (): void => {
             :name="shot.name"
             :thumb="shot.thumb"
             :full="shot.marked ?? undefined"
-            :selected="false"
             :failed="shot.status === 'failed'"
             :status="status(shot)"
             @remove="removeShot(shot.id)"
@@ -232,19 +223,6 @@ const handleForgetLearned = (): void => {
 
 .progress {
   margin: 0;
-}
-
-.shot-list {
-  display: grid;
-  grid-template-columns: var(--import-columns);
-  gap: var(--spacing-sm);
-}
-
-@media (max-width: 720px) {
-  .shot-list {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--spacing-md);
-  }
 }
 
 .footer .name {

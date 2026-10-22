@@ -19,12 +19,14 @@ import {
   imageToDataUrl,
   useImportEngine,
   type ImportEngine,
+  type IntakeResult,
+  type Placement,
   type ShotError,
   type ShotSession,
   type ShotStatus,
 } from '@/composables/useImportEngine'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { isRosterReading, type ImportKind } from '@/lib/import/kinds'
+import { isRosterReading } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
 import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
 import type { ScreenshotReading, ShotKind } from '@/lib/import/screens/match/types'
@@ -149,7 +151,7 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
 }
 
 const session: ShotSession = {
-  parts: ['heroes', 'match'],
+  kinds: ['result', 'formation', 'replay'],
   shots: () => shots.value,
   apply: (id, reading) => {
     const shot = findShot(id)
@@ -179,7 +181,9 @@ export function useTeamImport(
     files: File[],
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
-  ) => Promise<{ added: number; refused: Partial<Record<ImportKind, number>> }>
+  ) => Promise<IntakeResult>
+  // Files still being sorted and added.
+  adding: ImportEngine['adding']
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
   replayOpen: ComputedRef<boolean>
@@ -246,62 +250,53 @@ export function useTeamImport(
 
   // Shots refused because their drop is closed, or because they are roster
   // screenshots, are counted by kind, so the caller can say why they were not
-  // added. Every file is sorted, however it came: a dropped one is read as the
-  // kind of its drop unless the sorter finds a roster screen.
-  const addFiles = async (
+  // added. A dropped file is read as the kind of its drop unless the sorter
+  // finds a roster screen; a paste goes where the sorter places it, and one it
+  // cannot place to the results, or to the formations while those are
+  // imported alone.
+  const addFiles = (
     files: File[],
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
-  ): Promise<{ added: number; refused: Partial<Record<ImportKind, number>> }> => {
-    void engine.ensureReferences()
+  ): Promise<IntakeResult> => {
     const mine = opening
-    let added = 0
-    const refused: Partial<Record<ImportKind, number>> = {}
-    for (const file of files) {
-      if (mine !== opening) break
-      if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
-      const sorted = await engine
-        .sortShot(file, kind === 'sort' && replayOpen.value)
-        .catch(() => null)
-      if (mine !== opening) break
-      if (sorted === 'roster') {
-        refused.roster = (refused.roster ?? 0) + 1
-        continue
-      }
-      const shotKind =
-        kind === 'sort' ? (sorted ?? (resultsClosed.value ? 'formation' : 'result')) : kind
-      const closed =
-        (shotKind === 'result' && resultsClosed.value) ||
-        (shotKind === 'formation' && formationsClosed.value) ||
-        (shotKind === 'replay' && !replayOpen.value)
-      if (closed) {
-        refused[shotKind] = (refused[shotKind] ?? 0) + 1
-        continue
-      }
-      const shot: ImportShot = reactive({
-        id: `shot-${nextId++}`,
-        kind: shotKind,
-        name: file.name,
-        size: file.size,
-        thumb: URL.createObjectURL(file),
-        status: 'reading',
-        error: null,
-        reading: null,
-        overrides: {},
-        artifactOverrides: {},
-        resultOverrides: {},
-        cards: {},
-        artifactCards: {},
-        unitOverrides: {},
-        unitCards: [],
-        tilePicks: {},
-      }) as ImportShot
-      shots.value = [...shots.value, shot]
-      onAdd?.(shot.id)
-      added++
-      await engine.readShot(shot, file)
-    }
-    return { added, refused }
+    return engine.addFiles(files, {
+      current: () => mine === opening,
+      replay: () => kind === 'sort' && replayOpen.value,
+      place: (sorted): Placement<ShotKind> => {
+        if (sorted === 'roster') return { refused: 'roster' }
+        const shotKind =
+          kind === 'sort' ? (sorted ?? (resultsClosed.value ? 'formation' : 'result')) : kind
+        const closed =
+          (shotKind === 'result' && resultsClosed.value) ||
+          (shotKind === 'formation' && formationsClosed.value) ||
+          (shotKind === 'replay' && !replayOpen.value)
+        return closed ? { refused: shotKind } : { kind: shotKind }
+      },
+      add: (file, shotKind) => {
+        const shot = reactive({
+          id: `shot-${nextId++}`,
+          kind: shotKind,
+          name: file.name,
+          size: file.size,
+          thumb: URL.createObjectURL(file),
+          status: 'reading',
+          error: null,
+          reading: null,
+          overrides: {},
+          artifactOverrides: {},
+          resultOverrides: {},
+          cards: {},
+          artifactCards: {},
+          unitOverrides: {},
+          unitCards: [],
+          tilePicks: {},
+        }) as ImportShot
+        shots.value = [...shots.value, shot]
+        onAdd?.(shot.id)
+        return shot
+      },
+    })
   }
 
   const removeShot = (id: string): void => {
@@ -467,6 +462,7 @@ export function useTeamImport(
     unitsOf,
     phantimalFits,
     addFiles,
+    adding: engine.adding,
     resultsClosed,
     formationsClosed,
     replayOpen,

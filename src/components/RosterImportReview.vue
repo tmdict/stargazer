@@ -10,16 +10,13 @@
 
 import { computed, ref } from 'vue'
 
-import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
-import SelectionPopup from '@/components/ui/SelectionPopup.vue'
+import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
 import type { CardRef, RosterImportShot } from '@/composables/useRosterImport'
-import { isBaseHeroId } from '@/lib/characters/character'
-import { compareFaction } from '@/lib/filterOrder'
+import { compareCharacters } from '@/lib/filterOrder'
 import type { CellState } from '@/lib/import/review'
 import type { EntryIssue, RosterCard, RosterImportPlan } from '@/lib/rosterImport'
-import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -87,15 +84,14 @@ const cellsOf = (cards: RosterCard[], apart: boolean): CellView[] => {
   ]
 }
 
-const factionOf = (characterId: number): string =>
-  gameData.getCharacterById(characterId)?.faction ?? ''
+const heroOrder = (a: number, b: number): number => {
+  const first = gameData.getCharacterById(a)
+  const second = gameData.getCharacterById(b)
+  return first && second ? compareCharacters(first, second) : a - b
+}
 
 const byHeroOrder = <T extends { characterId: number }>(entries: T[]): T[] =>
-  [...entries].sort(
-    (a, b) =>
-      compareFaction(factionOf(a.characterId), factionOf(b.characterId)) ||
-      a.characterId - b.characterId,
-  )
+  [...entries].sort((a, b) => heroOrder(a.characterId, b.characterId))
 
 // The heroes to check, each with what it asks about and its cells.
 const toCheck = computed(() =>
@@ -116,35 +112,32 @@ const ISSUE_TEXT: Record<EntryIssue, string> = {
   twice: 'app.roster-import-twice',
 }
 
-// ---------- hero picker ----------
+const picker = ref<{ key: string; position: { x: number; y: number } } | null>(null)
 
-// Every real hero in hero list order.
-const heroes = computed(() =>
-  gameData.characters
-    .filter((c) => isBaseHeroId(c.id) && !c.placeholder)
-    .sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id),
-)
-
-const picker = ref<{ cell: CellView; position: { x: number; y: number } } | null>(null)
+// The cell as it stands when a hero is picked: a screenshot read while the
+// picker is open can add a card to it.
+const pickerCell = computed(() => {
+  const key = picker.value?.key
+  if (!key) return null
+  return (
+    [...unnamed.value, ...toCheck.value.flatMap((hero) => hero.cells), ...sure.value].find(
+      (cell) => cell.key === key,
+    ) ?? null
+  )
+})
 
 const togglePicker = (cell: CellView, event: MouseEvent): void => {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   picker.value =
-    picker.value?.cell.key === cell.key
+    picker.value?.key === cell.key
       ? null
-      : { cell, position: { x: rect.left, y: rect.bottom + 4 } }
+      : { key: cell.key, position: { x: rect.left, y: rect.bottom + 4 } }
 }
 
-const pinned = computed(() =>
-  (picker.value?.cell.cards[0]?.cell.candidates ?? [])
-    .map((c) => gameData.getCharacterById(c.characterId))
-    .filter((c): c is CharacterType => c !== undefined),
-)
-
 const setPicked = (characterId: number | null): void => {
-  if (!picker.value) return
-  emit('setHero', refs(picker.value.cell.cards), characterId)
+  const cell = pickerCell.value
   picker.value = null
+  if (cell) emit('setHero', refs(cell.cards), characterId)
 }
 
 // The modal stops clicks before they reach the document, where the popup's
@@ -158,7 +151,7 @@ const closePicker = (event: MouseEvent): void => {
 <template>
   <div class="roster-review" @click="closePicker">
     <template v-if="toCheck.length || unnamed.length">
-      <div class="group-head">{{ i18n.t('app.roster-import-check-first') }}</div>
+      <div class="group-label">{{ i18n.t('app.roster-import-check-first') }}</div>
       <ImportCellGrid v-if="unnamed.length">
         <div v-for="cell in unnamed" :key="cell.key" class="placed">
           <ImportHeroCell
@@ -168,7 +161,7 @@ const closePicker = (event: MouseEvent): void => {
             :refinement="cell.refinement"
             :state="cell.state"
             :edited="cell.edited"
-            :open="picker?.cell.key === cell.key"
+            :open="picker?.key === cell.key"
             @pick="togglePicker(cell, $event)"
             @hero="emit('setHero', refs(cell.cards), $event)"
             @paragon="emit('setLevel', refs(cell.cards), 'paragon', $event)"
@@ -192,7 +185,7 @@ const closePicker = (event: MouseEvent): void => {
               :refinement="cell.refinement"
               :state="cell.state"
               :edited="cell.edited"
-              :open="picker?.cell.key === cell.key"
+              :open="picker?.key === cell.key"
               @pick="togglePicker(cell, $event)"
               @hero="emit('setHero', refs(cell.cards), $event)"
               @paragon="emit('setLevel', refs(cell.cards), 'paragon', $event)"
@@ -205,7 +198,7 @@ const closePicker = (event: MouseEvent): void => {
     </template>
 
     <template v-if="sure.length">
-      <div class="group-head">{{ i18n.t('app.roster-import-read-surely') }}</div>
+      <div class="group-label">{{ i18n.t('app.roster-import-read-surely') }}</div>
       <ImportCellGrid>
         <ImportHeroCell
           v-for="cell in sure"
@@ -216,7 +209,7 @@ const closePicker = (event: MouseEvent): void => {
           :refinement="cell.refinement"
           :state="cell.state"
           :edited="cell.edited"
-          :open="picker?.cell.key === cell.key"
+          :open="picker?.key === cell.key"
           @pick="togglePicker(cell, $event)"
           @hero="emit('setHero', refs(cell.cards), $event)"
           @paragon="emit('setLevel', refs(cell.cards), 'paragon', $event)"
@@ -225,33 +218,14 @@ const closePicker = (event: MouseEvent): void => {
       </ImportCellGrid>
     </template>
 
-    <!-- Outside the modal's container, so its clicks and Escape are stopped
-         here rather than reaching the modal's own close listeners on document. -->
-    <Teleport to="body">
-      <SelectionPopup
-        v-if="picker"
-        :position="picker.position"
-        over-modal
-        @close="picker = null"
-        @click.stop
-        @keydown.esc.stop="picker = null"
-      >
-        <CharacterSelectionPalette
-          :characters="heroes"
-          :pinned
-          :enter-hint="i18n.t('app.import-pick-hero')"
-          @pick="setPicked($event.id)"
-        />
-        <button
-          v-if="picker.cell.characterId !== null"
-          type="button"
-          class="picker-remove"
-          @click="setPicked(null)"
-        >
-          {{ i18n.t('app.remove-hero') }}
-        </button>
-      </SelectionPopup>
-    </Teleport>
+    <ImportHeroPicker
+      v-if="picker && pickerCell"
+      :position="picker.position"
+      :candidates="pickerCell.cards[0]!.cell.candidates"
+      :removable="pickerCell.characterId !== null"
+      @pick="setPicked"
+      @close="picker = null"
+    />
   </div>
 </template>
 
@@ -260,14 +234,6 @@ const closePicker = (event: MouseEvent): void => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-}
-
-.group-head {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--import-label);
 }
 
 .hero {
