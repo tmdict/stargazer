@@ -26,7 +26,7 @@ A whole roster takes several screenshots: one per faction filter, or one per scr
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
 
-A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. The engine starts another reader for a roster screenshot left waiting while every reader is busy, up to three, fewer on a device with few cores or that reports under 4 GB of memory, each with its own copy of the references. Screenshots are decoded one after another as they are added and read as readers come free. A status line says how many are done while any is read.
+A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. The engine starts another reader for a roster screenshot left waiting while every reader is busy, up to three, fewer on a device with few cores or that reports under 4 GB of memory, each with its own copy of the references. Screenshots are sorted and decoded one after another as they are added, and read as readers come free. A status line counts the screenshots done while any is still being added or read.
 
 ## The screen
 
@@ -46,7 +46,7 @@ Cards come in two families. Heroes at S+ (which Stargazer calls P0) and above we
 6. Each card is read with the card reader (`readCard`) on a copy scaled so its frame meets the frame templates, at the scale where the first whole cards' frames match best, and the screenshot's cards, the Hands and the grid together, are settled against each other (`settleCards`), since the screen shows each hero once. A card is sure of its hero only when it leads every other hero it was ranked against: among some thirty cards the elimination the match screens settle by would pass weak readings as sure.
 7. The frame match tells the family. A paragon frame matches its template at 0.565 or more, or is the winged P4 by its lead over the other levels; less is a card below S+, read as P0, R0. Between the bounds the family is unsure, and a paragon level is sure only when it leads the next level by 0.02, since the P0, P2 and P3 frames match one another's templates closely on roster cards.
 
-Each card's key is `h1` to `h5` for the Hands of Resonance and `row.col` down the grid (`slotKey`), and the screenshot's full image in the review outlines every card read with its key.
+Each card's key is `h1` to `h5` for the Hands of Resonance and `row.col` down the grid (`slotKey`). The screenshot's full image in the review outlines every slot with its key: the cards read in yellow, and a slot cut, covered or empty dashed in grey, so a card counted as cut off can be found.
 
 ## The plan
 
@@ -62,9 +62,9 @@ Cards no hero is taken for are listed apart, and a hero removed in review drops 
 
 ## Review and save
 
-The review lists what to check first (the cards no hero is taken for, then the heroes with an issue or a card left to check), then the heroes read with confidence in a compact grid. Every cell takes the hero picker and the level pills. A hero with an issue shows its cards one by one, each with its screenshot and key and corrected on its own, since one of them may be another hero; any other hero is one cell for all its cards, and a correction or a level set there goes to each of them. Correcting the hero of an unsure card on a surely placed paragon frame teaches that face to the learned store the team import uses ([Screenshot Import](./IMPORT.md#reference-descriptors)); a card below S+ never teaches, since its face is cut from a guessed box. One face is taught per correction, the cards of one cell being one card seen again. Picking the reader's own top candidate, or no hero, takes back what was taught. The modal has the team import's control to forget the learned faces.
+The review lists what to check first (the cards no hero is taken for, then the heroes with an issue or a card left to check), then the heroes read with confidence in a compact grid. Every cell takes the hero picker and the level pills. A hero with an issue shows its cards one by one, each with its screenshot and key and corrected on its own, since one of them may be another hero; any other hero is one cell for all its cards, and a correction or a level set there goes to each of them. Correcting the hero of an unsure card whose paragon frame and level were read surely teaches that face to the learned store the team import uses ([Screenshot Import](./IMPORT.md#reference-descriptors)); a card below S+ never teaches, since its face is cut from a guessed box. The cards of one cell are one card seen again, so the first teaches its face and the others take back what each was taught on its own. Picking the reader's own top candidate, or no hero, takes back what was taught. The modal has the team import's control to forget the learned faces.
 
-The footer names the roster (the next free automatic name until edited) and saves it as a new roster in one write (`rosters.create`), which becomes the active roster. Save waits while screenshots are read, while an entry's issue holds it back, and while no hero is found. At the roster limit the save is refused with a toast and the review stays open; a write the browser refuses keeps the roster for the visit, as the Rosters tab reports it.
+The footer names the roster (the next free automatic name until edited) and saves it as a new roster in one write (`rosters.create`), which becomes the active roster. Save waits while screenshots are added or read, while an entry's issue holds it back, and while no hero is found. At the roster limit the save is refused with a toast and the review stays open; a write the browser refuses keeps the roster for the visit, as the Rosters tab reports it.
 
 ## Screenshots of the other import
 

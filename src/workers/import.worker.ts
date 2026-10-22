@@ -71,6 +71,10 @@ const scope = self as unknown as {
 let card: Pick<ReferenceSet, 'frames' | 'heroes'> | null = null
 let match: Pick<ReferenceSet, 'artifacts' | 'units'> | null = null
 let portraits: PortraitRef[] = []
+// The learned faces as last sent, for the next read to rebuild the hero table
+// with. A rebuild takes most of a second, and a review can send correction
+// after correction while screenshots still wait to be read.
+let learnedSince: LearnedIcon[] | null = null
 // From the match part in a reader, from its own message in the sorter.
 let arena: ArenaRef | null = null
 
@@ -130,6 +134,7 @@ scope.addEventListener('message', (event) => {
         frames: prepareFrameRefs(msg.frames),
         heroes: buildImportHeroTable(portraits, msg.learned),
       }
+      learnedSince = null
       scope.postMessage({ type: 'ready', part: 'heroes' })
       return
     }
@@ -141,16 +146,18 @@ scope.addEventListener('message', (event) => {
     }
     if (msg.type === 'learned') {
       // Before the tables exist the pending hero part carries the current list
-      // itself, so there is nothing to rebuild or to fail.
-      if (card) {
-        card.heroes = buildImportHeroTable(portraits, msg.learned)
-        scope.postMessage({ type: 'ready', part: 'heroes' })
-      }
+      // itself.
+      if (card) learnedSince = msg.learned
       return
     }
     if (!partsOf(msg.kind).every(has)) {
       scope.postMessage({ type: 'error', id, message: 'references not loaded' })
       return
+    }
+    if (card && learnedSince) {
+      const next = learnedSince
+      learnedSince = null
+      card.heroes = buildImportHeroTable(portraits, next)
     }
     const reading = readers[msg.kind](msg.image)
     scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))

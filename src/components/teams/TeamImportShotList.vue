@@ -7,7 +7,7 @@
    as New on it. */
 
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
-import type { ShotError } from '@/composables/useImportEngine'
+import { SHOT_ERROR_TEXT } from '@/components/import/shotError'
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
@@ -84,18 +84,10 @@ const cellReviewCount = (shot: ImportShot): number => {
 
 type StatusTone = 'plain' | 'warn' | 'error'
 
-const ERROR_TEXT: Record<ShotError, string> = {
-  'too-small': 'app.import-failed-small',
-  unsupported: 'app.import-failed-unsupported',
-  references: 'app.import-failed-references',
-  worker: 'app.import-failed-references',
-  read: 'app.import-failed-unsupported',
-}
-
 const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
-    return { text: i18n.t(ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
+    return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
   }
   const reading = shot.reading
   if (reading?.warnings.some((w) => w.kind === 'no-board'))
@@ -199,19 +191,6 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 </template>
 
 <style scoped>
-.shot-list {
-  display: grid;
-  grid-template-columns: var(--import-columns);
-  gap: var(--spacing-sm);
-}
-
-@media (max-width: 720px) {
-  .shot-list {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--spacing-md);
-  }
-}
-
 .shot-row {
   display: flex;
   flex-direction: column;
