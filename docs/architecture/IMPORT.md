@@ -1,6 +1,6 @@
 # Screenshot Import
 
-The screenshot imports read the game's own screens on the device and turn what they show into app data: the team import ([Team Import](./IMPORT_TEAM.md)) reads match result screens, formation panels and replay frames into a new team, and the roster import ([Roster Import](./IMPORT_ROSTER.md)) reads the hero roster into a new roster. Each import keeps its own plan and review. What lies under the screens is shared: the image code, the reading of hero cards, the worker that runs the readers, the references they match against and the faces learned from corrections.
+The screenshot imports read the game's own screens on the device and turn what they show into app data: the team import ([Team Import](./IMPORT_TEAM.md)) reads match result screens, formation panels and replay frames into a new team, and the roster import ([Roster Import](./IMPORT_ROSTER.md)) reads the hero roster into a new roster. [Import Capabilities](./IMPORT_CAPABILITIES.md) sums up what each screen gives and where the imports stop. Each import keeps its own plan and review. What lies under the screens is shared: the image code, the reading of hero cards, the worker that runs the readers, the references they match against and the faces learned from corrections.
 
 Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`). It runs unchanged in the worker, in unit tests and in offline checks against labelled screenshots kept outside this repo, so nothing under it touches the DOM.
 
@@ -100,4 +100,5 @@ An import's review is built from shared pieces (`src/components/import/`): a car
 
 - [Team Import](./IMPORT_TEAM.md): the match screens, their review and their plan
 - [Roster Import](./IMPORT_ROSTER.md): the hero roster screen, its review and its plan
+- [Import Capabilities](./IMPORT_CAPABILITIES.md): what each screen gives, what a screenshot needs, and the limits
 - [Teams](./TEAMS.md): where each import lands
