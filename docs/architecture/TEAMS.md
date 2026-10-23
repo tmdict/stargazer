@@ -119,7 +119,7 @@ A record that breaks a rule is dropped with a console warning, and the others st
 
 Save updates the source team in place, or behaves as Save as New when there is none. New builds fresh boards and detaches the source, so Save cannot overwrite the previous team. Clear only empties the boards, or one side of every board, and keeps the source.
 
-Search matches heroes per lineup, meaning one board's ally or enemy side, so picked heroes never pair across boards or against the opponent. A filtered export writes only the teams shown and says so in its label and toast, so a partial backup cannot pass for a full one.
+Search matches heroes and artifacts per lineup, meaning one board's ally or enemy side with its artifact, so picks never pair across boards or against the opponent. A filtered export writes only the teams shown and says so in its label and toast, so a partial backup cannot pass for a full one.
 
 ## Loading one side
 

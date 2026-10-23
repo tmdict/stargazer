@@ -44,6 +44,11 @@ export function lineupHeroKey(board: number, team: Team, slug: string): string {
   return `${board}:${team}:${slug}`
 }
 
+// Names a lineup's artifact the same way.
+export function lineupArtifactKey(board: number, team: Team): string {
+  return `${board}:${team}`
+}
+
 export interface PreviewBoard {
   mapKey: string
   // The board's serialized tile states, authoritative for rendering (an empty

@@ -142,17 +142,17 @@ const sideFiltered = computed(() =>
     : typeFiltered.value,
 )
 
-// Matching itself (hero pills, name hit with highlight snippet, hero hit at
-// 2+ characters) is the shared useSavedTeamSearch composable, also used by
-// the Load menu.
+// Matching itself (hero and artifact pills, name hit with highlight snippet,
+// hero or artifact hit at 2+ characters) is the shared useSavedTeamSearch
+// composable, also used by the Load menu.
 const searchVisible = computed(() => library.count > 1)
 const {
   query: searchQuery,
-  heroes: searchHeroes,
+  picks: searchPicks,
   suggestions: searchSuggestions,
   results: visibleTeams,
-  addHero: addSearchHero,
-  removeHero: removeSearchHero,
+  addPick: addSearchPick,
+  removePick: removeSearchPick,
   clear: clearSearch,
 } = useSavedTeamSearch(() => sideFiltered.value)
 // The box hides below 2 teams; hiding also resets pills and text (which
@@ -256,7 +256,7 @@ const filterLabels = computed((): string[] => {
   if (modeFilter.value !== 'all') labels.push(i18n.t(TEAM_MODES[modeFilter.value].labelKey))
   if (typeFilter.value !== 'all') labels.push(typeLabel(typeFilter.value))
   if (oneSideOnly.value) labels.push(i18n.t('app.one-sided'))
-  for (const hero of searchHeroes.value) labels.push(hero.label)
+  for (const pick of searchPicks.value) labels.push(pick.label)
   const query = searchQuery.value.trim()
   if (query) labels.push(`“${query}”`)
   return labels
@@ -340,10 +340,10 @@ const actionTipText = computed((): string => {
           v-if="searchVisible"
           v-model="searchQuery"
           class="team-search"
-          :heroes="searchHeroes"
+          :picks="searchPicks"
           :suggestions="searchSuggestions"
-          @add-hero="addSearchHero"
-          @remove-hero="removeSearchHero"
+          @add-pick="addSearchPick"
+          @remove-pick="removeSearchPick"
           @clear="clearSearch"
         />
       </span>
@@ -442,7 +442,7 @@ const actionTipText = computed((): string => {
 
     <div v-else class="team-grid">
       <div
-        v-for="{ team, name, highlightHeroes } in visibleTeams"
+        v-for="{ team, name, highlights } in visibleTeams"
         :key="team.id"
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
@@ -455,7 +455,7 @@ const actionTipText = computed((): string => {
           @click="openPreview(team)"
         >
           <MountOnVisible :estimated-height="estimatedPreviewHeight(team.mode)">
-            <TeamPreview :team :highlight-heroes="highlightHeroes" />
+            <TeamPreview :team :highlights />
           </MountOnVisible>
         </button>
 

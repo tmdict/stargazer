@@ -34,8 +34,8 @@ const BOARDS = [
 ]
 
 const SEARCH_HERO = 'frieren'
-const searchHeroes = computed(() => [
-  { slug: SEARCH_HERO, label: curatedHeroName(SEARCH_HERO, lang.value) },
+const searchPicks = computed(() => [
+  { kind: 'hero' as const, slug: SEARCH_HERO, label: curatedHeroName(SEARCH_HERO, lang.value) },
 ])
 </script>
 
@@ -91,7 +91,7 @@ const searchHeroes = computed(() => [
           <SavedTeamsSearch
             class="help-search"
             model-value=""
-            :heroes="searchHeroes"
+            :picks="searchPicks"
             :suggestions="[]"
           />
         </div>
