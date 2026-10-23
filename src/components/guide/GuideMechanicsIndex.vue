@@ -2,7 +2,6 @@
 /* Mechanics entry on the guide index: one tile per mechanic, deep-linking to
    its card on the mechanics page. */
 
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
@@ -27,7 +26,7 @@ const props = defineProps<{ lang: AppLocale }>()
 const PREVIEW = 4
 
 const label = (key: string): string => appLabel(key, props.lang)
-const page = computed(() => guidePath(props.lang, 'mechanics'))
+const page = guidePath('mechanics')
 
 // The query picks the mechanic on the page; the hash scrolls to its card. A
 // tile shows the heroes its pick leaves lit there, which for a tag is the

@@ -71,7 +71,7 @@ const bands = computed((): Band[] => [
 <template>
   <article class="container page-panel guide-panel">
     <div class="content guide-link">
-      <RouterLink class="guide-title" :to="guidePath(lang, 'upgrades')">
+      <RouterLink class="guide-title" :to="guidePath('upgrades')">
         <h2>{{ label('upgrades') }}</h2>
         <IconChevronRight :size="18" />
       </RouterLink>

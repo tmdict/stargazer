@@ -46,20 +46,20 @@ describe('setupGuideContentMeta', () => {
     }
   }
 
-  it("follows the route locale reactively, as a guide's locale routes share one instance", async () => {
+  it('follows the site language reactively on its one address', async () => {
     const locale = ref<AppLocale>('en')
     const resolved = mount(locale, 'index')
 
     expect(await resolved()).toEqual({
       title: 'Guide | Stargazer',
-      canonical: `${SITE_ORIGIN}/en/guide`,
+      canonical: `${SITE_ORIGIN}/guide`,
     })
 
     locale.value = 'zh'
     await nextTick()
     expect(await resolved()).toEqual({
       title: '攻略 | Stargazer',
-      canonical: `${SITE_ORIGIN}/zh/guide`,
+      canonical: `${SITE_ORIGIN}/guide`,
     })
   })
 })

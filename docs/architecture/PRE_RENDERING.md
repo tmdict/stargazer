@@ -22,7 +22,7 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
 
 `npm run build` runs the type check, then `build:ssg`. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `APP_LOCALES` × `GUIDE_PAGES` ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
 The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so hydration matches.
 
@@ -42,15 +42,17 @@ A page is baked once per path, so nothing from the query string is in its HTML. 
 
 The skill-text locale is the URL prefix on skill pages and has 16 values. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings. On a path that carries an app locale, and on every skill page, each row of the header's language menu links to the same page under that language's prefix.
 
+A page whose prose is its content carries its language in its address: the skill pages, in every skill-text language, and Help, in every app locale. Every other page has one address and shows in the site language, and those with content to find in search, `/skills` and the guide pages, are pre-rendered in English.
+
 `App.vue` watches the path and hands its app-locale prefix to `applyAddressLocale` (`src/stores/i18n.ts`), which sets the chrome locale without saving it, because following a shared `/zh/...` link must not overwrite the saved preference.
 
 | Path                                            | Chrome locale                                          |
 | ----------------------------------------------- | ------------------------------------------------------ |
-| Guide or Help page, `/zh/guide`                 | the prefix, since the page is written in that language |
+| Help page, `/zh/help`                           | the prefix, since the page is written in that language |
 | Skill page under an app locale, `/zh/skill/...` | the saved preference, else the prefix                  |
-| Anything else, `/`, `/skills`, `/ja/skill/...`  | the saved preference, else the locale in use           |
+| Anything else, `/`, `/guide`, `/ja/skill/...`   | the saved preference, else the locale in use           |
 
-A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Guide or Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so hydration matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
+A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so hydration matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
 
 ## Head tags
 
@@ -74,7 +76,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 ## Hosting
 
-The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
+The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?l=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
 
 `public/_headers` caches `/assets/*` as `immutable` for a year, since hashed output never changes behind a URL. Unhashed files keep the host's revalidate default. `/site.webmanifest` gets an explicit `application/manifest+json` type, because the host has no mapping for that extension.
 

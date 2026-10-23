@@ -11,11 +11,11 @@ import IconClose from '@/components/ui/IconClose.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useMechanicPicks } from '@/composables/useMechanicPicks'
-import { useRouteLocale } from '@/composables/useRouteLocale'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { ENERGY_KEY, fromMechanicQuery, pickKey } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { setupGuideContentMeta } from '@/utils/contentMeta'
 import { interpolate } from '@/utils/interpolate'
 import { appLabel, curatedHeroName, mechanicLabel } from '@/utils/skillLabels'
@@ -24,7 +24,8 @@ import { loadMechanicGroups, loadTagVocabulary } from '@/utils/tagData'
 import '@/styles/content.css'
 import '@/styles/guide.css'
 
-const lang = useRouteLocale()
+const i18n = useI18nStore()
+const lang = computed(() => i18n.currentLocale)
 setupGuideContentMeta(lang, 'mechanics')
 
 // SSG-safe: the hero data loads eagerly, so every card bakes into the static

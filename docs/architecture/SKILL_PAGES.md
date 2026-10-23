@@ -110,9 +110,9 @@ The `/skills` index replaces its query when the mechanic filter changes, making 
 
 ```
 /skills?tag=debuff&mods=eryndor,global
-/en/guide/mechanics?tag=temp-buff&mods=opening#temp-buff
+/guide/mechanics?tag=temp-buff&mods=opening#temp-buff
 /skills?energy=500
-/en/guide/mechanics?energy=500#init-energy
+/guide/mechanics?energy=500#init-energy
 ```
 
 The guide index adds the card id as a fragment: the tag or `init-energy`. Unknown tags or modifiers, invalid energy values or spellings (`0500`), repeated parameters, or energy combined with tag parameters apply no filter. Silently narrowing or widening a malformed pick would misrepresent its author's selection. A combined entry writes its modifier (`?tag=ult&mods=opening`), and `?tag=ult` reads identically. Queries apply after mount because pre-rendered HTML has no query state.

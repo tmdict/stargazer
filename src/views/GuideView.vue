@@ -4,19 +4,22 @@
    grid areas, so the two rows pair up on wide screens and stack in reading
    order below 1100px. */
 
+import { computed } from 'vue'
+
 import GuideCounterLadder from '@/components/guide/GuideCounterLadder.vue'
 import GuideMechanicsIndex from '@/components/guide/GuideMechanicsIndex.vue'
 import GuidePvpReport from '@/components/guide/GuidePvpReport.vue'
 import GuideUpgradesIndex from '@/components/guide/GuideUpgradesIndex.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
 import { PVP_SEASONS } from '@/content/pvp/seasons'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { setupGuideContentMeta } from '@/utils/contentMeta'
 
 import '@/styles/content.css'
 import '@/styles/guide.css'
 
-const lang = useRouteLocale()
+const i18n = useI18nStore()
+const lang = computed(() => i18n.currentLocale)
 setupGuideContentMeta(lang, 'index')
 
 // SSG-safe: character data loads eagerly, so the portraits bake into the

@@ -9,7 +9,7 @@ import { splitLocalePath } from '@/utils/routeLocale'
 describe('splitLocalePath', () => {
   it('splits app-locale prefixes', () => {
     expect(splitLocalePath('/en/skill/walker')).toEqual({ locale: 'en', rest: '/skill/walker' })
-    expect(splitLocalePath('/zh/guide')).toEqual({ locale: 'zh', rest: '/guide' })
+    expect(splitLocalePath('/zh/help')).toEqual({ locale: 'zh', rest: '/help' })
     expect(splitLocalePath('/ko/skill/walker')).toEqual({ locale: 'ko', rest: '/skill/walker' })
     expect(splitLocalePath('/en')).toEqual({ locale: 'en', rest: '' })
   })

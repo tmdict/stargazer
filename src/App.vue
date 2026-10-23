@@ -21,6 +21,7 @@ import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
+import { guidePath } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
@@ -139,7 +140,7 @@ onUnmounted(() => {
           >{{ i18n.t('app.skills') }}</RouterLink
         >
         <RouterLink
-          :to="`/${i18n.currentLocale}/guide`"
+          :to="guidePath('index')"
           class="nav-text-link"
           :class="{ active: route.path.includes('/guide') }"
           >{{ i18n.t('app.guide') }}</RouterLink

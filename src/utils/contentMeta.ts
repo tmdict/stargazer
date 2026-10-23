@@ -136,15 +136,19 @@ const HELP_META: Record<AppLocale, { title: string; description: string }> = {
 }
 
 /**
- * Sets up meta tags for a page with one route per app locale (SSG and client).
- * A page's locale routes share one view instance, so the head follows
- * the locale reactively instead of the value at setup.
+ * Sets up meta tags for a guide or Help page (SSG and client). The head follows
+ * the locale reactively instead of the value at setup: a guide page keeps its
+ * view while the site language switches, and a Help page's locale routes share
+ * one view instance. `address` is the page's one address, or its route in each
+ * app locale, which search engines are then told about as alternates.
  */
-function setupLocalePageMeta(
+function setupPageMeta(
   locale: Ref<AppLocale>,
   meta: (locale: AppLocale) => { title: string; description: string },
-  pathFor: (locale: AppLocale) => string,
+  address: string | ((locale: AppLocale) => string),
 ): void {
+  const perLocale = typeof address !== 'string'
+  const pathFor = (l: AppLocale): string => (typeof address === 'string' ? address : address(l))
   useHead(
     computed(() => {
       const { title, description } = meta(locale.value)
@@ -160,12 +164,16 @@ function setupLocalePageMeta(
         ],
         link: [
           { rel: 'canonical', href: `${ORIGIN}${path}` },
-          ...APP_LOCALES.map((code) => ({
-            rel: 'alternate',
-            hreflang: code,
-            href: `${ORIGIN}${pathFor(code)}`,
-          })),
-          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${pathFor('en')}` },
+          ...(perLocale
+            ? [
+                ...APP_LOCALES.map((code) => ({
+                  rel: 'alternate',
+                  hreflang: code,
+                  href: `${ORIGIN}${pathFor(code)}`,
+                })),
+                { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${pathFor('en')}` },
+              ]
+            : []),
         ],
       }
     }),
@@ -173,11 +181,7 @@ function setupLocalePageMeta(
 }
 
 export const setupGuideContentMeta = (locale: Ref<AppLocale>, page: GuidePage): void =>
-  setupLocalePageMeta(
-    locale,
-    (l) => GUIDE_META[page][l],
-    (l) => guidePath(l, page),
-  )
+  setupPageMeta(locale, (l) => GUIDE_META[page][l], guidePath(page))
 
 export const setupHelpContentMeta = (locale: Ref<AppLocale>): void =>
-  setupLocalePageMeta(locale, (l) => HELP_META[l], helpPath)
+  setupPageMeta(locale, (l) => HELP_META[l], helpPath)
