@@ -17,7 +17,7 @@ import {
   type CellState,
   type ReviewPart,
 } from './import/review'
-import type { FrameFamily, RosterReading, Slot } from './import/screens/roster/types'
+import type { RosterReading, Slot } from './import/screens/roster/types'
 
 /* A slot's key: h1 to h5 for the Hands of Resonance, row.col down the grid. */
 export const slotKey = (slot: Slot): string =>
@@ -35,7 +35,6 @@ export interface RosterCard {
   shotId: string
   key: string
   cell: HeroReading
-  family: FrameFamily
   characterId: number | null
   paragon: number
   refinement: number
@@ -88,7 +87,6 @@ const cardsOf = (shot: RosterShotInput): RosterCard[] =>
         shotId: shot.id,
         key,
         cell: slot.cell,
-        family: slot.frame.family,
         characterId: reviewedCharacterId(slot.cell, override),
         paragon: attrs[ATTR_PARAGON] ?? 0,
         refinement: attrs[ATTR_REFINEMENT] ?? 0,

@@ -140,8 +140,8 @@ const boards = computed(() => {
   })
 })
 
-// While any board rings a hero or artifact, the boards without one fade whole, pointing a
-// multi-board record at the board that matched.
+// While any board rings a hero or artifact, the boards without one fade whole,
+// pointing a multi-board record at the board that matched.
 const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? false)
 </script>
 
