@@ -13,6 +13,7 @@
       { "awakening": 1, "mods": ["eryndor", "single"] },
       { "awakening": 1, "mods": ["aoe", "eryndor"] }
     ],
+    "haste": [{ "ultimate": 1, "mods": ["aoe"] }],
     "temp-buff": [
       { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
       { "ex": 3, "mods": ["aoe", "orion", "perseus"] }

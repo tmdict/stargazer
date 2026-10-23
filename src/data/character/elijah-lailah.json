@@ -10,6 +10,10 @@
   "season": 3,
   "tags": {
     "energy-battery": [{ "skill2": 1 }, { "ex": 1 }],
+    "haste": [
+      { "ultimate": 1, "mods": ["global"] },
+      { "mastery": 1, "mods": ["single"] }
+    ],
     "temp-buff": [{ "ultimate": 1, "mods": ["global", "orion", "perseus"] }],
     "tile-effect": [{ "skill2": 1 }]
   }
