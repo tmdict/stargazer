@@ -9,6 +9,7 @@
   "range": 4,
   "season": 0,
   "tags": {
+    "haste": [{ "awakening": 1, "mods": ["single"] }],
     "temp-buff": [{ "awakening": 1, "mods": ["orion", "perseus", "single"] }]
   }
 }

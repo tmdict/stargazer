@@ -15,6 +15,7 @@
       { "awakening": 1, "mods": ["global"] },
       { "awakening": 1, "mods": ["aoe"] }
     ],
+    "haste": [{ "skill2": 1, "mods": ["aoe"] }],
     "temp-buff": [{ "skill2": 1, "mods": ["aoe", "orion", "perseus"] }]
   }
 }

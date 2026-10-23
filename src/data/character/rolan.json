@@ -10,6 +10,7 @@
   "season": 7,
   "tags": {
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
+    "haste": [{ "skill2": 1, "mods": ["single"] }],
     "summon": [{ "ex": 1 }],
     "temp-buff": [
       { "skill2": 1, "mods": ["orion", "perseus", "single"] },

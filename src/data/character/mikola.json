@@ -9,6 +9,7 @@
   "range": 1,
   "season": 1,
   "tags": {
+    "haste": [{ "ultimate": 1, "mods": ["aoe"] }],
     "temp-buff": [
       { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
       { "skill2": 1, "mods": ["global", "orion", "perseus"] },

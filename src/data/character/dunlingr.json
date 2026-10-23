@@ -14,6 +14,7 @@
       { "awakening": 2, "mods": ["eryndor", "global"] }
     ],
     "energy-denial": [{ "awakening": 2 }],
+    "haste": [{ "ex": 4, "mods": ["opening", "single"] }],
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1, "mods": ["global", "orion", "perseus"] }],
