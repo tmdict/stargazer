@@ -208,7 +208,7 @@ function toggle(item: { key: string; pick: MechanicPick }) {
             action
             :label="i18n.t('app.mechanics-guide')"
             meta="→"
-            :to="guidePath(lang, 'mechanics')"
+            :to="guidePath('mechanics')"
           />
         </div>
       </template>
