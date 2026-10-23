@@ -31,7 +31,7 @@ The card layer (`card/`) reads a hero card wherever a screen shows one. The fram
 
 The screen layer (`screens/`) has one reader per screen, each finding the screen's own landmark before reading its cards: the result screen's tabs, the formation panel's board outline, the replay frame's arena, and on the hero roster (the Resonating Hall) the cream gutters between the cards, which a comb of columns is fitted to. The match screens share their reading type, the green ring of their map strips and the artifact reader (`screens/match/`).
 
-The review rules (`review.ts`) are what every import's review asks of a card: its state, and the hero and levels it contributes once corrected. On top sit the reference assembly, the learned-face store and the sorter, which tells which import and kind a screenshot shows (`sort.ts`).
+The review rules (`review.ts`) are what every import's review asks of a card: its state, the parts of it left to confirm (`doubtfulParts`), and the hero and levels it contributes once corrected. On top sit the reference assembly, the learned-face store and the sorter, which tells which import and kind a screenshot shows (`sort.ts`).
 
 ## The engine
 

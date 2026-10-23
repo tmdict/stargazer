@@ -45,6 +45,7 @@ const {
   clearImport,
   setHero,
   setLevel,
+  confirmAll,
   forgetLearned,
   ensureReferences,
 } = useRosterImport()
@@ -178,7 +179,13 @@ const handleForgetLearned = (): void => {
             </template>
           </span>
         </div>
-        <RosterImportReview :plan :shots @set-hero="setHero" @set-level="setLevel" />
+        <RosterImportReview
+          :plan
+          :shots
+          @set-hero="setHero"
+          @set-level="setLevel"
+          @confirm-all="confirmAll"
+        />
       </section>
 
       <div class="footer">

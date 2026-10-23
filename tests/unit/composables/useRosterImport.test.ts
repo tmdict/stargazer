@@ -101,6 +101,31 @@ describe('roster import', () => {
     expect(api.learnedCount.value).toBe(0)
   })
 
+  it('confirms every doubtful part of the heroes with no issue as read, teaching no face', () => {
+    const api = holdImport()
+    const allUnsure: HeroReading = {
+      ...unsure(0.1),
+      paragon: { level: 2, score: 0.8, runnerUp: 0.79, sure: false },
+      refinement: { level: 0, stars: 6, family: 'white', sure: false },
+    }
+    // Hero 8 on two cards of one screenshot is the reviewer's to settle.
+    const eight: HeroReading = {
+      ...unsure(0.2),
+      candidates: [{ characterId: 8, score: 0.7, learned: false, costume: false }],
+    }
+    api.shots.value = [shot('a', [slot(0, allUnsure), slot(1, eight), slot(2, eight)])]
+
+    api.confirmAll()
+    expect(api.shots.value[0]!.overrides).toEqual({
+      '1.1': { characterId: 7, paragon: 2, refinement: 0 },
+    })
+    expect(api.learnedCount.value).toBe(0)
+    expect(api.plan.value.entries.map((e) => [e.characterId, e.check])).toEqual([
+      [8, true],
+      [7, false],
+    ])
+  })
+
   it('refuses a screenshot the sorter finds to be a match screen, and reads one it cannot place', async () => {
     stubImportBrowser()
     const api = holdImport()
