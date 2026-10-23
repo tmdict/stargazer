@@ -10,10 +10,12 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from './characters/att
 import type { HeroReading } from './import/card/types'
 import {
   cellState,
+  doubtfulParts,
   reviewedAttrs,
   reviewedCharacterId,
   type CellOverride,
   type CellState,
+  type ReviewPart,
 } from './import/review'
 import type { FrameFamily, RosterReading, Slot } from './import/screens/roster/types'
 
@@ -38,6 +40,7 @@ export interface RosterCard {
   paragon: number
   refinement: number
   state: CellState
+  doubtful: ReviewPart[]
   edited: boolean
 }
 
@@ -60,6 +63,9 @@ export interface RosterEntry {
 export interface RosterImportPlan {
   // The heroes to check first, then the rest, each in hero id order.
   entries: RosterEntry[]
+  // The heroes the review confirms as read in one go: a card left to check and
+  // no issue (an issue is the reviewer's to settle).
+  confirmable: RosterEntry[]
   // Cards no hero is taken for yet.
   unnamed: RosterCard[]
   // What Save writes: each hero's levels, defaults left out.
@@ -87,6 +93,7 @@ const cardsOf = (shot: RosterShotInput): RosterCard[] =>
         paragon: attrs[ATTR_PARAGON] ?? 0,
         refinement: attrs[ATTR_REFINEMENT] ?? 0,
         state: cellState(slot.cell, override),
+        doubtful: doubtfulParts(slot.cell, override),
         edited: Object.keys(override).length > 0,
       },
     ]
@@ -130,6 +137,7 @@ export function buildRosterImportPlan(shots: readonly RosterShotInput[]): Roster
   }
   return {
     entries,
+    confirmable: entries.filter((e) => e.check && e.issues.length === 0),
     unnamed,
     heroes,
     blocked: entries.some((e) => e.issues.some((issue) => BLOCKING.includes(issue))),

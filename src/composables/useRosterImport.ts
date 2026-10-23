@@ -140,6 +140,7 @@ export function useRosterImport(): {
   clearImport: () => void
   setHero: (cards: readonly CardRef[], characterId: number | null) => void
   setLevel: (cards: readonly CardRef[], field: 'paragon' | 'refinement', level: number) => void
+  confirmAll: () => void
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
 } {
@@ -243,6 +244,19 @@ export function useRosterImport(): {
     ),
   )
 
+  // Each doubtful part is confirmed as read, the hero being the reader's own
+  // top candidate, so no face is taught.
+  const confirmAll = (): void => {
+    for (const entry of plan.value.confirmable) {
+      for (const card of entry.cards) {
+        for (const part of card.doubtful) {
+          if (part === 'hero') setHero([card], entry.characterId)
+          else setLevel([card], part, card[part])
+        }
+      }
+    }
+  }
+
   const progress = computed(() => {
     const waiting = engine.adding.value + shots.value.filter((s) => s.status === 'reading').length
     const total = shots.value.length + engine.adding.value
@@ -260,6 +274,7 @@ export function useRosterImport(): {
     clearImport,
     setHero,
     setLevel,
+    confirmAll,
     forgetLearned: engine.forgetLearned,
     ensureReferences: engine.ensureReferences,
   }

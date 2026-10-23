@@ -22,7 +22,7 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { getOpposingTeam } from '@/lib/characters/character'
 import type { HeroReading } from '@/lib/import/card/types'
-import type { CellState } from '@/lib/import/review'
+import { doubtfulParts, type CellState, type ReviewPart } from '@/lib/import/review'
 import {
   artifactState,
   cellArtifactId,
@@ -79,6 +79,7 @@ interface CellView {
   paragon: number
   refinement: number
   state: CellState
+  doubtful: ReviewPart[]
   edited: boolean
   card: string
 }
@@ -98,6 +99,8 @@ const cells = (team: Team): CellView[] => {
       paragon: override.paragon ?? cell.paragon.level,
       refinement: override.refinement ?? cell.refinement.level,
       state: states[row]!,
+      // A hero picked twice is changed on one of its cells, not confirmed.
+      doubtful: states[row] === 'duplicate' ? [] : doubtfulParts(cell, override),
       edited: Object.keys(override).length > 0,
       card: shot.cards[key] ?? '',
     }
@@ -254,6 +257,7 @@ const closePickers = (event: MouseEvent): void => {
             :paragon="view.paragon"
             :refinement="view.refinement"
             :state="view.state"
+            :doubtful="view.doubtful"
             :edited="view.edited"
             :open="picker?.key === view.key"
             @pick="togglePicker(team, view.row, view.key, $event)"

@@ -574,8 +574,6 @@ const tileBoxes = (): HTMLInputElement[] => [
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* The portrait inside the ring takes clicks too. A portrait to confirm or not
-   recognised is ringed as thick as a pointed one, to be found at a glance. */
 .shot-ring {
   fill: none;
   stroke: var(--color-accent);
