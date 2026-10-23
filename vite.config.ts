@@ -30,13 +30,10 @@ const SKILL_ROUTE_RE = new RegExp(`^\\/(${localePattern})\\/skill\\/`)
 /** Returns all routes to pre-render during SSG */
 function getSSGRoutes(): string[] {
   // Pre-render static HTML so canonical/meta are correct without JS.
-  const routes: string[] = ['/', '/share', '/skills']
+  const routes: string[] = ['/', '/share', '/skills', ...GUIDE_PAGES.map(guidePath)]
 
-  // Guide and Help pages exist only in the app locales.
-  for (const locale of APP_LOCALES) {
-    for (const page of GUIDE_PAGES) routes.push(guidePath(locale, page))
-    routes.push(helpPath(locale))
-  }
+  // Help exists only in the app locales.
+  for (const locale of APP_LOCALES) routes.push(helpPath(locale))
 
   for (const { code } of SKILL_LOCALES) {
     const dir = join(skillLocaleRoot, code)

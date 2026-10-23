@@ -1,10 +1,10 @@
 # Guide
 
-The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Guide pages exist in every app locale and are pre-rendered ([Pre-Rendering](./PRE_RENDERING.md)).
+The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Each guide page has one address and shows in the site language. It is pre-rendered in English, as `/skills` is ([Pre-Rendering](./PRE_RENDERING.md)).
 
 ## Pages
 
-`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. A page's locale routes share one view instance, so `setupGuideContentMeta` passes `useHead` a computed that follows the locale instead of the value at setup.
+`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. The site language can switch while a page is open, so `setupGuideContentMeta` passes `useHead` a computed that follows it instead of the value at setup.
 
 Each index panel's title link is stretched over its `.guide-link` area (`src/styles/guide.css`), so the blurb, the previews and empty space open the page too. A control placed inside that area, such as a chip or tile, must raise itself with `position: relative; z-index: 2`, or the stretched link swallows its clicks. The counter ladder is the exception: only its title is a link, so a click on its empty space clears the team selection as it does in the report.
 

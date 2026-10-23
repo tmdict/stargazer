@@ -123,24 +123,22 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
     // Locale chunk warm-up lives in warmSkillLocale (global beforeResolve).
   },
-  // Guide pages exist per app locale: their content is hand-written in those.
-  ...APP_LOCALES.flatMap((locale) => [
-    {
-      path: guidePath(locale, 'index'),
-      name: `guide-${locale}`,
-      component: () => import('@/views/GuideView.vue'),
-    },
-    {
-      path: guidePath(locale, 'upgrades'),
-      name: `guide-upgrades-${locale}`,
-      component: () => import('@/views/GuideUpgradesView.vue'),
-    },
-    {
-      path: guidePath(locale, 'mechanics'),
-      name: `guide-mechanics-${locale}`,
-      component: () => import('@/views/GuideMechanicsView.vue'),
-    },
-  ]),
+  {
+    path: guidePath('index'),
+    name: 'guide',
+    component: () => import('@/views/GuideView.vue'),
+  },
+  {
+    path: guidePath('upgrades'),
+    name: 'guide-upgrades',
+    component: () => import('@/views/GuideUpgradesView.vue'),
+  },
+  {
+    path: guidePath('mechanics'),
+    name: 'guide-mechanics',
+    component: () => import('@/views/GuideMechanicsView.vue'),
+  },
+  // Help exists per app locale: its content is hand-written in those.
   ...APP_LOCALES.map((locale) => ({
     path: helpPath(locale),
     name: `help-${locale}`,
