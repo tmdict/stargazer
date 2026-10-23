@@ -26,12 +26,14 @@ import BoardThumbnail, {
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import {
   isStandardHero,
+  lineupArtifactKey,
   lineupHeroKey,
   teamPreviewBoards,
   type PreviewArtifact,
   type PreviewUnit,
 } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
+import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { isRemoteArtifact, phantimalImageUrl, seasonArtifactImageUrl } from '@/utils/artifactImage'
@@ -39,15 +41,15 @@ import { isRemoteArtifact, phantimalImageUrl, seasonArtifactImageUrl } from '@/u
 const {
   team,
   large = false,
-  highlightHeroes,
+  highlights,
 } = defineProps<{
   team: SavedTeam
   // Modal scale: bigger boards, hex size raised in proportion so strokes stay
   // hairline.
   large?: boolean
-  // lineupHeroKey keys of the heroes to ring; the rest of the card fades.
-  // Companions and phantimals never match.
-  highlightHeroes?: ReadonlySet<string>
+  // lineupHeroKey and lineupArtifactKey keys of what to ring; the rest of the
+  // card fades. Companions and phantimals never match.
+  highlights?: ReadonlySet<string>
 }>()
 
 const gameData = useGameDataStore()
@@ -71,7 +73,11 @@ const resolveImage = (unit: PreviewUnit): string | undefined => {
 
 // The same local/remote split ArtifactImage makes for the live board; retired
 // slots become the "S{n}" placeholder circle instead of resolving the id.
-const resolveArtifact = (slot: PreviewArtifact): ThumbnailArtifact | undefined => {
+const resolveArtifact = (
+  slot: PreviewArtifact,
+  board: number,
+  team: Team,
+): ThumbnailArtifact | undefined => {
   if (slot === null) return undefined
   if (typeof slot !== 'number') {
     return {
@@ -81,15 +87,17 @@ const resolveArtifact = (slot: PreviewArtifact): ThumbnailArtifact | undefined =
   }
   const artifact = gameData.getArtifactById(slot)
   if (!artifact) return undefined
-  return isRemoteArtifact(artifact.season)
+  const image = isRemoteArtifact(artifact.season)
     ? seasonArtifactImageUrl(artifact.name)
-    : gameData.getArtifactImage(artifact.name) || undefined
+    : gameData.getArtifactImage(artifact.name)
+  if (!image) return undefined
+  return { image, highlight: highlights?.has(lineupArtifactKey(board, team)) ?? false }
 }
 
 const isHighlighted = (board: number, unit: PreviewUnit): boolean => {
-  if (!highlightHeroes || !isStandardHero(unit)) return false
+  if (!highlights || !isStandardHero(unit)) return false
   const slug = gameData.getCharacterNameById(unit.characterId)
-  return slug !== undefined && highlightHeroes.has(lineupHeroKey(board, unit.team, slug))
+  return slug !== undefined && highlights.has(lineupHeroKey(board, unit.team, slug))
 }
 
 // Decoded once per record; team.data is immutable (updates replace the record).
@@ -115,20 +123,24 @@ const boards = computed(() => {
             highlight: isHighlighted(index, unit),
           },
     )
+    const artifacts = {
+      ally: resolveArtifact(board.artifacts.ally, index, Team.ALLY),
+      enemy: resolveArtifact(board.artifacts.enemy, index, Team.ENEMY),
+    }
     return {
       mapKey: board.mapKey,
       tiles: board.tiles,
-      artifacts: {
-        ally: resolveArtifact(board.artifacts.ally),
-        enemy: resolveArtifact(board.artifacts.enemy),
-      },
+      artifacts,
       units,
-      matched: units.some((unit) => unit.highlight),
+      matched:
+        units.some((unit) => unit.highlight) ||
+        !!artifacts.ally?.highlight ||
+        !!artifacts.enemy?.highlight,
     }
   })
 })
 
-// While any board rings a hero, the boards without one fade whole, pointing a
+// While any board rings a hero or artifact, the boards without one fade whole, pointing a
 // multi-board record at the board that matched.
 const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? false)
 </script>

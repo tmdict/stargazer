@@ -24,12 +24,17 @@ export interface ThumbnailUnit {
   image?: string
   label?: string
   title?: string
-  // Ringed; one ringed unit fades the board's other units and artifacts.
+  // Ringed; a ringed unit or artifact fades the board's other ones.
   highlight?: boolean
 }
 
-// An artifact slot: an image URL, or a labeled placeholder circle.
-export type ThumbnailArtifact = string | { label: string; title?: string }
+// An artifact slot: its image, or a labeled placeholder circle.
+export interface ThumbnailArtifact {
+  image?: string
+  label?: string
+  title?: string
+  highlight?: boolean
+}
 
 interface Geometry {
   viewBox: string
@@ -293,20 +298,14 @@ const placedUnits = computed(() =>
     })),
 )
 
-const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
-const spotlit = computed(() => ringedUnits.value.length > 0)
-
 const placedArtifacts = computed(() =>
   ARTIFACT_SIDES.flatMap(({ side, team }) => {
     const value = artifacts?.[side]
     if (value === undefined) return []
-    const placeholder = typeof value === 'string' ? undefined : value
     return [
       {
+        ...value,
         side,
-        image: typeof value === 'string' ? value : undefined,
-        label: placeholder?.label,
-        title: placeholder?.title,
         center: geometry.value.artifactCenters[side],
         radius: hexSize * ARTIFACT_RADIUS_RATIO,
         color: TEAM_COLORS[team],
@@ -314,6 +313,10 @@ const placedArtifacts = computed(() =>
     ]
   }),
 )
+
+const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
+const ringedArtifacts = computed(() => placedArtifacts.value.filter((art) => art.highlight))
+const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.value.length > 0)
 </script>
 
 <template>
@@ -443,7 +446,11 @@ const placedArtifacts = computed(() =>
       </template>
     </g>
 
-    <g v-for="art in placedArtifacts" :key="`artifact-${art.side}`" :class="{ faded: spotlit }">
+    <g
+      v-for="art in placedArtifacts"
+      :key="`artifact-${art.side}`"
+      :class="{ faded: spotlit && !art.highlight }"
+    >
       <title v-if="art.title">{{ art.title }}</title>
       <image
         v-if="art.image"
@@ -512,6 +519,25 @@ const placedArtifacts = computed(() =>
         :points="unit.corners"
         fill="none"
         stroke-linejoin="round"
+        :stroke-width="hexSize * RING_RATIO"
+      />
+    </template>
+    <template v-for="art in ringedArtifacts" :key="`ring-${art.side}`">
+      <circle
+        class="ring-edge"
+        :cx="art.center.x"
+        :cy="art.center.y"
+        :r="art.radius"
+        fill="none"
+        :stroke-width="hexSize * RING_EDGE_RATIO"
+        :filter="`url(#${uid}-ring-edge)`"
+      />
+      <circle
+        class="ring"
+        :cx="art.center.x"
+        :cy="art.center.y"
+        :r="art.radius"
+        fill="none"
         :stroke-width="hexSize * RING_RATIO"
       />
     </template>

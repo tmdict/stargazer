@@ -6,8 +6,8 @@
    (offered in every other mode) load onto the active board. Invert loads onto
    the opposite side, mirrored 180 degrees. Loading clears the destination
    side first (delete semantics), so a load that would remove anything arms a
-   two-step confirm; search matches team names and hero names exactly like the
-   Saved Teams tab (shared composable). */
+   two-step confirm; search matches team, hero and artifact names exactly like
+   the Saved Teams tab (shared composable). */
 
 import { computed, nextTick, ref, watch } from 'vue'
 
@@ -235,7 +235,7 @@ const tipText = computed((): string =>
             <div v-if="group.label" class="panel-group">{{ group.label }}</div>
             <div class="team-cards">
               <button
-                v-for="{ team, name, highlightHeroes } in group.items"
+                v-for="{ team, name, highlights } in group.items"
                 :key="team.id"
                 type="button"
                 class="load-card"
@@ -245,7 +245,7 @@ const tipText = computed((): string =>
               >
                 <span class="card-thumb">
                   <MountOnVisible :estimated-height="estimatedPreviewHeight(team.mode)">
-                    <TeamPreview :team :highlight-heroes="highlightHeroes" />
+                    <TeamPreview :team :highlights />
                   </MountOnVisible>
                   <span v-if="armed === team.id" class="card-confirm">{{ confirmText(team) }}</span>
                 </span>

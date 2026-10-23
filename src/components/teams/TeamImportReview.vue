@@ -303,7 +303,7 @@ const closePickers = (event: MouseEvent): void => {
           class="picker-remove"
           @click="setArtifactPicked(null)"
         >
-          {{ i18n.t('app.import-remove-artifact') }}
+          {{ i18n.t('app.remove-artifact') }}
         </button>
       </SelectionPopup>
     </Teleport>
