@@ -13,20 +13,35 @@ export interface CellOverride {
 
 export type CellState = 'sure' | 'review' | 'paragon' | 'refinement' | 'none' | 'duplicate'
 
-/* The state the review shows for a cell. A cell removed in review has nothing
- * left to check; one nobody recognised or picked is `none`; otherwise the
- * hero, the paragon and the refinement each stand once read surely or edited,
- * asked about in that order (a doubtful frame match puts the whole card in
- * doubt, levels included). */
+export type ReviewPart = 'hero' | 'paragon' | 'refinement'
+
+/* The parts of a cell the review asks to confirm: the hero, the paragon and
+ * the refinement, each until read surely or edited (a doubtful frame match puts
+ * the whole card in doubt, levels included). A cell removed in review, or that
+ * nobody recognised or picked, has none to confirm. */
+export const doubtfulParts = (cell: HeroReading, override: CellOverride = {}): ReviewPart[] => {
+  if (override.characterId === null) return []
+  if (override.characterId === undefined && !cell.recognised) return []
+  const parts: ReviewPart[] = []
+  if (override.characterId === undefined && !cell.sure) parts.push('hero')
+  if (override.paragon === undefined && !cell.paragon.sure) parts.push('paragon')
+  if (override.refinement === undefined && !cell.refinement.sure) parts.push('refinement')
+  return parts
+}
+
+const PART_STATE: Record<ReviewPart, CellState> = {
+  hero: 'review',
+  paragon: 'paragon',
+  refinement: 'refinement',
+}
+
+/* The state the review shows for a cell: `none` when nobody recognised or
+ * picked it, else its first doubtful part, else `sure`. */
 export const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
   if (override.characterId === null) return 'sure'
   if (override.characterId === undefined && !cell.recognised) return 'none'
-  const heroSure = override.characterId !== undefined || cell.sure
-  const paragonSure = override.paragon !== undefined || cell.paragon.sure
-  const refinementSure = override.refinement !== undefined || cell.refinement.sure
-  if (!heroSure) return 'review'
-  if (!paragonSure) return 'paragon'
-  return refinementSure ? 'sure' : 'refinement'
+  const first = doubtfulParts(cell, override)[0]
+  return first ? PART_STATE[first] : 'sure'
 }
 
 /* The hero a cell contributes: the override when one was made (null =

@@ -260,8 +260,6 @@ const status = (shot: ImportShot): ShotStatusView => {
   text-overflow: ellipsis;
 }
 
-/* A map's winner is the result screen's, in its colours; the team a formation
-   shot shows is a board side, in the app's. */
 .seg-btn.side.on.ally {
   background: var(--import-ally);
 }

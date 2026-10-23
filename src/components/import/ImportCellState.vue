@@ -1,21 +1,30 @@
 <script setup lang="ts">
 /* A reading's state in an import review: a button that confirms the reading,
    or a label saying it needs review, is not recognised, is picked twice or
-   was edited. */
+   was edited. The default slot names a button that confirms several readings
+   at once. */
+
+import { computed } from 'vue'
 
 import { useI18nStore } from '@/stores/i18n'
 
 type Shown = 'review' | 'none' | 'duplicate' | 'edited'
 
-defineProps<{
+const props = defineProps<{
   state: Shown
   // The reading to confirm, offered on a button in place of the label.
   reading?: string
+  // The button shows the reading beside a check mark, for several in a row.
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{ confirm: [] }>()
 
 const i18n = useI18nStore()
+
+const confirmText = computed(() =>
+  props.reading === undefined ? undefined : i18n.t('app.import-confirm', { value: props.reading }),
+)
 
 const LABEL: Record<Shown, string> = {
   review: 'app.import-review',
@@ -27,13 +36,15 @@ const LABEL: Record<Shown, string> = {
 
 <template>
   <button
-    v-if="reading !== undefined"
+    v-if="confirmText !== undefined || $slots.default"
     type="button"
     class="cell-state confirm-choice"
     :class="state"
+    :title="compact ? confirmText : undefined"
+    :aria-label="compact ? confirmText : undefined"
     @click="emit('confirm')"
   >
-    {{ i18n.t('app.import-confirm', { value: reading }) }}
+    <slot>{{ compact ? `✓ ${reading}` : confirmText }}</slot>
   </button>
   <span v-else class="cell-state" :class="state">{{ i18n.t(LABEL[state]) }}</span>
 </template>
