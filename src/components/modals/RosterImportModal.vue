@@ -232,7 +232,20 @@ const handleForgetLearned = (): void => {
   margin: 0;
 }
 
+.roster-import .footer {
+  align-items: flex-end;
+}
+
 .footer .name {
   flex: 1 1 220px;
+}
+
+.footer .field-input {
+  height: var(--import-control-height);
+  padding-block: 0;
+}
+
+.footer .link-btn {
+  min-height: var(--import-control-height);
 }
 </style>
