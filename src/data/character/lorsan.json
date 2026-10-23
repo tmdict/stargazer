@@ -13,6 +13,10 @@
       { "ultimate": 1, "mods": ["aoe", "eryndor"] },
       { "awakening": 2, "mods": ["single"] }
     ],
+    "haste": [
+      { "skill3": 1, "mods": ["single"] },
+      { "awakening": 2, "mods": ["single"] }
+    ],
     "temp-buff": [
       { "skill3": 1, "mods": ["orion", "perseus", "single"] },
       { "awakening": 2, "mods": ["orion", "perseus", "single"] }
