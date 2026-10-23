@@ -32,7 +32,7 @@ A report is written in English and Chinese (`ReportLocale`), and a summary carri
 
 Team ids and counter anchors follow the report's `counter-<winner>-vs-<loser>` fragment ids, so the ladder's curves link straight to the evidence. `tests/unit/content/pvpSeasons.test.ts` checks every summary against the hero list and its report: known hero slugs, counters only between listed teams, and anchors present in the template.
 
-To add a season, write `s<N>/summary.ts` beside `s<N>/index.template.html` and put it at the front of `PVP_SEASONS`.
+To add a season, write `s<N>/summary.ts` beside `s<N>/index.template.html` and put it at the front of `PVP_SEASONS`. The report's page is built from its template alone (Pre-Rendering, "PvP reports"), so a report can be published before the index lists it: its folder then holds the template only, and its summary comes with its `PVP_SEASONS` entry.
 
 ## Counter ladder
 
