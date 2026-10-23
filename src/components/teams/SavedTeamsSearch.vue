@@ -1,27 +1,30 @@
 <script setup lang="ts">
-/* The Saved Teams tab's search field: hero pills plus free text in one box.
-   Text that matches a hero name lists the matching heroes under the box;
-   Enter or a click turns the lit one into a pill and clears the text for the
-   next term. Team names never become pills: the text alone matches them.
+/* The Saved Teams tab's search field: hero and artifact pills plus free text
+   in one box. Text that matches a hero or artifact name lists the matching
+   ones under the box; Enter or a click turns the lit one into a pill and
+   clears the text for the next term. Team names never become pills: the text
+   alone matches them.
    Backspace on empty text drops the last pill; the X clears pills and text
    together. Matching lives in useSavedTeamSearch; this component is the
    field and its combobox keyboard handling. */
 
 import { computed, ref, useId, watch } from 'vue'
 
+import ArtifactImage from '@/components/ArtifactImage.vue'
 import IconClose from '@/components/ui/IconClose.vue'
-import type { SearchHero } from '@/composables/useSavedTeamSearch'
+import type { SearchPick } from '@/composables/useSavedTeamSearch'
+import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
-const { heroes, suggestions } = defineProps<{
-  heroes: readonly SearchHero[]
-  suggestions: readonly SearchHero[]
+const { picks, suggestions } = defineProps<{
+  picks: readonly SearchPick[]
+  suggestions: readonly SearchPick[]
 }>()
 
 const emit = defineEmits<{
-  addHero: [slug: string]
-  removeHero: [slug: string]
+  addPick: [pick: SearchPick]
+  removePick: [pick: SearchPick]
   clear: []
 }>()
 
@@ -48,9 +51,16 @@ watch(
   },
 )
 
-const clearable = computed(() => heroes.length > 0 || query.value !== '')
+const clearable = computed(() => picks.length > 0 || query.value !== '')
 
-const portrait = (slug: string): string => gameData.getCharacterImage(slug)
+const portrait = (pick: SearchPick): string =>
+  pick.kind === 'hero' ? gameData.getCharacterImage(pick.slug) : ''
+
+const artifactOf = (pick: SearchPick): ArtifactType | undefined =>
+  pick.kind === 'artifact' ? gameData.artifacts.find((a) => a.name === pick.slug) : undefined
+
+const removeLabel = (pick: SearchPick): string =>
+  i18n.t(pick.kind === 'hero' ? 'app.remove-hero' : 'app.remove-artifact')
 
 // Every press inside the box keeps the caret in the input (pills, their
 // remove buttons, the options, the X), so the list never blinks shut on a
@@ -72,14 +82,14 @@ const onKeydown = (event: KeyboardEvent): void => {
     const pick = open.value ? suggestions[selected.value] : undefined
     if (!pick) return
     event.preventDefault()
-    emit('addHero', pick.slug)
+    emit('addPick', pick)
   } else if (event.key === 'Escape') {
     if (!open.value) return
     event.preventDefault()
     dismissed.value = true
   } else if (event.key === 'Backspace' && query.value === '') {
-    const last = heroes[heroes.length - 1]
-    if (last) emit('removeHero', last.slug)
+    const last = picks[picks.length - 1]
+    if (last) emit('removePick', last)
   }
 }
 </script>
@@ -87,15 +97,18 @@ const onKeydown = (event: KeyboardEvent): void => {
 <template>
   <div class="search-box" @mousedown="onMousedown" @click="inputEl?.focus()">
     <div class="search-field">
-      <span v-for="hero in heroes" :key="hero.slug" class="hero-pill">
-        <img v-if="portrait(hero.slug)" :src="portrait(hero.slug)" alt="" class="pill-portrait" />
-        {{ hero.label }}
+      <span v-for="pick in picks" :key="`${pick.kind}:${pick.slug}`" class="pick-pill">
+        <img v-if="portrait(pick)" :src="portrait(pick)" alt="" class="pill-portrait" />
+        <span v-else-if="artifactOf(pick)" class="pill-portrait">
+          <ArtifactImage :artifact="artifactOf(pick)!" />
+        </span>
+        {{ pick.label }}
         <button
           type="button"
           class="pill-remove"
-          :aria-label="`${i18n.t('app.remove-hero')}: ${hero.label}`"
-          :title="i18n.t('app.remove-hero')"
-          @click="emit('removeHero', hero.slug)"
+          :aria-label="`${removeLabel(pick)}: ${pick.label}`"
+          :title="removeLabel(pick)"
+          @click="emit('removePick', pick)"
         >
           <IconClose :size="10" />
         </button>
@@ -133,23 +146,26 @@ const onKeydown = (event: KeyboardEvent): void => {
     <ul
       v-if="open"
       :id="listId"
-      class="hero-list"
+      class="pick-list"
       role="listbox"
-      :aria-label="i18n.t('app.search-hero-names')"
+      :aria-label="i18n.t('app.heroes-and-artifacts')"
     >
       <li
-        v-for="(hero, i) in suggestions"
+        v-for="(pick, i) in suggestions"
         :id="`${listId}-${i}`"
-        :key="hero.slug"
-        class="hero-option"
+        :key="`${pick.kind}:${pick.slug}`"
+        class="pick-option"
         :class="{ sel: i === selected }"
         role="option"
         :aria-selected="i === selected"
-        @click="emit('addHero', hero.slug)"
+        @click="emit('addPick', pick)"
         @mousemove="selected = i"
       >
-        <img v-if="portrait(hero.slug)" :src="portrait(hero.slug)" alt="" class="option-portrait" />
-        {{ hero.label }}
+        <img v-if="portrait(pick)" :src="portrait(pick)" alt="" class="option-portrait" />
+        <span v-else-if="artifactOf(pick)" class="option-portrait">
+          <ArtifactImage :artifact="artifactOf(pick)!" />
+        </span>
+        {{ pick.label }}
       </li>
     </ul>
   </div>
@@ -196,7 +212,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   outline: none;
 }
 
-.hero-pill {
+.pick-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -211,6 +227,8 @@ const onKeydown = (event: KeyboardEvent): void => {
 }
 
 .pill-portrait {
+  display: block;
+  overflow: hidden;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -254,7 +272,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   background: var(--color-bg-tertiary);
 }
 
-.hero-list {
+.pick-list {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -269,7 +287,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   box-shadow: var(--shadow-float);
 }
 
-.hero-option {
+.pick-option {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -281,12 +299,14 @@ const onKeydown = (event: KeyboardEvent): void => {
   cursor: pointer;
 }
 
-.hero-option.sel {
+.pick-option.sel {
   background: var(--color-primary);
   color: #fff;
 }
 
 .option-portrait {
+  display: block;
+  overflow: hidden;
   width: 24px;
   height: 24px;
   border-radius: 6px;

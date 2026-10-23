@@ -2,9 +2,9 @@ import { effectScope, nextTick, shallowRef, type EffectScope } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useSavedTeamSearch, type SearchHero } from '@/composables/useSavedTeamSearch'
+import { useSavedTeamSearch, type SearchPick } from '@/composables/useSavedTeamSearch'
 import type { TeamModeKey } from '@/lib/teams/modes'
-import { lineupHeroKey } from '@/lib/teams/preview'
+import { lineupArtifactKey, lineupHeroKey } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -12,17 +12,18 @@ import { loadSkillLocale } from '@/utils/dataLoader'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { GUNNAR } from '../fixtures/characters'
 
-/* Runs over the real hero list and the en name index. Rolan and Alsa are the
- * fielded heroes; Rowan and Aliceth share their prefixes but sit on no team,
- * so they prove the suggestion pool is the teams, not the hero list. Gunnar
- * shares records with Rolan but never a lineup, and Duo's enemy side mirrors
- * Rolan outside the Rolan + Alsa lineup. */
+/* Runs over the real hero and artifact lists and the en name index. Rolan and
+ * Alsa are the fielded heroes; Rowan and Aliceth share their prefixes but sit
+ * on no team, so they prove the suggestion pool is the teams, not the hero
+ * list. Gunnar shares records with Rolan but never a lineup, and Duo's enemy
+ * side mirrors Rolan outside the Rolan + Alsa lineup. */
 
 const ROLAN = 121
 const ALSA = 48
+const BLAZING = 4
 
-// A board's ally ids, then its enemy ids.
-type Board = [ally: number[], enemy?: number[]]
+// A board's ally ids, its enemy ids, then its ally and enemy artifacts.
+type Board = [ally: number[], enemy?: number[], artifacts?: (number | null)[]]
 
 const side = (ids: number[], team: Team, firstHex: number): [number, number, Team][] =>
   ids.map((id, i) => [firstHex + i, id, team])
@@ -34,9 +35,10 @@ const team = (name: string, ...boards: Board[]): SavedTeam => {
     name,
     mode,
     data: encodeMultiGridStateToUrl({
-      boards: boards.map(([ally, enemy = []]) => ({
+      boards: boards.map(([ally, enemy = [], artifacts]) => ({
         m: 'arena1',
         c: [...side(ally, Team.ALLY, 1), ...side(enemy, Team.ENEMY, 30)],
+        ...(artifacts ? { a: artifacts } : {}),
       })),
       mode,
     }),
@@ -57,9 +59,10 @@ const TEAMS = [
 type Search = ReturnType<typeof useSavedTeamSearch>
 
 const names = (search: Search): string[] => search.results.value.map(({ team }) => team.name)
-const slugs = (heroes: readonly SearchHero[]): string[] => heroes.map(({ slug }) => slug)
+const slugs = (picks: readonly SearchPick[]): string[] => picks.map(({ slug }) => slug)
 const ringed = (search: Search, index: number): ReadonlySet<string> =>
-  search.results.value[index]!.highlightHeroes!
+  search.results.value[index]!.highlights!
+const hero = (slug: string) => ({ kind: 'hero' as const, slug })
 const ally = (slug: string, board = 0): string => lineupHeroKey(board, Team.ALLY, slug)
 const enemy = (slug: string): string => lineupHeroKey(0, Team.ENEMY, slug)
 
@@ -97,23 +100,23 @@ describe('useSavedTeamSearch suggestions', () => {
     search.query.value = 'r'
     expect(search.suggestions.value).toEqual([])
     search.query.value = 'ro'
-    expect(search.suggestions.value).toEqual([{ slug: 'rolan', label: 'Rolan' }])
+    expect(search.suggestions.value).toEqual([{ kind: 'hero', slug: 'rolan', label: 'Rolan' }])
     search.query.value = 'ali'
     expect(search.suggestions.value).toEqual([])
 
-    search.addHero('rolan')
+    search.addPick(hero('rolan'))
     expect(search.query.value).toBe('')
-    expect(search.heroes.value).toEqual([{ slug: 'rolan', label: 'Rolan' }])
+    expect(search.picks.value).toEqual([{ kind: 'hero', slug: 'rolan', label: 'Rolan' }])
     // A picked hero leaves the list; Alsa stays because Duo fields both.
     search.query.value = 'ro'
     expect(search.suggestions.value).toEqual([])
     search.query.value = 'al'
     expect(slugs(search.suggestions.value)).toEqual(['alsa'])
 
-    search.addHero('alsa')
+    search.addPick(hero('alsa'))
     search.query.value = 'al'
     expect(search.suggestions.value).toEqual([])
-    search.removeHero('alsa')
+    search.removePick(hero('alsa'))
     expect(slugs(search.suggestions.value)).toEqual(['alsa'])
   })
 
@@ -122,7 +125,7 @@ describe('useSavedTeamSearch suggestions', () => {
     search.query.value = 'gu'
     expect(slugs(search.suggestions.value)).toEqual(['gunnar'])
 
-    search.addHero('rolan')
+    search.addPick(hero('rolan'))
     search.query.value = 'gu'
     expect(search.suggestions.value).toEqual([])
   })
@@ -139,37 +142,37 @@ describe('useSavedTeamSearch results', () => {
       'Split boards',
       'Empty',
     ])
-    expect(search.results.value[0]!.highlightHeroes).toBeUndefined()
+    expect(search.results.value[0]!.highlights).toBeUndefined()
 
-    search.addHero('rolan')
+    search.addPick(hero('rolan'))
     expect(names(search)).toEqual(['Duo', 'Solo', 'Split sides', 'Split boards'])
     expect(ringed(search, 0)).toEqual(new Set([ally('rolan'), enemy('rolan')]))
 
     // The mirrored enemy Rolan leaves the rings once only the ally side matches.
-    search.addHero('alsa')
+    search.addPick(hero('alsa'))
     expect(names(search)).toEqual(['Duo'])
     expect(ringed(search, 0)).toEqual(new Set([ally('rolan'), ally('alsa')]))
 
     search.clear()
-    expect(search.heroes.value).toEqual([])
+    expect(search.picks.value).toEqual([])
     expect(names(search)).toHaveLength(TEAMS.length)
   })
 
   it('pairs heroes only within one lineup, by pill or by text', async () => {
     const search = setup()
-    search.addHero('gunnar')
+    search.addPick(hero('gunnar'))
     expect(names(search)).toEqual(['Split sides', 'Split boards'])
     expect(ringed(search, 1)).toEqual(new Set([ally('gunnar', 1)]))
 
     await type(search, 'rol')
     expect(names(search)).toEqual([])
-    search.addHero('rolan')
+    search.addPick(hero('rolan'))
     expect(names(search)).toEqual([])
   })
 
   it('applies the text on top of the pills, by name or by hero', async () => {
     const search = setup()
-    search.addHero('alsa')
+    search.addPick(hero('alsa'))
     await type(search, 'squad')
     expect(names(search)).toEqual(['Alsa squad'])
     expect(search.results.value[0]!.name).toEqual({ pre: 'Alsa ', match: 'squad', post: '' })
@@ -179,10 +182,35 @@ describe('useSavedTeamSearch results', () => {
     expect(ringed(search, 0)).toEqual(new Set([ally('alsa'), ally('rolan')]))
   })
 
+  it('matches an artifact within one lineup, by pick or by text, and rings it', async () => {
+    const search = setup(() => [
+      team('Ally Blazing', [[ROLAN], [], [BLAZING, null]]),
+      team('Enemy Blazing', [[ROLAN], [ALSA], [null, BLAZING]]),
+      team('Bare', [[ROLAN]]),
+    ])
+    search.query.value = 'blaz'
+    expect(search.suggestions.value).toEqual([
+      { kind: 'artifact', slug: 'blazing', label: 'Blazing' },
+    ])
+    search.addPick({ kind: 'artifact', slug: 'blazing' })
+    expect(names(search)).toEqual(['Ally Blazing', 'Enemy Blazing'])
+    expect(ringed(search, 1)).toEqual(new Set([lineupArtifactKey(0, Team.ENEMY)]))
+
+    // Rolan fields Blazing only where both stand on the ally side.
+    search.addPick(hero('rolan'))
+    expect(names(search)).toEqual(['Ally Blazing'])
+    expect(ringed(search, 0)).toEqual(new Set([ally('rolan'), lineupArtifactKey(0, Team.ALLY)]))
+
+    search.clear()
+    await type(search, 'blaz')
+    expect(names(search)).toEqual(['Ally Blazing', 'Enemy Blazing'])
+    expect(ringed(search, 0)).toEqual(new Set([lineupArtifactKey(0, Team.ALLY)]))
+  })
+
   it('hands a card the same ring set across a filter pass', () => {
     const source = shallowRef(TEAMS)
     const search = setup(() => source.value)
-    search.addHero('rolan')
+    search.addPick(hero('rolan'))
     const rings = ringed(search, 0)
 
     source.value = [...TEAMS].reverse()
