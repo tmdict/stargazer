@@ -50,7 +50,7 @@ interface Lineup {
   artifact: string | null
 }
 
-export type SearchKind = 'hero' | 'artifact'
+type SearchKind = 'hero' | 'artifact'
 
 // A picked or suggested hero or artifact: its slug (an artifact's name) and
 // its chrome-locale name.

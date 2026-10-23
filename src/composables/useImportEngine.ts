@@ -10,9 +10,8 @@
  * through `addFiles`, which sorts each before the import places it. The
  * references come in two parts (lib/import/kinds), each fetched once per
  * visit, and every reading worker holds its own copy of each. Images never
- * leave the device: the
- * references are fetched, the screenshots are drawn to a canvas and handed to
- * the workers as pixels. */
+ * leave the device: the references are fetched, the screenshots are drawn to
+ * a canvas and handed to the workers as pixels. */
 
 import {
   computed,
@@ -502,7 +501,7 @@ const sortShot = async (file: Blob, replay: boolean): Promise<ImportKind | null>
 
 // A reader started with its own copy of every part fetched so far; later parts
 // reach it as they load.
-const startReader = (): Reader => {
+const startReader = (): void => {
   const reader: Reader = {
     worker: new Worker(new URL('../workers/import.worker.ts', import.meta.url), {
       type: 'module',
@@ -514,7 +513,6 @@ const startReader = (): Reader => {
   reader.worker.onerror = () => dropReader(reader, 'worker')
   readers.push(reader)
   for (const part of PARTS) postPart(reader, part)
-  return reader
 }
 
 /* A reader that fails is dropped, and the shot it was reading goes with it;

@@ -1,9 +1,7 @@
-/* The screenshot imports' modals: the parts both lay out alike (header, drop
- * sections, screenshot lists, labels and fields, review section, footer),
- * under the .import class each
- * modal's root takes, and loaded with the modals. The pickers' Remove line is
- * rendered inside the teleported popup, so it goes by its own class and takes
- * the popup's palette rather than the modal's --import-* tokens. */
+/* The parts both screenshot import modals lay out alike, under the .import
+ * class each modal's root takes. The pickers' Remove line renders in a
+ * teleported popup outside .import, so it goes by its own class and the
+ * popup's palette. */
 
 .import {
   display: flex;
