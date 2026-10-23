@@ -15,7 +15,7 @@ defineProps<{ label: string }>()
 <style scoped>
 .side-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   margin-bottom: var(--spacing-sm);

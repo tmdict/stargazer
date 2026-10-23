@@ -24,13 +24,17 @@ const i18n = useI18nStore()
 <style scoped>
 .place-count {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 3px;
   flex: none;
   font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--import-warn);
+}
+
+.place-count svg {
+  align-self: center;
 }
 
 .place-count.done {
