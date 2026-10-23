@@ -702,9 +702,6 @@ const handleForgetLearned = (): void => {
   border-radius: var(--radius-medium);
   background: rgba(255, 255, 255, 0.07);
   color: var(--import-text);
-}
-
-.toggle {
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
