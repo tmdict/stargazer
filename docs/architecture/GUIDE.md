@@ -52,9 +52,9 @@ The page shows Stargazer's own controls in dark, and draws the set in the dark s
 
 ### The chooser
 
-`chooseSlSet` is a port of the generator's own chooser, and the audit compares the two on hundreds of random selections, so it keeps that code's order of arithmetic and every sort's tie order: a change that is harmless in isolation fails the audit. Ties between teams break by `rank` and between swaps by `order`, both from the file. It imports types alone, since the audit loads the file in Node by stripping its types. A team is judged from its comp's strength, then the comp's record on its map, then its own games, each step starting from the one before with `prior` notional games, and its chance is averaged over how unsure that estimate is. Each team's chance is moved by its upgrade gap against an opponent at the top levels, priced in Rivalry points by `prices` and scaled by `theta`. A complete search keeps the set with the best chance to win three maps.
+`chooseSlSet` is a port of the generator's own chooser, and the audit compares the two on hundreds of random selections, so it keeps that code's order of arithmetic and every sort's tie order: a change that is harmless in isolation fails the audit. Ties between teams break by `rank` and between swaps by `order`, both from the file. It imports types alone, since the audit loads the file in Node by stripping its types. A team is judged from its comp's strength, then the comp's record on its map, then its own games, each step starting from the one before with `prior` notional games, and its chance is averaged over how unsure that estimate is. Each team's chance is moved by its upgrade gap against an opponent at the top levels, priced in Rivalry points by `prices` and scaled by this season's `theta`, last season's teams included, since `prices` are the prices this season's `theta` was measured with. A complete search keeps the set with the best chance to win three maps.
 
-Last season's teams (`before`) join when the selection holds fewer than `beforeUnder` Celestial and Hypogean heroes that some recorded team holds, so a new hero with no records cannot keep them out, and whenever this season's teams alone make no set. Such a team is judged on its own season's numbers and takes this season's artifact, the first of `like` that no team before it in the set holds.
+Last season's teams (`before`) join when the selection holds fewer than `beforeUnder` Celestial and Hypogean heroes that some recorded team holds, so a new hero with no records cannot keep them out, and whenever this season's teams alone make no set. Such a team is judged on its own season's games and numbers, its upgrade gap aside, and takes this season's artifact, the first of `like` that no team before it in the set holds.
 
 ### Seasons and rotations
 
@@ -66,21 +66,21 @@ The page draws each map's board from the encoded team `slTeamData` builds, the s
 
 The file is UTF-8 JSON compressed with raw deflate, each byte then XORed with a mulberry32 keystream from the seed in `src/lib/pvp/sl/codec.ts`, which the writer holds too. It keeps the file from reading as data in the network panel and protects nothing, since the decoder is public. `decodeSlData` refuses a file of another shape whole, and the page keeps the decoded data in a plain variable, out of any store. A load that fails, as in a tab left open across a deploy, reloads the page once through `reloadOntoCurrentBuild` ([Pre-Rendering](./PRE_RENDERING.md)), then shows one line. The file carries no version field: it and the code that reads it reach visitors in the same deploy, and the unit test reads the shipped file.
 
-| Field                   | Meaning                                                                                                                                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `season`, `exportedAt`  | The records' season and the date of the export behind them (YYYY-MM-DD).                                                                                                                                                                                            |
-| `maps`                  | The Supreme League maps in order, each once: its arena key and its tile lists as the arena files have them. A team's `map` indexes it.                                                                                                                              |
-| `theta`, `oneOffStart`  | The season's upgrade effect per Rivalry point on a team's log-odds, and the chance a team outside every group starts from.                                                                                                                                          |
-| `prior`, `alpha`        | The notional games every chance starts with, and the weight of use against results when a team's board is chosen.                                                                                                                                                   |
-| `evidence`              | What a team needs to be picked, the strict rule then the relaxed one: its group's decided games on the map, its players or its own decided games, and whether a team outside every group may be picked.                                                             |
-| `flex`                  | How many heroes get swaps, and how many swaps each.                                                                                                                                                                                                                 |
-| `prices`                | Each level's Rivalry points, paragon by faction and refinement for all, the level being the index. Each list has one entry per level Stargazer offers, and the opponent stands at the last.                                                                         |
-| `order`                 | Every hero id the file names, in plain string order of their English names.                                                                                                                                                                                         |
-| `games`                 | Every recorded league game on these maps: the team's index, `w`, `l` or `t`, the upgrade gap toward the team in Rivalry points, and the opponent's log rating.                                                                                                      |
-| `teams`                 | Every five-hero team on one map: its map, group (`family`, null outside every group), hero ids, tie `rank`, players, games, the decided games behind its board (`lineup`), its artifacts with the share of its boards that used each, and its placements.           |
-| `teams[].placements`    | Each recorded placement with its games, use, players, set-ups, agreement and tie `order`. `c` holds the heroes and their companions as `[tile, id]` (a companion as N × 10000 plus its hero's id), `s` the phantimal and its companions, tiles from the ally side.  |
-| `families`              | Every team group: its name by language code (a missing language names it by its `core`), its chance against the average opponent and that chance's spread in log-odds, its core heroes, its recorded teams with their chances (`swaps`) and its record on each map. |
-| `before`, `beforeUnder` | Last season's teams on these maps with its own `season`, `theta`, `oneOffStart`, `games` and `families`, its teams carrying `like` (this season's artifacts it can take, best first) instead of `artifacts`. Absent when there is no such season.                   |
+| Field                   | Meaning                                                                                                                                                                                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `season`, `exportedAt`  | The records' season and the date of the export behind them (YYYY-MM-DD).                                                                                                                                                                                              |
+| `maps`                  | The Supreme League maps in order, each once: its arena key and its tile lists as the arena files have them. A team's `map` indexes it.                                                                                                                                |
+| `theta`, `oneOffStart`  | The season's upgrade effect per Rivalry point on a team's log-odds, which scales every team's upgrade gap, last season's included, and the chance a team outside every group starts from.                                                                             |
+| `prior`, `alpha`        | The notional games every chance starts with, and the weight of use against results when a team's board is chosen.                                                                                                                                                     |
+| `evidence`              | What a team needs to be picked, the strict rule then the relaxed one: its group's decided games on the map, its players or its own decided games, and whether a team outside every group may be picked.                                                               |
+| `flex`                  | How many heroes get swaps, and how many swaps each.                                                                                                                                                                                                                   |
+| `prices`                | Each level's Rivalry points, paragon by faction and refinement for all, the level being the index. Each list has one entry per level Stargazer offers, and the opponent stands at the last.                                                                           |
+| `order`                 | Every hero id the file names, in plain string order of their English names.                                                                                                                                                                                           |
+| `games`                 | Every recorded league game on these maps: the team's index, `w`, `l` or `t`, the upgrade gap toward the team in Rivalry points, and the opponent's log rating.                                                                                                        |
+| `teams`                 | Every five-hero team on one map: its map, group (`family`, null outside every group), hero ids, tie `rank`, players, games, the decided games behind its board (`lineup`), its artifacts with the share of its boards that used each, and its placements.             |
+| `teams[].placements`    | Each recorded placement with its games, use, players, set-ups, agreement and tie `order`. `c` holds the heroes and their companions as `[tile, id]` (a companion as N × 10000 plus its hero's id), `s` the phantimal and its companions, tiles from the ally side.    |
+| `families`              | Every team group: its name by language code (a missing language names it by its `core`), its chance against the average opponent and that chance's spread in log-odds, its core heroes, its recorded teams with their chances (`swaps`) and its record on each map.   |
+| `before`, `beforeUnder` | Last season's teams on these maps with its own `season`, `theta` (for its own games), `oneOffStart`, `games` and `families`, its teams carrying `like` (this season's artifacts it can take, best first) instead of `artifacts`. Absent when there is no such season. |
 
 A complete example, each list cut to one or two entries:
 
@@ -108,8 +108,8 @@ A complete example, each list cut to one or two entries:
       }
     }
   ],
-  "theta": 0.0377862658715483,
-  "oneOffStart": 0.29429106938094785,
+  "theta": 0.03498973087535196,
+  "oneOffStart": 0.29540868177404,
   "prior": 20,
   "alpha": 0.3,
   "evidence": [
@@ -127,7 +127,7 @@ A complete example, each list cut to one or two entries:
       "celestial": [4, 7.5, 11, 14.5, 18],
       "dimensional": [0, 4.5, 9, 13.5, 18]
     },
-    "refinement": [0, 0.8571428571428571, 3.8571428571428568, 4.714285714285714, 7.7142857142857135]
+    "refinement": [0, 1, 4.5, 5.5, 9]
   },
   "order": [91, 100],
   "games": [[0, "w", 32.9, -0.6070737875427862]],

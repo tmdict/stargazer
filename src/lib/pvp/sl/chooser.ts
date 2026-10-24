@@ -95,14 +95,18 @@ function choose(
   }
   const gap = (team: number[]): number => -team.reduce((n, id) => n + shortfall(id), 0)
 
+  // The gap is priced at `data.prices`, which this season's effect was fitted
+  // with, so it weighs the season before's teams too; each season's own effect
+  // still reads its own games (judge).
+  const { theta } = data
   // A swap's rate, moved by its upgrade gap alone.
-  const shifted = (s: Season, rate: number, heroes: number[]): number => {
+  const shifted = (rate: number, heroes: number[]): number => {
     const points = gap(heroes)
-    return points ? sigmoid(Math.log(rate / (1 - rate)) + s.theta * points) : rate
+    return points ? sigmoid(Math.log(rate / (1 - rate)) + theta * points) : rate
   }
   // A rate averaged over the spread of its log-odds (the probit approximation).
-  const chanceOf = (s: Season, t: Option): number =>
-    sigmoid((t.logit + s.theta * gap(t.heroes)) / Math.sqrt(1 + (Math.PI * t.spread2) / 8))
+  const chanceOf = (t: Option): number =>
+    sigmoid((t.logit + theta * gap(t.heroes)) / Math.sqrt(1 + (Math.PI * t.spread2) / 8))
   const rated = (s: Season, ids: number[]): Rated[] =>
     ids.map((i) => ({ won: s.games[i]![1] === 'w', gap: s.games[i]![2], opponent: s.games[i]![3] }))
   const slope = (x: number): number => sigmoid(x) * (1 - sigmoid(x))
@@ -172,7 +176,7 @@ function choose(
                   t.wins + t.losses >= 1 &&
                   (t.players >= proof.players || t.wins + t.losses >= proof.games),
               )
-              .map((t) => ({ ...t, chance: chanceOf(s, t) }))
+              .map((t) => ({ ...t, chance: chanceOf(t) }))
           })
         })
         .sort(byChance),
@@ -301,7 +305,7 @@ function choose(
       const out = dropped[0]!
       if (elsewhere.has(hero) || excluded(hero)) continue
       if (!swaps.has(out)) swaps.set(out, [])
-      swaps.get(out)!.push({ hero, chance: shifted(sources[t.source]!, rate, team) })
+      swaps.get(out)!.push({ hero, chance: shifted(rate, team) })
     }
     const all = [...swaps]
       .map(([out, found]) => {
