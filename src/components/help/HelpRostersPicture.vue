@@ -50,7 +50,7 @@ const HEROES = [
               label('new')
             }}</span>
           </span>
-          <span class="control-btn compact">
+          <span class="control-btn compact secondary">
             <IconUpload :size="13" class="btn-icon" /><span class="btn-text">{{
               label('import')
             }}</span>

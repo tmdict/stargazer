@@ -43,17 +43,17 @@ const chips = computed((): { choice: AttrLayerChoice; label: string; name: strin
 <style scoped>
 .layer-chips {
   display: inline-flex;
-  gap: 6px;
+  gap: calc(6px * var(--dock-scale));
 }
 
 .layer-chip {
   border: 1.5px solid var(--color-border-primary);
   background: var(--color-bg-white);
   border-radius: 999px;
-  font-size: 0.64rem;
+  font-size: calc(0.64rem * var(--dock-scale));
   font-weight: 800;
-  padding: 2px 13px;
-  min-height: 22px;
+  padding: calc(2px * var(--dock-scale)) calc(13px * var(--dock-scale));
+  min-height: calc(22px * var(--dock-scale));
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);

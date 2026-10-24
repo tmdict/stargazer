@@ -31,6 +31,8 @@
   /* Upgrade dock chips: their fill, and on hover. */
   --dock-chip-fill: rgba(0, 0, 0, 0.09);
   --dock-chip-fill-hover: rgba(0, 0, 0, 0.14);
+  /* A host sets it to scale an upgrade dock's chips, labels and spacing. */
+  --dock-scale: 1;
 
   /* Team Colors */
   --color-ally: #36958e;
@@ -125,6 +127,7 @@
   --control-font-size: 0.85rem;
   --control-font-weight: 600;
   --control-height: 36px;
+  --control-height-compact: 32px;
   --control-height-tablet: 34px;
   --control-height-mobile: 30px;
   --toggle-chip-padding-tablet: 5px 11px;

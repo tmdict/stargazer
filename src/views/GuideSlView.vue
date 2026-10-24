@@ -298,7 +298,10 @@ const save = (): void => {
   display: none;
 }
 
+/* The roster controls a size above the Rosters tab's. */
 .sl-picker {
+  --control-height-compact: var(--control-height);
+  --dock-scale: 1.4;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -314,6 +317,12 @@ const save = (): void => {
   }
   .sl-picker {
     padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sl-picker {
+    --dock-scale: 1;
   }
 }
 </style>

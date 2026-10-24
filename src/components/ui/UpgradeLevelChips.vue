@@ -51,20 +51,20 @@ const levels = computed(() => Array.from({ length: max.value + 1 }, (_, level) =
 <style scoped>
 .level-chips {
   display: inline-flex;
-  gap: 5px;
+  gap: calc(5px * var(--dock-scale));
 }
 
 .level-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 27px;
-  height: 20px;
-  padding: 0 5px;
+  min-width: calc(27px * var(--dock-scale));
+  height: calc(20px * var(--dock-scale));
+  padding: 0 calc(5px * var(--dock-scale));
   border: none;
   border-radius: 999px;
   font: inherit;
-  font-size: 10px;
+  font-size: calc(10px * var(--dock-scale));
   font-weight: 800;
   letter-spacing: 0.02em;
   color: var(--upgrade-pill-gray-text);

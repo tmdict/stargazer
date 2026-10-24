@@ -16,7 +16,7 @@
 .upgrade-dock {
   display: flex;
   align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: calc(var(--spacing-sm) * var(--dock-scale)) calc(var(--spacing-md) * var(--dock-scale));
   background: var(--color-bg-white);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-large);

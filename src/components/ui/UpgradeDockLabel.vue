@@ -4,7 +4,7 @@
 
 <style scoped>
 .dock-label {
-  font-size: 0.55rem;
+  font-size: calc(0.55rem * var(--dock-scale));
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;

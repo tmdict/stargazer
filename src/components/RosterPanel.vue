@@ -147,7 +147,7 @@ const {
         />
         <button
           type="button"
-          class="control-btn compact"
+          class="control-btn compact secondary"
           :aria-label="i18n.t('app.import')"
           @click="fileInput?.click()"
           @mouseenter="showTip($event, 'app.tooltip-rosters-import')"
@@ -160,7 +160,7 @@ const {
         <button
           v-if="rosters.count > 0"
           type="button"
-          class="control-btn compact"
+          class="control-btn compact secondary"
           :aria-label="i18n.t('app.export')"
           @click="download(rosters.exportRosters())"
           @mouseenter="showTip($event, 'app.tooltip-rosters-export')"
@@ -217,9 +217,16 @@ const {
 
 <style scoped>
 .roster-panel {
+  --dock-scale: 1.2;
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
+}
+
+@media (max-width: 480px) {
+  .roster-panel {
+    --dock-scale: 1.1;
+  }
 }
 
 .roster-bar {
