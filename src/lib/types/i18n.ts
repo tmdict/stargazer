@@ -27,7 +27,7 @@ export function isAppLocale(value: string): value is AppLocale {
 }
 
 export interface SkillLocaleDef {
-  /** Lowercase BCP-47 code: the feed's and the locale dir's name, URL prefix, hreflang, html lang. */
+  /** Lowercase BCP-47 code: feed and locale dir name, URL prefix, hreflang, html lang. */
   code: SkillLocale
   /** Native-language label shown in the skill-locale menu. */
   native: string
