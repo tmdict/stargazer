@@ -8,7 +8,7 @@
    pre-rendered with its heading alone: the picker and the set follow the
    visitor's rosters, which the browser holds, so they are drawn after mount. */
 
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import SlBar from '@/components/guide/sl/SlBar.vue'
@@ -37,6 +37,8 @@ import { useRosters } from '@/stores/rosters'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { setupSlContentMeta } from '@/utils/contentMeta'
 
+import '@/components/guide/sl/sl.css'
+
 const i18n = useI18nStore()
 setupSlContentMeta(computed(() => i18n.currentLocale))
 
@@ -60,8 +62,12 @@ const heading = ref<{ season: number; date: string; rotation: boolean; retired: 
 const failed = ref(false)
 const mounted = ref(false)
 
+// Floating lists leave the page for <body> (sl.css).
+onUnmounted(() => document.documentElement.classList.remove('sl-page-open'))
+
 onMounted(async () => {
   mounted.value = true
+  document.documentElement.classList.add('sl-page-open')
   try {
     data = await loadSlData()
   } catch {
@@ -188,74 +194,79 @@ const save = (): void => {
 </script>
 
 <template>
-  <main>
-    <section class="section sl-page">
-      <header class="sl-head">
-        <h1>{{ i18n.t('app.sl-title') }}</h1>
-        <p v-if="heading" class="sl-records">
-          {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
-        </p>
-        <p class="sl-intro">{{ i18n.t('app.sl-intro') }}</p>
-        <p v-if="heading?.retired" class="sl-note">{{ i18n.t('app.sl-previous-season') }}</p>
-        <p v-else-if="heading?.rotation" class="sl-note">
-          {{ i18n.t('app.sl-previous-rotation') }}
-        </p>
-        <p v-if="failed" class="sl-note">{{ i18n.t('app.sl-load-failed') }}</p>
-      </header>
+  <main class="sl-page">
+    <header class="sl-head">
+      <h1>{{ i18n.t('app.sl-title') }}</h1>
+      <p v-if="heading">
+        {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
+      </p>
+    </header>
+    <p class="sl-line">{{ i18n.t('app.sl-intro') }}</p>
+    <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.sl-previous-season') }}</p>
+    <p v-else-if="heading?.rotation" class="sl-line sl-note">
+      {{ i18n.t('app.sl-previous-rotation') }}
+    </p>
+    <p v-if="failed" class="sl-line sl-note">{{ i18n.t('app.sl-load-failed') }}</p>
 
-      <div v-if="mounted" ref="result" class="sl-result-slot">
-        <SlResult v-if="shown" :shown @save="save" />
-        <p v-else-if="noSet" class="sl-none">{{ i18n.t('app.sl-no-set') }}</p>
-      </div>
+    <div v-if="mounted" ref="result" class="sl-result-slot">
+      <SlResult v-if="shown" :shown @save="save" />
+      <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set') }}</p>
+    </div>
 
-      <div v-if="mounted" class="sl-picker">
-        <SlBar :busy :ready="!!heading" @generate="generate" />
-        <RosterEditor
-          :heroes
-          :levels="copy"
-          :source-key="rosters.activeId"
-          :armed-confirm
-          @edit="edit"
-        />
-      </div>
+    <section v-if="mounted" class="sl-picker">
+      <SlBar :busy :ready="!!heading" @generate="generate" />
+      <RosterEditor
+        :heroes
+        :levels="copy"
+        :source-key="rosters.activeId"
+        :armed-confirm
+        @edit="edit"
+      />
     </section>
   </main>
 </template>
 
 <style scoped>
 .sl-page {
-  gap: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 24px 48px;
+  border-radius: var(--section-radius);
 }
 
 .sl-head {
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .sl-head h1 {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 700;
+  text-align: left;
+  color: var(--sl-fg);
 }
 
-.sl-head p {
-  margin: 6px auto 0;
-  max-width: 70ch;
-  font-size: 0.9rem;
+.sl-head p,
+.sl-line {
+  margin: 0;
+  font-size: 14px;
   line-height: 1.5;
-  color: var(--color-text-secondary);
+  color: var(--sl-dim);
 }
 
-.sl-head .sl-records {
-  margin-top: 2px;
-  font-size: 0.85rem;
-}
-
-.sl-head .sl-note {
-  color: var(--color-danger);
+.sl-line.sl-note {
+  color: var(--sl-bad);
 }
 
 .sl-result-slot {
+  margin: 4px 0;
   scroll-margin-top: var(--spacing-lg);
 }
 
@@ -263,14 +274,22 @@ const save = (): void => {
   display: none;
 }
 
-.sl-none {
-  margin: 0;
-  color: var(--color-text-secondary);
-}
-
 .sl-picker {
   display: flex;
   flex-direction: column;
-  gap: var(--picker-row-gap);
+  gap: 14px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--sl-line2);
+  border-radius: 14px;
+  background: var(--sl-panel);
+}
+
+@media (max-width: 768px) {
+  .sl-page {
+    padding: 16px 16px 40px;
+  }
+  .sl-picker {
+    padding: 12px;
+  }
 }
 </style>

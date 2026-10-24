@@ -37,7 +37,6 @@ import { computed, ref } from 'vue'
 
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
-import IconHelp from '@/components/ui/IconHelp.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { teamPreviewBoards } from '@/lib/teams/preview'
@@ -62,12 +61,12 @@ const {
 </script>
 
 <template>
-  <section class="sl-result">
-    <div class="sl-result-head">
+  <section class="sl-band">
+    <div class="sl-band-head">
       <span class="sl-chance">
         <button
           type="button"
-          class="sl-chance-label"
+          class="sl-help"
           @mouseenter="tipOpen"
           @mouseleave="tipClose"
           @focus="tipOpen"
@@ -75,16 +74,15 @@ const {
           @click="tipToggle"
           @touchstart.passive="tipTouchStart"
         >
-          {{ i18n.t('app.sl-chance') }}
-          <IconHelp :size="14" />
+          {{ i18n.t('app.sl-chance') }}<span aria-hidden="true" />
         </button>
-        <b class="sl-chance-value">{{ slPercent(shown.chance) }}</b>
+        <b>{{ slPercent(shown.chance) }}</b>
       </span>
       <span class="sl-actions">
-        <button type="button" class="solid-btn secondary sl-action" @click="explaining = true">
+        <button type="button" class="sl-btn" @click="explaining = true">
           {{ i18n.t('app.sl-explain') }}
         </button>
-        <button type="button" class="solid-btn sl-action" @click="emit('save')">
+        <button type="button" class="sl-btn" @click="emit('save')">
           {{ i18n.t('app.sl-save') }}
         </button>
       </span>
@@ -99,7 +97,7 @@ const {
         v-if="tipAnchor"
         :target-element="tipAnchor"
         variant="detailed"
-        max-width="280px"
+        max-width="290px"
       >
         <template #content>{{ i18n.t('app.sl-chance-tip') }}</template>
       </TooltipPopup>
@@ -108,84 +106,108 @@ const {
 </template>
 
 <style scoped>
-.sl-result {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+.sl-band {
+  border: 1px solid var(--sl-line2);
+  border-radius: 14px;
+  background: var(--sl-panel);
+  overflow: hidden;
   container-type: inline-size;
 }
 
-.sl-result-head {
+.sl-band-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
+  gap: 8px 14px;
+  padding: 9px 18px;
+  background: var(--sl-panel2);
+  border-bottom: 1px solid var(--sl-line2);
+  font-size: 20px;
 }
 
 .sl-chance {
   display: inline-flex;
   align-items: baseline;
-  gap: var(--spacing-md);
+  gap: 10px;
+  color: var(--sl-dim);
 }
 
-.sl-chance-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.sl-chance b {
+  color: var(--sl-fg);
+  font-size: 24px;
+}
+
+/* The report's help mark: a question mark in a small ring after the label. */
+.sl-help {
   padding: 0;
   border: 0;
   background: none;
   font: inherit;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
+  color: inherit;
+  white-space: nowrap;
   cursor: help;
 }
 
-.sl-chance-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+.sl-help > span {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border: 1px solid var(--sl-line2);
+  border-radius: 50%;
+  vertical-align: calc(0.5cap - 7px);
+}
+
+.sl-help > span::before {
+  content: '?';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.sl-help:focus-visible {
+  outline: 2px solid var(--sl-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .sl-actions {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
-}
-
-.sl-action {
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.sl-action.secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-primary);
-}
-
-.sl-action.secondary:hover {
-  background: var(--color-bg-tertiary);
+  gap: 6px;
 }
 
 .sl-maps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--spacing-xl) var(--spacing-lg);
+  gap: 14px;
+  padding: 12px 16px 16px;
 }
 
-/* Two to a row on a phone, three on a tablet. */
-@container (max-width: 900px) {
+/* Three to a row on a tablet and two on a phone, with smaller portraits. */
+@container (max-width: 1100px) {
   .sl-maps {
+    --pt: 34px;
+    --pt-gap: 8px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 24px;
   }
 }
 
-@container (max-width: 560px) {
+@container (max-width: 600px) {
   .sl-maps {
+    --pt: 26px;
+    --pt-gap: 5px;
+    --sl-aside-offset: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--spacing-md);
+    gap: 20px 10px;
+    padding: 10px;
   }
 }
 </style>

@@ -80,7 +80,7 @@ const {
     </span>
     <button
       type="button"
-      class="solid-btn sl-generate"
+      class="sl-btn sl-go"
       :disabled="!ready || busy"
       :aria-busy="busy"
       @click="emit('generate')"
@@ -114,20 +114,5 @@ const {
 
 .file-input {
   display: none;
-}
-
-.sl-generate {
-  min-height: var(--control-height);
-  padding: var(--spacing-xs) var(--spacing-xl);
-  font-size: var(--control-font-size);
-}
-
-.sl-generate:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.sl-generate[aria-busy='true'] {
-  cursor: progress;
 }
 </style>
