@@ -10,8 +10,8 @@
 //
 // Everything hand-written is linted against the feed instead of generated:
 // existence both ways, dir placement matching the feed's set, id, season and
-// stat values matching the feed's, and a name locale file per artifact. A balance patch
-// fails the import loudly instead of drifting silently.
+// stat values matching the feed's, and a name locale file per artifact. A
+// balance patch fails the import loudly instead of drifting silently.
 //
 // Usage:
 //   npm run import:artifacts                          # reads DATA_FEED_DIR/<code>/artifacts.json
@@ -184,9 +184,7 @@ async function main() {
           `the feed says id ${entry.id} in season ${entry.season}`,
       )
     }
-    const expected = Object.fromEntries(
-      entry.statBonuses.map(({ stat, value }) => [stat, value]),
-    ) as Record<string, number>
+    const expected = Object.fromEntries(entry.statBonuses.map(({ stat, value }) => [stat, value]))
     const actual = structural.stats ?? {}
     const keys = new Set([...Object.keys(expected), ...Object.keys(actual)])
     for (const key of keys) {
