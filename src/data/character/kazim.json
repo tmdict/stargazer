@@ -11,9 +11,9 @@
   "tags": {
     "airborne": [
       { "ultimate": 1, "mods": ["kazim"] },
-      { "skill2": 1, "mods": ["kazim"] },
       { "skill3": 1, "mods": ["kazim"] },
-      { "ex": 1, "mods": ["kazim"] }
+      { "ex": 3, "mods": ["kazim"] },
+      { "awakening": 1, "mods": ["kazim"] }
     ],
     "haste": [{ "skill3": 1, "mods": ["global", "opening"] }],
     "temp-buff": [{ "skill3": 1, "mods": ["global", "opening", "orion", "perseus"] }]
