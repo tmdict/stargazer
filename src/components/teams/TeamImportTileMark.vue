@@ -66,10 +66,6 @@ const GAP = 0.045
   opacity: 0.85;
 }
 
-.tile-mark.preview {
-  opacity: 0.75;
-}
-
 .ring {
   fill: none;
   stroke: #fff;
