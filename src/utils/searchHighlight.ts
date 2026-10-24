@@ -1,7 +1,7 @@
 import { HIGHLIGHT_RE, splitHighlightToken, STAT_TAG_RE, statLabel } from './textHighlight'
 
 /** Strips display-only tokens from skill descriptions: `[[value]]` and
- * `[[label|key]]` collapse to their visible text, `<TAG>` is dropped. Search +
+ * `[[label|key]]` collapse to their visible text, `{stat}` is dropped. Search +
  * snippet rendering both operate on the cleaned form. */
 export function cleanSkillText(raw: string): string {
   return raw
@@ -28,12 +28,12 @@ function findMatch(text: string, query: string): { start: number; end: number } 
 }
 
 /** One run of skill text: a plain stretch, a `[[value]]` highlight, or a
- * `<TAG>` stat chip; plain and value runs are flagged when they fall inside
+ * `{stat}` stat chip; plain and value runs are flagged when they fall inside
  * the query match. */
 export interface RichPiece {
   text: string
   kind: 'plain' | 'value' | 'stat'
-  /** Lowercased stat tag, for the chip's color class. */
+  /** The stat tag, for the chip's color class. */
   tag?: string
   marked: boolean
 }
@@ -51,8 +51,7 @@ export function renderRichText(raw: string, query: string): RichPiece[] {
   for (const m of raw.matchAll(new RegExp(`${HIGHLIGHT_RE.source}|${STAT_TAG_RE.source}`, 'g'))) {
     if (m.index > last) pushText(raw.slice(last, m.index), 'plain')
     if (m[1] !== undefined) pushText(splitHighlightToken(m[1]).label, 'value')
-    else if (m[2] !== undefined)
-      segments.push({ text: statLabel(m[2]), kind: 'stat', tag: m[2].toLowerCase() })
+    else if (m[2] !== undefined) segments.push({ text: statLabel(m[2]), kind: 'stat', tag: m[2] })
     last = m.index + m[0].length
   }
   if (last < raw.length) pushText(raw.slice(last), 'plain')
