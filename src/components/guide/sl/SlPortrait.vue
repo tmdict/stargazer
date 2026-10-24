@@ -30,7 +30,7 @@ const slug = computed(() => gameData.getCharacterNameById(id) ?? '')
   width: var(--pt, 40px);
   height: var(--pt, 40px);
   border-radius: 50%;
-  border: 1px solid var(--sl-line);
+  border: 1px solid var(--color-border-light);
   background: #555;
   overflow: hidden;
 }

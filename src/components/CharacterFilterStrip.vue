@@ -13,8 +13,9 @@ const mechanicFilter = defineModel<MechanicPick | null>('mechanicFilter', { defa
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  // `characters` with the icon filters applied: what the mechanics menu counts in.
-  mechanicPool: readonly CharacterType[]
+  // `characters` with the icon filters applied: what the mechanics menu counts
+  // in. Without it the strip has no mechanics menu.
+  mechanicPool?: readonly CharacterType[]
 }>()
 
 const optionsOf = (pick: (c: CharacterType) => string) =>
@@ -47,9 +48,9 @@ function handleStripClick(e: MouseEvent) {
 
 <template>
   <div class="filter-strip" :class="{ resettable: hasActiveFilter }" @click="handleStripClick">
-    <div class="menus-row">
+    <div v-if="$slots.menus || mechanicPool" class="menus-row">
       <slot name="menus" />
-      <CharacterFilterMechanics v-model="mechanicFilter" :pool="mechanicPool" />
+      <CharacterFilterMechanics v-if="mechanicPool" v-model="mechanicFilter" :pool="mechanicPool" />
     </div>
     <div class="icons-row">
       <FilterIcons

@@ -195,7 +195,7 @@ const handleDragEnd = (event: DragEvent) => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 0 5px #fff;
+  box-shadow: 0 0 0 5px var(--hero-icon-ring);
 }
 
 .character-display::before {
@@ -298,7 +298,7 @@ const handleDragEnd = (event: DragEvent) => {
 .tick.on {
   background: var(--color-primary);
   box-shadow:
-    0 0 0 2px #fff,
+    0 0 0 2px var(--hero-icon-ring),
     0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
@@ -366,7 +366,7 @@ const handleDragEnd = (event: DragEvent) => {
   .character-display {
     width: 50px;
     height: 50px;
-    box-shadow: 0 0 0 3px #fff;
+    box-shadow: 0 0 0 3px var(--hero-icon-ring);
   }
 
   .character-display.ticked {

@@ -107,9 +107,9 @@ const {
 
 <style scoped>
 .sl-band {
-  border: 1px solid var(--sl-line2);
+  border: 1px solid var(--color-border-primary);
   border-radius: 14px;
-  background: var(--sl-panel);
+  background: var(--color-bg-primary);
   overflow: hidden;
   container-type: inline-size;
 }
@@ -121,8 +121,8 @@ const {
   flex-wrap: wrap;
   gap: 8px 14px;
   padding: 9px 18px;
-  background: var(--sl-panel2);
-  border-bottom: 1px solid var(--sl-line2);
+  background: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border-primary);
   font-size: 20px;
 }
 
@@ -130,11 +130,11 @@ const {
   display: inline-flex;
   align-items: baseline;
   gap: 10px;
-  color: var(--sl-dim);
+  color: var(--color-text-secondary);
 }
 
 .sl-chance b {
-  color: var(--sl-fg);
+  color: var(--color-text-primary);
   font-size: 24px;
 }
 
@@ -155,7 +155,7 @@ const {
   width: 14px;
   height: 14px;
   margin-left: 4px;
-  border: 1px solid var(--sl-line2);
+  border: 1px solid var(--color-border-primary);
   border-radius: 50%;
   vertical-align: calc(0.5cap - 7px);
 }
@@ -172,7 +172,7 @@ const {
 }
 
 .sl-help:focus-visible {
-  outline: 2px solid var(--sl-accent);
+  outline: 2px solid var(--color-primary);
   outline-offset: 3px;
   border-radius: 2px;
 }

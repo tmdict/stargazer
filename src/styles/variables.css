@@ -28,6 +28,10 @@
   --upgrade-pill-refinement-max: #ce756b;
   --upgrade-pill-rim: 0 0 0 1px rgba(255, 255, 255, 0.9);
 
+  /* Upgrade dock chips: their fill, and on hover. */
+  --dock-chip-fill: rgba(0, 0, 0, 0.09);
+  --dock-chip-fill-hover: rgba(0, 0, 0, 0.14);
+
   /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
@@ -178,6 +182,7 @@
   --palette-inset: 4px;
 
   --hero-icon-size: 70px;
+  --hero-icon-ring: #fff;
 
   --skill-popup-width: 960px;
 

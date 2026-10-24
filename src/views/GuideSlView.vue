@@ -4,12 +4,13 @@
    best chance to win a match (lib/pvp/sl). The picker edits a copy of the
    active roster, so trying a hero out never changes the roster, and picking
    or importing another roster takes a fresh copy. The set is chosen only on
-   Generate and stays as it is while the selection changes. The page is
-   pre-rendered with its heading alone: the picker and the set follow the
-   visitor's rosters, which the browser holds, so they are drawn after mount. */
+   Generate and stays as it is while the selection changes, and Save as team
+   opens the saved set on the Teams page. The page is pre-rendered with its
+   heading alone: the picker and the set follow the visitor's rosters, which
+   the browser holds, so they are drawn after mount. */
 
 import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import SlBar from '@/components/guide/sl/SlBar.vue'
 import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
@@ -47,6 +48,7 @@ gameData.initializeData()
 const rosters = useRosters()
 const library = useTeamLibrary()
 const route = useRoute()
+const router = useRouter()
 const { error, success } = useToast()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
@@ -178,7 +180,7 @@ const generate = async (): Promise<void> => {
 }
 
 // The saved team holds the levels the set was chosen with, not the levels
-// shown since.
+// shown since. A team kept only in memory still opens on the Teams page.
 const save = (): void => {
   if (!shown.value) return
   if (library.teams.length >= MAX_SAVED_TEAMS) {
@@ -187,9 +189,13 @@ const save = (): void => {
   }
   const name = i18n.t('app.sl-team-name', { chance: slPercent(shown.value.chance) })
   const team = library.saveAsNew('5v5', shown.value.data, name)
-  if (!team) error(i18n.t('app.team-unreadable'))
-  else if (!library.persisted) error(i18n.t('app.team-not-stored'))
+  if (!team) {
+    error(i18n.t('app.team-unreadable'))
+    return
+  }
+  if (!library.persisted) error(i18n.t('app.team-not-stored'))
   else success(i18n.t('app.team-saved', { name: team.name }))
+  void router.push({ path: '/teams', state: { openTeam: team.id } })
 }
 </script>
 
@@ -220,6 +226,7 @@ const save = (): void => {
         :levels="copy"
         :source-key="rosters.activeId"
         :armed-confirm
+        hide-mechanics
         @edit="edit"
       />
     </section>
@@ -250,7 +257,7 @@ const save = (): void => {
   line-height: 1.15;
   font-weight: 700;
   text-align: left;
-  color: var(--sl-fg);
+  color: var(--color-text-primary);
 }
 
 .sl-head p,
@@ -258,7 +265,7 @@ const save = (): void => {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--sl-dim);
+  color: var(--color-text-secondary);
 }
 
 .sl-line.sl-note {
@@ -279,9 +286,9 @@ const save = (): void => {
   flex-direction: column;
   gap: 14px;
   padding: 14px 16px 16px;
-  border: 1px solid var(--sl-line2);
+  border: 1px solid var(--color-border-primary);
   border-radius: 14px;
-  background: var(--sl-panel);
+  background: var(--color-bg-primary);
 }
 
 @media (max-width: 768px) {

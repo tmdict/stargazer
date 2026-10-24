@@ -155,7 +155,7 @@ const record = computed(() => {
 
 .sl-stat small {
   font-size: 13px;
-  color: var(--sl-dim);
+  color: var(--color-text-secondary);
 }
 
 .sl-stat .good {
@@ -169,12 +169,12 @@ const record = computed(() => {
 .sl-small-icon {
   width: 19px;
   height: 19px;
-  color: var(--sl-dim);
+  color: var(--color-text-secondary);
 }
 
 .sl-label {
   display: flex;
-  color: var(--sl-dim);
+  color: var(--color-text-secondary);
 }
 
 .sl-faces,
@@ -191,7 +191,7 @@ const record = computed(() => {
   width: 18px;
   height: 18px;
   margin: 0 6px;
-  color: var(--sl-accent);
+  color: var(--color-primary);
 }
 /* Two maps to a row on a phone (SlResult): the record takes smaller type and
    may wrap. */

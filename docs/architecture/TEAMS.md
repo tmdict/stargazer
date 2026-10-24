@@ -74,7 +74,7 @@ A field the reader does not know is ignored and dropped by the next write.
 5. Adopt the slot's `sourceId` if that saved team still exists.
 6. Resume autosave.
 
-Every whole-board apply (mode switch, slot restore, saved-team load, `?g=` link) goes through `restoreMultiFromEncodedState`, which handles board order, companion placement, duplicate repair across boards, and the phantimal baseline. A `?g=` link overwrites its mode's slot with `sourceId` null, because a shared link is nobody's saved team. A link that fails to decode or apply, or an Arena link, falls back to the saved slot.
+Every whole-board apply (mode switch, slot restore, saved-team load, `?g=` link) goes through `restoreMultiFromEncodedState`, which handles board order, companion placement, duplicate repair across boards, and the phantimal baseline. A `?g=` link overwrites its mode's slot with `sourceId` null, because a shared link is nobody's saved team. A link that fails to decode or apply, or an Arena link, falls back to the saved slot. The Supreme League generator's Save as team opens the page with the saved team's id in the history entry (`openTeam`): after the restore, that team loads as Load loads it, and the id is cleared from the entry so a reload keeps the edits made since.
 
 Autosave only writes after the page has started it, so a page that failed to load game data can never overwrite a slot. The page resets to the Arena's single board in `onScopeDispose`, which runs synchronously on unmount, so a hot reload cannot leave the board count wrong.
 
