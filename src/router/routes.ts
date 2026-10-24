@@ -5,7 +5,7 @@ import type {
   RouterScrollBehavior,
 } from 'vue-router'
 
-import { guidePath } from '@/lib/guide'
+import { guidePath, SL_GENERATOR_PATH } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
@@ -69,17 +69,26 @@ const CHUNK_ERROR_RE =
 // rethrow starves this handler of the destination.
 const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
 
+/* Loads `fullPath` afresh from the current build, once per URL: false when
+ * this URL was already recovered (or storage is refused), so the caller shows
+ * its failure instead. A page whose own data file a deploy replaced recovers
+ * through it too. */
+export function reloadOntoCurrentBuild(fullPath: string): boolean {
+  try {
+    if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === fullPath) return false
+    sessionStorage.setItem(CHUNK_RECOVERY_KEY, fullPath)
+  } catch {
+    return false
+  }
+  window.location.assign(fullPath)
+  return true
+}
+
 function installChunkErrorRecovery(router: Router): void {
   if (import.meta.env.SSR) return
   router.onError((error, to) => {
     if (!(error instanceof Error) || !CHUNK_ERROR_RE.test(error.message)) return
-    try {
-      if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === to.fullPath) return
-      sessionStorage.setItem(CHUNK_RECOVERY_KEY, to.fullPath)
-    } catch {
-      return
-    }
-    window.location.assign(to.fullPath)
+    reloadOntoCurrentBuild(to.fullPath)
   })
 }
 
@@ -137,6 +146,11 @@ export const routes: RouteRecordRaw[] = [
     path: guidePath('mechanics'),
     name: 'guide-mechanics',
     component: () => import('@/views/GuideMechanicsView.vue'),
+  },
+  {
+    path: SL_GENERATOR_PATH,
+    name: 'guide-sl',
+    component: () => import('@/views/GuideSlView.vue'),
   },
   // Help exists per app locale: its content is hand-written in those.
   ...APP_LOCALES.map((locale) => ({

@@ -142,9 +142,19 @@ export const useRosters = defineStore('rosters', () => {
   const exportRosters = (): RostersExportFile =>
     buildRostersExport(rosters.value, new Date().toISOString())
 
-  // Merge-only (lib/exportFile).
-  const importRosters = (raw: string): ImportOutcome =>
-    mutate((fresh) => importInto(fresh, parseRostersImport(raw, fresh), MAX_ROSTERS))
+  // Merge-only (lib/exportFile). The first roster the file adds becomes the
+  // active one, as a created roster does; a file that adds none changes nothing.
+  const importRosters = (raw: string): ImportOutcome => {
+    let added: string | undefined
+    const outcome = mutate((fresh) => {
+      const before = fresh.length
+      const result = importInto(fresh, parseRostersImport(raw, fresh), MAX_ROSTERS)
+      added = fresh[before]?.id
+      return result
+    })
+    if (added) setActive(added)
+    return outcome
+  }
 
   return {
     rosters,

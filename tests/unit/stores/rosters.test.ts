@@ -30,4 +30,23 @@ describe('rosters store', () => {
     // A blank name takes the next free automatic one.
     expect(rosters.create({ name: ' ' })?.name).toBe('Roster 3')
   })
+
+  it('makes the first roster a file adds the active one, and leaves it alone when it adds none', () => {
+    const rosters = useRosters()
+    const own = rosters.create({ name: 'Main account' })!
+    const file = (names: string[]) =>
+      JSON.stringify({
+        app: 'stargazer',
+        kind: 'rosters',
+        exportedAt: '2026-10-24T00:00:00.000Z',
+        rosters: names.map((name, i) => ({ id: `r${i}-${name}`, name, heroes: { [i + 1]: {} } })),
+      })
+
+    expect(rosters.importRosters(file(['Alt', 'Friend'])).imported).toBe(2)
+    expect(rosters.active?.name).toBe('Alt')
+
+    rosters.setActive(own.id)
+    expect(rosters.importRosters(file(['Alt', 'Friend'])).imported).toBe(0)
+    expect(rosters.active?.id).toBe(own.id)
+  })
 })

@@ -19,11 +19,8 @@ export function estimatedPreviewHeight(mode: TeamModeKey): number {
 
 import { computed } from 'vue'
 
-import BoardThumbnail, {
-  type ThumbnailArtifact,
-  type ThumbnailUnit,
-} from '@/components/grid/BoardThumbnail.vue'
-import { toPhantimalId } from '@/lib/characters/phantimal'
+import BoardThumbnail, { type ThumbnailArtifact } from '@/components/grid/BoardThumbnail.vue'
+import { usePreviewImages } from '@/composables/usePreviewImages'
 import {
   isStandardHero,
   lineupArtifactKey,
@@ -36,7 +33,6 @@ import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { isRemoteArtifact, phantimalImageUrl, seasonArtifactImageUrl } from '@/utils/artifactImage'
 
 const {
   team,
@@ -54,44 +50,16 @@ const {
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
+const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
 
-const resolveImage = (unit: PreviewUnit): string | undefined => {
-  if (unit.characterId !== undefined) {
-    // Companion-aware: the store maps companion ids to the main hero's
-    // portrait or the skill's custom companion image.
-    const name = gameData.getCharacterImageNameById(unit.characterId)
-    const image = name ? gameData.getCharacterImage(name) : ''
-    return image || undefined
-  }
-  if (unit.phantimalLocal !== undefined) {
-    // Band-local, so a phantimal's companion resolves too.
-    const slug = gameData.getPhantimalUnitSlug(toPhantimalId(unit.phantimalLocal))
-    return slug ? phantimalImageUrl(slug) : undefined
-  }
-  return undefined
-}
-
-// The same local/remote split ArtifactImage makes for the live board; retired
-// slots become the "S{n}" placeholder circle instead of resolving the id.
 const resolveArtifact = (
   slot: PreviewArtifact,
   board: number,
   team: Team,
 ): ThumbnailArtifact | undefined => {
-  if (slot === null) return undefined
-  if (typeof slot !== 'number') {
-    return {
-      label: `S${slot.retiredSeason}`,
-      title: i18n.t('app.seasonal-retired', { n: slot.retiredSeason }),
-    }
-  }
-  const artifact = gameData.getArtifactById(slot)
-  if (!artifact) return undefined
-  const image = isRemoteArtifact(artifact.season)
-    ? seasonArtifactImageUrl(artifact.name)
-    : gameData.getArtifactImage(artifact.name)
-  if (!image) return undefined
-  return { image, highlight: highlights?.has(lineupArtifactKey(board, team)) ?? false }
+  const artifact = thumbnailArtifact(slot)
+  if (!artifact || typeof slot !== 'number') return artifact
+  return { ...artifact, highlight: highlights?.has(lineupArtifactKey(board, team)) ?? false }
 }
 
 const isHighlighted = (board: number, unit: PreviewUnit): boolean => {
@@ -108,20 +76,10 @@ const decoded = computed(() => teamPreviewBoards(team.data))
 const boards = computed(() => {
   if (!decoded.value) return null
   return decoded.value.map((board, index) => {
-    const units = board.units.map((unit): ThumbnailUnit =>
+    const units = board.units.map((unit) =>
       unit.retiredSeason !== undefined
-        ? {
-            hexId: unit.hexId,
-            team: unit.team,
-            label: `S${unit.retiredSeason}`,
-            title: i18n.t('app.seasonal-retired', { n: unit.retiredSeason }),
-          }
-        : {
-            hexId: unit.hexId,
-            team: unit.team,
-            image: resolveImage(unit),
-            highlight: isHighlighted(index, unit),
-          },
+        ? thumbnailUnit(unit)
+        : { ...thumbnailUnit(unit), highlight: isHighlighted(index, unit) },
     )
     const artifacts = {
       ally: resolveArtifact(board.artifacts.ally, index, Team.ALLY),

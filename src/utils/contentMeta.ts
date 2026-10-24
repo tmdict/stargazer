@@ -1,12 +1,12 @@
 import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
-import { guidePath, type GuidePage } from '@/lib/guide'
+import { guidePath, SL_GENERATOR_PATH, type GuidePage } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
-import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
+import { loadAppLocales, loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
 import { heroDisplayName } from '@/utils/skillLabels'
 
 /** Provide(true) when rendering skill content inside a modal to suppress page-level meta writes. */
@@ -185,3 +185,12 @@ export const setupGuideContentMeta = (locale: Ref<AppLocale>, page: GuidePage): 
 
 export const setupHelpContentMeta = (locale: Ref<AppLocale>): void =>
   setupPageMeta(locale, (l) => HELP_META[l], helpPath)
+
+export const setupSlContentMeta = (locale: Ref<AppLocale>): void => {
+  const strings = loadAppLocales()
+  setupPageMeta(
+    locale,
+    (l) => ({ title: strings['sl-title']![l], description: strings['sl-description']![l] }),
+    SL_GENERATOR_PATH,
+  )
+}
