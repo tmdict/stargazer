@@ -9,6 +9,10 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "airborne": [
+      { "ultimate": 1, "mods": ["kazim"] },
+      { "skill2": 1, "mods": ["kazim"] }
+    ],
     "dot": [{ "ultimate": 1, "mods": ["shadewing"] }],
     "execute": [{ "skill3": 1 }],
     "heal-denial": [{ "ultimate": 1 }]

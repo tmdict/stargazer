@@ -9,6 +9,7 @@
   "range": 5,
   "season": 6,
   "tags": {
+    "airborne": [{ "ultimate": 1, "mods": ["kazim"] }],
     "energy-denial": [{ "skill3": 1 }]
   }
 }

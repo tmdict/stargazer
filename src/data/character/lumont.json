@@ -9,6 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "airborne": [{ "ex": 1, "mods": ["kazim"] }],
     "debuff": [{ "ex": 1, "mods": ["aoe", "eryndor"] }],
     "temp-buff": [{ "skill2": 1, "mods": ["orion", "perseus", "single"] }]
   }

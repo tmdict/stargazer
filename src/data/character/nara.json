@@ -9,6 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "airborne": [{ "skill3": 1, "mods": ["kazim"] }],
     "debuff": [{ "awakening": 2, "mods": ["eryndor", "single"] }],
     "dot": [{ "skill2": 1, "mods": ["shadewing"] }],
     "special-target": [{ "skill2": 1 }]

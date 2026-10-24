@@ -9,6 +9,7 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "airborne": [{ "ultimate": 1, "mods": ["kazim"] }],
     "summon": [{ "ultimate": 1 }, { "skill3": 1 }]
   }
 }

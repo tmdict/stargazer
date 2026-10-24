@@ -9,6 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
+    "airborne": [{ "ultimate": 1, "mods": ["kazim"] }],
     "haste": [{ "skill2": 1, "mods": ["aoe", "opening"] }],
     "temp-buff": [{ "skill2": 1, "mods": ["aoe", "opening", "orion", "perseus"] }],
     "tile-effect": [{ "skill2": 1 }]
