@@ -1,6 +1,6 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` and the Supreme League generator (`/guide/pvp/sl`, [Guide](./GUIDE.md)) are client-only. Game state never enters the baked HTML.
 
 The hard rule is that the client's first render must equal the baked HTML, or hydration breaks. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
@@ -62,11 +62,11 @@ vite-ssg creates its own unhead instance on the server and the client, and `src/
 
 ## Chunk error recovery
 
-A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop.
+A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop. `reloadOntoCurrentBuild` does the reloading, and the Supreme League generator calls it too when its data file, a hashed asset of the same build, fails to load.
 
 ## PvP reports
 
-The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page from an external report generator with its own styles and scripts. It sits outside Vue routing and the route list, and reaches the sitemap only because the sitemap scans the built HTML. The plugin runs only in the client production build, so a report URL does not resolve in the dev server.
+The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page from an external report generator with its own styles and scripts. It sits outside Vue routing and the route list, and reaches the sitemap only because the sitemap scans the built HTML. The generator's own folder, `src/content/pvp/sl/`, holds its data file and no template, and the plugin takes only folders named `s<N>`. The plugin runs only in the client production build, so a report URL does not resolve in the dev server.
 
 The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies. `seasonal-artifact` resolves to the icon's URL on the image host.
 
@@ -76,7 +76,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 ## Hosting
 
-The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?l=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
+The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?l=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and the Supreme League generator and sends unknown paths home through the router.
 
 `public/_headers` caches `/assets/*` as `immutable` for a year, since hashed output never changes behind a URL. Unhashed files keep the host's revalidate default. `/site.webmanifest` gets an explicit `application/manifest+json` type, because the host has no mapping for that extension.
 

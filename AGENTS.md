@@ -61,7 +61,7 @@ System docs:
 - [Screenshots the Imports Read](./docs/architecture/IMPORT_SCREENSHOTS.md) - What each game screen gives, what a screenshot needs, and the limits
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
-- [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder
+- [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder, Supreme League generator
 - [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, hosting
 
 ## BUILD COMMANDS

@@ -209,7 +209,7 @@ The Rosters tab's Screenshots button reads a roster from screenshots of the game
 
 A roster that breaks a rule is dropped with a console warning, and the others still load. Heroes are stored in ascending id order with levels in canonical form, so equal content is byte-equal.
 
-The Rosters tab exports every roster, and imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object:
+The Rosters tab exports every roster, and imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object. The first roster a file adds becomes the active one, as a new roster does, and a file that adds none leaves the active roster as it was:
 
 ```json
 {

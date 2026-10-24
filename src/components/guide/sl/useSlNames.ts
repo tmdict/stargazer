@@ -1,0 +1,31 @@
+import type { SlShownTeam } from './SlResult.vue'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
+import { curatedHeroName } from '@/utils/skillLabels'
+
+// A chance as a whole percentage. One that rounds to 0% or 100% is still
+// neither, so it reads as under 1% or over 99%.
+export const slPercent = (chance: number): string =>
+  chance < 0.005 ? '<1%' : chance > 0.995 ? '>99%' : `${Math.round(chance * 100)}%`
+
+/* Names on the generator's page in the site language: a hero's slug for its
+ * portrait, and a team's group by the name the data file gives it in this
+ * language, else by its core heroes, as the guide names a team the report
+ * has no name for. */
+export function useSlNames() {
+  const gameData = useGameDataStore()
+  const i18n = useI18nStore()
+
+  const heroSlug = (id: number): string => gameData.getCharacterNameById(id) ?? String(id)
+
+  const groupName = (team: SlShownTeam): string => {
+    if (!team.group) return i18n.t('app.sl-no-group')
+    const lang = i18n.currentLocale
+    return (
+      team.group.name[lang] ??
+      team.group.core.map((id) => curatedHeroName(heroSlug(id), lang)).join('/')
+    )
+  }
+
+  return { heroSlug, groupName }
+}
