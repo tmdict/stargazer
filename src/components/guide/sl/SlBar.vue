@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* The generator's roster bar: the roster menu, a rosters file import and the
-   screenshot import, as on the Rosters tab, then Generate. Picking or
+/* The generator's roster bar: the roster menu, the screenshot import and a
+   rosters file import, as on the Rosters tab, then Generate. Picking or
    importing a roster makes it the active one, which the page copies. */
 
 import RosterImportButton from '@/components/RosterImportButton.vue'
@@ -51,6 +51,12 @@ const {
 <template>
   <div class="sl-bar">
     <RosterMenu />
+    <RosterImportButton
+      @click="hideTip"
+      @mouseenter="showTip($event, 'app.tooltip-roster-import')"
+      @touchstart.passive="tipTouchStart"
+      @mouseleave="hideTip"
+    />
     <button
       type="button"
       class="control-btn compact"
@@ -63,12 +69,6 @@ const {
       <IconUpload :size="13" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.import') }}</span>
     </button>
-    <RosterImportButton
-      @click="hideTip"
-      @mouseenter="showTip($event, 'app.tooltip-roster-import')"
-      @touchstart.passive="tipTouchStart"
-      @mouseleave="hideTip"
-    />
     <button
       type="button"
       class="solid-btn sl-go"
