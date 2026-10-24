@@ -113,7 +113,7 @@ const charm = computed(() => {
   const entry = getCharmForHero(props.slug)
   if (!entry) return null
   const dict = language.value?.charms
-  const texts = dict?.charms[entry.slug]
+  const texts = dict?.charms[entry.id]
   if (!dict || !texts) return null
   const { slotTags, highlight, visible } = applyChips('charm')
   if (!visible) return null

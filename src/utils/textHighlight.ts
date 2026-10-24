@@ -1,10 +1,10 @@
 // Renders skill descriptions to HTML: [[value]] → highlight span,
-// <STAT> → stat-tag span. Output is consumed via v-html / innerHTML; input is
+// {stat} → stat-tag span. Output is consumed via v-html / innerHTML; input is
 // from a controlled feed, not user input.
 
 const STAT_LABEL: Record<string, string> = {
-  ATK: 'ATK',
-  HP: 'HP',
+  atk: 'ATK',
+  hp: 'HP',
 }
 
 // Canonical skill-text token grammar; searchHighlight, scripts/import-skills,
@@ -15,7 +15,7 @@ export const STAT_TAG_RE = /\{([a-z]+)\}/g
 // Inside a [[...]] token, a trailing `|key` marks a glossary keyword: the key
 // resolves against the language's `_keywords` glossary for its tooltip text
 // (SkillKeywordTooltip). A pipeless token is a plain value highlight.
-const KEYWORD_KEY_RE = /^(.*)\|([A-Za-z][A-Za-z0-9_]*)$/s
+const KEYWORD_KEY_RE = /^(.*)\|([a-z][a-z0-9-]*)$/s
 
 export function splitHighlightToken(inner: string): { label: string; key?: string } {
   const m = KEYWORD_KEY_RE.exec(inner)
@@ -38,8 +38,7 @@ export function highlightSkillText(text: string): string {
   })
   out = out.replace(
     STAT_TAG_RE,
-    (_m, tag: string) =>
-      `<span class="skill-stat-tag skill-stat-${tag.toLowerCase()}">${statLabel(tag)}</span>`,
+    (_m, tag: string) => `<span class="skill-stat-tag skill-stat-${tag}">${statLabel(tag)}</span>`,
   )
   return out
 }

@@ -127,7 +127,7 @@ function buildIndex(lang: SkillLocale, dict: NonNullable<ReturnType<typeof getSk
     // Charm tier text is charm-keyed and shared across heroes; indexing it per
     // hero lets any sharer surface on a match. Anchored by loc, not slot.
     const charm = getCharmForHero(slug)
-    const charmTexts = charm ? getSkillCharms(lang)?.charms[charm.slug] : undefined
+    const charmTexts = charm ? getSkillCharms(lang)?.charms[charm.id] : undefined
     charmTexts?.forEach((text, i) => {
       deep.push({ slug, loc: 'charm', tier: i + 1, text: cleanSkillText(text) })
     })

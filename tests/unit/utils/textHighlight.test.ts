@@ -4,7 +4,10 @@ import { splitHighlightToken } from '@/utils/textHighlight'
 
 describe('splitHighlightToken', () => {
   it('splits on the last pipe, keeping earlier pipes in the label', () => {
-    expect(splitHighlightToken('a|b|frontmost')).toEqual({ label: 'a|b', key: 'frontmost' })
+    expect(splitHighlightToken('a|b|max-hp-reduction')).toEqual({
+      label: 'a|b',
+      key: 'max-hp-reduction',
+    })
   })
 
   it('rejects a trailing segment that is not a key shape', () => {

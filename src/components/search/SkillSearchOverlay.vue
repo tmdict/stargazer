@@ -244,7 +244,7 @@ const paneHits = computed<PaneHit[]>(() => {
     } else if (hit.loc === 'charm') {
       const charm = getCharmForHero(hero.slug)
       bodyText = charm
-        ? (getSkillCharms(hit.locale)?.charms[charm.slug]?.[(hit.tier ?? 1) - 1] ?? null)
+        ? (getSkillCharms(hit.locale)?.charms[charm.id]?.[(hit.tier ?? 1) - 1] ?? null)
         : null
     }
     return {

@@ -49,9 +49,9 @@ export type SkillLocaleFile = {
 // On-disk shape of src/locales/skill/<lang>/_terms.json (auto-managed by the
 // importer): the game's official "Ultimate" / "Exclusive Equipment" labels in
 // that language, used as heading prefixes for those slots, and its skill-panel
-// templates: cooldown ("Cooldown: {cooldown}\nInitial Cooldown: {initialCooldown}"), range
-// ("Range: {range}"), the word a global range shows as, and initial energy
-// ("Initial Energy: {energy}").
+// templates: cooldown ("Cooldown: {cooldown}\nInitial Cooldown: {initialCooldown}"),
+// range ("Range: {range}"), the word a global range shows as, and initial
+// energy ("Initial Energy: {energy}").
 export interface SkillTerms {
   ultimate: string
   ex: string
@@ -87,7 +87,7 @@ export type SkillKeywords = Record<string, string>
 // On-disk shape of src/locales/skill/<lang>/_charms.json (auto-managed by
 // scripts/import-charms.ts): the current season's charm text, stored once per
 // charm because one charm is shared by several heroes. `tiers` carries the
-// localized tier labels in Elite → Mythic order; each charm slug maps to its
+// localized tier labels in Elite → Mythic order; each charm id maps to its
 // four tier descriptions in the same order. Rides the locale chunks like
 // `_keywords.json`.
 export interface SkillCharms {
@@ -105,12 +105,12 @@ export interface SkillLanguage {
 }
 
 // On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm
-// slug → the heroes sharing it. The inverse hero → charm lookup is
+// id → the heroes sharing it. The inverse hero → charm lookup is
 // derived at load time.
 export type CharmData = Record<string, { heroes: string[] }>
 
 // On-disk shape of src/data/seasonal/charm/tags.json (hand-written): charm
-// slug → tag → every tier (1-4) whose text carries the effect, and the
+// id → tag → every tier (1-4) whose text carries the effect, and the
 // modifiers that describe it. Each tier's text is complete on its own, unlike
 // a skill level's upgrade line, so an effect a charm has from Elite lists all
 // four. Written once per charm, and joined to each sharing hero's tags at

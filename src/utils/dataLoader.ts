@@ -126,7 +126,7 @@ export function loadPhantimals(): PhantimalType[] {
 let charmsCache: CharmData | null = null
 let heroCharmCache: Map<string, string> | null = null
 
-/** Seasonal charm registry: charm slug → the heroes sharing it. After
+/** Seasonal charm registry: charm id → the heroes sharing it. After
  * seasonal removal the unmatched glob compiles to an empty module map, so this
  * degrades to {}. */
 function loadCharms(): CharmData {
@@ -154,7 +154,7 @@ function loadCharmTags(): CharmTags {
 // ordinary hero tags.
 function withCharmTags(character: CharacterType): CharacterType {
   const charm = getCharmForHero(character.name)
-  const charmTags = charm ? loadCharmTags()[charm.slug] : undefined
+  const charmTags = charm ? loadCharmTags()[charm.id] : undefined
   if (!charmTags) return character
   const tags: Record<string, readonly TagAttachment[]> = { ...character.tags }
   for (const [tag, { tiers, mods }] of Object.entries(charmTags)) {
@@ -166,16 +166,16 @@ function withCharmTags(character: CharacterType): CharacterType {
 
 /** The charm a hero shares, with the full sharer list; null when the hero has
  * none (or charms are retired). */
-export function getCharmForHero(slug: string): { slug: string; heroes: string[] } | null {
+export function getCharmForHero(slug: string): { id: string; heroes: string[] } | null {
   if (!heroCharmCache) {
     heroCharmCache = new Map()
-    for (const [charmSlug, { heroes }] of Object.entries(loadCharms())) {
-      for (const hero of heroes) heroCharmCache.set(hero, charmSlug)
+    for (const [charmId, { heroes }] of Object.entries(loadCharms())) {
+      for (const hero of heroes) heroCharmCache.set(hero, charmId)
     }
   }
-  const charmSlug = heroCharmCache.get(slug)
-  if (!charmSlug) return null
-  return { slug: charmSlug, heroes: loadCharms()[charmSlug]!.heroes }
+  const charmId = heroCharmCache.get(slug)
+  if (!charmId) return null
+  return { id: charmId, heroes: loadCharms()[charmId]!.heroes }
 }
 
 // Full localized phantimal content (name + per-skill names/levels), keyed by
