@@ -55,12 +55,12 @@ const record = computed(() => {
       <div class="sl-aside-in">
         <template v-if="record">
           <span />
-          <span class="sl-stats" :title="i18n.t('app.sl-record-tip')">
-            <span class="sl-stat">
+          <span class="sl-stats">
+            <span class="sl-stat" :title="i18n.t('app.sl-players-tip')">
               <SlIcon name="players" class="sl-small-icon" />
               <b>{{ record.players }}</b>
             </span>
-            <span class="sl-stat">
+            <span class="sl-stat" :title="i18n.t('app.sl-record-tip')">
               <SlIcon name="record" class="sl-small-icon" />
               <b v-if="record.rate !== null" :class="record.tone">{{ record.rate }}%</b>
               <small>{{ record.wins }}–{{ record.losses }}</small>

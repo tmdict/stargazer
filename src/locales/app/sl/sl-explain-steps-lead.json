@@ -1,5 +1,5 @@
 {
-  "en": "Each map's chance is built in three steps.",
-  "zh": "每张地图的几率分三步算出。",
-  "ko": "맵마다 확률은 세 단계로 계산합니다."
+  "en": "The chance starts broad and gets more specific in three steps:",
+  "zh": "几率分三步计算，从整体逐步细化到具体：",
+  "ko": "확률은 세 단계로 계산하며, 전체적인 기록에서 점점 구체적인 기록으로 좁혀 갑니다."
 }

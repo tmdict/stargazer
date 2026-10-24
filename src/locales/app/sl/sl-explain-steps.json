@@ -1,5 +1,5 @@
 {
-  "en": "First the comp's strength over all its games. Then the comp's record on this map. Then this team's own games here. Each step starts from the one before and adds {prior} imaginary games at that level, so a few lucky games cannot swing it. A win against a stronger opponent counts for more, and a win while ahead in upgrades counts for less.",
-  "zh": "先看阵容在全部对局中的强度，再看阵容在这张地图上的战绩，最后看这支队伍自己在这里的对局。每一步都从上一步出发，并按那个水平补上 {prior} 场假想对局，所以几场好运不会左右结果。赢下更强的对手算得更多，强化领先时取胜则算得更少。",
-  "ko": "먼저 조합의 전체 전투 기준 전력, 다음으로 이 맵에서의 조합 전적, 마지막으로 이 팀 자체의 이 맵 전투를 봅니다. 단계마다 앞 단계에서 출발해 그 수준의 가상 전투 {prior}회를 더하므로, 운 좋은 몇 판이 결과를 좌우하지 못합니다. 더 강한 상대를 이기면 더 크게, 강화에서 앞선 채로 이기면 더 작게 칩니다."
+  "en": "Each step only adjusts the one before it. It counts as if {prior} extra games had gone the way the step before expected, so a few lucky games cannot swing the number, and a team with only a few games stays close to 50%.",
+  "zh": "每一步只在上一步的基础上做调整，相当于额外加上 {prior} 场结果符合上一步预期的对局。所以，几场靠运气赢下的对局不会让这个几率大幅变化，对局很少的队伍也会保持在 50% 附近。",
+  "ko": "각 단계에서는 바로 앞 단계의 결과를 조정합니다. 앞 단계가 예상한 대로 끝난 가상 전투 {prior}판을 더한 것처럼 계산하므로, 운 좋게 이긴 몇 판으로 확률이 크게 흔들리지 않고, 전투 기록이 적은 팀은 50% 근처에 머뭅니다."
 }
