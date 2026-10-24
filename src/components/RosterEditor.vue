@@ -48,6 +48,7 @@ const props = defineProps<{
   // A change of pool (another roster) stops Select and clears its ticks.
   sourceKey: string | null
   armedConfirm: ReturnType<typeof useArmedConfirm>
+  hideMechanics?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -433,7 +434,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
       v-model:class-filter="classFilter"
       v-model:mechanic-filter="mechanicFilter"
       :characters="heroes"
-      :mechanic-pool
+      :mechanic-pool="hideMechanics ? undefined : mechanicPool"
     />
 
     <CharacterGrid>
