@@ -259,16 +259,17 @@ const save = (): void => {
   color: var(--color-text-primary);
 }
 
-/* Stargazer's tab badge, at the top of the title's line. */
+/* A status label at the top of the title's line. */
 .sl-beta {
   display: inline-flex;
   align-items: center;
   height: 18px;
   margin-left: 8px;
   padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 55%, transparent);
   border-radius: 9px;
-  background: var(--color-primary);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.06em;
