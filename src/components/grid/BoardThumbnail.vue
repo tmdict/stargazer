@@ -314,6 +314,18 @@ const placedArtifacts = computed(() =>
   }),
 )
 
+// Each number names its tile's zone and whether a unit stands on it, so a
+// page can style or leave out some of them.
+const numberedTiles = computed(() => {
+  const occupied = new Set(units.map((unit) => unit.hexId))
+  return [...geometry.value.centers].map(([hexId, center]) => ({
+    hexId,
+    center,
+    zone: zoneOf(states.value.get(hexId)),
+    occupied: occupied.has(hexId),
+  }))
+})
+
 const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
 const ringedArtifacts = computed(() => placedArtifacts.value.filter((art) => art.highlight))
 const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.value.length > 0)
@@ -340,6 +352,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
     <template v-if="crisp">
       <template v-for="tile in crispTiles" :key="tile.hexId">
         <polygon
+          :class="`tile tile-${tile.zone}`"
           :points="tile.points"
           :fill="tile.fill"
           :stroke="tile.zone === 'void' ? '#8a8f96' : '#a9afb7'"
@@ -349,6 +362,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
         />
         <polygon
           v-if="tile.zone !== 'void'"
+          class="tile-bevel"
           :points="tile.bevel"
           fill="none"
           stroke="rgba(0, 0, 0, 0.5)"
@@ -398,6 +412,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
           vector-effect="non-scaling-stroke"
         />
         <polygon
+          class="unit-frame"
           :points="unit.corners"
           fill="none"
           :stroke="unit.color"
@@ -489,9 +504,10 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
 
     <template v-if="numbered">
       <text
-        v-for="[hexId, center] in geometry.centers"
+        v-for="{ hexId, center, zone, occupied } in numberedTiles"
         :key="`number-${hexId}`"
         class="tile-number"
+        :class="[`tile-${zone}`, { occupied }]"
         :x="center.x"
         :y="center.y + hexSize * NUMBER_DROP_RATIO"
         :font-size="hexSize * NUMBER_SIZE_RATIO"

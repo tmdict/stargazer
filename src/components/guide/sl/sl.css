@@ -1,0 +1,293 @@
+/* The Supreme League generator's look: the dark style of the season reports
+   it comes from, with their panels, lines, type and the season's accent.
+   Every rule sits under the view's root (.sl-page), so it reaches no other
+   page. The shared roster controls inside it take Stargazer's own tokens in
+   dark, and the report's square buttons, filter boxes and grey portraits on
+   top. A few declarations are marked important where a child's own state
+   rule (hover, an inline portrait background) would otherwise win. */
+
+.sl-page {
+  --sl-bg: #0f1216;
+  --sl-panel: #171b21;
+  --sl-panel2: #1d232b;
+  --sl-line: #2a313b;
+  --sl-line2: #39424e;
+  --sl-fg: #e9edf3;
+  --sl-dim: #a7b1bf;
+  --sl-good: #4ec9a5;
+  --sl-bad: #e2686f;
+  /* Season 8's colour, the report's link and emphasis colour. */
+  --sl-accent: #91ddc2;
+
+  --color-bg-primary: var(--sl-panel);
+  --color-bg-secondary: var(--sl-panel2);
+  --color-bg-tertiary: var(--sl-panel2);
+  --color-bg-white: var(--sl-panel2);
+  --color-bg-light-gray: var(--sl-panel2);
+  --color-border-primary: var(--sl-line2);
+  --color-border-light: var(--sl-line);
+  --color-text-primary: var(--sl-fg);
+  --color-text-secondary: var(--sl-dim);
+  --color-text-muted: var(--sl-dim);
+  --color-primary: var(--sl-accent);
+  --color-primary-hover: var(--sl-accent);
+  --placed-overlay: transparent;
+  --hero-icon-size: 64px;
+
+  background: var(--sl-bg);
+  color: var(--sl-fg);
+  font:
+    17px/1.7 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    'Noto Sans CJK SC',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A floating list leaves the page for <body>; while the page is open, the
+   view marks <html> so its lists take the same dark tokens. */
+html.sl-page-open .list.floating {
+  --color-bg-primary: #171b21;
+  --color-bg-secondary: #1d232b;
+  --color-bg-tertiary: #1d232b;
+  --color-bg-white: #1d232b;
+  --color-border-primary: #39424e;
+  --color-text-primary: #e9edf3;
+  --color-text-secondary: #a7b1bf;
+  --color-primary: #91ddc2;
+}
+
+/* Dark text on the accent, as on the report's own accent buttons. */
+html.sl-page-open .list.floating .row.selected,
+.sl-page .sl-picker .row.selected {
+  color: #0f1216;
+}
+
+/* The report's button: a dark box with a thin line, its label lit on hover
+   and its line in the accent when pressed. */
+.sl-page .sl-btn,
+.sl-page .sl-picker .control-btn,
+.sl-page .sl-picker .dock-chip,
+.sl-page .sl-picker .layer-chip {
+  width: auto;
+  height: auto;
+  min-height: 36px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--sl-dim);
+  background: var(--sl-panel2) !important;
+  border: 1px solid var(--sl-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sl-page .sl-btn:hover:not(:disabled),
+.sl-page .sl-picker .control-btn:hover,
+.sl-page .sl-picker .dock-chip:hover:not(:disabled),
+.sl-page .sl-picker .layer-chip:hover {
+  color: var(--sl-fg) !important;
+  border-color: var(--sl-line2);
+}
+
+.sl-page .sl-picker .layer-chip.lit,
+.sl-page .sl-picker .dock-chip.primary {
+  color: var(--sl-fg);
+  border-color: var(--sl-accent);
+}
+
+.sl-page .sl-picker .dock-chip.danger {
+  color: var(--sl-dim);
+}
+
+.sl-page .sl-picker .dock-chip.confirm-armed {
+  color: var(--sl-bad) !important;
+  border-color: var(--sl-bad);
+}
+
+.sl-page .sl-btn:disabled,
+.sl-page .sl-picker .dock-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sl-page .sl-btn.sl-go {
+  color: var(--sl-bg) !important;
+  background: var(--sl-accent) !important;
+  border-color: var(--sl-accent);
+}
+
+/* The bar's Import and Screenshots keep Stargazer's round icon buttons on a
+   phone, where their labels are hidden. */
+@media (max-width: 768px) {
+  .sl-page .sl-picker .control-btn {
+    width: var(--control-height-tablet);
+    min-height: 0;
+    padding: 0;
+    border-radius: 999px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sl-page .sl-picker .control-btn {
+    width: var(--control-height-mobile);
+  }
+}
+
+/* The dock is a row of buttons on the panel itself, its group labels plain. */
+.sl-page .sl-picker .upgrade-dock {
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.sl-page .sl-picker .dock-label {
+  margin: 0 2px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sl-dim);
+}
+
+.sl-page .sl-picker .dock-divider {
+  height: 20px;
+  margin: 0 4px;
+  background: var(--sl-line2);
+}
+
+.sl-page .sl-picker .roster-hint {
+  font-size: 13px;
+  color: var(--sl-dim);
+}
+
+/* Faction and class filters: square boxes, the chosen one lined in the
+   accent. */
+.sl-page .sl-picker .icon-option {
+  padding: 0;
+  border: 1px solid var(--sl-line);
+  border-radius: 6px;
+  background: var(--sl-panel2);
+}
+
+.sl-page .sl-picker .icon-option:hover {
+  transform: none;
+  border-color: var(--sl-line2);
+}
+
+.sl-page .sl-picker .icon-option.active {
+  border-color: var(--sl-accent);
+}
+
+.sl-page .sl-picker .clear-option {
+  border-width: 1px;
+  color: var(--sl-dim);
+}
+
+.sl-page .sl-picker .clear-option:hover,
+.sl-page .sl-picker .clear-option.active {
+  color: var(--sl-fg);
+}
+
+.sl-page .sl-picker .clear-option .clear-label {
+  border: 0;
+  font-size: 13px !important;
+  font-weight: 600;
+  translate: none;
+}
+
+.sl-page .sl-picker .menus-row .trigger,
+.sl-page .sl-bar .roster-menu .trigger {
+  border-width: 1px;
+}
+
+/* Heroes: grey discs with a thin rim, faded and grey when not selected. */
+.sl-page .sl-picker .character-grid {
+  gap: 12px 10px;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.sl-page .sl-picker .character-display {
+  border: 1px solid var(--sl-line);
+  box-shadow: none;
+  background: #555 !important;
+}
+
+.sl-page .sl-picker .character-display::before {
+  display: none;
+}
+
+.sl-page .sl-picker .character-display .portrait {
+  width: 72px;
+  height: 72px;
+}
+
+.sl-page .sl-picker .character-display.ticked {
+  box-shadow: 0 0 0 3px var(--sl-accent);
+}
+
+.sl-page .sl-picker .character-display.dimmed {
+  opacity: 0.3;
+}
+
+/* Boards in the report's colours: dark open ground with no number, deep ally
+   and enemy tiles with light borders, numbers on free deployment tiles only,
+   and each unit framed in its side's colour. */
+.sl-page .sl-board .tile-void {
+  fill: #101318;
+  stroke: #3b424d;
+}
+
+.sl-page .sl-board .tile:not(.tile-void) {
+  stroke: #98a3b9;
+  stroke-width: 1.5;
+}
+
+.sl-page .sl-board .tile-ally {
+  fill: #12222c;
+}
+
+.sl-page .sl-board .tile-enemy {
+  fill: #2a1622;
+}
+
+.sl-page .sl-board .tile-blocked {
+  fill: #262c38;
+}
+
+.sl-page .sl-board .tile-breakable {
+  fill: #2c3340;
+}
+
+.sl-page .sl-board .tile-bevel {
+  stroke: #07091a;
+}
+
+.sl-page .sl-board .tile-number {
+  fill: #8a95ab;
+  stroke: none;
+  font-weight: 600;
+}
+
+.sl-page .sl-board .tile-number:is(.tile-void, .tile-blocked, .tile-breakable, .occupied) {
+  display: none;
+}
+
+.sl-page .sl-board .unit-frame {
+  stroke: #5fd6cb;
+  stroke-width: 2;
+}
+
+.sl-page .sl-picker .portrait-badge {
+  margin-top: 5px;
+}
