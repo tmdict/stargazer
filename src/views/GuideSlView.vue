@@ -202,12 +202,11 @@ const save = (): void => {
 <template>
   <main class="sl-page">
     <header class="sl-head">
-      <h1>{{ i18n.t('app.sl-title') }}</h1>
+      <h1>{{ i18n.t('app.sl-title') }}<span class="sl-beta">BETA</span></h1>
       <p v-if="heading">
         {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
       </p>
     </header>
-    <p class="sl-line">{{ i18n.t('app.sl-intro') }}</p>
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.sl-previous-season') }}</p>
     <p v-else-if="heading?.rotation" class="sl-line sl-note">
       {{ i18n.t('app.sl-previous-rotation') }}
@@ -258,6 +257,23 @@ const save = (): void => {
   font-weight: 700;
   text-align: left;
   color: var(--color-text-primary);
+}
+
+/* Stargazer's tab badge, at the top of the title's line. */
+.sl-beta {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  vertical-align: top;
 }
 
 .sl-head p,

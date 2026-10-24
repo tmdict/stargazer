@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* How the set's chance to win is worked out, with the set's own numbers:
-   each map's chance beside its comp's record, how a chance is built, and the
-   chance of winning all five maps, exactly four and exactly three. */
+/* What the set is and how its chance to win is worked out, with the set's
+   own numbers: each map's chance beside its comp's record, how a chance is
+   built, and the chance of winning all five maps, exactly four and exactly
+   three. */
 
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
@@ -19,6 +20,7 @@ const { groupName } = useSlNames()
 <template>
   <BaseModal :show :label="i18n.t('app.sl-explain-title')" max-width="760px" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-explain-title') }}</h1>
+    <p>{{ i18n.t('app.sl-explain-set') }}</p>
     <p>{{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance) }) }}</p>
     <div class="sl-table-wrap">
       <table class="sl-table">
