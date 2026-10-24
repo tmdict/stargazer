@@ -44,7 +44,7 @@ Selecting a team dims every curve not touching it and turns the curves it loses 
 
 ## Supreme League generator
 
-`/guide/pvp/sl` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per map and no hero twice, with the best chance to win a match. Its records and its choice come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export and runs its own chooser beside `chooseSlSet` (`src/lib/pvp/sl/chooser.ts`) on every file it writes, requiring the same answer to the last digit. The page is a tool, so it is drawn in the browser and not pre-rendered, and nothing on the site links to it yet.
+`/guide/pvp/sl` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per map and no hero twice, with the best chance to win a match. Its records and its choice come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export and runs its own chooser beside `chooseSlSet` (`src/lib/pvp/sl/chooser.ts`) on every file it writes, requiring the same answer to the last digit. The guide index's PvP panel opens with an entry linking it. The page is pre-rendered in English with its heading alone, so search engines find it: the picker and the set follow the rosters the browser holds, so they are drawn after mount and never reach the baked HTML.
 
 The picker is the Rosters tab's `RosterEditor` ([Teams](./TEAMS.md)) bound to a copy of the active roster, so trying a hero out never reaches the roster. The copy is taken again only when another roster becomes active, never when the roster object is replaced by a library write. With no roster every hero starts at P4 R4, the level the recorded opponents are counted at. A hero added on the page takes the level its roster gives it, P4 R4 under All heroes, and 0 only when the roster does not hold it. A rosters file import or a screenshot import makes its roster the active one, so the page takes it up at once. The set is chosen only on Generate, and it keeps the selection it was chosen with, which is what Save as team saves.
 
@@ -244,7 +244,7 @@ A complete example, each list cut to one or two entries:
 
 ### Removing it
 
-The feature lives in `src/content/pvp/sl/`, `src/lib/pvp/sl/`, `src/views/GuideSlView.vue`, `src/components/guide/sl/`, `src/locales/app/sl/`, `tests/unit/sl/` and this section, plus its route, its `SL_GENERATOR_PATH` line and its `setupSlContentMeta` entry. `RosterEditor`, `usePreviewImages`, `reloadOntoCurrentBuild` and the rosters import's switch to the first roster it adds belong to the rest of the app and stay.
+The feature lives in `src/content/pvp/sl/`, `src/lib/pvp/sl/`, `src/views/GuideSlView.vue`, `src/components/guide/sl/`, `src/locales/app/sl/`, `tests/unit/sl/` and this section, plus its route, its `SL_GENERATOR_PATH` line and its place in the pre-render list, its `setupSlContentMeta` entry and the `SlGuideEntry` line in the PvP panel. `RosterEditor`, `usePreviewImages`, `reloadOntoCurrentBuild` and the rosters import's switch to the first roster it adds belong to the rest of the app and stay.
 
 ## Related documentation
 

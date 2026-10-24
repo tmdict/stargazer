@@ -10,6 +10,6 @@ export const GUIDE_PAGES: readonly GuidePage[] = ['index', 'upgrades', 'mechanic
 export const guidePath = (page: GuidePage): string =>
   page === 'index' ? '/guide' : `/guide/${page}`
 
-// The Supreme League generator, beside the season reports. A tool drawn in the
-// browser, so it is not among the pre-rendered pages.
+// The Supreme League generator, beside the season reports, pre-rendered with
+// its heading alone (GuideSlView).
 export const SL_GENERATOR_PATH = '/guide/pvp/sl'

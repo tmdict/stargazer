@@ -4,7 +4,9 @@
    best chance to win a match (lib/pvp/sl). The picker edits a copy of the
    active roster, so trying a hero out never changes the roster, and picking
    or importing another roster takes a fresh copy. The set is chosen only on
-   Generate and stays as it is while the selection changes. */
+   Generate and stays as it is while the selection changes. The page is
+   pre-rendered with its heading alone: the picker and the set follow the
+   visitor's rosters, which the browser holds, so they are drawn after mount. */
 
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -56,8 +58,10 @@ const heading = ref<{ season: number; date: string; rotation: boolean; retired: 
   null,
 )
 const failed = ref(false)
+const mounted = ref(false)
 
 onMounted(async () => {
+  mounted.value = true
   try {
     data = await loadSlData()
   } catch {
@@ -199,12 +203,12 @@ const save = (): void => {
         <p v-if="failed" class="sl-note">{{ i18n.t('app.sl-load-failed') }}</p>
       </header>
 
-      <div ref="result" class="sl-result-slot">
+      <div v-if="mounted" ref="result" class="sl-result-slot">
         <SlResult v-if="shown" :shown @save="save" />
         <p v-else-if="noSet" class="sl-none">{{ i18n.t('app.sl-no-set') }}</p>
       </div>
 
-      <div class="sl-picker">
+      <div v-if="mounted" class="sl-picker">
         <SlBar :busy :ready="!!heading" @generate="generate" />
         <RosterEditor
           :heroes
