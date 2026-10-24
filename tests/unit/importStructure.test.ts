@@ -7,32 +7,41 @@ import {
   type FeedPhantimal,
 } from '../../scripts/lib/structure'
 
+const artifact = (slug: string, id: number, extra: Partial<FeedArtifact> = {}) => ({
   slug,
   set: 'season',
   name: `${slug} Spell`,
+  id,
+  season: 8,
   statBonuses: [
-    { stat: 'ATK', value: 18.7 },
-    { stat: 'HEAL', value: 14 },
+    { stat: 'atk', value: 18.7 },
+    { stat: 'vitality', value: 14 },
   ],
   ...extra,
 })
 
+const phantimal = (slug: string, id: number, extra: Partial<FeedPhantimal> = {}) => ({
   slug,
   faction: 'Mauler',
+  id,
+  factions: ['mauler'],
+  damage: 'magic',
+  range: 20,
+  season: 8,
   ...extra,
 })
 
 describe('artifactStructure', () => {
   const en = {
-    b: artifact('b', 8002),
-    a: artifact('a', 8001),
-    old: artifact('old', 1, { set: 'pre-season' }),
+    b: artifact('b', 8),
+    a: artifact('a', 7),
+    old: artifact('old', 1, { set: 'pre-season', season: 0 }),
   }
   const zh = { a: { ...en.a, name: '甲' }, b: { ...en.b, name: '乙' } }
   const ko = { a: { ...en.a, name: '가' }, b: { ...en.b, name: '나' } }
   const feeds = { en, zh, ko }
 
-  it('numbers the season after the permanent six, by fairy id', () => {
+  it("writes the season's set with the feed's ids, leaving the permanent artifacts out", () => {
     const out = artifactStructure(feeds, {})
     expect(out.problems).toEqual([])
     expect(out.data).toEqual({
@@ -48,19 +57,19 @@ describe('artifactStructure', () => {
     const lastSeason = artifactStructure(feeds, { a: { id: 9, name: 'a', season: 7 } })
     expect(lastSeason.problems).toEqual([])
   })
-
-  it('reports an unmapped stat code and a feed without fairy ids', () => {
-    const odd = { a: artifact('a', 8001, { statBonuses: [{ stat: 'NEW', value: 1 }] }) }
-    expect(artifactStructure({ ...feeds, en: odd }, {}).problems[0]).toContain('"NEW"')
-    expect(artifactStructure({ ...feeds, en: old }, {}).problems[0]).toContain('rebuild')
-  })
 })
 
 describe('phantimalStructure', () => {
-  it('derives id, range, damage and faction, with both factions for camp 5', () => {
+  it('writes id, range, damage and faction, and both factions for one that counts for two', () => {
     const out = phantimalStructure(
       {
-        w: phantimal('w', 5, { faction: 'Celestial' }),
+        m: phantimal('m', 2, {
+          damage: 'physical',
+          range: 1,
+          faction: 'Wilder',
+          factions: ['wilder'],
+        }),
+        w: phantimal('w', 5, { faction: 'Celestial', factions: ['hypogean', 'celestial'] }),
       },
       {},
     )
@@ -76,11 +85,6 @@ describe('phantimalStructure', () => {
         qualifyingFactions: ['hypogean', 'celestial'],
       },
     })
-  })
-
-  it('reports an unmapped damage code and a feed without attack ranges', () => {
-    expect(odd.problems[0]).toContain('"NEW"')
-    expect(old.problems[0]).toContain('rebuild')
   })
 
   it('keeps curated fields and an existing qualifyingFactions within a season', () => {

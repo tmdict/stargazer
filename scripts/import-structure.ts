@@ -10,7 +10,7 @@
 // against the feed.
 //
 // Usage:
-//   npm run import:structure                          # reads DATA_FEED_DIR/<feed>/…
+//   npm run import:structure                          # reads DATA_FEED_DIR/<code>/…
 //   npm run import:structure -- --src-dir <PATH> | --url-base <URL>
 
 import { existsSync } from 'node:fs'
@@ -19,8 +19,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as prettier from 'prettier'
 
-import type { AppLocale } from '../src/lib/types/i18n.ts'
-import { APP_LOCALE_FEEDS, arg, feedSrcDir, writeTextIfChanged } from './lib/shared.ts'
+import { APP_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
+import { arg, feedSrcDir, writeTextIfChanged } from './lib/shared.ts'
 import {
   artifactStructure,
   phantimalStructure,
@@ -39,14 +39,14 @@ const DIRS = {
 const URL_BASE_FLAG = arg('url-base')
 const SRC_DIR_FLAG = arg('src-dir')
 
-async function loadFeed<T>(feed: string, file: string): Promise<T> {
+async function loadFeed<T>(code: AppLocale, file: string): Promise<T> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/${file}`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${code}/${file}`
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as T
   }
-  const path = join(feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG), feed, file)
+  const path = join(feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG), code, file)
   if (!existsSync(path)) throw new Error(`data feed not found at ${path}`)
   return JSON.parse(await readFile(path, 'utf8')) as T
 }
@@ -76,9 +76,9 @@ async function format(path: string, value: unknown): Promise<string> {
 
 async function main() {
   const artifacts = {} as Record<AppLocale, Record<string, FeedArtifact>>
-  for (const { code, feed } of APP_LOCALE_FEEDS) {
+  for (const code of APP_LOCALES) {
     artifacts[code] = (
-      await loadFeed<{ artifacts: Record<string, FeedArtifact> }>(feed, 'artifacts.json')
+      await loadFeed<{ artifacts: Record<string, FeedArtifact> }>(code, 'artifacts.json')
     ).artifacts
   }
   const phantimals = (

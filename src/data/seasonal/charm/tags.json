@@ -1,8 +1,8 @@
 {
-  "s8-9": { "haste": { "tiers": [1, 2, 3, 4] }, "temp-buff": { "tiers": [1, 2, 3, 4] } },
-  "s8-5": { "debuff": { "tiers": [3, 4], "mods": ["aoe", "eryndor"] } },
   "s8-4": { "debuff": { "tiers": [3, 4], "mods": ["eryndor", "single"] } },
-  "s8-13": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "orion", "perseus"] } },
+  "s8-5": { "debuff": { "tiers": [3, 4], "mods": ["aoe", "eryndor"] } },
+  "s8-7": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } },
+  "s8-9": { "haste": { "tiers": [1, 2, 3, 4] }, "temp-buff": { "tiers": [1, 2, 3, 4] } },
   "s8-10": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } },
-  "s8-7": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } }
+  "s8-13": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "orion", "perseus"] } }
 }

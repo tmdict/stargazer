@@ -12,7 +12,7 @@
 // import loudly.
 //
 // Usage:
-//   npm run import:phantimals                          # reads DATA_FEED_DIR/<feed>/phantimals.json
+//   npm run import:phantimals                          # reads DATA_FEED_DIR/<code>/phantimals.json
 //   npm run import:phantimals -- --src-dir <PATH> | --url-base <URL>
 //   npm run import:phantimals -- --retire              # delete every generated locale file
 //
@@ -25,7 +25,6 @@ import { fileURLToPath } from 'node:url'
 
 import { APP_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
 import {
-  APP_LOCALE_FEEDS,
   arg,
   cleanDescription,
   feedSrcDir,
@@ -47,6 +46,8 @@ interface PhantimalEntry {
   slug: string
   name: string | null
   faction: string | null
+  damage: string
+  range: number
   skills: { name: string | null; levels: { level: number; description: string | null }[] }[]
 }
 
@@ -57,16 +58,16 @@ interface PhantimalsBulk {
 const URL_BASE_FLAG = arg('url-base')
 const SRC_DIR_FLAG = arg('src-dir')
 
-async function loadPhantimalsBulk(feed: string): Promise<PhantimalsBulk> {
+async function loadPhantimalsBulk(code: AppLocale): Promise<PhantimalsBulk> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/phantimals.json`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${code}/phantimals.json`
     console.log(`import-phantimals: fetching ${url}`)
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as PhantimalsBulk
   }
   const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
-  const path = join(base, feed, 'phantimals.json')
+  const path = join(base, code, 'phantimals.json')
   if (!existsSync(path)) {
     throw new Error(
       `phantimal data feed not found at ${path}\n` +
@@ -109,7 +110,7 @@ async function main() {
   }
 
   const bulks = {} as Record<AppLocale, PhantimalsBulk>
-  for (const { feed, code } of APP_LOCALE_FEEDS) bulks[code] = await loadPhantimalsBulk(feed)
+  for (const code of APP_LOCALES) bulks[code] = await loadPhantimalsBulk(code)
 
   const en = bulks.en.phantimals
   const feedSlugs = Object.keys(en).sort()
@@ -141,11 +142,12 @@ async function main() {
     if (feedFaction && structural.faction !== feedFaction) {
       problems.push(`${slug}: faction "${structural.faction}" but the feed says "${feedFaction}"`)
     }
-    if (feedRange !== null && structural.range !== feedRange) {
-      problems.push(`${slug}: range ${structural.range} but the feed says ${feedRange}`)
+    const feed = en[slug]!
+    if (structural.range !== feed.range) {
+      problems.push(`${slug}: range ${structural.range} but the feed says ${feed.range}`)
     }
-    if (feedDamage && structural.damage !== feedDamage) {
-      problems.push(`${slug}: damage "${structural.damage}" but the feed says "${feedDamage}"`)
+    if (structural.damage !== feed.damage) {
+      problems.push(`${slug}: damage "${structural.damage}" but the feed says "${feed.damage}"`)
     }
   }
   for (const slug of structuralSlugs) {

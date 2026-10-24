@@ -32,9 +32,9 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
 | Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`           | hand                |
 | Icons                               | image host, `seasonal/{artifact,phantimal}/<slug>.webp`                        | exported per season |
 
-`npm run import:structure` writes the structural files from the feed by fixed rules (`scripts/lib/structure.ts`): an artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts from the feed alone), and the previous season's files are removed.
+`npm run import:structure` writes the structural files from the feed (`scripts/lib/structure.ts`), with each id, season, stat, range, damage type and faction as the feed gives it: an artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts from the feed alone), and the previous season's files are removed.
 
-`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact stats must equal the feed's through the stat-code map in `scripts/lib/structure.ts`. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose. The feed's location is `DATA_FEED_DIR` in `.env.local` (template: `.env.example`); `--src-dir` / `--url-base` point at another feed.
+`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact ids, seasons and stats must equal the feed's. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose. The feed's location is `DATA_FEED_DIR` in `.env.local` (template: `.env.example`); `--src-dir` / `--url-base` point at another feed.
 
 ## Reused ids
 
@@ -90,7 +90,7 @@ Phantimal and artifact data files, the six pre-season artifacts included, can ca
 
 ## Charms
 
-A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under the feed's slug and each hero points to it. `_charms.json` sits in each language's skill locale folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
+A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. `_charms.json` sits in each language's skill locale folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
 
 Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and gives each tag of a charm every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
 
@@ -115,7 +115,7 @@ Each phase ships on its own.
 It needs the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits, but no text.
 
 1. Publish the new icons, companions included, to the image host before deploying.
-2. Retire the old generated text: `npm run import:phantimals -- --retire`, then the same for `import:artifacts` and `import:charms`. Charms carry no season stamp, so the old text cannot stay up.
+2. Retire the old generated text: `npm run import:phantimals -- --retire`, then the same for `import:artifacts` and `import:charms`. Charm ids name their season, so the old text and tags match nothing in the new one.
 3. Run `npm run import:structure`: it replaces the season's artifact and phantimal data files and the artifact names, reusing the freed ids. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key. Phantimal names come with their text from `import:phantimals`; if the feed does not carry the season's text yet, write name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) for phase 2 to overwrite.
 4. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
 5. Replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
@@ -126,7 +126,7 @@ Phase 1 is done when the tests pass, every new icon loads, and modals without te
 
 ### Phase 2: text, when the feed carries the season
 
-Artifacts, phantimals and charms may arrive on different builds. Run `npm run import:seasonal`, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data; likewise each phantimal's and artifact's `tags` once its text is in. A failed check means a phase 1 value or a stat-code mapping is wrong: fix the data file, not the check. It is done when no phantimal locale file still has `"skills": []`, every seasonal artifact has an effects file, and the charm tests run instead of skipping.
+Artifacts, phantimals and charms may arrive on different builds. Run `npm run import:seasonal`, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data; likewise each phantimal's and artifact's `tags` once its text is in. A failed check means a phase 1 value is wrong: fix the data file, not the check. It is done when no phantimal locale file still has `"skills": []`, every seasonal artifact has an effects file, and the charm tests run instead of skipping.
 
 ### Phase 3: targeting
 

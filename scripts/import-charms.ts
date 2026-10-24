@@ -3,7 +3,7 @@
 // Charm text is charm-keyed, not hero-keyed: one charm (a skill family shared
 // by several heroes) is stored once per locale, and heroes reference it
 // through the structural charm -> heroes map. This script owns both outputs:
-//   src/data/seasonal/charm/charms.json        charm slug -> sharing heroes
+//   src/data/seasonal/charm/charms.json        charm id -> sharing heroes
 //   src/locales/skill/<code>/_charms.json      localized tier labels + text
 // The hand-written src/data/seasonal/charm/tags.json is checked against the
 // feed and retired with the outputs.
@@ -15,9 +15,9 @@
 // inside every chunk.
 //
 // Usage:
-//   npm run import:charms                          # reads DATA_FEED_DIR/<feed>/charms.json
-//   npm run import:charms -- --src-dir <PATH>      # local: <PATH>/<feed>/charms.json
-//   npm run import:charms -- --url-base <URL>      # remote: <URL>/<feed>/charms.json
+//   npm run import:charms                          # reads DATA_FEED_DIR/<code>/charms.json
+//   npm run import:charms -- --src-dir <PATH>      # local: <PATH>/<code>/charms.json
+//   npm run import:charms -- --url-base <URL>      # remote: <URL>/<code>/charms.json
 //   npm run import:charms -- --retire              # delete every output (season retired)
 //
 // An absent or unreadable feed is a hard error, never a silent wipe; outputs
@@ -55,7 +55,8 @@ const TIER_COUNT = 4
 // ---------- feed shape (single-locale per file) ----------
 
 interface CharmEntry {
-  slug: string
+  // The season and the charm's place in the game's list (s8-1).
+  id: string
   heroes: string[]
   tiers: string[]
 }
@@ -68,16 +69,16 @@ interface CharmsBulk {
 const URL_BASE_FLAG = arg('url-base')
 const SRC_DIR_FLAG = arg('src-dir')
 
-async function loadCharmsBulk(feed: string): Promise<CharmsBulk> {
+async function loadCharmsBulk(code: SkillLocale): Promise<CharmsBulk> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/charms.json`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${code}/charms.json`
     console.log(`import-charms: fetching ${url}`)
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as CharmsBulk
   }
   const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
-  const path = join(base, feed, 'charms.json')
+  const path = join(base, code, 'charms.json')
   if (!existsSync(path)) {
     throw new Error(
       `charm data feed not found at ${path}\n` +
@@ -121,13 +122,13 @@ function assertBulkShape(code: SkillLocale, bulk: CharmsBulk): void {
   }
   const seen = new Set<string>()
   for (const charm of bulk.charms) {
-    if (seen.has(charm.slug)) throw new Error(`[${code}] duplicate charm slug "${charm.slug}"`)
-    seen.add(charm.slug)
+    if (seen.has(charm.id)) throw new Error(`[${code}] duplicate charm id "${charm.id}"`)
+    seen.add(charm.id)
     if (!Array.isArray(charm.tiers) || charm.tiers.length !== TIER_COUNT) {
-      throw new Error(`[${code}] charm "${charm.slug}" must have exactly ${TIER_COUNT} tiers`)
+      throw new Error(`[${code}] charm "${charm.id}" must have exactly ${TIER_COUNT} tiers`)
     }
     if (charm.tiers.some((t) => !t?.trim())) {
-      throw new Error(`[${code}] charm "${charm.slug}" has an empty tier description`)
+      throw new Error(`[${code}] charm "${charm.id}" has an empty tier description`)
     }
   }
 }
@@ -135,20 +136,20 @@ function assertBulkShape(code: SkillLocale, bulk: CharmsBulk): void {
 // Coverage must be uniform across locales, same contract as the skill import:
 // the app assumes any charm present in en renders in every language.
 function assertUniformCoverage(bulks: Record<SkillLocale, CharmsBulk>): void {
-  const enBySlug = new Map(bulks.en.charms.map((c) => [c.slug, c]))
+  const enById = new Map(bulks.en.charms.map((c) => [c.id, c]))
   const problems: string[] = []
   for (const { code } of SKILL_LOCALES) {
-    const slugs = new Set(bulks[code].charms.map((c) => c.slug))
-    const missing = [...enBySlug.keys()].filter((s) => !slugs.has(s))
-    const extra = [...slugs].filter((s) => !enBySlug.has(s))
+    const ids = new Set(bulks[code].charms.map((c) => c.id))
+    const missing = [...enById.keys()].filter((s) => !ids.has(s))
+    const extra = [...ids].filter((s) => !enById.has(s))
     if (missing.length > 0) problems.push(`  [${code}] missing: ${missing.join(', ')}`)
     if (extra.length > 0) problems.push(`  [${code}] extra: ${extra.join(', ')}`)
     // Hero lists are structural, not localized: any divergence means the
     // producer's feeds are out of sync with each other.
     for (const charm of bulks[code].charms) {
-      const en = enBySlug.get(charm.slug)
+      const en = enById.get(charm.id)
       if (en && en.heroes.join(',') !== charm.heroes.join(',')) {
-        problems.push(`  [${code}] ${charm.slug}: hero list differs from en`)
+        problems.push(`  [${code}] ${charm.id}: hero list differs from en`)
       }
     }
   }
@@ -156,6 +157,10 @@ function assertUniformCoverage(bulks: Record<SkillLocale, CharmsBulk>): void {
     throw new Error(`charm feed is not uniform across locales:\n${problems.join('\n')}`)
   }
 }
+
+// The data files list charms in the feed's numbered order (s8-2 before s8-10).
+const byCharmNumber = (a: CharmEntry, b: CharmEntry): number =>
+  a.id.localeCompare(b.id, 'en', { numeric: true })
 
 // ---------- main ----------
 
@@ -166,8 +171,8 @@ async function main() {
   }
 
   const bulks = {} as Record<SkillLocale, CharmsBulk>
-  for (const { feed, code } of SKILL_LOCALES) {
-    bulks[code] = await loadCharmsBulk(feed)
+  for (const { code } of SKILL_LOCALES) {
+    bulks[code] = await loadCharmsBulk(code)
     assertBulkShape(code, bulks[code])
   }
   assertUniformCoverage(bulks)
@@ -185,9 +190,9 @@ async function main() {
     for (const hero of charm.heroes) {
       const owner = heroOwner.get(hero)
       if (owner) {
-        throw new Error(`hero "${hero}" appears on charms "${owner}" and "${charm.slug}"`)
+        throw new Error(`hero "${hero}" appears on charms "${owner}" and "${charm.id}"`)
       }
-      heroOwner.set(hero, charm.slug)
+      heroOwner.set(hero, charm.id)
     }
   }
 
@@ -198,25 +203,25 @@ async function main() {
   const unknownHeroes = new Set<string>()
 
   const structural: CharmData = {}
-  for (const charm of [...bulks.en.charms].sort((a, b) => a.slug.localeCompare(b.slug))) {
+  for (const charm of [...bulks.en.charms].sort(byCharmNumber)) {
     const heroes = charm.heroes.filter((h) => {
       if (heroSlugs.has(h)) return true
       unknownHeroes.add(h)
       return false
     })
     if (heroes.length === 0) {
-      console.warn(`  skipping charm "${charm.slug}": no sharing hero is in the hero list`)
+      console.warn(`  skipping charm "${charm.id}": no sharing hero is in the hero list`)
       continue
     }
-    structural[charm.slug] = { heroes: [...heroes].sort() }
+    structural[charm.id] = { heroes: [...heroes].sort() }
   }
 
-  // Charm slugs change every season, so a tag left from the last one names a
+  // Charm ids carry their season, so a tag left from the last one names a
   // charm the feed no longer has. Checked before writing, so a failed run
   // changes nothing.
   if (existsSync(CHARM_TAGS_FILE)) {
     const charmTags = JSON.parse(await readFile(CHARM_TAGS_FILE, 'utf8')) as CharmTags
-    const stale = Object.keys(charmTags).filter((slug) => !(slug in structural))
+    const stale = Object.keys(charmTags).filter((id) => !(id in structural))
     if (stale.length > 0) {
       throw new Error(
         `${CHARM_TAGS_FILE} tags charm(s) not in the feed: ${stale.join(', ')}\n` +
@@ -236,23 +241,23 @@ async function main() {
     }
     const keywords = JSON.parse(await readFile(keywordsPath, 'utf8')) as SkillKeywords
     const charms: Record<string, string[]> = {}
-    for (const charm of [...bulks[code].charms].sort((a, b) => a.slug.localeCompare(b.slug))) {
-      if (!(charm.slug in structural)) continue
+    for (const charm of [...bulks[code].charms].sort(byCharmNumber)) {
+      if (!(charm.id in structural)) continue
       // Validation runs on the cleaned strings, which are exactly what gets
       // written (a tier that is only a sprite tag must fail, not ship empty).
       const tiers = charm.tiers.map(cleanDescription)
       tiers.forEach((t, i) => {
         if (!t.trim()) {
-          throw new Error(`[${code}] charm "${charm.slug}" tier ${i + 1} is empty after cleaning`)
+          throw new Error(`[${code}] charm "${charm.id}" tier ${i + 1} is empty after cleaning`)
         }
       })
       for (const text of tiers) {
         for (const m of text.matchAll(HIGHLIGHT_RE)) {
           const { key } = splitHighlightToken(m[1]!)
-          if (key && !(key in keywords)) missingKeywords.push(`[${code}] ${charm.slug}: ${key}`)
+          if (key && !(key in keywords)) missingKeywords.push(`[${code}] ${charm.id}: ${key}`)
         }
       }
-      charms[charm.slug] = tiers
+      charms[charm.id] = tiers
     }
     localeFiles[code] = { tiers: bulks[code].tierNames, charms }
   }

@@ -9,12 +9,12 @@
 //   src/locales/seasonal/artifact/effects/<slug>.json   seasonal set
 //
 // Everything hand-written is linted against the feed instead of generated:
-// existence both ways, dir placement matching the feed's set, stat values
-// matching statBonuses, and a name locale file per artifact. A balance patch
+// existence both ways, dir placement matching the feed's set, id, season and
+// stat values matching the feed's, and a name locale file per artifact. A balance patch
 // fails the import loudly instead of drifting silently.
 //
 // Usage:
-//   npm run import:artifacts                          # reads DATA_FEED_DIR/<feed>/artifacts.json
+//   npm run import:artifacts                          # reads DATA_FEED_DIR/<code>/artifacts.json
 //   npm run import:artifacts -- --src-dir <PATH> | --url-base <URL>
 //   npm run import:artifacts -- --retire              # delete the seasonal effect files only
 //
@@ -28,7 +28,6 @@ import { fileURLToPath } from 'node:url'
 
 import { APP_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
 import {
-  APP_LOCALE_FEEDS,
   arg,
   cleanDescription,
   feedSrcDir,
@@ -65,6 +64,9 @@ interface ArtifactEntry {
   slug: string
   set: ArtifactSet
   name: string | null
+  id: number
+  season: number
+  // `stat` is the structural files' stats key.
   statBonuses: { stat: string; value: number }[]
   levels: { level: number; description: string | null }[]
 }
@@ -76,16 +78,16 @@ interface ArtifactsBulk {
 const URL_BASE_FLAG = arg('url-base')
 const SRC_DIR_FLAG = arg('src-dir')
 
-async function loadArtifactsBulk(feed: string): Promise<ArtifactsBulk> {
+async function loadArtifactsBulk(code: AppLocale): Promise<ArtifactsBulk> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/artifacts.json`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${code}/artifacts.json`
     console.log(`import-artifacts: fetching ${url}`)
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as ArtifactsBulk
   }
   const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
-  const path = join(base, feed, 'artifacts.json')
+  const path = join(base, code, 'artifacts.json')
   if (!existsSync(path)) {
     throw new Error(
       `artifact data feed not found at ${path}\n` +
@@ -128,7 +130,7 @@ async function main() {
   }
 
   const bulks = {} as Record<AppLocale, ArtifactsBulk>
-  for (const { feed, code } of APP_LOCALE_FEEDS) bulks[code] = await loadArtifactsBulk(feed)
+  for (const code of APP_LOCALES) bulks[code] = await loadArtifactsBulk(code)
 
   const en = bulks.en.artifacts
   const feedSlugs = Object.keys(en).sort()
@@ -163,6 +165,7 @@ async function main() {
     const structural = JSON.parse(await readFile(join(tree.data, `${slug}.json`), 'utf8')) as {
       id?: number
       name?: string
+      season?: number
       stats?: Record<string, number>
     }
     // Effect/name locale dicts and image lookups key on `name` matching the
@@ -175,13 +178,15 @@ async function main() {
       if (owner) problems.push(`${slug}: id ${structural.id} already used by "${owner}"`)
       else idOwner.set(structural.id, slug)
     }
-    const expected: Record<string, number> = {}
-    for (const { stat, value } of entry.statBonuses) {
-      if (!key) {
-        continue
-      }
-      expected[key] = value
+    if (structural.id !== entry.id || structural.season !== entry.season) {
+      problems.push(
+        `${slug}: id ${structural.id} in season ${structural.season}, ` +
+          `the feed says id ${entry.id} in season ${entry.season}`,
+      )
     }
+    const expected = Object.fromEntries(
+      entry.statBonuses.map(({ stat, value }) => [stat, value]),
+    ) as Record<string, number>
     const actual = structural.stats ?? {}
     const keys = new Set([...Object.keys(expected), ...Object.keys(actual)])
     for (const key of keys) {

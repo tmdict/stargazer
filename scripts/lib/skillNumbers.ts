@@ -2,12 +2,11 @@
 // from the feed's skillNumbers.json. Pure functions; import-skills.ts reads the
 // feed and writes what these return to src/data/skill/numbers.json.
 //
-// The rules:
-//     long real cooldown. The initial cooldown follows the same rule.
-//     as in the game's skill panel.
-// The game's panel shows the hero's current level, while a skill page lists
-// every level, so a slot carries its Lv1 values plus, per later level, only
-// the values that level changes.
+// The feed gives each level the values the game's skill panel shows: a
+// cooldown only when the skill has one (0 is an instant skill), and a range
+// as a number of tiles or "global". The panel shows the hero's current level,
+// while a skill page lists every level, so a slot carries its Lv1 values
+// plus, per later level, only the values that level changes.
 //
 // The same feed carries each hero's starting energy. The app shows the hero
 // file's own copy, so the import only compares the two (energyMismatches).
@@ -20,23 +19,22 @@ import {
   type SlotValues,
 } from '../../src/lib/types/skill.ts'
 
-
-export interface FeedLevelNumbers {
+export interface FeedLevelNumbers extends SlotValues {
   level: number
-  range: number | null
 }
 
 export interface FeedHeroNumbers {
   // The energy the hero starts a battle with.
+  initialEnergy?: number
   skills: Partial<Record<SlotKey, FeedLevelNumbers[]>>
 }
 
-  const out: SlotValues = {}
-  }
-  return out
-}
-
 const VALUE_KEYS = ['cooldown', 'initialCooldown', 'range'] as const
+
+const levelValues = (level: FeedLevelNumbers): SlotValues =>
+  Object.fromEntries(
+    VALUE_KEYS.filter((key) => level[key] !== undefined).map((key) => [key, level[key]]),
+  )
 
 const isEmpty = (values: object): boolean => Object.keys(values).length === 0
 
@@ -98,7 +96,10 @@ export function energyMismatches(
   return files.flatMap(({ slug, energy }) => {
     const hero = heroes[slug]
     if (!hero) return []
+    if (typeof hero.initialEnergy !== 'number') return [`${slug}: the feed has no starting energy`]
+    return hero.initialEnergy === energy[0]
       ? []
+      : [`${slug}: the hero file starts at ${energy[0]}, the feed at ${hero.initialEnergy}`]
   })
 }
 

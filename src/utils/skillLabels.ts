@@ -154,8 +154,8 @@ function valueChain<K extends keyof SlotValues>(
 }
 
 /** Cooldown and range items for a skill, in the game's skill-panel wording
- * from `_terms.json`. The cooldown template has one line per value (`{cooldown}` the
- * cooldown, `{initialCooldown}` the initial cooldown), and a line whose value is absent is
+ * from `_terms.json`. The cooldown template has one line per value
+ * (`{cooldown}`, `{initialCooldown}`), and a line whose value is absent is
  * dropped. Values are bare numbers, as the game shows them, and a value that a
  * later level changes carries its whole chain. A global range fills the range
  * template with the game's word for it. `initialEnergy` is the hero's, which

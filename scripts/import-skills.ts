@@ -18,9 +18,9 @@
 // starting energy disagree with the feed.
 //
 // Usage:
-//   npm run import:skills                          # reads DATA_FEED_DIR/<feed>/skills.json
-//   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<feed>/skills.json
-//   npm run import:skills -- --url-base <URL>      # remote: <URL>/<feed>/skills.json
+//   npm run import:skills                          # reads DATA_FEED_DIR/<code>/skills.json
+//   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<code>/skills.json
+//   npm run import:skills -- --url-base <URL>      # remote: <URL>/<code>/skills.json
 
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
@@ -122,20 +122,20 @@ const SRC_DIR_FLAG = arg('src-dir')
 
 // ---------- io helpers ----------
 
-async function loadSkillsBulk(feed: string): Promise<SkillsBulk> {
+async function loadSkillsBulk(code: SkillLocale): Promise<SkillsBulk> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/skills.json`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${code}/skills.json`
     console.log(`import-skills: fetching ${url}`)
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as SkillsBulk
   }
   const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
-  const path = join(base, feed, 'skills.json')
+  const path = join(base, code, 'skills.json')
   if (!existsSync(path)) {
     throw new Error(
       `skill data feed not found at ${path}\n` +
-        `  Place the per-locale skill JSON under <src-dir>/<feed>/skills.json,\n` +
+        `  Place the per-locale skill JSON under <src-dir>/<code>/skills.json,\n` +
         `  or pass --src-dir <PATH> / --url-base <URL>.`,
     )
   }
@@ -301,7 +301,7 @@ async function main() {
   // producer's per-hero slug is EN-derived; assertUniformCoverage guarantees
   // all per-locale bulks share the same slug set.
   const bulks = {} as Record<SkillLocale, SkillsBulk>
-  for (const { feed, code } of SKILL_LOCALES) bulks[code] = await loadSkillsBulk(feed)
+  for (const { code } of SKILL_LOCALES) bulks[code] = await loadSkillsBulk(code)
   assertUniformCoverage(bulks)
 
   // Official slot-type labels and skill-panel templates per locale, so skill

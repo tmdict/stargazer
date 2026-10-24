@@ -5,14 +5,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { argv, env, loadEnvFile } from 'node:process'
 
-import { APP_LOCALES, SKILL_LOCALES, type AppLocale } from '../../src/lib/types/i18n.ts'
+import { APP_LOCALES, type AppLocale } from '../../src/lib/types/i18n.ts'
 import { STAT_TAG_RE } from '../../src/utils/textHighlight.ts'
-
-/** Each app locale with the upstream feed directory that carries it. */
-export const APP_LOCALE_FEEDS = APP_LOCALES.map((code) => ({
-  code,
-  feed: SKILL_LOCALES.find((l) => l.code === code)!.feed,
-}))
 
 /** One value per app locale, keyed in APP_LOCALES order: the shape of every
  * chrome-language text the importers write. */
@@ -43,20 +37,14 @@ export function hasFlag(name: string): boolean {
   return argv.includes(`--${name}`)
 }
 
-// Reorder adjacent <STAT>[[value]] pairs to [[value]]<STAT>, which reads more
+// Reorder adjacent {stat}[[value]] pairs to [[value]]{stat}, which reads more
 // naturally in both EN and ZH ("40% of ATK" rather than "ATK 40%"). Standalone
 // stat tags like "based on {atk}" are left untouched. The tag grammar comes
 // from the canonical STAT_TAG_RE so renderer and importer can't diverge.
 const STAT_VALUE_SWAP = new RegExp(`${STAT_TAG_RE.source}\\s*(\\[\\[[^\\]]+\\]\\])`, 'g')
 
-function reorderStatValuePairs(text: string): string {
-  return text.replace(STAT_VALUE_SWAP, '$2{$1}')
-}
-
-
-}
-
 export function cleanDescription(text: string): string {
+  return text.replace(STAT_VALUE_SWAP, '$2{$1}')
 }
 
 // Write only when content differs so re-runs produce no git diff.
