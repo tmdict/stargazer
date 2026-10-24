@@ -139,6 +139,12 @@ const {
           <IconFilePlus :size="13" class="btn-icon" />
           <span class="btn-text">{{ i18n.t('app.new') }}</span>
         </button>
+        <RosterImportButton
+          @click="hideTip"
+          @mouseenter="showTip($event, 'app.tooltip-roster-import')"
+          @touchstart.passive="tipTouchStart"
+          @mouseleave="hideTip"
+        />
         <button
           type="button"
           class="control-btn compact"
@@ -151,12 +157,6 @@ const {
           <IconUpload :size="13" class="btn-icon" />
           <span class="btn-text">{{ i18n.t('app.import') }}</span>
         </button>
-        <RosterImportButton
-          @click="hideTip"
-          @mouseenter="showTip($event, 'app.tooltip-roster-import')"
-          @touchstart.passive="tipTouchStart"
-          @mouseleave="hideTip"
-        />
         <button
           v-if="rosters.count > 0"
           type="button"
