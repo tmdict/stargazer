@@ -9,6 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
+    "airborne": [{ "skill3": 1, "mods": ["kazim"] }],
     "debuff": [{ "awakening": 1, "mods": ["single"] }]
   }
 }

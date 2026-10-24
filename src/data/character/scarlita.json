@@ -9,6 +9,10 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "airborne": [
+      { "skill2": 1, "mods": ["kazim"] },
+      { "skill3": 1, "mods": ["kazim"] }
+    ],
     "execute": [{ "ex": 3 }],
     "temp-buff": [{ "awakening": 1, "mods": ["orion", "perseus", "single"] }]
   }

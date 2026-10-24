@@ -9,6 +9,10 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "airborne": [
+      { "skill3": 1, "mods": ["kazim"] },
+      { "ex": 1, "mods": ["kazim"] }
+    ],
     "debuff": [
       { "mastery": 1, "mods": ["eryndor", "single"] },
       { "ex": 1, "mods": ["single"] }

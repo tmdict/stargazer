@@ -9,6 +9,10 @@
   "range": 3,
   "season": 3,
   "tags": {
+    "airborne": [
+      { "ultimate": 1, "mods": ["kazim"] },
+      { "skill3": 1, "mods": ["kazim"] }
+    ],
     "summon": [{ "ultimate": 1 }],
     "temp-buff": [{ "ex": 3, "mods": ["orion", "perseus", "single"] }]
   }

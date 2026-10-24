@@ -9,6 +9,7 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "airborne": [{ "ultimate": 1, "mods": ["kazim"] }],
     "debuff": [{ "ex": 3, "mods": ["eryndor", "global"] }]
   }
 }

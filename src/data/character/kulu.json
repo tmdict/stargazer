@@ -9,6 +9,7 @@
   "range": 6,
   "season": 4,
   "tags": {
+    "airborne": [{ "skill2": 1, "mods": ["kazim"] }],
     "debuff": [
       { "skill3": 1, "mods": ["aoe", "eryndor"] },
       { "ex": 1, "mods": ["global"] }
