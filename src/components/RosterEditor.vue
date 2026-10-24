@@ -484,6 +484,8 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   gap: var(--picker-row-gap);
 }
 
+/* The dock takes two rows below the width its one row needs at scale 1.4,
+   the largest a host sets, in English, the widest language. */
 .roster-dock {
   container-type: inline-size;
 }
@@ -502,7 +504,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   gap: var(--spacing-sm);
 }
 
-@container (max-width: 490px) {
+@container (max-width: 660px) {
   .dock-rows {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -515,7 +517,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   }
 }
 
-@container (max-width: 560px) {
+@container (max-width: 765px) {
   .select-rows {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -539,7 +541,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   }
 }
 
-@container (min-width: 561px) {
+@container (min-width: 766px) {
   .level-label {
     display: none;
   }

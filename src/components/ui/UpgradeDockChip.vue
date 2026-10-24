@@ -68,14 +68,14 @@ const handleClick = (): void => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: calc(20px * var(--dock-scale));
+  height: calc(20px * var(--dock-scale));
   padding: 0;
   border: none;
   border-radius: 999px;
   background: var(--dock-chip-fill);
   color: var(--color-text-secondary);
-  font-size: 0.62rem;
+  font-size: calc(0.62rem * var(--dock-scale));
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -92,9 +92,13 @@ const handleClick = (): void => {
   cursor: default;
 }
 
+.dock-chip :slotted(svg) {
+  scale: var(--dock-scale);
+}
+
 .danger {
-  width: 18px;
-  height: 18px;
+  width: calc(18px * var(--dock-scale));
+  height: calc(18px * var(--dock-scale));
   color: var(--color-danger);
 }
 
@@ -109,8 +113,8 @@ const handleClick = (): void => {
 
 .text {
   width: auto;
-  height: 20px;
-  padding: 0 7px;
+  height: calc(20px * var(--dock-scale));
+  padding: 0 calc(7px * var(--dock-scale));
 }
 
 .danger:hover:not(:disabled),

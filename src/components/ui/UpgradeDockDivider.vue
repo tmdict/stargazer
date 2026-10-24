@@ -5,7 +5,7 @@
 <style scoped>
 .dock-divider {
   width: 1px;
-  height: 18px;
+  height: calc(18px * var(--dock-scale));
   background: var(--color-border-primary);
 }
 </style>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-/* The generator's roster bar: the roster menu, the screenshot import and a
-   rosters file import, as on the Rosters tab, then Generate. Picking or
-   importing a roster makes it the active one, which the page copies. */
+/* The generator's roster bar: the roster menu, the screenshot import and the
+   rosters file import and export, as on the Rosters tab, then Generate.
+   Picking or importing a roster makes it the active one, which the page
+   copies. */
 
 import RosterImportButton from '@/components/RosterImportButton.vue'
 import RosterMenu from '@/components/RosterMenu.vue'
+import IconDownload from '@/components/ui/IconDownload.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -28,7 +30,7 @@ const report = (message?: string): void => {
   else if (message) success(message)
 }
 
-const { fileInput, handleFileChosen } = useLibraryTransfer({
+const { fileInput, download, handleFileChosen } = useLibraryTransfer({
   filePrefix: 'stargazer-rosters',
   importFile: rosters.importRosters,
   report,
@@ -59,7 +61,7 @@ const {
     />
     <button
       type="button"
-      class="control-btn compact"
+      class="control-btn compact secondary"
       :aria-label="i18n.t('app.import')"
       @click="fileInput?.click()"
       @mouseenter="showTip($event, 'app.tooltip-rosters-import')"
@@ -68,6 +70,19 @@ const {
     >
       <IconUpload :size="13" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.import') }}</span>
+    </button>
+    <button
+      v-if="rosters.count > 0"
+      type="button"
+      class="control-btn compact secondary"
+      :aria-label="i18n.t('app.export')"
+      @click="download(rosters.exportRosters())"
+      @mouseenter="showTip($event, 'app.tooltip-rosters-export')"
+      @touchstart.passive="tipTouchStart"
+      @mouseleave="hideTip"
+    >
+      <IconDownload :size="13" class="btn-icon" />
+      <span class="btn-text">{{ i18n.t('app.export') }}</span>
     </button>
     <button
       type="button"
@@ -105,9 +120,9 @@ const {
 /* Sized as the bar's compact buttons, and on a phone as tall as their round
    icons, keeping its label there. */
 .sl-go {
-  min-height: 28px;
-  padding: 2px 12px;
-  font-size: 0.78rem;
+  min-height: var(--control-height-compact);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--control-font-size);
 }
 
 .sl-go:disabled {
