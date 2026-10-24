@@ -174,6 +174,8 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`: it edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster. The tab's Delete and the editor's Clear share one two-step confirm, so only one of them is armed at a time.
+
 The Rosters tab's Screenshots button reads a roster from screenshots of the game's hero roster ([Roster Import](./IMPORT_ROSTER.md)). Its Save creates the roster with its name and heroes in one write (`create`, which the tab's New calls with an automatic name and no heroes), and the new roster becomes the active one. At the limit nothing is created, and the import keeps its review.
 
 | Key                        | Holds                                                                                            |
