@@ -1,5 +1,5 @@
 {
-  "en": "Every team of this comp on this map: the players who fielded one, and their wins–losses",
-  "zh": "该阵容在这张地图上的所有队伍：用过的玩家数，以及胜负场次",
-  "ko": "이 맵에서 이 조합의 모든 팀: 그 팀을 쓴 플레이어 수와 승패"
+  "en": "This comp's wins and losses on this map. The win rate shows once it has won or lost 8 games.",
+  "zh": "这个阵容在这张地图上的胜负场次。胜负合计满 8 场后才显示胜率。",
+  "ko": "이 맵에서 이 조합의 승패입니다. 이기거나 진 전투가 8판이 되면 승률이 표시됩니다."
 }

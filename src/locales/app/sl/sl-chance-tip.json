@@ -1,5 +1,5 @@
 {
-  "en": "The chance this set wins at least 3 of the 5 maps against an average opponent, with your upgrade levels counted.",
-  "zh": "按你的强化等级计算，这套阵容对阵平均水平的对手时，5 张地图中至少赢下 3 张的几率。",
-  "ko": "강화 수준을 반영해, 이 세트가 평균적인 상대를 만나 5개 맵 중 3개 이상을 이길 확률입니다."
+  "en": "If you played this set many times against a typical opponent from the records, this is how often you would win the match by taking 3 of the 5 maps. The opponent's heroes count as fully upgraded, and yours at the levels you picked.",
+  "zh": "如果用这套阵容对阵记录中一般水平的对手打很多场，这就是你赢下整场比赛（5 张地图赢 3 张）的频率。对手的英雄按满强化计算，你的英雄按你选择的等级计算。",
+  "ko": "기록 속 보통 수준의 상대와 이 세트로 여러 번 싸운다면, 5개 맵 중 3개를 이겨 매치에서 승리하는 비율이 이 정도입니다. 상대 영웅은 모두 최대 강화로, 내 영웅은 고른 강화 수준으로 계산합니다."
 }

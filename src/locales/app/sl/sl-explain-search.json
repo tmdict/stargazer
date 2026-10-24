@@ -1,5 +1,5 @@
 {
-  "en": "from every combination of five teams with no hero twice. It can give up a map to make three others safer.",
-  "zh": "从所有不重复使用英雄的五队组合中选出。它可能放弃一张地图，换来另外三张更稳。",
-  "ko": "같은 영웅을 두 번 쓰지 않는 다섯 팀의 모든 조합 가운데서 고릅니다. 다른 세 맵을 더 확실히 잡으려고 한 맵을 내줄 수도 있습니다."
+  "en": "The generator tries every way of picking five recorded teams, one for each map, with no hero used twice. It keeps the set with the best chance to win the match, which can mean a weaker team on one map so that the others are stronger.",
+  "zh": "生成器会尝试所有挑选五支记录队伍的方式，每张地图一支，同一英雄只用一次，然后保留赢下整场比赛几率最高的一套。这可能意味着在一张地图上用较弱的队伍，让其他地图更强。",
+  "ko": "생성기는 맵마다 한 팀씩, 같은 영웅을 두 번 쓰지 않게 기록된 팀 다섯을 고르는 모든 방법을 시도하고, 매치를 이길 확률이 가장 높은 세트를 남깁니다. 그래서 다른 맵을 더 강하게 하려고 한 맵에 약한 팀을 둘 수도 있습니다."
 }

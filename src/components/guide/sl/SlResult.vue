@@ -30,8 +30,9 @@ export interface SlShown {
 </script>
 
 <script setup lang="ts">
-/* The chosen set: its chance to win the match with a tooltip, the
-   explanation, Save as team, and one column per map. */
+/* The chosen set: its chance to win the match with a tooltip and a line on
+   what it is measured against, the explanation, Save as team, and one column
+   per map. */
 
 import { computed, ref } from 'vue'
 
@@ -64,19 +65,22 @@ const {
   <section class="sl-band">
     <div class="sl-band-head">
       <span class="sl-chance">
-        <button
-          type="button"
-          class="sl-help"
-          @mouseenter="tipOpen"
-          @mouseleave="tipClose"
-          @focus="tipOpen"
-          @blur="tipClose"
-          @click="tipToggle"
-          @touchstart.passive="tipTouchStart"
-        >
-          {{ i18n.t('app.sl-chance') }}<span aria-hidden="true" />
-        </button>
-        <b>{{ slPercent(shown.chance) }}</b>
+        <span class="sl-chance-line">
+          <button
+            type="button"
+            class="sl-help"
+            @mouseenter="tipOpen"
+            @mouseleave="tipClose"
+            @focus="tipOpen"
+            @blur="tipClose"
+            @click="tipToggle"
+            @touchstart.passive="tipTouchStart"
+          >
+            {{ i18n.t('app.sl-chance') }}<span aria-hidden="true" />
+          </button>
+          <b>{{ slPercent(shown.chance) }}</b>
+        </span>
+        <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
       </span>
       <span class="sl-actions">
         <button type="button" class="sl-btn" @click="explaining = true">
@@ -127,10 +131,22 @@ const {
 }
 
 .sl-chance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-text-secondary);
+}
+
+.sl-chance-line {
   display: inline-flex;
   align-items: baseline;
   gap: 10px;
-  color: var(--color-text-secondary);
+}
+
+.sl-chance-note {
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .sl-chance b {
