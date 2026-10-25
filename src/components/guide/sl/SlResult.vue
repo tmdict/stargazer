@@ -38,7 +38,7 @@ import { computed, ref } from 'vue'
 
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
-import IconHelp from '@/components/ui/IconHelp.vue'
+import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
@@ -78,7 +78,8 @@ const {
             @click="tipToggle"
             @touchstart.passive="tipTouchStart"
           >
-            {{ i18n.t('app.sl-chance') }}<span aria-hidden="true" />
+            {{ i18n.t('app.sl-chance')
+            }}<IconHelpSmall :size="14" class="sl-help-mark" aria-hidden="true" />
           </button>
           <b>{{ slPercent(shown.chance) }}</b>
         </span>
@@ -86,7 +87,7 @@ const {
       </span>
       <span class="sl-actions">
         <button type="button" class="solid-btn sl-action outline" @click="explaining = true">
-          <IconHelp :size="14" />
+          <IconHelpSmall :size="14" />
           {{ i18n.t('app.sl-explain') }}
         </button>
         <button type="button" class="solid-btn sl-action" @click="emit('save')">
@@ -158,7 +159,6 @@ const {
   font-size: 24px;
 }
 
-/* The report's help mark: a question mark in a small ring after the label. */
 .sl-help {
   padding: 0;
   border: 0;
@@ -169,26 +169,18 @@ const {
   cursor: help;
 }
 
-.sl-help > span {
-  position: relative;
-  display: inline-block;
-  width: 14px;
-  height: 14px;
+/* Dimmed and lit in the teal as the help links are (HelpLink), centred on the
+   label's capitals. */
+.sl-help-mark {
   margin-left: 4px;
-  border: 1px solid var(--color-border-primary);
-  border-radius: 50%;
+  opacity: 0.55;
   vertical-align: calc(0.5cap - 7px);
+  transition: all var(--transition-fast);
 }
 
-.sl-help > span::before {
-  content: '?';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  line-height: 1;
+.sl-help:is(:hover, :focus-visible) .sl-help-mark {
+  opacity: 1;
+  color: var(--color-primary);
 }
 
 .sl-help:focus-visible {
