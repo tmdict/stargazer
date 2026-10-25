@@ -34,6 +34,9 @@ const isNumbers = (value: unknown, length?: number): boolean =>
 // One season's part of the file: its games, teams and groups.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
   isObject(value) &&
+  (value.sample === undefined ||
+    (isObject(value.sample) &&
+      isNumbers([value.sample.matches, value.sample.games, value.sample.players]))) &&
   typeof value.theta === 'number' &&
   typeof value.oneOffStart === 'number' &&
   Array.isArray(value.games) &&

@@ -9,10 +9,11 @@ export const isReportLocale = (lang: AppLocale): lang is ReportLocale =>
 
 /** The season's static report, hydrated to this path at build (scripts/guideReports.ts).
  * It sits outside the locale-prefixed routes and opens in English unless the
- * link asks for Chinese with `?lang=zh`, so a site language the report is not
- * written in reads the English one; a fragment goes after the query. */
+ * link asks for another language with `?lang=`. A report reads a language it
+ * has no translation in as English, so the link asks for the site language
+ * whatever the season offers; a fragment goes after the query. */
 export const pvpReportHref = (season: number, lang: AppLocale): string =>
-  `/guide/pvp/s${season}/${lang === 'zh' ? '?lang=zh' : ''}`
+  `/guide/pvp/s${season}/${lang === 'en' ? '' : `?lang=${lang}`}`
 
 /** Ladder order: best rating first; games break ties so the order is total. */
 export const ladderTeams = (summary: PvpSeasonSummary): PvpTeam[] =>

@@ -1,0 +1,5 @@
+{
+  "en": "The teams and all the numbers come from {matches} recorded Season {season} matches ({games} games) between {players} players, up to {date}.",
+  "zh": "这些队伍和所有数字都来自第 {season} 赛季截至 {date} 的记录，共 {matches} 场比赛（{games} 局），涉及 {players} 名玩家。",
+  "ko": "팀과 모든 수치는 {date}까지 기록된 시즌 {season}의 매치 {matches}회(전투 {games}판)에서 나왔으며, 플레이어 {players}명이 참여했습니다."
+}

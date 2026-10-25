@@ -58,7 +58,17 @@ export interface SlFamily {
   perMap: [players: number, wins: number, losses: number][]
 }
 
+// What a season's numbers come from: its recorded matches and games in every
+// format, and the players in them.
+export interface SlSample {
+  matches: number
+  games: number
+  players: number
+}
+
 export interface SlSeason<Team> {
+  // Optional: the note on the data gives the counts when the file has them.
+  sample?: SlSample
   theta: number
   oneOffStart: number
   games: SlGame[]

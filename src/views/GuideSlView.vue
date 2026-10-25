@@ -12,6 +12,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar from '@/components/guide/sl/SlBar.vue'
 import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
@@ -27,7 +28,7 @@ import {
 import { chooseSlSet } from '@/lib/pvp/sl/chooser'
 import { loadSlData } from '@/lib/pvp/sl/codec'
 import { slTeamData } from '@/lib/pvp/sl/team'
-import type { SlData, SlPick } from '@/lib/pvp/sl/types'
+import type { SlData, SlPick, SlSample } from '@/lib/pvp/sl/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { MAX_SAVED_TEAMS, TEAM_VARIANTS } from '@/lib/teams/modes'
@@ -58,9 +59,15 @@ const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 // Plain, never reactive: a proxy over every recorded game would slow the
 // chooser, and the decoded data stays out of anything the console can reach.
 let data: SlData | null = null
-const heading = ref<{ season: number; date: string; rotation: boolean; retired: boolean } | null>(
-  null,
-)
+const heading = ref<{
+  season: number
+  date: string
+  rotation: boolean
+  retired: boolean
+  sample: SlSample | null
+  before: (SlSample & { season: number }) | null
+} | null>(null)
+const aboutOpen = ref(false)
 const failed = ref(false)
 const mounted = ref(false)
 
@@ -82,6 +89,8 @@ onMounted(async () => {
     date: data.exportedAt,
     rotation: data.maps.map((m) => m.key).join() !== TEAM_VARIANTS.sl.maps.join(),
     retired: isRetiredSeason(data.season),
+    sample: data.sample ?? null,
+    before: data.before?.sample ? { season: data.before.season, ...data.before.sample } : null,
   }
 })
 
@@ -205,8 +214,21 @@ const save = (): void => {
       <h1>{{ i18n.t('app.sl-title') }}<span class="sl-beta">BETA</span></h1>
       <p v-if="heading">
         {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
+        <span aria-hidden="true">·</span>
+        <button type="button" class="sl-about-link" @click="aboutOpen = true">
+          {{ i18n.t('app.sl-about') }}
+        </button>
       </p>
     </header>
+    <SlAbout
+      v-if="heading"
+      :show="aboutOpen"
+      :season="heading.season"
+      :date="heading.date"
+      :sample="heading.sample"
+      :before="heading.before"
+      @close="aboutOpen = false"
+    />
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.sl-previous-season') }}</p>
     <p v-else-if="heading?.rotation" class="sl-line sl-note">
       {{ i18n.t('app.sl-previous-rotation') }}
@@ -283,6 +305,20 @@ const save = (): void => {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
+}
+
+.sl-about-link {
+  margin-left: 0.35em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.sl-about-link:hover {
+  text-decoration: underline;
 }
 
 .sl-line.sl-note {
