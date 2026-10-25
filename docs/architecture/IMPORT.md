@@ -55,7 +55,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 ## Reference descriptors
 
-Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and outfits give general coverage. The data pack's `screenshot-import/hero-icons.json` holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
+Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and costumes give general coverage. The data pack's `screenshot-import/hero-icons.json` holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
 
 The bundled file and browser storage (`stargazer.import.learned`) share one object, validated by `readLearnedIcons`:
 

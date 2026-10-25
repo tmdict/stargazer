@@ -21,12 +21,15 @@ import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 
 import { outfitHero } from '../../src/lib/characters/outfit.ts'
+import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
 import { SKILL_LOCALES } from '../../src/lib/types/i18n.ts'
 
 const SKILL = 'text/skill'
 // The pinned version a download holds; a copy from a local folder has none.
 const MARKER = '.version'
 
+// Seasonal text is left out: a season ships before its text, and git keeps no
+// empty folder.
 const PACK_FOLDERS = [
   'images/character',
   'images/artifact',
@@ -35,8 +38,6 @@ const PACK_FOLDERS = [
   'screenshot-import',
   'text/skill',
   'text/artifact',
-  'text/seasonal/artifact',
-  'text/seasonal/phantimal',
 ]
 
 // The files the app imports directly. Without a pack they are written empty, so dev, the type check and
@@ -111,12 +112,13 @@ const heroFiles = (dir: string): string[] => jsonNames(dir).filter((name) => !na
 
 /** Makes dest a copy of source and returns how many files changed. Files that
  * already match are left alone, so a running dev server reloads only what
- * changed, and the files npm run data generates stay. */
+ * changed, and the files npm run data generates stay while the source holds
+ * their language. */
 export function mirror(source: string, dest: string): number {
   const wanted = new Set(listFiles(source))
   let changed = 0
   for (const path of listFiles(dest)) {
-    if (wanted.has(path) || isGenerated(path)) continue
+    if (wanted.has(path) || (isGenerated(path) && existsSync(join(source, dirname(path))))) continue
     rmSync(join(dest, path))
     changed++
   }
@@ -177,7 +179,11 @@ export function packProblems(pack: string, root: string): { problems: string[]; 
   for (const folder of PACK_FOLDERS) {
     if (!existsSync(join(pack, folder))) problems.push(`the pack has no ${folder} folder`)
   }
-  for (const file of [...Object.keys(STAND_INS), 'screenshot-import/replay-arena.png']) {
+  for (const file of [
+    ...Object.keys(STAND_INS),
+    'screenshot-import/replay-arena.png',
+    ...FRAME_NAMES.map((name) => `screenshot-import/frame-${name}.png`),
+  ]) {
     if (!hasFile(pack, file)) problems.push(`the pack has no ${file}`)
   }
 
@@ -215,6 +221,10 @@ export function packProblems(pack: string, root: string): { problems: string[]; 
   )
   for (const slug of english) {
     if (!known.has(slug)) problems.push(`the pack has skill text for ${slug}, who has no hero file`)
+  }
+  // Heroes and phantimals share one picture list keyed by name.
+  for (const slug of jsonNames(join(root, 'src/data/seasonal/phantimal'))) {
+    if (known.has(slug)) problems.push(`${slug} is both a hero and a phantimal`)
   }
   for (const slug of heroes) {
     if (!portraits.has(slug)) notes.push(`${slug} has no portrait yet`)
@@ -319,7 +329,6 @@ export async function download(
     rmSync(staging, { recursive: true, force: true })
     mkdirSync(staging, { recursive: true })
     cpSync(source, next, { recursive: true })
-    writeGenerated(next)
     if (existsSync(pack)) renameSync(pack, old)
     renameSync(next, pack)
     writeFileSync(join(pack, MARKER), `${version}\n`)

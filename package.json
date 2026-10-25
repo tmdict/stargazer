@@ -7,19 +7,19 @@
     "data": "tsx scripts/data.ts",
     "data:pin": "tsx scripts/data.ts pin",
     "dev": "npm run data && vite",
-    "build": "tsx scripts/data.ts build && npm run type-check && vite-ssg build",
+    "build": "tsx scripts/data.ts build && vue-tsc --build && vite-ssg build",
     "build:ssg": "tsx scripts/data.ts build && vite-ssg build",
-    "build:spa": "tsx scripts/data.ts build && npm run type-check && vite build",
+    "build:spa": "tsx scripts/data.ts build && vue-tsc --build && vite build",
     "format": "prettier --write --list-different src/ docs/ tests/",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prep": "npm run data && npm run format && npm run type-check && npm run lint && vitest run",
+    "prep": "npm run data && npm run format && vue-tsc --build && npm run lint && vitest run",
     "preview": "vite preview",
     "test": "npm run data && vitest run",
     "test:unit": "npm run data && vitest run tests/unit",
     "test:it": "npm run data && vitest run tests/integration",
     "test:watch": "npm run data && vitest",
-    "type-check": "vue-tsc --build"
+    "type-check": "npm run data && vue-tsc --build"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.4",

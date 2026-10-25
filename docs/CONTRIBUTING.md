@@ -38,7 +38,7 @@ npm run data:pin      # pin the DATA_PACK_DIR folder's version in data.lock
 
 1. Add `src/data/character/<name>.json`.
 2. Add the English and Chinese display names in `src/locales/character/<name>.json`.
-3. Run the data export. It adds the hero's portrait and skill text in every language to the data pack, and writes the hero's Korean display name, the game's own, into that file.
+3. Run the image export and the data export. The image export adds the hero's portrait to the data pack; the data export adds its skill text in every language and writes its Korean display name, the game's own, into that file.
 4. Run `npm run data:pin` so the build takes the pack version that holds the hero.
 
 The hero list, skill pages and search pick the character up from those files.

@@ -31,11 +31,9 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
       mkdirSync(join(dir, path), { recursive: true })
     }
     copyFileSync(join(root, 'src/utils/imageAssets.ts'), join(dir, 'src/utils/imageAssets.ts'))
-    for (const name of ['evie', 'evie-skin1']) {
-      await sharp({ create: { width: 240, height: 330, channels: 4, background: '#a05080' } })
-        .png()
-        .toFile(join(dir, `src/pack/images/character/${name}.png`))
-    }
+    await sharp({ create: { width: 240, height: 330, channels: 4, background: '#a05080' } })
+      .png()
+      .toFile(join(dir, 'src/pack/images/character/evie.png'))
     await sharp({ create: { width: 120, height: 120, channels: 4, background: '#30a070' } })
       .png()
       .toFile(join(dir, 'src/pack/images/artifact/starshard.png'))
@@ -72,7 +70,6 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
       template.replace(/href="[^"]+"/g, 'href="image"'),
     )
     const assets = readdirSync(join(dir, 'dist/assets'))
-    // The outfit beside the portrait is no display variant.
     expect(assets.filter((file) => file.endsWith('.webp'))).toHaveLength(3)
     const app = assets
       .filter((file) => file.endsWith('.js'))
