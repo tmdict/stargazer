@@ -5,8 +5,6 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { normalizePath, type Plugin, type ResolvedConfig } from 'vite'
 
-import { seasonArtifactImageUrl } from '../src/utils/artifactImage.ts'
-
 export function guideReports(): Plugin {
   let config: ResolvedConfig
 
@@ -34,7 +32,7 @@ export function guideReports(): Plugin {
       const files = new Map<string, string>()
       for (const id of images.importedIds) {
         const source = normalizePath(relative(config.root, id.split('?')[0]!))
-        const key = /^src\/assets\/images\/(character|artifact)\/([a-z0-9-]+)\.png$/.exec(source)
+        const key = /^src\/pack\/images\/(character|artifact)\/([a-z0-9-]+)\.png$/.exec(source)
         if (!key) continue
         // vite-imagetools returns Vite's emitted-asset token. Resolve its
         // reference through the bundler, which owns the final hashed filename.
@@ -56,9 +54,8 @@ export function guideReports(): Plugin {
         }
         const template = readFileSync(join(directory, season, 'index.template.html'), 'utf8')
         const html = template.replace(
-          /\{\{asset:(character|artifact|seasonal-artifact)\/([a-z0-9-]+)\}\}/g,
+          /\{\{asset:(character|artifact)\/([a-z0-9-]+)\}\}/g,
           (_marker, type: string, slug: string) => {
-            if (type === 'seasonal-artifact') return seasonArtifactImageUrl(slug)
             const file = files.get(`${type}/${slug}`)
             if (!file) this.error(`Missing guide image in ${season}: ${type}/${slug}`)
             return config.base + file

@@ -1,7 +1,7 @@
 /* Runtime reference assembly shared by the worker and offline checker.
  * Curated examples stay separate from the browser's disposable learning. */
 
-import heroIcons from '@/data/import/hero-icons.json'
+import heroIcons from '@/pack/screenshot-import/hero-icons.json'
 import { buildHeroTable } from './card/heroes'
 import type { HeroTable, LearnedIcon, PortraitRef } from './card/types'
 import { readLearnedIcons } from './learned'

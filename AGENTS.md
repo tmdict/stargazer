@@ -20,7 +20,7 @@ Any new or changed data contract requires the owner's explicit approval before i
 
 ### Private Sources
 
-Nothing committed here names or points to a private repository, its files or its folders: not code, comments, docs, tests or test names, script output, file paths, commit messages or PR text. Describe such a source in neutral words ("the upstream data feed", "the image host", "an external report generator") or leave it out. The image host's address in `src/utils/artifactImage.ts` is the only exception.
+Nothing committed here names or points to a private repository, its files or its folders: not code, comments, docs, tests or test names, script output, file paths, commit messages or PR text. Describe such a source in neutral words ("the upstream data feed", "the data pack", "the data export", "an external report generator") or leave it out.
 
 ### Comments
 

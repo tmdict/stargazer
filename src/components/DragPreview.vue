@@ -33,12 +33,7 @@ const backgroundImage = computed(() => {
           backgroundPosition: 'center',
         }"
       >
-        <img
-          :src="draggedImageSrc"
-          :alt="draggedCharacter.name"
-          class="portrait"
-          crossorigin="anonymous"
-        />
+        <img :src="draggedImageSrc" :alt="draggedCharacter.name" class="portrait" />
       </div>
     </div>
   </Teleport>

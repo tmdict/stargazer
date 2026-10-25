@@ -117,7 +117,6 @@ const iconStyle = (center: { x: number; y: number }) => {
 const getAllyStyles = computed(() => iconStyle(allyCenter.value))
 const getEnemyStyles = computed(() => iconStyle(enemyCenter.value))
 
-// Resolve artifact IDs to records (name + season drive local vs remote icons).
 const allyArtifact = computed(() => {
   if (props.allyArtifactId === null || props.allyArtifactId === undefined) return null
   return gameDataStore.getArtifactById(props.allyArtifactId) ?? null

@@ -61,14 +61,9 @@ export const stubImportBrowser = (): void => {
     'createImageBitmap',
     vi.fn(async () => bitmap),
   )
-  // No costume manifest; every other reference is an image.
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (url: string) => ({
-      ok: !url.endsWith('skins.json'),
-      status: 404,
-      blob: async () => new Blob(),
-    })),
+    vi.fn(async () => ({ ok: true, blob: async () => new Blob() })),
   )
 }
 

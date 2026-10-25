@@ -22,7 +22,7 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
 
 `npm run build` runs the type check, then `build:ssg`. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page, so 16 languages × every hero with text. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
 The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so hydration matches.
 
@@ -68,7 +68,7 @@ A deploy purges the previous build's hashed chunks, so a stale tab's next lazy r
 
 The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page from an external report generator with its own styles and scripts. It sits outside Vue routing and the route list, and reaches the sitemap only because the sitemap scans the built HTML. The generator's own folder, `src/content/pvp/sl/`, holds its data file and no template, and the plugin takes only folders named `s<N>`. The plugin runs only in the client production build, so a report URL does not resolve in the dev server.
 
-The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies. `seasonal-artifact` resolves to the icon's URL on the image host.
+The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies.
 
 The plugin takes images only from the imports of `src/utils/imageAssets.ts`, which holds the hero list's display variants, so other variants cut from the same PNGs stay out of the reports. That file must import nothing local, because its integration test copies it on its own. Each image module must carry exactly one `__VITE_ASSET__` reference, which the bundler resolves to the final file name. This leans on a Vite internal, so re-run `tests/integration/guideReports.test.ts` after a Vite upgrade.
 

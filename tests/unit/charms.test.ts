@@ -1,7 +1,7 @@
 // Charm data integrity: the generated structural map and locale files must
 // stay mutually consistent, and every referenced hero must exist in the
-// hero list. Guards the import-charms outputs the UI consumes without runtime
-// checks.
+// hero list. Guards the data export's charm outputs the UI consumes without
+// runtime checks.
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { pinnedLevels } from '@/lib/tags'
@@ -34,9 +34,9 @@ describe('charm data', () => {
     await Promise.all(APP_LOCALES.map((lang) => loadSkillLocale(lang)))
   })
 
-  // A season can ship before its charm feed, so an empty map is legitimate
-  // (import:charms --retire); a structural map without text, or text without
-  // a map, is a half-written import.
+  // A season can ship before its charm text, so an empty map is legitimate (the
+  // export retires charms with their season); a structural map without text, or
+  // text without a map, is a half-written export.
   it('is either fully present or fully retired', () => {
     for (const lang of APP_LOCALES) {
       expect(getSkillCharms(lang) !== null, `${lang} _charms.json vs charms.json`).toBe(
@@ -62,8 +62,8 @@ describe('charm tags', () => {
   const charmTags = loadCharmTags()
   const tagged = Object.entries(charmTags)
 
-  // import:charms checks the slugs at import time; this catches an edit made
-  // between imports.
+  // The export checks the slugs when it runs; this catches an edit made between
+  // exports.
   it.runIf(tagged.length > 0)('tags only current charms, with labelled tags and real tiers', () => {
     const charms = loadCharms()
     const labels = loadAppLocales()

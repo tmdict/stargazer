@@ -1,7 +1,6 @@
 import { shallowReactive } from 'vue'
 
-import skillHeroes from '@/data/skill/heroes.json'
-import skillNumbers from '@/data/skill/numbers.json'
+import { outfitHero } from '@/lib/characters/outfit'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -18,6 +17,8 @@ import type {
   SkillTerms,
   TagAttachment,
 } from '@/lib/types/skill'
+import skillHeroes from '@/pack/data/skill/heroes.json'
+import skillNumbers from '@/pack/data/skill/numbers.json'
 import { artifactImages, characterImages } from './imageAssets'
 
 function extractFileName(path: string): string {
@@ -95,15 +96,49 @@ export function loadCharacterImages(): Record<string, string> {
   return characterImages
 }
 
-// Portraits at the art's own width for the match-import matcher, loaded on
-// demand: the 100 px picker thumbnails lose the face detail the matcher needs.
-// Keyed by hero name; each value is a lazy import of the image URL.
+// Portraits and phantimals at the art's own width for the screenshot import's
+// matcher, loaded on demand: the 100 px picker thumbnails lose the face detail
+// the matcher needs. Keyed by unit name; each value is a lazy import of the
+// image URL.
 export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
-  const modules = import.meta.glob<string>('@/assets/images/character/*.png', {
-    query: { format: 'webp', quality: 85, w: 180 },
+  const modules = import.meta.glob<string>(
+    [
+      '@/pack/images/character/*.png',
+      '@/pack/images/seasonal/phantimal/*.png',
+      '!@/pack/images/character/*-skin*.png',
+    ],
+    { query: { format: 'webp', quality: 85, w: 180 }, import: 'default' },
+  )
+  return loadAssetsDict(modules)
+}
+
+// The paragon frames by name (p0 … p4-crown) and each hero's outfits, for the
+// screenshot import. Both are encoded at the settings the import's matching
+// was tuned on.
+export function loadImportFrames(): Record<string, () => Promise<string>> {
+  const modules = import.meta.glob<string>('@/pack/screenshot-import/frame-*.png', {
+    query: { format: 'webp', quality: 90, effort: 6 },
     import: 'default',
   })
-  return loadAssetsDict(modules)
+  return Object.fromEntries(
+    Object.entries(modules).map(([path, load]) => [
+      extractFileName(path).slice('frame-'.length),
+      load,
+    ]),
+  )
+}
+
+export function loadOutfitPortraits(): Record<string, (() => Promise<string>)[]> {
+  const modules = import.meta.glob<string>('@/pack/images/character/*-skin*.png', {
+    query: { format: 'webp', quality: 90, effort: 6 },
+    import: 'default',
+  })
+  const outfits: Record<string, (() => Promise<string>)[]> = {}
+  for (const [path, load] of Object.entries(modules)) {
+    const hero = outfitHero(extractFileName(path))
+    if (hero) (outfits[hero] ??= []).push(load)
+  }
+  return outfits
 }
 
 function loadArtifactImages(): Record<string, string> {
@@ -185,7 +220,7 @@ export function loadPhantimalLocales(): Record<string, PhantimalLocale> {
     return phantimalLocalesCache
   }
 
-  const modules = import.meta.glob<PhantimalLocale>('@/locales/seasonal/phantimal/*.json', {
+  const modules = import.meta.glob<PhantimalLocale>('@/pack/text/seasonal/phantimal/*.json', {
     eager: true,
     import: 'default',
   })
@@ -206,11 +241,11 @@ function loadArtifactEffects(): Record<string, LocaleData[]> {
   }
 
   const effectModules = {
-    ...import.meta.glob<LocaleData[]>('@/locales/artifact/effects/*.json', {
+    ...import.meta.glob<LocaleData[]>('@/pack/text/artifact/*.json', {
       eager: true,
       import: 'default',
     }),
-    ...import.meta.glob<LocaleData[]>('@/locales/seasonal/artifact/effects/*.json', {
+    ...import.meta.glob<LocaleData[]>('@/pack/text/seasonal/artifact/*.json', {
       eager: true,
       import: 'default',
     }),
@@ -347,13 +382,13 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
 }
 
 // Skill text ships as one lazy chunk per language, so no page downloads a
-// language it does not show: each locale dir holds an importer-emitted
-// index.ts whose eager same-dir glob inlines that dir's JSON into a single
-// chunk. Loading is promise-cached per locale; the route warm-up guard, the
-// skill modal, the search index and the app's background fetch of the
-// reader's language all share it.
+// language it does not show: each language folder holds an index.ts, written
+// by npm run data, whose eager same-folder glob inlines that folder's JSON
+// into a single chunk. Loading is promise-cached per locale; the route warm-up
+// guard, the skill modal, the search index and the app's background fetch of
+// the reader's language all share it.
 const skillLocaleChunks = import.meta.glob<Record<string, SkillLocaleFile>>(
-  '@/locales/skill/*/index.ts',
+  '@/pack/text/skill/*/index.ts',
   { import: 'default' },
 )
 // Reactive so whatever was computed before a language arrived re-renders when
@@ -364,7 +399,7 @@ const skillLocalePromises = new Map<SkillLocale, Promise<SkillLanguage>>()
 export function loadSkillLocale(lang: SkillLocale): Promise<SkillLanguage> {
   const pending = skillLocalePromises.get(lang)
   if (pending) return pending
-  const loader = skillLocaleChunks[`/src/locales/skill/${lang}/index.ts`]
+  const loader = skillLocaleChunks[`/src/pack/text/skill/${lang}/index.ts`]
   if (!loader) return Promise.reject(new Error(`No skill locale chunk for "${lang}"`))
   const promise = loader().then((dict) => {
     const language = splitSkillDict(dict)
@@ -409,12 +444,12 @@ export function getSkillCharms(lang: SkillLocale): SkillCharms | null {
 
 const SKILL_HEROES: ReadonlySet<string> = new Set(skillHeroes)
 
-/** True iff the importer wrote skill text for `slug`, read from its hero list
- * so the answer needs no language loaded. Gates the surfaces where a missing
- * locale would surface a dead link (the info button, the modal, the reader's
- * visibleSlug) so a character JSON without a matching locale file degrades
- * gracefully. Coverage across languages is asserted at import time (every
- * locale's slug set equals en's), so one list answers for all 16 locales. */
+/** True iff the pack holds skill text for `slug`, read from the hero list
+ * npm run data writes so the answer needs no language loaded. Gates the
+ * surfaces where a missing locale would surface a dead link (the info button,
+ * the modal, the reader's visibleSlug) so a character JSON without a matching
+ * locale file degrades gracefully. A build stops unless every language holds
+ * the same heroes as English, so one list answers for all 16 locales. */
 export function hasSkillLocale(slug: string): boolean {
   return SKILL_HEROES.has(slug)
 }

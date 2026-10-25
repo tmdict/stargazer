@@ -6,7 +6,7 @@ import { readLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
 import { buildImportHeroTable } from '@/lib/import/references'
 import { createImage } from '../../fixtures/image'
 
-vi.mock('@/data/import/hero-icons.json', async () => {
+vi.mock('@/pack/screenshot-import/hero-icons.json', async () => {
   const { DESCRIPTOR_LENGTH, encodeLearned } = await import('@/lib/import/card/heroes')
   const { serializeLearnedIcons } = await import('@/lib/import/learned')
   const descriptor = encodeLearned(new Float32Array(DESCRIPTOR_LENGTH).fill(0.02))
@@ -54,7 +54,7 @@ describe('curated hero references', () => {
 
   it('ships a reference file compatible with the descriptor contract', async () => {
     const { default: data } = await vi.importActual<{ default: unknown }>(
-      '@/data/import/hero-icons.json',
+      '@/pack/screenshot-import/hero-icons.json',
     )
     const icons = readLearnedIcons(data)
     expect(data).toEqual(JSON.parse(serializeLearnedIcons(icons)))

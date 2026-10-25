@@ -19,7 +19,7 @@ import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
 // disk gets a route. Optional `<HeroName>.<lang>.vue` snippet files in
 // src/content/skill/ are discovered at runtime via import.meta.glob; they
 // don't gate routing.
-const skillLocaleRoot = fileURLToPath(new URL('./src/locales/skill', import.meta.url))
+const skillLocaleRoot = fileURLToPath(new URL('./src/pack/text/skill', import.meta.url))
 
 // Any valid skill-text prefix (used to stamp <html lang> and to scope the
 // description extraction to skill pages).
@@ -43,17 +43,19 @@ function getSSGRoutes(): string[] {
 
   for (const { code } of SKILL_LOCALES) {
     const dir = join(skillLocaleRoot, code)
-    // SKILL_LOCALES is the contract; a missing dir means the importer hasn't
-    // run for a newly added language, and continuing would silently ship a
-    // build whose menu and hreflang link to pages that don't exist.
-    if (!existsSync(dir)) {
-      throw new Error(`[ssg] missing skill locale dir "${code}"; run npm run import:skills`)
+    const heroes = existsSync(dir)
+      ? readdirSync(dir)
+          // Underscore-prefixed files are per-language data, not hero pages.
+          .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
+          .sort()
+      : []
+    // SKILL_LOCALES is the contract; a language without hero files would
+    // silently ship a build whose menu and hreflang link to pages that don't
+    // exist.
+    if (!heroes.length) {
+      throw new Error(`[ssg] no skill text for "${code}"; run npm run data`)
     }
-    readdirSync(dir)
-      // Underscore-prefixed files are per-language data, not hero pages.
-      .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
-      .sort()
-      .forEach((f) => routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`))
+    for (const f of heroes) routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`)
   }
 
   return routes
@@ -117,7 +119,7 @@ function localeChunkHref(code: string): string | null {
       ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, string[]>)
       : {}
   }
-  return chunkManifest[`src/locales/skill/${code}/index.ts`]?.[0] ?? null
+  return chunkManifest[`src/pack/text/skill/${code}/index.ts`]?.[0] ?? null
 }
 
 /** Post-processes SSG-rendered pages: sets lang attribute and derives skill descriptions */

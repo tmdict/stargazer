@@ -102,8 +102,8 @@ export function useGridExport() {
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images
-    // finish decoding (WebKit bug 99677) and drops the slowest, the remote
-    // artifact WebP; a throwaway pass primes the image cache for the kept pass.
+    // finish decoding (WebKit bug 99677) and can drop the slowest; a throwaway
+    // pass primes the image cache for the kept pass.
     const capture = async (element: HTMLElement): Promise<string> => {
       if (isWebKit()) await toPng(element, toPngOptions)
       return toPng(element, toPngOptions)

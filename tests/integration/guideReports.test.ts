@@ -16,7 +16,6 @@ import { imagetools } from 'vite-imagetools'
 import { expect, test } from 'vitest'
 
 import { guideReports } from '../../scripts/guideReports'
-import { seasonArtifactImageUrl } from '../../src/utils/artifactImage'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -25,30 +24,32 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
   try {
     for (const path of [
       'src/utils',
-      'src/assets/images/character',
-      'src/assets/images/artifact',
+      'src/pack/images/character',
+      'src/pack/images/artifact',
       'src/content/pvp/s7',
     ]) {
       mkdirSync(join(dir, path), { recursive: true })
     }
     copyFileSync(join(root, 'src/utils/imageAssets.ts'), join(dir, 'src/utils/imageAssets.ts'))
-    await sharp({ create: { width: 240, height: 330, channels: 4, background: '#a05080' } })
-      .png()
-      .toFile(join(dir, 'src/assets/images/character/evie.png'))
+    for (const name of ['evie', 'evie-skin1']) {
+      await sharp({ create: { width: 240, height: 330, channels: 4, background: '#a05080' } })
+        .png()
+        .toFile(join(dir, `src/pack/images/character/${name}.png`))
+    }
     await sharp({ create: { width: 120, height: 120, channels: 4, background: '#30a070' } })
       .png()
-      .toFile(join(dir, 'src/assets/images/artifact/starshard.png'))
+      .toFile(join(dir, 'src/pack/images/artifact/starshard.png'))
     writeFileSync(
       join(dir, 'main.ts'),
       `
       import { characterImages, artifactImages } from './src/utils/imageAssets'
-      import matcher from './src/assets/images/character/evie.png?format=webp&quality=85&w=180'
+      import matcher from './src/pack/images/character/evie.png?format=webp&quality=85&w=180'
       console.log(characterImages, artifactImages, matcher)
     `,
     )
     const templateFile = join(dir, 'src/content/pvp/s7/index.template.html')
     const template =
-      '<h1>Anonymous report</h1><svg><image href="{{asset:character/evie}}"/><image href="{{asset:artifact/starshard}}"/><image href="{{asset:seasonal-artifact/frosthelm}}"/></svg><script>window.report = 1</script>'
+      '<h1>Anonymous report</h1><svg><image href="{{asset:character/evie}}"/><image href="{{asset:artifact/starshard}}"/></svg><script>window.report = 1</script>'
     writeFileSync(templateFile, template)
     const compile = () =>
       build({
@@ -67,12 +68,11 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
     const artifact = await sharp(join(dir, 'dist', urls[1]!.slice('/test/'.length))).metadata()
     expect([portrait.width, portrait.height]).toEqual([100, 135])
     expect([artifact.width, artifact.height]).toEqual([100, 100])
-    // A seasonal artifact stays on the image host rather than being bundled.
-    expect(urls[2]).toBe(seasonArtifactImageUrl('frosthelm'))
     expect(html.replace(/href="[^"]+"/g, 'href="image"')).toBe(
       template.replace(/href="[^"]+"/g, 'href="image"'),
     )
     const assets = readdirSync(join(dir, 'dist/assets'))
+    // The outfit beside the portrait is no display variant.
     expect(assets.filter((file) => file.endsWith('.webp'))).toHaveLength(3)
     const app = assets
       .filter((file) => file.endsWith('.js'))

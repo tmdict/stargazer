@@ -24,8 +24,8 @@ export interface TagPick {
   readonly mods: readonly string[]
 }
 
-// On-disk shape of src/locales/skill/<lang>/<slug>.json (auto-managed by the
-// importer). Skill content is entirely feed-sourced: every slot carries `n`.
+// On-disk shape of src/pack/text/skill/<lang>/<slug>.json (written by the data
+// export). Skill content is entirely feed-sourced: every slot carries `n`.
 // `r` carries EX refinement tiers (Refine 2, Refine 4) and is only emitted on
 // the `ex` slot when the source data has them.
 export interface SkillRefineEntry {
@@ -46,8 +46,8 @@ export type SkillLocaleFile = {
   _hero?: { name: string }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
 
-// On-disk shape of src/locales/skill/<lang>/_terms.json (auto-managed by the
-// importer): the game's official "Ultimate" / "Exclusive Equipment" labels in
+// On-disk shape of src/pack/text/skill/<lang>/_terms.json (written by the data
+// export): the game's official "Ultimate" / "Exclusive Equipment" labels in
 // that language, used as heading prefixes for those slots, and its skill-panel
 // templates: cooldown ("Cooldown: {cooldown}\nInitial Cooldown: {initialCooldown}"),
 // range ("Range: {range}"), the word a global range shows as, and initial
@@ -61,10 +61,10 @@ export interface SkillTerms {
   initialEnergy: string
 }
 
-// On-disk shape of src/data/skill/numbers.json (auto-managed by the importer):
+// On-disk shape of src/pack/data/skill/numbers.json (written by the data export):
 // hero slug → slot → the numbers shown with that skill. Only displayable
-// values are written (scripts/lib/skillNumbers.ts holds the rules), so the app
-// renders whatever is present. Cooldowns are seconds, range is tiles.
+// values are written, so the app renders whatever is present. Cooldowns are
+// seconds, range is tiles.
 export interface SlotValues {
   cooldown?: number
   initialCooldown?: number
@@ -78,14 +78,14 @@ export interface SlotNumbers extends SlotValues {
 
 export type SkillNumbers = Record<string, Partial<Record<SlotKey, SlotNumbers>>>
 
-// On-disk shape of src/locales/skill/<lang>/_keywords.json: glossary key →
+// On-disk shape of src/pack/text/skill/<lang>/_keywords.json: glossary key →
 // tooltip text in that language, resolving the `[[label|key]]` tokens in slot
 // text. Lives beside the hero files so each language chunk carries its own
 // glossary; the underscore keeps it out of the hero-slug namespace.
 export type SkillKeywords = Record<string, string>
 
-// On-disk shape of src/locales/skill/<lang>/_charms.json (auto-managed by
-// scripts/import-charms.ts): the current season's charm text, stored once per
+// On-disk shape of src/pack/text/skill/<lang>/_charms.json (written by the data
+// export): the current season's charm text, stored once per
 // charm because one charm is shared by several heroes. `tiers` carries the
 // localized tier labels in Elite → Mythic order; each charm id maps to its
 // four tier descriptions in the same order. Rides the locale chunks like

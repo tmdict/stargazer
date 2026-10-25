@@ -16,9 +16,9 @@ import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageUrl } from '@/utils/artifactImage'
 import { phantimalDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -27,6 +27,7 @@ const { phantimals, isDraggable = false } = defineProps<{
   isDraggable?: boolean
 }>()
 
+const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const grids = useGrids()
 const { traitRow, rangeRow } = useUnitTooltipRows()
@@ -112,7 +113,7 @@ const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   // Minimal character-shaped payload: the drop handler only needs the id (no
   // sourceHexId marks it as a picker placement).
   const dragData = { id } as unknown as CharacterType
-  startDrag(event, dragData, id, phantimalImageUrl(phantimal.name))
+  startDrag(event, dragData, id, gameDataStore.getCharacterImage(phantimal.name))
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -193,12 +194,11 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
           @touchstart.passive="onPortraitTouchStart"
         >
           <img
-            :src="phantimalImageUrl(phantimal.name)"
+            :src="gameDataStore.getCharacterImage(phantimal.name)"
             :alt="phantimal.name"
             class="portrait"
             loading="lazy"
             decoding="async"
-            crossorigin="anonymous"
           />
         </div>
         <HoldRing v-if="pressing === phantimal" />
