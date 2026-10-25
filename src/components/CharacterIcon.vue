@@ -37,6 +37,8 @@ const props = defineProps<{
   // ring in the selection colour once the hero is ticked.
   tickable?: boolean
   ticked?: boolean
+  // A mouse resting on the icon shows the hero's outfit.
+  showOutfit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -61,6 +63,22 @@ const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.charact
 const portraitFailed = ref(false)
 watch(portraitUrl, () => (portraitFailed.value = false))
 const displayName = computed(() => characterDisplayName(i18n.t, props.character))
+
+// The outfit takes the portrait's place only while hovered, so each one
+// downloads on its first hover, and the browser keeps the portrait up until it
+// has loaded. Touch is left out: a tap would leave the outfit up until the next
+// tap elsewhere.
+const outfitUrl = computed(() =>
+  props.showOutfit ? gameDataStore.getOutfitImage(props.character.name) : '',
+)
+const hovered = ref(false)
+const outfitFailed = ref(false)
+const showingOutfit = computed(() => hovered.value && !!outfitUrl.value && !outfitFailed.value)
+const onPointerEnter = (event: PointerEvent) => (hovered.value = event.pointerType === 'mouse')
+const onImageError = () => {
+  if (showingOutfit.value) outfitFailed.value = true
+  else portraitFailed.value = true
+}
 
 const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 
@@ -121,19 +139,21 @@ const handleDragEnd = (event: DragEvent) => {
         @contextmenu="handleContextMenu"
         @mouseenter="onMouseEnter"
         @mouseleave="onMouseLeave"
+        @pointerenter="onPointerEnter"
+        @pointerleave="hovered = false"
         @touchstart="onTouchStart"
       >
         <!-- The image drags only where the tile does: elsewhere a native image
              drag would start inside the hold's move tolerance and abandon it. -->
         <img
           v-if="portraitUrl && !portraitFailed"
-          :src="portraitUrl"
+          :src="showingOutfit ? outfitUrl : portraitUrl"
           loading="lazy"
           decoding="async"
           :alt="character.name"
           class="portrait"
           :draggable="isDraggable"
-          @error="portraitFailed = true"
+          @error="onImageError"
         />
         <span v-else class="portrait-name">{{ displayName }}</span>
       </div>

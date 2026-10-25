@@ -21,6 +21,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   const artifacts = ref<ArtifactType[]>([])
   const phantimals = ref<PhantimalType[]>([])
   const characterImages = ref<Record<string, string>>({})
+  const outfitImages = ref<Record<string, string>>({})
   const artifactImages = ref<Record<string, string>>({})
   const icons = ref<Record<string, string>>({})
   const artifactEffects = ref<Record<string, LocaleData[]>>({})
@@ -35,6 +36,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     artifacts.value = data.artifacts
     phantimals.value = data.phantimals
     characterImages.value = data.characterImages
+    outfitImages.value = data.outfitImages
     artifactImages.value = data.artifactImages
     icons.value = data.icons
     artifactEffects.value = data.artifactEffects
@@ -156,6 +158,8 @@ export const useGameDataStore = defineStore('gameData', () => {
     return characterImages.value[name] ?? icons.value[name] ?? ''
   }
 
+  const getOutfitImage = (name: string): string => outfitImages.value[name] ?? ''
+
   const getArtifactImage = (name: string): string => {
     return artifactImages.value[name] ?? ''
   }
@@ -193,6 +197,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterFaction,
     getCharacterClass,
     getCharacterImage,
+    getOutfitImage,
     getArtifactImage,
     getArtifactEffects,
     getIcon,
