@@ -129,6 +129,8 @@ export interface SlChoiceTeam {
   placement: number
   core: number[]
   flex: { out: number; options: number[] }[]
+  // Two-hero swaps: two heroes out, and the pairs that can take their places.
+  pairs: { out: number[]; options: number[][] }[]
 }
 
 export interface SlChoice {

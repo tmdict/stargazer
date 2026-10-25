@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* One map of the set: the board as it was recorded, its artifact on its cell,
    then the comp's record on the map, the core heroes to keep and the swaps
-   recorded in place of a hero. A win rate shows from eight decided games,
-   green from 60% and red to 40%, as the report colours one. */
+   recorded in place of one hero or two. A win rate shows from eight decided
+   games, green from 60% and red to 40%, as the report colours one. */
 
 import { computed } from 'vue'
 
@@ -20,6 +20,15 @@ const TONE_GAMES = 8
 
 const i18n = useI18nStore()
 const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
+
+// One-hero swaps take their options in a row, two-hero swaps one pair to a line.
+const swaps = computed(() => [
+  ...team.flex.map(({ out, options }) => ({
+    out: [out],
+    options: options.map((id) => [id]),
+  })),
+  ...team.pairs,
+])
 
 const record = computed(() => {
   if (!team.comp) return null
@@ -75,7 +84,7 @@ const record = computed(() => {
             <SlPortrait v-for="id in team.core" :key="id" :id />
           </span>
         </template>
-        <template v-for="(swap, index) in team.flex" :key="swap.out">
+        <template v-for="(swap, index) in swaps" :key="swap.out.join()">
           <span v-if="index" />
           <span
             v-else
@@ -86,10 +95,14 @@ const record = computed(() => {
             <SlIcon name="swap" :label="i18n.t('app.sl-swaps')" />
           </span>
           <span class="sl-swap" :class="{ start: !index && (record || team.core.length) }">
-            <SlPortrait :id="swap.out" />
+            <span class="sl-pair">
+              <SlPortrait v-for="id in swap.out" :key="id" :id />
+            </span>
             <SlIcon name="arrow" class="sl-arrow" />
-            <span class="sl-faces">
-              <SlPortrait v-for="id in swap.options" :key="id" :id />
+            <span class="sl-options" :class="{ stacked: swap.out.length > 1 }">
+              <span v-for="option in swap.options" :key="option.join()" class="sl-pair">
+                <SlPortrait v-for="id in option" :key="id" :id />
+              </span>
             </span>
           </span>
         </template>
@@ -178,13 +191,25 @@ const record = computed(() => {
 }
 
 .sl-faces,
-.sl-swap {
+.sl-swap,
+.sl-options,
+.sl-pair {
   display: flex;
   align-items: center;
 }
 
-.sl-faces {
+.sl-faces,
+.sl-options {
   gap: var(--pt-gap, 15px);
+}
+
+.sl-options.stacked {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sl-pair {
+  gap: 3px;
 }
 
 .sl-arrow {

@@ -1,5 +1,5 @@
 {
-  "en": "You can swap the hero on the left for any hero on the right, best first. Each swap comes from a recorded team of this comp.",
-  "zh": "左边的英雄可以换成右边任意一位，越靠前越好。每个替换都来自这个阵容的记录队伍。",
-  "ko": "왼쪽 영웅을 오른쪽 영웅 중 하나로 바꿀 수 있으며, 앞쪽일수록 좋습니다. 모든 교체는 이 조합의 기록된 팀에서 나왔습니다."
+  "en": "You can swap the hero on the left for any hero on the right, or the pair on the left for any pair on the right, best first. Each swap comes from a recorded team of this comp.",
+  "zh": "左边的英雄可以换成右边任意一位，左边的两位英雄也可以换成右边任意一对，越靠前越好。每个替换都来自这个阵容的记录队伍。",
+  "ko": "왼쪽 영웅은 오른쪽 영웅 중 하나로, 왼쪽 두 영웅은 오른쪽에 표시된 쌍 중 하나로 함께 교체할 수 있으며, 더 좋은 후보부터 표시됩니다. 모든 교체는 이 조합의 기록된 팀에서 나왔습니다."
 }
