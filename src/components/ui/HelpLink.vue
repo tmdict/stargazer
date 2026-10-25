@@ -24,7 +24,7 @@ const i18n = useI18nStore()
   display: inline-flex;
   flex-shrink: 0;
   color: var(--color-text-secondary);
-  opacity: 0.55;
+  opacity: var(--help-mark-opacity);
   transition: all var(--transition-fast);
 }
 

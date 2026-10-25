@@ -129,8 +129,7 @@ export function teamContentKey(encoded: string): string | null {
   return encodeMultiGridStateToUrl(decoded)
 }
 
-/* Whether boards hold work no saved team keeps: they differ from the team they
- * came from, or they came from none and hold a unit or an artifact. */
+/* Whether boards hold work no saved team keeps. */
 export function holdsUnsavedWork(encoded: string, source: SavedTeam | undefined): boolean {
   if (source) return teamContentKey(encoded) !== teamContentKey(source.data)
   const decoded = decodeMultiGridStateFromUrl(encoded)

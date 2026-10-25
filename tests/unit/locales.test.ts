@@ -49,8 +49,7 @@ function walkSourceFiles(dir: string): string[] {
 
 function loadCategoryKeys(category: string): Map<string, Record<string, unknown>> {
   const dir = join(LOCALES_DIR, category)
-  // Mirror the loaders' glob depth: app uses `**` (recursive); character/artifact/game
-  // use `*`
+  // Mirror the loaders' glob depth: app uses `**` (recursive); character/artifact/game use `*`
   const recursive = category === 'app'
   const files = recursive
     ? walkJsonFiles(dir)
@@ -62,7 +61,7 @@ function loadCategoryKeys(category: string): Map<string, Record<string, unknown>
     const parts = file.split('/')
     const key = parts[parts.length - 1]!.replace(/\.json$/, '')
     // The loader silently overwrites colliding flat keys (e.g. a file in
-    // app/messages/ shadowing one at the app root) — fail loudly instead
+    // app/messages/ shadowing one at the app root); fail loudly instead
     expect(keys.has(key), `duplicate locale key ${category}.${key} (${file})`).toBe(false)
     keys.set(key, JSON.parse(readFileSync(file, 'utf-8')))
   }

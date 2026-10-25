@@ -1,8 +1,6 @@
-/* The Supreme League generator's look: Stargazer's own controls with its
-   colour tokens in dark, and the set drawn in the dark style of the season
-   reports it comes from. Every rule sits under the view's root (.sl-page), so
-   it reaches no other page. A list that a dropdown floats onto <body> takes
-   the same tokens while the page is open, when the view marks <html>. */
+/* The Supreme League generator's dark look. Every rule sits under the view's
+   root (.sl-page), so it reaches no other page; a list a dropdown floats onto
+   <body> takes the same tokens while the view marks <html> (sl-page-open). */
 
 .sl-page,
 html.sl-page-open .list.floating {
@@ -10,7 +8,6 @@ html.sl-page-open .list.floating {
   --color-bg-secondary: #232a33;
   --color-bg-tertiary: #1d232b;
   --color-bg-white: #1d232b;
-  --color-bg-light-gray: #1d232b;
   --color-border-primary: #39424e;
   --color-border-light: #2a313b;
   --color-text-primary: #e9edf3;
@@ -25,7 +22,6 @@ html.sl-page-open .list.floating {
 }
 
 .sl-page {
-  /* A win rate's colours, as the reports colour one. */
   --sl-good: #4ec9a5;
   --sl-bad: #e2686f;
 
@@ -33,14 +29,6 @@ html.sl-page-open .list.floating {
   color: var(--color-text-primary);
 }
 
-/* The set keeps the reports' line spacing. */
-.sl-page .sl-result-slot {
-  line-height: 1.7;
-}
-
-/* The page's own buttons: Stargazer's solid button at the roster bar's size,
-   or its outline in the teal, keeping their labels on a phone, where they are
-   as tall as the bar's round icons. */
 .sl-page .sl-action {
   display: inline-flex;
   align-items: center;
@@ -79,9 +67,6 @@ html.sl-page-open .list.floating {
   }
 }
 
-/* Boards in the reports' colours: dark open ground with no number, deep ally
-   and enemy tiles with light borders, numbers on free deployment tiles only,
-   and each unit framed in its side's colour. */
 .sl-page .sl-board .tile-void {
   fill: #101318;
   stroke: #3b424d;

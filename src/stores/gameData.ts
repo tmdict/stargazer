@@ -93,9 +93,9 @@ export const useGameDataStore = defineStore('gameData', () => {
     return characters.value.find((char) => char.id === characterId)
   }
 
-  // Slug of a phantimal-band unit, which names its portrait: the
-  // phantimal's own, or for a companion the owner skill's companion image
-  // (falling back to the owner's portrait).
+  // Slug of a phantimal-band unit, which names its portrait: the phantimal's
+  // own, or for a companion the owner skill's companion image (falling back to
+  // the owner's portrait).
   const getPhantimalUnitSlug = (unitId: number): string | undefined => {
     const ownerId = phantimalOwnerId(unitId)
     const ownerName = getPhantimalById(ownerId)?.name

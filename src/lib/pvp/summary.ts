@@ -1,5 +1,4 @@
-/* Readings of a season summary shared by the guide index's report entry and
- * counter ladder. */
+/* Readings of a season summary for the guide's PvP pages. */
 
 import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpSeasonSummary, PvpTeam, ReportLocale } from '@/lib/types/pvp'

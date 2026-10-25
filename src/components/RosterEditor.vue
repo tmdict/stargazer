@@ -487,10 +487,6 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   gap: var(--picker-row-gap);
 }
 
-/* The dock takes two rows below the width its one row needs in English, the
-   widest language: at the Rosters tab's scale by default (1.2), at the
-   generator's with largeDock (1.4). Select mode's row is the longer one, and
-   its level labels show only once its rows stack. */
 .roster-dock {
   container: roster-dock / inline-size;
 }

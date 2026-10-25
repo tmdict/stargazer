@@ -229,7 +229,7 @@ const pressSegment = (): void => {
     </button>
     <!-- The variant class is repeated on the list: on <body> it has no root
          to take the variant's type size and colours from. A page can give
-         its floating lists other token values by these classes
+         its floating lists other token values through .list.floating
          (guide/sl/sl.css). -->
     <Teleport to="body" :disabled="!floating">
       <div

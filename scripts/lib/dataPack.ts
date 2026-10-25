@@ -40,8 +40,8 @@ const PACK_FOLDERS = [
   'text/artifact',
 ]
 
-// The files the app imports directly. Without a pack they are written empty, so dev, the type check and
-// the tools that load the app's modules still run.
+// The files the app imports directly. Without a pack they are written empty,
+// so dev, the type check and the tools that load the app's modules still run.
 const STAND_INS: Record<string, string> = {
   'text/skill/numbers.json': '{}\n',
   'screenshot-import/hero-icons.json': '{ "icons": [] }\n',
@@ -66,7 +66,6 @@ export default dict
 
 const bundlePath = (code: string): string => `${SKILL}/${code}/index.ts`
 
-// The files npm run data writes into the pack itself, which a copy keeps.
 const isGenerated = (path: string): boolean =>
   SKILL_LOCALES.some(({ code }) => path === bundlePath(code))
 
@@ -134,8 +133,9 @@ export function mirror(source: string, dest: string): number {
   return changed
 }
 
-/** Writes the skill bundling files, and returns how many changed. A bundling file goes only where the pack holds the language,
- * so it never stands in for missing text. */
+/** Writes the skill bundling files, and returns how many changed. A bundling
+ * file goes only where the pack holds the language, so it never stands in for
+ * missing text. */
 export function writeGenerated(pack: string): number {
   let changed = 0
   for (const { code } of SKILL_LOCALES) {
@@ -246,24 +246,26 @@ const unsaved = (dir: string): number =>
 const files = (count: number): string =>
   `${count} uncommitted or untracked ${count === 1 ? 'file' : 'files'}`
 
+/** The commit the pack folder is at, for data.lock. */
+export const packCommit = (dir: string): string => git(dir, 'rev-parse', 'HEAD')
+
 /** Why the pack folder's current commit can't be pinned, or null when it can:
- * the host builds from GitHub, so the pin must name a pushed commit that holds
- * every file of the folder. */
+ * the build downloads the pin from the remote, so it must name a pushed commit
+ * that holds every file of the folder. */
 export function pinProblem(dir: string): string | null {
   const count = unsaved(dir)
   if (count) return `the pack folder has ${files(count)}; commit and push them first`
-  const head = git(dir, 'rev-parse', 'HEAD')
-  if (!git(dir, 'branch', '-r', '--contains', head)) {
+  if (!git(dir, 'branch', '-r', '--contains', packCommit(dir))) {
     return 'the pack folder holds commits that are not pushed yet, so the host could not build them'
   }
   return null
 }
 
-/** One line when the pack folder no longer matches the pin, or null. Commits
- * that leave the pack folder alone don't count. */
+/** One line when the pack folder differs from the pin, or null. Commits that
+ * leave the pack folder alone don't count. */
 export function pinNotice(dir: string, pin: string | null): string | null {
   try {
-    git(dir, 'rev-parse', 'HEAD')
+    packCommit(dir)
   } catch {
     return null
   }
@@ -278,9 +280,6 @@ export function pinNotice(dir: string, pin: string | null): string | null {
   if (!moved && !count) return null
   return `your pack folder differs from the pinned version${count ? ` (${files(count)})` : ''}`
 }
-
-/** The pinned commit the pack folder is at, for data.lock. */
-export const packCommit = (dir: string): string => git(dir, 'rev-parse', 'HEAD')
 
 export const readMarker = (pack: string): string | null =>
   existsSync(join(pack, MARKER)) ? readFileSync(join(pack, MARKER), 'utf8').trim() : null

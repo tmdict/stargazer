@@ -14,6 +14,7 @@ import type {
   SlChoiceTeam,
   SlData,
   SlEvidence,
+  SlFamily,
   SlPick,
   SlSeason,
   SlTeam,
@@ -325,7 +326,7 @@ function choose(
     return {
       core: core.filter((id) => !all.some((s) => s.out === id)),
       flex: shown.map(({ out, options }) => ({ out, options })),
-      pairs: pairSwaps(t, set, core, shown),
+      pairs: pairSwaps(t, family, elsewhere, core, shown),
     }
   }
 
@@ -338,15 +339,14 @@ function choose(
     byOrder(a[0]!, b[0]!) || byOrder(a[1]!, b[1]!)
   const pairSwaps = (
     t: Option,
-    set: Option[],
+    family: SlFamily,
+    elsewhere: Set<number>,
     core: number[],
     shown: { out: number }[],
   ): SlChoiceTeam['pairs'] => {
     const rows = data.flex.heroes - shown.length
     if (rows <= 0) return []
-    const family = sources[t.source]!.families[t.family!]!
     const fixed = new Set([...core, ...shown.map((s) => s.out)])
-    const elsewhere = new Set(set.filter((o) => o !== t).flatMap((o) => o.heroes))
     const byOut = new Map<
       string,
       { out: number[]; found: { heroes: number[]; chance: number }[] }

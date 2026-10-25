@@ -2,8 +2,7 @@
 /* The roster library's file controls, as the Rosters tab and the Supreme
    League generator show them: the screenshot import, then the rosters file
    import and export. An import merges into the library and never replaces
-   it, and it is applied in memory even when its write fails, so the loss is
-   reported in place of the success message. */
+   it. */
 
 import RosterImportButton from './RosterImportButton.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -11,18 +10,13 @@ import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
-import { useToast } from '@/composables/useToast'
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
 const rosters = useRosters()
 const i18n = useI18nStore()
-const { error, success } = useToast()
-
-const report = (message?: string): void => {
-  if (!rosters.persisted) error(i18n.t('app.rosters-not-stored'))
-  else if (message) success(message)
-}
+const { report } = useRosterFeedback()
 
 const { fileInput, download, handleFileChosen } = useLibraryTransfer({
   filePrefix: 'stargazer-rosters',

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/* The note on the data: the teams are real ones from the season's records,
-   how many, the season's report for more, how the records trail new heroes,
-   and credit to the content creators many of the teams start with. */
+/* The note on the generator's data, with credit to the content creators many
+   of the teams start with. */
 
 import { computed } from 'vue'
 

@@ -1,17 +1,14 @@
 <script lang="ts">
-import type { SlFamily } from '@/lib/pvp/sl/types'
+import type { SlChoiceTeam, SlFamily } from '@/lib/pvp/sl/types'
 
 // A chosen team as the page shows it, read off the data file once.
-export interface SlShownTeam {
+export interface SlShownTeam extends Pick<
+  SlChoiceTeam,
+  'comp' | 'core' | 'flex' | 'pairs' | 'chance'
+> {
   // Index into the data file's maps.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
-  // The comp's [players, wins, losses] on this map.
-  comp: [number, number, number] | null
-  core: number[]
-  flex: { out: number; options: number[] }[]
-  pairs: { out: number[]; options: number[][] }[]
-  chance: number
 }
 
 export interface SlShown {
@@ -154,7 +151,6 @@ const {
   color: var(--color-text-secondary);
 }
 
-/* The chance goes under its label when the line is too narrow for both. */
 .sl-chance-line {
   display: inline-flex;
   flex-wrap: wrap;
@@ -193,11 +189,9 @@ const {
   cursor: help;
 }
 
-/* Dimmed and lit in the teal as the help links are (HelpLink), centred on the
-   label's capitals. */
 .sl-help-mark {
   margin-left: 4px;
-  opacity: 0.55;
+  opacity: var(--help-mark-opacity);
   vertical-align: calc(0.5cap - 7px);
   transition: all var(--transition-fast);
 }
@@ -226,11 +220,6 @@ const {
   padding: 24px 16px;
 }
 
-/* Five to a row while a column holds a swap row of four portraits: at 40px
-   from 1360px wide, at 34px from 1170px. Below that, three to a row on six
-   half columns, so a last row of two sits centred. From 710px, where three
-   columns no longer hold that row, one to a row at full size, no wider than
-   420px. */
 @container (max-width: 1360px) {
   .sl-maps {
     --pt: 34px;
@@ -238,6 +227,7 @@ const {
   }
 }
 
+/* Six half columns, so a last row of two sits centred. */
 @container (max-width: 1170px) {
   .sl-maps {
     grid-template-columns: repeat(6, minmax(0, 1fr));

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/* The generator's roster bar: the roster menu, labelled as the dock's rows
-   are, the roster file controls of the Rosters tab, then Generate. Picking or
-   importing a roster makes it the active one, which the page copies. */
+/* The generator's roster bar. Picking or importing a roster makes it the
+   active one, which the page copies. */
 
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
@@ -43,10 +42,6 @@ const i18n = useI18nStore()
   gap: var(--spacing-sm);
 }
 
-/* On a phone the roster menu takes the room the round buttons leave, so
-   Generate stays on the row. A narrow phone gives the label and menu a row of
-   their own, as the dock's rows are laid out there, with the buttons below
-   and Generate at the end. */
 @media (max-width: 768px) {
   .sl-bar :deep(.roster-menu) {
     flex: 1;
