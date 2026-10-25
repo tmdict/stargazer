@@ -67,8 +67,7 @@ export interface SlSample {
 }
 
 export interface SlSeason<Team> {
-  // Optional: the note on the data gives the counts when the file has them.
-  sample?: SlSample
+  sample: SlSample
   theta: number
   oneOffStart: number
   games: SlGame[]
