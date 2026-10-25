@@ -89,16 +89,21 @@ const record = computed(() => {
           <span
             v-else
             class="sl-label"
-            :class="{ start: record || team.core.length }"
+            :class="{ start: record || team.core.length, top: swap.out.length > 1 }"
             :title="i18n.t('app.sl-swaps-tip')"
           >
             <SlIcon name="swap" :label="i18n.t('app.sl-swaps')" />
           </span>
-          <span class="sl-swap" :class="{ start: !index && (record || team.core.length) }">
-            <span class="sl-pair">
-              <SlPortrait v-for="id in swap.out" :key="id" :id />
+          <span
+            class="sl-swap"
+            :class="{ start: !index && (record || team.core.length), top: swap.out.length > 1 }"
+          >
+            <span class="sl-from">
+              <span class="sl-pair">
+                <SlPortrait v-for="id in swap.out" :key="id" :id />
+              </span>
+              <SlIcon name="arrow" class="sl-arrow" />
             </span>
-            <SlIcon name="arrow" class="sl-arrow" />
             <span class="sl-options" :class="{ stacked: swap.out.length > 1 }">
               <span v-for="option in swap.options" :key="option.join()" class="sl-pair">
                 <SlPortrait v-for="id in option" :key="id" :id />
@@ -192,10 +197,23 @@ const record = computed(() => {
 
 .sl-faces,
 .sl-swap,
+.sl-from,
 .sl-options,
 .sl-pair {
   display: flex;
   align-items: center;
+}
+
+/* A two-hero swap's pair, arrow and label line up with its first option, so
+   its options read as its own and not the next row's. */
+.sl-swap.top {
+  align-items: flex-start;
+}
+
+.sl-label.top {
+  align-self: start;
+  align-items: center;
+  height: var(--pt, 40px);
 }
 
 .sl-faces,
