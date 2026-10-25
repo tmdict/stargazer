@@ -10,7 +10,7 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
   upstream data feed
           │
           ▼
-     data export ──────▶  data pack: text and icons ───┐
+     the exports ──────▶  data pack: text and icons ───┐
           │                                            │ npm run data
           │ writes, checks                             ▼
           └────────────▶  seasonal data files ───────▶ app
@@ -18,18 +18,18 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
   by hand ─────────────▶  tags, targeting, skill code ─┘
 ```
 
-| Content                             | Files                                                                            | Written by  |
-| ----------------------------------- | -------------------------------------------------------------------------------- | ----------- |
-| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                        | data export |
-| Phantimal name and skill text       | `src/pack/text/seasonal/phantimal/<slug>.json`                                   | data export |
-| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)        | data export |
-| Artifact names                      | `src/locales/seasonal/artifact/`                                                 | data export |
-| Artifact effect text                | `src/pack/text/seasonal/artifact/` (pre-season: `src/pack/text/artifact/`)       | data export |
-| Charms                              | `src/data/seasonal/charm/charms.json`, `src/pack/text/skill/<code>/_charms.json` | data export |
-| Charm tags                          | `src/data/seasonal/charm/tags.json`                                              | hand        |
-| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                  | hand        |
-| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`             | hand        |
-| Icons                               | `src/pack/images/seasonal/{artifact,phantimal}/<slug>.png`                       | data export |
+| Content                             | Files                                                                            | Written by   |
+| ----------------------------------- | -------------------------------------------------------------------------------- | ------------ |
+| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                        | data export  |
+| Phantimal name and skill text       | `src/pack/text/seasonal/phantimal/<slug>.json`                                   | data export  |
+| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)        | data export  |
+| Artifact names                      | `src/locales/seasonal/artifact/`                                                 | data export  |
+| Artifact effect text                | `src/pack/text/seasonal/artifact/` (pre-season: `src/pack/text/artifact/`)       | data export  |
+| Charms                              | `src/data/seasonal/charm/charms.json`, `src/pack/text/skill/<code>/_charms.json` | data export  |
+| Charm tags                          | `src/data/seasonal/charm/tags.json`                                              | hand         |
+| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                  | hand         |
+| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`             | hand         |
+| Icons                               | `src/pack/images/seasonal/{artifact,phantimal}/<slug>.png`                       | image export |
 
 The data export writes the structural files from the feed at a season's start, with each id, season, stat, range, damage type and faction as the feed gives it: an artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts from the feed alone), and the previous season's files are removed.
 
@@ -113,7 +113,7 @@ Each phase ships on its own.
 
 It needs the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits, but no text.
 
-1. Run the data export for the new season. It retires the previous season's text, writes the season's artifact and phantimal data files and the artifact names, reusing the freed ids, and adds the season's icons, companions included, to the data pack. Phantimal names come with their text; until the feed carries it, name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) go into the pack for phase 2 to overwrite. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key.
+1. Run the data export for the new season. It retires the previous season's text, writes the season's artifact and phantimal data files and the artifact names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. Phantimal names come with their text; until the feed carries it, name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) go into the pack for phase 2 to overwrite. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key.
 2. Pin the pack version that holds the season with `npm run data:pin`, and review the changes the export made here.
 3. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
 4. Replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.

@@ -73,6 +73,7 @@ const outfitUrl = computed(() =>
 )
 const hovered = ref(false)
 const outfitFailed = ref(false)
+watch(outfitUrl, () => (outfitFailed.value = false))
 const showingOutfit = computed(() => hovered.value && !!outfitUrl.value && !outfitFailed.value)
 const onPointerEnter = (event: PointerEvent) => (hovered.value = event.pointerType === 'mouse')
 const onImageError = () => {

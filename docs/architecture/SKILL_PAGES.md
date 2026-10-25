@@ -25,7 +25,7 @@ In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields
 
 The data export requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. `hasSkillLocale` reads the English skill file names, without loading any language, to gate links and inspect gestures.
 
-Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the data export updates the locales named by `FEED_NAMED_LOCALES` from the feed.
+Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the data export writes the Korean ones, the game's own, from the feed.
 
 ## Loading languages
 
@@ -42,7 +42,7 @@ Chrome names live in `src/locales/character/<slug>.json`. English and Chinese ar
                  synchronous getters ──▶ SkillSections, search
 ```
 
-Each `index.ts`, which `npm run data` writes for every language in `SKILL_LOCALES`, eagerly imports its directory into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
+Each `index.ts`, which `npm run data` writes for every language in `SKILL_LOCALES` that the pack holds, eagerly imports its directory into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
 
 `warmSkillLocale` in `src/router/routes.ts` awaits the chunk before rendering a skill route. Without it, vite-ssg's single pass would bake missing text and descriptions. It uses global `beforeResolve` because `beforeEnter` skips language switches that change only route parameters. A failed mid-session load hard-navigates to fresh HTML; an initial-load failure allows the reader's fallback or load-error message.
 

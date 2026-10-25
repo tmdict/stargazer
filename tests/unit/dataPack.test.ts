@@ -7,10 +7,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   mirror,
   packCommit,
+  packProblems,
   pinNotice,
   pinProblem,
   writeGenerated,
 } from '../../scripts/lib/dataPack'
+import { FRAME_NAMES } from '../../src/lib/import/card/frames'
+import { SKILL_LOCALES } from '../../src/lib/types/i18n'
 
 let dir: string
 
@@ -54,6 +57,47 @@ describe('mirror', () => {
     expect(existsSync(join(dir, 'pack/text/seasonal'))).toBe(false)
     expect(existsSync(join(dir, 'pack/text/skill/en/index.ts'))).toBe(true)
     expect(mirror(join(dir, 'source'), join(dir, 'pack'))).toBe(0)
+  })
+})
+
+describe('build checks', () => {
+  // One hero, one permanent artifact and a season whose text is not out yet,
+  // which leaves the pack no seasonal text folder at all.
+  beforeEach(() => {
+    for (const path of [
+      'src/data/character/odie',
+      'src/data/artifact/starshard',
+      'src/data/seasonal/artifact/frosthelm',
+      'src/data/seasonal/phantimal/beetle',
+    ])
+      put(`repo/${path}.json`)
+    for (const path of [
+      'images/character/odie',
+      'images/artifact/starshard',
+      'images/seasonal/artifact/frosthelm',
+      'images/seasonal/phantimal/beetle',
+      'screenshot-import/replay-arena',
+      ...FRAME_NAMES.map((name) => `screenshot-import/frame-${name}`),
+    ])
+      put(`pack/${path}.png`, 'png')
+    for (const { code } of SKILL_LOCALES) put(`pack/text/skill/${code}/odie.json`)
+    put('pack/text/skill/numbers.json', '{ "odie": {} }')
+    put('pack/screenshot-import/hero-icons.json', '{ "icons": [1] }')
+    put('pack/text/artifact/starshard.json')
+  })
+
+  it('note seasonal text that is not out yet', () => {
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'))).toEqual({
+      problems: [],
+      notes: ['frosthelm has no text in the pack', 'beetle has no text in the pack'],
+    })
+  })
+
+  it('stop on a missing paragon frame', () => {
+    rmSync(join(dir, 'pack/screenshot-import/frame-p4-crown.png'))
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo')).problems).toEqual([
+      'the pack has no screenshot-import/frame-p4-crown.png',
+    ])
   })
 })
 

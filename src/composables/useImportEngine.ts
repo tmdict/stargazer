@@ -211,8 +211,8 @@ const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> =>
   }
 }
 
-// A pattern rather than an import, so a build without the pack still runs
-// and the import reports the picture as a missing reference.
+// A pattern rather than an import, so dev without the pack still runs and the
+// import reports the picture as a missing reference.
 const arenaUrl: string | undefined = Object.values(
   import.meta.glob<string>('@/pack/screenshot-import/replay-arena.png', {
     eager: true,

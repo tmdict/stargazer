@@ -95,10 +95,14 @@ export function loadCharacterImages(): Record<string, string> {
   return characterImages
 }
 
-// Each hero's first outfit at the portraits' display size, keyed by hero.
+// Each hero's first outfit at the portraits' display size, keyed by hero. The
+// glob lists names as text, where -skin10 comes before -skin2.
 function loadOutfitImages(): Record<string, string> {
   const outfits: Record<string, string> = {}
-  for (const [name, url] of Object.entries(outfitImages)) {
+  const byNumber = Object.entries(outfitImages).sort(([a], [b]) =>
+    a.localeCompare(b, 'en', { numeric: true }),
+  )
+  for (const [name, url] of byNumber) {
     const hero = outfitHero(name)
     if (hero) outfits[hero] ??= url
   }
@@ -114,7 +118,7 @@ export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
     [
       '@/pack/images/character/*.png',
       '@/pack/images/seasonal/phantimal/*.png',
-      '!@/pack/images/character/*-skin*.png',
+      '!@/pack/images/character/*-skin[0-9]*.png',
     ],
     { query: { format: 'webp', quality: 85, w: 180 }, import: 'default' },
   )
@@ -138,7 +142,7 @@ export function loadImportFrames(): Record<string, () => Promise<string>> {
 }
 
 export function loadOutfitPortraits(): Record<string, (() => Promise<string>)[]> {
-  const modules = import.meta.glob<string>('@/pack/images/character/*-skin*.png', {
+  const modules = import.meta.glob<string>('@/pack/images/character/*-skin[0-9]*.png', {
     query: { format: 'webp', quality: 90, effort: 6 },
     import: 'default',
   })

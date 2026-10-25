@@ -50,6 +50,12 @@ const localEnv = join(ROOT, '.env.local')
 if (existsSync(localEnv)) loadEnvFile(localEnv)
 const dir = env.DATA_PACK_DIR ? resolve(ROOT, env.DATA_PACK_DIR) : null
 const { DATA_PACK_URL: url, DATA_PACK_TOKEN: token, DATA_PACK_PATH: path } = env
+const HOST_SETTINGS = ['DATA_PACK_URL', 'DATA_PACK_TOKEN', 'DATA_PACK_PATH']
+const unset = HOST_SETTINGS.filter((name) => !env[name])
+const noPackFix =
+  unset.length < HOST_SETTINGS.length
+    ? `set ${unset.join(' and ')}`
+    : 'set DATA_PACK_DIR in .env.local'
 
 let changed = 0
 if (dir) {
@@ -68,6 +74,8 @@ if (dir) {
 } else if (url && token && path) {
   const pin = readPin()
   if (!pin) fail('data.lock names no version')
+  // A branch name would download whatever its tip is at each build.
+  if (!/^[0-9a-f]{40}$/.test(pin)) fail('data.lock holds no full commit id')
   if (readMarker(PACK) !== pin) {
     try {
       await download(url, token, path, pin, PACK, STAGING)
@@ -78,12 +86,11 @@ if (dir) {
     }
     changed = 1
   }
+  changed += writeGenerated(PACK)
 } else {
   changed = writeStandIns(PACK) + writeGenerated(PACK)
-  if (mode === 'build') fail('no data pack; set DATA_PACK_DIR in .env.local')
-  console.log(
-    'data: no data pack, so the app runs without game pictures or skill text; set DATA_PACK_DIR in .env.local',
-  )
+  if (mode === 'build') fail(`no data pack; ${noPackFix}`)
+  console.log(`data: no data pack, so the app runs without game pictures or skill text; ${noPackFix}`)
 }
 
 if (changed) rmSync(VITEST_CACHE, { recursive: true, force: true })

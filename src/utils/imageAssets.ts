@@ -17,7 +17,7 @@ export const characterImages = byName(
     [
       '@/pack/images/character/*.png',
       '@/pack/images/seasonal/phantimal/*.png',
-      '!@/pack/images/character/*-skin*.png',
+      '!@/pack/images/character/*-skin[0-9]*.png',
     ],
     {
       query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
@@ -29,7 +29,7 @@ export const characterImages = byName(
 
 // Keyed by file name (`<hero>-skin<N>`).
 export const outfitImages = byName(
-  import.meta.glob<string>('@/pack/images/character/*-skin*.png', {
+  import.meta.glob<string>('@/pack/images/character/*-skin[0-9]*.png', {
     query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
     eager: true,
     import: 'default',
