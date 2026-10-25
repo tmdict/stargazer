@@ -62,7 +62,11 @@ describe('skill text', () => {
 
 describe('chips', () => {
   const chip = (tag: string, whole: boolean, ...mods: string[]) => ({ tag, mods, whole })
-  const chipsOf = (tags: CharacterTags) => heroChips(tags, tagVocabulary([{ tags }]))
+  const chipsOf = (tags: CharacterTags) =>
+    heroChips(
+      tags,
+      tagVocabulary([{ tags }], () => false),
+    )
 
   // The first effect is the hero's only opening and only single-target one.
   const effect = { skill3: 1, mods: ['opening', 'single'] }
@@ -131,7 +135,10 @@ describe('skill headings', () => {
 
 describe('vocabulary', () => {
   const solo = (heroes: CharacterTags[]) =>
-    tagVocabulary(heroes.map((tags) => ({ tags }))).get('ult')
+    tagVocabulary(
+      heroes.map((tags) => ({ tags })),
+      () => false,
+    ).get('ult')
 
   it('calls a tag solo only while every attachment carries its one modifier', () => {
     const opening = { ult: [{ ultimate: 1, mods: ['opening'] }] }
@@ -144,15 +151,16 @@ describe('vocabulary', () => {
   it('never calls a synergy solo, so its tag keeps its own name', () => {
     const heroes = [{ tags: { dot: [{ ex: 1, mods: ['shadewing'] }] } }]
     const isSynergy = (mod: string) => mod === 'shadewing'
-    expect(tagVocabulary(heroes).get('dot')!.solo).toBe('shadewing')
+    expect(tagVocabulary(heroes, () => false).get('dot')!.solo).toBe('shadewing')
     expect(tagVocabulary(heroes, isSynergy).get('dot')!.solo).toBeNull()
   })
 })
 
 describe('tag links', () => {
-  const vocabulary = tagVocabulary([
-    { tags: { ...apart, ult: [{ ultimate: 1, mods: ['opening'] }], dot: [{ ex: 1 }] } },
-  ])
+  const vocabulary = tagVocabulary(
+    [{ tags: { ...apart, ult: [{ ultimate: 1, mods: ['opening'] }], dot: [{ ex: 1 }] } }],
+    () => false,
+  )
 
   it('round-trips a pick, modifiers sorted', () => {
     const query = toTagQuery(pick('debuff', 'global', 'eryndor'))

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
@@ -154,7 +154,6 @@ describe('validateSavedTeam', () => {
   })
 
   it('rejects structural garbage', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(validateSavedTeam(null)).toBeNull()
     expect(validateSavedTeam('x')).toBeNull()
     expect(validateSavedTeam(record({ id: '' }))).toBeNull()
@@ -166,7 +165,6 @@ describe('validateSavedTeam', () => {
     expect(
       validateSavedTeam(record({ data: encode({ boards: [{ c: {} }, {}, {}] } as never) })),
     ).toBeNull()
-    warn.mockRestore()
   })
 })
 

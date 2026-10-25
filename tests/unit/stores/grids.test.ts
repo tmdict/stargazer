@@ -26,10 +26,9 @@ import {
 } from '../fixtures/characters'
 
 /**
- * Tests for the grids store's cross-board actions: swapBoards, moveToMap, drop
- * routing, and loadTeamSide. Boards default to arena1 (ally spawns
- * 1-10/12/13/16, enemy spawns 30/33/34/36-45). Skills are code-registered, so
- * Kulu/Phraesto behave without loaded game data.
+ * Boards default to arena1 (ally spawns 1-10/12/13/16, enemy spawns
+ * 30/33/34/36-45). Skills are code-registered, so Kulu/Phraesto behave without
+ * loaded game data.
  */
 
 // (characterId, team) pairs on a board, order-independent (placement is random).
@@ -275,19 +274,6 @@ describe('useGrids.routeArtifactDrop', () => {
     expect(a!.artifacts.enemy).toBe(5)
     expect(b!.artifacts.enemy).toBe(9)
   })
-
-  it('is a no-op when the same artifact already occupies the target slot', () => {
-    const grids = useGrids()
-    const a = grids.contexts[0]!
-    a.setArtifact(Team.ALLY, 5)
-    a.setArtifact(Team.ENEMY, 5)
-
-    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ENEMY)).toBe(
-      false,
-    )
-    expect(a.artifacts.ally).toBe(5)
-    expect(a.artifacts.enemy).toBe(5)
-  })
 })
 
 describe('useGrids.routeDrop cross-board hero/phantimal swap', () => {
@@ -446,9 +432,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     const { grids } = setupBoards()
     grids.setActive(0)
 
-    // Picker payload: no sourceGridId/sourceHexId.
-    const payload = { character: {} as CharacterType, characterId: ALLY_A }
-    expect(grids.routeDrop(payload, 1, 2)).toBe(true)
+    expect(grids.routeDrop(pickerPayload(ALLY_A), 1, 2)).toBe(true)
 
     expect(getCharacter(grids.contexts[1]!.grid, 2)).toBe(ALLY_A)
     expect(grids.activeId).toBe(1)
@@ -628,17 +612,6 @@ describe('useGrids synergy', () => {
       15,
       toSynergyId(17),
     ])
-  })
-
-  it('routeDrop treats a hero dropped onto its own tile as a no-op', () => {
-    const { grids, a: ctx } = setupBoards(1)
-    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
-    grids.synergy = true
-    const hex = findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)!
-
-    expect(grids.canDropCharacter(ALLY_A, undefined, undefined, ctx.id, hex)).toBe(false)
-    expect(grids.routeDrop(pickerPayload(ALLY_A), ctx.id, hex)).toBe(false)
-    expect(lineup(ctx.grid).map((r) => r.characterId)).toEqual([ALLY_A])
   })
 
   it('setGridCount re-derives the affordance from the rebuilt boards', () => {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createApp, h, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import { companionIdsOf } from '@/lib/characters/companion'
@@ -12,15 +12,6 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
-
-vi.mock('@/stores/gameData', () => ({
-  useGameDataStore: () => ({
-    getCharacterNameById: () => undefined,
-    getCharacterImageNameById: () => undefined,
-    getCharacterImage: () => '',
-    getPhantimalUnitSlug: () => undefined,
-  }),
-}))
 
 const deploymentTiles = (type: State): number[] =>
   MAPS[DEFAULT_MAP_KEY]!.grid.filter((entry) => entry.type === type).flatMap((entry) => entry.hex)

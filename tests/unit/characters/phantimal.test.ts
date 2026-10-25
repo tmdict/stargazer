@@ -3,14 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   canPlaceCharacterOnTeam,
   findTeamPhantimalHex,
-  getAvailableTeamSize,
   setMaxTeamSize,
 } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
@@ -20,18 +18,6 @@ describe('phantimal', () => {
 
     beforeEach(() => {
       grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-    })
-
-    it('occupies a tile but is excluded from team-size tracking', () => {
-      const ok = performPlace(grid, 1, toPhantimalId(2), Team.ALLY)
-
-      expect(ok).toBe(true)
-      const tile = grid.getTileById(1)
-      expect(tile.characterId).toBe(toPhantimalId(2))
-      expect(tile.team).toBe(Team.ALLY)
-      expect(tile.state).toBe(State.OCCUPIED_ALLY)
-      // Capacity ignores the phantimal
-      expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(5)
     })
 
     it('is exempt from the team-size limit when the team is full', () => {

@@ -100,7 +100,6 @@ describe('gridStateSerializer', () => {
   })
 
   describe('unpackDisplayFlags', () => {
-    // All flags off; spread overrides on top for each case.
     const off = {
       showPerspective: false,
       showSkills: false,

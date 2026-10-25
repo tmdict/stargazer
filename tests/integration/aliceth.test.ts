@@ -20,7 +20,7 @@ describe('Aliceth row-scan targeting', () => {
   const testFiles = loadTestsFromDirectory(join(__dirname, 'aliceth'))
 
   testFiles.forEach((testFile) => {
-    describe(`${testFile.path ?? 'unknown fixture'}`, () => {
+    describe(`${testFile.path}`, () => {
       testFile.testCases.forEach(({ characterTile, expectedTarget }) => {
         it(`Aliceth at ${characterTile} targets ally ${expectedTarget}`, () => {
           const { grid, skillManager } = buildScenarioGrid(

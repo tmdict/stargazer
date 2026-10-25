@@ -126,7 +126,6 @@ describe('move.ts', () => {
     })
 
     it('should rollback and reactivate the skill at the origin on activation failure', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
       const companionHex = findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)!
       performPlace(grid, 5, ENEMY_A, Team.ENEMY)
@@ -145,7 +144,6 @@ describe('move.ts', () => {
       // Skill reactivated on the original team with its companion restored
       expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(companionHex)
-      error.mockRestore()
     })
   })
 
@@ -173,7 +171,6 @@ describe('move.ts', () => {
     })
 
     it('should restore a displaced companion to its stored hex on rollback', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       // Deterministic spawns: the first pick (initial spawn) takes the first
       // free ally tile, later picks (the rollback re-spawn) take the last, so
       // the re-spawn lands on the other tile and restoreCompanions must move
@@ -199,7 +196,6 @@ describe('move.ts', () => {
           .get(`${PHRAESTO_COMPANION}-${Team.ALLY}`),
       ).toBe(SKILL_COLORS.crimson)
       random.mockRestore()
-      error.mockRestore()
     })
   })
 })

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
@@ -68,13 +68,11 @@ describe('savedTeamSide', () => {
   })
 
   it('rejects unit-less records (nothing to load) and corrupt team fields', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(savedTeamSide(encode({ boards: [{ m: 'arena1' }], mode: '1v1' }))).toBeNull()
     expect(
       savedTeamSide(encode({ boards: [{ m: 'arena1', c: [[1, 11, 3]] }], mode: '1v1' })),
     ).toBeNull()
     expect(savedTeamSide('not-a-record')).toBeNull()
-    warn.mockRestore()
   })
 })
 
@@ -168,7 +166,7 @@ describe('retired seasonal content in side-load', () => {
     expect(plan.boards[0]!.phantimal).toBeNull()
     // Artifact 7 is seasonal (season > 0 in data), so the retired side clears.
     expect(plan.boards[0]!.artifact).toBeNull()
-    // Heroes, companions, synergy units, and attrs are never seasonal.
+    // Heroes are never seasonal.
     expect(plan.boards[0]!.mains.length).toBeGreaterThan(0)
   })
 

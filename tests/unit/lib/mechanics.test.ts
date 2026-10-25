@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { fromMechanicQuery, toMechanicQuery, type MechanicPick } from '@/lib/mechanics'
 import { tagVocabulary } from '@/lib/tags'
 
-const vocabulary = tagVocabulary([
-  { tags: { dot: [{ ex: 1 }], summon: [{ ultimate: 1 }], 'heal-denial': [{ skill2: 1 }] } },
-])
+const vocabulary = tagVocabulary(
+  [{ tags: { dot: [{ ex: 1 }], summon: [{ ultimate: 1 }], 'heal-denial': [{ skill2: 1 }] } }],
+  () => false,
+)
 
 describe('mechanic links', () => {
   const read = (query: Record<string, unknown>): MechanicPick | null =>

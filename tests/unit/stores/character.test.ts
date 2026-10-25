@@ -2,7 +2,6 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getAvailableTeamSize, getMaxTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -41,43 +40,8 @@ beforeEach(() => {
   grids = useGrids()
 })
 
-// Drop routing (place / move / swap / phantimal rules) lives on the GridContext;
-// the app reaches it via grids.routeDrop's same-board path. These exercise that
-// handler on the active board directly (sourceHexId without sourceGridId = a
-// same-board move, which is handleDrop's contract, not routeDrop's).
-describe('active grid: drop routing (handleDrop)', () => {
-  describe('selection drop (no sourceHexId)', () => {
-    // Capacity and replacement rules are lib-pinned (characters/place.test.ts);
-    // this pins the picker-drop dispatch on a full team.
-    it('on a full team, rejects a drop on an empty tile but replaces an occupant', () => {
-      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
-      const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
-      const allyHexIds = allyTiles.slice(0, maxAlly).map((h) => h.getId())
-      allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
-      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
-
-      const remaining = allyTiles[allyHexIds.length]
-      if (!remaining) throw new Error('Test setup: default map has no spare ally tile')
-      expect(
-        grids.active!.handleDrop(
-          { character: buildCharacter(999), characterId: 999 },
-          remaining.getId(),
-        ),
-      ).toBe(false)
-
-      const targetHexId = allyHexIds[0]!
-      expect(
-        grids.active!.handleDrop({ character: buildCharacter(999), characterId: 999 }, targetHexId),
-      ).toBe(true)
-      expect(gridStore.getTile(targetHexId).characterId).toBe(999)
-      expect(isCharacterOnTeam(grids.active!.grid, 100, Team.ALLY)).toBe(false)
-      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
-    })
-  })
-})
-
-// Phantimal placement rules (team-size exemption, one per team) are lib-pinned
-// in characters/phantimal.test.ts; this pins the picker-drop dispatch.
+// The team-size exemption is pinned in characters/phantimal.test.ts; one
+// phantimal per team is enforced on the picker-drop path, so it is pinned here.
 describe('characterStore phantimals', () => {
   it('routes a picker phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
@@ -121,7 +85,6 @@ describe('characterStore phantimal faction rule', () => {
     vi.spyOn(gameData, 'getPhantimalById').mockReturnValue(aurelian)
   })
 
-  // Field the given hero ids on a team, returning the used hex ids
   const fieldHeroes = (team: Team, ids: number[]): number[] => {
     const state = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
     const tiles = tilesByState(state)

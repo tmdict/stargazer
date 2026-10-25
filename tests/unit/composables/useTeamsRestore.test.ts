@@ -339,13 +339,11 @@ describe('useTeamsRestore', () => {
     }
     const saved = readEnvelope('5v5').data
 
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { restore } = createHarness()
     const result = restore.initialize('!!!not-a-payload!!!')
     expect(result).toEqual({ linkLoaded: false, linkFailed: true })
     expect(restore.activeMode.value).toBe('5v5')
     expect(readEnvelope('5v5').data).toBe(saved)
-    error.mockRestore()
   })
 
   it('a shared link overwrites the routed mode slot with sourceId null', () => {
@@ -398,7 +396,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
 
   it('applyTeamData switches mode, applies content, and adopts provenance', () => {
     // The unit lands on a non-placeable hex of arena3; restore warns and skips it.
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     expect(restore.activeMode.value).toBe('5v5')
@@ -415,11 +412,9 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(grids.contexts[0]!.currentMap).toBe('arena3')
     expect(restore.sourceId.value).toBe('team-9')
     expect(readEnvelope('1v1').sourceId).toBe('team-9')
-    warn.mockRestore()
   })
 
   it('newTeam rebuilds a mode without types on its default map and detaches provenance', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     const data = canonicalTeamData(
@@ -440,7 +435,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     const slot = readEnvelope('1v1')
     expect(slot.sourceId).toBeNull()
     expect(decodeBoards(slot.data).boards[0]!.c).toBeUndefined()
-    warn.mockRestore()
   })
 
   it('newTeam keeps the matched type and falls back to the initial type on custom maps', async () => {
@@ -485,7 +479,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
   })
 
   it('applyTeamData with corrupt data falls back to the initial boards and clears provenance', () => {
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     expect(restore.applyTeamData('3v3', '!!!corrupt!!!', 'team-1')).toBe(false)
@@ -493,7 +486,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(grids.contexts).toHaveLength(3)
     expect(currentMaps(grids)).toEqual(TEAM_VARIANTS.gd.maps)
     expect(restore.sourceId.value).toBeNull()
-    error.mockRestore()
   })
 
   it('selecting a team keeps current display flags and view rotation', () => {

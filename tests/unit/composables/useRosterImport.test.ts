@@ -8,9 +8,6 @@ import type { FrameFamily, RosterSlot } from '@/lib/import/screens/roster/types'
 import { createImage } from '../fixtures/image'
 import { FakeWorker, file, stubImportBrowser } from '../fixtures/importBrowser'
 
-vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
-vi.mock('@/utils/dataLoader', () => ({ loadMatcherPortraits: vi.fn() }))
-
 // A card the reader read as hero 7 without being sure, on a surely placed frame.
 const unsure = (descriptor: number): HeroReading => ({
   candidates: [{ characterId: 7, score: 0.7, learned: false, costume: false }],

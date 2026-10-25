@@ -4,11 +4,10 @@ import { Grid } from '@/lib/grid'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 
 /**
- * Oracle: the original hand-derived diagonal-row table for FULL_GRID (visually
- * verified against the rendered board, predating the coordinate derivation).
- * The runtime computes both relations from cube coordinates (same diagonal ⇔
- * equal q − r, mirror ⇔ q↔r swap), and these tests pin that the derivation
- * reproduces the human-verified table exactly.
+ * Oracle: a hand-derived diagonal-row table for FULL_GRID, checked against the
+ * rendered board. The runtime computes both relations from cube coordinates
+ * (same diagonal ⇔ equal q − r, mirror ⇔ q↔r swap), and these tests pin that
+ * the derivation reproduces the table exactly.
  */
 const DIAGONAL_ROWS: readonly number[][] = [
   [1, 2],
@@ -30,7 +29,7 @@ const DIAGONAL_ROWS: readonly number[][] = [
 
 const MIDDLE_ROW = 7
 
-// The original symmetry construction: mirror row i ↔ row 14 − i, pairing by
+// The table's mirror: row i ↔ row 14 − i, pairing by
 // position (first→first); the middle diagonal maps to itself.
 function buildOracleSymmetryMap(): Map<number, number> {
   const map = new Map<number, number>()
@@ -64,7 +63,7 @@ describe('diagonal geometry vs the hand-derived FULL_GRID table', () => {
     }
   })
 
-  it('getSymmetricalHexId reproduces the original table-built mirror map for all 45 hexes', () => {
+  it('getSymmetricalHexId reproduces the table-built mirror map for all 45 hexes', () => {
     const oracle = buildOracleSymmetryMap()
     for (const tile of grid.getAllTiles()) {
       const id = tile.hex.getId()

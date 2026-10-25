@@ -1,4 +1,3 @@
-import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { findCharacterHex, getAvailableTeamSize } from '@/lib/characters/character'
@@ -8,18 +7,12 @@ import { executePlaceCharacter } from '@/lib/characters/place'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillLookups } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { useGameDataStore } from '@/stores/gameData'
 import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 // Retire with src/lib/skills/seasonal/phantimal.ts.
 describe('season 8', () => {
   const WEDGE_OF_MATTER = toPhantimalId(5)
   const WEDGE_OF_POWER = WEDGE_OF_MATTER + 10000
-
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    useGameDataStore().initializeContentData()
-  })
 
   it('wedge of matter brings wedge of power, which holds no team slot', () => {
     const grid = new Grid()

@@ -110,30 +110,14 @@ describe('rowScan (diagonal-row scan)', () => {
     ).toBe(4)
   })
 
-  it('expands to the next ring when the nearest is empty', () => {
+  it('reaches past the nearest ring unless maxDistance stops it', () => {
     placeOnTile(grid, 1, 101, Team.ALLY) // distance 2
+    const scan = { team: Team.ALLY, rowDirection: REAR, withinRowDirection: REAR }
 
-    const result = rowScan(ally(), {
-      team: Team.ALLY,
-      rowDirection: REAR,
-      withinRowDirection: REAR,
-    })
+    const result = rowScan(ally(), scan)
     expect(result?.targetHexId).toBe(1)
     expect(result?.metadata?.distance).toBe(2)
-  })
-
-  it('maxDistance bounds the scan to the nearest ring', () => {
-    placeOnTile(grid, 1, 101, Team.ALLY) // distance 2
-    placeOnTile(grid, 4, 102, Team.ALLY) // distance 1
-
-    const result = rowScan(ally(), {
-      team: Team.ALLY,
-      rowDirection: REAR,
-      withinRowDirection: REAR,
-      maxDistance: 1,
-    })
-    expect(result?.targetHexId).toBe(4)
-    expect(result?.metadata?.distance).toBe(1)
+    expect(rowScan(ally(), { ...scan, maxDistance: 1 })).toBeNull()
   })
 
   it('excludes the caster itself', () => {

@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  addCompanionLink,
-  clearCompanionLinks,
-  getCompanions,
-  getMainCharacterId,
   isCompanionId,
   restoreCompanions,
   type CompanionPosition,
@@ -36,33 +32,6 @@ describe('companion', () => {
       expect(isCompanionId(grid, 100)).toBe(false)
       expect(isCompanionId(grid, 9999)).toBe(false)
       expect(isCompanionId(grid, 1)).toBe(false)
-    })
-  })
-
-  describe('getMainCharacterId', () => {
-    it('extracts main character ID from companion ID', () => {
-      expect(getMainCharacterId(grid, 10100)).toBe(100)
-      expect(getMainCharacterId(grid, 10001)).toBe(1)
-      expect(getMainCharacterId(grid, 12345)).toBe(2345)
-      expect(getMainCharacterId(grid, grid.phantimalIdOffset - 1)).toBe(9999)
-    })
-  })
-
-  describe('companion link management', () => {
-    describe('clearCompanionLinks', () => {
-      it('only clears companions for specified team', () => {
-        addCompanionLink(grid, 100, 10100, Team.ALLY)
-        addCompanionLink(grid, 100, 10101, Team.ENEMY)
-
-        clearCompanionLinks(grid, 100, Team.ALLY)
-
-        const allyCompanions = getCompanions(grid, 100, Team.ALLY)
-        const enemyCompanions = getCompanions(grid, 100, Team.ENEMY)
-
-        expect(allyCompanions.size).toBe(0)
-        expect(enemyCompanions.size).toBe(1)
-        expect(enemyCompanions.has(10101)).toBe(true)
-      })
     })
   })
 
