@@ -24,7 +24,6 @@ import { outfitHero } from '../../src/lib/characters/outfit.ts'
 import { SKILL_LOCALES } from '../../src/lib/types/i18n.ts'
 
 const SKILL = 'text/skill'
-const HEROES = 'data/skill/heroes.json'
 // The pinned version a download holds; a copy from a local folder has none.
 const MARKER = '.version'
 
@@ -38,14 +37,12 @@ const PACK_FOLDERS = [
   'text/artifact',
   'text/seasonal/artifact',
   'text/seasonal/phantimal',
-  'data/skill',
 ]
 
-// The files the app imports directly, besides the hero list writeGenerated
-// writes. Without a pack they are written empty, so dev, the type check and
+// The files the app imports directly. Without a pack they are written empty, so dev, the type check and
 // the tools that load the app's modules still run.
 const STAND_INS: Record<string, string> = {
-  'data/skill/numbers.json': '{}\n',
+  'text/skill/numbers.json': '{}\n',
   'screenshot-import/hero-icons.json': '{ "icons": [] }\n',
 }
 
@@ -70,7 +67,7 @@ const bundlePath = (code: string): string => `${SKILL}/${code}/index.ts`
 
 // The files npm run data writes into the pack itself, which a copy keeps.
 const isGenerated = (path: string): boolean =>
-  path === HEROES || SKILL_LOCALES.some(({ code }) => path === bundlePath(code))
+  SKILL_LOCALES.some(({ code }) => path === bundlePath(code))
 
 // Every file under dir, relative to it, dotfiles (.DS_Store) left out.
 function listFiles(dir: string, base = dir): string[] {
@@ -135,13 +132,7 @@ export function mirror(source: string, dest: string): number {
   return changed
 }
 
-/** The heroes with skill text, from the English folder's file names. */
-export function skillHeroes(pack: string): string[] {
-  return heroFiles(join(pack, SKILL, 'en'))
-}
-
-/** Writes the skill bundling files and the skill hero list, and returns how
- * many changed. A bundling file goes only where the pack holds the language,
+/** Writes the skill bundling files, and returns how many changed. A bundling file goes only where the pack holds the language,
  * so it never stands in for missing text. */
 export function writeGenerated(pack: string): number {
   let changed = 0
@@ -152,8 +143,6 @@ export function writeGenerated(pack: string): number {
     )
       changed++
   }
-  if (writeIfChanged(join(pack, HEROES), `${JSON.stringify(skillHeroes(pack), null, 2)}\n`))
-    changed++
   return changed
 }
 
@@ -192,7 +181,7 @@ export function packProblems(pack: string, root: string): { problems: string[]; 
     if (!hasFile(pack, file)) problems.push(`the pack has no ${file}`)
   }
 
-  const english = skillHeroes(pack)
+  const english = heroFiles(join(pack, SKILL, 'en'))
   for (const { code } of SKILL_LOCALES) {
     const heroes = heroFiles(join(pack, SKILL, code))
     if (heroes.length === 0) problems.push(`the pack has no ${code} skill text`)

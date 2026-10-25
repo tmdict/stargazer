@@ -9,7 +9,6 @@ import {
   packCommit,
   pinNotice,
   pinProblem,
-  skillHeroes,
   writeGenerated,
 } from '../../scripts/lib/dataPack'
 
@@ -28,17 +27,12 @@ function put(path: string, text = '{}'): void {
   writeFileSync(join(dir, path), text)
 }
 
-describe('skill hero list', () => {
-  it('comes from the English file names, without underscore files', () => {
-    for (const name of ['odie', '_terms', 'eironn']) put(`pack/text/skill/en/${name}.json`)
+describe('skill bundling files', () => {
+  it('go only where the pack holds the language', () => {
+    put('pack/text/skill/en/odie.json')
     put('pack/text/skill/ja/odie.json')
     writeGenerated(join(dir, 'pack'))
 
-    expect(skillHeroes(join(dir, 'pack'))).toEqual(['eironn', 'odie'])
-    expect(JSON.parse(readFileSync(join(dir, 'pack/data/skill/heroes.json'), 'utf8'))).toEqual([
-      'eironn',
-      'odie',
-    ])
     expect(existsSync(join(dir, 'pack/text/skill/ja/index.ts'))).toBe(true)
     expect(existsSync(join(dir, 'pack/text/skill/ko/index.ts'))).toBe(false)
   })
@@ -59,7 +53,6 @@ describe('mirror', () => {
     expect(readFileSync(join(dir, 'pack/images/character/odie.png'), 'utf8')).toBe('b')
     expect(existsSync(join(dir, 'pack/text/seasonal'))).toBe(false)
     expect(existsSync(join(dir, 'pack/text/skill/en/index.ts'))).toBe(true)
-    expect(existsSync(join(dir, 'pack/data/skill/heroes.json'))).toBe(true)
     expect(mirror(join(dir, 'source'), join(dir, 'pack'))).toBe(0)
   })
 })
