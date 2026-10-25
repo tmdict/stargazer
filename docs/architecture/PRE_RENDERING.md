@@ -20,7 +20,7 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
        from every .html in dist/
 ```
 
-`npm run build` runs the type check, then `build:ssg`. `build:spa` skips pre-rendering, and the dev server is SPA only.
+`npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
 `getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page, so 16 languages × every hero with text. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
