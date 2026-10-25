@@ -176,7 +176,7 @@ const searchPicks = computed(() => [
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   padding: 8px;
-  background: #e6e1d6;
+  background: color-mix(in srgb, var(--color-contrast) 5%, transparent);
   border-radius: var(--radius-medium);
 }
 
@@ -216,10 +216,10 @@ const searchPicks = computed(() => [
   display: inline-grid;
   place-items: center;
   padding: 4px 10px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border: 1.5px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
-  color: #555;
+  color: var(--color-text-secondary);
   font-size: 0.8rem;
   font-weight: 700;
 }

@@ -14,6 +14,7 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import LocaleMenu from '@/components/ui/LocaleMenu.vue'
+import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
@@ -207,6 +208,9 @@ onUnmounted(() => {
             :link-to="localeTarget"
             @select="i18n.pickLocale"
           />
+        </li>
+        <li>
+          <ThemeToggle class="icon-link icon-button" />
         </li>
       </ul>
     </nav>

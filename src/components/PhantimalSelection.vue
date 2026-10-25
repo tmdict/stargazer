@@ -253,10 +253,10 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
   height: 70px;
   position: relative;
   border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-white);
-  background: #fff;
+  border: 2px solid var(--color-bg-raised);
+  background: var(--color-bg-raised);
   overflow: hidden;
-  box-shadow: 0 0 0 2px var(--color-bg-white);
+  box-shadow: 0 0 0 2px var(--color-bg-raised);
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);

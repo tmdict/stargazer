@@ -48,7 +48,7 @@ const chips = computed((): { choice: AttrLayerChoice; label: string; name: strin
 
 .layer-chip {
   border: 1.5px solid var(--color-border-primary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border-radius: 999px;
   font-size: calc(0.64rem * var(--dock-scale));
   font-weight: 800;

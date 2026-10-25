@@ -47,7 +47,7 @@ const HALF = W / 2
 const RISE = 16.5
 const R = 11
 const RING = 8.7
-const ROW_FILL = ['#fde6e6', '#efefef', '#fff']
+const ROW_STATE = [State.AVAILABLE_ENEMY, State.DEFAULT, State.AVAILABLE_ALLY]
 
 // Pointy-top rows alternate their offset, as on the arena.
 const center = ([row, col]: Cell) => ({ x: col * W + (row % 2 ? W : HALF), y: row * RISE + R })
@@ -75,7 +75,7 @@ const tiles = computed(() =>
     return {
       key: i,
       state,
-      fill: painted ? getTileFillColor(state) : ROW_FILL[row],
+      fill: getTileFillColor(painted ? state : ROW_STATE[row]!),
       points: points(center([row, col])),
       hatch: getTileHatchFill(id, state),
       stroke: getWallStrokeColor(state),
@@ -160,8 +160,7 @@ const arrowPath = computed(() => {
     <template v-for="tile in tiles" :key="tile.key">
       <polygon
         :points="tile.points"
-        :fill="tile.fill"
-        :stroke="TILE_STROKE_COLOR"
+        :style="{ fill: tile.fill, stroke: TILE_STROKE_COLOR }"
         stroke-width="1"
       />
       <polygon v-if="tile.hatch" :points="tile.points" :fill="tile.hatch" />
@@ -171,7 +170,7 @@ const arrowPath = computed(() => {
       :key="`wall-border-${tile.key}`"
       :points="tile.points"
       fill="none"
-      :stroke="tile.stroke"
+      :style="{ stroke: tile.stroke }"
       stroke-width="1"
     />
     <polygon
@@ -193,7 +192,7 @@ const arrowPath = computed(() => {
       :class="{ faded: ringed.length > 0 && token.slug !== ring }"
       :transform="`translate(${token.x} ${token.y})`"
     >
-      <circle :r="RING" fill="#fff" />
+      <circle :r="RING" class="help-board-token-ring" />
       <g :clip-path="`url(#${id}-clip)`">
         <image
           :href="token.backdrop"
@@ -243,8 +242,12 @@ const arrowPath = computed(() => {
 }
 
 .help-board-target {
-  fill: #e3f2f0;
+  fill: var(--help-target-fill);
   stroke: var(--color-primary);
+}
+
+.help-board-token-ring {
+  fill: var(--unit-ring);
 }
 
 .help-arrow-target {
@@ -258,7 +261,7 @@ const arrowPath = computed(() => {
 }
 
 .help-board-origin {
-  fill: rgba(255, 255, 255, 0.6);
+  fill: color-mix(in srgb, var(--tile-fill-ally) 60%, transparent);
   stroke: var(--color-text-secondary);
   stroke-width: 1.2;
   stroke-dasharray: 2 1.6;

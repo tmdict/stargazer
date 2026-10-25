@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   padding: calc(var(--spacing-sm) * var(--dock-scale)) calc(var(--spacing-md) * var(--dock-scale));
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-large);
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.09);

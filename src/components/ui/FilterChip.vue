@@ -43,7 +43,7 @@ defineProps<{
   padding: var(--chip-padding-block) 10px;
   border: var(--chip-border) solid var(--color-border-primary);
   border-radius: 999px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-text-secondary);
   font: inherit;
   font-size: var(--chip-font-size);
@@ -138,7 +138,7 @@ defineProps<{
 }
 
 .active + .active.joins-left {
-  border-left-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-bg-white));
+  border-left-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-bg-raised));
 }
 
 .chip.joined.joins-right {

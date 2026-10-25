@@ -93,7 +93,7 @@ function onKeydown(e: KeyboardEvent) {
   min-height: var(--pill-large-height);
   border: var(--pill-large-border) solid var(--stepper-line);
   border-radius: 999px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-text-secondary);
   font-size: var(--control-font-size);
   font-weight: var(--control-font-weight);

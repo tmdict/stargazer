@@ -40,7 +40,7 @@ const onClick = () => {
   font: inherit;
   font-size: 1rem;
   color: var(--color-text-secondary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border: 1px solid var(--color-border-primary);
   border-radius: 10px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);

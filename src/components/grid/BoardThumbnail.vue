@@ -13,6 +13,7 @@ import {
   TEAM_COLORS,
   teamTint,
   TILE_STROKE_COLOR,
+  UNIT_FRAME_COLORS,
 } from '@/utils/tileStateFormatting'
 
 /* One unit on a thumbnail: a portrait clipped to its hex, or a team-colored
@@ -135,19 +136,16 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-/* The crisp look, for the preview modal: the thumbnail's own fills and team
-   colours, with one border on every deployment and wall tile (open ground
-   drawn first, so a shared edge never shows two colours), a dark bevel line
-   inside each framed tile, and each portrait clipped under a dark rim inside a 2px team frame. Ratios are of hexSize; strokes
-   are fixed in screen pixels. */
+/* The crisp look, for the preview modal: its own tile colours (the
+   --tile-crisp-* tokens) and the unit frames, with one border on every
+   deployment and wall tile (open ground drawn first, so a shared edge never
+   shows two colours), a dark bevel line inside each framed tile, and each
+   portrait clipped under a dark rim inside a 2px frame. Ratios are of hexSize;
+   strokes are fixed in screen pixels. */
 const CRISP = {
   inset: 1.6 / 18,
   bevel: 2.5 / 18,
 }
-/* On the crisp look's dark backdrop a faded breakable fill sinks into the
-   ground, so breakable walls keep the ground tone and stand apart by their
-   light hatch (TileHatchPatterns). */
-const CRISP_BREAKABLE_FILL = getTileFill(undefined)
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
   switch (state) {
@@ -272,7 +270,6 @@ const crispTiles = computed(() => {
       return {
         hexId,
         zone,
-        fill: state === State.BLOCKED_BREAKABLE ? CRISP_BREAKABLE_FILL : getTileFill(state),
         points: geometry.value.points.get(hexId)!,
         bevel: hexAt(center, size - size * CRISP.bevel),
         center,
@@ -292,6 +289,7 @@ const placedUnits = computed(() =>
       center: geometry.value.centers.get(unit.hexId)!,
       corners: geometry.value.points.get(unit.hexId)!,
       color: TEAM_COLORS[unit.team],
+      frame: UNIT_FRAME_COLORS[unit.team],
       imageSize: hexSize * 2.2,
       // The crisp look clips the portrait under the rim, inside the frame.
       inner: hexAt(geometry.value.centers.get(unit.hexId)!, hexSize - hexSize * CRISP.inset),
@@ -354,8 +352,6 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
         <polygon
           :class="`tile tile-${tile.zone}`"
           :points="tile.points"
-          :fill="tile.fill"
-          :stroke="tile.zone === 'void' ? '#8a8f96' : '#a9afb7'"
           :stroke-width="1"
           stroke-linejoin="round"
           vector-effect="non-scaling-stroke"
@@ -365,7 +361,6 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
           class="tile-bevel"
           :points="tile.bevel"
           fill="none"
-          stroke="rgba(0, 0, 0, 0.5)"
           stroke-width="1"
           vector-effect="non-scaling-stroke"
         />
@@ -378,7 +373,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       :key="tile.hexId"
       :points="tile.points"
       :fill="tile.fill"
-      :stroke="TILE_STROKE_COLOR"
+      :style="{ stroke: TILE_STROKE_COLOR }"
       stroke-width="1"
     />
     <polygon
@@ -415,7 +410,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
           class="unit-frame"
           :points="unit.corners"
           fill="none"
-          :stroke="unit.color"
+          :style="{ stroke: unit.frame }"
           stroke-width="1.5"
           stroke-linejoin="round"
           vector-effect="non-scaling-stroke"
@@ -433,7 +428,12 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
         />
         <!-- Team ring replaces the tile's border line at the same stroke
              width: a heavier ring shrinks the already-small portraits. -->
-        <polygon :points="unit.corners" fill="none" :stroke="unit.color" stroke-width="1" />
+        <polygon
+          :points="unit.corners"
+          fill="none"
+          :style="{ stroke: unit.frame }"
+          stroke-width="1"
+        />
       </template>
       <template v-else>
         <circle
@@ -477,7 +477,6 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
         preserveAspectRatio="xMidYMid slice"
         :clip-path="`url(#${uid}-a-${art.side})`"
       />
-      <!-- Literal grey, not a token: exports serialize the SVG standalone. -->
       <circle v-else :cx="art.center.x" :cy="art.center.y" :r="art.radius" fill="#b0b6bb" />
       <text
         v-if="art.label"
@@ -573,8 +572,37 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
   stroke: rgba(0, 0, 0, 0.45);
 }
 
+.tile {
+  stroke: var(--tile-crisp-stroke);
+}
+
+.tile-void {
+  fill: var(--tile-crisp-fill-void);
+  stroke: var(--tile-crisp-stroke-void);
+}
+
+.tile-ally {
+  fill: var(--tile-crisp-fill-ally);
+}
+
+.tile-enemy {
+  fill: var(--tile-crisp-fill-enemy);
+}
+
+.tile-blocked {
+  fill: var(--tile-crisp-fill-blocked);
+}
+
+.tile-breakable {
+  fill: var(--tile-crisp-fill-breakable);
+}
+
+.tile-bevel {
+  stroke: var(--tile-bevel);
+}
+
 .tile-number {
-  fill: #fff;
+  fill: var(--tile-number);
   stroke: rgba(0, 0, 0, 0.75);
   paint-order: stroke;
   font-family: sans-serif;

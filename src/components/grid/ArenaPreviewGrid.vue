@@ -66,16 +66,16 @@ const handleArenaClick = (mapKey: string) => {
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.06);
-  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  background: color-mix(in srgb, var(--color-contrast) 6%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-contrast) 10%, transparent);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .arena-thumbnail:hover {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, var(--color-contrast) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-contrast) 20%, transparent);
   transform: translateY(-1px);
 }
 
@@ -92,7 +92,7 @@ const handleArenaClick = (mapKey: string) => {
 
 .arena-name {
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
   font-size: 0.8rem;
   text-align: center;
   line-height: 1.2;

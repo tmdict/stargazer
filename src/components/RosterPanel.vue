@@ -192,7 +192,7 @@ const {
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-medium);
   padding: 2px 8px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
 }
 
 .roster-name-input:focus {

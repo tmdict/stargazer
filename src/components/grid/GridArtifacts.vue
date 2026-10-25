@@ -450,7 +450,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 }
 
 .artifact-cell-border {
-  stroke: #8a8f98;
+  stroke: var(--tile-stroke-strong);
 }
 
 .artifact-cell.clickable {
@@ -515,7 +515,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: var(--artifact-border-width, 2px) solid var(--color-bg-white);
-  background: #fff;
+  border: var(--artifact-border-width, 2px) solid var(--color-bg-raised);
+  background: var(--color-bg-raised);
 }
 </style>

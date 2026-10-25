@@ -287,7 +287,7 @@ const narrow = useNarrowViewport()
   height: 26px;
   padding: 4px;
   color: var(--color-text-primary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border-radius: 50%;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }

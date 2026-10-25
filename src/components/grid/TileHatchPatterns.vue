@@ -24,7 +24,7 @@ const spacing = computed(() => hexSize / (light ? 2 : 3))
 const stroke = computed(() => strokeWidth ?? hexSize / (light ? 20 : 9))
 const hatches = computed(() =>
   light
-    ? [{ suffix: 'breakable', color: '#b2b6af' }]
+    ? [{ suffix: 'breakable', color: 'var(--tile-hatch)' }]
     : [
         { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.4)' },
         { suffix: 'breakable', color: 'rgba(255, 255, 255, 0.18)' },
@@ -42,6 +42,13 @@ const hatches = computed(() =>
     patternUnits="userSpaceOnUse"
     patternTransform="rotate(45)"
   >
-    <line x1="0" y1="0" x2="0" :y2="spacing" :stroke="hatch.color" :stroke-width="stroke" />
+    <line
+      x1="0"
+      y1="0"
+      x2="0"
+      :y2="spacing"
+      :style="{ stroke: hatch.color }"
+      :stroke-width="stroke"
+    />
   </pattern>
 </template>

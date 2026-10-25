@@ -149,7 +149,7 @@ const HEROES = [
   overflow: hidden;
   white-space: nowrap;
   color: var(--color-text-secondary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border: 1px solid var(--color-border-primary);
   border-radius: 10px;
   font-size: 0.85rem;
@@ -178,6 +178,6 @@ const HEROES = [
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--color-bg-raised);
 }
 </style>

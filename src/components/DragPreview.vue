@@ -59,7 +59,7 @@ const backgroundImage = computed(() => {
   position: relative;
   overflow: hidden;
   box-shadow:
-    0 0 0 5px #fff,
+    0 0 0 5px var(--hero-icon-ring),
     0 4px 12px rgba(0, 0, 0, 0.3);
   font-size: 1rem;
   font-weight: 600;

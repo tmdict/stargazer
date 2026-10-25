@@ -4,6 +4,8 @@
   --color-primary-hover: #2a7a73;
   --color-danger: #c05b4d;
   --color-danger-hover: #a04936;
+  --color-neutral: #666;
+  --color-neutral-hover: #333;
 
   --color-accent: #5fc4bb;
   --color-accent-active: #3a8a83;
@@ -37,6 +39,39 @@
   --color-ally: #36958e;
   --color-enemy: #c82333;
 
+  /* Boards */
+  --tile-fill-default: #f0f0f0;
+  --tile-fill-ally: #fff;
+  --tile-fill-enemy: #ffe8e8;
+  --tile-fill-blocked: #b5b9bd;
+  --tile-fill-breakable: #e1e2e0;
+  --tile-stroke: #a9afb6;
+  --tile-stroke-default: #a9afb6;
+  --tile-stroke-strong: #8a8f98;
+  --tile-stroke-held-ally: var(--tile-stroke-strong);
+  --tile-stroke-held-enemy: var(--tile-stroke-strong);
+  --tile-wall-blocked: #858b91;
+  --tile-wall-breakable: #a0a59d;
+  --tile-hatch: #b2b6af;
+  --tile-text: #222;
+  --tile-coordinate: #555;
+  --unit-frame-ally: var(--color-ally);
+  --unit-frame-enemy: var(--color-enemy);
+  --unit-disc: #c4baa6;
+  --unit-disc-phantimal: #b0b6bb;
+  --unit-ring: #fff;
+
+  /* Boards in BoardThumbnail's crisp look */
+  --tile-crisp-fill-void: rgba(255, 255, 255, 0.08);
+  --tile-crisp-fill-ally: color-mix(in srgb, var(--color-ally) 35%, transparent);
+  --tile-crisp-fill-enemy: color-mix(in srgb, var(--color-enemy) 35%, transparent);
+  --tile-crisp-fill-blocked: rgba(128, 128, 128, 0.45);
+  --tile-crisp-fill-breakable: rgba(255, 255, 255, 0.08);
+  --tile-crisp-stroke-void: #8a8f96;
+  --tile-crisp-stroke: #a9afb7;
+  --tile-bevel: rgba(0, 0, 0, 0.5);
+  --tile-number: #fff;
+
   /* Screenshot imports: their dark modal's text, surfaces and control
      height, the review states, and the game's result colours (orange ally,
      blue enemy). */
@@ -58,18 +93,20 @@
 
   /* Status colors */
   --color-success: #36958e;
-  --color-success-bg: #e6f4ea;
   --color-warning: #f9a825;
   --color-warning-bg: #fff8e1;
   --color-error: #c62828;
-  --color-error-bg: #fce4ec;
+  --color-info: #4a90e2;
+  --color-info-bg: #f0f8ff;
+  --color-info-text: #2c5aa0;
 
   /* Background Colors */
+  --color-bg-page: #20232a;
   --color-bg-primary: #f7f2ec;
   --color-bg-secondary: #ebe6db;
   --color-bg-tertiary: #f0ebe0;
-  --color-bg-white: #fff;
-  --color-bg-light-gray: #f0f0f0;
+  --color-bg-raised: #fff;
+  --color-bg-subtle: #f0f0f0;
 
   /* Border Colors */
   --color-border-primary: #d4cfc0;
@@ -79,6 +116,9 @@
   --color-text-primary: #333;
   --color-text-secondary: #666;
   --color-text-muted: #484848;
+
+  /* The far end from a panel's colour, mixed into translucent tints and lines on it */
+  --color-contrast: #000;
 
   /* Picker "already placed on the board" state */
   --placed-filter: grayscale(1);
@@ -148,6 +188,7 @@
 
   /* Help marks */
   --help-mark-opacity: 0.55;
+  --help-target-fill: #e3f2f0;
 
   /* Large pills */
   --pill-large-height: 36px;
@@ -217,6 +258,80 @@
   --z-arrows: 15;
   --z-board-controls: calc(var(--z-arrows) + 1);
   --z-dropdown: 9999;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-neutral: #4a5361;
+  --color-neutral-hover: #5d6779;
+
+  --dock-chip-fill: rgba(255, 255, 255, 0.08);
+  --dock-chip-fill-hover: rgba(255, 255, 255, 0.14);
+
+  --tile-fill-default: #101318;
+  --tile-fill-ally: #12222c;
+  --tile-fill-enemy: #2a1622;
+  --tile-fill-blocked: #262c38;
+  --tile-fill-breakable: #2c3340;
+  --tile-stroke: #98a3b9;
+  --tile-stroke-default: #3b424d;
+  --tile-stroke-strong: #98a3b9;
+  --tile-stroke-held-ally: var(--unit-frame-ally);
+  --tile-stroke-held-enemy: var(--unit-frame-enemy);
+  --tile-wall-blocked: #5d6779;
+  --tile-wall-breakable: #6c7689;
+  --tile-hatch: rgba(255, 255, 255, 0.1);
+  --tile-text: #8a95ab;
+  --tile-coordinate: #737e93;
+  --unit-frame-ally: #5fd6cb;
+  --unit-frame-enemy: #e2686f;
+  --unit-disc: #2a313b;
+  --unit-disc-phantimal: #3d4654;
+  --unit-ring: #98a3b9;
+
+  --tile-crisp-fill-void: var(--tile-fill-default);
+  --tile-crisp-fill-ally: var(--tile-fill-ally);
+  --tile-crisp-fill-enemy: var(--tile-fill-enemy);
+  --tile-crisp-fill-blocked: var(--tile-fill-blocked);
+  --tile-crisp-fill-breakable: var(--tile-fill-breakable);
+  --tile-crisp-stroke-void: var(--tile-stroke-default);
+  --tile-crisp-stroke: var(--tile-stroke);
+  --tile-bevel: #07091a;
+  --tile-number: #8a95ab;
+
+  --help-target-fill: color-mix(in srgb, var(--color-primary) 25%, var(--tile-fill-ally));
+
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 15%, var(--color-bg-primary));
+  --color-info-bg: color-mix(in srgb, var(--color-info) 15%, var(--color-bg-primary));
+  --color-info-text: #7fb0ea;
+
+  --color-bg-page: #0f1216;
+  --color-bg-primary: #171b21;
+  --color-bg-secondary: #232a33;
+  --color-bg-tertiary: #1d232b;
+  --color-bg-raised: #1d232b;
+  --color-bg-subtle: #1d232b;
+
+  --color-border-primary: #39424e;
+  --color-border-light: #2a313b;
+
+  --color-text-primary: #e9edf3;
+  --color-text-secondary: #a7b1bf;
+  --color-text-muted: #c3cbd6;
+  --color-contrast: #fff;
+
+  --placed-overlay: rgba(0, 0, 0, 0.35);
+
+  --color-bg-reading: #171b21;
+
+  --dropdown-row-hover: var(--color-bg-secondary);
+
+  --hero-icon-ring: #2a313b;
+
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 1px 3px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 1280px) {

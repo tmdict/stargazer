@@ -15,7 +15,7 @@ const {
   iconPrefix,
   size = 36,
   showTooltip = true,
-  activeBorderColor = 'var(--color-bg-white)',
+  activeBorderColor = 'var(--color-bg-raised)',
 } = defineProps<{
   options: string[]
   iconPrefix: string // 'class' or 'faction'
@@ -156,7 +156,7 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
 }
 
 .icon-option.active {
-  border-color: var(--active-border-color, var(--color-bg-white));
+  border-color: var(--active-border-color, var(--color-bg-raised));
 }
 
 .clear-option {
@@ -179,7 +179,7 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
 }
 
 .clear-option.active .clear-label {
-  border-bottom-color: var(--active-border-color, var(--color-bg-white));
+  border-bottom-color: var(--active-border-color, var(--color-bg-raised));
   translate: 0 -2px;
 }
 

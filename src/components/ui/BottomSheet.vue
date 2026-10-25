@@ -243,7 +243,7 @@ const onSheetClickCapture = (e: MouseEvent) => {
     width: 40px;
     height: 4px;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.22);
+    background: color-mix(in srgb, var(--color-contrast) 22%, transparent);
   }
 }
 </style>

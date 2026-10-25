@@ -1,8 +1,6 @@
 /* Device-level Grid Info preferences: one master switch plus granular children,
  * shared by the Arena, Teams, and ShareView pages. Stored as the `gridInfo`
- * slice of the generic `stargazer.prefs` key so future device prefs can join
- * the key; writes read-modify-write the whole object and preserve sibling
- * slices they don't own.
+ * field of `stargazer.prefs` (utils/prefs.ts).
  *
  * The first call seeds storage synchronously. The reactive prefs themselves
  * render as the defaults and adopt the stored values in onMounted: '/' and
@@ -16,9 +14,7 @@
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
 
-import { readStorage, writeStorage } from '@/utils/storage'
-
-const PREFS_KEY = 'stargazer.prefs'
+import { readPrefs, writePref } from '@/utils/prefs'
 
 export interface GridInfoPrefs {
   master: boolean
@@ -87,57 +83,26 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
 })
 
 // The stored slice merged over the defaults (booleans only, so a wrong-typed
-// value can't leak into the pref state), or null when the object is unparsable.
-const sliceFrom = (raw: string): GridInfoPrefs | null => {
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    const slice =
-      parsed && typeof parsed === 'object' ? (parsed as { gridInfo?: unknown }).gridInfo : undefined
-    const merged = { ...DEFAULTS }
-    if (slice && typeof slice === 'object') {
-      for (const key of PREF_KEYS) {
-        const value = (slice as Record<string, unknown>)[key]
-        if (typeof value === 'boolean') merged[key] = value
-      }
+// value can't leak into the pref state).
+const sliceFrom = (slice: unknown): GridInfoPrefs => {
+  const merged = { ...DEFAULTS }
+  if (slice && typeof slice === 'object') {
+    for (const key of PREF_KEYS) {
+      const value = (slice as Record<string, unknown>)[key]
+      if (typeof value === 'boolean') merged[key] = value
     }
-    return merged
-  } catch {
-    return null
   }
+  return merged
 }
-
-const seedStorage = (): boolean => writeStorage(PREFS_KEY, JSON.stringify({ gridInfo: DEFAULTS }))
 
 // Read the stored slice, seeding on first run.
 const initStorage = (): GridInfoPrefs => {
-  const raw = readStorage(PREFS_KEY)
-  if (raw === null) {
-    seedStorage()
+  const stored = readPrefs()
+  if (stored === null) {
+    writePref('gridInfo', DEFAULTS)
     return { ...DEFAULTS }
   }
-  const slice = sliceFrom(raw)
-  if (slice === null) {
-    seedStorage()
-    return { ...DEFAULTS }
-  }
-  return slice
-}
-
-const persist = (prefs: GridInfoPrefs): void => {
-  let stored: Record<string, unknown> = {}
-  const raw = readStorage(PREFS_KEY)
-  if (raw !== null) {
-    try {
-      const parsed: unknown = JSON.parse(raw)
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        stored = parsed as Record<string, unknown>
-      }
-    } catch {
-      // Corrupt object: rebuilt around this slice alone.
-    }
-  }
-  stored.gridInfo = { ...prefs }
-  writeStorage(PREFS_KEY, JSON.stringify(stored))
+  return sliceFrom(stored.gridInfo)
 }
 
 let prefs: GridInfoPrefs | null = null
@@ -175,7 +140,7 @@ export function useGridInfoPrefs(): {
       }
       enableParents(key)
     }
-    persist(state)
+    writePref('gridInfo', { ...state })
   }
 
   return { prefs: state, setPref }

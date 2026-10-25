@@ -197,7 +197,7 @@ const handleDragEnd = (event: DragEvent) => {
   font-weight: 600;
   text-align: center;
   margin-top: 0.25rem;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .portrait-frame {
@@ -243,6 +243,7 @@ const handleDragEnd = (event: DragEvent) => {
   font-size: 0.8rem;
   line-height: 1.15;
   overflow-wrap: anywhere;
+  color: #333;
   text-shadow:
     -1px -1px 0 #fff,
     1px -1px 0 #fff,

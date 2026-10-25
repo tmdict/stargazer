@@ -278,7 +278,7 @@ const {
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-small);
   padding: 0 4px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
 }
 
 .team-title,

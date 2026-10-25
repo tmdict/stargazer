@@ -324,7 +324,7 @@ defineExpose({
 <style scoped>
 .grid-stats {
   padding: var(--spacing-lg);
-  background: var(--color-bg-light-gray);
+  background: var(--color-bg-subtle);
   border-radius: var(--radius-large);
 }
 
@@ -349,7 +349,7 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-sm);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   margin: var(--spacing-sm) 0;
   border-radius: var(--radius-small);
 }
@@ -359,7 +359,7 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   margin: var(--spacing-sm) 0;
   border-radius: var(--radius-medium);
   border-left: 4px solid var(--color-border-light);
@@ -431,50 +431,14 @@ defineExpose({
 }
 
 /* State-specific colors */
-.state-default {
-  background: #e9ecef;
-  color: #495057;
-}
-
-.state-available-ally,
 .state-occupied-ally {
-  color: color-mix(in srgb, var(--color-ally) 65%, black);
-}
-
-.state-available-enemy,
-.state-occupied-enemy {
-  color: color-mix(in srgb, var(--color-enemy) 65%, black);
-}
-
-.state-available-ally {
-  background: color-mix(in srgb, var(--color-ally) 12%, transparent);
-}
-
-.state-available-enemy {
-  background: color-mix(in srgb, var(--color-enemy) 12%, transparent);
-}
-
-.state-occupied-ally {
+  color: color-mix(in srgb, var(--color-ally) 65%, var(--color-contrast));
   background: color-mix(in srgb, var(--color-ally) 28%, transparent);
 }
 
 .state-occupied-enemy {
+  color: color-mix(in srgb, var(--color-enemy) 65%, var(--color-contrast));
   background: color-mix(in srgb, var(--color-enemy) 28%, transparent);
-}
-
-.state-blocked {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.state-blocked-breakable {
-  background: #e2e3e5;
-  color: #383d41;
-}
-
-.state-unknown {
-  background: #f8f9fa;
-  color: #6c757d;
 }
 
 .closest-enemy {
@@ -515,12 +479,12 @@ defineExpose({
 .artifact-section {
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 2px solid #ddd;
+  border-top: 2px solid var(--color-border-light);
 }
 
 .artifact-section h4 {
   margin: 0 0 0.75rem 0;
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1rem;
 }
 
@@ -535,9 +499,9 @@ defineExpose({
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: white;
+  background: var(--color-bg-raised);
   border-radius: 6px;
-  border-left: 4px solid #ddd;
+  border-left: 4px solid var(--color-border-light);
 }
 
 .artifact-team.ally {
@@ -551,13 +515,13 @@ defineExpose({
 .team-label {
   font-weight: 700;
   font-size: 0.9rem;
-  color: #333;
+  color: var(--color-text-primary);
   min-width: 130px;
   text-align: left;
 }
 
 .artifact-name {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   flex: 1;
   font-family: monospace;
@@ -616,26 +580,26 @@ defineExpose({
   gap: 0.25rem;
   margin: 0.25rem 1rem 0.25rem 0;
   padding: 0.5rem;
-  background: #f0f8ff;
+  background: var(--color-info-bg);
   border-radius: 4px;
-  border-left: 3px solid #4a90e2;
+  border-left: 3px solid var(--color-info);
 }
 
 .skill-label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #2c5aa0;
+  color: var(--color-info-text);
 }
 
 .symmetry-info {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .skill-target {
   font-size: 0.75rem;
-  color: #4a90e2;
+  color: var(--color-info);
   font-weight: 500;
 }
 

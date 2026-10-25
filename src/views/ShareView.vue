@@ -233,7 +233,7 @@ const editLink = computed(() =>
 }
 
 .share-board :deep(.team-power) {
-  background: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--color-bg-raised) 85%, transparent);
   border-radius: 6px;
 }
 

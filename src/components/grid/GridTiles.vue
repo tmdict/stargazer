@@ -7,7 +7,7 @@ import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { hasCharacter } from '@/lib/characters/character'
+import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import { BOARD_SIZE, type Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
@@ -17,9 +17,9 @@ import {
   compareWallDrawOrder,
   getTileFillColor,
   getTileHatchFill,
+  getTileStrokeColor,
   getWallStrokeColor,
-  TILE_STROKE_COLOR,
-  TILE_STROKE_COLOR_STRONG,
+  HELD_TILE_STROKE_COLORS,
 } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -40,13 +40,10 @@ const BASE_STROKE_WIDTH = 2
 const HEX_ID_FONT_SIZE = 18
 const COORDINATE_FONT_SIZE = 8
 const TEXT_ROTATION = 30
-const TEXT_COLOR = '#222'
-const COORDINATE_COLOR = '#555'
-const HEX_FILL_COLOR = '#fff'
 // Skill fill-paints are blended into one opaque color, not a translucent layer,
 // so an exported PNG has no partial alpha for a viewer to composite against its
 // own background. Kept below the arrow opacity (0.8); a full-cell tint reads strong.
-const SKILL_FILL_RATIO = 0.35
+const SKILL_FILL_PERCENT = 35
 
 const gridEvents = useGridEvents()
 
@@ -91,33 +88,11 @@ const textTransform = (hex: Hex) => {
   return `rotate(${TEXT_ROTATION},${pos.x},${pos.y})`
 }
 
-// Composite `overlay` over `base` at `ratio` (0..1) into an opaque #rrggbb.
-// Inputs may be #rgb or #rrggbb.
-const mixHexColors = (base: string, overlay: string, ratio: number): string => {
-  const toRgb = (hex: string): number[] => {
-    const h = hex.replace('#', '')
-    const full =
-      h.length === 3
-        ? h
-            .split('')
-            .map((c) => c + c)
-            .join('')
-        : h
-    return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16))
-  }
-  const b = toRgb(base)
-  const o = toRgb(overlay)
-  const channel = (i: number) => Math.round(b[i]! * (1 - ratio) + o[i]! * ratio)
-  const toHex = (n: number) => n.toString(16).padStart(2, '0')
-  return `#${toHex(channel(0))}${toHex(channel(1))}${toHex(channel(2))}`
-}
-
 const getHexFill = (hex: Hex) => {
-  const state = ctx.grid.getTile(hex).state
-  const baseFill = getTileFillColor(state) || HEX_FILL_COLOR
+  const baseFill = getTileFillColor(ctx.grid.getTile(hex).state)
   if (props.showSkills) {
     const fills = ctx.getTileFillModifier(hex.getId())
-    if (fills) return mixHexColors(baseFill, fills[0]!, SKILL_FILL_RATIO)
+    if (fills) return `color-mix(in srgb, ${fills[0]} ${SKILL_FILL_PERCENT}%, ${baseFill})`
   }
   return baseFill
 }
@@ -293,8 +268,9 @@ const getHexStroke = (hex: Hex) => {
     }
   }
 
-  const isOccupied = hasCharacter(ctx.grid, hexId)
-  return isOccupied ? TILE_STROKE_COLOR_STRONG : TILE_STROKE_COLOR
+  const team = getCharacterTeam(ctx.grid, hexId)
+  if (team !== undefined) return HELD_TILE_STROKE_COLORS[team]
+  return getTileStrokeColor(ctx.grid.getTile(hex).state)
 }
 
 const getHexStrokeWidth = (hex: Hex) => {
@@ -335,9 +311,14 @@ const hasSkillHighlight = (hex: Hex) => {
   return ctx.getTileColorModifier(hex.getId()) !== undefined
 }
 
-// Render layers: SVG has no z-index, so stacking is draw order.
+// Render layers: SVG has no z-index, so stacking is draw order. Open ground
+// comes first, so its outline, dimmer in the dark look, never covers the edge
+// of a deployment tile or wall beside it.
+const isOpenGround = (hex: Hex) => ctx.grid.getTile(hex).state === State.DEFAULT
 const regularHexes = computed(() =>
-  props.hexes.filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex)),
+  props.hexes
+    .filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex))
+    .sort((a, b) => Number(isOpenGround(b)) - Number(isOpenGround(a))),
 )
 const elevatedHexes = computed(() =>
   props.hexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)),
@@ -424,8 +405,7 @@ onUnmounted(() => {
                 .map((p) => `${p.x},${p.y}`)
                 .join(' ')
             "
-            :fill="getHexFill(hex)"
-            :stroke="getHexStroke(hex)"
+            :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
         </g>
@@ -447,8 +427,7 @@ onUnmounted(() => {
                 .map((p) => `${p.x},${p.y}`)
                 .join(' ')
             "
-            :fill="getHexFill(hex)"
-            :stroke="getHexStroke(hex)"
+            :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
         </g>
@@ -460,7 +439,7 @@ onUnmounted(() => {
           class="grid-tile"
           :points="tile.points"
           fill="none"
-          :stroke="tile.stroke"
+          :style="{ stroke: tile.stroke }"
           :stroke-width="scaledStrokeWidth"
         />
 
@@ -478,8 +457,7 @@ onUnmounted(() => {
                 .map((p) => `${p.x},${p.y}`)
                 .join(' ')
             "
-            :fill="getHexFill(hex)"
-            :stroke="getHexStroke(hex)"
+            :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
           <!-- Concentric inner strokes for additional colors -->
@@ -508,8 +486,8 @@ onUnmounted(() => {
             :x="ctx.layout.hexToPixel(hex).x"
             :y="ctx.layout.hexToPixel(hex).y + 6"
             text-anchor="middle"
+            class="tile-id"
             :font-size="scaledFontSizes.hexId"
-            :fill="TEXT_COLOR"
             font-family="monospace"
             :transform="textTransform(hex)"
           >
@@ -520,8 +498,8 @@ onUnmounted(() => {
             :x="ctx.layout.hexToPixel(hex).x"
             :y="ctx.layout.hexToPixel(hex).y + 18"
             text-anchor="middle"
+            class="tile-coordinate"
             :font-size="scaledFontSizes.coordinate"
-            :fill="COORDINATE_COLOR"
             font-family="monospace"
             :transform="textTransform(hex)"
           >
@@ -580,6 +558,14 @@ onUnmounted(() => {
 
 .hex-text {
   pointer-events: none;
+}
+
+.tile-id {
+  fill: var(--tile-text);
+}
+
+.tile-coordinate {
+  fill: var(--tile-coordinate);
 }
 
 .grid-event-layer {
