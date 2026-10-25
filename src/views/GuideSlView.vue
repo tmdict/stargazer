@@ -194,6 +194,7 @@ const generate = async (): Promise<void> => {
           comp: t.comp,
           core: t.core,
           flex: t.flex,
+          pairs: t.pairs,
           chance: t.chance,
         }
       }),

@@ -10,6 +10,7 @@ export interface SlShownTeam {
   comp: [number, number, number] | null
   core: number[]
   flex: { out: number; options: number[] }[]
+  pairs: { out: number[]; options: number[][] }[]
   chance: number
 }
 
@@ -82,8 +83,10 @@ const {
             {{ i18n.t('app.sl-chance')
             }}<IconHelpSmall :size="14" class="sl-help-mark" aria-hidden="true" />
           </button>
-          <b>{{ slPercent(shown.chance) }}</b>
-          <span class="sl-mood" aria-hidden="true">{{ slMood(shown.chance) }}</span>
+          <span class="sl-chance-value">
+            <b>{{ slPercent(shown.chance) }}</b>
+            <span class="sl-mood" aria-hidden="true">{{ slMood(shown.chance) }}</span>
+          </span>
         </span>
         <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
       </span>
@@ -151,10 +154,18 @@ const {
   color: var(--color-text-secondary);
 }
 
+/* The chance goes under its label when the line is too narrow for both. */
 .sl-chance-line {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 10px;
+  gap: 0 10px;
+}
+
+.sl-chance-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .sl-chance-note {
@@ -163,7 +174,6 @@ const {
 }
 
 .sl-mood {
-  margin-left: -4px;
   font-size: 22px;
   line-height: 1;
 }
@@ -234,6 +244,15 @@ const {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 10px;
     padding: 18px 10px;
+  }
+}
+
+/* The narrowest phones: a swap row of four portraits still fits its column. */
+@container (max-width: 340px) {
+  .sl-maps {
+    --pt: 24px;
+    --pt-gap: 4px;
+    column-gap: 8px;
   }
 }
 </style>

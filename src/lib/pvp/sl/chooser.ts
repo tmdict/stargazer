@@ -291,8 +291,8 @@ function choose(
   // the set uses elsewhere. Core keeps the group's core heroes the team holds
   // that no swap replaces: one with a swap is listed under Flex even past its
   // limit, and the other swaps fill what that limit leaves.
-  const coreAndFlex = (t: Option, set: Option[]): Pick<SlChoiceTeam, 'core' | 'flex'> => {
-    if (t.family === null) return { core: [], flex: [] }
+  const coreAndFlex = (t: Option, set: Option[]): Pick<SlChoiceTeam, 'core' | 'flex' | 'pairs'> => {
+    if (t.family === null) return { core: [], flex: [], pairs: [] }
     const family = sources[t.source]!.families[t.family]!
     const core = family.core.filter((id) => t.heroes.includes(id))
     const elsewhere = new Set(set.filter((o) => o !== t).flatMap((o) => o.heroes))
@@ -321,12 +321,58 @@ function choose(
     const others = all
       .filter((s) => !moved.has(s))
       .slice(0, Math.max(0, data.flex.heroes - moved.size))
+    const shown = all.filter((s) => moved.has(s) || others.includes(s))
     return {
       core: core.filter((id) => !all.some((s) => s.out === id)),
-      flex: all
-        .filter((s) => moved.has(s) || others.includes(s))
-        .map(({ out, options }) => ({ out, options })),
+      flex: shown.map(({ out, options }) => ({ out, options })),
+      pairs: pairSwaps(t, set, core, shown),
     }
+  }
+
+  // Two-hero swaps: the group's recorded teams that differ from this one by two
+  // heroes, neither of them core nor out in a one-hero swap shown, for the rows
+  // the one-hero swaps leave. Each pair, and each pair it can take, is in name
+  // order, and ties break by those names.
+  const byOrder = (a: number, b: number): number => (before(a, b) ? -1 : before(b, a) ? 1 : 0)
+  const pairOrder = (a: number[], b: number[]): number =>
+    byOrder(a[0]!, b[0]!) || byOrder(a[1]!, b[1]!)
+  const pairSwaps = (
+    t: Option,
+    set: Option[],
+    core: number[],
+    shown: { out: number }[],
+  ): SlChoiceTeam['pairs'] => {
+    const rows = data.flex.heroes - shown.length
+    if (rows <= 0) return []
+    const family = sources[t.source]!.families[t.family!]!
+    const fixed = new Set([...core, ...shown.map((s) => s.out)])
+    const elsewhere = new Set(set.filter((o) => o !== t).flatMap((o) => o.heroes))
+    const byOut = new Map<
+      string,
+      { out: number[]; found: { heroes: number[]; chance: number }[] }
+    >()
+    for (const [team, rate] of family.swaps) {
+      const added = team.filter((h) => !t.heroes.includes(h))
+      const dropped = t.heroes.filter((h) => !team.includes(h))
+      if (added.length !== 2 || dropped.length !== 2 || dropped.some((h) => fixed.has(h))) continue
+      if (added.some((h) => elsewhere.has(h) || excluded(h))) continue
+      const out = [...dropped].sort(byOrder)
+      const key = out.join('/')
+      if (!byOut.has(key)) byOut.set(key, { out, found: [] })
+      byOut.get(key)!.found.push({ heroes: [...added].sort(byOrder), chance: shifted(rate, team) })
+    }
+    return [...byOut.values()]
+      .map(({ out, found }) => {
+        found.sort((a, b) => b.chance - a.chance || pairOrder(a.heroes, b.heroes))
+        return {
+          out,
+          best: found[0]!.chance,
+          options: found.slice(0, data.flex.options).map((o) => o.heroes),
+        }
+      })
+      .sort((a, b) => b.best - a.best || pairOrder(a.out, b.out))
+      .slice(0, rows)
+      .map(({ out, options }) => ({ out, options }))
   }
 
   for (const [evidence, proof] of data.evidence.entries()) {

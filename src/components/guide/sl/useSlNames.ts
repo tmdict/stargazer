@@ -3,13 +3,13 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
 
-// A chance as a whole percentage. One that rounds to 0% or 100% is still
-// neither, so it reads as under 1% or over 99%.
+// A chance as a percentage to one decimal. One that rounds to 0% or 100% is
+// still neither, so it reads as under 0.1% or over 99.9%.
 export const slPercent = (chance: number): string =>
-  chance < 0.005 ? '<1%' : chance > 0.995 ? '>99%' : `${Math.round(chance * 100)}%`
+  chance < 0.0005 ? '<0.1%' : chance > 0.9995 ? '>99.9%' : `${(chance * 100).toFixed(1)}%`
 
-// An emoji beside a chance, by the whole percentage slPercent shows: each
-// entry holds from its percentage up to the next.
+// An emoji beside a chance, by the percentage slPercent shows: each entry
+// holds from its percentage up to the next.
 const MOODS: readonly (readonly [number, string])[] = [
   [99, '👑'],
   [95, '🏆'],
@@ -37,7 +37,7 @@ const MOODS: readonly (readonly [number, string])[] = [
 ]
 
 export const slMood = (chance: number): string => {
-  const percent = Math.round(chance * 100)
+  const percent = Math.round(chance * 1000) / 10
   return MOODS.find(([from]) => percent >= from)![1]
 }
 

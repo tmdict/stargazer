@@ -82,6 +82,15 @@ describe('chooseSlSet on the shipped data', () => {
       expect(t.chance).toBeGreaterThan(0)
       expect(t.chance).toBeLessThan(1)
       expect(t.flex.flatMap((f) => f.options).every((id) => selected.has(id))).toBe(true)
+      // A two-hero swap takes heroes the set leaves free, for two of the team's
+      // that are neither core nor out in a one-hero swap, in the rows left.
+      const free = new Set([...selected].filter((id) => !used.includes(id)))
+      const fixed = new Set([...t.core, ...t.flex.map((f) => f.out)])
+      expect(t.flex.length + t.pairs.length).toBeLessThanOrEqual(data.flex.heroes)
+      for (const pair of t.pairs) {
+        expect(pair.out.every((id) => t.heroes.includes(id) && !fixed.has(id))).toBe(true)
+        expect(pair.options.flat().every((id) => free.has(id))).toBe(true)
+      }
     }
     const artifacts = set.teams.flatMap((t) => (t.artifact === null ? [] : [t.artifact]))
     expect(new Set(artifacts).size).toBe(artifacts.length)
