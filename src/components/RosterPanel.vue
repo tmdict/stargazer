@@ -6,20 +6,15 @@
 import { computed } from 'vue'
 
 import RosterEditor from './RosterEditor.vue'
-import RosterImportButton from './RosterImportButton.vue'
 import RosterMenu from './RosterMenu.vue'
+import RosterTransferActions from './RosterTransferActions.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import HelpLink from '@/components/ui/HelpLink.vue'
-import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconTrash from '@/components/ui/IconTrash.vue'
-import IconUpload from '@/components/ui/IconUpload.vue'
 import RenameButton from '@/components/ui/RenameButton.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInlineRename } from '@/composables/useInlineRename'
-import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { MAX_NAME_LENGTH } from '@/lib/names'
@@ -80,26 +75,6 @@ const {
     report()
   },
 })
-
-// Import merges into the library and never replaces it.
-const { fileInput, download, handleFileChosen } = useLibraryTransfer({
-  filePrefix: 'stargazer-rosters',
-  importFile: rosters.importRosters,
-  report,
-  messages: {
-    invalid: 'app.rosters-import-invalid',
-    success: 'app.rosters-import-success',
-    successConflicts: 'app.rosters-import-success-conflicts',
-  },
-})
-
-const {
-  anchor: tipEl,
-  payload: tipKey,
-  onMouseEnter: showTip,
-  onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
-} = useHoverTooltip<string>()
 </script>
 
 <template>
@@ -139,37 +114,7 @@ const {
           <IconFilePlus :size="13" class="btn-icon" />
           <span class="btn-text">{{ i18n.t('app.new') }}</span>
         </button>
-        <RosterImportButton
-          @click="hideTip"
-          @mouseenter="showTip($event, 'app.tooltip-roster-import')"
-          @touchstart.passive="tipTouchStart"
-          @mouseleave="hideTip"
-        />
-        <button
-          type="button"
-          class="control-btn compact secondary"
-          :aria-label="i18n.t('app.import')"
-          @click="fileInput?.click()"
-          @mouseenter="showTip($event, 'app.tooltip-rosters-import')"
-          @touchstart.passive="tipTouchStart"
-          @mouseleave="hideTip"
-        >
-          <IconUpload :size="13" class="btn-icon" />
-          <span class="btn-text">{{ i18n.t('app.import') }}</span>
-        </button>
-        <button
-          v-if="rosters.count > 0"
-          type="button"
-          class="control-btn compact secondary"
-          :aria-label="i18n.t('app.export')"
-          @click="download(rosters.exportRosters())"
-          @mouseenter="showTip($event, 'app.tooltip-rosters-export')"
-          @touchstart.passive="tipTouchStart"
-          @mouseleave="hideTip"
-        >
-          <IconDownload :size="13" class="btn-icon" />
-          <span class="btn-text">{{ i18n.t('app.export') }}</span>
-        </button>
+        <RosterTransferActions />
         <button
           v-if="rosters.active"
           type="button"
@@ -183,13 +128,6 @@ const {
             <ConfirmLabel :armed="armed === rosters.active.id" :label="i18n.t('app.delete')" />
           </span>
         </button>
-        <input
-          ref="fileInput"
-          type="file"
-          accept="application/json,.json"
-          class="file-input"
-          @change="handleFileChosen"
-        />
       </span>
     </div>
 
@@ -206,12 +144,6 @@ const {
     <p v-else class="empty-state">
       {{ rosters.count === 0 ? i18n.t('app.rosters-empty') : i18n.t('app.rosters-pick') }}
     </p>
-
-    <Teleport to="body">
-      <TooltipPopup v-if="tipKey && tipEl" :target-element="tipEl" variant="detailed">
-        <template #content>{{ i18n.t(tipKey) }}</template>
-      </TooltipPopup>
-    </Teleport>
   </div>
 </template>
 
@@ -276,10 +208,6 @@ const {
   :is(.roster-rename, .roster-name-input) + .roster-help {
     display: none;
   }
-}
-
-.file-input {
-  display: none;
 }
 
 .empty-state {

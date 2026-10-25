@@ -64,8 +64,6 @@ const {
   onTouchStart: betaTouchStart,
 } = useInfoTip()
 
-// ---- The file ----
-
 // Plain, never reactive: a proxy over every recorded game would slow the
 // chooser, and the decoded data stays out of anything the console can reach.
 let data: SlData | null = null
@@ -81,8 +79,14 @@ const aboutOpen = ref(false)
 const failed = ref(false)
 const mounted = ref(false)
 
+// A load can fail after the page is left, when the route is another page's.
+let active = true
+
 // Floating lists leave the page for <body> (sl.css).
-onUnmounted(() => document.documentElement.classList.remove('sl-page-open'))
+onUnmounted(() => {
+  active = false
+  document.documentElement.classList.remove('sl-page-open')
+})
 
 onMounted(async () => {
   mounted.value = true
@@ -90,8 +94,12 @@ onMounted(async () => {
   try {
     data = await loadSlData()
   } catch {
-    // A tab left open across a deploy asks for a file the deploy replaced.
-    if (!reloadOntoCurrentBuild(route.fullPath)) failed.value = true
+    // A tab left open across a deploy asks for a file the deploy replaced, so
+    // it reloads once. A browser that cannot decode the file never would.
+    if (!active) return
+    if (typeof DecompressionStream === 'undefined' || !reloadOntoCurrentBuild(route.fullPath)) {
+      failed.value = true
+    }
     return
   }
   heading.value = {
@@ -103,8 +111,6 @@ onMounted(async () => {
     before: data.before?.sample ? { season: data.before.season, ...data.before.sample } : null,
   }
 })
-
-// ---- The selection ----
 
 // With no roster every hero starts at the top levels, where the recorded
 // opponents are counted, so the set is the records' own best.
@@ -143,8 +149,6 @@ const edit = (changes: Record<string, AttrRecord | null>): void => {
 
 const armedConfirm = useArmedConfirm()
 
-// ---- Generate ----
-
 const shown = ref<SlShown | null>(null)
 const noSet = ref(false)
 const busy = ref(false)
@@ -169,52 +173,65 @@ const generate = async (): Promise<void> => {
   const file = data
   if (!file) return
   busy.value = true
-  // Let the busy state paint before the choice holds the thread.
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-  const picks = picksOf(copy.value)
-  const set = chooseSlSet(file, picks)
-  shown.value = set && {
-    chance: set.chance,
-    odds: set.odds,
-    prior: file.prior,
-    beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
-    teams: set.teams.map((t) => {
-      const season = t.source === 0 ? file : file.before!
-      const family = t.family === null ? null : season.families[t.family]!
-      return {
-        map: season.teams[t.team]!.map,
-        group: family && { name: family.name, core: family.core },
-        comp: t.comp,
-        core: t.core,
-        flex: t.flex,
-        chance: t.chance,
-      }
-    }),
-    data: slTeamData(file, set, picks),
+  try {
+    // Let the busy state paint before the choice holds the thread.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const picks = picksOf(copy.value)
+    const set = chooseSlSet(file, picks)
+    shown.value = set && {
+      chance: set.chance,
+      odds: set.odds,
+      prior: file.prior,
+      beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
+      teams: set.teams.map((t) => {
+        const season = t.source === 0 ? file : file.before!
+        const family = t.family === null ? null : season.families[t.family]!
+        return {
+          map: season.teams[t.team]!.map,
+          group: family && { name: family.name, core: family.core },
+          comp: t.comp,
+          core: t.core,
+          flex: t.flex,
+          chance: t.chance,
+        }
+      }),
+      data: slTeamData(file, set, picks),
+    }
+    noSet.value = !set
+  } catch {
+    // A file whose parts do not line up passes the shape check and fails here.
+    shown.value = null
+    failed.value = true
+  } finally {
+    busy.value = false
   }
-  noSet.value = !set
-  busy.value = false
   await nextTick()
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 // The saved team holds the levels the set was chosen with, not the levels
-// shown since. A team kept only in memory still opens on the Teams page.
+// shown since. A team kept only in memory still opens on the Teams page. A
+// second press while that page loads saves nothing more.
+let saving = false
 const save = (): void => {
-  if (!shown.value) return
-  if (library.teams.length >= MAX_SAVED_TEAMS) {
-    error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
-    return
-  }
+  if (!shown.value || saving) return
   const name = i18n.t('app.sl-team-name', { chance: slPercent(shown.value.chance) })
   const team = library.saveAsNew('5v5', shown.value.data, name)
   if (!team) {
-    error(i18n.t('app.team-unreadable'))
+    // The library re-reads storage first, so another tab may have filled it.
+    error(
+      library.teams.length >= MAX_SAVED_TEAMS
+        ? i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS })
+        : i18n.t('app.team-unreadable'),
+    )
     return
   }
   if (!library.persisted) error(i18n.t('app.team-not-stored'))
   else success(i18n.t('app.team-saved', { name: team.name }))
-  void router.push({ path: '/teams', state: { openTeam: team.id } })
+  saving = true
+  void router.push({ path: '/teams', state: { openTeam: team.id } }).finally(() => {
+    saving = false
+  })
 }
 </script>
 

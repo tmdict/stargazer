@@ -7,6 +7,7 @@
 
 import slFileUrl from '@/content/pvp/sl/sl.bin?url'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import { TEAM_MODES } from '@/lib/teams/modes'
 import type { SlData } from './types'
 
 const SEED = 0x51a7e5ed
@@ -67,7 +68,7 @@ function isSlData(value: unknown): value is SlData {
     typeof value.season === 'number' &&
     typeof value.exportedAt === 'string' &&
     Array.isArray(value.maps) &&
-    value.maps.length > 0 &&
+    value.maps.length === TEAM_MODES['5v5'].boardCount &&
     value.maps.every(isMap) &&
     typeof value.prior === 'number' &&
     typeof value.alpha === 'number' &&
@@ -86,7 +87,7 @@ function isSlData(value: unknown): value is SlData {
   )
 }
 
-export async function decodeSlData(bytes: Uint8Array): Promise<SlData> {
+async function decodeSlData(bytes: Uint8Array): Promise<SlData> {
   const stream = new Blob([unscramble(bytes)])
     .stream()
     .pipeThrough(new DecompressionStream('deflate-raw'))

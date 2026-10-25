@@ -8,10 +8,9 @@ import { curatedHeroName } from '@/utils/skillLabels'
 export const slPercent = (chance: number): string =>
   chance < 0.005 ? '<1%' : chance > 0.995 ? '>99%' : `${Math.round(chance * 100)}%`
 
-/* Names on the generator's page in the site language: a hero's slug for its
- * portrait, and a team's group by the name the data file gives it in this
- * language, else by its core heroes, as the guide names a team the report
- * has no name for. */
+/* A team's group named in the site language: by the name the data file gives
+ * it in this language, else by its core heroes, as the guide names a team the
+ * report has no name for. */
 export function useSlNames() {
   const gameData = useGameDataStore()
   const i18n = useI18nStore()
@@ -27,5 +26,5 @@ export function useSlNames() {
     )
   }
 
-  return { heroSlug, groupName }
+  return { groupName }
 }
