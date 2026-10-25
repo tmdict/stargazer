@@ -14,7 +14,7 @@ export interface PhantimalType {
   tags?: readonly string[] // hero tag ids found anywhere in its skill text; absent = none
 }
 
-// src/locales/seasonal/phantimal/<name>.json: full localized content.
+// src/pack/text/seasonal/phantimal/<name>.json: full localized content.
 export interface PhantimalSkillLocale {
   name: LocaleData
   levels: LocaleData[]

@@ -50,8 +50,7 @@ function walkSourceFiles(dir: string): string[] {
 function loadCategoryKeys(category: string): Map<string, Record<string, unknown>> {
   const dir = join(LOCALES_DIR, category)
   // Mirror the loaders' glob depth: app uses `**` (recursive); character/artifact/game
-  // use `*` (their subfolders, e.g. artifact/effects, belong to other loaders with
-  // different shapes)
+  // use `*`
   const recursive = category === 'app'
   const files = recursive
     ? walkJsonFiles(dir)

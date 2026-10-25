@@ -2,6 +2,7 @@ import { effectScope, type EffectScope } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useImportEngine, type EngineShot, type Intake } from '@/composables/useImportEngine'
+import { FRAME_NAMES } from '@/lib/import/card/frames'
 import type { ImportKind, ReferencePart } from '@/lib/import/kinds'
 import type { ScreenshotReading } from '@/lib/import/screens/match/types'
 import type { RosterReading } from '@/lib/import/screens/roster/types'
@@ -10,7 +11,12 @@ import { bitmap, FakeWorker, file, readers, stubImportBrowser } from '../fixture
 vi.mock('@/stores/gameData', () => ({
   useGameDataStore: () => ({ characters: [], artifacts: [], phantimals: [] }),
 }))
-vi.mock('@/utils/dataLoader', () => ({ loadMatcherPortraits: () => ({}) }))
+vi.mock('@/utils/dataLoader', () => ({
+  loadMatcherPortraits: () => ({}),
+  loadOutfitPortraits: () => ({}),
+  loadImportFrames: () =>
+    Object.fromEntries(FRAME_NAMES.map((name) => [name, async () => `frame-${name}.webp`])),
+}))
 
 beforeEach(stubImportBrowser)
 

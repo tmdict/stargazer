@@ -11,6 +11,7 @@ node_modules
 .DS_Store
 dist
 .vite-ssg-temp
+src/pack/
 *.local
 
 # Editor directories and files

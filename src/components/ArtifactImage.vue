@@ -1,35 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
-import { isRemoteArtifact, seasonArtifactImageUrl } from '@/utils/artifactImage'
 
-const props = defineProps<{ artifact: ArtifactType }>()
+defineProps<{ artifact: ArtifactType }>()
 
 const gameDataStore = useGameDataStore()
-
-// Seasonal icons load remotely (AVIF → WebP → PNG); pre-season icons are bundled locally.
-const isRemote = computed(() => isRemoteArtifact(props.artifact.season))
-const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
 </script>
 
 <template>
-  <!-- crossorigin keeps the remote icon CORS-clean for the canvas image export.
-       draggable=false keeps the GridArtifacts wrapper (not this img) the drag source,
+  <!-- draggable=false keeps the GridArtifacts wrapper (not this img) the drag source,
        so the artifact drag carries its payload instead of a native image drag. -->
   <img
-    v-if="isRemote"
-    class="artifact-img"
-    :src="remoteUrl"
-    :alt="artifact.name"
-    crossorigin="anonymous"
-    loading="lazy"
-    decoding="async"
-    draggable="false"
-  />
-  <img
-    v-else
     class="artifact-img"
     :src="gameDataStore.getArtifactImage(artifact.name)"
     :alt="artifact.name"

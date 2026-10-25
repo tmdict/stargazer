@@ -6,7 +6,6 @@ import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand } from '@/lib/characters/phantimal'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageUrl } from '@/utils/artifactImage'
 import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
 
 export function useUnitLabels(): {
@@ -40,8 +39,7 @@ export function useUnitLabels(): {
 
   const unitImage = (unitId: number | null): string => {
     const name = unitId === null ? undefined : gameData.getCharacterImageNameById(unitId)
-    if (!name) return ''
-    return inPhantimalBand(unitId!) ? phantimalImageUrl(name) : gameData.getCharacterImage(name)
+    return name ? gameData.getCharacterImage(name) : ''
   }
 
   return { heroName, heroImage, unitName, unitImage }

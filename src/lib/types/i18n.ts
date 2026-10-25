@@ -27,14 +27,14 @@ export function isAppLocale(value: string): value is AppLocale {
 }
 
 export interface SkillLocaleDef {
-  /** Lowercase BCP-47 code: feed and locale dir name, URL prefix, hreflang, html lang. */
+  /** Lowercase BCP-47 code: skill text folder name, URL prefix, hreflang, html lang. */
   code: SkillLocale
   /** Native-language label shown in the skill-locale menu. */
   native: string
 }
 
-// Table order is menu order. Adding a language is a one-row edit here
-// (removing one also means deleting its locale dir); the importer, routes,
+// Table order is menu order. Adding a language is a one-row edit here, once
+// the data pack holds its skill text; the data export, the data step, routes,
 // SSG route list, hreflang, and the menu all derive from this table.
 export const SKILL_LOCALES = [
   { code: 'en', native: 'English' },

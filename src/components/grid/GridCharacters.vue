@@ -33,7 +33,6 @@ import type { BadgeIcon } from '@/lib/types/unitBadge'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageUrl } from '@/utils/artifactImage'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
@@ -165,7 +164,7 @@ const PHANTIMAL_COLOR = '#b0b6bb'
 // A companion a phantimal spawned renders through the same branch, under its
 // owner skill's companion portrait.
 const phantimalUrl = (characterId: number) =>
-  phantimalImageUrl(gameDataStore.getPhantimalUnitSlug(characterId) ?? '')
+  gameDataStore.getCharacterImage(gameDataStore.getPhantimalUnitSlug(characterId) ?? '')
 
 const phantimalName = (characterId: number): string =>
   gameDataStore.getPhantimalUnitSlug(characterId) ?? 'Phantimal'
@@ -251,7 +250,7 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   clearLiftedHex()
 
   // Phantimals carry a minimal payload (the drop handler only needs id +
-  // sourceHexId); their image comes from the remote phantimal sources.
+  // sourceHexId).
   if (inPhantimalBand(characterId)) {
     const slug = gameDataStore.getPhantimalUnitSlug(characterId)
     if (!slug) return
@@ -260,7 +259,7 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
       sourceHexId: hexId,
       sourceGridId: ctx.id,
     } as unknown as CharacterType
-    startDrag(event, dragData, characterId, phantimalImageUrl(slug))
+    startDrag(event, dragData, characterId, gameDataStore.getCharacterImage(slug))
     return
   }
 
@@ -462,7 +461,6 @@ const liftedMode = computed(() =>
           :alt="phantimalName(characterId)"
           class="character-image"
           draggable="false"
-          crossorigin="anonymous"
         />
         <img
           v-else

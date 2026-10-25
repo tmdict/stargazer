@@ -55,7 +55,7 @@ A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best c
 
 ## Reference descriptors
 
-Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and costumes give general coverage. The bundled [`hero-icons.json`](../../src/data/import/hero-icons.json) holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
+Three sources feed one hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and outfits give general coverage. The data pack's `screenshot-import/hero-icons.json` holds approved face examples for cards the portraits cannot match, shipped with the app as ordinary data. Browser learning adds examples private to that browser. Geometry, ranking and confidence do not depend on which source a row came from.
 
 The bundled file and browser storage (`stargazer.import.learned`) share one object, validated by `readLearnedIcons`:
 
@@ -88,9 +88,9 @@ The bundled file and browser storage (`stargazer.import.learned`) share one obje
 
 Each descriptor appears once. A local lesson for identical descriptor bytes overrides the bundled label, and forgetting local learning restores it. Different crops of one hero stay separate examples, and nothing is averaged or voted. No client correction ever edits the bundled file. Every import teaches the one store. Each reader takes the store's new list into its hero table before its next read: a rebuild takes most of a second, and a review can send several corrections while screenshots still wait.
 
-## Hosted references
+## Reference pictures
 
-`importReferenceUrl` fetches the import references from the image host under `img/import/`: the paragon frames `frame-p0` to `frame-p4-crown`, a `skins.json` manifest shaped `{ "<hero slug>": ["<file>", …] }`, and the costume captures under `skin/`. A missing manifest means no costumes. Artifact references are the bundled permanent icons plus the hosted seasonal set, capped at 128 px.
+Every reference picture is built into the site from the data pack (`src/pack/`). The paragon frames `frame-p0` to `frame-p4-crown` sit in `screenshot-import/`, and a hero's outfits beside its portrait as `<hero>-skin<N>.png` (`src/lib/characters/outfit.ts`). Both are encoded at the settings the matching was tuned on. Portraits and phantimals load at 180 px, artifact references are every artifact's icon capped at 128 px, and the replay arena is `screenshot-import/replay-arena.png`. Without a pack the frames are missing, and the import says its reference images could not be loaded.
 
 ## Review pieces
 

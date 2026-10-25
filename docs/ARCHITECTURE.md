@@ -121,4 +121,20 @@ Text carries its language in the `lang` attribute, and nothing else decides how 
 
 ## Content and data
 
-The About popup's text is in `src/content/about/` and the Help page's in `src/content/help/`, one file per app locale (`APP_LOCALES`: en, zh and ko), each imported directly by its view. Per-hero skill notes are in `src/content/skill/<slug>/`, also one file per app locale, while skill text for all languages is in `src/locales/skill/<lang>/`. Game data (`src/data/`) and dictionaries (`src/locales/`) load through `src/utils/dataLoader.ts`. PvP reports produced by an external report generator sit in `src/content/pvp/s<N>/` and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).
+The About popup's text is in `src/content/about/` and the Help page's in `src/content/help/`, one file per app locale (`APP_LOCALES`: en, zh and ko), each imported directly by its view. Per-hero skill notes are in `src/content/skill/<slug>/`, also one file per app locale, while skill text for all languages is in the data pack's `text/skill/<lang>/`. Game data (`src/data/`) and dictionaries (`src/locales/`) load through `src/utils/dataLoader.ts`. PvP reports produced by an external report generator sit in `src/content/pvp/s<N>/` and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).
+
+### The data pack
+
+The game's own files are kept outside this repo as the data pack, which the data export writes: hero portraits and outfits, artifact and seasonal pictures, skill and effect text, skill cooldowns and the screenshot import's references. `npm run data` copies it into the ignored `src/pack/`, which the app imports from:
+
+- from the folder `DATA_PACK_DIR` names in `.env.local` (template: `.env.example`);
+- else, where `DATA_PACK_URL`, `DATA_PACK_TOKEN` and `DATA_PACK_PATH` are set, as on the host, by downloading the version `data.lock` pins;
+- else it writes empty stand-ins for the files the app imports directly and prints one line, and the app runs with plain portraits and no skill text.
+
+The copy mirrors its source. The step also writes each skill language's bundling module (`text/skill/<code>/index.ts`) and the sorted list of heroes with English skill text (`data/skill/heroes.json`), both worked out from the folders present. `dev`, `test` and `prep` run it first. A build runs it as `tsx scripts/data.ts build`, which stops, naming each problem, when the pack is missing or lacks a folder or file the app reads, a skill language covers other heroes than English, an artifact or phantimal in `src/data/` has no picture, a pre-season artifact has no text, or the pack has skill text for a hero with no hero file. A hero with no portrait or skill text yet and a seasonal unit with no text yet are only notes.
+
+`npm run data:pin` writes the commit of the `DATA_PACK_DIR` folder into `data.lock`, and refuses while that folder has uncommitted files or unpushed commits. `data.lock` holds that one line:
+
+```
+3f9a1c07d2e84b6f9a0c1e2d3b4a5f6e7d8c9b0a
+```

@@ -2,13 +2,13 @@
 
 The `/skills` browser, skill modal and pre-rendered `/<code>/skill/<slug>` pages share a skill reader. Skill text and hero names follow the text locale (`SKILL_LOCALES`), while chips and app controls follow the chrome locale (`APP_LOCALES`). No skill language ships in the main bundle, but pre-rendered pages must have their text ready for a single render pass.
 
-## Imported text
+## Skill text
 
-`npm run import:skills` generates `src/locales/skill/<code>/` from the upstream feed. These directories are prettier-ignored and never hand-edited. Add a language through `SKILL_LOCALES`, whose `feed` field maps the upstream code to the BCP-47 `code`, then rerun the importer.
+Skill text comes from the data pack, in `src/pack/text/skill/<code>/` ([Architecture](../ARCHITECTURE.md)), which the data export writes from the upstream feed. Add a language through `SKILL_LOCALES`; the build stops until the pack holds its folder.
 
 Each `<slug>.json` stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
-Underscore files hold shared language data: `_terms.json` for panel labels, `_keywords.json` for the glossary, and `_charms.json` from `import:charms` for [seasonal text](./SEASONAL.md). `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too.
+Underscore files hold shared language data: `_terms.json` for panel labels, `_keywords.json` for the glossary, and `_charms.json` for [seasonal text](./SEASONAL.md). `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too.
 
 In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields are panel templates, with `{cooldown}`, `{initialCooldown}`, `{range}` and `{energy}` replaced by values:
 
@@ -23,14 +23,14 @@ In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields
 }
 ```
 
-The importer requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. Its sorted slug list, `src/data/skill/heroes.json`, lets `hasSkillLocale` gate links and inspect gestures without loading any language.
+The data export requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. `npm run data` writes the sorted list of heroes with English skill text, `src/pack/data/skill/heroes.json`, which lets `hasSkillLocale` gate links and inspect gestures without loading any language.
 
-Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the importer updates the locales named by `FEED_NAMED_LOCALES` from the feed.
+Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the data export updates the locales named by `FEED_NAMED_LOCALES` from the feed.
 
 ## Loading languages
 
 ```
-  import:skills ──▶ src/locales/skill/<code>/*.json
+  npm run data ──▶ src/pack/text/skill/<code>/*.json
                             │
                             ▼
               one lazy chunk per language (index.ts)
@@ -42,7 +42,7 @@ Chrome names live in `src/locales/character/<slug>.json`. English and Chinese ar
                  synchronous getters ──▶ SkillSections, search
 ```
 
-Each generated `index.ts` eagerly imports its directory into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
+Each `index.ts`, which `npm run data` writes for every language in `SKILL_LOCALES`, eagerly imports its directory into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
 
 `warmSkillLocale` in `src/router/routes.ts` awaits the chunk before rendering a skill route. Without it, vite-ssg's single pass would bake missing text and descriptions. It uses global `beforeResolve` because `beforeEnter` skips language switches that change only route parameters. A failed mid-session load hard-navigates to fresh HTML; an initial-load failure allows the reader's fallback or load-error message.
 
@@ -58,9 +58,9 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Cooldowns and range
 
-`import:skills` writes the language-independent `src/data/skill/numbers.json`, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
+The data export writes the language-independent `src/pack/data/skill/numbers.json`, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
 
-Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The importer reports discrepancies with the feed rather than overwriting hand-maintained hero data.
+Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The data export reports discrepancies with the feed rather than overwriting hand-maintained hero data.
 
 Panel labels use the text language's `_terms.json`. `TERM_OVERRIDES` changes the English range label from the game's unit label, "Tiles", to "Range".
 

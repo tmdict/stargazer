@@ -23,10 +23,9 @@ import {
   type Ref,
 } from 'vue'
 
-import arenaUrl from '@/assets/import/replay-arena.png'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages } from '@/lib/characters/companion'
-import { inPhantimalBand, toPhantimalId } from '@/lib/characters/phantimal'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/card/frames'
 import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
@@ -47,14 +46,7 @@ import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
 import { ROSTER_MAX_WIDTH, ROSTER_MIN_WIDTH } from '@/lib/import/screens/roster/roster'
 import { SORT_WIDTH } from '@/lib/import/sort'
 import { useGameDataStore } from '@/stores/gameData'
-import {
-  importReferenceUrl,
-  importSkinsManifestUrl,
-  isRemoteArtifact,
-  phantimalImageUrl,
-  seasonArtifactImageUrl,
-} from '@/utils/artifactImage'
-import { loadMatcherPortraits } from '@/utils/dataLoader'
+import { loadImportFrames, loadMatcherPortraits, loadOutfitPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
 import type {
   HeroReferences,
@@ -208,7 +200,7 @@ const drawToImage = (source: ImageBitmap, width: number, height: number): RgbaIm
 }
 
 const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> => {
-  const response = await fetch(url, { mode: 'cors' })
+  const response = await fetch(url)
   if (!response.ok) throw new Error(`${url}: ${response.status}`)
   const bitmap = await createImageBitmap(await response.blob())
   try {
@@ -219,9 +211,20 @@ const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> =>
   }
 }
 
+// A pattern rather than an import, so a build without the pack still runs
+// and the import reports the picture as a missing reference.
+const arenaUrl: string | undefined = Object.values(
+  import.meta.glob<string>('@/pack/screenshot-import/replay-arena.png', {
+    eager: true,
+    import: 'default',
+  }),
+)[0]
+
 // A failed fetch is forgotten, so the next open tries again.
 const loadArena = (): Promise<RgbaImage> =>
-  (arena ??= fetchImage(arenaUrl).catch((error: unknown) => {
+  (arena ??= (
+    arenaUrl ? fetchImage(arenaUrl) : Promise.reject(new Error('no arena picture'))
+  ).catch((error: unknown) => {
     arena = null
     throw error
   }))
@@ -246,24 +249,17 @@ export const imageToDataUrl = (image: RgbaImage): string => {
 
 // The references and the reading workers.
 
-// Costume references from the image host, or none when the manifest is missing; a
-// single file that fails to load is skipped, the rest still count.
+// Outfit references; a single file that fails to load is skipped, the rest
+// still count.
 const loadCostumes = async (idOf: (slug: string) => number | undefined): Promise<PortraitRef[]> => {
-  let manifest: Record<string, string[]>
-  try {
-    const response = await fetch(importSkinsManifestUrl(), { mode: 'cors' })
-    if (!response.ok) return []
-    manifest = (await response.json()) as Record<string, string[]>
-  } catch {
-    return []
-  }
   const jobs: Promise<PortraitRef | null>[] = []
-  for (const [slug, files] of Object.entries(manifest)) {
+  for (const [slug, loaders] of Object.entries(loadOutfitPortraits())) {
     const characterId = idOf(slug)
-    if (characterId === undefined || !Array.isArray(files)) continue
-    for (const file of files) {
+    if (characterId === undefined) continue
+    for (const load of loaders) {
       jobs.push(
-        fetchImage(importReferenceUrl(`skin/${file}`))
+        load()
+          .then((url) => fetchImage(url))
           .then((image) => ({ characterId, image, costume: true }))
           .catch(() => null),
       )
@@ -281,6 +277,7 @@ async function loadHeroPart(): Promise<Omit<HeroReferences, 'learned'>> {
     (c) => isBaseHeroId(c.id) && !c.placeholder && portraitLoaders[c.name],
   )
   const ids = new Map(gameData.characters.map((c) => [c.name, c.id]))
+  const frameLoaders = loadImportFrames()
   const [portraits, costumes, frames] = await Promise.all([
     Promise.all(
       heroes.map(async (hero) => ({
@@ -289,7 +286,13 @@ async function loadHeroPart(): Promise<Omit<HeroReferences, 'learned'>> {
       })),
     ),
     loadCostumes((slug) => ids.get(slug)),
-    Promise.all(FRAME_NAMES.map((name) => fetchImage(importReferenceUrl(`frame-${name}`)))),
+    Promise.all(
+      FRAME_NAMES.map(async (name) => {
+        const load = frameLoaders[name]
+        if (!load) throw new Error(`no frame reference ${name}`)
+        return fetchImage(await load())
+      }),
+    ),
   ])
   return { frames, portraits: [...portraits, ...costumes] }
 }
@@ -304,12 +307,7 @@ async function loadMatchPart(): Promise<MatchReferences> {
   const artifacts = (
     await Promise.all(
       gameData.artifacts.map((artifact) =>
-        fetchImage(
-          isRemoteArtifact(artifact.season)
-            ? seasonArtifactImageUrl(artifact.name)
-            : gameData.getArtifactImage(artifact.name),
-          128,
-        )
+        fetchImage(gameData.getArtifactImage(artifact.name), 128)
           .then((image) => ({ artifactId: artifact.id, image }))
           .catch(() => null),
       ),
@@ -320,17 +318,13 @@ async function loadMatchPart(): Promise<MatchReferences> {
   const units = (
     await Promise.all(
       [
-        ...gameData.phantimals.map(({ id, name }) =>
-          fetchImage(phantimalImageUrl(name)).then((image) => ({
-            characterId: toPhantimalId(id),
-            image,
-          })),
-        ),
+        ...gameData.phantimals.map(async ({ id, name }) => ({
+          characterId: toPhantimalId(id),
+          image: await fetchImage(await portraitLoaders[name]!()),
+        })),
         ...companionImages().map(async ({ unitId, image }) => ({
           characterId: unitId,
-          image: await fetchImage(
-            inPhantimalBand(unitId) ? phantimalImageUrl(image) : await portraitLoaders[image]!(),
-          ),
+          image: await fetchImage(await portraitLoaders[image]!()),
         })),
       ].map((job) => job.catch(() => null)),
     )

@@ -133,4 +133,4 @@ The camera, the arena picture and the strip's circles were measured on the frame
 - [Screenshots the Imports Read](./IMPORT_SCREENSHOTS.md): what each screen gives, what a screenshot needs, and the limits
 - [Teams](./TEAMS.md): where the import lands, and how it applies and saves
 - [Grid & Characters](./GRID.md): page-wide uniqueness and the pickers the review reuses
-- [Seasonal Content](./SEASONAL.md): seasonal artifact icons on the image host
+- [Seasonal Content](./SEASONAL.md): where the seasonal artifact icons come from

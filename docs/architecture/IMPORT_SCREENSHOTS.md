@@ -37,9 +37,9 @@ Each import accepts only its own screens, on every way in. The sorter turns a ro
 
 - Other game languages are untested on the match screens. The result tabs' lettering is skipped over as small gaps, so a language whose label covers much more of a tab could hide the tabs; the result reader then finds the panel from its cards instead. The roster screen reads in French as in English.
 - A game update that moves or recolours a landmark (the cream ground, the six columns, the tabs, the board outline, the arena around a replay fight) stops that screen reading until its reader is measured again on new samples.
-- Seasonal artifacts are matched against icons from the image host, so a new season's artifacts read once their icons are published there ([Seasonal Content](./SEASONAL.md)).
+- Seasonal artifacts are matched against the icons the app ships, so a new season's artifacts read once the data pack holds their icons ([Seasonal Content](./SEASONAL.md)).
 - The replay camera and arena were measured on one match. A Supreme League map change needs frames of the new maps checked, and a new arena picture when the fight's surroundings change.
-- A new hero reads once its portrait is in the app, and a costume once its capture is on the image host. A face neither covers stays unsure until a correction teaches it.
+- A new hero reads once its portrait is in the app, and an outfit once the data pack holds its picture. A face neither covers stays unsure until a correction teaches it.
 - A roster reads in up to three workers at once. A device reporting under 4 GB of memory reads with one, and a touch screen reporting none (Safari and Firefox report none) with two at most, so a roster takes longer there; phones have not been timed.
 
 ## Privacy

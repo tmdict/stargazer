@@ -3,7 +3,6 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { PreviewArtifact, PreviewUnit } from '@/lib/teams/preview'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { isRemoteArtifact, phantimalImageUrl, seasonArtifactImageUrl } from '@/utils/artifactImage'
 
 /* The images of a decoded team's units and artifacts (lib/teams/preview), for
  * the boards drawn from encoded team data: saved-team thumbnails and the
@@ -29,7 +28,7 @@ export function usePreviewImages() {
     if (unit.phantimalLocal !== undefined) {
       // Band-local, so a phantimal's companion resolves too.
       const slug = gameData.getPhantimalUnitSlug(toPhantimalId(unit.phantimalLocal))
-      return slug ? phantimalImageUrl(slug) : undefined
+      return (slug && gameData.getCharacterImage(slug)) || undefined
     }
     return undefined
   }
@@ -39,15 +38,12 @@ export function usePreviewImages() {
       ? { hexId: unit.hexId, team: unit.team, ...retired(unit.retiredSeason) }
       : { hexId: unit.hexId, team: unit.team, image: unitImage(unit) }
 
-  // The same local/remote split ArtifactImage makes for the live board.
   const thumbnailArtifact = (slot: PreviewArtifact): ThumbnailArtifact | undefined => {
     if (slot === null) return undefined
     if (typeof slot !== 'number') return retired(slot.retiredSeason)
     const artifact = gameData.getArtifactById(slot)
     if (!artifact) return undefined
-    const image = isRemoteArtifact(artifact.season)
-      ? seasonArtifactImageUrl(artifact.name)
-      : gameData.getArtifactImage(artifact.name)
+    const image = gameData.getArtifactImage(artifact.name)
     return image ? { image } : undefined
   }
 

@@ -1,7 +1,5 @@
-# Auto-managed by scripts/import-skills.ts (compact JSON + generated chunk
-# modules); formatting them would churn against the importer's output.
-src/locales/skill/
-# Auto-managed by scripts/import-charms.ts; same churn rule.
+# Written by the data export; formatting it would churn against the export's
+# output.
 src/data/seasonal/charm/charms.json
 # Generated outside this repo; preserve the exported template verbatim.
 src/content/pvp/

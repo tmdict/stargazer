@@ -13,6 +13,8 @@ npm run dev
 
 Then open http://localhost:5173.
 
+The game's pictures and text come from a data pack kept outside this repo ([Architecture](./ARCHITECTURE.md#the-data-pack)). Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder.
+
 ## Commands
 
 ```sh
@@ -26,20 +28,18 @@ npm run format        # Prettier over src/, docs/ and tests/
 npm run lint          # ESLint (lint:fix to auto-fix)
 npm run type-check    # vue-tsc
 npm run test          # all tests (test:unit, test:it, test:watch)
-npm run import:seasonal  # skills, charms, artifacts, phantimals from the data feed
-npm run import:structure # a season's artifact and phantimal data files, from the data feed
-npm run import:skills    # skill text only (also import:charms, :artifacts, :phantimals)
+npm run data          # copy the data pack into src/pack/ (dev, test and prep run it first)
+npm run data:pin      # pin the DATA_PACK_DIR folder's version in data.lock
 ```
-
-The importers read an upstream data feed that is not part of this repo. To run them, copy `.env.example` to `.env.local` (gitignored) and set `DATA_FEED_DIR` to the feed's directory, or pass `--src-dir <PATH>`; see [Seasonal Content](./architecture/SEASONAL.md).
 
 ## Common tasks
 
 ### Adding a character
 
-1. Add `src/data/character/<name>.json` and the portrait `src/assets/images/character/<name>.png` (converted to WebP at build time).
+1. Add `src/data/character/<name>.json`.
 2. Add the English and Chinese display names in `src/locales/character/<name>.json`.
-3. Run `npm run import:skills` to bring in the skill text for every language. It also writes the hero's Korean display name, the game's own, into that file.
+3. Run the data export. It adds the hero's portrait and skill text in every language to the data pack, and writes the hero's Korean display name, the game's own, into that file.
+4. Run `npm run data:pin` so the build takes the pack version that holds the hero.
 
 The hero list, skill pages and search pick the character up from those files.
 
@@ -53,7 +53,7 @@ Placement, moves, swaps and removal live in `src/lib/characters/` and run inside
 
 ### A new season
 
-Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md). Seasonal icons load from an image host that must send CORS headers, because the image export reads them into a canvas.
+Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md).
 
 ### Styles
 
