@@ -1,31 +1,12 @@
-/* The Supreme League generator's dark look. Every rule sits under the view's
-   root (.sl-page), so it reaches no other page; a list a dropdown floats onto
-   <body> takes the same tokens while the view marks <html> (sl-page-open). */
-
-.sl-page,
-html.sl-page-open .list.floating {
-  --color-bg-primary: #171b21;
-  --color-bg-secondary: #232a33;
-  --color-bg-tertiary: #1d232b;
-  --color-bg-white: #1d232b;
-  --color-border-primary: #39424e;
-  --color-border-light: #2a313b;
-  --color-text-primary: #e9edf3;
-  --color-text-secondary: #a7b1bf;
-  --color-text-muted: #c3cbd6;
-  --placed-overlay: rgba(0, 0, 0, 0.35);
-  --hero-icon-ring: #2a313b;
-  --dock-chip-fill: rgba(255, 255, 255, 0.08);
-  --dock-chip-fill-hover: rgba(255, 255, 255, 0.14);
-  /* Defined from another token on :root, where its value is fixed. */
-  --dropdown-row-hover: var(--color-bg-secondary);
-}
+/* The Supreme League generator's styles. Every rule sits under the view's
+   root (.sl-page), which carries data-theme="dark" so the page keeps the dark
+   look in both looks. */
 
 .sl-page {
   --sl-good: #4ec9a5;
   --sl-bad: #e2686f;
 
-  background: #0f1216;
+  background: var(--color-bg-page);
   color: var(--color-text-primary);
 }
 
@@ -67,38 +48,11 @@ html.sl-page-open .list.floating {
   }
 }
 
-.sl-page .sl-board .tile-void {
-  fill: #101318;
-  stroke: #3b424d;
-}
-
 .sl-page .sl-board .tile:not(.tile-void) {
-  stroke: #98a3b9;
   stroke-width: 1.5;
 }
 
-.sl-page .sl-board .tile-ally {
-  fill: #12222c;
-}
-
-.sl-page .sl-board .tile-enemy {
-  fill: #2a1622;
-}
-
-.sl-page .sl-board .tile-blocked {
-  fill: #262c38;
-}
-
-.sl-page .sl-board .tile-breakable {
-  fill: #2c3340;
-}
-
-.sl-page .sl-board .tile-bevel {
-  stroke: #07091a;
-}
-
 .sl-page .sl-board .tile-number {
-  fill: #8a95ab;
   stroke: none;
   font-weight: 600;
 }

@@ -31,7 +31,7 @@ circle {
 }
 
 .track {
-  stroke: rgba(0, 0, 0, 0.18);
+  stroke: color-mix(in srgb, var(--color-contrast) 18%, transparent);
 }
 
 .fill {

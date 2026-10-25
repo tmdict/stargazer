@@ -92,6 +92,14 @@ const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDrop
 const listMaxHeight = usePanelFit(listRef, () => open.value && !floating)
 const floatingStyle = useFloatingPanel(rootRef, listRef, () => open.value && floating)
 
+// A list on <body> leaves the data-theme region it opened in (a page that keeps
+// one look), so it takes that region's look along.
+const regionTheme = (): string | undefined => {
+  const region = rootRef.value?.closest('[data-theme]')
+  if (!region || region === document.documentElement) return undefined
+  return region.getAttribute('data-theme') ?? undefined
+}
+
 const clearing = computed(() => clearable && lit)
 
 // Pressing the clear button uncovers the trigger under the pointer; hover
@@ -228,9 +236,7 @@ const pressSegment = (): void => {
       <IconMinus v-else />
     </button>
     <!-- The variant class is repeated on the list: on <body> it has no root
-         to take the variant's type size and colours from. A page can give
-         its floating lists other token values through .list.floating
-         (guide/sl/sl.css). -->
+         to take the variant's type size and colours from. -->
     <Teleport to="body" :disabled="!floating">
       <div
         v-if="open"
@@ -238,6 +244,7 @@ const pressSegment = (): void => {
         class="list"
         :class="[variant, { floating, custom: $slots.default }]"
         :style="floating ? floatingStyle : { maxHeight: listMaxHeight }"
+        :data-theme="floating ? regionTheme() : undefined"
         v-on="listEvents"
       >
         <slot :close="hide">
@@ -350,13 +357,13 @@ const pressSegment = (): void => {
 
 .list.pill {
   --dropdown-row-hover: var(--color-bg-primary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
 }
 
 .pill .trigger {
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-text-secondary);
   font-weight: var(--control-font-weight);
   padding: 2px 12px;

@@ -180,7 +180,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   padding: 3px 6px 3px 10px;
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   cursor: text;
 }
 

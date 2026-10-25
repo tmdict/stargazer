@@ -83,7 +83,7 @@ onMounted(() => {
   line-height: 1.4;
   text-align: center;
   color: var(--color-text-primary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border: 1px solid var(--color-border-primary);
   border-bottom-width: 2px;
   border-radius: 5px;

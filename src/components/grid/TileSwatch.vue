@@ -41,9 +41,8 @@ const stroke = computed(() => getWallStrokeColor(state))
   <TileHatchPatterns v-if="hatch" :id :hex-size light :stroke-width="hexSize / 10" />
   <polygon
     :points
-    :fill="getTileFillColor(state)"
-    :stroke="TILE_STROKE_COLOR_STRONG"
+    :style="{ fill: getTileFillColor(state), stroke: TILE_STROKE_COLOR_STRONG }"
     stroke-width="2"
   />
-  <polygon v-if="stroke" :points :fill="hatch ?? 'none'" :stroke stroke-width="2" />
+  <polygon v-if="stroke" :points :fill="hatch ?? 'none'" :style="{ stroke }" stroke-width="2" />
 </template>

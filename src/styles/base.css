@@ -47,8 +47,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
 
-  color: #333;
-  background-color: #20232a;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
   line-height: 1.6;
   font-family: var(--font-ui);
   font-size: 15px;
@@ -81,7 +81,13 @@ body:lang(ko) {
   width: 100%;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #20232a;
+  background-color: var(--color-bg-page);
+}
+
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
 }
 
 a {

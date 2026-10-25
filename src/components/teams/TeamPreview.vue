@@ -130,7 +130,7 @@ const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? f
   gap: 6px;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.05);
+  background: color-mix(in srgb, var(--color-contrast) 5%, transparent);
   border-radius: var(--radius-medium);
   padding: 8px 6px;
   min-height: 120px;

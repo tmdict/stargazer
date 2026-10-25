@@ -162,7 +162,7 @@ const handleClear = (): void => {
 
 .grid-board:hover:not(.active) {
   border-color: var(--color-border-light);
-  background: var(--color-bg-light-gray);
+  background: var(--color-bg-subtle);
 }
 
 .board-actions {
@@ -206,12 +206,12 @@ const handleClear = (): void => {
 
 .board-copy,
 .board-download {
-  background: var(--color-text-secondary);
+  background: var(--color-neutral);
 }
 
 .board-copy:hover,
 .board-download:hover {
-  background: var(--color-text-primary);
+  background: var(--color-neutral-hover);
 }
 
 .board-swap-overlay {
@@ -240,7 +240,7 @@ const handleClear = (): void => {
 .board-swap-overlay.source {
   border-style: solid;
   border-color: var(--color-border-light);
-  background: rgba(0, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--color-contrast) 6%, transparent);
   cursor: default;
 }
 
@@ -250,7 +250,7 @@ const handleClear = (): void => {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-primary);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   box-shadow: var(--shadow-float);

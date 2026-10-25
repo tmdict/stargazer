@@ -159,7 +159,6 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 
 // Phantimal-specific render helpers (B1 seam: phantimals reuse the character
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
-const PHANTIMAL_COLOR = '#b0b6bb'
 
 // A companion a phantimal spawned renders through the same branch, under its
 // owner skill's companion portrait.
@@ -173,16 +172,6 @@ const phantimalName = (characterId: number): string =>
 // team (removable/replaceable like any unit) and renders as a placeholder.
 const isRetiredPhantimal = (characterId: number): boolean =>
   inPhantimalBand(characterId) && !gameDataStore.getPhantimalById(phantimalOwnerId(characterId))
-
-// Neutral disc behind every placed hero (one color for all, not the picker's
-// per-level gold/purple). Phantimals keep their own grey; skill-driven colors
-// (companion/skill image borders, tile tints) are separate and unaffected.
-const CHARACTER_COLOR = '#c4baa6'
-
-const getCharacterColors = (characterId: number) => {
-  const color = inPhantimalBand(characterId) ? PHANTIMAL_COLOR : CHARACTER_COLOR
-  return { backgroundColor: color, borderColor: color }
-}
 
 // Base character size (at 40px hex radius)
 const BASE_CHARACTER_SIZE = 2 * PORTRAIT_RADIUS
@@ -441,7 +430,7 @@ const liftedMode = computed(() =>
       @mouseleave="handleMouseLeave(hexId)"
     >
       <div class="character-content" :class="{ companion: isCompanionUnitId(characterId) }">
-        <div class="character-background" :style="getCharacterColors(characterId)" />
+        <div class="character-background" :class="{ phantimal: inPhantimalBand(characterId) }" />
         <!-- draggable=false keeps the wrapper div as the drag source. Images are
              draggable by default, and a swap can replace this node mid-drag
              (character↔phantimal flips the v-if branch). Dragend fired on a
@@ -729,8 +718,13 @@ const liftedMode = computed(() =>
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: var(--character-border-width, 3px) solid;
-  border-color: #fff;
+  border: var(--character-border-width, 3px) solid var(--unit-disc);
+  background-color: var(--unit-disc);
+}
+
+.character-background.phantimal {
+  border-color: var(--unit-disc-phantimal);
+  background-color: var(--unit-disc-phantimal);
 }
 
 .retired-unit {
@@ -750,6 +744,6 @@ const liftedMode = computed(() =>
   height: calc(100% - 2 * var(--character-border-width, 3px));
   border-radius: 50%;
   object-fit: cover;
-  border: var(--character-border-width, 3px) solid #fff;
+  border: var(--character-border-width, 3px) solid var(--unit-ring);
 }
 </style>

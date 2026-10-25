@@ -780,7 +780,7 @@ const actionTipText = computed((): string => {
 
 .preview-btn:hover :deep(.team-preview),
 .preview-btn:focus-visible :deep(.team-preview) {
-  background: rgba(0, 0, 0, 0.1);
+  background: color-mix(in srgb, var(--color-contrast) 10%, transparent);
 }
 
 .card-title-row {
@@ -828,7 +828,7 @@ const actionTipText = computed((): string => {
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-small);
   padding: 0 4px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
 }
 
 .team-name-input:focus {

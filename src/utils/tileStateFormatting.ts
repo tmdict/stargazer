@@ -12,37 +12,37 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   [State.DEFAULT]: {
     name: 'Default',
     cssClass: 'state-default',
-    fillColor: '#f0f0f0',
+    fillColor: 'var(--tile-fill-default)',
   },
   [State.AVAILABLE_ALLY]: {
     name: 'Available (Ally)',
     cssClass: 'state-available-ally',
-    fillColor: '#fff',
+    fillColor: 'var(--tile-fill-ally)',
   },
   [State.AVAILABLE_ENEMY]: {
     name: 'Available (Enemy)',
     cssClass: 'state-available-enemy',
-    fillColor: '#ffe8e8',
+    fillColor: 'var(--tile-fill-enemy)',
   },
   [State.OCCUPIED_ALLY]: {
     name: 'Occupied (Ally)',
     cssClass: 'state-occupied-ally',
-    fillColor: '#fff',
+    fillColor: 'var(--tile-fill-ally)',
   },
   [State.OCCUPIED_ENEMY]: {
     name: 'Occupied (Enemy)',
     cssClass: 'state-occupied-enemy',
-    fillColor: '#ffe8e8',
+    fillColor: 'var(--tile-fill-enemy)',
   },
   [State.BLOCKED]: {
     name: 'Blocked',
     cssClass: 'state-blocked',
-    fillColor: '#b5b9bd',
+    fillColor: 'var(--tile-fill-blocked)',
   },
   [State.BLOCKED_BREAKABLE]: {
     name: 'Blocked (Breakable)',
     cssClass: 'state-blocked-breakable',
-    fillColor: '#e1e2e0',
+    fillColor: 'var(--tile-fill-breakable)',
   },
 }
 
@@ -73,17 +73,34 @@ export const teamTint = (team: Team, alpha: number): string => {
   return `rgba(${rgb >> 16}, ${(rgb >> 8) & 255}, ${rgb & 255}, ${alpha})`
 }
 
-// Tile outlines on the light boards. The strong one rings a tile that holds a
-// hero and outlines a tile drawn on its own.
-export const TILE_STROKE_COLOR = '#a9afb6'
-export const TILE_STROKE_COLOR_STRONG = '#8a8f98'
+// Board colours are tokens (variables.css) with a value for each look, so they
+// are set through `style`: an SVG attribute does not read var().
+export const TILE_STROKE_COLOR = 'var(--tile-stroke)'
+export const TILE_STROKE_COLOR_STRONG = 'var(--tile-stroke-strong)'
+
+// Open ground's outline is dimmer than a deployment tile's or a wall's in the
+// dark look.
+export const getTileStrokeColor = (state: State): string =>
+  state === State.DEFAULT ? 'var(--tile-stroke-default)' : TILE_STROKE_COLOR
+
+// The outline of a tile with a unit on it, which in the dark look is the
+// unit's frame.
+export const HELD_TILE_STROKE_COLORS: Record<Team, string> = {
+  [Team.ALLY]: 'var(--tile-stroke-held-ally)',
+  [Team.ENEMY]: 'var(--tile-stroke-held-enemy)',
+}
+
+export const UNIT_FRAME_COLORS: Record<Team, string> = {
+  [Team.ALLY]: 'var(--unit-frame-ally)',
+  [Team.ENEMY]: 'var(--unit-frame-enemy)',
+}
 
 export const getTileHatchFill = (patternId: string, state: State): string | null =>
   state === State.BLOCKED_BREAKABLE ? `url(#${patternId}-breakable)` : null
 
 export const getWallStrokeColor = (state: State): string | null => {
-  if (state === State.BLOCKED) return '#858b91'
-  if (state === State.BLOCKED_BREAKABLE) return '#a0a59d'
+  if (state === State.BLOCKED) return 'var(--tile-wall-blocked)'
+  if (state === State.BLOCKED_BREAKABLE) return 'var(--tile-wall-breakable)'
   return null
 }
 

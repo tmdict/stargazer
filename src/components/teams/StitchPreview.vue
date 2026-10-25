@@ -94,16 +94,17 @@ const download = () => downloadImage(stitchedBlob(), 'teams')
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-light-gray);
+  --checker: color-mix(in srgb, var(--color-contrast) 6.67%, transparent);
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
   padding: var(--spacing-md);
   min-height: 160px;
   background-image:
-    linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
-    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
-    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+    linear-gradient(45deg, var(--checker) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker) 75%);
   background-size: 16px 16px;
   background-position:
     0 0,

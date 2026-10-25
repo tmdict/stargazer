@@ -41,7 +41,7 @@ const i18n = useI18nStore()
   padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   border-radius: var(--radius-medium);
-  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg-white));
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg-raised));
   color: var(--color-text-primary);
   font-size: 12.5px;
 }

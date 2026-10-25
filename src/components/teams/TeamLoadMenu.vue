@@ -325,7 +325,7 @@ const tipText = computed((): string =>
   padding: 5px 12px;
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-text-primary);
 }
 
@@ -347,7 +347,7 @@ const tipText = computed((): string =>
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
   padding: 4px 12px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   transition: all var(--transition-fast);
 }
 

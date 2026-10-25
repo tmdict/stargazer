@@ -359,7 +359,7 @@ const hoveredStat = computed(
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid var(--hero-icon-ring);
   background-color: var(--color-bg-secondary);
   transition: transform 0.12s ease;
 }

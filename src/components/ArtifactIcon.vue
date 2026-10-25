@@ -79,8 +79,8 @@ const {
   width: 58px;
   height: 58px;
   border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-white);
-  background: #fff;
+  border: 2px solid var(--color-bg-raised);
+  background: var(--color-bg-raised);
   display: flex;
   flex-direction: column;
   align-items: center;

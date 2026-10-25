@@ -138,7 +138,7 @@ const {
   flex-wrap: wrap;
   gap: 8px 14px;
   padding: 9px 18px;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border-primary);
   font-size: 20px;
 }

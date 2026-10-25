@@ -151,7 +151,7 @@ const handleArenaSelected = (mapKey: string) => {
 .editor-description {
   margin-bottom: 1rem;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -206,7 +206,7 @@ const handleArenaSelected = (mapKey: string) => {
 
 .state-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
   font-size: 0.9rem;
   text-align: center;
   line-height: 1.2;

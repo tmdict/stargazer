@@ -6,6 +6,14 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Sets the look before the first paint; useTheme.ts takes it over after mount. -->
+    <script>
+      var theme = 'light'
+      try {
+        if (JSON.parse(localStorage.getItem('stargazer.prefs')).theme === 'dark') theme = 'dark'
+      } catch (e) {}
+      document.documentElement.setAttribute('data-theme', theme)
+    </script>
 
     <title>Stargazer | AFK Journey Arena, Skills & Team Builder</title>
     <meta

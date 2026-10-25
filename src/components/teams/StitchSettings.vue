@@ -95,7 +95,7 @@ const fit = defineModel<StitchFit>('fit', { required: true })
 
 .seg-btn {
   border: none;
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-primary);
   font-size: max(0.85rem, var(--field-min-font-size));
   font-weight: 600;
@@ -112,7 +112,7 @@ const fit = defineModel<StitchFit>('fit', { required: true })
 .setting-input {
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
-  background: var(--color-bg-white);
+  background: var(--color-bg-raised);
   color: var(--color-text-primary);
   font-size: max(0.85rem, var(--field-min-font-size));
   padding: var(--spacing-xs) var(--spacing-sm);

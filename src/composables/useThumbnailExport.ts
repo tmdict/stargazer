@@ -7,10 +7,9 @@ import { useImageExportActions } from './useImageExportActions'
 
 /* Exports a saved team as a PNG drawn the way the preview popup shows it: the
  * popup's TeamPreview is rendered off-screen for each capture, so the image
- * follows the popup's look. Its boards are self-contained BoardThumbnail SVGs
- * (the team drawn in presentation attributes, internal clipPaths), so each
- * board is serialized and rasterized through an <img>, then drawn onto one
- * canvas at its layout position. A DOM snapshot (useGridExport's html-to-image
+ * follows the popup's look. Its boards are BoardThumbnail SVGs with internal
+ * clipPaths, so each board is serialized and rasterized through an <img>,
+ * then drawn onto one canvas at its layout position. A DOM snapshot (useGridExport's html-to-image
  * path) is deliberately avoided here: WebKit fails to rasterize SVG content
  * inside a foreignObject snapshot. */
 
@@ -24,6 +23,7 @@ const MARGIN = 24
 const BACKGROUND = 'rgb(20, 20, 20)'
 // Keeps the portraits close to their source resolution.
 const CAPTURE_SCALE = 3
+const PAINTED = 'circle, line, path, polygon, rect, text'
 
 // An SVG loaded through an <img> cannot reference external resources at all,
 // so portrait hrefs must become data: URLs before serialization. Portraits
@@ -63,6 +63,15 @@ async function rasterizeSvg(
   height: number,
 ): Promise<HTMLImageElement> {
   const clone = svg.cloneNode(true) as SVGSVGElement
+  // An SVG drawn through an <img> sees none of the page's styles, and its
+  // colours are tokens that differ between the light and dark looks, so each
+  // shape takes the fill and stroke the page resolved for it.
+  const sources = svg.querySelectorAll<SVGElement>(PAINTED)
+  clone.querySelectorAll<SVGElement>(PAINTED).forEach((el, index) => {
+    const resolved = getComputedStyle(sources[index]!)
+    el.style.fill = resolved.fill
+    el.style.stroke = resolved.stroke
+  })
   clone.setAttribute('width', `${width}`)
   clone.setAttribute('height', `${height}`)
   // Non-scaling strokes are sized in screen pixels, so the enlarged image

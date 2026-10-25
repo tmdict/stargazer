@@ -84,15 +84,12 @@ const mounted = ref(false)
 // A load can fail after the page is left, when the route is another page's.
 let active = true
 
-// Floating lists leave the page for <body> (sl.css).
 onUnmounted(() => {
   active = false
-  document.documentElement.classList.remove('sl-page-open')
 })
 
 onMounted(async () => {
   mounted.value = true
-  document.documentElement.classList.add('sl-page-open')
   try {
     data = await loadSlData()
   } catch {
@@ -252,7 +249,7 @@ const save = (): void => {
 </script>
 
 <template>
-  <main class="sl-page">
+  <main class="sl-page" data-theme="dark">
     <header class="sl-head">
       <h1>
         {{ i18n.t('app.sl-title')
