@@ -10,8 +10,8 @@ import {
   compareWallDrawOrder,
   getTileFillColor,
   getTileHatchFill,
+  getTileStrokeColor,
   getWallStrokeColor,
-  TILE_STROKE_COLOR,
 } from '@/utils/tileStateFormatting'
 
 type Cell = readonly [row: number, col: number]
@@ -72,10 +72,12 @@ const tiles = computed(() =>
     const col = i % COLS
     const painted = paint.find(({ at }) => at[0] === row && at[1] === col)
     const state = painted?.state ?? State.DEFAULT
+    const look = painted ? state : ROW_STATE[row]!
     return {
       key: i,
       state,
-      fill: getTileFillColor(painted ? state : ROW_STATE[row]!),
+      fill: getTileFillColor(look),
+      outline: getTileStrokeColor(look),
       points: points(center([row, col])),
       hatch: getTileHatchFill(id, state),
       stroke: getWallStrokeColor(state),
@@ -160,7 +162,7 @@ const arrowPath = computed(() => {
     <template v-for="tile in tiles" :key="tile.key">
       <polygon
         :points="tile.points"
-        :style="{ fill: tile.fill, stroke: TILE_STROKE_COLOR }"
+        :style="{ fill: tile.fill, stroke: tile.outline }"
         stroke-width="1"
       />
       <polygon v-if="tile.hatch" :points="tile.points" :fill="tile.hatch" />

@@ -53,6 +53,17 @@ describe('useGridInfoPrefs', () => {
     expect(JSON.parse(storage.get(PREFS_KEY)!).gridInfo.tileIds).toBe(true)
   })
 
+  it('seeds the defaults beside a stored theme', async () => {
+    storage.set(PREFS_KEY, JSON.stringify({ theme: 'dark' }))
+    const { useGridInfoPrefs } = await importComposable()
+
+    useGridInfoPrefs()
+
+    const stored = JSON.parse(storage.get(PREFS_KEY)!)
+    expect(stored.theme).toBe('dark')
+    expect(stored.gridInfo.tileIds).toBe(true)
+  })
+
   it('keeps the defaults until a component mounts, then adopts stored booleans only', async () => {
     storage.set(
       PREFS_KEY,

@@ -9,13 +9,15 @@
     <!-- Sets the look before the first paint, the stored choice or else the device's;
          useTheme.ts takes it over after mount. -->
     <script>
-      var theme
-      try {
-        theme = JSON.parse(localStorage.getItem('stargazer.prefs')).theme
-      } catch (e) {}
-      if (theme !== 'light' && theme !== 'dark')
-        theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      document.documentElement.setAttribute('data-theme', theme)
+      ;(function () {
+        var theme
+        try {
+          theme = JSON.parse(localStorage.getItem('stargazer.prefs')).theme
+        } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark')
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.setAttribute('data-theme', theme)
+      })()
     </script>
 
     <title>Stargazer | AFK Journey Arena, Skills & Team Builder</title>

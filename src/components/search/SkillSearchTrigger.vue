@@ -83,7 +83,7 @@ const onClick = () => {
   font-size: 0.68rem;
   letter-spacing: 0.04em;
   color: #857f72;
-  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--color-contrast) 8%, transparent);
   border-radius: 5px;
   padding: 2px 7px;
 }
