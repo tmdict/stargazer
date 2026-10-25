@@ -1,10 +1,9 @@
 <script setup lang="ts">
 /* The guide index's report entries: one block per finished season, newest
    first, each linking to its static report with the season's most played
-   team groups as chips, under the Supreme League generator's entry. */
+   team groups as chips. */
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import SlGuideEntry from '@/components/guide/sl/SlGuideEntry.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import { isReportLocale, mostPlayedTeams, pvpReportHref } from '@/lib/pvp/summary'
 import type { AppLocale } from '@/lib/types/i18n'
@@ -23,7 +22,6 @@ const title = (season: number): string =>
 
 <template>
   <article class="container page-panel guide-panel">
-    <SlGuideEntry :lang />
     <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
       <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
         <h2>

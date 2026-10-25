@@ -129,6 +129,14 @@ export function teamContentKey(encoded: string): string | null {
   return encodeMultiGridStateToUrl(decoded)
 }
 
+/* Whether boards hold work no saved team keeps: they differ from the team they
+ * came from, or they came from none and hold a unit or an artifact. */
+export function holdsUnsavedWork(encoded: string, source: SavedTeam | undefined): boolean {
+  if (source) return teamContentKey(encoded) !== teamContentKey(source.data)
+  const decoded = decodeMultiGridStateFromUrl(encoded)
+  return !!decoded?.boards.some((board) => board.c?.length || board.s?.length || board.a?.length)
+}
+
 /* Validate one record from untrusted storage (hydration) or an import file.
  * Returns a normalized record (name sanitized, data canonicalized) or null.
  * Rules: known mode; decodable data whose board count matches the mode. Map keys
