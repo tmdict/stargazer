@@ -19,6 +19,6 @@ export const readPrefs = (): Record<string, unknown> | null => {
   }
 }
 
-export const writePref = (field: string, value: unknown): void => {
+export const writePref = (field: 'gridInfo' | 'theme', value: unknown): void => {
   writeStorage(PREFS_KEY, JSON.stringify({ ...readPrefs(), [field]: value }))
 }

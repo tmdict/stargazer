@@ -84,25 +84,24 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
 
 // The stored slice merged over the defaults (booleans only, so a wrong-typed
 // value can't leak into the pref state).
-const sliceFrom = (slice: unknown): GridInfoPrefs => {
+const sliceFrom = (slice: object): GridInfoPrefs => {
   const merged = { ...DEFAULTS }
-  if (slice && typeof slice === 'object') {
-    for (const key of PREF_KEYS) {
-      const value = (slice as Record<string, unknown>)[key]
-      if (typeof value === 'boolean') merged[key] = value
-    }
+  for (const key of PREF_KEYS) {
+    const value = (slice as Record<string, unknown>)[key]
+    if (typeof value === 'boolean') merged[key] = value
   }
   return merged
 }
 
-// Read the stored slice, seeding on first run.
+// Read the stored slice, seeding on first run. The theme can write the object
+// before any board opens, so a missing slice counts as a first run.
 const initStorage = (): GridInfoPrefs => {
-  const stored = readPrefs()
-  if (stored === null) {
+  const slice = readPrefs()?.gridInfo
+  if (!slice || typeof slice !== 'object') {
     writePref('gridInfo', DEFAULTS)
     return { ...DEFAULTS }
   }
-  return sliceFrom(stored.gridInfo)
+  return sliceFrom(slice)
 }
 
 let prefs: GridInfoPrefs | null = null

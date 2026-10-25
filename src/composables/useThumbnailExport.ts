@@ -9,9 +9,9 @@ import { useImageExportActions } from './useImageExportActions'
  * popup's TeamPreview is rendered off-screen for each capture, so the image
  * follows the popup's look. Its boards are BoardThumbnail SVGs with internal
  * clipPaths, so each board is serialized and rasterized through an <img>,
- * then drawn onto one canvas at its layout position. A DOM snapshot (useGridExport's html-to-image
- * path) is deliberately avoided here: WebKit fails to rasterize SVG content
- * inside a foreignObject snapshot. */
+ * then drawn onto one canvas at its layout position. A DOM snapshot
+ * (useGridExport's html-to-image path) is deliberately avoided here: WebKit
+ * fails to rasterize SVG content inside a foreignObject snapshot. */
 
 // The popup's content width at its full 1000px, so the boards wrap as they do
 // there on a desktop window, whatever the device. The image crops to the

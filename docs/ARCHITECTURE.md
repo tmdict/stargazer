@@ -114,7 +114,7 @@ Only links (`?g=`) and the Arena board use the binary format; everything else st
 
 Window size is read only through `src/utils/viewport.ts`. ESLint bans `window.innerWidth` and `innerHeight` elsewhere, because they include classic scrollbars that fixed overlays are not laid out against.
 
-The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs` or else the device's setting, and `useTheme` takes it over after mount. An element carrying `data-theme` keeps that look inside it whatever the site's look, and a dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
+The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs` or else the device's setting, and `useTheme` takes it over after mount. An element carrying `data-theme="dark"` stays dark inside it whatever the site's look, and a dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
 
 Every modal uses `useScrollLock`, `useFocusTrap` and `useOverlay` through `BaseModal`: page scrolling locks while it is open, focus stays inside and returns to the opener, and Escape or a click outside closes it.
 

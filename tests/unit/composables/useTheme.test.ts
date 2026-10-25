@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createApp, defineComponent, h } from 'vue'
+import { createApp, defineComponent, h, type App } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubLocalStorage } from '../fixtures/storage'
@@ -11,6 +11,7 @@ import { stubLocalStorage } from '../fixtures/storage'
 const PREFS_KEY = 'stargazer.prefs'
 
 let storage: Map<string, string>
+let app: App | undefined
 
 // The device's light or dark setting; jsdom has no matchMedia.
 const device = {
@@ -25,14 +26,15 @@ const device = {
 const mountTheme = async () => {
   const { useTheme } = await import('@/composables/useTheme')
   let result!: ReturnType<typeof useTheme>
-  createApp(
+  app = createApp(
     defineComponent({
       setup() {
         result = useTheme()
         return () => h('div')
       },
     }),
-  ).mount(document.createElement('div'))
+  )
+  app.mount(document.createElement('div'))
   return result
 }
 
@@ -60,7 +62,11 @@ describe('useTheme', () => {
     document.documentElement.setAttribute('data-theme', 'light')
   })
 
+  // Unmounting removes the window listener, so an earlier test's module
+  // never answers a later test's storage event.
   afterEach(() => {
+    app?.unmount()
+    app = undefined
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
   })
@@ -87,6 +93,16 @@ describe('useTheme', () => {
     expect(theme.value).toBe('light')
 
     writeFromOtherTab(JSON.stringify({ theme: 'blue' }))
+    expect(look()).toBe('dark')
+  })
+
+  it('keeps the pressed look when storage is unavailable', async () => {
+    const { toggle } = await mountTheme()
+    vi.stubGlobal('localStorage', undefined)
+
+    toggle()
+    device.set(false)
+
     expect(look()).toBe('dark')
   })
 
