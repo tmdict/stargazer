@@ -46,7 +46,7 @@ const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
 </script>
 
 <template>
-  <BaseModal :show :label="i18n.t('app.sl-about-title')" max-width="640px" @close="emit('close')">
+  <BaseModal :show :label="i18n.t('app.sl-about-title')" max-width="1000px" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-about-title') }}</h1>
     <p>{{ i18n.t('app.sl-about-real') }}</p>
     <p v-if="sample">
