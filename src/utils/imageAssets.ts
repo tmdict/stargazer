@@ -8,9 +8,10 @@ const byName = (modules: Record<string, string>): Record<string, string> =>
   )
 
 // The 100px width sets the grid image export's resolution (FULL_DETAIL_RATIO).
-// Phantimals have the portraits' shape and take the same variant. Outfits
-// share the portraits' folder under lib/characters/outfit.ts's naming rule, and
-// a glob takes only literal patterns, so the rule is repeated in the negative one.
+// Phantimals and outfits have the portraits' shape and take the same variant.
+// Outfits share the portraits' folder under lib/characters/outfit.ts's naming
+// rule, and a glob takes only literals, so the rule is repeated in each pattern
+// and the query in each glob.
 export const characterImages = byName(
   import.meta.glob<string>(
     [
@@ -24,6 +25,15 @@ export const characterImages = byName(
       import: 'default',
     },
   ),
+)
+
+// Keyed by file name (`<hero>-skin<N>`).
+export const outfitImages = byName(
+  import.meta.glob<string>('@/pack/images/character/*-skin*.png', {
+    query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
+    eager: true,
+    import: 'default',
+  }),
 )
 
 export const artifactImages = byName(

@@ -18,7 +18,7 @@ import type {
   TagAttachment,
 } from '@/lib/types/skill'
 import skillNumbers from '@/pack/text/skill/numbers.json'
-import { artifactImages, characterImages } from './imageAssets'
+import { artifactImages, characterImages, outfitImages } from './imageAssets'
 
 function extractFileName(path: string): string {
   const fileName = path.split('/').pop() || 'Unknown'
@@ -93,6 +93,16 @@ export function loadArtifacts(): ArtifactType[] {
 
 export function loadCharacterImages(): Record<string, string> {
   return characterImages
+}
+
+// Each hero's first outfit at the portraits' display size, keyed by hero.
+function loadOutfitImages(): Record<string, string> {
+  const outfits: Record<string, string> = {}
+  for (const [name, url] of Object.entries(outfitImages)) {
+    const hero = outfitHero(name)
+    if (hero) outfits[hero] ??= url
+  }
+  return outfits
 }
 
 // Portraits and phantimals at the art's own width for the screenshot import's
@@ -289,6 +299,7 @@ export function loadAllData() {
   const artifacts = loadArtifacts()
   const phantimals = loadPhantimals()
   const characterImages = loadCharacterImages()
+  const outfitImages = loadOutfitImages()
   const artifactImages = loadArtifactImages()
   const icons = loadIcons()
   const artifactEffects = loadArtifactEffects()
@@ -298,6 +309,7 @@ export function loadAllData() {
     artifacts,
     phantimals,
     characterImages,
+    outfitImages,
     artifactImages,
     icons,
     artifactEffects,

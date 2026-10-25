@@ -164,6 +164,7 @@ const handleResultSelect = (slug: string) => {
         :show-energy="energyPicked"
         inspectable
         :inspect-chips
+        show-outfit
         @character-click="handleCharacterClick"
       >
         <!-- Placeholders have no levels; their pill is reserved to keep the grid even. -->

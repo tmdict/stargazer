@@ -81,6 +81,7 @@ watch(mechanicFilter, (pick) => {
           hide-tooltip
           :is-selected="currentSlug === character.name"
           :show-energy="energyPicked"
+          show-outfit
         />
       </RouterLink>
     </CharacterGrid>
