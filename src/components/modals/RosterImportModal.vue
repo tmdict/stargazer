@@ -194,6 +194,20 @@ const handleForgetLearned = (): void => {
           @set-level="setLevel"
           @confirm-all="confirmAll"
         />
+        <p v-if="learnedCount > 0" class="learned-line">
+          <button
+            type="button"
+            class="link-btn"
+            :class="{ armed: armed === 'forget' }"
+            :title="i18n.t('app.import-forget-learned-tip')"
+            @click="handleForgetLearned"
+          >
+            <ConfirmLabel
+              :armed="armed === 'forget'"
+              :label="i18n.t('app.import-forget-learned')"
+            />
+          </button>
+        </p>
       </section>
 
       <div class="footer">
@@ -213,18 +227,6 @@ const handleForgetLearned = (): void => {
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
-        </button>
-        <button
-          v-if="learnedCount > 0"
-          type="button"
-          class="link-btn"
-          :class="{ armed: armed === 'forget' }"
-          @click="handleForgetLearned"
-        >
-          <ConfirmLabel
-            :armed="armed === 'forget'"
-            :label="i18n.t('app.import-forget-learned', { count: learnedCount })"
-          />
         </button>
       </div>
     </div>
@@ -251,9 +253,5 @@ const handleForgetLearned = (): void => {
 .footer .field-input {
   height: var(--import-control-height);
   padding-block: 0;
-}
-
-.footer .link-btn {
-  min-height: var(--import-control-height);
 }
 </style>

@@ -193,8 +193,14 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
+/* The reset of learned heroes, quiet at the end of a review. */
+.import .learned-line {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--spacing-sm) 0 0;
+}
+
 .import .link-btn {
-  margin-left: auto;
   border: none;
   background: none;
   color: var(--import-text-dim);

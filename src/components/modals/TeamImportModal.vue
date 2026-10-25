@@ -638,6 +638,20 @@ const handleForgetLearned = (): void => {
           @set-unit="setUnit"
           @set-pick="setTilePick"
         />
+        <p v-if="learnedCount > 0" class="learned-line">
+          <button
+            type="button"
+            class="link-btn"
+            :class="{ armed: armed === 'forget' }"
+            :title="i18n.t('app.import-forget-learned-tip')"
+            @click="handleForgetLearned"
+          >
+            <ConfirmLabel
+              :armed="armed === 'forget'"
+              :label="i18n.t('app.import-forget-learned')"
+            />
+          </button>
+        </p>
       </section>
 
       <ul v-if="plan.issues.length" class="issues">
@@ -665,18 +679,6 @@ const handleForgetLearned = (): void => {
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
-        </button>
-        <button
-          v-if="learnedCount > 0"
-          type="button"
-          class="link-btn"
-          :class="{ armed: armed === 'forget' }"
-          @click="handleForgetLearned"
-        >
-          <ConfirmLabel
-            :armed="armed === 'forget'"
-            :label="i18n.t('app.import-forget-learned', { count: learnedCount })"
-          />
         </button>
       </div>
     </div>

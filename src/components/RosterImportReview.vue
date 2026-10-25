@@ -134,22 +134,26 @@ const legend = computed(() =>
   ISSUES.filter((issue) => plan.entries.some((e) => e.issues.includes(issue))),
 )
 
-const picker = ref<{ key: string; position: { x: number; y: number } } | null>(null)
+// The picker follows the card it opened on, so a screenshot read while it is
+// open, which can reorder or regroup that hero's cards, never loses its cell.
+const picker = ref<{ card: CardRef; position: { x: number; y: number } } | null>(null)
 
-// The cell as it stands when a hero is picked: a screenshot read while the
-// picker is open can add a card to it.
+const holds = (cell: CellView, card: CardRef): boolean =>
+  cell.cards.some((c) => c.shotId === card.shotId && c.key === card.key)
+
 const pickerCell = computed(() => {
-  const key = picker.value?.key
-  if (!key) return null
-  return [...toCheck.value, ...sure.value].find((cell) => cell.key === key) ?? null
+  const card = picker.value?.card
+  if (!card) return null
+  return [...toCheck.value, ...sure.value].find((cell) => holds(cell, card)) ?? null
 })
 
 const togglePicker = (cell: CellView, event: MouseEvent): void => {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const open = picker.value
   picker.value =
-    picker.value?.key === cell.key
+    open && holds(cell, open.card)
       ? null
-      : { key: cell.key, position: { x: rect.left, y: rect.bottom + 4 } }
+      : { card: refs(cell.cards)[0]!, position: { x: rect.left, y: rect.bottom + 4 } }
 }
 
 const setPicked = (characterId: number | null): void => {
@@ -199,7 +203,7 @@ const closePicker = (event: MouseEvent): void => {
             :state="cell.state"
             :doubtful="cell.doubtful"
             :edited="cell.edited"
-            :open="picker?.key === cell.key"
+            :open="pickerCell?.key === cell.key"
             @pick="togglePicker(cell, $event)"
             @hero="emit('setHero', refs(cell.cards), $event)"
             @paragon="emit('setLevel', refs(cell.cards), 'paragon', $event)"
@@ -233,7 +237,7 @@ const closePicker = (event: MouseEvent): void => {
           :state="cell.state"
           :doubtful="cell.doubtful"
           :edited="cell.edited"
-          :open="picker?.key === cell.key"
+          :open="pickerCell?.key === cell.key"
           @pick="togglePicker(cell, $event)"
           @hero="emit('setHero', refs(cell.cards), $event)"
           @paragon="emit('setLevel', refs(cell.cards), 'paragon', $event)"
