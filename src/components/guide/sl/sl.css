@@ -41,24 +41,45 @@ html.sl-page-open .list.floating {
   line-height: 1.7;
 }
 
-/* The set's buttons: a dark box with a thin line, its label lit on hover. */
-.sl-page .sl-btn {
-  min-height: 36px;
-  padding: 0 12px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-white);
-  border: 1px solid var(--color-border-light);
-  border-radius: 6px;
-  cursor: pointer;
+/* The page's own buttons: Stargazer's solid button at the roster bar's size,
+   or its outline in the teal, keeping their labels on a phone, where they are
+   as tall as the bar's round icons. */
+.sl-page .sl-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-height: var(--control-height-compact);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--control-font-size);
+  white-space: nowrap;
 }
 
-.sl-page .sl-btn:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-border-primary);
+.sl-page .sl-action.outline {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.sl-page .sl-action.outline:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.sl-page .sl-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .sl-page .sl-action {
+    min-height: var(--control-height-tablet);
+    border-radius: 999px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sl-page .sl-action {
+    min-height: var(--control-height-mobile);
+  }
 }
 
 /* Boards in the reports' colours: dark open ground with no number, deep ally

@@ -1,5 +1,5 @@
 {
-  "en": "Each step only adjusts the one before it. It counts as if {prior} extra games had gone the way the step before expected, so a few lucky games cannot swing the number, and a team with only a few games stays close to 50%.",
-  "zh": "每一步只在上一步的基础上做调整，相当于额外加上 {prior} 场结果符合上一步预期的对局。所以，几场靠运气赢下的对局不会让这个几率大幅变化，对局很少的队伍也会保持在 50% 附近。",
-  "ko": "각 단계에서는 바로 앞 단계의 결과를 조정합니다. 앞 단계가 예상한 대로 끝난 가상 전투 {prior}판을 더한 것처럼 계산하므로, 운 좋게 이긴 몇 판으로 확률이 크게 흔들리지 않고, 전투 기록이 적은 팀은 50% 근처에 머뭅니다."
+  "en": "Each step starts from the one before and adds {prior} games that went as that step expected, so a few lucky games can't swing it. The fewer games behind a chance, the closer to 50% it stays.",
+  "zh": "每一步都以上一步为基础，再加上 {prior} 场结果符合上一步预期的对局，这样几场运气好的对局就不会让几率大幅波动。支撑几率的对局越少，几率就越接近 50%。",
+  "ko": "각 단계는 앞 단계에서 시작해 앞 단계가 예상한 대로 끝난 전투 {prior}판을 더하므로, 운 좋은 몇 판으로 크게 흔들리지 않습니다. 근거가 되는 전투가 적을수록 확률은 50%에 더 가깝게 유지됩니다."
 }

@@ -31,11 +31,7 @@ const outcomes = computed(() => [
 
     <h2>{{ i18n.t('app.sl-explain-meaning-head') }}</h2>
     <p>{{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance) }) }}</p>
-    <p>{{ i18n.t('app.sl-explain-typical-lead') }}</p>
-    <ul>
-      <li>{{ i18n.t('app.sl-explain-typical-strength') }}</li>
-      <li>{{ i18n.t('app.sl-explain-typical-upgrades') }}</li>
-    </ul>
+    <p>{{ i18n.t('app.sl-explain-typical') }}</p>
     <p>{{ i18n.t('app.sl-explain-forecast') }}</p>
 
     <h2>{{ i18n.t('app.sl-explain-teams-head') }}</h2>

@@ -16,8 +16,10 @@ import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar from '@/components/guide/sl/SlBar.vue'
 import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { slPercent } from '@/components/guide/sl/useSlNames'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useToast } from '@/composables/useToast'
 import {
   ATTR_PARAGON,
@@ -53,6 +55,14 @@ const router = useRouter()
 const { error, success } = useToast()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
+
+const {
+  anchor: betaAnchor,
+  hoverOpen: betaOpen,
+  hoverClose: betaClose,
+  toggle: betaToggle,
+  onTouchStart: betaTouchStart,
+} = useInfoTip()
 
 // ---- The file ----
 
@@ -211,7 +221,26 @@ const save = (): void => {
 <template>
   <main class="sl-page">
     <header class="sl-head">
-      <h1>{{ i18n.t('app.sl-title') }}<span class="sl-beta">BETA</span></h1>
+      <h1>
+        {{ i18n.t('app.sl-title')
+        }}<button
+          type="button"
+          class="sl-beta"
+          @mouseenter="betaOpen"
+          @mouseleave="betaClose"
+          @focus="betaOpen"
+          @blur="betaClose"
+          @click="betaToggle"
+          @touchstart.passive="betaTouchStart"
+        >
+          BETA
+        </button>
+      </h1>
+      <Teleport v-if="betaAnchor" to="body">
+        <TooltipPopup :target-element="betaAnchor" variant="detailed" max-width="290px">
+          <template #content>{{ i18n.t('app.sl-beta-tip') }}</template>
+        </TooltipPopup>
+      </Teleport>
       <p v-if="heading">
         {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
         <span aria-hidden="true">·</span>
@@ -255,7 +284,9 @@ const save = (): void => {
 </template>
 
 <style scoped>
+/* The page's buttons, and below its dock, a size above the Rosters tab's. */
 .sl-page {
+  --control-height-compact: var(--control-height);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -292,11 +323,13 @@ const save = (): void => {
   border-radius: 9px;
   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
   color: var(--color-warning);
+  font-family: inherit;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1;
   vertical-align: top;
+  cursor: help;
 }
 
 .sl-head p,
@@ -334,9 +367,7 @@ const save = (): void => {
   display: none;
 }
 
-/* The roster controls a size above the Rosters tab's. */
 .sl-picker {
-  --control-height-compact: var(--control-height);
   --dock-scale: 1.4;
   display: flex;
   flex-direction: column;
