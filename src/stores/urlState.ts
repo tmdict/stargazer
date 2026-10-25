@@ -25,7 +25,6 @@ interface UrlRestoreResult {
   // keep the viewer's current flags instead of applying unpack defaults (canonical
   // saved-team data deliberately has no `d`; see lib/teams).
   hasDisplayFlags?: boolean
-  error?: string
 }
 
 export const useUrlStateStore = defineStore('urlState', () => {
@@ -36,13 +35,13 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
   const restoreFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
     if (!encodedState) {
-      return { success: false, error: 'No state provided' }
+      return { success: false }
     }
 
     try {
       const gridState = decodeGridStateFromUrl(encodedState)
       if (!gridState) {
-        return { success: false, error: 'Invalid state data' }
+        return { success: false }
       }
 
       applyGridState(gridState)
@@ -52,7 +51,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
       return { success: true, displayFlags }
     } catch (err) {
       console.error('Failed to restore state from encoded string:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      return { success: false }
     }
   }
 
@@ -210,7 +209,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
   const restoreMultiFromDecodedState = (multi: MultiGridState): UrlRestoreResult => {
     try {
       if (multi.boards.length === 0) {
-        return { success: false, error: 'Invalid state data' }
+        return { success: false }
       }
 
       // Boards beyond the supported maximum (a crafted URL) are dropped.
@@ -234,17 +233,17 @@ export const useUrlStateStore = defineStore('urlState', () => {
       }
     } catch (err) {
       console.error('Failed to restore multi state:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      return { success: false }
     }
   }
 
   const restoreMultiFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
     if (!encodedState) {
-      return { success: false, error: 'No state provided' }
+      return { success: false }
     }
     const multi = decodeMultiGridStateFromUrl(encodedState)
     if (!multi) {
-      return { success: false, error: 'Invalid state data' }
+      return { success: false }
     }
     return restoreMultiFromDecodedState(multi)
   }

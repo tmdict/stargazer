@@ -4,9 +4,9 @@ import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { EVIE } from '../fixtures/characters'
 import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
-const EVIE = 113
 // Evie on 16 mirrors to enemy tile 30; the symmetrical tile and its neighbours
 // span enemy-zone tiles 30, 33, 34, 37 and middle (non-enemy) tiles 23, 26, 27.
 const EVIE_HEX = 16

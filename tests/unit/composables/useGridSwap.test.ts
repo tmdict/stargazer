@@ -26,6 +26,8 @@ describe('useGridSwap target selection', () => {
     swap.onOverlayDown(boardId, at(x, y))
     swap.onOverlayUp(boardId, at(x, y))
   }
+  const onBoard = (boardId: number) =>
+    grids.contexts[boardId]!.grid.getAllTiles().some((tile) => tile.characterId === ALLY_A)
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -46,11 +48,7 @@ describe('useGridSwap target selection', () => {
       tap(TARGET)
       tap(TARGET)
 
-      expect(swapBoards).toHaveBeenCalledWith(SOURCE, TARGET)
       expect(swap.isSwapping.value).toBe(false)
-      // The swap really happened: the unit now lives on the target board
-      const onBoard = (boardId: number) =>
-        grids.contexts[boardId]!.grid.getAllTiles().some((tile) => tile.characterId === ALLY_A)
       expect(onBoard(SOURCE)).toBe(false)
       expect(onBoard(TARGET)).toBe(true)
     })
@@ -86,9 +84,11 @@ describe('useGridSwap target selection', () => {
     beforeEach(() => swap.startFromButton(SOURCE, buttonPress(), true)) // draggable on
 
     it('commits on the first tap, with no confirm step', () => {
+      grids.contexts[SOURCE]!.place(1, ALLY_A, Team.ALLY)
       tap(TARGET)
-      expect(swapBoards).toHaveBeenCalledWith(SOURCE, TARGET)
       expect(swap.isSwapping.value).toBe(false)
+      expect(onBoard(SOURCE)).toBe(false)
+      expect(onBoard(TARGET)).toBe(true)
     })
   })
 })

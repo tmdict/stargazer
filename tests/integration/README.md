@@ -22,10 +22,6 @@ integration/
 └── aliceth/                   # Test data for Aliceth's row-scan targeting
 ```
 
-## Test Coverage
-
-The tests simulate various complex targeting test scenarios, such as the symmetrical targeting flow.
-
 ## Running Tests
 
 ```bash
@@ -76,7 +72,7 @@ Test cases are written in JSON files with the following structure:
   "testCases": [
     {
       "characterTile": 1, // Character's position
-      "expectedTarget": 42 // Expected ally Aliceth targets
+      "expectedTarget": 8 // Expected ally Aliceth targets
     }
     // ... more test cases
   ]

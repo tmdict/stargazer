@@ -24,7 +24,6 @@ let teardown: (() => void) | undefined
 afterEach(() => {
   teardown?.()
   teardown = undefined
-  vi.useRealTimers()
 })
 
 const mountPicker = async (overrides: Partial<PickerState> = {}) => {

@@ -6,9 +6,10 @@ import { ENERGY_DEFAULT, ENERGY_KEY } from '@/lib/mechanics'
 import { tagVocabulary } from '@/lib/tags'
 
 describe('useMechanicPicks', () => {
-  const vocabulary = tagVocabulary([
-    { tags: { 'temp-buff': [{ ultimate: 1 }, { skill3: 1, mods: ['opening'] }] } },
-  ])
+  const vocabulary = tagVocabulary(
+    [{ tags: { 'temp-buff': [{ ultimate: 1 }, { skill3: 1, mods: ['opening'] }] } }],
+    () => false,
+  )
 
   // The energy value is shared by every instance.
   beforeEach(() => {

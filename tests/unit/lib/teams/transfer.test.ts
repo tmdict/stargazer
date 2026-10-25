@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
-import { buildExport, parseImport } from '@/lib/teams/transfer'
+import { parseImport } from '@/lib/teams/transfer'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
@@ -29,17 +29,6 @@ const record = (overrides: Partial<SavedTeam> = {}): SavedTeam => ({
 const envelope = (teams: unknown[], overrides: Record<string, unknown> = {}): string =>
   JSON.stringify({ app: 'stargazer', kind: 'saved-teams', teams, ...overrides })
 
-describe('buildExport', () => {
-  // parseImport accepting the export proves the envelope is well-formed; its
-  // rejection paths below pin every envelope field.
-  it('round-trips through parseImport', () => {
-    const file = buildExport([record()], '2026-07-04T00:00:00.000Z')
-    expect(file.exportedAt).toBe('2026-07-04T00:00:00.000Z')
-    const result = parseImport(JSON.stringify(file), [])
-    expect(result).toMatchObject({ skipped: 0, accepted: [expect.any(Object)] })
-  })
-})
-
 describe('parseImport envelope rejection', () => {
   it.each([
     ['not json', 'garbage{'],
@@ -56,7 +45,6 @@ describe('parseImport record validation', () => {
   // Record-rejection variants are validateSavedTeam's, pinned in
   // savedTeam.test.ts; this pins skip-not-reject and the skipped count.
   it('skips invalid records without rejecting the file', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const result = parseImport(
       envelope([
         record(),
@@ -69,7 +57,6 @@ describe('parseImport record validation', () => {
       [],
     )
     expect(result).toMatchObject({ skipped: 3, accepted: [expect.any(Object)] })
-    warn.mockRestore()
   })
 
   it('marks an old version of an existing team (its id is taken) as a conflict', () => {

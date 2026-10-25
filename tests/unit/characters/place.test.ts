@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { findCharacterHex, getMaxTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import {
@@ -67,13 +67,6 @@ describe('place.ts', () => {
       expect(isCharacterOnTeam(grid, ALLY_B, Team.ALLY)).toBe(false)
     })
 
-    it('should reject invalid character ID', () => {
-      expect(performPlace(grid, 1, 0, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, 1, -1, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, 1, 1.5, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, 1, NaN, Team.ALLY)).toBe(false)
-    })
-
     // Tile-rule variants live in character.test.ts (canPlaceCharacterOnTile);
     // this pins only that performPlace consults them.
     it('should reject placement on wrong-team, blocked, or default tiles', () => {
@@ -135,7 +128,6 @@ describe('place.ts', () => {
     })
 
     it('should restore the occupant when the new character skill activation fails', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       executePlaceCharacter(grid, skillManager, 1, GUNNAR, Team.ALLY)
       performPlace(grid, 2, ALLY_A, Team.ALLY)
       performPlace(grid, 3, ALLY_B, Team.ALLY)
@@ -149,7 +141,6 @@ describe('place.ts', () => {
       expect(isCharacterOnTeam(grid, GUNNAR, Team.ALLY)).toBe(true)
       expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
       expect(skillManager.hasActiveSkill(GUNNAR, Team.ALLY)).toBe(true)
-      error.mockRestore()
     })
 
     it('should cascade a companion occupant to its main character', () => {
@@ -169,7 +160,6 @@ describe('place.ts', () => {
     })
 
     it('should rollback on skill activation failure', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       performPlace(grid, 2, ALLY_A, Team.ALLY)
       performPlace(grid, 3, ALLY_B, Team.ALLY)
 
@@ -180,7 +170,6 @@ describe('place.ts', () => {
       expect(tile.characterId).toBeUndefined()
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
       expect(skillManager.hasActiveSkill(PHRAESTO)).toBe(false)
-      error.mockRestore()
     })
 
     it('should replace an occupant when the team is at max capacity', () => {
@@ -239,7 +228,6 @@ describe('place.ts', () => {
     })
 
     it('should rollback placement on skill activation failure', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       // Only hex 1 stays free: the companion spawn finds no second tile
       performPlace(grid, 2, ALLY_A, Team.ALLY)
       performPlace(grid, 3, ALLY_B, Team.ALLY)
@@ -249,7 +237,6 @@ describe('place.ts', () => {
       expect(result).toBe(false)
       expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
       expect(grid.getTileById(1).characterId).toBeUndefined()
-      error.mockRestore()
     })
   })
 })

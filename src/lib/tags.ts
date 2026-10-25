@@ -96,7 +96,7 @@ export type TagVocabulary = ReadonlyMap<string, TagModifiers>
 /** `isSynergy` is passed in because the hero list sits behind the data loader. */
 export function tagVocabulary(
   heroes: readonly { readonly tags: CharacterTags }[],
-  isSynergy: (mod: string) => boolean = () => false,
+  isSynergy: (mod: string) => boolean,
 ): TagVocabulary {
   const seen = new Map<string, { mods: Set<string>; bare: boolean }>()
   for (const { tags } of heroes) {

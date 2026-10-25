@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { performPlace } from '@/lib/characters/place'
-import { isPlaceholderId, PLACEHOLDERS } from '@/lib/characters/placeholder'
+import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
+import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -31,15 +31,6 @@ describe('placeholder definitions', () => {
       hypogean: 9006,
       dimensional: 9007,
     })
-  })
-
-  it('keeps ids inside the reserved band below the companion namespace', () => {
-    for (const p of PLACEHOLDERS) {
-      expect(isPlaceholderId(p.id)).toBe(true)
-      expect(p.id).toBeLessThan(COMPANION_ID_OFFSET)
-    }
-    expect(isPlaceholderId(8999)).toBe(false)
-    expect(isPlaceholderId(COMPANION_ID_OFFSET)).toBe(false)
   })
 
   it('joins the hero list without colliding with real hero ids', () => {

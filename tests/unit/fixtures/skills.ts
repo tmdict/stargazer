@@ -5,7 +5,7 @@
  */
 
 import type { Grid } from '@/lib/grid'
-import type { SkillContext, SkillLookups, SkillManager } from '@/lib/skills/skill'
+import { SkillManager, type SkillContext, type SkillLookups } from '@/lib/skills/skill'
 import type { Team } from '@/lib/types/team'
 
 // For skills that read no data-store fact; spread it to answer the one a test needs.
@@ -33,5 +33,12 @@ export function makeSkillContext(
   team: Team,
   characterId: number,
 ): SkillContext {
-  return { grid, hexId, team, characterId, skillManager: {} as SkillManager, lookups: NO_LOOKUPS }
+  return {
+    grid,
+    hexId,
+    team,
+    characterId,
+    skillManager: new SkillManager(NO_LOOKUPS),
+    lookups: NO_LOOKUPS,
+  }
 }

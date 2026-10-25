@@ -5,12 +5,12 @@ import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
+import { KULU } from '../fixtures/characters'
 import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Kulu (80, Demolition Zone) paints a cosmetic per-team zone: tiles are tinted and
 // outlined but keep their state, so they stay placeable. The two zones overlap on
 // 22/23/24, which both teams paint with the same colors.
-const KULU = 80
 const ALLY_ONLY = [18, 19, 20, 21]
 const ENEMY_ONLY = [25, 26, 27, 28]
 const SHARED = [22, 23, 24]

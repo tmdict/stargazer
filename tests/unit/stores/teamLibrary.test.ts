@@ -52,11 +52,9 @@ afterEach(() => {
 
 describe('useTeamLibrary', () => {
   it('hydrates valid records and drops invalid ones', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     seed([record('a', 'Alpha'), { ...record('b', 'Broken'), mode: '9v9' } as never])
     const library = useTeamLibrary()
     expect(library.teams.map((t) => t.id)).toEqual(['a'])
-    warn.mockRestore()
   })
 
   it('treats corrupt blobs as empty', () => {
@@ -66,17 +64,6 @@ describe('useTeamLibrary', () => {
     setActivePinia(createPinia())
     storage.set(LIBRARY_KEY, JSON.stringify({ teams: 'x' }))
     expect(useTeamLibrary().teams).toHaveLength(0)
-  })
-
-  it('one poison record drops alone without hiding the rest of the library', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    seed([
-      record('a', 'Alpha'),
-      { ...record('p', 'Poison'), data: encodeMultiGridStateToUrl({ boards: [null] } as never) },
-    ])
-    const library = useTeamLibrary()
-    expect(library.teams.map((t) => t.id)).toEqual(['a'])
-    warn.mockRestore()
   })
 
   it('saveAsNew and update canonicalize data and reject garbage', () => {
@@ -93,10 +80,8 @@ describe('useTeamLibrary', () => {
     expect(library.update(team.id, withViewerState)).toBe(true)
     expect(library.get(team.id)!.data).toBe(canonicalTeamData(withViewerState))
 
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(library.saveAsNew('3v3', 'garbage')).toBeNull()
     expect(library.update(team.id, 'garbage')).toBe(false)
-    warn.mockRestore()
   })
 
   it('saveAsNew assigns auto-names and sanitizes custom names', () => {

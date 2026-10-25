@@ -1,23 +1,13 @@
 // @vitest-environment jsdom
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import type { RosterImportShot } from '@/composables/useRosterImport'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { RosterCard, RosterImportPlan } from '@/lib/rosterImport'
 import { useI18nStore } from '@/stores/i18n'
-
-vi.mock('@/stores/gameData', () => ({
-  useGameDataStore: () => ({
-    characters: [],
-    getCharacterById: () => undefined,
-    getCharacterNameById: (id: number) => `hero${id}`,
-    getCharacterImageNameById: () => undefined,
-    getCharacterImage: () => '',
-  }),
-}))
 
 let teardown: (() => void) | undefined
 

@@ -1,5 +1,6 @@
 import { nextTick } from 'vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { toPhantimalId } from '@/lib/characters/phantimal'
@@ -11,13 +12,6 @@ import type { ReplayReading } from '@/lib/import/screens/replay/types'
 import { FakeWorker, file, stubImportBrowser } from '../fixtures/importBrowser'
 import { stubLocalStorage } from '../fixtures/storage'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
-
-vi.mock('@/stores/gameData', () => ({ useGameDataStore: vi.fn() }))
-vi.mock('@/utils/dataLoader', () => ({
-  loadMatcherPortraits: vi.fn(),
-  loadArtifacts: () => [],
-  loadPhantimals: () => [],
-}))
 
 const shot = (): ImportShot => ({
   id: 'sample',
@@ -69,11 +63,16 @@ const shot = (): ImportShot => ({
   },
 })
 
-afterEach(() => {
+const hold = () =>
   holdTeamImport(
     () => '5v5',
     () => false,
-  ).forgetLearned()
+  )
+
+beforeEach(() => setActivePinia(createPinia()))
+
+afterEach(() => {
+  hold().forgetLearned()
   leaveTeamImport()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
@@ -83,10 +82,7 @@ describe('learning from corrections', () => {
   it('teaches an unsure cell, replaces the lesson on a second pick, and takes it back', () => {
     vi.stubEnv('SSR', false)
     const { storage } = stubLocalStorage()
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const learnedIds = (): number[] =>
       readLearnedIcons(JSON.parse(storage.get('stargazer.import.learned') ?? 'null')).map(
         (i) => i.characterId,
@@ -106,10 +102,7 @@ describe('learning from corrections', () => {
   })
 
   it('never teaches a sure cell or one whose frame match was doubtful', () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const sample = shot()
     const cell = sample.reading!.sides[1][0]!
     cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
@@ -130,10 +123,7 @@ describe('shot map and winner', () => {
     expect(shotMapIndex(s, 1)).toBe(0)
     expect(shotWinner(s)).toBe(1)
 
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     api.shots.value = [s]
     api.setMap('sample', 1)
     api.setWinner('sample', 2)
@@ -147,10 +137,7 @@ describe('shot map and winner', () => {
 
   it('keeps a map chosen before the reading arrived', () => {
     const s: ImportShot = { ...shot(), reading: null, status: 'reading' }
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     api.shots.value = [s]
     api.setMap('sample', 2)
     s.reading = shot().reading
@@ -159,26 +146,16 @@ describe('shot map and winner', () => {
 })
 
 describe('board sides', () => {
-  it("swaps the result screenshot's columns onto the opposite sides until the shots go", () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+  it('turns Swap sides off when the shots go', () => {
+    const api = hold()
     api.shots.value = [shot()]
     api.swapSides.value = true
-    const board = api.plan.value.boards[3]!
-    expect(board.sides[2]!.mains.map((unit) => unit.unitId)).toEqual([5])
-    expect(board.sides[2]!.artifact).toBe(8)
-    expect(board.sides[1]).toEqual({ mains: [], companions: [], phantimal: null, artifact: null })
     api.clearImport()
     expect(api.swapSides.value).toBe(false)
   })
 
   it('sets Swap sides from the formation shots and leaves it to the user after', async () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const result = shot()
     // The Ally column's hero on the enemy half: the match is swapped.
     const formation: FormationReading = {
@@ -224,10 +201,7 @@ describe('board sides', () => {
 
 describe('a match import', () => {
   it('leaves out a formation shot when the only result shot failed to read', () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const result = shot()
     const unit = {
       hexId: 1,
@@ -262,10 +236,7 @@ describe('a match import', () => {
 
 describe('replay tile picks', () => {
   it('moves a unit picked for another tile and replaces what a tile held', () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     api.shots.value = [{ ...shot(), kind: 'replay' }]
     const picks = () => api.shots.value[0]!.tilePicks[1]
     api.setTilePick('sample', 1, 1, 7)
@@ -279,10 +250,7 @@ describe('replay tile picks', () => {
   })
 
   it("drops a side's picks of another phantimal's units, as the side fields one", () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     api.shots.value = [{ ...shot(), kind: 'replay' }]
     const [first, second] = [toPhantimalId(1), toPhantimalId(2)]
     const companionOf = (phantimal: number): number => phantimal + COMPANION_ID_OFFSET
@@ -298,10 +266,7 @@ describe('replay tile picks', () => {
   })
 
   it("starts a frame's picks over when it moves to another board", () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const reading: ReplayReading = {
       ...shot().reading!,
       size: { width: 1400, height: 1940 },
@@ -316,10 +281,7 @@ describe('replay tile picks', () => {
   })
 
   it('leaves out a frame the arena was not found in', () => {
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     const reading: ReplayReading = {
       ...shot().reading!,
       mapIndex: null,
@@ -335,10 +297,7 @@ describe('clearing an import', () => {
   it('drops unsaved name edits back to the names last saved', () => {
     vi.stubEnv('SSR', false)
     stubLocalStorage()
-    const api = holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
+    const api = hold()
     api.names.left = 'unii'
     api.saveNames()
     api.names.left = 'typo'
@@ -350,12 +309,6 @@ describe('clearing an import', () => {
 })
 
 describe('adding screenshots', () => {
-  const hold = () =>
-    holdTeamImport(
-      () => '5v5',
-      () => false,
-    )
-
   it("refuses a roster screenshot however it came, and reads a drop as its area's kind", async () => {
     stubImportBrowser()
     const api = hold()

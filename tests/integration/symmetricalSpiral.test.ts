@@ -21,7 +21,7 @@ describe('Silvina symmetrical targeting', () => {
   const testFiles = loadTestsFromDirectory(join(__dirname, 'symmetricalSpiral'))
 
   testFiles.forEach((testFile) => {
-    describe(`${testFile.path ?? 'unknown fixture'}`, () => {
+    describe(`${testFile.path}`, () => {
       testFile.testCases.forEach(({ characterTile, symmetricalTile, expectedTarget }) => {
         it(`Silvina at ${characterTile} targets ${expectedTarget}`, () => {
           const { grid, skillManager } = buildScenarioGrid(

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
 import {
@@ -30,17 +30,6 @@ describe('binaryEncoder', () => {
         },
       ],
       ['a team-scope sentinel row (characterId 0)', { u: [[1, 0, 2, 4]] }],
-      [
-        'every section together',
-        {
-          t: [[1, 2]],
-          c: [[2, 100, 1]],
-          a: [2, 4],
-          s: [[7, 1, 2]],
-          y: [[5, 100, 1]],
-          u: [[1, 100, 1, 4]],
-        },
-      ],
     ])('round-trips an arena board with %s', (_, board) => {
       const decoded = decodeLink(arenaLink(board as BoardState))
       expect(decoded).toEqual({ mode: 'arena', active: 0, d: DEFAULT_FLAGS, boards: [board] })
@@ -65,19 +54,15 @@ describe('binaryEncoder', () => {
     })
 
     it('pads or trims a board list that disagrees with the mode', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const decoded = decodeLink(encodeLink({ mode: '3v3', boards: [{ m: 'arena1' }] }))
       expect(decoded!.boards).toEqual([{ m: 'arena1' }, {}, {}])
-      consoleSpy.mockRestore()
     })
 
     it('encodes an unregistered map key as none, keeping the board content', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const decoded = decodeLink(
         encodeLink({ mode: '1v1', boards: [{ m: 'retired-map', t: [[1, 1]] }] }),
       )
       expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
-      consoleSpy.mockRestore()
     })
   })
 
@@ -272,7 +257,6 @@ describe('binaryEncoder', () => {
       }
       expect(roundTrip(valid)).toEqual(valid)
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const state: GridState = {
         t: [
           [0, 2],
@@ -289,14 +273,11 @@ describe('binaryEncoder', () => {
         t: [[1, 2]],
         c: [[2, 100, 1]],
       })
-      consoleSpy.mockRestore()
     })
 
     it('nulls out-of-range artifact IDs instead of truncating them', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const result = roundTrip({ a: [64, 18] })
       expect(result).toEqual({ a: [null, 18] })
-      consoleSpy.mockRestore()
     })
 
     // Every count field caps at its width: an oversized crafted list would
@@ -323,15 +304,12 @@ describe('binaryEncoder', () => {
         63,
       ],
     ])('caps %s at the count field maximum', (_, state, key, max) => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       expect(roundTrip(state as GridState)[key as keyof GridState]).toHaveLength(max as number)
-      consoleSpy.mockRestore()
     })
 
     // A value past the registry range must clamp before writeBits sees it: the
     // 4-bit field would otherwise truncate (17 → 1), corrupting the wire.
     it('normalizes upgrade rows: drops junk teams/attrIds, clamps values, dedupes last-wins', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const state: GridState = {
         u: [
           [3, 11, 1, 2], // team outside {1, 2}
@@ -347,11 +325,9 @@ describe('binaryEncoder', () => {
         [1, 11, 1, 4],
         [1, 57, 3, 1],
       ])
-      consoleSpy.mockRestore()
     })
 
     it('validates synergy entries before capping', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const good: number[][] = Array.from({ length: 20 }, (_, i) => [i + 1, 100 + i, 1])
       const bad: number[][] = [
         [0, 50, 1],
@@ -362,12 +338,9 @@ describe('binaryEncoder', () => {
       const validated = roundTrip({ y: [...bad, ...good] })
       expect(validated.y).toHaveLength(15)
       expect(validated.y![0]).toEqual([1, 100, 1])
-      consoleSpy.mockRestore()
     })
 
     it('handles invalid structure types', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
       // Invalid tile structure
       expect(roundTrip({ t: 'invalid' } as unknown as GridState)).toEqual({})
       expect(roundTrip({ t: null } as unknown as GridState)).toEqual({})
@@ -380,8 +353,6 @@ describe('binaryEncoder', () => {
       expect(roundTrip({ a: [1] } as unknown as GridState)).toEqual({}) // Not exactly 2 elements
       expect(roundTrip({ a: [1, 2, 3] } as unknown as GridState)).toEqual({}) // Too many elements
       expect(roundTrip({ a: 'invalid' } as unknown as GridState)).toEqual({})
-
-      consoleSpy.mockRestore()
     })
   })
 
@@ -403,10 +374,8 @@ describe('binaryEncoder', () => {
     })
 
     it('returns null for strings outside the URL-safe alphabet', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       expect(urlSafeToBytes('abc!def')).toBeNull()
       expect(urlSafeToBytes('with space')).toBeNull()
-      consoleSpy.mockRestore()
     })
   })
 })

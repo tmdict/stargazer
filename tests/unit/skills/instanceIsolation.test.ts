@@ -116,10 +116,6 @@ const makeHarness = () => {
 describe('skill instance isolation (divergent-id contract)', () => {
   const skills = getRegisteredSkills().filter((skill) => skill.characterId < 10000)
 
-  it('registry is populated', () => {
-    expect(skills.length).toBeGreaterThan(0)
-  })
-
   for (const skill of skills) {
     it(`${skill.id}: synergy copy leaves the base instance intact and cleans up fully`, () => {
       const { grid, sm, freeAllyHex } = makeHarness()

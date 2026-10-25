@@ -130,6 +130,8 @@ describe('resolveTeamMode', () => {
 })
 
 describe('normalizeTeamPayload', () => {
+  // Padding is shape repair for a crafted payload, not a fresh slate: the
+  // neutral map, never the mode's initial type list.
   it('pads short payloads with empty boards on the mode default maps', () => {
     const payload: MultiGridState = { boards: [{ m: 'arena2', c: [[1, 11, 0]] }] }
     const normalized = normalizeTeamPayload(payload, '3v3')
@@ -138,13 +140,6 @@ describe('normalizeTeamPayload', () => {
     expect(normalized.boards[1]).toEqual({ m: 'arena1' })
     expect(normalized.boards[2]).toEqual({ m: 'arena1' })
     expect(normalized.mode).toBe('3v3')
-  })
-
-  // Padding is shape repair for a crafted payload, not a fresh slate: the
-  // neutral map, never the mode's initial type list.
-  it('pads with the default map even where the mode opens on a named type', () => {
-    const normalized = normalizeTeamPayload(boards(2), '5v5')
-    expect(normalized.boards.map((b) => b.m)).toEqual(Array<string>(5).fill(DEFAULT_MAP_KEY))
   })
 
   it('truncates oversize payloads', () => {

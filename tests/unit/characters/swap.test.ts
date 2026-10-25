@@ -139,7 +139,6 @@ describe('swap.ts', () => {
     })
 
     it('should restore everything when skill activation fails mid-swap', () => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
       executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
       const companionHex = findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)!
       performPlace(grid, 4, ENEMY_A, Team.ENEMY)
@@ -161,7 +160,6 @@ describe('swap.ts', () => {
         .filter((tile) => tile.characterId === PHRAESTO_COMPANION)
       expect(companionTiles).toHaveLength(1)
       expect(getTilesWithCharacters(grid)).toHaveLength(4)
-      error.mockRestore()
     })
 
     it('should reject a duplicate-creating swap before any skill teardown', () => {

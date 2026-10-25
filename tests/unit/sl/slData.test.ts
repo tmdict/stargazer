@@ -34,9 +34,9 @@ const pick = (id: number, paragon = 4, refinement = 4): SlPick => ({
 const named = [...new Set(seasons.flatMap((s) => s.teams.flatMap((t) => t.heroes)))]
 
 describe('the shipped Supreme League data', () => {
+  // A rotation must not hold up a deploy, so the maps are the file's own.
   it('names only heroes Stargazer knows, and companions their heroes spawn', () => {
     expect(data.order.filter((id) => !heroes.has(id))).toEqual([])
-    // A rotation must not hold up a deploy, so the maps are the file's own.
     const strays: SlUnit[] = []
     for (const s of seasons) {
       for (const t of s.teams) {

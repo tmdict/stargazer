@@ -25,7 +25,7 @@ export interface TargetingTestFile {
     symmetricalTile?: number
     expectedTarget: number
   }[]
-  path?: string
+  path: string
 }
 
 const ROMAN_TO_ARENA: Record<string, string> = {
@@ -44,9 +44,10 @@ export function loadTestsFromDirectory(dirPath: string, rootDir = dirPath): Targ
     if (statSync(fullPath).isDirectory()) {
       tests.push(...loadTestsFromDirectory(fullPath, rootDir))
     } else if (file.endsWith('.json')) {
-      const testFile: TargetingTestFile = JSON.parse(readFileSync(fullPath, 'utf-8'))
-      testFile.path = fullPath.slice(rootDir.length + 1)
-      tests.push(testFile)
+      tests.push({
+        ...(JSON.parse(readFileSync(fullPath, 'utf-8')) as Omit<TargetingTestFile, 'path'>),
+        path: fullPath.slice(rootDir.length + 1),
+      })
     }
   }
 
@@ -63,7 +64,9 @@ export function buildScenarioGrid(
   targetHexIds: number[],
   targetTeam: Team,
 ): { grid: Grid; skillManager: SkillManager } {
-  const map = MAPS[ROMAN_TO_ARENA[arena] ?? 'arena1']
+  const key = ROMAN_TO_ARENA[arena]
+  if (!key) throw new Error(`Unknown arena numeral in fixture: ${arena}`)
+  const map = MAPS[key]
   const grid = new Grid(undefined, map)
   const skillManager = new SkillManager(NO_LOOKUPS)
   grid.skillManager = skillManager

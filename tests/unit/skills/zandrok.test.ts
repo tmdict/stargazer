@@ -22,7 +22,7 @@ describe('zandrok wedge boundary lines', () => {
 
   const sOf = (hexId: number) => grid.getHexById(hexId).s
 
-  // The exact cells of each line (for the canonical placement).
+  // The exact cells of each line, for one fixed placement.
   const edges = () =>
     skillManager.getSkillLines().map(({ fromHexId, toHexId, fromCorner, toCorner }) => ({
       fromHexId,
@@ -46,7 +46,7 @@ describe('zandrok wedge boundary lines', () => {
 
   // Zandrok on cell 4 (s = 0): the band is s in [-2, 2]. The high edge runs the s=2
   // lane (cells 5..43) along corner 3, the low edge the s=-2 lane (cells 3..41) along
-  // corner 0 — the two outer vertices that wrap the 5 lanes.
+  // corner 0: the two outer vertices that wrap the 5 lanes.
   it('draws both band edges centered on Zandrok', () => {
     placeOnTile(grid, 4, ZANDROK, Team.ALLY)
     getCharacterSkill(ZANDROK)!.onActivate(buildContext(4))

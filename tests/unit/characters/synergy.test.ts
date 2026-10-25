@@ -16,6 +16,7 @@ import { decomposeUnitId, isSynergyHeroId, toSynergyId } from '@/lib/characters/
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
+import { PHRAESTO } from '../fixtures/characters'
 import { TARGETING_ARENA, TARGETING_GRID } from '../fixtures/grid'
 import { NO_LOOKUPS } from '../fixtures/skills'
 
@@ -124,7 +125,6 @@ describe('resolvePlacement', () => {
 })
 
 describe('resolveReplacement', () => {
-  const PHRAESTO = 50
   let grid: Grid
   let sm: SkillManager
 

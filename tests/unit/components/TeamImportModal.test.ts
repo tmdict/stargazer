@@ -7,25 +7,10 @@ import TeamImportModal from '@/components/modals/TeamImportModal.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
+import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { shownText } from '../fixtures/dom'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
-
-vi.mock('@/stores/grids', () => ({
-  useGrids: () => ({ boardsHaveContent: () => false }),
-}))
-
-vi.mock('@/stores/gameData', () => ({
-  useGameDataStore: () => ({
-    characters: [],
-    artifacts: [],
-    getCharacterNameById: () => undefined,
-    getCharacterImage: () => '',
-    getArtifactById: (id: number) =>
-      id === 1 ? { id: 1, name: 'starshard', season: 0, stats: {} } : undefined,
-    getArtifactImage: () => '',
-  }),
-}))
 
 const sample = (): ImportShot => ({
   id: 'sample',
@@ -99,6 +84,7 @@ const mountImport = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
+  useGameDataStore().initializeContentData()
   const api = holdTeamImport(
     () => '3v3',
     () => false,

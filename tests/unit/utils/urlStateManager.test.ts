@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
@@ -29,14 +29,10 @@ describe('urlStateManager', () => {
     })
 
     it('rejects undecodable input and payloads whose boards are not an array', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       expect(decodeMultiGridStateFromUrl('!!!invalid!!!')).toBeNull()
       expect(decodeMultiGridStateFromUrl(encodeRaw({}))).toBeNull()
       expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: 'x' }))).toBeNull()
       expect(decodeMultiGridStateFromUrl(encodeRaw(null))).toBeNull()
-      warnSpy.mockRestore()
-      errorSpy.mockRestore()
     })
 
     it('rejects crafted payloads with non-object board entries', () => {
