@@ -19,6 +19,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
+import { createServer } from 'vite'
 
 import { outfitHero } from '../../src/lib/characters/outfit.ts'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
@@ -167,13 +168,40 @@ const hasFile = (pack: string, path: string): boolean => {
   )
 }
 
+/** The pictures the skill code draws companions with. The skills register
+ * through import.meta.glob, so they load through Vite. */
+export async function companionPictures(root: string): Promise<string[]> {
+  const vite = await createServer({
+    configFile: false,
+    root,
+    resolve: { alias: { '@': join(root, 'src') } },
+    server: { middlewareMode: true, hmr: false, ws: false },
+    appType: 'custom',
+    logLevel: 'error',
+    optimizeDeps: { noDiscovery: true, include: [] },
+  })
+  try {
+    const { companionImages } = (await vite.ssrLoadModule('/src/lib/characters/companion.ts')) as {
+      companionImages: () => { image: string }[]
+    }
+    return companionImages().map(({ image }) => image)
+  } finally {
+    await vite.close()
+  }
+}
+
 /** What stops a build: the pack lacking what the app reads, or out of step
  * with this repo's own files. New content whose text or portrait lags behind
  * the feed is only a note: a hero with no portrait or skill text yet, and a
  * seasonal unit with no text yet. A seasonal unit's pictures come with its
  * season, so a missing one is what a season shipped without a new pin looks
- * like, and stops the build. */
-export function packProblems(pack: string, root: string): { problems: string[]; notes: string[] } {
+ * like, and stops the build. A companion picture the pack lacks is a note,
+ * since the companion is still drawn, without a picture. */
+export function packProblems(
+  pack: string,
+  root: string,
+  companions: readonly string[],
+): { problems: string[]; notes: string[] } {
   const problems: string[] = []
   const notes: string[] = []
   for (const folder of PACK_FOLDERS) {
@@ -229,6 +257,11 @@ export function packProblems(pack: string, root: string): { problems: string[]; 
   for (const slug of heroes) {
     if (!portraits.has(slug)) notes.push(`${slug} has no portrait yet`)
     if (!withText.has(slug)) notes.push(`${slug} has no skill text yet`)
+  }
+  const pictures = ['images/character', 'images/seasonal/phantimal']
+  for (const name of companions) {
+    if (!pictures.some((folder) => existsSync(join(pack, folder, `${name}.png`))))
+      notes.push(`the companion picture ${name} is not in the pack`)
   }
   return { problems, notes }
 }

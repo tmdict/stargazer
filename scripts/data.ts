@@ -13,6 +13,7 @@ import { argv, env, exit, loadEnvFile } from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import {
+  companionPictures,
   download,
   DownloadError,
   dropMarker,
@@ -99,7 +100,7 @@ if (dir) {
 if (changed) rmSync(VITEST_CACHE, { recursive: true, force: true })
 
 if (mode === 'build' || mode === 'pin') {
-  const { problems, notes } = packProblems(PACK, ROOT)
+  const { problems, notes } = packProblems(PACK, ROOT, await companionPictures(ROOT))
   for (const note of notes) console.log(`data: ${note}`)
   if (problems.length && mode === 'pin') console.error('data: pinned, but a build would stop on:')
   for (const problem of problems) console.error(`data: ${problem}`)

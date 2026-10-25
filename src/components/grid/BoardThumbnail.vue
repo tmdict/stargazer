@@ -507,7 +507,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
         v-for="{ hexId, center, zone, occupied } in numberedTiles"
         :key="`number-${hexId}`"
         class="tile-number"
-        :class="[`tile-${zone}`, { occupied }]"
+        :class="[`zone-${zone}`, { occupied }]"
         :x="center.x"
         :y="center.y + hexSize * NUMBER_DROP_RATIO"
         :font-size="hexSize * NUMBER_SIZE_RATIO"
