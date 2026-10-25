@@ -1,9 +1,9 @@
 // i18n type definitions.
 //
-// Two locale axes: AppLocale is the site chrome (nav, labels, character and
-// artifact names), the few languages in APP_LOCALES. SkillLocale is the
-// reading language of skill-page text and covers every language the upstream
-// skill feed publishes.
+// Two locale axes: AppLocale is the site chrome (nav, labels, character,
+// artifact and phantimal names), the few languages in APP_LOCALES. SkillLocale
+// is the reading language of skill, artifact and phantimal text and covers
+// every language the upstream skill feed publishes.
 
 // List order is the language menu's order. Adding a site language is a row
 // here plus its strings: LocaleData makes every chrome string carry it, and

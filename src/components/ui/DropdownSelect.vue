@@ -10,8 +10,7 @@
    on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
    accessible name, list dark and right-aligned). The owner can fix the
    trigger width with `--dropdown-trigger-width` or give it a floor with
-   `--dropdown-trigger-min-width`. An `icon` trigger is bare unless
-   `triggerClass` names the class that draws its box.
+   `--dropdown-trigger-min-width`.
 
    `floating` moves the list to <body>, for a dropdown inside a scrolling
    panel that would otherwise cut the list off. `clickOnly` and the `open`
@@ -51,7 +50,6 @@ const {
   label: string
   items?: readonly DropdownItem[]
   variant?: 'pill' | 'tab' | 'dark' | 'icon'
-  triggerClass?: string
   large?: boolean
   floating?: boolean
   // Accent the trigger, e.g. while a non-default choice is active.
@@ -200,7 +198,7 @@ const pressSegment = (): void => {
       ref="triggerRef"
       type="button"
       class="trigger"
-      :class="[triggerClass ?? (variant === 'icon' ? 'bare' : undefined), { lit, clearing }]"
+      :class="[variant === 'icon' ? 'bare' : undefined, { lit, clearing }]"
       :title
       :aria-label="variant === 'icon' ? label : undefined"
       :aria-expanded="open"

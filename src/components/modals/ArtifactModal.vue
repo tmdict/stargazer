@@ -3,13 +3,14 @@ import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
-import LocaleMenu from '@/components/ui/LocaleMenu.vue'
-import { useModalLocale } from '@/composables/useModalLocale'
+import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
+import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import type { ArtifactType } from '@/lib/types/artifact'
-import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { formatArtifactStats } from '@/utils/artifactStats'
-import { loadAppLocales, loadArtifactLocales, loadGameLocales } from '@/utils/dataLoader'
-import { formatDisplayName } from '@/utils/nameFormatting'
+import { getSkillLanguage } from '@/utils/dataLoader'
+import { localizedDisplayName } from '@/utils/nameFormatting'
+import { gameLabel } from '@/utils/skillLabels'
 
 interface Props {
   show: boolean
@@ -21,33 +22,27 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
 
-// Modal-local locale: overrides global without mutating it
-const displayLocale = useModalLocale(() => props.show)
+// The name and effect text follow the skill-text language, as in the skill
+// modal; the season and stat chips are chrome, in the site language.
+const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
 
-const gameLabel = (key: string) => loadGameLocales()[key]?.[displayLocale.value] ?? key
+const text = computed(() =>
+  applied.value ? getSkillLanguage(applied.value)?.artifacts[props.artifact.name] : undefined,
+)
 
-const title = computed(() => {
-  const loc = loadArtifactLocales()[props.artifact.name]
-  return loc?.[displayLocale.value] || formatDisplayName(props.artifact.name)
-})
+const title = computed(
+  () => text.value?.name || localizedDisplayName(i18n.t, 'artifact', props.artifact.name),
+)
 
-const stats = computed(() => formatArtifactStats(props.artifact.stats, displayLocale.value))
+const stats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
 
 // Effect descriptions become a level ladder; SkillSection renders them with
 // the same badges/highlighting/typography as character skills (level 1 is the
 // base effect, 2+ are upgrades). Shared styling, no bespoke drift.
 const effectLevels = computed(() =>
-  gameDataStore.getArtifactEffects(props.artifact.name).map((effect, i) => ({
-    level: i + 1,
-    description: effect[displayLocale.value] || effect.en,
-  })),
-)
-
-// A season can ship before the upstream feed carries its text.
-const pendingLabel = computed(
-  () => loadAppLocales()['skill-details-pending']?.[displayLocale.value] ?? '',
+  (text.value?.levels ?? []).map((description, i) => ({ level: i + 1, description })),
 )
 </script>
 
@@ -55,24 +50,31 @@ const pendingLabel = computed(
   <BaseModal
     :show="show"
     :label="title"
-    :locale-override="displayLocale"
+    :locale-override="selected"
     max-width="640px"
     @close="emit('close')"
   >
     <template #header-buttons>
-      <LocaleMenu :current="displayLocale" in-modal @select="displayLocale = $event" />
+      <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
 
     <h1 class="detail-title">{{ title }}</h1>
-    <div class="artifact-stats meta-chips">
-      <span class="meta-chip stat-chip">{{ gameLabel('season') }} {{ artifact.season }}</span>
+    <div class="artifact-stats meta-chips" :lang="i18n.currentLocale">
+      <span class="meta-chip stat-chip">
+        {{ gameLabel('season', i18n.currentLocale) }} {{ artifact.season }}
+      </span>
       <span v-for="stat in stats" :key="stat.key" class="meta-chip stat-chip">
         {{ stat.label }} <strong>{{ stat.value }}</strong>
       </span>
     </div>
 
-    <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
-    <p v-else class="details-pending">{{ pendingLabel }}</p>
+    <template v-if="applied || failed">
+      <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
+      <!-- A season can ship before the upstream feed carries its text. -->
+      <p v-else class="details-pending" :lang="i18n.currentLocale">
+        {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
+      </p>
+    </template>
   </BaseModal>
 </template>
 

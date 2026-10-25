@@ -1,8 +1,6 @@
 <script setup lang="ts">
 /* The site-language menu: the current language's glyph opens the list of
-   APP_LOCALES, each named in itself. The header's switches the site; a
-   modal's (`inModal`, drawn as one of its `.button`s) switches only what
-   that modal shows. */
+   APP_LOCALES, each named in itself. The header's switches the site. */
 
 import { computed } from 'vue'
 
@@ -11,13 +9,8 @@ import IconLocale from './IconLocale.vue'
 import { APP_LOCALES, isAppLocale, localeNativeName, type AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
-const {
-  current,
-  inModal = false,
-  linkTo,
-} = defineProps<{
+const { current, linkTo } = defineProps<{
   current: AppLocale
-  inModal?: boolean
   // Where a language's row leads, on a page whose address carries the language.
   linkTo?: (locale: AppLocale) => string | undefined
 }>()
@@ -46,16 +39,10 @@ const select = (key: string): void => {
     :label="i18n.t('app.language')"
     :title="i18n.t('app.language')"
     :items
-    :trigger-class="inModal ? 'button' : undefined"
     @select="select"
   >
     <template #icon>
-      <IconLocale
-        :locale="current"
-        :size="inModal ? 22 : 24"
-        :no-circle="inModal"
-        aria-hidden="true"
-      />
+      <IconLocale :locale="current" aria-hidden="true" />
     </template>
   </DropdownSelect>
 </template>

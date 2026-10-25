@@ -1,7 +1,6 @@
-import type { LocaleData } from './i18n'
-
 // Seasonal Phantimals. Structural data (src/data/seasonal/phantimal/<name>.json);
-// localized content (name + skills) lives in the matching locale file.
+// names in src/locales/seasonal/phantimal/<name>.json, skill text in each skill
+// language's _phantimals.json (SkillPhantimals).
 export interface PhantimalType {
   id: number
   name: string
@@ -12,15 +11,4 @@ export interface PhantimalType {
   qualifyingFactions?: readonly string[] // factions counted toward the team requirement; default [faction]
   targeting?: boolean // seasonal skill targeting (Spirit Mark) is live in-game; absent = off
   tags?: readonly string[] // hero tag ids found anywhere in its skill text; absent = none
-}
-
-// src/pack/text/seasonal/phantimal/<name>.json: full localized content.
-export interface PhantimalSkillLocale {
-  name: LocaleData
-  levels: LocaleData[]
-}
-
-export interface PhantimalLocale {
-  name: LocaleData
-  skills: PhantimalSkillLocale[]
 }

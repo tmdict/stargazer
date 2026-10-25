@@ -29,8 +29,7 @@ const SKILL = 'text/skill'
 // The pinned version a download holds; a copy from a local folder has none.
 const MARKER = '.version'
 
-// Seasonal text is left out: a season ships before its text, and git keeps no
-// empty folder.
+// Artifact, phantimal and charm text rides the skill language folders.
 const PACK_FOLDERS = [
   'images/character',
   'images/artifact',
@@ -38,7 +37,6 @@ const PACK_FOLDERS = [
   'images/seasonal/phantimal',
   'screenshot-import',
   'text/skill',
-  'text/artifact',
 ]
 
 // The files the app imports directly. Without a pack they are written empty,
@@ -224,17 +222,25 @@ export function packProblems(
     }
   }
 
+  // The data export writes every language's artifact and phantimal text
+  // alike, so English answers for all.
+  const textIn = (file: string): Record<string, unknown> => {
+    const path = join(pack, SKILL, 'en', file)
+    return existsSync(path)
+      ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
+      : {}
+  }
+  const artifactText = textIn('_artifacts.json')
   const sets = [
-    ['src/data/artifact', 'images/artifact', 'text/artifact', problems],
-    ['src/data/seasonal/artifact', 'images/seasonal/artifact', 'text/seasonal/artifact', notes],
-    ['src/data/seasonal/phantimal', 'images/seasonal/phantimal', 'text/seasonal/phantimal', notes],
+    ['src/data/artifact', 'images/artifact', artifactText, problems],
+    ['src/data/seasonal/artifact', 'images/seasonal/artifact', artifactText, notes],
+    ['src/data/seasonal/phantimal', 'images/seasonal/phantimal', textIn('_phantimals.json'), notes],
   ] as const
   for (const [data, images, text, missingText] of sets) {
     for (const name of jsonNames(join(root, data))) {
       if (!existsSync(join(pack, images, `${name}.png`)))
         problems.push(`${name} has no picture in the pack`)
-      if (!existsSync(join(pack, text, `${name}.json`)))
-        missingText.push(`${name} has no text in the pack`)
+      if (!(name in text)) missingText.push(`${name} has no text in the pack`)
     }
   }
 

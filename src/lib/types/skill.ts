@@ -94,13 +94,29 @@ export interface SkillCharms {
   charms: Record<string, string[]>
 }
 
+// On-disk shape of src/pack/text/skill/<lang>/_artifacts.json (written by the
+// data export): artifact name → its name and effect text in that language,
+// `levels[i]` being level i+1. Covers the permanent and the seasonal set.
+export type SkillArtifacts = Record<string, { name: string; levels: string[] }>
+
+// On-disk shape of src/pack/text/skill/<lang>/_phantimals.json (written by the
+// data export): phantimal name → its name and skills in that language, each
+// skill's `levels[i]` being level i+1. Absent once the season is retired.
+export type SkillPhantimals = Record<
+  string,
+  { name: string; skills: { name: string; levels: string[] }[] }
+>
+
 // One language's chunk once loaded: its hero files by slug, and the
-// per-language files beside them. `charms` is null while charms are retired.
+// per-language files beside them. `charms` is null while charms are retired;
+// an absent artifact or phantimal file reads as empty.
 export interface SkillLanguage {
   heroes: Record<string, SkillLocaleFile>
   terms: SkillTerms
   keywords: SkillKeywords
   charms: SkillCharms | null
+  artifacts: SkillArtifacts
+  phantimals: SkillPhantimals
 }
 
 // On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm

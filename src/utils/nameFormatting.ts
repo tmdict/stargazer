@@ -32,7 +32,7 @@ export function characterDisplayName(
 
 /** A phantimal's name, from its seasonal locale file. */
 export function phantimalDisplayName(locale: AppLocale, name: string): string {
-  return loadPhantimalLocales()[name]?.name[locale] || formatDisplayName(name)
+  return loadPhantimalLocales()[name]?.[locale] || formatDisplayName(name)
 }
 
 /**

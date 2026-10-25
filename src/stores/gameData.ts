@@ -11,7 +11,6 @@ import {
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import type { LocaleData } from '@/lib/types/i18n'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { loadAllData } from '@/utils/dataLoader'
 
@@ -24,7 +23,6 @@ export const useGameDataStore = defineStore('gameData', () => {
   const outfitImages = ref<Record<string, string>>({})
   const artifactImages = ref<Record<string, string>>({})
   const icons = ref<Record<string, string>>({})
-  const artifactEffects = ref<Record<string, LocaleData[]>>({})
   const dataLoaded = ref(false)
 
   // Character ranges - internal state
@@ -39,7 +37,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     outfitImages.value = data.outfitImages
     artifactImages.value = data.artifactImages
     icons.value = data.icons
-    artifactEffects.value = data.artifactEffects
     characterRanges.value = data.characterRanges
     dataLoaded.value = true
   }
@@ -164,10 +161,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     return artifactImages.value[name] ?? ''
   }
 
-  const getArtifactEffects = (name: string): LocaleData[] => {
-    return artifactEffects.value[name] ?? []
-  }
-
   const getIcon = (key: string): string => {
     return icons.value[key] ?? ''
   }
@@ -180,7 +173,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     characterImages: readonly(characterImages),
     artifactImages: readonly(artifactImages),
     icons: readonly(icons),
-    artifactEffects: readonly(artifactEffects),
     dataLoaded: readonly(dataLoaded),
 
     // Actions
@@ -199,7 +191,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterImage,
     getOutfitImage,
     getArtifactImage,
-    getArtifactEffects,
     getIcon,
 
     // Expose for other stores

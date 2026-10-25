@@ -21,10 +21,11 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
 | Content                             | Files                                                                            | Written by   |
 | ----------------------------------- | -------------------------------------------------------------------------------- | ------------ |
 | Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                        | data export  |
-| Phantimal name and skill text       | `src/pack/text/seasonal/phantimal/<slug>.json`                                   | data export  |
+| Phantimal names                     | `src/locales/seasonal/phantimal/`                                                | data export  |
+| Phantimal skill text                | `src/pack/text/skill/<code>/_phantimals.json`                                    | data export  |
 | Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)        | data export  |
 | Artifact names                      | `src/locales/seasonal/artifact/`                                                 | data export  |
-| Artifact effect text                | `src/pack/text/seasonal/artifact/` (pre-season: `src/pack/text/artifact/`)       | data export  |
+| Artifact effect text                | `src/pack/text/skill/<code>/_artifacts.json`, pre-season included                | data export  |
 | Charms                              | `src/data/seasonal/charm/charms.json`, `src/pack/text/skill/<code>/_charms.json` | data export  |
 | Charm tags                          | `src/data/seasonal/charm/tags.json`                                              | hand         |
 | Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                  | hand         |
@@ -113,7 +114,7 @@ Each phase ships on its own.
 
 It needs the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits, but no text.
 
-1. Run the data export for the new season. It retires the previous season's text, writes the season's artifact and phantimal data files and the artifact names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. Phantimal names come with their text; until the feed carries it, name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) go into the pack for phase 2 to overwrite. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key.
+1. Run the data export for the new season. It retires the previous season's text, writes the season's artifact and phantimal data files and their names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key.
 2. Pin the pack version that holds the season with `npm run data:pin`, and review the changes the export made here.
 3. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
 4. Replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
@@ -124,7 +125,7 @@ Phase 1 is done when the tests and the build pass, every new icon loads, and mod
 
 ### Phase 2: text, when the feed carries the season
 
-Artifacts, phantimals and charms may arrive on different builds. Run the data export, pin its pack version, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data; likewise each phantimal's and artifact's `tags` once its text is in. A failed check means a phase 1 value is wrong: fix the data file, not the check. It is done when no phantimal text file still has `"skills": []`, every seasonal artifact has an effect text file, and the charm tests run instead of skipping.
+Artifacts, phantimals and charms may arrive on different builds. Run the data export, pin its pack version, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data; likewise each phantimal's and artifact's `tags` once its text is in. A failed check means a phase 1 value is wrong: fix the data file, not the check. It is done when `npm run build` lists no seasonal artifact or phantimal without text, and the charm tests run instead of skipping.
 
 ### Phase 3: targeting
 

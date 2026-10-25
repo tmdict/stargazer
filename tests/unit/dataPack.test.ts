@@ -45,24 +45,23 @@ describe('mirror', () => {
   it('deletes what the source lost and keeps the generated files', () => {
     put('source/images/character/odie.png', 'a')
     put('source/text/skill/en/odie.json')
-    put('source/text/seasonal/artifact/frosthelm.json')
+    put('source/images/seasonal/artifact/frosthelm.png')
     expect(mirror(join(dir, 'source'), join(dir, 'pack'))).toBe(3)
     writeGenerated(join(dir, 'pack'))
 
-    rmSync(join(dir, 'source/text/seasonal'), { recursive: true })
+    rmSync(join(dir, 'source/images/seasonal'), { recursive: true })
     put('source/images/character/odie.png', 'b')
     expect(mirror(join(dir, 'source'), join(dir, 'pack'))).toBe(2)
 
     expect(readFileSync(join(dir, 'pack/images/character/odie.png'), 'utf8')).toBe('b')
-    expect(existsSync(join(dir, 'pack/text/seasonal'))).toBe(false)
+    expect(existsSync(join(dir, 'pack/images/seasonal'))).toBe(false)
     expect(existsSync(join(dir, 'pack/text/skill/en/index.ts'))).toBe(true)
     expect(mirror(join(dir, 'source'), join(dir, 'pack'))).toBe(0)
   })
 })
 
 describe('build checks', () => {
-  // One hero, one permanent artifact and a season whose text is not out yet,
-  // which leaves the pack no seasonal text folder at all.
+  // One hero, one permanent artifact and a season whose text is not out yet.
   beforeEach(() => {
     for (const path of [
       'src/data/character/odie',
@@ -83,7 +82,7 @@ describe('build checks', () => {
     for (const { code } of SKILL_LOCALES) put(`pack/text/skill/${code}/odie.json`)
     put('pack/text/skill/numbers.json', '{ "odie": {} }')
     put('pack/screenshot-import/hero-icons.json', '{ "icons": [1] }')
-    put('pack/text/artifact/starshard.json')
+    put('pack/text/skill/en/_artifacts.json', '{ "starshard": { "name": "", "levels": [] } }')
   })
 
   it('note seasonal text that is not out yet', () => {

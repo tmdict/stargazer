@@ -5,15 +5,17 @@ import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData, LocaleDictionary, SkillLocale } from '@/lib/types/i18n'
-import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import type {
   CharmData,
   CharmTags,
+  SkillArtifacts,
   SkillCharms,
   SkillKeywords,
   SkillLanguage,
   SkillLocaleFile,
   SkillNumbers,
+  SkillPhantimals,
   SkillTerms,
   TagAttachment,
 } from '@/lib/types/skill'
@@ -39,9 +41,7 @@ let charactersCache: CharacterType[] | null = null
 let artifactsCache: ArtifactType[] | null = null
 let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
-let artifactEffectsCache: Record<string, LocaleData[]> | null = null
 let phantimalsCache: PhantimalType[] | null = null
-let phantimalLocalesCache: Record<string, PhantimalLocale> | null = null
 
 export function loadCharacters(): CharacterType[] {
   if (charactersCache) {
@@ -225,54 +225,6 @@ export function getCharmForHero(slug: string): { id: string; heroes: string[] } 
   return { id: charmId, heroes: loadCharms()[charmId]!.heroes }
 }
 
-// Full localized phantimal content (name + per-skill names/levels), keyed by
-// phantimal name (matches the JSON filename).
-export function loadPhantimalLocales(): Record<string, PhantimalLocale> {
-  if (phantimalLocalesCache) {
-    return phantimalLocalesCache
-  }
-
-  const modules = import.meta.glob<PhantimalLocale>('@/pack/text/seasonal/phantimal/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, PhantimalLocale> = {}
-  Object.entries(modules).forEach(([path, content]) => {
-    result[extractFileName(path)] = content
-  })
-
-  phantimalLocalesCache = result
-  return result
-}
-
-// Per-artifact effect descriptions, keyed by artifact name (matches the JSON filename).
-// Each entry is an ordered list of localized effect strings.
-function loadArtifactEffects(): Record<string, LocaleData[]> {
-  if (artifactEffectsCache) {
-    return artifactEffectsCache
-  }
-
-  const effectModules = {
-    ...import.meta.glob<LocaleData[]>('@/pack/text/artifact/*.json', {
-      eager: true,
-      import: 'default',
-    }),
-    ...import.meta.glob<LocaleData[]>('@/pack/text/seasonal/artifact/*.json', {
-      eager: true,
-      import: 'default',
-    }),
-  }
-  const result: Record<string, LocaleData[]> = {}
-
-  Object.entries(effectModules).forEach(([path, content]) => {
-    const fileName = extractFileName(path)
-    result[fileName] = content
-  })
-
-  artifactEffectsCache = result
-  return result
-}
-
 function loadIcons(): Record<string, string> {
   if (iconsCache) {
     return iconsCache
@@ -305,7 +257,6 @@ export function loadAllData() {
   const outfitImages = loadOutfitImages()
   const artifactImages = loadArtifactImages()
   const icons = loadIcons()
-  const artifactEffects = loadArtifactEffects()
 
   return {
     characters,
@@ -315,7 +266,6 @@ export function loadAllData() {
     outfitImages,
     artifactImages,
     icons,
-    artifactEffects,
     characterRanges: getCharacterRanges(),
   }
 }
@@ -324,6 +274,7 @@ export function loadAllData() {
 let appLocalesCache: Record<string, LocaleData> | null = null
 let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
+let phantimalLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
 
 // import.meta.glob needs a literal pattern, so each loader globs its own directory
@@ -377,6 +328,18 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
   return artifactLocalesCache
 }
 
+// The season's phantimal names, keyed by phantimal name (the JSON filename).
+export function loadPhantimalLocales(): Record<string, LocaleData> {
+  if (phantimalLocalesCache) return phantimalLocalesCache
+  phantimalLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/seasonal/phantimal/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+  return phantimalLocalesCache
+}
+
 // The locale dirs carry reserved underscore-prefixed files beside the hero
 // files. They ride the same globs and chunks, but are split out at load time
 // so dict consumers (the search index, slug walks) only ever see hero entries.
@@ -386,12 +349,16 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
     _terms: SkillTerms
     _keywords?: SkillKeywords
     _charms?: SkillCharms
+    _artifacts?: SkillArtifacts
+    _phantimals?: SkillPhantimals
   }
   return {
     heroes: Object.fromEntries(Object.entries(dict).filter(([key]) => !key.startsWith('_'))),
     terms: reserved._terms,
     keywords: reserved._keywords ?? {},
     charms: reserved._charms ?? null,
+    artifacts: reserved._artifacts ?? {},
+    phantimals: reserved._phantimals ?? {},
   }
 }
 
