@@ -74,7 +74,7 @@ const heading = ref<{
   date: string
   rotation: boolean
   retired: boolean
-  sample: SlSample | null
+  sample: SlSample
   before: (SlSample & { season: number }) | null
 } | null>(null)
 const aboutOpen = ref(false)
@@ -109,8 +109,8 @@ onMounted(async () => {
     date: data.exportedAt,
     rotation: data.maps.map((m) => m.key).join() !== TEAM_VARIANTS.sl.maps.join(),
     retired: isRetiredSeason(data.season),
-    sample: data.sample ?? null,
-    before: data.before?.sample ? { season: data.before.season, ...data.before.sample } : null,
+    sample: data.sample,
+    before: data.before ? { season: data.before.season, ...data.before.sample } : null,
   }
 })
 

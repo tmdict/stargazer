@@ -14,7 +14,7 @@ const { season, sample, before } = defineProps<{
   show: boolean
   season: number
   date: string
-  sample: SlSample | null
+  sample: SlSample
   before: (SlSample & { season: number }) | null
 }>()
 
@@ -49,7 +49,7 @@ const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
   <BaseModal :show :label="i18n.t('app.sl-about-title')" max-width="1000px" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-about-title') }}</h1>
     <p>{{ i18n.t('app.sl-about-real') }}</p>
-    <p v-if="sample">
+    <p>
       {{ i18n.t('app.sl-about-sample', { season, date, ...counts(sample) }) }}
     </p>
     <p v-if="before">
