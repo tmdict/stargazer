@@ -74,7 +74,7 @@ Descriptions are extracted at build time from the first article's first two skil
 
 ## Tags
 
-Tags are hand-maintained in `src/data/character/<slug>.json`; the importer only validates their pins:
+Tags are hand-maintained in `src/data/character/<slug>.json`; the data export only validates their pins:
 
 ```jsonc
 "tags": {
