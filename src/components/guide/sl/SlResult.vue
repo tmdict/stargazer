@@ -226,13 +226,37 @@ const {
   padding: 24px 16px;
 }
 
-/* Three to a row on a tablet and two on a phone, with smaller portraits. */
-@container (max-width: 1100px) {
+/* Five to a row while a column holds a swap row of four portraits: at 40px
+   from 1360px wide, at 34px from 1170px. Below that, three to a row on six
+   half columns, so a last row of two sits centred, and two to a row from
+   710px, where three columns no longer hold that row. */
+@container (max-width: 1360px) {
   .sl-maps {
     --pt: 34px;
     --pt-gap: 8px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 1170px) {
+  .sl-maps {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     row-gap: 24px;
+  }
+  .sl-maps > * {
+    grid-column: span 2;
+  }
+  .sl-maps > :nth-child(3n + 1):nth-last-child(2) {
+    grid-column: 2 / span 2;
+  }
+}
+
+@container (max-width: 710px) {
+  .sl-maps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sl-maps > *,
+  .sl-maps > :nth-child(3n + 1):nth-last-child(2) {
+    grid-column: auto;
   }
 }
 
@@ -241,7 +265,6 @@ const {
     --pt: 26px;
     --pt-gap: 5px;
     --sl-aside-offset: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 10px;
     padding: 18px 10px;
   }
