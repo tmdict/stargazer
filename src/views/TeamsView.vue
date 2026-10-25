@@ -36,7 +36,7 @@ import {
   TEAM_VARIANTS,
   type TeamModeKey,
 } from '@/lib/teams/modes'
-import { canonicalTeamData, teamContentKey, type SavedTeam } from '@/lib/teams/savedTeam'
+import { canonicalTeamData, holdsUnsavedWork, type SavedTeam } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
@@ -135,7 +135,7 @@ const dirty = computed(
   () =>
     sourceTeam.value !== undefined &&
     canonicalActive.value !== null &&
-    teamContentKey(canonicalActive.value) !== teamContentKey(sourceTeam.value.data),
+    holdsUnsavedWork(canonicalActive.value, sourceTeam.value),
 )
 // A match import names the boards it filled; the name is offered by Save as
 // New until the boards are saved, replaced, or loaded. Otherwise boards on a

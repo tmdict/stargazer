@@ -1,8 +1,6 @@
 <script setup lang="ts">
 /* What the set's chance to win means and how it is worked out, with the
-   set's own numbers: each map's chance beside its comp's record, the three
-   steps a chance is built in, the chance of winning all five maps, exactly
-   four and exactly three, and how the set is picked. */
+   set's own numbers. */
 
 import { computed } from 'vue'
 

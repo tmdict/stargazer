@@ -111,8 +111,7 @@ function loadOutfitImages(): Record<string, string> {
 
 // Portraits and phantimals at the art's own width for the screenshot import's
 // matcher, loaded on demand: the 100 px picker thumbnails lose the face detail
-// the matcher needs. Keyed by unit name; each value is a lazy import of the
-// image URL.
+// the matcher needs. Keyed by unit name.
 export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
   const modules = import.meta.glob<string>(
     [
@@ -464,11 +463,11 @@ const SKILL_HEROES: ReadonlySet<string> = new Set(
 )
 
 /** True iff the pack holds skill text for `slug`, from the English file names
- * so the answer needs no language loaded. Gates the
- * surfaces where a missing locale would surface a dead link (the info button,
- * the modal, the reader's visibleSlug) so a character JSON without a matching
- * locale file degrades gracefully. A build stops unless every language holds
- * the same heroes as English, so one list answers for all 16 locales. */
+ * so the answer needs no language loaded. Gates the surfaces where a missing
+ * locale would surface a dead link (the info button, the modal, the reader's
+ * visibleSlug) so a character JSON without a matching locale file degrades
+ * gracefully. A build stops unless every language holds the same heroes as
+ * English, so one list answers for all 16 locales. */
 export function hasSkillLocale(slug: string): boolean {
   return SKILL_HEROES.has(slug)
 }

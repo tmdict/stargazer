@@ -213,8 +213,7 @@ const generate = async (): Promise<void> => {
 }
 
 // Save as team replaces the Teams page's 5v5 boards, so boards there holding
-// work no saved team keeps take a second press, as the app's other
-// replacing and removing buttons do.
+// work no saved team keeps take a second press.
 const replacesWork = (): boolean => {
   const slot = readTeamsSlot('5v5')
   return slot !== null && holdsUnsavedWork(slot.data, library.get(slot.sourceId))
@@ -319,7 +318,6 @@ const save = (): void => {
 </template>
 
 <style scoped>
-/* The page's buttons, and below its dock, a size above the Rosters tab's. */
 .sl-page {
   --control-height-compact: var(--control-height);
   display: flex;
@@ -347,7 +345,6 @@ const save = (): void => {
   color: var(--color-text-primary);
 }
 
-/* A status label at the top of the title's line. */
 .sl-beta {
   display: inline-flex;
   align-items: center;
@@ -395,6 +392,7 @@ const save = (): void => {
 
 .sl-result-slot {
   margin: 4px 0;
+  line-height: 1.7;
   scroll-margin-top: var(--spacing-lg);
 }
 

@@ -12,6 +12,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
+import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
@@ -638,20 +639,11 @@ const handleForgetLearned = (): void => {
           @set-unit="setUnit"
           @set-pick="setTilePick"
         />
-        <p v-if="learnedCount > 0" class="learned-line">
-          <button
-            type="button"
-            class="link-btn"
-            :class="{ armed: armed === 'forget' }"
-            :title="i18n.t('app.import-forget-learned-tip')"
-            @click="handleForgetLearned"
-          >
-            <ConfirmLabel
-              :armed="armed === 'forget'"
-              :label="i18n.t('app.import-forget-learned')"
-            />
-          </button>
-        </p>
+        <ImportLearnedReset
+          v-if="learnedCount > 0"
+          :armed="armed === 'forget'"
+          @reset="handleForgetLearned"
+        />
       </section>
 
       <ul v-if="plan.issues.length" class="issues">

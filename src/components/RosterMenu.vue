@@ -71,7 +71,6 @@ const items = computed((): DropdownItem[] => [
   --dropdown-trigger-width: 100%;
 }
 
-/* In a roster bar, as tall as the buttons beside it. */
 .roster-menu:not(.large, .dark) :deep(.trigger) {
   min-height: var(--control-height-compact);
 }

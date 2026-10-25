@@ -15,6 +15,7 @@ import IconTrash from '@/components/ui/IconTrash.vue'
 import RenameButton from '@/components/ui/RenameButton.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useInlineRename } from '@/composables/useInlineRename'
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { MAX_NAME_LENGTH } from '@/lib/names'
@@ -29,16 +30,10 @@ const { scrollable = true } = defineProps<{ scrollable?: boolean }>()
 const rosters = useRosters()
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
-const { error, success } = useToast()
+const { error } = useToast()
+const { report } = useRosterFeedback()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
-
-// A change is applied in memory even when its write fails, so the loss is
-// reported in place of any success message.
-const report = (message?: string): void => {
-  if (!rosters.persisted) error(i18n.t('app.rosters-not-stored'))
-  else if (message) success(message)
-}
 
 const editHeroes = (changes: Record<string, AttrRecord | null>): void => {
   if (rosters.active) rosters.setHeroes(rosters.active.id, changes)

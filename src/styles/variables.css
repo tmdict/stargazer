@@ -28,10 +28,9 @@
   --upgrade-pill-refinement-max: #ce756b;
   --upgrade-pill-rim: 0 0 0 1px rgba(255, 255, 255, 0.9);
 
-  /* Upgrade dock chips: their fill, and on hover. */
+  /* Upgrade dock */
   --dock-chip-fill: rgba(0, 0, 0, 0.09);
   --dock-chip-fill-hover: rgba(0, 0, 0, 0.14);
-  /* A host sets it to scale an upgrade dock's chips, labels and spacing. */
   --dock-scale: 1;
 
   /* Team Colors */
@@ -146,6 +145,9 @@
   --field-dark-border: 1px solid rgba(255, 255, 255, 0.15);
   --field-dark-radius: var(--radius-medium);
   --field-dark-background: rgba(255, 255, 255, 0.08);
+
+  /* Help marks */
+  --help-mark-opacity: 0.55;
 
   /* Large pills */
   --pill-large-height: 36px;

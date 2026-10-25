@@ -133,19 +133,6 @@ li {
   font-size: 1rem;
 }
 
-.placeholder-notice {
-  margin-top: var(--spacing-2xl);
-  padding: var(--spacing-lg);
-  background: var(--color-bg-light-gray);
-  border-radius: var(--radius-medium);
-  border-left: 4px solid var(--color-primary);
-}
-
-.placeholder-notice em {
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
 @media (max-width: 768px) {
   h1 {
     font-size: 1.6rem;

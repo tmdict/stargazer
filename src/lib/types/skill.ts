@@ -85,11 +85,10 @@ export type SkillNumbers = Record<string, Partial<Record<SlotKey, SlotNumbers>>>
 export type SkillKeywords = Record<string, string>
 
 // On-disk shape of src/pack/text/skill/<lang>/_charms.json (written by the data
-// export): the current season's charm text, stored once per
-// charm because one charm is shared by several heroes. `tiers` carries the
-// localized tier labels in Elite → Mythic order; each charm id maps to its
-// four tier descriptions in the same order. Rides the locale chunks like
-// `_keywords.json`.
+// export): the current season's charm text, stored once per charm because one
+// charm is shared by several heroes. `tiers` carries the localized tier labels
+// in Elite → Mythic order; each charm id maps to its four tier descriptions in
+// the same order. Rides the locale chunks like `_keywords.json`.
 export interface SkillCharms {
   tiers: string[]
   charms: Record<string, string[]>

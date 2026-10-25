@@ -8,9 +8,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
+import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import RosterImportReview from '@/components/RosterImportReview.vue'
-import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
@@ -194,20 +194,11 @@ const handleForgetLearned = (): void => {
           @set-level="setLevel"
           @confirm-all="confirmAll"
         />
-        <p v-if="learnedCount > 0" class="learned-line">
-          <button
-            type="button"
-            class="link-btn"
-            :class="{ armed: armed === 'forget' }"
-            :title="i18n.t('app.import-forget-learned-tip')"
-            @click="handleForgetLearned"
-          >
-            <ConfirmLabel
-              :armed="armed === 'forget'"
-              :label="i18n.t('app.import-forget-learned')"
-            />
-          </button>
-        </p>
+        <ImportLearnedReset
+          v-if="learnedCount > 0"
+          :armed="armed === 'forget'"
+          @reset="handleForgetLearned"
+        />
       </section>
 
       <div class="footer">

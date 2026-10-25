@@ -18,19 +18,10 @@ export function usePreviewImages() {
   })
 
   const unitImage = (unit: PreviewUnit): string | undefined => {
-    if (unit.characterId !== undefined) {
-      // Companion-aware: the store maps companion ids to the main hero's
-      // portrait or the skill's custom companion image.
-      const name = gameData.getCharacterImageNameById(unit.characterId)
-      const image = name ? gameData.getCharacterImage(name) : ''
-      return image || undefined
-    }
-    if (unit.phantimalLocal !== undefined) {
-      // Band-local, so a phantimal's companion resolves too.
-      const slug = gameData.getPhantimalUnitSlug(toPhantimalId(unit.phantimalLocal))
-      return (slug && gameData.getCharacterImage(slug)) || undefined
-    }
-    return undefined
+    const unitId =
+      unit.phantimalLocal !== undefined ? toPhantimalId(unit.phantimalLocal) : unit.characterId
+    const name = unitId === undefined ? undefined : gameData.getCharacterImageNameById(unitId)
+    return (name && gameData.getCharacterImage(name)) || undefined
   }
 
   const thumbnailUnit = (unit: PreviewUnit): ThumbnailUnit =>

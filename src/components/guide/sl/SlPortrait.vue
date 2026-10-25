@@ -1,6 +1,5 @@
 <script setup lang="ts">
-/* A hero portrait under a generated set's board: a grey disc with a thin rim,
-   sized by its host's --pt. */
+/* A hero portrait under a generated set's board, sized by its host's --pt. */
 
 import { computed } from 'vue'
 

@@ -21,7 +21,6 @@ const TONE_GAMES = 8
 const i18n = useI18nStore()
 const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
 
-// One-hero swaps take their options in a row, two-hero swaps one pair to a line.
 const swaps = computed(() => [
   ...team.flex.map(({ out, options }) => ({
     out: [out],
@@ -58,8 +57,7 @@ const record = computed(() => {
       crisp
       numbered
     />
-    <!-- Two columns, the icons and what they lead; a gap opens above the core
-         and swap rows when another row comes before them. -->
+    <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
       <div class="sl-aside-in">
         <template v-if="record">
@@ -128,8 +126,6 @@ const record = computed(() => {
   height: auto;
 }
 
-/* The block sits a little left of the board's middle, under the ally tiles,
-   as on the infographic. */
 .sl-aside {
   display: flex;
   justify-content: safe center;
@@ -204,8 +200,6 @@ const record = computed(() => {
   align-items: center;
 }
 
-/* A two-hero swap's pair, arrow and label line up with its first option, so
-   its options read as its own and not the next row's. */
 .sl-swap.top {
   align-items: flex-start;
 }

@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/* The icons under a generated set's boards, on one 24-unit grid with one
-   stroke width, drawn in currentColor: two people for the players who fielded
-   a comp, a trophy for its record, a padlock for the core heroes, swap arrows
-   for the swaps, and the arrow from a hero to its replacements. */
+/* The icons under a generated set's boards. */
 
 const { name, label } = defineProps<{
   name: 'players' | 'record' | 'lock' | 'swap' | 'arrow'
