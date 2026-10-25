@@ -87,15 +87,25 @@ describe('build checks', () => {
   })
 
   it('note seasonal text that is not out yet', () => {
-    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'))).toEqual({
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), [])).toEqual({
       problems: [],
       notes: ['frosthelm has no text in the pack', 'beetle has no text in the pack'],
     })
   })
 
+  it('note a companion picture in neither picture folder', () => {
+    expect(
+      packProblems(join(dir, 'pack'), join(dir, 'repo'), ['odie', 'beetle', 'turret']).notes,
+    ).toEqual([
+      'frosthelm has no text in the pack',
+      'beetle has no text in the pack',
+      'the companion picture turret is not in the pack',
+    ])
+  })
+
   it('stop on a missing paragon frame', () => {
     rmSync(join(dir, 'pack/screenshot-import/frame-p4-crown.png'))
-    expect(packProblems(join(dir, 'pack'), join(dir, 'repo')).problems).toEqual([
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
       'the pack has no screenshot-import/frame-p4-crown.png',
     ])
   })

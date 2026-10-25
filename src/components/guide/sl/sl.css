@@ -103,11 +103,10 @@ html.sl-page-open .list.floating {
   font-weight: 600;
 }
 
-.sl-page .sl-board .tile-number:is(.tile-void, .tile-blocked, .tile-breakable, .occupied) {
+.sl-page .sl-board .tile-number:is(.zone-void, .zone-blocked, .zone-breakable, .occupied) {
   display: none;
 }
 
 .sl-page .sl-board .unit-frame {
-  stroke: #5fd6cb;
   stroke-width: 2;
 }
