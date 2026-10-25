@@ -13,10 +13,10 @@ describe('useMechanicsExpanded', () => {
     vi.unstubAllGlobals()
   })
 
-  it('adopts a stored "1" once mounted, then writes "1" or removes the key', () => {
+  it('adopts a stored "0" once mounted, then writes "1" or "0"', () => {
     vi.stubEnv('SSR', false)
     const { storage } = stubLocalStorage()
-    storage.set(EXPANDED_KEY, '1')
+    storage.set(EXPANDED_KEY, '0')
 
     // onMounted flushes before mount() returns.
     let atSetup!: boolean
@@ -31,12 +31,12 @@ describe('useMechanicsExpanded', () => {
       }),
     ).mount(document.createElement('div'))
 
-    expect(atSetup).toBe(false)
-    expect(state.expanded.value).toBe(true)
+    expect(atSetup).toBe(true)
+    expect(state.expanded.value).toBe(false)
 
-    state.setExpanded(false)
-    expect(storage.has(EXPANDED_KEY)).toBe(false)
     state.setExpanded(true)
     expect(storage.get(EXPANDED_KEY)).toBe('1')
+    state.setExpanded(false)
+    expect(storage.get(EXPANDED_KEY)).toBe('0')
   })
 })
