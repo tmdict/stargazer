@@ -1,6 +1,6 @@
 /* The Supreme League generator's data file, as codec.ts reads it, and the
  * chooser's input and answer. The format and a complete example are in
- * docs/architecture/GUIDE.md ("The Supreme League generator"). */
+ * docs/architecture/GUIDE.md ("Supreme League generator"). */
 
 // [team, result, gap, opponent]: the team's index, a win, a loss or a tie, the
 // upgrade gap toward the team in Rivalry points, and the opponent's log rating.

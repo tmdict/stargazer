@@ -1,19 +1,24 @@
 import { readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { chooseSlSet } from '@/lib/pvp/sl/chooser'
-import { decodeSlData } from '@/lib/pvp/sl/codec'
+import { loadSlData } from '@/lib/pvp/sl/codec'
 import type { SlPick, SlUnit } from '@/lib/pvp/sl/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 
 // The file a deploy ships, as copied in from the external report generator,
 // which runs its own chooser beside this one on every selection it audits.
-const data = await decodeSlData(
-  new Uint8Array(readFileSync(new URL('../../../src/content/pvp/sl/sl.bin', import.meta.url))),
+// The page fetches the file the build emits, so the test serves it the same bytes.
+vi.stubGlobal(
+  'fetch',
+  async () =>
+    new Response(readFileSync(new URL('../../../src/content/pvp/sl/sl.bin', import.meta.url))),
 )
+const data = await loadSlData()
+vi.unstubAllGlobals()
 const seasons = [data, ...(data.before ? [data.before] : [])]
 const heroes = new Map(
   loadCharacters()
