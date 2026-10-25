@@ -12,9 +12,10 @@ import '@/styles/modal.css'
 
 // Globe dropdown for the skill-text language, distinct from the header's
 // site-language menu. `links` mode (skill pages) renders real hrefs to the
-// sibling locale URLs; `select` mode (skill modal) emits and lets the caller
-// own the chunk loading. An explicit pick persists the preference in both
-// modes; only picks persist (URL visits never do).
+// sibling locale URLs; `select` mode (the skill, artifact and phantimal
+// modals) emits and lets the caller own the chunk loading. An explicit pick
+// persists the preference in both modes; only picks persist (URL visits never
+// do).
 const props = defineProps<{
   current: SkillLocale
   mode: 'links' | 'select'

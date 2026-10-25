@@ -8,7 +8,7 @@ Skill text comes from the data pack, in `src/pack/text/skill/<code>/` ([Architec
 
 Each `<slug>.json` stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
-Underscore files hold shared language data: `_terms.json` for panel labels, `_keywords.json` for the glossary, and `_charms.json` for [seasonal text](./SEASONAL.md). `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too.
+Underscore files hold shared language data: `_terms.json` for panel labels, `_keywords.json` for the glossary, `_artifacts.json` for every artifact's name and effects, and `_charms.json` and `_phantimals.json` for [seasonal text](./SEASONAL.md). `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too. The artifact and phantimal windows read theirs in the language of their own globe menu, through `useModalSkillLocale` as the skill window does, so their text loads with that language's chunk.
 
 In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields are panel templates, with `{cooldown}`, `{initialCooldown}`, `{range}` and `{energy}` replaced by values:
 

@@ -3,11 +3,13 @@ import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
-import LocaleMenu from '@/components/ui/LocaleMenu.vue'
-import { useModalLocale } from '@/composables/useModalLocale'
+import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
+import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import { loadAppLocales, loadGameLocales, loadPhantimalLocales } from '@/utils/dataLoader'
-import { formatDisplayName } from '@/utils/nameFormatting'
+import { useI18nStore } from '@/stores/i18n'
+import { getSkillLanguage } from '@/utils/dataLoader'
+import { phantimalDisplayName } from '@/utils/nameFormatting'
+import { gameLabel } from '@/utils/skillLabels'
 
 interface Props {
   show: boolean
@@ -19,29 +21,27 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// Modal-local locale: overrides global without mutating it
-const displayLocale = useModalLocale(() => props.show)
+const i18n = useI18nStore()
 
-const gameLabel = (key: string) => loadGameLocales()[key]?.[displayLocale.value] ?? key
+// The name and skill text follow the skill-text language, as in the skill
+// modal; the faction chip is chrome, in the site language.
+const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
 
-const locale = computed(() => loadPhantimalLocales()[props.phantimal.name])
+const text = computed(() =>
+  applied.value ? getSkillLanguage(applied.value)?.phantimals[props.phantimal.name] : undefined,
+)
 
 const title = computed(
-  () => locale.value?.name[displayLocale.value] || formatDisplayName(props.phantimal.name),
+  () => text.value?.name || phantimalDisplayName(i18n.currentLocale, props.phantimal.name),
 )
 
 // Each phantimal skill renders as its own SkillSection (heading = skill name),
 // exactly like a character's skill slots.
 const skills = computed(() =>
-  (locale.value?.skills ?? []).map((skill) => ({
-    heading: skill.name[displayLocale.value],
-    levels: skill.levels.map((lv, i) => ({ level: i + 1, description: lv[displayLocale.value] })),
+  (text.value?.skills ?? []).map((skill) => ({
+    heading: skill.name,
+    levels: skill.levels.map((description, i) => ({ level: i + 1, description })),
   })),
-)
-
-// A season can ship before the upstream feed carries its text.
-const pendingLabel = computed(
-  () => loadAppLocales()['skill-details-pending']?.[displayLocale.value] ?? '',
 )
 </script>
 
@@ -49,26 +49,31 @@ const pendingLabel = computed(
   <BaseModal
     :show="show"
     :label="title"
-    :locale-override="displayLocale"
+    :locale-override="selected"
     max-width="var(--skill-popup-width)"
     @close="emit('close')"
   >
     <template #header-buttons>
-      <LocaleMenu :current="displayLocale" in-modal @select="displayLocale = $event" />
+      <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
 
     <h1 class="detail-title">{{ title }}</h1>
-    <div class="meta-chips">
-      <span class="meta-chip">{{ gameLabel(phantimal.faction) }}</span>
+    <div class="meta-chips" :lang="i18n.currentLocale">
+      <span class="meta-chip">{{ gameLabel(phantimal.faction, i18n.currentLocale) }}</span>
     </div>
 
-    <SkillSection
-      v-for="(skill, i) in skills"
-      :key="i"
-      :heading="skill.heading"
-      :levels="skill.levels"
-    />
-    <p v-if="!skills.length" class="details-pending">{{ pendingLabel }}</p>
+    <template v-if="applied || failed">
+      <SkillSection
+        v-for="(skill, i) in skills"
+        :key="i"
+        :heading="skill.heading"
+        :levels="skill.levels"
+      />
+      <!-- A season can ship before the upstream feed carries its text. -->
+      <p v-if="!skills.length" class="details-pending" :lang="i18n.currentLocale">
+        {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
+      </p>
+    </template>
   </BaseModal>
 </template>
 
