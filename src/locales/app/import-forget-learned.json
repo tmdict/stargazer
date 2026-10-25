@@ -1,5 +1,5 @@
 {
-  "en": "Forget learned icons ({count})",
-  "zh": "清除已记住的头像（{count}）",
-  "ko": "학습한 아이콘 삭제 ({count})"
+  "en": "Reset heroes learned from your corrections",
+  "zh": "清除纠正后记住的英雄信息",
+  "ko": "수정으로 학습한 영웅 정보 초기화"
 }

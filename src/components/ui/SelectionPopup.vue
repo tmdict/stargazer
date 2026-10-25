@@ -7,7 +7,8 @@ import { clampX, clampY, VIEWPORT_MARGIN } from '@/utils/viewport'
 // Shared chrome for the selection popups (the on-grid character / artifact
 // pickers and the import review's): a fixed-positioned, click-outside-dismissing
 // panel. Consumers supply the grid of selectable items via the default slot.
-// It closes on mouse-leave, so it is a dropdown boundary (usePanelFit): a
+// It closes on mouse-leave unless keepOnLeave, so it is a dropdown boundary
+// (usePanelFit): a
 // dropdown list inside stays within it, and picking an item never leaves the
 // cursor outside the popup.
 const props = defineProps<{
@@ -15,6 +16,9 @@ const props = defineProps<{
   // Layer above an open modal (the match import's review picker); the default
   // layer sits under the modal overlay.
   overModal?: boolean
+  // Stay when the mouse leaves: a picker a click opened in an import review
+  // closes on a pick, a press outside or Escape.
+  keepOnLeave?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -82,7 +86,7 @@ watch(() => props.position, reposition)
     :style="{ left: `${coords.x}px`, top: `${coords.y}px`, minHeight: `${minHeight}px` }"
     tabindex="-1"
     data-dropdown-boundary
-    @mouseleave="emit('close')"
+    @mouseleave="keepOnLeave || emit('close')"
   >
     <slot />
   </div>

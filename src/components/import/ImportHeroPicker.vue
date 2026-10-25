@@ -44,6 +44,7 @@ const pinned = computed(() =>
     <SelectionPopup
       :position
       over-modal
+      keep-on-leave
       @close="emit('close')"
       @click.stop
       @keydown.esc.stop="emit('close')"

@@ -292,6 +292,7 @@ const closePickers = (event: MouseEvent): void => {
         v-if="artifactPicker"
         :position="artifactPicker.position"
         over-modal
+        keep-on-leave
         @close="artifactPicker = null"
         @click.stop
         @keydown.esc.stop="artifactPicker = null"

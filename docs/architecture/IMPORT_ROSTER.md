@@ -2,7 +2,7 @@
 
 The roster import reads screenshots of the game's hero roster, the Resonating Hall, on the device and saves what they show as a new roster: every hero shown, with its paragon and refinement. It opens from the Rosters tab's Screenshots button on both the Arena and Teams pages, and loads on first use. The screens are read by the shared screenshot import ([Screenshot Import](./IMPORT.md)), the same engine, worker, card reader and references the team import runs on. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save changes the rosters.
 
-A whole roster takes several screenshots: one per faction filter, or one per scroll with each overlapping the last by a row. Players take them as desktop windows with other apps around the game, whole phone screens, or crops of a few rows, so the reader finds the grid with no fixed position.
+A whole roster takes several screenshots, taken any way as long as each hero shows whole in at least one (the Chinese and Korean clients call the screen 英雄厅堂 and 영웅의 전당). Players take them as desktop windows with other apps around the game, whole phone screens, or crops of a few rows, so the reader finds the grid with no fixed position.
 
 ## How it fits together
 

@@ -132,7 +132,7 @@ describe('match import review and save', () => {
     api.setHero('sample', 1, 0, 9)
     await nextTick()
     const forget = [...document.querySelectorAll<HTMLButtonElement>('.link-btn')].find((button) =>
-      button.textContent?.includes('Forget learned icons'),
+      button.textContent?.includes('Reset heroes learned from your corrections'),
     )!
     const save = document.querySelector<HTMLButtonElement>('.footer-btn.danger')!
 
@@ -144,7 +144,7 @@ describe('match import review and save', () => {
 
     vi.advanceTimersByTime(3000)
     await nextTick()
-    expect(shownText(forget)).toBe('Forget learned icons (1)')
+    expect(shownText(forget)).toBe('Reset heroes learned from your corrections')
     forget.click()
     expect(api.learnedCount.value).toBe(1)
     forget.click()

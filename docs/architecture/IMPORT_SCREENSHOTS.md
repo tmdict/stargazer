@@ -13,7 +13,7 @@ Nothing reads text. Every landmark is a shape, a colour or a picture: the result
 | Replay frame    | where the board lies in the frame, the map from the strip                                                                                | which unit stands where: the review places them on the frame's tiles by hand  | tiles for a Supreme League match's lineups |
 | Hero roster     | every whole card's hero with its paragon and refinement, the Hands of Resonance included; a card below S+ as P0, R0                      | Soul Pact phantimals, hero levels, cards the scroll cuts or the filter covers | a new roster, made the active one          |
 
-A match imports from its result screenshots, and formation screenshots or replay frames add where its units stand. Formation screenshots can also be imported on their own. A roster takes several screenshots, one per faction filter or one per scroll overlapping the last by a row, and a hero seen twice is one entry.
+A match imports from its result screenshots, and formation screenshots or replay frames add where its units stand. Formation screenshots can also be imported on their own. A roster takes several screenshots, taken any way as long as each hero shows whole in at least one, and a hero seen twice is one entry.
 
 ## Confidence and review
 
