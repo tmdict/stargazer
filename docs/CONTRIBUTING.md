@@ -20,7 +20,7 @@ The game's pictures and text come from a data pack kept outside this repo ([Arch
 ```sh
 npm run dev           # development server (SPA, hot reload)
 npm run build         # type-check plus the pre-rendered production build
-npm run build:ssg     # the pre-rendered build alone
+npm run build:ssg     # the pre-rendered build without the type-check
 npm run build:spa     # type-check plus a plain SPA build, no pre-rendering
 npm run preview       # serve the last build
 npm run prep          # format, type-check, lint and test: run before committing
