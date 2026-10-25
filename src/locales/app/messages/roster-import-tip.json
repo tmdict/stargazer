@@ -1,5 +1,5 @@
 {
-  "en": "Add screenshots of the game's screen that lists all your heroes. Take one per faction filter, or scroll so each screenshot overlaps the last by a row: a hero cut off at an edge is read from the screenshot that shows it whole. Paste anywhere here.",
-  "zh": "添加游戏中列出你所有英雄的界面截图。每个阵营筛选截一张，或滚动时让每张截图与上一张重叠一行：在边缘被截断的英雄，会从完整显示它的那张截图中读取。可在此处任意位置粘贴。",
-  "ko": "보유한 모든 영웅이 나열된 게임 화면의 스크린샷을 추가하세요. 진영 필터마다 한 장씩 찍거나, 스크롤할 때 각 스크린샷이 앞의 것과 한 줄씩 겹치게 하세요: 가장자리에서 잘린 영웅은 온전히 보이는 스크린샷에서 읽습니다. 이곳 어디에나 붙여넣을 수 있습니다."
+  "en": "Add screenshots of your heroes from the **Resonating Hall**. Other screens that list heroes, like team setup, **can't be read**. Take **one screenshot per faction filter**, or scroll and take several so that **every hero appears whole in at least one**. Paste anywhere here.",
+  "zh": "请添加**共鸣大厅**（列出你全部英雄的界面）的英雄截图。其他列出英雄的界面（如布阵界面）**无法识别**。可以**每个阵营筛选各截一张**，或滚动截取多张，确保**每位英雄至少在一张截图中完整显示**。可在此处任意位置粘贴。",
+  "ko": "**공명의 전당**(보유한 모든 영웅이 나열된 화면)에서 찍은 영웅 스크린샷을 추가하세요. 영웅이 나열된 다른 화면(편성 화면 등)은 **인식할 수 없습니다**. **진영 필터마다 한 장씩** 찍거나, 스크롤하며 여러 장을 찍어 **모든 영웅이 적어도 한 장의 스크린샷에 잘리지 않고 나오도록** 하세요. 이곳 어디에나 붙여넣을 수 있습니다."
 }

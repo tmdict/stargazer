@@ -50,6 +50,9 @@ const {
   ensureReferences,
 } = useRosterImport()
 
+// The tip marks what it bolds with **, so a translation keeps its own stress.
+const tipParts = computed(() => i18n.t('app.roster-import-tip').split('**'))
+
 const name = ref('')
 // The name a blank field saves under.
 const autoName = computed(() =>
@@ -147,7 +150,12 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-failed-references') }}
           </span>
         </div>
-        <p class="note intro">{{ i18n.t('app.roster-import-tip') }}</p>
+        <p class="note intro">
+          <template v-for="(part, i) in tipParts" :key="i">
+            <strong v-if="i % 2">{{ part }}</strong>
+            <template v-else>{{ part }}</template>
+          </template>
+        </p>
       </header>
 
       <section class="drop-section">
