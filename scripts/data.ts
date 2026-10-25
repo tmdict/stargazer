@@ -1,7 +1,8 @@
 // npm run data fills src/pack/: from DATA_PACK_DIR on your computer, else the
 // version data.lock pins, downloaded with DATA_PACK_URL, DATA_PACK_TOKEN and
 // DATA_PACK_PATH. `build` stops on a missing or incomplete pack; `pin` writes
-// the DATA_PACK_DIR folder's commit into data.lock first.
+// the DATA_PACK_DIR folder's commit into data.lock first, then prints the same
+// checks without stopping.
 //
 // Build logs can be public, so nothing here prints the download's address,
 // where it redirects, or the paths inside it.
@@ -90,16 +91,17 @@ if (dir) {
 } else {
   changed = writeStandIns(PACK) + writeGenerated(PACK)
   if (mode === 'build') fail(`no data pack; ${noPackFix}`)
-  console.log(`data: no data pack, so the app runs without game pictures or skill text; ${noPackFix}`)
+  console.log(
+    `data: no data pack, so the app runs without game pictures or skill text; ${noPackFix}`,
+  )
 }
 
 if (changed) rmSync(VITEST_CACHE, { recursive: true, force: true })
 
-if (mode === 'build') {
+if (mode === 'build' || mode === 'pin') {
   const { problems, notes } = packProblems(PACK, ROOT)
   for (const note of notes) console.log(`data: ${note}`)
-  if (problems.length) {
-    for (const problem of problems) console.error(`data: ${problem}`)
-    exit(1)
-  }
+  if (problems.length && mode === 'pin') console.error('data: pinned, but a build would stop on:')
+  for (const problem of problems) console.error(`data: ${problem}`)
+  if (problems.length && mode === 'build') exit(1)
 }
