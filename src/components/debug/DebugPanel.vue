@@ -443,13 +443,13 @@ defineExpose({
 
 .closest-enemy {
   font-size: 0.75rem;
-  color: var(--color-enemy);
+  color: var(--unit-frame-enemy);
   font-style: italic;
 }
 
 .closest-ally {
   font-size: 0.75rem;
-  color: var(--color-ally);
+  color: var(--unit-frame-ally);
   font-style: italic;
 }
 

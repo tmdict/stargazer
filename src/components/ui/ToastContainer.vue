@@ -7,7 +7,7 @@ const { toasts, remove } = useToast()
 
 <template>
   <Teleport to="body">
-    <TransitionGroup name="toast" tag="div" class="toast-container">
+    <TransitionGroup name="toast" tag="div" class="toast-container" data-theme="dark">
       <ToastMessage
         v-for="toast in toasts"
         :key="toast.id"
