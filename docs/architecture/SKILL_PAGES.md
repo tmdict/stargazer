@@ -23,7 +23,7 @@ In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields
 }
 ```
 
-The data export requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. `npm run data` writes the sorted list of heroes with English skill text, `src/pack/data/skill/heroes.json`, which lets `hasSkillLocale` gate links and inspect gestures without loading any language.
+The data export requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. `hasSkillLocale` reads the English skill file names, without loading any language, to gate links and inspect gestures.
 
 Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the data export updates the locales named by `FEED_NAMED_LOCALES` from the feed.
 
@@ -58,7 +58,7 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Cooldowns and range
 
-The data export writes the language-independent `src/pack/data/skill/numbers.json`, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
+The data export writes the language-independent `src/pack/text/skill/numbers.json`, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
 
 Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The data export reports discrepancies with the feed rather than overwriting hand-maintained hero data.
 

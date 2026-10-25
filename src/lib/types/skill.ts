@@ -61,7 +61,7 @@ export interface SkillTerms {
   initialEnergy: string
 }
 
-// On-disk shape of src/pack/data/skill/numbers.json (written by the data export):
+// On-disk shape of src/pack/text/skill/numbers.json (written by the data export):
 // hero slug → slot → the numbers shown with that skill. Only displayable
 // values are written, so the app renders whatever is present. Cooldowns are
 // seconds, range is tiles.

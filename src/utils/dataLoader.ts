@@ -17,8 +17,7 @@ import type {
   SkillTerms,
   TagAttachment,
 } from '@/lib/types/skill'
-import skillHeroes from '@/pack/data/skill/heroes.json'
-import skillNumbers from '@/pack/data/skill/numbers.json'
+import skillNumbers from '@/pack/text/skill/numbers.json'
 import { artifactImages, characterImages } from './imageAssets'
 
 function extractFileName(path: string): string {
@@ -442,10 +441,14 @@ export function getSkillCharms(lang: SkillLocale): SkillCharms | null {
   return getSkillLanguage(lang)?.charms ?? null
 }
 
-const SKILL_HEROES: ReadonlySet<string> = new Set(skillHeroes)
+const SKILL_HEROES: ReadonlySet<string> = new Set(
+  Object.keys(
+    import.meta.glob(['@/pack/text/skill/en/*.json', '!@/pack/text/skill/en/_*.json']),
+  ).map(extractFileName),
+)
 
-/** True iff the pack holds skill text for `slug`, read from the hero list
- * npm run data writes so the answer needs no language loaded. Gates the
+/** True iff the pack holds skill text for `slug`, from the English file names
+ * so the answer needs no language loaded. Gates the
  * surfaces where a missing locale would surface a dead link (the info button,
  * the modal, the reader's visibleSlug) so a character JSON without a matching
  * locale file degrades gracefully. A build stops unless every language holds
