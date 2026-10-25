@@ -88,7 +88,7 @@
 }
 
 .content a:hover {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   text-decoration: underline;
 }
 

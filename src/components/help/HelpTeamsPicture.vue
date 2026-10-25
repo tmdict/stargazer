@@ -176,7 +176,7 @@ const searchPicks = computed(() => [
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   padding: 8px;
-  background: color-mix(in srgb, var(--color-contrast) 5%, transparent);
+  background: var(--color-bg-inset);
   border-radius: var(--radius-medium);
 }
 
@@ -233,8 +233,8 @@ const searchPicks = computed(() => [
 
 .help-card-actions .danger {
   flex: 1;
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+  border-color: var(--color-danger-text);
+  color: var(--color-danger-text);
 }
 
 .help-card-actions .icon {

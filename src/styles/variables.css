@@ -4,6 +4,7 @@
   --color-primary-hover: #2a7a73;
   --color-danger: #c05b4d;
   --color-danger-hover: #a04936;
+  --color-danger-text: var(--color-danger);
   --color-neutral: #666;
   --color-neutral-hover: #333;
 
@@ -107,6 +108,8 @@
   --color-bg-tertiary: #f0ebe0;
   --color-bg-raised: #fff;
   --color-bg-subtle: #f0f0f0;
+  --color-bg-inset: rgba(0, 0, 0, 0.05);
+  --color-bg-inset-hover: rgba(0, 0, 0, 0.1);
 
   /* Border Colors */
   --color-border-primary: #d4cfc0;
@@ -265,6 +268,7 @@
 
   --color-neutral: #4a5361;
   --color-neutral-hover: #5d6779;
+  --color-danger-text: #e28174;
 
   --dock-chip-fill: rgba(255, 255, 255, 0.08);
   --dock-chip-fill-hover: rgba(255, 255, 255, 0.14);
@@ -312,6 +316,8 @@
   --color-bg-tertiary: #1d232b;
   --color-bg-raised: #1d232b;
   --color-bg-subtle: #1d232b;
+  --color-bg-inset: rgba(0, 0, 0, 0.22);
+  --color-bg-inset-hover: rgba(0, 0, 0, 0.32);
 
   --color-border-primary: #39424e;
   --color-border-light: #2a313b;

@@ -52,7 +52,7 @@ const ICONS: Record<ToastItem['type'], Component> = {
 }
 
 .toast-error .toast-icon {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .toast-message {

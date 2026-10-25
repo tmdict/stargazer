@@ -313,7 +313,7 @@ const hoveredStat = computed(
   color: var(--color-success);
 }
 .stat.neg .stat-num {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 .stat.zero .stat-num {
   color: var(--color-text-secondary);
