@@ -1,0 +1,5 @@
+{
+  "en": "Some sets also use last season's teams. Those come from {matches} Season {season} matches ({games} games) between {players} players.",
+  "zh": "部分阵容也会用到上赛季的队伍，它们来自第 {season} 赛季的 {matches} 场比赛（{games} 局），涉及 {players} 名玩家。",
+  "ko": "일부 세트에는 지난 시즌 팀도 쓰입니다. 이 팀들은 시즌 {season}의 매치 {matches}회(전투 {games}판)에서 나왔으며, 플레이어 {players}명이 참여했습니다."
+}
