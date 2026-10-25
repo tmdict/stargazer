@@ -780,7 +780,7 @@ const actionTipText = computed((): string => {
 
 .preview-btn:hover :deep(.team-preview),
 .preview-btn:focus-visible :deep(.team-preview) {
-  background: color-mix(in srgb, var(--color-contrast) 10%, transparent);
+  background: var(--color-bg-inset-hover);
 }
 
 .card-title-row {
@@ -908,8 +908,8 @@ const actionTipText = computed((): string => {
 }
 
 .card-btn.danger {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-text);
 }
 
 .card-btn.danger:hover {

@@ -146,10 +146,10 @@ const onTrayFocusOut = (e: FocusEvent): void => {
   align-items: center;
   gap: 6px;
   padding: var(--spacing-xs) var(--spacing-md);
-  border: var(--chip-border) solid var(--color-danger);
+  border: var(--chip-border) solid var(--color-danger-text);
   border-radius: 999px;
   background: transparent;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--chip-font-size);
   font-weight: var(--control-font-weight);
   white-space: nowrap;
@@ -159,6 +159,7 @@ const onTrayFocusOut = (e: FocusEvent): void => {
 
 .side-choice:hover:not(:disabled) {
   background: var(--color-danger);
+  border-color: var(--color-danger);
   color: #fff;
 }
 

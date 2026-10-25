@@ -91,7 +91,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 
-`stargazer.prefs` holds two fields, `gridInfo` for Grid Info and `theme` for the site's look, and a write replaces its own field and keeps the other. In `gridInfo` a missing or non-boolean field takes its default, and a value that does not parse is replaced with the defaults. `theme` is `"light"` or `"dark"`, written only when the top bar's light and dark button is pressed; while it is missing or holds anything else, the site shows the light look. The example shows the Grid Info defaults with the dark look picked:
+`stargazer.prefs` holds two fields, `gridInfo` for Grid Info and `theme` for the site's look, and a write replaces its own field and keeps the other. In `gridInfo` a missing or non-boolean field takes its default, and a value that does not parse is replaced with the defaults. `theme` is `"light"` or `"dark"`, written only when the top bar's light and dark button is pressed; while it is missing or holds anything else, the site follows the device's light or dark setting, live. The example shows the Grid Info defaults with the dark look picked:
 
 ```json
 {
@@ -114,7 +114,7 @@ Only links (`?g=`) and the Arena board use the binary format; everything else st
 
 Window size is read only through `src/utils/viewport.ts`. ESLint bans `window.innerWidth` and `innerHeight` elsewhere, because they include classic scrollbars that fixed overlays are not laid out against.
 
-The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs`, and `useTheme` takes it over after mount. An element carrying `data-theme` keeps that look inside it whatever the site's look, and a dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
+The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs` or else the device's setting, and `useTheme` takes it over after mount. An element carrying `data-theme` keeps that look inside it whatever the site's look, and a dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
 
 Every modal uses `useScrollLock`, `useFocusTrap` and `useOverlay` through `BaseModal`: page scrolling locks while it is open, focus stays inside and returns to the opener, and Escape or a click outside closes it.
 

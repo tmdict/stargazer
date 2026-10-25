@@ -4,12 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubLocalStorage } from '../fixtures/storage'
 
-/* The stored choice beside Grid Info's field of stargazer.prefs, and another
- * tab's choice reaching this one. */
+/* The stored choice beside Grid Info's field of stargazer.prefs, another
+ * tab's choice reaching this one, and the device deciding while nothing is
+ * stored. */
 
 const PREFS_KEY = 'stargazer.prefs'
 
 let storage: Map<string, string>
+
+// The device's light or dark setting; jsdom has no matchMedia.
+const device = {
+  matches: false,
+  listeners: new Set<() => void>(),
+  set(dark: boolean) {
+    this.matches = dark
+    this.listeners.forEach((listener) => listener())
+  },
+}
 
 const mountTheme = async () => {
   const { useTheme } = await import('@/composables/useTheme')
@@ -37,6 +48,15 @@ describe('useTheme', () => {
     vi.resetModules()
     vi.stubEnv('SSR', false)
     ;({ storage } = stubLocalStorage())
+    device.matches = false
+    device.listeners.clear()
+    vi.stubGlobal('matchMedia', () => ({
+      get matches() {
+        return device.matches
+      },
+      addEventListener: (_: string, listener: () => void) => device.listeners.add(listener),
+      removeEventListener: (_: string, listener: () => void) => device.listeners.delete(listener),
+    }))
     document.documentElement.setAttribute('data-theme', 'light')
   })
 
@@ -58,14 +78,27 @@ describe('useTheme', () => {
     })
   })
 
-  it("follows another tab's choice, reading anything but dark as light", async () => {
+  it("follows another tab's choice, and the device when the value is not a look", async () => {
+    device.matches = true
     const { theme } = await mountTheme()
 
-    writeFromOtherTab(JSON.stringify({ theme: 'dark' }))
-    expect(look()).toBe('dark')
-    expect(theme.value).toBe('dark')
+    writeFromOtherTab(JSON.stringify({ theme: 'light' }))
+    expect(look()).toBe('light')
+    expect(theme.value).toBe('light')
 
     writeFromOtherTab(JSON.stringify({ theme: 'blue' }))
+    expect(look()).toBe('dark')
+  })
+
+  it('follows the device until the button is pressed', async () => {
+    const { toggle } = await mountTheme()
+
+    device.set(true)
+    expect(look()).toBe('dark')
+
+    toggle()
+    device.set(false)
+    device.set(true)
     expect(look()).toBe('light')
   })
 })

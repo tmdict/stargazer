@@ -99,7 +99,7 @@ const handleClick = (): void => {
 .danger {
   width: calc(18px * var(--dock-scale));
   height: calc(18px * var(--dock-scale));
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .primary {
