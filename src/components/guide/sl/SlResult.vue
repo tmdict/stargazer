@@ -38,6 +38,8 @@ import { computed, ref } from 'vue'
 
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
+import IconHelp from '@/components/ui/IconHelp.vue'
+import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { teamPreviewBoards } from '@/lib/teams/preview'
@@ -83,10 +85,12 @@ const {
         <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
       </span>
       <span class="sl-actions">
-        <button type="button" class="sl-btn" @click="explaining = true">
+        <button type="button" class="solid-btn sl-action outline" @click="explaining = true">
+          <IconHelp :size="14" />
           {{ i18n.t('app.sl-explain') }}
         </button>
-        <button type="button" class="sl-btn" @click="emit('save')">
+        <button type="button" class="solid-btn sl-action" @click="emit('save')">
+          <IconSavePlus :size="14" />
           {{ i18n.t('app.sl-save') }}
         </button>
       </span>
@@ -196,14 +200,14 @@ const {
 .sl-actions {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .sl-maps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
-  padding: 12px 16px 16px;
+  padding: 24px 16px;
 }
 
 /* Three to a row on a tablet and two on a phone, with smaller portraits. */
@@ -223,7 +227,7 @@ const {
     --sl-aside-offset: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 10px;
-    padding: 10px;
+    padding: 18px 10px;
   }
 }
 </style>

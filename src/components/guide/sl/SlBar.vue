@@ -86,7 +86,7 @@ const {
     </button>
     <button
       type="button"
-      class="solid-btn sl-go"
+      class="solid-btn sl-action"
       :disabled="!ready || busy"
       :aria-busy="busy"
       @click="emit('generate')"
@@ -117,19 +117,6 @@ const {
   gap: var(--spacing-sm);
 }
 
-/* Sized as the bar's compact buttons, and on a phone as tall as their round
-   icons, keeping its label there. */
-.sl-go {
-  min-height: var(--control-height-compact);
-  padding: var(--spacing-xs) var(--spacing-md);
-  font-size: var(--control-font-size);
-}
-
-.sl-go:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .file-input {
   display: none;
 }
@@ -142,16 +129,6 @@ const {
     min-width: 0;
     --dropdown-trigger-width: 100%;
     --dropdown-trigger-min-width: 0;
-  }
-  .sl-go {
-    min-height: var(--control-height-tablet);
-    border-radius: 999px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sl-go {
-    min-height: var(--control-height-mobile);
   }
 }
 </style>
