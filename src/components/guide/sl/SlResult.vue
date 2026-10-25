@@ -228,8 +228,9 @@ const {
 
 /* Five to a row while a column holds a swap row of four portraits: at 40px
    from 1360px wide, at 34px from 1170px. Below that, three to a row on six
-   half columns, so a last row of two sits centred, and two to a row from
-   710px, where three columns no longer hold that row. */
+   half columns, so a last row of two sits centred. From 710px, where three
+   columns no longer hold that row, one to a row at full size, no wider than
+   420px. */
 @container (max-width: 1360px) {
   .sl-maps {
     --pt: 34px;
@@ -252,7 +253,12 @@ const {
 
 @container (max-width: 710px) {
   .sl-maps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --pt: 40px;
+    --pt-gap: 15px;
+    --sl-aside-offset: 0;
+    grid-template-columns: minmax(0, 420px);
+    justify-content: center;
+    row-gap: 32px;
   }
   .sl-maps > *,
   .sl-maps > :nth-child(3n + 1):nth-last-child(2) {
@@ -262,20 +268,7 @@ const {
 
 @container (max-width: 600px) {
   .sl-maps {
-    --pt: 26px;
-    --pt-gap: 5px;
-    --sl-aside-offset: 0;
-    gap: 20px 10px;
     padding: 18px 10px;
-  }
-}
-
-/* The narrowest phones: a swap row of four portraits still fits its column. */
-@container (max-width: 340px) {
-  .sl-maps {
-    --pt: 24px;
-    --pt-gap: 4px;
-    column-gap: 8px;
   }
 }
 </style>

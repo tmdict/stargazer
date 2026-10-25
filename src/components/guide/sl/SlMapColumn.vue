@@ -236,35 +236,4 @@ const record = computed(() => {
   margin: 0 6px;
   color: var(--color-primary);
 }
-/* Two maps to a row on a phone (SlResult): the record takes smaller type and
-   may wrap. */
-@container (max-width: 600px) {
-  .sl-aside-in {
-    column-gap: 6px;
-  }
-  .sl-stats {
-    flex-wrap: wrap;
-    gap: 2px 8px;
-    font-size: 13px;
-  }
-  .sl-stat:first-child {
-    min-width: 0;
-  }
-  .sl-stat small {
-    font-size: 11px;
-  }
-  .sl-small-icon {
-    width: 15px;
-    height: 15px;
-  }
-  .sl-label .sl-icon {
-    width: 18px;
-    height: 18px;
-  }
-  .sl-arrow {
-    width: 14px;
-    height: 14px;
-    margin: 0 3px;
-  }
-}
 </style>
