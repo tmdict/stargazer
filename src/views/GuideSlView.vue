@@ -19,6 +19,7 @@ import RosterEditor from '@/components/RosterEditor.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { slPercent } from '@/components/guide/sl/useSlNames'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { readTeamsSlot } from '@/composables/useGridPersistence'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useToast } from '@/composables/useToast'
 import {
@@ -34,6 +35,7 @@ import type { SlData, SlPick, SlSample } from '@/lib/pvp/sl/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { MAX_SAVED_TEAMS, TEAM_VARIANTS } from '@/lib/teams/modes'
+import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
 import { reloadOntoCurrentBuild } from '@/router/routes'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -52,7 +54,7 @@ const rosters = useRosters()
 const library = useTeamLibrary()
 const route = useRoute()
 const router = useRouter()
-const { error, success } = useToast()
+const { error, success, show } = useToast()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 
@@ -209,12 +211,26 @@ const generate = async (): Promise<void> => {
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+// Save as team replaces the Teams page's 5v5 boards, so boards there holding
+// work no saved team keeps take a second press, as the app's other
+// replacing and removing buttons do.
+const replacesWork = (): boolean => {
+  const slot = readTeamsSlot('5v5')
+  return slot !== null && holdsUnsavedWork(slot.data, library.get(slot.sourceId))
+}
+const saveArmed = computed(() => armedConfirm.armed.value === 'save-team')
+
 // The saved team holds the levels the set was chosen with, not the levels
 // shown since. A team kept only in memory still opens on the Teams page. A
 // second press while that page loads saves nothing more.
 let saving = false
 const save = (): void => {
   if (!shown.value || saving) return
+  const replacing = replacesWork()
+  if (replacing && !armedConfirm.confirm('save-team')) {
+    show(i18n.t('app.sl-save-replaces'), 'info')
+    return
+  }
   const name = i18n.t('app.sl-team-name', { chance: slPercent(shown.value.chance) })
   const team = library.saveAsNew('5v5', shown.value.data, name)
   if (!team) {
@@ -227,7 +243,7 @@ const save = (): void => {
     return
   }
   if (!library.persisted) error(i18n.t('app.team-not-stored'))
-  else success(i18n.t('app.team-saved', { name: team.name }))
+  else success(i18n.t(replacing ? 'app.sl-saved-replaced' : 'app.team-saved', { name: team.name }))
   saving = true
   void router.push({ path: '/teams', state: { openTeam: team.id } }).finally(() => {
     saving = false
@@ -282,7 +298,7 @@ const save = (): void => {
     <p v-if="failed" class="sl-line sl-note">{{ i18n.t('app.sl-load-failed') }}</p>
 
     <div v-if="mounted" ref="result" class="sl-result-slot">
-      <SlResult v-if="shown" :shown @save="save" />
+      <SlResult v-if="shown" :shown :save-armed @save="save" />
       <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set') }}</p>
     </div>
 
@@ -294,6 +310,7 @@ const save = (): void => {
         :source-key="rosters.activeId"
         :armed-confirm
         hide-mechanics
+        large-dock
         @edit="edit"
       />
     </section>

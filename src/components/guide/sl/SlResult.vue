@@ -38,15 +38,16 @@ import { computed, ref } from 'vue'
 
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
-import { slPercent } from './useSlNames'
+import { slMood, slPercent } from './useSlNames'
 
-const { shown } = defineProps<{ shown: SlShown }>()
+const { shown, saveArmed } = defineProps<{ shown: SlShown; saveArmed: boolean }>()
 
 const emit = defineEmits<{ save: [] }>()
 
@@ -82,6 +83,7 @@ const {
             }}<IconHelpSmall :size="14" class="sl-help-mark" aria-hidden="true" />
           </button>
           <b>{{ slPercent(shown.chance) }}</b>
+          <span class="sl-mood" aria-hidden="true">{{ slMood(shown.chance) }}</span>
         </span>
         <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
       </span>
@@ -90,9 +92,15 @@ const {
           <IconHelpSmall :size="14" />
           {{ i18n.t('app.sl-explain') }}
         </button>
-        <button type="button" class="solid-btn sl-action" @click="emit('save')">
+        <button
+          type="button"
+          class="solid-btn sl-action"
+          :class="{ 'confirm-armed': saveArmed }"
+          :title="saveArmed ? i18n.t('app.sl-save-replaces') : undefined"
+          @click="emit('save')"
+        >
           <IconSavePlus :size="14" />
-          {{ i18n.t('app.sl-save') }}
+          <ConfirmLabel :armed="saveArmed" :label="i18n.t('app.sl-save')" />
         </button>
       </span>
     </div>
@@ -152,6 +160,12 @@ const {
 .sl-chance-note {
   font-size: 13px;
   line-height: 1.4;
+}
+
+.sl-mood {
+  margin-left: -4px;
+  font-size: 22px;
+  line-height: 1;
 }
 
 .sl-chance b {

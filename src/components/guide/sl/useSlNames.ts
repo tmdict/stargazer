@@ -8,6 +8,39 @@ import { curatedHeroName } from '@/utils/skillLabels'
 export const slPercent = (chance: number): string =>
   chance < 0.005 ? '<1%' : chance > 0.995 ? '>99%' : `${Math.round(chance * 100)}%`
 
+// An emoji beside a chance, by the whole percentage slPercent shows: each
+// entry holds from its percentage up to the next.
+const MOODS: readonly (readonly [number, string])[] = [
+  [99, '👑'],
+  [95, '🏆'],
+  [90, '🚀'],
+  [85, '🔥'],
+  [80, '💪'],
+  [75, '😎'],
+  [70, '🎯'],
+  [65, '😄'],
+  [60, '🙂'],
+  [55, '👍'],
+  [50, '🪙'],
+  [45, '😐'],
+  [40, '🤞'],
+  [35, '😬'],
+  [30, '😅'],
+  [25, '😓'],
+  [20, '😰'],
+  [15, '😱'],
+  [10, '🥶'],
+  [5, '🙏'],
+  [2, '🕯️'],
+  [1, '💀'],
+  [0, '🪦'],
+]
+
+export const slMood = (chance: number): string => {
+  const percent = Math.round(chance * 100)
+  return MOODS.find(([from]) => percent >= from)![1]
+}
+
 /* A team's group named in the site language: by the name the data file gives
  * it in this language, else by its core heroes, as the guide names a team the
  * report has no name for. */

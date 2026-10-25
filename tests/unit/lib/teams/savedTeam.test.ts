@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
-import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
+import {
+  canonicalTeamData,
+  holdsUnsavedWork,
+  validateSavedTeam,
+  type SavedTeam,
+} from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
@@ -171,5 +176,48 @@ describe('uniqueName', () => {
     const numbered = uniqueName([long], long)
     expect(numbered).toHaveLength(MAX_NAME_LENGTH)
     expect(numbered.endsWith(' - 2')).toBe(true)
+  })
+})
+
+describe('holdsUnsavedWork', () => {
+  const saved = (data: string): SavedTeam => ({
+    id: 't1',
+    name: 'Team 1',
+    mode: '3v3',
+    data: canonicalTeamData(data)!,
+    createdAt: 0,
+    updatedAt: 0,
+  })
+  const EMPTY: MultiGridState = {
+    boards: [{ m: 'arena1' }, { m: 'arena2' }, { m: 'arena3' }],
+    mode: '3v3',
+  }
+
+  it('is false for boards that match their saved team, whatever the view', () => {
+    expect(
+      holdsUnsavedWork(encode({ ...THREE_BOARDS, active: 1, d: 3 }), saved(encode(THREE_BOARDS))),
+    ).toBe(false)
+  })
+
+  it('is true for boards edited since their saved team', () => {
+    const moved = encode({
+      ...THREE_BOARDS,
+      boards: [{ m: 'arena1', c: [[2, 11, Team.ALLY]] }, { m: 'arena2' }, { m: 'arena3' }],
+    })
+    expect(holdsUnsavedWork(moved, saved(encode(THREE_BOARDS)))).toBe(true)
+  })
+
+  it('without a saved team, is true only for boards holding a unit or an artifact', () => {
+    expect(holdsUnsavedWork(encode(THREE_BOARDS), undefined)).toBe(true)
+    expect(
+      holdsUnsavedWork(
+        encode({
+          ...EMPTY,
+          boards: [{ m: 'arena1', a: [5, null] }, { m: 'arena2' }, { m: 'arena3' }],
+        }),
+        undefined,
+      ),
+    ).toBe(true)
+    expect(holdsUnsavedWork(encode(EMPTY), undefined)).toBe(false)
   })
 })

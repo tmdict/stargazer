@@ -58,6 +58,22 @@ export interface ActiveSlot {
   sourceId: string | null
 }
 
+/* A mode's saved boards, or null when there are none to read. */
+export const readTeamsSlot = (mode: TeamModeKey): ActiveSlot | null => {
+  const raw = readStorage(teamsSlotKey(mode))
+  if (!raw) return null
+  try {
+    const slot = JSON.parse(raw) as ActiveSlot
+    if (typeof slot.data !== 'string') return null
+    return {
+      data: slot.data,
+      sourceId: typeof slot.sourceId === 'string' ? slot.sourceId : null,
+    }
+  } catch {
+    return null
+  }
+}
+
 interface GridPersistence {
   load: () => string | null
   startAutosave: () => void
@@ -143,20 +159,7 @@ export function useTeamsPersistence(
       return isTeamModeKey(stored) ? stored : null
     },
     persistMode: (next) => writeStorage(TEAMS_MODE_KEY, next),
-    load: (target) => {
-      const raw = readStorage(teamsSlotKey(target))
-      if (!raw) return null
-      try {
-        const slot = JSON.parse(raw) as ActiveSlot
-        if (typeof slot.data !== 'string') return null
-        return {
-          data: slot.data,
-          sourceId: typeof slot.sourceId === 'string' ? slot.sourceId : null,
-        }
-      } catch {
-        return null
-      }
-    },
+    load: readTeamsSlot,
     snapshot,
     // Inert until startAutosave marks this instance as the slot's writer: on a
     // degraded page (data never loaded, initialize skipped) a flush would

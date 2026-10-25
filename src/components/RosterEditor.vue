@@ -49,6 +49,9 @@ const props = defineProps<{
   sourceKey: string | null
   armedConfirm: ReturnType<typeof useArmedConfirm>
   hideMechanics?: boolean
+  // For a host whose dock is the larger one (--dock-scale 1.4): its rows
+  // stack at the widths that size needs.
+  largeDock?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -312,7 +315,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
 </script>
 
 <template>
-  <div class="roster-editor" :class="{ selecting }">
+  <div class="roster-editor" :class="{ selecting, 'large-dock': largeDock }">
     <UpgradeDock v-if="selecting" class="roster-dock">
       <div class="dock-rows select-rows">
         <span class="dock-group">
@@ -484,10 +487,16 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   gap: var(--picker-row-gap);
 }
 
-/* The dock takes two rows below the width its one row needs at scale 1.4,
-   the largest a host sets, in English, the widest language. */
+/* The dock takes two rows below the width its one row needs in English, the
+   widest language: at the Rosters tab's scale by default (1.2), at the
+   generator's with largeDock (1.4). Select mode's row is the longer one, and
+   its level labels show only once its rows stack. */
 .roster-dock {
-  container-type: inline-size;
+  container: roster-dock / inline-size;
+}
+
+.large-dock .roster-dock {
+  container-name: roster-dock-large;
 }
 
 .dock-rows {
@@ -504,7 +513,11 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   gap: var(--spacing-sm);
 }
 
-@container (max-width: 660px) {
+.level-label {
+  display: none;
+}
+
+@container roster-dock (max-width: 580px) {
   .dock-rows {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -517,7 +530,20 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   }
 }
 
-@container (max-width: 765px) {
+@container roster-dock-large (max-width: 660px) {
+  .dock-rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  .dock-group {
+    display: contents;
+  }
+  .dock-divider {
+    display: none;
+  }
+}
+
+@container roster-dock (max-width: 665px) {
   .select-rows {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -539,11 +565,35 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
   .done-slot {
     justify-self: end;
   }
+  .level-label {
+    display: inline;
+  }
 }
 
-@container (min-width: 766px) {
-  .level-label {
+@container roster-dock-large (max-width: 765px) {
+  .select-rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  .select-rows .dock-group {
+    display: contents;
+  }
+  .select-rows .dock-divider {
     display: none;
+  }
+  .tick-controls,
+  .done-slot {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .tick-controls {
+    justify-self: start;
+  }
+  .done-slot {
+    justify-self: end;
+  }
+  .level-label {
+    display: inline;
   }
 }
 
