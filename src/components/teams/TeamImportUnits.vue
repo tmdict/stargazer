@@ -9,7 +9,7 @@
    frame (useTilePlacing).
    Every edit is an override on the shot; nothing here touches a board. */
 
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 import ImportCell from '@/components/import/ImportCell.vue'
 import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
@@ -68,6 +68,7 @@ const emit = defineEmits<{
 
 const i18n = useI18nStore()
 const { unitName, unitImage } = useUnitLabels()
+const svgId = useId()
 
 // ---------- units ----------
 
@@ -359,6 +360,7 @@ const tileBoxes = (): HTMLInputElement[] => [
         <div ref="boardFrame" class="board-frame">
           <svg class="board-view" :viewBox="shotBoard.viewBox">
             <image
+              :id="`${svgId}-shot`"
               :href="shot.thumb"
               x="0"
               y="0"
@@ -380,6 +382,18 @@ const tileBoxes = (): HTMLInputElement[] => [
               @mouseenter="hoveredTile = { side: tile.side, hexId: tile.hexId }"
               @mouseleave="hoveredTile = null"
             />
+            <!-- A portrait reaches into the tile behind its own, so the screenshot is
+                 drawn again over the tint, cut to the portraits. -->
+            <clipPath :id="`${svgId}-portraits`">
+              <circle
+                v-for="ring in shotBoard.rings"
+                :key="ring.index"
+                :cx="ring.x"
+                :cy="ring.y"
+                :r="ring.radius"
+              />
+            </clipPath>
+            <use :href="`#${svgId}-shot`" :clip-path="`url(#${svgId}-portraits)`" />
             <circle
               v-for="ring in shotBoard.rings"
               :key="`ring-${ring.index}`"
