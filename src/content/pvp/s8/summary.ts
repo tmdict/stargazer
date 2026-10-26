@@ -5,6 +5,8 @@ import type { PvpSeasonSummary } from '@/lib/types/pvp'
  * made here is lost with the next copy. */
 export const S8: PvpSeasonSummary = {
   season: 8,
+  live: true,
+  league: 1,
   languages: ['en', 'zh', 'ko'],
   teams: [
     { id: 'rolan-twins-mehira-sylph', name: { en: 'Rolan/Twins/Mehira/Sylph', zh: '罗兰／双子／魅魔／鸟神', ko: '로란 대제/일리아&라이라/메히라/실피라' }, heroes: ['elijah-lailah', 'mehira', 'rolan', 'sylphira'], games: 159, rating: 3.11, tier: 1 },

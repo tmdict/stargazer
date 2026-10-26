@@ -16,8 +16,10 @@ const props = defineProps<{ seasons: readonly PvpSeasonSummary[]; lang: AppLocal
 const CHIP_COUNT = 6
 
 const label = (key: string): string => appLabel(key, props.lang)
-const title = (season: number): string =>
-  `${interpolate(label('season'), { n: season })} ${label('pvp-report')}`
+const title = ({ season, league }: PvpSeasonSummary): string =>
+  `${interpolate(label('season'), { n: season })} ${
+    league ? interpolate(label('league-report'), { n: league }) : label('pvp-report')
+  }`
 </script>
 
 <template>
@@ -25,10 +27,9 @@ const title = (season: number): string =>
     <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
       <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
         <h2>
-          {{ title(summary.season) }}
-          <span v-if="!reportReadsIn(summary, lang)" class="report-language">{{
-            label('english')
-          }}</span>
+          {{ title(summary) }}
+          <span v-if="summary.live" class="badge current">{{ label('current-season') }}</span>
+          <span v-if="!reportReadsIn(summary, lang)" class="badge">{{ label('english') }}</span>
         </h2>
         <IconChevronRight :size="18" />
       </a>
@@ -64,7 +65,8 @@ const title = (season: number): string =>
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.report-language {
+.badge {
+  display: inline-block;
   margin-left: 6px;
   padding: 0 7px;
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -73,7 +75,12 @@ const title = (season: number): string =>
   font-weight: 600;
   line-height: 18px;
   color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
   vertical-align: middle;
+}
+.badge.current {
+  border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+  color: var(--color-accent);
 }
 
 .chips {
