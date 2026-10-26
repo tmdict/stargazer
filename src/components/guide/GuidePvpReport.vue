@@ -40,7 +40,7 @@ const title = computed(() => {
       <div class="chips">
         <a
           v-for="team in mostPlayedTeams(summary, CHIP_COUNT)"
-          :key="team.id"
+          :key="team.name.en"
           class="chip"
           :href="`${pvpReportHref(summary.season, lang)}#comps`"
         >
