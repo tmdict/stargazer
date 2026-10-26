@@ -21,5 +21,4 @@ export const SKILL_COLORS = {
   lilac: 'var(--skill-lilac)', // dunlingr (curelock)
   orchid: 'var(--skill-orchid)', // kulu (breakable tiles)
   slate: 'var(--skill-slate)', // kulu (demolition zone)
-  white: 'var(--skill-white)', // phraesto
 } as const

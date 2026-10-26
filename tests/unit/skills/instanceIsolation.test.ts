@@ -184,7 +184,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
 
     expect([...grid.companionLinks.keys()].sort()).toEqual(['200050-1', '50-1'])
     const colorKeys = [...sm.getColorModifiersByCharacterAndTeam().keys()].sort()
-    expect(colorKeys).toEqual(['10050-1', '200050-1', '210050-1', '50-1'])
+    expect(colorKeys).toEqual(['10050-1', '210050-1'])
   })
 
   it('a tile-highlight copy survives an update cycle without touching the base paint', () => {
