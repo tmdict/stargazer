@@ -3,9 +3,10 @@
    then the comp's record on the map, the core heroes to keep and the swaps
    recorded in place of one hero or two. A win rate shows from eight decided
    games, green from 60% and red to 40%, as the report colours one. Its host
-   sizes it: --pt for the portraits, and --sl-scale for the gaps and icons of
-   the core and swap rows (1 on the generator's page, smaller on the guide
-   index's card, which shows no record). */
+   sizes it: --pt for the portraits, and --sl-unit, the length of one of the
+   generator page's pixels, for the gaps and icons of the core and swap rows
+   (1px there, a share of its column's width on the guide index's card, which
+   shows no record). */
 
 import { computed } from 'vue'
 
@@ -138,10 +139,10 @@ const record = computed(() => {
 }
 
 .sl-aside {
-  --s: var(--sl-scale, 1);
+  --u: var(--sl-unit, 1px);
   display: flex;
   justify-content: safe center;
-  margin-top: calc(16px * var(--s));
+  margin-top: calc(16 * var(--u));
   padding-right: var(--sl-aside-offset, 34%);
 }
 
@@ -149,12 +150,12 @@ const record = computed(() => {
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
-  column-gap: calc(10px * var(--s));
-  row-gap: calc(8px * var(--s));
+  column-gap: calc(10 * var(--u));
+  row-gap: calc(8 * var(--u));
 }
 
 .sl-aside-in .start {
-  margin-top: calc(14px * var(--s));
+  margin-top: calc(14 * var(--u));
 }
 
 .sl-stats {
@@ -204,8 +205,8 @@ const record = computed(() => {
 }
 
 .sl-label .sl-icon {
-  width: calc(24px * var(--s));
-  height: calc(24px * var(--s));
+  width: calc(24 * var(--u));
+  height: calc(24 * var(--u));
 }
 
 .sl-faces,
@@ -234,17 +235,17 @@ const record = computed(() => {
 
 .sl-options.stacked {
   flex-direction: column;
-  gap: calc(6px * var(--s));
+  gap: calc(6 * var(--u));
 }
 
 .sl-pair {
-  gap: 3px;
+  gap: calc(3 * var(--u));
 }
 
 .sl-arrow {
-  width: calc(18px * var(--s));
-  height: calc(18px * var(--s));
-  margin: 0 calc(6px * var(--s));
+  width: calc(18 * var(--u));
+  height: calc(18 * var(--u));
+  margin: 0 calc(6 * var(--u));
   color: var(--color-primary);
 }
 </style>
