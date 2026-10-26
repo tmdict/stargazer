@@ -86,7 +86,7 @@ function isSlData(value: unknown): value is SlData {
   )
 }
 
-async function decodeSlData(bytes: Uint8Array): Promise<SlData> {
+export async function decodeSlData(bytes: Uint8Array): Promise<SlData> {
   const stream = new Blob([unscramble(bytes)])
     .stream()
     .pipeThrough(new DecompressionStream('deflate-raw'))

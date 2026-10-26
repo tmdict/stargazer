@@ -7,6 +7,7 @@ import { imagetools } from 'vite-imagetools'
 import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
+import { slPreview } from './scripts/slPreview.ts'
 import { GUIDE_PAGES, guidePath, SL_GENERATOR_PATH } from './src/lib/guide.ts'
 import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
@@ -169,7 +170,7 @@ function processRenderedPage(route: string, html: string): string {
 // Vite Config
 
 export default defineConfig({
-  plugins: [vue(), imagetools(), guideReports()],
+  plugins: [vue(), imagetools(), guideReports(), slPreview()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

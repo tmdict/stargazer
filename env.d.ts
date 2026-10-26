@@ -1,5 +1,11 @@
 /// <reference types="vite/client" />
 
+/** The Supreme League generator's set before a roster is picked (scripts/slPreview.ts). */
+declare module 'virtual:sl-preview' {
+  const set: import('@/lib/pvp/sl/defaultSet').SlDefaultSet | null
+  export default set
+}
+
 /**
  * Type declarations for vite-imagetools
  * Used for optimized images in content files
