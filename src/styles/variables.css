@@ -264,7 +264,10 @@
   --board-gutter: var(--spacing-md);
   --bottom-sheet-clearance: 64px;
 
+  --tile-highlight-fill: rgba(255, 255, 255, 0.3);
+  --tile-highlight-stroke: var(--color-primary);
   --tile-highlight-stroke-width: 3;
+  --tile-targeted-fill: rgba(247, 216, 124, 0.35);
   --invalid-drop-glow: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
 
   /* Transitions */
@@ -309,6 +312,9 @@
   --tile-hatch: rgba(255, 255, 255, 0.1);
   --tile-text: #8a95ab;
   --tile-coordinate: #737e93;
+  --tile-highlight-fill: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --tile-highlight-stroke: #a3ece4;
+  --tile-targeted-fill: rgba(247, 216, 124, 0.12);
   --unit-frame-ally: #5fd6cb;
   --unit-frame-enemy: #e2686f;
   --unit-disc: #2a313b;
