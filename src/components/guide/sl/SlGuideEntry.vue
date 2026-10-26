@@ -59,16 +59,20 @@ const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
 </template>
 
 <style scoped>
-/* The maps fill the card at the generator's proportions: a column is 229 of
-   its pixels wide there at 1280px, so one of them is a 229th of a column. */
+/* The maps fill the card at the generator's proportions, up to its own size.
+   There, at 1280px, a column is 229 of its pixels wide with 34px portraits
+   8px apart and 14px between columns, so one of its pixels is a 229th of a
+   column here, and never more than 1px. */
 .maps {
-  --sl-unit: calc((100cqw - 28px) / 3 / 229);
+  --gap: 14px;
+  --sl-unit: min(1px, (100cqw - 2 * var(--gap)) / 3 / 229);
   --pt: calc(34 * var(--sl-unit));
   --pt-gap: calc(8 * var(--sl-unit));
   container-type: inline-size;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 229px));
+  justify-content: center;
+  column-gap: var(--gap);
   margin-top: 14px;
 }
 </style>

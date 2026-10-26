@@ -1,8 +1,8 @@
 import type { PvpSeasonSummary } from '@/lib/types/pvp'
 
-/* Season 7: the report's team groups, most played first.
- * Generated with the report and copied in beside its template, so an edit
- * made here is lost with the next copy. */
+/* Season 7: the teams on its report's counter ladder, most played first, as
+ * its report's summary gives them, in the shape the guide reads. Season 7's
+ * report is not built again, so this copy is kept by hand. */
 export const S7: PvpSeasonSummary = {
   season: 7,
   languages: ['en', 'zh', 'ko'],

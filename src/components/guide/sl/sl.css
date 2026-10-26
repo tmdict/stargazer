@@ -47,20 +47,3 @@
     min-height: var(--control-height-mobile);
   }
 }
-
-.sl-page .sl-board .tile:not(.tile-void) {
-  stroke-width: 1.5;
-}
-
-.sl-page .sl-board .tile-number {
-  stroke: none;
-  font-weight: 600;
-}
-
-.sl-page .sl-board .tile-number:is(.zone-void, .zone-blocked, .zone-breakable, .occupied) {
-  display: none;
-}
-
-.sl-page .sl-board .unit-frame {
-  stroke-width: 2;
-}

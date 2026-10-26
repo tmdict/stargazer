@@ -17,7 +17,11 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlChoice, SlData, SlMap, SlPick } from './types'
+import type { SlChoice, SlChoiceTeam, SlData, SlMap, SlPick } from './types'
+
+// The season a chosen team comes from: this season's, or the season before's.
+export const choiceSeason = (data: SlData, choice: Pick<SlChoiceTeam, 'source'>) =>
+  choice.source === 0 ? data : data.before!
 
 const mapConfig = ({ key, grid }: SlMap): MapConfig => ({
   id: 0,
@@ -39,7 +43,7 @@ export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]
     ]),
   )
   const boards = set.teams.map((choice): BoardInput => {
-    const season = choice.source === 0 ? data : data.before!
+    const season = choiceSeason(data, choice)
     const team = season.teams[choice.team]!
     const { c, s } = team.placements[choice.placement]!
     const map = data.maps[team.map]!
