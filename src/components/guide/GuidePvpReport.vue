@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* The guide index's report entries: one block per season, newest first,
-   each linking to its static report with the season's most played team
-   groups as chips. */
+/* A season's report card on the guide index: its title links to the static
+   report, with the season's most played team groups as chips. */
+
+import { computed } from 'vue'
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
@@ -11,23 +12,25 @@ import type { PvpSeasonSummary } from '@/lib/types/pvp'
 import { interpolate } from '@/utils/interpolate'
 import { appLabel, pvpTeamName } from '@/utils/skillLabels'
 
-const props = defineProps<{ seasons: readonly PvpSeasonSummary[]; lang: AppLocale }>()
+const props = defineProps<{ summary: PvpSeasonSummary; lang: AppLocale }>()
 
 const CHIP_COUNT = 6
 
 const label = (key: string): string => appLabel(key, props.lang)
-const title = ({ season, league }: PvpSeasonSummary): string =>
-  `${interpolate(label('season'), { n: season })} ${
+const title = computed(() => {
+  const { season, league } = props.summary
+  return `${interpolate(label('season'), { n: season })} ${
     league ? interpolate(label('league-report'), { n: league }) : label('pvp-report')
   }`
+})
 </script>
 
 <template>
   <article class="container page-panel guide-panel">
-    <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
+    <section class="content guide-link">
       <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
         <h2>
-          {{ title(summary) }}
+          {{ title }}
           <span v-if="summary.live" class="badge current">{{ label('current-season') }}</span>
           <span v-if="!reportReadsIn(summary, lang)" class="badge">{{ label('english') }}</span>
         </h2>
@@ -52,19 +55,6 @@ const title = ({ season, league }: PvpSeasonSummary): string =>
 </template>
 
 <style scoped>
-/* GuideView stretches this panel to its row neighbour; the last season grows
-   into that space so none of the panel is left unclickable. */
-.guide-panel {
-  display: flex;
-  flex-direction: column;
-}
-.season:last-child {
-  flex: 1;
-}
-.season + .season {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .badge {
   display: inline-block;
   margin-left: 6px;
