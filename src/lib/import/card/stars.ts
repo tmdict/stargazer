@@ -1,35 +1,41 @@
-/* Refinement from the star row above the face. The row starts a fixed
- * distance above the card box's centre, and the seven-row band with the most
- * bright pixels within ROW_SLACK rows of there absorbs the frame match's
- * residual error. Stars are bright blobs with dark gaps between them: the
- * count is the number of peaks across the band, and the colour family comes
- * from the bright pixels at the peaks. A row gains a star every five
- * exclusive-weapon levels, and refinement starts only once it holds six, so a
- * short row is R0. It waits for review when a refined family's colour is
- * strong, as two stars can merge or one hide on a blurred capture.
+/* Refinement from the star row above the face. The row sits a fixed distance
+ * above the card box's centre, and a full row's six stars sit at fixed places
+ * across the card. A row gains a star every five exclusive-weapon levels, and
+ * refinement starts only once it holds six, so a short row is R0. A short row
+ * is centred too: an odd count puts its stars in the gaps between the six
+ * places, an even count leaves the outer places empty. The row is full when its
+ * inner places are brighter than the gaps between them and every place about as
+ * bright as the inner ones. Bright blobs are not counted: beside a short row the
+ * frame's side pieces and gold arcs and the hero's headwear are as bright as
+ * stars, and they can light the outer places on their own. The colour family
+ * comes from the bright pixels over the six places. A short row waits for
+ * review when a refined family's colour is strong, as a full row's outer stars
+ * can hide on a blurred capture.
  *
  * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
- * can add peaks at its ends and tint the colour toward a refined family, so
- * a refined reading is sure only when its family's evidence is strong: a
- * real refined row is one colour from end to end. A full R4 row, a pale
- * rainbow, stands out from R0 mainly by a faint pink tint, which resampling
- * can halve, so R0 is sure only when the row has none. */
+ * can tint the colour toward a refined family, so a refined reading is sure
+ * only when its family's evidence is strong: a real refined row is one colour
+ * from end to end. A full R4 row, a pale rainbow, stands out from R0 mainly by
+ * a faint pink tint, which resampling can halve, so R0 is sure only when the
+ * row has none. */
 
 import { hsvAt } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
 import type { RefinementReading, StarFamily } from './types'
 
 const BAND_ROWS = 7
-// The framed shot gives every card one size, and a frame matched a little
-// larger or smaller sits around the same card, so the row's top is this many
-// pixels above the box's centre whatever frame and scale matched (37.5 to 40.5
-// on labelled screenshots). The brightest band near the card's top is often
-// not the row but the winged frame's white band, or hair or a hat under the row.
-const ROW_ABOVE_CENTRE = 39
-const ROW_SLACK = 2
 const BRIGHT = 0.78
-const PEAK_BRIGHT = 0.72
-const PEAK_MIN_DISTANCE = 6
+const STAR_BRIGHT = 0.72
+// A place's brightness is its bright pixels over the three columns around it. A
+// full row's inner four places beat the gaps by `lead` on average, and none of
+// its places has less than `even` of the inner four's mean. On labelled
+// screenshots full rows' inner places beat the gaps by 2.3 or more and their
+// dimmest place has 0.82 of the inner mean or more; rows of three or five, whose
+// stars sit in the gaps, trail them by 2.5 or more, and rows of two or four
+// leave a place at 0.53 of the inner mean or less.
+const FULL = { lead: 1, even: 0.7 } as const
+// Colour is read within this many pixels of each place.
+const STAR_REACH = 4
 // Evidence a refined reading needs to be sure, about 85% of the weakest
 // correctly read row of each level on labelled screenshots: the purple share
 // (R1), colour strength and gold share (R2), red share (R3), and the share of
@@ -45,74 +51,66 @@ const SURE = {
   r0Pink: 0.01,
 } as const
 const PINK = 0.03
-// Read where the card puts the row, every refined row on labelled screenshots
-// counts six peaks, so a row of five peaks is short.
-const SHORT_ROW = 5
 
-/* The highest pixel row the star reader looks at for a card's box. */
-export const starRowTop = (box: Rect): number =>
-  box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE - ROW_SLACK
-
-const findBand = (shot: RgbaImage, box: Rect): Rect => {
-  const x0 = box.x + Math.round(box.w * 0.1)
-  const x1 = box.x + Math.round(box.w * 0.9)
-  const at = box.y + Math.round(box.h / 2) - ROW_ABOVE_CENTRE
-  let bestTop = at
-  let bestSum = -1
-  for (let top = starRowTop(box); top <= at + ROW_SLACK; top++) {
-    let sum = 0
-    for (let y = Math.max(0, top); y < Math.min(shot.height, top + BAND_ROWS); y++) {
-      for (let x = Math.max(0, x0); x < Math.min(shot.width, x1); x++) {
-        if (hsvAt(shot, x, y)[2] > BRIGHT) sum++
-      }
-    }
-    if (sum > bestSum) {
-      bestSum = sum
-      bestTop = top
-    }
-  }
-  return { x: x0, y: bestTop, w: x1 - x0, h: BAND_ROWS }
+/* Where a screen's cards hold their star row, measured from the card's box: the
+ * row's top `above` pixels over the box's centre, and a full row's six stars
+ * `pitch` apart, centred `left` pixels left of the box's middle. Each screen
+ * draws its cards' row in its own place, whatever frame matched. */
+export interface StarRow {
+  above: number
+  pitch: number
+  left: number
 }
 
-/* Column peaks of the band's bright pixels: one per star. */
-const findPeaks = (shot: RgbaImage, band: Rect): number[] => {
-  const profile: number[] = []
-  for (let x = band.x; x < band.x + band.w; x++) {
-    let c = 0
-    for (let y = band.y; y < band.y + band.h; y++) {
-      if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      if (hsvAt(shot, x, y)[2] > PEAK_BRIGHT) c++
-    }
-    profile.push(c)
+/* The highest pixel row the star reader looks at for a card's box. */
+export const starRowTop = (box: Rect, row: StarRow): number =>
+  box.y + Math.round(box.h / 2) - row.above
+
+/* The columns of a full row's six stars, left to right, and of the five gaps
+ * between them, where a row of five puts its stars. */
+const starPlaces = (box: Rect, row: StarRow): { places: number[]; gaps: number[] } => {
+  const centre = box.x + box.w / 2 - row.left
+  return {
+    places: [0, 1, 2, 3, 4, 5].map((k) => Math.round(centre + (k - 2.5) * row.pitch)),
+    gaps: [0, 1, 2, 3, 4].map((k) => Math.round(centre + (k - 2) * row.pitch)),
   }
-  const smooth = profile.map(
-    (_, i) => (profile[i - 1] ?? 0) + 2 * profile[i]! + (profile[i + 1] ?? 0),
+}
+
+const brightAround = (shot: RgbaImage, band: Rect, x: number): number => {
+  let n = 0
+  for (let y = band.y; y < band.y + band.h; y++) {
+    for (let xx = x - 1; xx <= x + 1; xx++) {
+      if (xx < 0 || y < 0 || xx >= shot.width || y >= shot.height) continue
+      if (hsvAt(shot, xx, y)[2] > STAR_BRIGHT) n++
+    }
+  }
+  return n
+}
+
+const mean = (values: readonly number[]): number =>
+  values.reduce((sum, v) => sum + v, 0) / values.length
+
+const isFull = (
+  shot: RgbaImage,
+  band: Rect,
+  { places, gaps }: { places: readonly number[]; gaps: readonly number[] },
+): boolean => {
+  const lit = places.map((x) => brightAround(shot, band, x))
+  const inner = mean(lit.slice(1, 5))
+  return (
+    inner - mean(gaps.map((x) => brightAround(shot, band, x))) >= FULL.lead &&
+    Math.min(...lit) >= FULL.even * inner
   )
-  const max = Math.max(...smooth)
-  if (max === 0) return []
-  const peaks: number[] = []
-  for (let i = 0; i < smooth.length; i++) {
-    const v = smooth[i]!
-    if (v < max * 0.5) continue
-    if (v < (smooth[i - 1] ?? 0) || v < (smooth[i + 1] ?? 0)) continue
-    const last = peaks[peaks.length - 1]
-    if (last !== undefined && i - last < PEAK_MIN_DISTANCE) {
-      if (v > smooth[last]!) peaks[peaks.length - 1] = i
-      continue
-    }
-    peaks.push(i)
-  }
-  return peaks.map((i) => band.x + i)
 }
 
 /* The share of the row's stars whose own bright pixels carry the pink tint. */
-const pinkStarShare = (shot: RgbaImage, band: Rect, peaks: readonly number[]): number => {
+const pinkStarShare = (shot: RgbaImage, band: Rect, places: readonly number[]): number => {
   let pink = 0
-  for (const p of peaks) {
+  for (const p of places) {
     let n = 0
     let m = 0
     for (let y = band.y; y < band.y + band.h; y++) {
-      for (let x = p - 4; x <= p + 4; x++) {
+      for (let x = p - STAR_REACH; x <= p + STAR_REACH; x++) {
         if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
         const [h, s, v] = hsvAt(shot, x, y)
         if (v < BRIGHT) continue
@@ -122,16 +120,21 @@ const pinkStarShare = (shot: RgbaImage, band: Rect, peaks: readonly number[]): n
     }
     if (n && m / n >= PINK) pink++
   }
-  return peaks.length ? pink / peaks.length : 0
+  return pink / places.length
 }
 
-export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
-  const band = findBand(shot, box)
-  const peaks = findPeaks(shot, band)
-  const stars = Math.min(6, peaks.length)
+export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementReading {
+  const stars = starPlaces(box, row)
+  const { places } = stars
+  const x0 = places[0]! - STAR_REACH
+  const band = {
+    x: x0,
+    y: starRowTop(box, row),
+    w: places[5]! + STAR_REACH + 1 - x0,
+    h: BAND_ROWS,
+  }
+  const full = isFull(shot, band, stars)
 
-  // Colour from bright pixels near the peaks, so a hat or crown under the
-  // row does not tint the reading.
   const hist = new Array<number>(12).fill(0)
   let n = 0
   let cx = 0
@@ -139,7 +142,7 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
   for (let y = band.y; y < band.y + band.h; y++) {
     for (let x = band.x; x < band.x + band.w; x++) {
       if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      if (peaks.length >= 2 && !peaks.some((p) => Math.abs(p - x) <= 4)) continue
+      if (!places.some((p) => Math.abs(p - x) <= STAR_REACH)) continue
       const [h, s, v] = hsvAt(shot, x, y)
       if (v < BRIGHT) continue
       n++
@@ -174,7 +177,7 @@ export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
         ? chroma >= SURE.chroma && gold >= SURE.gold
         : level === 3
           ? red >= SURE.red
-          : level === 4 && pinkStarShare(shot, band, peaks) >= SURE.pinkStars
-  if (stars <= SHORT_ROW) return { level: 0, stars, family, sure: !refined }
-  return { level, stars, family, sure: level === 0 ? magenta < SURE.r0Pink : refined }
+          : level === 4 && pinkStarShare(shot, band, places) >= SURE.pinkStars
+  if (!full) return { level: 0, full, family, sure: !refined }
+  return { level, full, family, sure: level === 0 ? magenta < SURE.r0Pink : refined }
 }

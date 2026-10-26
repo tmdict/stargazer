@@ -20,7 +20,7 @@ const reading = (
   card: createImage(1, 1),
   descriptor: new Float32Array(1),
   paragon: { level: paragon, score: 0.8, runnerUp: 0.5, sure: true },
-  refinement: { level: refinement, stars: 6, family: 'white', sure: true },
+  refinement: { level: refinement, full: true, family: 'white', sure: true },
 })
 
 // A slot at a key: h1 to h5 for the Hands, row.col down the grid.

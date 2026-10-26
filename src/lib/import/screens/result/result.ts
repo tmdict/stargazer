@@ -28,6 +28,7 @@ import {
   CARD_COLUMN_X,
   CARD_PITCH,
   CARD_ROWS,
+  CARD_STARS,
   CARD_TOP,
   HEADER_ICON,
   PANEL_GAP,
@@ -110,7 +111,7 @@ export function readScreenshot(capture: RgbaImage, refs: ResultReferences): Scre
   for (const team of [Team.ALLY, Team.ENEMY]) {
     const trusted = anchors[team].mean >= floor
     if (!trusted) warnings.push({ kind: 'no-panel', side: team })
-    sides[team] = readCards(shot, refs, columnSeeds(anchors[team]), trusted)
+    sides[team] = readCards(shot, refs, columnSeeds(anchors[team]), trusted, CARD_STARS)
     if (!trusted) continue
     sides[team].forEach((cell, row) => {
       if (!cell.recognised) warnings.push({ kind: 'unrecognised', side: team, row })

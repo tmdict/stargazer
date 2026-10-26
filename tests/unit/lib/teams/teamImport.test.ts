@@ -48,7 +48,7 @@ const hero = (characterId: number, paragon = 4, refinement = 0): HeroReading => 
   sure: true,
   descriptor: new Float32Array(1),
   paragon: { level: paragon, score: 0.7, runnerUp: 0.4, sure: true },
-  refinement: { level: refinement, stars: 6, family: 'white', sure: true },
+  refinement: { level: refinement, full: true, family: 'white', sure: true },
 })
 
 const reading = (

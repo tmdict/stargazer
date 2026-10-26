@@ -18,7 +18,7 @@
  * elimination the match screens settle by would pass weak readings as sure. */
 
 import { readCard, settleCards, type CardRead } from '../../card/card'
-import { starRowTop } from '../../card/stars'
+import { starRowTop, type StarRow } from '../../card/stars'
 import type { CardReferences, HeroReading, ParagonReading } from '../../card/types'
 import { cropResize, maskedNcc, resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
@@ -40,10 +40,15 @@ export const ROSTER_MIN_WIDTH = 600
 const CARD_ASPECT = 404 / 280
 // Cards are read on a copy where they are the frame templates' middle width.
 const READ_WIDTH = 280 * 0.265
+// The star row of a card read at READ_WIDTH, larger than a result card's: on the
+// labelled roster shots a refined row's stars are 9.8 to 10 px apart, centred
+// from 0.1 px right to 0.6 px left of the box's middle, and a seven-row band
+// centred on them starts 34.9 to 38.3 px above the box's centre.
+const CARD_STARS: StarRow = { above: 37, pitch: 9.85, left: 0.25 }
 // The star row's top as a share of a template box's height: the highest pixel row the
 // star reader looks at on the copy the cards are read from.
 const STAR_ROW =
-  starRowTop({ x: 0, y: 0, w: READ_WIDTH, h: READ_WIDTH * CARD_ASPECT }) /
+  starRowTop({ x: 0, y: 0, w: READ_WIDTH, h: READ_WIDTH * CARD_ASPECT }, CARD_STARS) /
   (READ_WIDTH * CARD_ASPECT)
 const COLUMNS = 6
 // The Hands of Resonance row holds five cards.
@@ -729,8 +734,8 @@ function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences, top = 0)
   return seeds.map((seed) => {
     const covered = seed.y < cut
     const read = covered
-      ? readCard(below, refs, { x: seed.x, y: seed.y - cut }, true)
-      : readCard(scaled, refs, seed, true)
+      ? readCard(below, refs, { x: seed.x, y: seed.y - cut }, true, CARD_STARS)
+      : readCard(scaled, refs, seed, true, CARD_STARS)
     const { x, w, h } = read.cell.box
     const y = read.cell.box.y + (covered ? cut : 0)
     const box = {

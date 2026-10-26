@@ -9,6 +9,7 @@
 import { Team } from '@/lib/types/team'
 import { readCards } from '../../card/card'
 import { heroDescriptor, rankHeroes } from '../../card/heroes'
+import type { StarRow } from '../../card/stars'
 import type { HeroReading } from '../../card/types'
 import { cropResize, maskedNcc } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
@@ -303,6 +304,11 @@ const CARD_PITCH_SLACK = 2
 const CARD_COUNT = 5
 // The comb mean a row must reach to be read at all.
 const ROW_FLOOR = 0.27
+// The star row of a card read at CARD_SCALE, larger than a result card's: on
+// the twenty formation shots a full row's stars are 10.4 to 10.5 px apart,
+// centred from 0.1 px right to 0.3 px left of the box's middle, and a seven-row
+// band centred on them starts 39 to 40.2 px above the box's centre.
+const CARD_STARS: StarRow = { above: 39, pitch: 10.5, left: 0.2 }
 // The artifact card before the row: its art disc's centre from the first
 // card's top-left and its diameter, in hex radii. Placed so on four capture
 // sets, where it reads all ten labelled artifacts.
@@ -374,7 +380,7 @@ function readCardRow(
     x: comb.x + i * comb.pitch,
     y: comb.y,
   }))
-  const cells = readCards(scaled.shot, refs, seeds, true)
+  const cells = readCards(scaled.shot, refs, seeds, true, CARD_STARS)
   if (!cells.some((cell) => cell.recognised)) return { cells: [], artifact: null }
   const s = scaled.fit.scale
   const artifact =

@@ -6,6 +6,7 @@
  * desktop captures measured. */
 
 import { Team } from '@/lib/types/team'
+import type { StarRow } from '../../card/stars'
 
 export const CANONICAL_WIDTH = 1150
 
@@ -33,6 +34,10 @@ export const CARD_PITCH_RANGE = [95, 104] as const
 export const CARD_TOP = 237
 export const PANEL_GAP = 710
 export const PANEL_GAP_RANGE = [620, 900] as const
+// The star row over each card: on the labelled screenshots a full row's stars
+// are 8.8 to 9.1 px apart, centred 0.1 to 0.8 px left of the box's middle, and
+// a seven-row band centred on them starts 38.6 to 41.9 px above the box's centre.
+export const CARD_STARS: StarRow = { above: 40, pitch: 9, left: 0.6 }
 
 // The art disc of the round artifact icon under each player name: its
 // nominal centre relative to the ally column anchor, and its diameter. The
