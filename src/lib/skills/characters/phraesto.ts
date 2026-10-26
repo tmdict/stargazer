@@ -8,7 +8,6 @@ registerSkill(
   createCompanionSkill({
     id: 'phraesto',
     characterId: 50,
-    colorModifier: SKILL_COLORS.white,
     companionColorModifier: SKILL_COLORS.crimson,
   }),
 )
