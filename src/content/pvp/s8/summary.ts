@@ -10,7 +10,7 @@ export const S8: PvpSeasonSummary = {
   languages: ['en', 'zh', 'ko'],
   teams: [
     { name: { en: 'Gwyn/Gunnar/Kulu/Dun', zh: '龙弓／炮魔／库露露／钟神', ko: '귀네스/군나르/쿠루루/던릴' }, heroes: ['gwyneth', 'gunnar', 'kulu', 'dunlingr'], games: 429 },
-    { name: { en: 'Orion/Evie/Rolan/Perseus', zh: '王子／伊芙／罗兰／人皇', ko: '오리안/이브/로란 대제/페르세우스' }, heroes: ['orion', 'evie', 'rolan', 'perseus'], games: 303 },
+    { name: { en: 'Orion/Perseus/Rolan/Evie', zh: '王子／人皇／罗兰／伊芙', ko: '오리안/페르세우스/로란 대제/이브' }, heroes: ['orion', 'perseus', 'rolan', 'evie'], games: 303 },
     { name: { en: 'Senea/Alna/Zorya/Daimon', zh: '歌姬／冬喉／石像鬼／戴蒙', ko: '세니아/아르나/조르아/데이먼' }, heroes: ['senea', 'alna', 'zorya', 'daimon'], games: 282 },
     { name: { en: 'Rolan/Twins+Athalia', zh: '罗兰／双子 + 天罚', ko: '로란 대제/일리아&라이라+아탈리아' }, heroes: ['rolan', 'elijah-lailah'], games: 269 },
     { name: { en: 'Eryndor/Thador/Ravion', zh: '埃德加／都铎／沙利叶', ko: '에린도르/튜더/사리에' }, heroes: ['eryndor', 'thador', 'ravion'], games: 264 },
