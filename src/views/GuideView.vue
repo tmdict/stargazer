@@ -1,8 +1,10 @@
 <script setup lang="ts">
-/* Guide index: the seasons' report entries and the newest season's counter
-   ladder beside the Upgrades and Mechanics entries. The panels are grid
-   areas, so the two rows pair up on wide screens and stack in reading order
-   below 1100px. */
+/* Guide index: a card per season's report, newest first, and the newest
+   season's counter ladder beside the Upgrades and Mechanics entries. On wide
+   screens the report cards span the rows beside Upgrades and the top of
+   Mechanics, so every card keeps its own height and Mechanics follows
+   Upgrades however many seasons there are. Below 1100px the cards stack in
+   reading order. */
 
 import { computed } from 'vue'
 
@@ -31,7 +33,9 @@ const latest = PVP_SEASONS[0]
 
 <template>
   <main class="guide-index">
-    <GuidePvpReport v-if="latest" class="report" :seasons="PVP_SEASONS" :lang />
+    <div v-if="latest" class="reports">
+      <GuidePvpReport v-for="summary in PVP_SEASONS" :key="summary.season" :summary :lang />
+    </div>
     <GuideUpgradesIndex class="upgrades" :lang />
     <GuideCounterLadder v-if="latest" class="ladder" :summary="latest" :lang />
     <GuideMechanicsIndex class="mechanics" :lang />
@@ -43,15 +47,17 @@ const latest = PVP_SEASONS[0]
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    'report'
+    'reports'
     'upgrades'
     'ladder'
     'mechanics';
   align-items: start;
   gap: var(--stack-gap);
 }
-.report {
-  grid-area: report;
+.reports {
+  grid-area: reports;
+  display: grid;
+  gap: var(--stack-gap);
 }
 .upgrades {
   grid-area: upgrades;
@@ -67,12 +73,9 @@ const latest = PVP_SEASONS[0]
   .guide-index {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     grid-template-areas:
-      'report upgrades'
+      'reports upgrades'
+      'reports mechanics'
       'ladder mechanics';
-  }
-  .report,
-  .upgrades {
-    align-self: stretch;
   }
 }
 </style>
