@@ -1,5 +1,4 @@
 import { ENERGY_KEY, energyAboveLabel, isEnergyPick, type MechanicPick } from '@/lib/mechanics'
-import { isReportLocale } from '@/lib/pvp/summary'
 import { tagPick } from '@/lib/tags'
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { PvpTeam } from '@/lib/types/pvp'
@@ -95,9 +94,7 @@ export function curatedHeroName(slug: string, lang: AppLocale): string {
 /** A team's label on the guide: the report's own in a language the report is
  * written in, otherwise its heroes by name, in portrait order. */
 export function pvpTeamName(team: PvpTeam, lang: AppLocale): string {
-  return isReportLocale(lang)
-    ? team.name[lang]
-    : team.heroes.map((slug) => curatedHeroName(slug, lang)).join('/')
+  return team.name[lang] ?? team.heroes.map((slug) => curatedHeroName(slug, lang)).join('/')
 }
 
 // Heading composition per slot. Skill content is feed-sourced end to end:

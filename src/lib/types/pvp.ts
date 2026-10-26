@@ -1,13 +1,10 @@
-/* A finished season's PvP summary: the team groups and counter relationships
- * the guide index shows for that season. Generated with the season's report
- * and copied here beside its template: a locked snapshot of the report, not
- * something the app derives. Team ids double as the report's anchor slugs. */
+/* A season's PvP summary: the team groups and counter relationships the guide
+ * index shows for that season. Generated with the season's report and copied
+ * here beside its template, again with each export while the season is
+ * played: a copy of the report's figures, not something the app derives. Team
+ * ids double as the report's anchor slugs. */
 
 import type { AppLocale } from './i18n'
-
-/** The languages a report is written in. A site language outside them reads
- * the English report and names teams by their heroes. */
-export type ReportLocale = Extract<AppLocale, 'en' | 'zh'>
 
 /** The report's evidence class: 0 possible, 1 under 65% wins, 2 65 to 79%, 3 80% or more. */
 export type CounterBand = 0 | 1 | 2 | 3
@@ -15,8 +12,8 @@ export type CounterBand = 0 | 1 | 2 | 3
 export interface PvpTeam {
   /** Referenced by counters; matches the report's anchor slug. */
   id: string
-  /** The report's short label in each of its languages, as the report itself reads. */
-  name: Record<ReportLocale, string>
+  /** The report's short label in each language of its summary, as the report itself reads. */
+  name: { en: string } & Partial<Record<AppLocale, string>>
   /** Core hero slugs, in portrait order. */
   heroes: readonly string[]
   /** Recorded appearances; orders the most-played chips. */
@@ -39,6 +36,9 @@ export interface PvpCounter {
 
 export interface PvpSeasonSummary {
   season: number
+  /** The languages the report is written in, English first. A site language
+   * outside them reads the English report and names teams by their heroes. */
+  languages: readonly AppLocale[]
   teams: readonly PvpTeam[]
   counters: readonly PvpCounter[]
 }

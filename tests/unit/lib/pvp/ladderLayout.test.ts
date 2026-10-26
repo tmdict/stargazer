@@ -24,6 +24,7 @@ const counter = (winner: string, loser: string, wins = 1, losses = 0): PvpCounte
 })
 const summary: PvpSeasonSummary = {
   season: 0,
+  languages: ['en', 'zh'],
   teams: [team('c', 2, 2), team('a', 4, 1), team('d', 1, 2), team('b', 3, 1)],
   counters: [counter('a', 'b'), counter('a', 'c'), counter('d', 'a')],
 }
@@ -31,10 +32,10 @@ const share = (c: PvpCounter): string =>
   `${Math.round((100 * c.wins) / (c.wins + c.losses))}% of ${c.wins + c.losses}`
 
 // A label's box as the layout estimates it, back in viewBox units.
-const LABEL_H = 16
+const LABEL_H = 32
 const box = (layout: ReturnType<typeof layoutLadder>, anchor: string) => {
   const { label } = layout.edges.find((e) => e.counter.anchor === anchor)!
-  const w = label.text.length * 7 + 12
+  const w = label.text.length * 13 + 20
   const x = (label.left / 100) * layout.width
   const y = (label.top / 100) * layout.height
   return { x0: x - w / 2, x1: x + w / 2, y0: y - LABEL_H / 2, y1: y + LABEL_H / 2 }

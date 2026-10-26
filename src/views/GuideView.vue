@@ -1,8 +1,8 @@
 <script setup lang="ts">
-/* Guide index: the finished seasons' report entries and the newest season's
-   counter ladder beside the Upgrades and Mechanics entries. The panels are
-   grid areas, so the two rows pair up on wide screens and stack in reading
-   order below 1100px. */
+/* Guide index: the seasons' report entries and the newest season's counter
+   ladder beside the Upgrades and Mechanics entries. The panels are grid
+   areas, so the two rows pair up on wide screens and stack in reading order
+   below 1100px. */
 
 import { computed } from 'vue'
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-/* The guide index's report entries: one block per finished season, newest
-   first, each linking to its static report with the season's most played
-   team groups as chips. */
+/* The guide index's report entries: one block per season, newest first,
+   each linking to its static report with the season's most played team
+   groups as chips. */
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
-import { isReportLocale, mostPlayedTeams, pvpReportHref } from '@/lib/pvp/summary'
+import { mostPlayedTeams, pvpReportHref, reportReadsIn } from '@/lib/pvp/summary'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpSeasonSummary } from '@/lib/types/pvp'
 import { interpolate } from '@/utils/interpolate'
@@ -26,7 +26,9 @@ const title = (season: number): string =>
       <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
         <h2>
           {{ title(summary.season) }}
-          <span v-if="!isReportLocale(lang)" class="report-language">{{ label('english') }}</span>
+          <span v-if="!reportReadsIn(summary, lang)" class="report-language">{{
+            label('english')
+          }}</span>
         </h2>
         <IconChevronRight :size="18" />
       </a>

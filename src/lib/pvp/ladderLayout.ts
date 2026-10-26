@@ -24,13 +24,15 @@ const BOW_BASE = 36
 const BOW_STEP = 24
 // Curve ends sharing a node edge fan apart by this much.
 const FAN = 12
-// A label's box is estimated from its text: a unit per character, two for a
-// wide (CJK) character, plus padding.
-const LABEL_CHAR = 7
-const LABEL_PAD = 12
-const LABEL_H = 16
+// A label's box is estimated from its text, as a phone draws it: its font
+// stays near desktop size while the drawing narrows, so a label there is about
+// twice as wide beside the curves. Units per character, two for a wide (CJK)
+// character, plus padding.
+const LABEL_CHAR = 13
+const LABEL_PAD = 20
+const LABEL_H = 32
 // Where along its curve a label may sit, nearest the widest point first.
-const LABEL_STOPS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82]
+const LABEL_STOPS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82, 0.12, 0.88]
 // What a label position pays for leaving the drawing, covering another label
 // or covering a team card; each curve sample point it covers costs one.
 const COST = { outside: 100, label: 12, card: 40 }
@@ -173,11 +175,11 @@ export function layoutLadder(
     }
   })
 
-  // Each label tries the stops along its own curve, on the curve and just
-  // outside it, and takes the position that covers the fewest other curves,
-  // labels and cards; ties go to the stop nearest the widest point. Short
-  // curves place first: they have the least room. Equal spans place in the
-  // report's team order (most played first), so the labels land where the
+  // Each label tries the stops along its own curve, on the curve and just to
+  // either side of it, and takes the position that covers the fewest other
+  // curves, labels and cards; ties go to the stop nearest the widest point.
+  // Short curves place first: they have the least room. Equal spans place in
+  // the report's team order (most played first), so the labels land where the
   // report put them.
   const cards: Box[] = teams.map((_, r) => ({
     x0: NODE_LEFT,
@@ -206,12 +208,16 @@ export function layoutLadder(
       ).length +
       [...placed.values()].filter((label) => overlaps(box, label.box, 4)).length * COST.label +
       cards.filter((card) => overlaps(box, card, 2)).length * COST.card
+    // w is in phone units, so w / 4 is about half the label as a desktop
+    // draws it: a side position keeps the label beside its own curve.
+    const step = w / 4 + 5
     const candidates = LABEL_STOPS.flatMap((t) => {
       const [x, y] = cubicAt(curve.points, t)
       const dist = Math.abs(t - 0.5)
       return [
         { x, y, dist },
-        { x: x + out * (w / 2 + 5), y, dist: dist + 0.05 },
+        { x: x + out * step, y, dist: dist + 0.05 },
+        { x: x - out * step, y, dist: dist + 0.1 },
       ]
     }).map(({ x, y, dist }) => {
       const box = { x0: x - w / 2, x1: x + w / 2, y0: y - LABEL_H / 2, y1: y + LABEL_H / 2 }
@@ -236,12 +242,19 @@ export function layoutLadder(
   })
 
   // The drawing's extremes: the node column at least, else the outermost
-  // curve or label box on each side.
+  // curve or label box on each side. A ladder with many rows bows wider than
+  // the drawing, and centring it then stops where a label would leave the
+  // drawing, so every label stays readable on a narrow screen.
   const widest = curves.map((curve) => cubicAt(curve.points, 0.5)[0])
   const boxes = [...placed.values()].map((label) => label.box)
   const leftmost = Math.min(NODE_LEFT, ...widest, ...boxes.map((box) => box.x0))
   const rightmost = Math.max(NODE_RIGHT, ...widest, ...boxes.map((box) => box.x1))
-  const offset = pct(LADDER_WIDTH / 2 - (leftmost + rightmost) / 2, LADDER_WIDTH)
+  const centred = LADDER_WIDTH / 2 - (leftmost + rightmost) / 2
+  const shift = Math.min(
+    Math.max(centred, -Math.min(...boxes.map((box) => box.x0))),
+    LADDER_WIDTH - Math.max(...boxes.map((box) => box.x1)),
+  )
+  const offset = pct(shift, LADDER_WIDTH)
 
   const column = {
     left: pct(NODE_LEFT, LADDER_WIDTH),
