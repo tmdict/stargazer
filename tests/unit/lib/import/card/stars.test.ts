@@ -93,6 +93,27 @@ describe('readStars', () => {
     expect(readStars(...args(f))).toMatchObject({ level: 0, sure: false })
   })
 
+  // The same faded row with the card found two pixels off reads short, and must
+  // not pass as a sure R0 either; a row of five with the same tint can be.
+  it('is not sure of a faintly pink row that would be full a pixel or two over', () => {
+    const tint = (f: ReturnType<typeof frameWithStars>) => {
+      const y = f.box.y + Math.round(f.box.h / 2) - ROW.above + 3
+      for (let x = 31; x <= 34; x++) f.shot.data.set([250, 200, 245], (y * f.shot.width + x) * 4)
+      return f
+    }
+    const six = tint(frameWithStars(6, [225, 240, 250]))
+    expect(readStars(six.shot, { ...six.box, x: six.box.x - 2 }, ROW)).toMatchObject({
+      full: false,
+      level: 0,
+      sure: false,
+    })
+    expect(readStars(...args(tint(frameWithStars(5, [225, 240, 250]))))).toMatchObject({
+      full: false,
+      level: 0,
+      sure: true,
+    })
+  })
+
   // The winged P4 frame's white wings sit just above its star row and are
   // brighter than it.
   it('reads the row where the card puts it, not a brighter band above it', () => {

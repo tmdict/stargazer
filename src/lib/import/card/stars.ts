@@ -10,7 +10,8 @@
  * stars, and they can light the outer places on their own. The colour family
  * comes from the bright pixels over the six places. A short row waits for
  * review when a refined family's colour is strong, as a full row's outer stars
- * can hide on a blurred capture.
+ * can hide on a blurred capture, and when it is faintly pink and a pixel or two
+ * to the side would make it full: a faded R4 row read off its places.
  *
  * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
  * can tint the colour toward a refined family, so a refined reading is sure
@@ -104,6 +105,22 @@ const isFull = (
   )
 }
 
+// No shift adds the stars a short row lacks, so only a full row read off its
+// places passes the full test a pixel or two to the side; on labelled
+// screenshots no short row does within `SHIFT`.
+const SHIFT = 2
+const fullNearby = (
+  shot: RgbaImage,
+  band: Rect,
+  { places, gaps }: { places: readonly number[]; gaps: readonly number[] },
+): boolean => {
+  for (let d = -SHIFT; d <= SHIFT; d++) {
+    const at = (x: number): number => x + d
+    if (d !== 0 && isFull(shot, band, { places: places.map(at), gaps: gaps.map(at) })) return true
+  }
+  return false
+}
+
 /* The share of the row's stars whose own bright pixels carry the pink tint. */
 const pinkStarShare = (shot: RgbaImage, band: Rect, places: readonly number[]): number => {
   let pink = 0
@@ -179,6 +196,9 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
         : level === 3
           ? red >= SURE.red
           : level === 4 && pinkStarShare(shot, band, places) >= SURE.pinkStars
-  if (!full) return { level: 0, full, family, sure: !refined }
+  if (!full) {
+    const fadedR4 = magenta >= SURE.r0Pink && fullNearby(shot, band, stars)
+    return { level: 0, full, family, sure: !refined && !fadedR4 }
+  }
   return { level, full, family, sure: level === 0 ? magenta < SURE.r0Pink : refined }
 }
