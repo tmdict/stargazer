@@ -124,8 +124,8 @@ const {
 
 <style scoped>
 .sl-band {
-  border: 1px solid var(--color-border-primary);
-  border-radius: 14px;
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-large);
   background: var(--color-bg-primary);
   overflow: hidden;
   container-type: inline-size;
@@ -259,6 +259,12 @@ const {
 @container (max-width: 600px) {
   .sl-maps {
     padding: 18px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-band {
+    border-color: transparent;
   }
 }
 </style>

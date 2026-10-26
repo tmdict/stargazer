@@ -176,9 +176,8 @@
 
 .page-panel {
   background: var(--color-bg-reading);
-  box-shadow:
-    var(--shadow-panel),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  border-color: var(--panel-dark-edge);
+  box-shadow: var(--shadow-panel);
 }
 
 .page-panel > * {

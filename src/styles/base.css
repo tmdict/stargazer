@@ -184,8 +184,15 @@ main {
   width: 100%;
   background-color: var(--color-bg-primary);
   border-radius: var(--section-radius);
+  box-shadow: inset 0 0 0 1px var(--panel-edge);
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .section {
+    box-shadow: none;
+  }
 }
 
 .content {

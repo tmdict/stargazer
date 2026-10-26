@@ -403,8 +403,8 @@ const save = (): void => {
   flex-direction: column;
   gap: 14px;
   padding: 14px 16px 16px;
-  border: 1px solid var(--color-border-primary);
-  border-radius: 14px;
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-large);
   background: var(--color-bg-primary);
 }
 
@@ -414,6 +414,7 @@ const save = (): void => {
   }
   .sl-picker {
     padding: 12px;
+    border-color: transparent;
   }
 }
 

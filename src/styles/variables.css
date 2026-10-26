@@ -133,6 +133,8 @@
   --radius-round: 50%;
 
   --section-radius: var(--radius-large);
+  --panel-edge: transparent;
+  --panel-dark-edge: rgba(255, 255, 255, 0.1);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -320,6 +322,7 @@
 
   --color-border-primary: #39424e;
   --color-border-light: #2d343e;
+  --panel-edge: var(--panel-dark-edge);
 
   --color-text-primary: #e9edf3;
   --color-text-secondary: #a7b1bf;

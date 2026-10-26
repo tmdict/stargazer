@@ -162,6 +162,7 @@ const onSheetClickCapture = (e: MouseEvent) => {
   padding: var(--tabview-inset-y) var(--tabview-inset-x);
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-large);
+  box-shadow: inset 0 0 0 1px var(--panel-edge);
   display: flex;
   flex-direction: column;
 }
