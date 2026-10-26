@@ -1,9 +1,9 @@
 <script setup lang="ts">
-/* The counter ladder of a finished season: team rows by rating, a rule where
-   the tier changes, and a curve per recorded counter carrying the winner's
-   share of the games, drawn from layoutLadder. Selecting a team keeps only
-   its curves lit, teal where it wins and red where it loses; curves link to
-   the report's evidence. */
+/* The counter ladder of a season: team rows by rating, a rule where the tier
+   changes, and a curve per recorded counter carrying the winner's share of
+   the games, drawn from layoutLadder. Selecting a team keeps only its curves
+   lit, teal where it wins and red where it loses; curves link to the report's
+   evidence. */
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -37,12 +37,14 @@ const teamName = (id: string): string => {
   const team = props.summary.teams.find((t) => t.id === id)
   return team ? nameOf(team) : id
 }
-// Zero-width spaces let a long label wrap between its heroes, and a plus
-// stays with the hero it adds, so no line ends on one.
+// Zero-width spaces let a long label wrap between its heroes, a space inside
+// a hero's name ("로란 대제") never breaks, and a plus stays with the hero it
+// adds, so no line ends on one.
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
 const NO_BREAK_SPACE = String.fromCodePoint(0xa0)
 const wrappable = (name: string): string =>
   name
+    .replace(/(?<!\+) (?!\+)/g, NO_BREAK_SPACE)
     .replace(/[/／]/g, `$&${ZERO_WIDTH_SPACE}`)
     .replace(/(\S)\+/g, `$1${ZERO_WIDTH_SPACE}+`)
     .replace(/ \+ /g, ` +${NO_BREAK_SPACE}`)
@@ -93,13 +95,28 @@ const clearOutside = (event: PointerEvent) => {
 const clearOnEscape = (event: KeyboardEvent) => {
   if (event.key === 'Escape') selected.value = null
 }
+
+// The curves are drawn to evenly spaced rows, so the rows stay equal: each is
+// --row tall, or as tall as the tallest card and its margins need where long
+// names in a narrow column make a card grow. A card's height follows its
+// width and the site language, never the row, so measuring cannot loop.
+const CARD_MARGIN = 24
+const graph = ref<HTMLElement | null>(null)
+const cardRow = ref(0)
+let cardSizes: ResizeObserver | undefined
 onMounted(() => {
   document.addEventListener('pointerup', clearOutside)
   document.addEventListener('keydown', clearOnEscape)
+  const cards = [...graph.value!.querySelectorAll<HTMLElement>('.node')]
+  cardSizes = new ResizeObserver(() => {
+    cardRow.value = Math.max(...cards.map((card) => card.offsetHeight)) + CARD_MARGIN
+  })
+  for (const card of cards) cardSizes.observe(card)
 })
 onUnmounted(() => {
   document.removeEventListener('pointerup', clearOutside)
   document.removeEventListener('keydown', clearOnEscape)
+  cardSizes?.disconnect()
 })
 </script>
 
@@ -125,9 +142,11 @@ onUnmounted(() => {
       </div>
 
       <div
+        ref="graph"
         class="graph"
         :style="{
           '--rows': layout.rows.length,
+          '--card-row': `${cardRow}px`,
           '--portraits': portraitSlots,
           '--offset': `${layout.offset}%`,
           '--column-left': `${layout.column.left}%`,
@@ -253,7 +272,7 @@ onUnmounted(() => {
 
 .graph {
   position: relative;
-  height: calc(var(--rows) * var(--row));
+  height: calc(var(--rows) * max(var(--row), var(--card-row)));
   max-width: 780px;
   margin: 22px auto 0;
   transform: translateX(var(--offset));
@@ -318,9 +337,10 @@ onUnmounted(() => {
 .name > small {
   display: block;
 }
-/* Chinese may break between any two characters, which would split a hero's
-   name across lines: its labels wrap only where wrappable allows. */
-.name > span:lang(zh) {
+/* Chinese and Korean may break between any two characters, which would split
+   a hero's name across lines: their labels wrap only where wrappable allows. */
+.name > span:lang(zh),
+.name > span:lang(ko) {
   word-break: keep-all;
 }
 .name > small {
@@ -481,12 +501,21 @@ onUnmounted(() => {
     --portrait: 24px;
     --portrait-gap: 3px;
   }
+  /* A narrow card has no room for a name beside the portraits, so the name
+     runs under them, across the card. */
   .node {
-    gap: 6px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
     min-height: 60px;
     padding: 6px 8px;
   }
+  .portraits {
+    width: auto;
+  }
   .name {
+    width: 100%;
     font-size: 12.5px;
   }
   .name > small {

@@ -9,9 +9,9 @@ import { loadCharacters } from '@/utils/dataLoader'
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const heroNames = new Set(loadCharacters().map((character) => character.name))
 
-// A summary is generated with a finished season's report and copied here, so
-// every reference it makes is checked against the hero list and the report it
-// cites, and every team is named in both languages.
+// A summary is generated with a season's report and copied here, so every
+// reference it makes is checked against the hero list and the report it cites,
+// and every team is named in each language the report is written in.
 it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
   'season %i summary is consistent with the hero list and its report',
   (season, summary) => {
@@ -25,9 +25,15 @@ it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
     expect(
       summary.teams.flatMap((team) => team.heroes.filter((slug) => !heroNames.has(slug))),
     ).toEqual([])
+    expect(summary.languages[0]).toBe('en')
     expect(
       summary.teams.filter(
-        (team) => !team.name.en || !team.name.zh || team.name.zh === team.name.en,
+        (team) =>
+          !team.name.en ||
+          Object.keys(team.name).length !== summary.languages.length ||
+          summary.languages.some(
+            (lang) => lang !== 'en' && (!team.name[lang] || team.name[lang] === team.name.en),
+          ),
       ),
     ).toEqual([])
     expect(summary.counters.length).toBeGreaterThan(0)

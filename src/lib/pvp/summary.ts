@@ -1,10 +1,10 @@
 /* Readings of a season summary for the guide's PvP pages. */
 
 import type { AppLocale } from '@/lib/types/i18n'
-import type { PvpSeasonSummary, PvpTeam, ReportLocale } from '@/lib/types/pvp'
+import type { PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 
-export const isReportLocale = (lang: AppLocale): lang is ReportLocale =>
-  lang === 'en' || lang === 'zh'
+export const reportReadsIn = (summary: PvpSeasonSummary, lang: AppLocale): boolean =>
+  summary.languages.includes(lang)
 
 /** The season's static report, hydrated to this path at build (scripts/guideReports.ts).
  * It sits outside the locale-prefixed routes and opens in English unless the
