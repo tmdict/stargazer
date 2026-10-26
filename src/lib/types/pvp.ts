@@ -9,7 +9,7 @@ import type { AppLocale } from './i18n'
 export interface PvpTeam {
   /** The report's short label in each language of its summary, as the report itself reads. */
   name: { en: string } & Partial<Record<AppLocale, string>>
-  /** Core hero slugs, in portrait order. */
+  /** Core hero slugs, in the order the name lists them, a core hero it leaves out last. */
   heroes: readonly string[]
   /** Recorded appearances; orders the most-played chips. */
   games: number
