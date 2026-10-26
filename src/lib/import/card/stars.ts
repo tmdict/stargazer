@@ -30,9 +30,10 @@ const STAR_BRIGHT = 0.72
 // full row's inner four places beat the gaps by `lead` on average, and none of
 // its places has less than `even` of the inner four's mean. On labelled
 // screenshots full rows' inner places beat the gaps by 2.3 or more and their
-// dimmest place has 0.82 of the inner mean or more; rows of three or five, whose
-// stars sit in the gaps, trail them by 2.5 or more, and rows of two or four
-// leave a place at 0.53 of the inner mean or less.
+// dimmest place has 0.82 of the inner mean or more. On result screens rows of
+// three or five, whose stars sit in the gaps, trail them by 2.5 or more, and rows
+// of two or four leave a place at 0.53 of the inner mean or less; on the roster,
+// pale art behind a row of two has lifted its dimmest place to 0.63.
 const FULL = { lead: 1, even: 0.7 } as const
 // Colour is read within this many pixels of each place.
 const STAR_REACH = 4

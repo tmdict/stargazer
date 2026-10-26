@@ -40,7 +40,7 @@ const frameWithStars = (
 }
 
 describe('readStars', () => {
-  it('counts a full row and reads its colour family', () => {
+  it('reads a full row and its colour family', () => {
     expect(readStars(...args(frameWithStars(6, [250, 210, 60])))).toMatchObject({
       full: true,
       family: 'gold',
