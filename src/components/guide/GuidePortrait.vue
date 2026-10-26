@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Small portrait disc (picker ring and tier backdrop) for the guide index's
-   chips, ladder rows and mechanic tiles; CharacterIcon is the draggable
-   picker tile and far heavier than these lists need. */
+   chips and mechanic tiles; CharacterIcon is the draggable picker tile and
+   far heavier than these lists need. */
 
 import { computed } from 'vue'
 

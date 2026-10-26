@@ -14,9 +14,5 @@ export const reportReadsIn = (summary: PvpSeasonSummary, lang: AppLocale): boole
 export const pvpReportHref = (season: number, lang: AppLocale): string =>
   `/guide/pvp/s${season}/${lang === 'en' ? '' : `?lang=${lang}`}`
 
-/** Ladder order: best rating first; games break ties so the order is total. */
-export const ladderTeams = (summary: PvpSeasonSummary): PvpTeam[] =>
-  [...summary.teams].sort((a, b) => b.rating - a.rating || b.games - a.games)
-
 export const mostPlayedTeams = (summary: PvpSeasonSummary, count: number): PvpTeam[] =>
   [...summary.teams].sort((a, b) => b.games - a.games).slice(0, count)

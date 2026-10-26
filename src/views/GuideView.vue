@@ -1,17 +1,17 @@
 <script setup lang="ts">
-/* Guide index: a card per season's report, newest first, and the newest
-   season's counter ladder beside the Upgrades and Mechanics entries. On wide
-   screens the report cards span the rows beside Upgrades and the top of
-   Mechanics, so every card keeps its own height and Mechanics follows
-   Upgrades however many seasons there are. Below 1100px the cards stack in
-   reading order. */
+/* Guide index: a card per season's report, newest first, then Mechanics on
+   the left, and the Supreme League generator above Upgrades on the right. On
+   wide screens the report cards span the rows beside the generator and the
+   top of Upgrades, so every card keeps its own height and each column's
+   second card follows its first however many seasons there are. Below 1100px
+   the cards stack, the PvP ones first. */
 
 import { computed } from 'vue'
 
-import GuideCounterLadder from '@/components/guide/GuideCounterLadder.vue'
 import GuideMechanicsIndex from '@/components/guide/GuideMechanicsIndex.vue'
 import GuidePvpReport from '@/components/guide/GuidePvpReport.vue'
 import GuideUpgradesIndex from '@/components/guide/GuideUpgradesIndex.vue'
+import SlGuideEntry from '@/components/guide/sl/SlGuideEntry.vue'
 import { PVP_SEASONS } from '@/content/pvp/seasons'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -27,17 +27,15 @@ setupGuideContentMeta(lang, 'index')
 // SSG-safe: character data loads eagerly, so the portraits bake into the
 // static HTML.
 useGameDataStore().initializeContentData()
-
-const latest = PVP_SEASONS[0]
 </script>
 
 <template>
   <main class="guide-index">
-    <div v-if="latest" class="reports">
+    <div class="reports">
       <GuidePvpReport v-for="summary in PVP_SEASONS" :key="summary.season" :summary :lang />
     </div>
+    <SlGuideEntry class="generator" :lang />
     <GuideUpgradesIndex class="upgrades" :lang />
-    <GuideCounterLadder v-if="latest" class="ladder" :summary="latest" :lang />
     <GuideMechanicsIndex class="mechanics" :lang />
   </main>
 </template>
@@ -48,8 +46,8 @@ const latest = PVP_SEASONS[0]
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'reports'
+    'generator'
     'upgrades'
-    'ladder'
     'mechanics';
   align-items: start;
   gap: var(--stack-gap);
@@ -59,11 +57,11 @@ const latest = PVP_SEASONS[0]
   display: grid;
   gap: var(--stack-gap);
 }
+.generator {
+  grid-area: generator;
+}
 .upgrades {
   grid-area: upgrades;
-}
-.ladder {
-  grid-area: ladder;
 }
 .mechanics {
   grid-area: mechanics;
@@ -73,9 +71,9 @@ const latest = PVP_SEASONS[0]
   .guide-index {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     grid-template-areas:
+      'reports generator'
       'reports upgrades'
-      'reports mechanics'
-      'ladder mechanics';
+      'mechanics upgrades';
   }
 }
 </style>
