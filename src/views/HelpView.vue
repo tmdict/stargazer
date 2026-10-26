@@ -180,6 +180,11 @@ onMounted(() => {
   margin-top: -14px;
 }
 
+.help :deep(.help-grid > .help-below) {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+}
+
 .help :deep(.help-keys) {
   white-space: nowrap;
 }
@@ -228,6 +233,10 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 22px 1fr;
   gap: 9px;
+}
+
+.help :deep(.help-steps + .help-col-h) {
+  margin-top: 24px;
 }
 
 .help :deep(.help-steps li::before) {
@@ -310,7 +319,15 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .help :deep(:is(.help-grid > .help-scene, .help-grid > .help-side, .help-grid > .help-notes)) {
+  .help
+    :deep(
+      :is(
+        .help-grid > .help-scene,
+        .help-grid > .help-side,
+        .help-grid > .help-notes,
+        .help-grid > .help-below
+      )
+    ) {
     grid-column: 1 / -1;
     grid-row: auto;
   }

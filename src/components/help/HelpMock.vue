@@ -1,9 +1,9 @@
 <script setup lang="ts">
-defineProps<{ caption: string }>()
+defineProps<{ caption: string; glass?: boolean }>()
 </script>
 
 <template>
-  <div class="help-mock">
+  <div class="help-mock" :class="{ 'glass-panel': glass }">
     <div class="help-mock-cap">{{ caption }}</div>
     <slot />
   </div>
@@ -17,9 +17,20 @@ defineProps<{ caption: string }>()
   align-self: stretch;
   padding: 12px;
   color: var(--color-text-primary);
+}
+
+.help-mock:not(.glass-panel) {
   background: var(--color-bg-primary);
   border-radius: var(--radius-medium);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.help-mock.glass-panel {
+  color: var(--import-text);
+}
+
+.glass-panel .help-mock-cap {
+  color: var(--import-text-dim);
 }
 
 .help-mock-cap {
