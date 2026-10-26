@@ -55,7 +55,7 @@ const shot = (): ImportShot => ({
           sure: true,
           margin: 0.3,
           paragon: { level: 4, score: 0.8, runnerUp: 0.2, sure: true },
-          refinement: { level: 0, family: 'white', stars: 6, sure: true },
+          refinement: { level: 0, family: 'white', full: true, sure: true },
         },
       ],
       2: [],

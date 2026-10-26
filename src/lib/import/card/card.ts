@@ -7,7 +7,7 @@ import { cropResize } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
 import { matchCard, paragonFromMatch } from './frames'
 import { assignUnique, heroDescriptor, rankHeroes, type Rivals } from './heroes'
-import { readStars } from './stars'
+import { readStars, type StarRow } from './stars'
 import type { CardReferences, HeroCandidate, HeroIdentity, HeroReading } from './types'
 
 // The face inside a matched frame: fractions of the frame box. Only the upper
@@ -56,6 +56,7 @@ export const readCard = (
   refs: CardReferences,
   seed: { x: number; y: number },
   trusted: boolean,
+  stars: StarRow,
 ): CardRead => {
   const match = matchCard(shot, refs.frames, seed)
   const art = artBoxOf(match.box)
@@ -74,7 +75,7 @@ export const readCard = (
       card: cropResize(shot, cardRect, cardRect.w, cardRect.h),
       descriptor: alignments[0]!,
       paragon: paragonFromMatch(match),
-      refinement: readStars(shot, match.box),
+      refinement: readStars(shot, match.box, stars),
     },
     ranking: trusted ? rankHeroes(refs.heroes, alignments) : [],
   }
@@ -102,4 +103,5 @@ export const readCards = (
   refs: CardReferences,
   seeds: readonly { x: number; y: number }[],
   trusted: boolean,
-): HeroReading[] => settleCards(seeds.map((seed) => readCard(shot, refs, seed, trusted)))
+  stars: StarRow,
+): HeroReading[] => settleCards(seeds.map((seed) => readCard(shot, refs, seed, trusted, stars)))

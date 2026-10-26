@@ -46,7 +46,7 @@ const sample = (): ImportShot => ({
           sure: false,
           margin: 0.02,
           paragon: { level: 4, score: 0.4, runnerUp: 0.39, sure: false },
-          refinement: { level: 0, family: 'white', stars: 6, sure: true },
+          refinement: { level: 0, family: 'white', full: true, sure: true },
         },
       ],
       2: [],

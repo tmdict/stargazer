@@ -18,7 +18,7 @@ const unsure = (descriptor: number): HeroReading => ({
   card: createImage(1, 1),
   descriptor: new Float32Array(1).fill(descriptor),
   paragon: { level: 2, score: 0.8, runnerUp: 0.5, sure: true },
-  refinement: { level: 0, stars: 6, family: 'white', sure: true },
+  refinement: { level: 0, full: true, family: 'white', sure: true },
 })
 
 const slot = (col: number, cell: HeroReading, family: FrameFamily = 'paragon'): RosterSlot => ({
@@ -103,7 +103,7 @@ describe('roster import', () => {
     const allUnsure: HeroReading = {
       ...unsure(0.1),
       paragon: { level: 2, score: 0.8, runnerUp: 0.79, sure: false },
-      refinement: { level: 0, stars: 6, family: 'white', sure: false },
+      refinement: { level: 0, full: true, family: 'white', sure: false },
     }
     // Hero 8 on two cards of one screenshot is the reviewer's to settle.
     const eight: HeroReading = {

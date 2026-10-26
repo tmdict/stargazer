@@ -38,7 +38,8 @@ export interface ParagonReading {
 
 export interface RefinementReading {
   level: number
-  stars: number
+  // The row holds six stars, which refinement needs.
+  full: boolean
   family: StarFamily
   // The level's colour evidence is strong enough; for R0, the row has no pink tint.
   sure: boolean
