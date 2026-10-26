@@ -2,7 +2,10 @@
 /* One map of the set: the board as it was recorded, its artifact on its cell,
    then the comp's record on the map, the core heroes to keep and the swaps
    recorded in place of one hero or two. A win rate shows from eight decided
-   games, green from 60% and red to 40%, as the report colours one. */
+   games, green from 60% and red to 40%, as the report colours one. Its host
+   sizes it: --pt for the portraits, and --sl-scale for the gaps and icons of
+   the core and swap rows (1 on the generator's page, smaller on the guide
+   index's card, which shows no record). */
 
 import { computed } from 'vue'
 
@@ -14,7 +17,15 @@ import { usePreviewImages } from '@/composables/usePreviewImages'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
-const { team, board } = defineProps<{ team: SlShownTeam; board: PreviewBoard | undefined }>()
+const {
+  team,
+  board,
+  numbered = true,
+} = defineProps<{
+  team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'>
+  board: PreviewBoard | undefined
+  numbered?: boolean
+}>()
 
 const TONE_GAMES = 8
 
@@ -55,7 +66,7 @@ const record = computed(() => {
       :artifacts="{ ally: thumbnailArtifact(board.artifacts.ally) }"
       :hex-size="18"
       crisp
-      numbered
+      :numbered
     />
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
@@ -127,9 +138,10 @@ const record = computed(() => {
 }
 
 .sl-aside {
+  --s: var(--sl-scale, 1);
   display: flex;
   justify-content: safe center;
-  margin-top: 16px;
+  margin-top: calc(16px * var(--s));
   padding-right: var(--sl-aside-offset, 34%);
 }
 
@@ -137,12 +149,12 @@ const record = computed(() => {
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
-  column-gap: 10px;
-  row-gap: 8px;
+  column-gap: calc(10px * var(--s));
+  row-gap: calc(8px * var(--s));
 }
 
 .sl-aside-in .start {
-  margin-top: 14px;
+  margin-top: calc(14px * var(--s));
 }
 
 .sl-stats {
@@ -191,6 +203,11 @@ const record = computed(() => {
   color: var(--color-text-secondary);
 }
 
+.sl-label .sl-icon {
+  width: calc(24px * var(--s));
+  height: calc(24px * var(--s));
+}
+
 .sl-faces,
 .sl-swap,
 .sl-from,
@@ -217,7 +234,7 @@ const record = computed(() => {
 
 .sl-options.stacked {
   flex-direction: column;
-  gap: 6px;
+  gap: calc(6px * var(--s));
 }
 
 .sl-pair {
@@ -225,9 +242,9 @@ const record = computed(() => {
 }
 
 .sl-arrow {
-  width: 18px;
-  height: 18px;
-  margin: 0 6px;
+  width: calc(18px * var(--s));
+  height: calc(18px * var(--s));
+  margin: 0 calc(6px * var(--s));
   color: var(--color-primary);
 }
 </style>
