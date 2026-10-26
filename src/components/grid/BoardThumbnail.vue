@@ -136,12 +136,10 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-/* The crisp look, for the preview modal: its own tile colours (the
-   --tile-crisp-* tokens) and the unit frames, with one border on every
-   deployment and wall tile (open ground drawn first, so a shared edge never
-   shows two colours), a dark bevel line inside each framed tile, and each
-   portrait clipped under a dark rim inside a 2px frame. Ratios are of hexSize;
-   strokes are fixed in screen pixels. */
+/* The crisp look, for the preview modal: its own tile colours and the unit
+   frames, with one border on every deployment and wall tile, a dark bevel line
+   inside each framed tile, and each portrait clipped under a dark rim inside
+   its frame. Ratios are of hexSize; strokes are fixed in screen pixels. */
 const CRISP = {
   inset: 1.6 / 18,
   bevel: 2.5 / 18,

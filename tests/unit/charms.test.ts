@@ -9,7 +9,7 @@ import { APP_LOCALES } from '@/lib/types/i18n'
 import type { CharmData, CharmTags } from '@/lib/types/skill'
 import { getSkillCharms, loadAppLocales, loadCharacters, loadSkillLocale } from '@/utils/dataLoader'
 
-// The import's output files; a season between charm feeds has neither.
+// A season between charm feeds has neither file.
 const charmFile = <T>(modules: Record<string, T>): T | undefined => Object.values(modules)[0]
 const loadCharms = (): CharmData =>
   charmFile(

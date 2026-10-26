@@ -16,7 +16,6 @@ const theme = ref<Theme>('light')
 // Where storage is unavailable, the pressed look still outranks the device.
 let pressed: Theme | null = null
 
-// A value other than a look reads as no choice, so the device decides.
 const storedTheme = (): Theme | null => {
   const value = readPrefs()?.theme
   return value === 'light' || value === 'dark' ? value : null

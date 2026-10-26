@@ -29,8 +29,8 @@ const DIAGONAL_ROWS: readonly number[][] = [
 
 const MIDDLE_ROW = 7
 
-// The table's mirror: row i ↔ row 14 − i, pairing by
-// position (first→first); the middle diagonal maps to itself.
+// The table's mirror: row i ↔ row 14 − i, pairing by position (first→first);
+// the middle diagonal maps to itself.
 function buildOracleSymmetryMap(): Map<number, number> {
   const map = new Map<number, number>()
   for (let row = 0; row < DIAGONAL_ROWS.length; row++) {

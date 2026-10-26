@@ -40,8 +40,7 @@ beforeEach(() => {
   grids = useGrids()
 })
 
-// The team-size exemption is pinned in characters/phantimal.test.ts; one
-// phantimal per team is enforced on the picker-drop path, so it is pinned here.
+// One phantimal per team is enforced on the picker-drop path, so it is pinned here.
 describe('characterStore phantimals', () => {
   it('routes a picker phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)

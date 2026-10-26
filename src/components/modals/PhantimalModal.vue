@@ -35,8 +35,6 @@ const title = computed(
   () => text.value?.name || phantimalDisplayName(i18n.currentLocale, props.phantimal.name),
 )
 
-// Each phantimal skill renders as its own SkillSection (heading = skill name),
-// exactly like a character's skill slots.
 const skills = computed(() =>
   (text.value?.skills ?? []).map((skill) => ({
     heading: skill.name,
