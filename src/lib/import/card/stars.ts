@@ -70,7 +70,12 @@ export const starRowTop = (box: Rect, row: StarRow): number =>
 
 /* The columns of a full row's six stars, left to right, and of the five gaps
  * between them, where a row of five puts its stars. */
-const starPlaces = (box: Rect, row: StarRow): { places: number[]; gaps: number[] } => {
+interface StarPlaces {
+  places: readonly number[]
+  gaps: readonly number[]
+}
+
+const starPlaces = (box: Rect, row: StarRow): StarPlaces => {
   const centre = box.x + box.w / 2 - row.left
   return {
     places: [0, 1, 2, 3, 4, 5].map((k) => Math.round(centre + (k - 2.5) * row.pitch)),
@@ -92,11 +97,7 @@ const brightAround = (shot: RgbaImage, band: Rect, x: number): number => {
 const mean = (values: readonly number[]): number =>
   values.reduce((sum, v) => sum + v, 0) / values.length
 
-const isFull = (
-  shot: RgbaImage,
-  band: Rect,
-  { places, gaps }: { places: readonly number[]; gaps: readonly number[] },
-): boolean => {
+const isFull = (shot: RgbaImage, band: Rect, { places, gaps }: StarPlaces): boolean => {
   const lit = places.map((x) => brightAround(shot, band, x))
   const inner = mean(lit.slice(1, 5))
   return (
@@ -109,11 +110,7 @@ const isFull = (
 // places passes the full test a pixel or two to the side; on labelled
 // screenshots no short row does within `SHIFT`.
 const SHIFT = 2
-const fullNearby = (
-  shot: RgbaImage,
-  band: Rect,
-  { places, gaps }: { places: readonly number[]; gaps: readonly number[] },
-): boolean => {
+const fullNearby = (shot: RgbaImage, band: Rect, { places, gaps }: StarPlaces): boolean => {
   for (let d = -SHIFT; d <= SHIFT; d++) {
     const at = (x: number): number => x + d
     if (d !== 0 && isFull(shot, band, { places: places.map(at), gaps: gaps.map(at) })) return true
