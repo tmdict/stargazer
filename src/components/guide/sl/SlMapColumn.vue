@@ -138,23 +138,6 @@ const record = computed(() => {
   height: auto;
 }
 
-.sl-board :deep(.tile:not(.tile-void)) {
-  stroke-width: 1.5;
-}
-
-.sl-board :deep(.tile-number) {
-  stroke: none;
-  font-weight: 600;
-}
-
-.sl-board :deep(.tile-number:is(.zone-void, .zone-blocked, .zone-breakable, .occupied)) {
-  display: none;
-}
-
-.sl-board :deep(.unit-frame) {
-  stroke-width: 2;
-}
-
 .sl-aside {
   --u: var(--sl-unit, 1px);
   display: flex;
