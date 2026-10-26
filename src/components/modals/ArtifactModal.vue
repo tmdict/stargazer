@@ -38,9 +38,7 @@ const title = computed(
 
 const stats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
 
-// Effect descriptions become a level ladder; SkillSection renders them with
-// the same badges/highlighting/typography as character skills (level 1 is the
-// base effect, 2+ are upgrades). Shared styling, no bespoke drift.
+// Level 1 is the base effect, 2+ are upgrades.
 const effectLevels = computed(() =>
   (text.value?.levels ?? []).map((description, i) => ({ level: i + 1, description })),
 )

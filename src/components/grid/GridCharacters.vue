@@ -157,8 +157,8 @@ const getCharacterName = (characterId: number, hexId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
-// Phantimal-specific render helpers (B1 seam: phantimals reuse the character
-// wrapper's positioning, drag, lift and perspective; only image + colour differ).
+// Phantimals reuse the character wrapper's positioning, drag, lift and
+// perspective; only image and colour differ.
 
 // A companion a phantimal spawned renders through the same branch, under its
 // owner skill's companion portrait.

@@ -71,13 +71,12 @@ const tiles = computed(() =>
     const row = Math.floor(i / COLS)
     const col = i % COLS
     const painted = paint.find(({ at }) => at[0] === row && at[1] === col)
-    const state = painted?.state ?? State.DEFAULT
-    const look = painted ? state : ROW_STATE[row]!
+    const state = painted?.state ?? ROW_STATE[row]!
     return {
       key: i,
       state,
-      fill: getTileFillColor(look),
-      outline: getTileStrokeColor(look),
+      fill: getTileFillColor(state),
+      outline: getTileStrokeColor(state),
       points: points(center([row, col])),
       hatch: getTileHatchFill(id, state),
       stroke: getWallStrokeColor(state),

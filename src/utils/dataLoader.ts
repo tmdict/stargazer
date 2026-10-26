@@ -328,7 +328,6 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
   return artifactLocalesCache
 }
 
-// The season's phantimal names, keyed by phantimal name (the JSON filename).
 export function loadPhantimalLocales(): Record<string, LocaleData> {
   if (phantimalLocalesCache) return phantimalLocalesCache
   phantimalLocalesCache = buildLocaleDict(

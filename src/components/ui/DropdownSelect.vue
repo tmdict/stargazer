@@ -198,7 +198,7 @@ const pressSegment = (): void => {
       ref="triggerRef"
       type="button"
       class="trigger"
-      :class="[variant === 'icon' ? 'bare' : undefined, { lit, clearing }]"
+      :class="{ lit, clearing }"
       :title
       :aria-label="variant === 'icon' ? label : undefined"
       :aria-expanded="open"
@@ -531,7 +531,7 @@ const pressSegment = (): void => {
   display: inline-flex;
 }
 
-.icon .trigger.bare {
+.dropdown.icon .trigger {
   padding: 0;
   border: none;
   background: none;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* The site-language menu: the current language's glyph opens the list of
-   APP_LOCALES, each named in itself. The header's switches the site. */
+   APP_LOCALES, each named in itself. */
 
 import { computed } from 'vue'
 
