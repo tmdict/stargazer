@@ -4,12 +4,24 @@
  * (scripts/slPreview.ts) so the index loads neither the data file nor the
  * chooser. */
 
-import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import {
+  ATTR_PARAGON,
+  ATTR_REFINEMENT,
+  attrMax,
+  type AttrRecord,
+} from '@/lib/characters/attributes'
 import { loadCharacters } from '@/utils/dataLoader'
 import { chooseSlSet } from './chooser'
 import { decodeSlData } from './codec'
-import { slTeamData } from './team'
+import { choiceSeason, slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
+
+// Every hero's levels before a roster is picked: the top ones, where the
+// recorded opponents are counted, so the set is the records' own best.
+export const TOP_LEVELS: AttrRecord = {
+  [ATTR_PARAGON]: attrMax(ATTR_PARAGON),
+  [ATTR_REFINEMENT]: attrMax(ATTR_REFINEMENT),
+}
 
 export interface SlDefaultSet {
   // The set as one encoded 5v5 team, as Save as team stores it.
@@ -27,15 +39,15 @@ export async function defaultSlSet(bytes: Uint8Array): Promise<SlDefaultSet | nu
     .map((c) => ({
       id: c.id,
       faction: c.faction,
-      paragon: attrMax(ATTR_PARAGON),
-      refinement: attrMax(ATTR_REFINEMENT),
+      paragon: TOP_LEVELS[ATTR_PARAGON]!,
+      refinement: TOP_LEVELS[ATTR_REFINEMENT]!,
     }))
   const set = chooseSlSet(file, picks)
   if (!set) return null
   return {
     data: slTeamData(file, set, picks),
     teams: set.teams.map((t) => ({
-      map: (t.source === 0 ? file : file.before!).teams[t.team]!.map,
+      map: choiceSeason(file, t).teams[t.team]!.map,
       core: t.core,
       flex: t.flex,
       pairs: t.pairs,

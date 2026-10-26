@@ -22,15 +22,11 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readTeamsSlot } from '@/composables/useGridPersistence'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useToast } from '@/composables/useToast'
-import {
-  ATTR_PARAGON,
-  ATTR_REFINEMENT,
-  attrMax,
-  type AttrRecord,
-} from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { chooseSlSet } from '@/lib/pvp/sl/chooser'
 import { loadSlData } from '@/lib/pvp/sl/codec'
-import { slTeamData } from '@/lib/pvp/sl/team'
+import { TOP_LEVELS } from '@/lib/pvp/sl/defaultSet'
+import { choiceSeason, slTeamData } from '@/lib/pvp/sl/team'
 import type { SlData, SlPick, SlSample } from '@/lib/pvp/sl/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { isRetiredSeason } from '@/lib/seasonal'
@@ -111,14 +107,8 @@ onMounted(async () => {
   }
 })
 
-// With no roster every hero starts at the top levels, where the recorded
-// opponents are counted, so the set is the records' own best.
-const TOP: AttrRecord = {
-  [ATTR_PARAGON]: attrMax(ATTR_PARAGON),
-  [ATTR_REFINEMENT]: attrMax(ATTR_REFINEMENT),
-}
 const sourceLevels = (id: number): AttrRecord | undefined =>
-  rosters.active ? rosters.active.heroes[id] : TOP
+  rosters.active ? rosters.active.heroes[id] : TOP_LEVELS
 
 const copy = ref<Record<string, AttrRecord>>({})
 // Taken again when another roster becomes active, never on the roster object
@@ -128,7 +118,7 @@ watch(
   () => {
     copy.value = rosters.active
       ? { ...rosters.active.heroes }
-      : Object.fromEntries(heroes.value.map((c) => [c.id, TOP]))
+      : Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS]))
   },
   { immediate: true },
 )
@@ -183,7 +173,7 @@ const generate = async (): Promise<void> => {
       prior: file.prior,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
       teams: set.teams.map((t) => {
-        const season = t.source === 0 ? file : file.before!
+        const season = choiceSeason(file, t)
         const family = t.family === null ? null : season.families[t.family]!
         return {
           map: season.teams[t.team]!.map,
