@@ -471,7 +471,7 @@ onUnmounted(() => {
                 .join(' ')
             "
             fill="none"
-            :stroke="stroke.color"
+            :style="{ stroke: stroke.color }"
             :stroke-width="stroke.width"
           />
         </g>

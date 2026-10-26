@@ -18,6 +18,8 @@ export const SKILL_COLORS = {
   purple: '#9661f1', // gunnar, pandora, reinier, vala
   lilac: '#b08cf6', // dunlingr (curelock)
   orchid: '#a47fb8', // kulu (breakable tiles)
-  slate: '#565b63', // kulu (demolition zone)
+  // Lighter in the dark look; as a CSS variable it resolves only through `style`,
+  // never an SVG attribute.
+  slate: 'var(--skill-slate)', // kulu (demolition zone)
   white: '#ffffff', // phraesto
 } as const
