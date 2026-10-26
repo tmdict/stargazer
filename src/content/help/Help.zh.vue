@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
@@ -138,7 +139,7 @@ const SKILL = {
         <li>从搜索框下方的列表里选中英雄，就只显示把他们放在同一方的阵容。也可以搜阵容名称。</li>
         <li>
           <span class="help-inline-btn"><IconImagePlus :size="13" /></span>
-          可以从对战截图导入整场对局。
+          可以从对战截图导入整场对局，详见<a href="#import">从截图导入</a>。
         </li>
         <li>保存的阵容存在你的浏览器里，用<b>导出</b>可以备份成文件。</li>
       </ul>
@@ -174,6 +175,71 @@ const SKILL = {
         <li>选<b>全部英雄</b>可以重新看到所有英雄。</li>
         <li>英雄池存在你的浏览器里，用<b>导出</b>和<b>导入</b>可以转到其他设备。</li>
       </ul>
+    </div>
+  </section>
+
+  <section id="import" class="help-sec">
+    <h2>从截图导入</h2>
+    <div class="help-grid">
+      <HelpImportPicture />
+      <div class="help-side">
+        <p class="help-lead">把游戏截图变成保存的阵容或英雄池，不用一个个手动摆放英雄。</p>
+        <h3 class="help-col-h">对局</h3>
+        <ol class="help-steps">
+          <li>
+            <span>
+              在<b>阵容</b>页面，点<b>载入</b>旁边的<span class="help-inline-btn"
+                ><IconImagePlus :size="13" /></span
+              >。
+            </span>
+          </li>
+          <li>
+            <span
+              >每张地图添加一张<b>战斗数据</b>界面，用于读取双方的英雄、强化等级、神器和胜方。</span
+            >
+          </li>
+          <li>
+            <span
+              >想让每个英雄站在准确的格子上，再加上布阵截图。布阵截图也可以单独导入，每张导入一方的阵容。</span
+            >
+          </li>
+          <li>
+            <span
+              >巅峰联赛的对局如果没能保存布阵，可以改为每张地图添加一张暂停的回放截图，再设置每个单位起始所在的格子。这一步只能在电脑上进行。</span
+            >
+          </li>
+          <li>
+            <span
+              >先核对导入工具没把握的内容（会排在最前面），再点<b>另存为</b>。这场对局会存为一个新的阵容。</span
+            >
+          </li>
+        </ol>
+      </div>
+      <div class="help-below">
+        <h3 class="help-col-h">英雄池</h3>
+        <ol class="help-steps">
+          <li>
+            <span>在<b>英雄池</b>标签页，点<b>截图</b>。</span>
+          </li>
+          <li>
+            <span
+              >添加<b>英雄厅堂</b>中的英雄截图。截图数量不限，只要每位英雄至少在一张截图中完整显示即可。</span
+            >
+          </li>
+          <li>
+            <span>核对没把握的英雄，再点<b>另存为新英雄池</b>。导入后会自动选中这个英雄池。</span>
+          </li>
+        </ol>
+        <ul class="help-notes reading-secondary">
+          <li>可以在导入窗口的任意位置粘贴截图。</li>
+          <li>裁剪过的截图和完整的手机截屏都能识别。</li>
+          <li>截图不会离开你的设备。</li>
+          <li>
+            你修正过的英雄，导入工具会记住，仅保存在此设备上。核对区下方的清除链接可以删掉这些记录。
+          </li>
+          <li>对局截图目前只在游戏语言为英文时测试过。</li>
+        </ul>
+      </div>
     </div>
   </section>
 

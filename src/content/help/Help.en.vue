@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
@@ -160,7 +161,7 @@ const SKILL = {
         </li>
         <li>
           <span class="help-inline-btn"><IconImagePlus :size="13" /></span> imports a match from
-          screenshots.
+          screenshots, as <a href="#import">Import from screenshots</a> shows.
         </li>
         <li>Saved teams stay in your browser. <b>Export</b> makes a backup file.</li>
       </ul>
@@ -210,6 +211,83 @@ const SKILL = {
           device.
         </li>
       </ul>
+    </div>
+  </section>
+
+  <section id="import" class="help-sec">
+    <h2>Import from screenshots</h2>
+    <div class="help-grid">
+      <HelpImportPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          Turn game screenshots into a saved team or a roster, instead of placing every hero by
+          hand.
+        </p>
+        <h3 class="help-col-h">A match</h3>
+        <ol class="help-steps">
+          <li>
+            <span>
+              On the Teams page, press
+              <span class="help-inline-btn"><IconImagePlus :size="13" /></span> next to <b>Load</b>.
+            </span>
+          </li>
+          <li>
+            <span>
+              Add one <b>Battle Stats</b> screen per map. That gives both teams' heroes, their
+              levels, their artifacts and who won.
+            </span>
+          </li>
+          <li>
+            <span>
+              To put each hero on its exact tile, add the formation screenshots too. Formation
+              screenshots also work alone, and each one becomes a team.
+            </span>
+          </li>
+          <li>
+            <span>
+              For a Supreme League match whose formations weren't saved, add one paused replay
+              screenshot per map instead, then set the tile each unit started on. This works on a
+              computer only.
+            </span>
+          </li>
+          <li>
+            <span>
+              Check anything the importer is unsure of, which it shows first, then press
+              <b>Save as New</b>. The match becomes a new saved team.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <div class="help-below">
+        <h3 class="help-col-h">A roster</h3>
+        <ol class="help-steps">
+          <li>
+            <span>In the <b>Rosters</b> tab, press <b>Screenshots</b>.</span>
+          </li>
+          <li>
+            <span>
+              Add screenshots of your heroes from the <b>Resonating Hall</b>. Take as many as you
+              like, as long as every hero shows whole in at least one.
+            </span>
+          </li>
+          <li>
+            <span>
+              Check any hero it's unsure of, then press <b>Save as New Roster</b>. The roster is
+              picked for you.
+            </span>
+          </li>
+        </ol>
+        <ul class="help-notes reading-secondary">
+          <li>You can paste a screenshot anywhere in the import window.</li>
+          <li>Cropped screenshots and whole phone screens both work.</li>
+          <li>Screenshots stay on your device.</li>
+          <li>
+            When you correct a hero, the importer remembers that hero on this device. A reset link
+            under the review clears what it has learned.
+          </li>
+          <li>Match screens have only been tested with the game in English.</li>
+        </ul>
+      </div>
     </div>
   </section>
 

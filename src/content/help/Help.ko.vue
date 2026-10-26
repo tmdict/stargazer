@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
@@ -163,7 +164,7 @@ const SKILL = {
         </li>
         <li>
           <span class="help-inline-btn"><IconImagePlus :size="13" /></span> 버튼은 스크린샷에서
-          대전을 가져옵니다.
+          대전을 가져옵니다. 자세한 내용은 <a href="#import">스크린샷으로 가져오기</a>를 참고하세요.
         </li>
         <li>
           저장한 진형은 브라우저에 보관됩니다. <b>내보내기</b>로 백업 파일을 만들 수 있습니다.
@@ -216,6 +217,82 @@ const SKILL = {
           있습니다.
         </li>
       </ul>
+    </div>
+  </section>
+
+  <section id="import" class="help-sec">
+    <h2>스크린샷으로 가져오기</h2>
+    <div class="help-grid">
+      <HelpImportPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          영웅을 하나하나 배치하는 대신, 게임 스크린샷을 저장한 진형이나 로스터로 바꿔 보세요.
+        </p>
+        <h3 class="help-col-h">대전</h3>
+        <ol class="help-steps">
+          <li>
+            <span>
+              <b>진형</b> 페이지에서 <b>불러오기</b> 옆의
+              <span class="help-inline-btn"><IconImagePlus :size="13" /></span> 버튼을 누르세요.
+            </span>
+          </li>
+          <li>
+            <span
+              >맵마다 <b>전투 데이터</b> 화면을 한 장씩 추가하세요. 두 진영의 영웅과 레벨, 메아리,
+              승자를 읽습니다.</span
+            >
+          </li>
+          <li>
+            <span
+              >영웅을 정확한 타일에 놓으려면 배치 화면 스크린샷도 추가하세요. 배치 화면 스크린샷만
+              따로 가져오면 각 장이 한 진영이 됩니다.</span
+            >
+          </li>
+          <li>
+            <span
+              >최강자 리그 대전에서 배치를 저장하지 못했다면, 대신 맵마다 일시 정지한 리플레이
+              스크린샷을 한 장씩 추가하고 각 유닛이 시작한 타일을 지정하세요. 컴퓨터에서만 할 수
+              있습니다.</span
+            >
+          </li>
+          <li>
+            <span
+              >가져오기 기능이 확신하지 못한 항목이 맨 앞에 표시됩니다. 이를 확인한 뒤
+              <b>새로 저장</b>을 누르면 대전이 새 진형으로 저장됩니다.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <div class="help-below">
+        <h3 class="help-col-h">로스터</h3>
+        <ol class="help-steps">
+          <li>
+            <span><b>영웅 로스터</b> 탭에서 <b>스크린샷</b>을 누르세요.</span>
+          </li>
+          <li>
+            <span
+              ><b>영웅의 전당</b>에서 찍은 영웅 스크린샷을 추가하세요. 몇 장이든 괜찮지만, 모든
+              영웅이 적어도 한 장에 잘리지 않고 나와야 합니다.</span
+            >
+          </li>
+          <li>
+            <span
+              >확신하지 못한 영웅을 확인한 뒤 <b>새 로스터로 저장</b>을 누르세요. 저장한 로스터가
+              바로 선택됩니다.</span
+            >
+          </li>
+        </ol>
+        <ul class="help-notes reading-secondary">
+          <li>가져오기 창 어디에나 스크린샷을 붙여 넣을 수 있습니다.</li>
+          <li>잘라낸 스크린샷도, 휴대폰 화면 전체를 찍은 스크린샷도 인식됩니다.</li>
+          <li>스크린샷은 기기 밖으로 나가지 않습니다.</li>
+          <li>
+            영웅을 수정하면 가져오기 기능이 이 기기에서 그 영웅을 기억합니다. 확인 영역 아래의
+            초기화 링크로 학습한 내용을 지울 수 있습니다.
+          </li>
+          <li>대전 화면은 게임 언어가 영어일 때만 테스트했습니다.</li>
+        </ul>
+      </div>
     </div>
   </section>
 
