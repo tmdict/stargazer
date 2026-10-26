@@ -2,24 +2,24 @@
  * Shared palette for skill visual effects: targeting arrows, tile borders and
  * fills, unit borders, and connection lines. Hues are referenced by name so a
  * color shared across characters stays identical and retunes in one place.
+ * Each is a CSS variable with a value per look (variables.css), so an effect sets
+ * it through `style`, never an SVG attribute, where var() doesn't resolve.
  */
 export const SKILL_COLORS = {
-  red: '#e57373', // galahad, hepler, satrana, zandrok
-  crimson: '#c83232', // natsu, phraesto (clone), talene
-  rust: '#cd7169', // elijah-lailah (lailah)
-  amber: '#ffa000', // aliceth, dunlingr (spellbind)
-  gold: '#fbc02d', // natsu, phantimal (spirit marks)
-  green: '#98be5d', // bonnie, callan, daimon, isabella, nara, niru, silvina
-  teal: '#6d9c86', // faramor, ravion, thador
-  blue: '#0288d1', // cassadee, evie, himmel, hugin
-  sky: '#51abcb', // elijah-lailah (elijah)
-  steel: '#7badc4', // alna
-  lavender: '#b0a8d0', // frieren
-  purple: '#9661f1', // gunnar, pandora, reinier, vala
-  lilac: '#b08cf6', // dunlingr (curelock)
-  orchid: '#a47fb8', // kulu (breakable tiles)
-  // Lighter in the dark look; as a CSS variable it resolves only through `style`,
-  // never an SVG attribute.
+  red: 'var(--skill-red)', // galahad, hepler, satrana, zandrok
+  crimson: 'var(--skill-crimson)', // natsu, phraesto (clone), talene
+  rust: 'var(--skill-rust)', // elijah-lailah (lailah)
+  amber: 'var(--skill-amber)', // aliceth, dunlingr (spellbind)
+  gold: 'var(--skill-gold)', // natsu, phantimal (spirit marks)
+  green: 'var(--skill-green)', // bonnie, callan, daimon, isabella, nara, niru, silvina
+  teal: 'var(--skill-teal)', // faramor, ravion, thador
+  blue: 'var(--skill-blue)', // cassadee, evie, himmel, hugin
+  sky: 'var(--skill-sky)', // elijah-lailah (elijah)
+  steel: 'var(--skill-steel)', // alna
+  lavender: 'var(--skill-lavender)', // frieren
+  purple: 'var(--skill-purple)', // gunnar, pandora, reinier, vala
+  lilac: 'var(--skill-lilac)', // dunlingr (curelock)
+  orchid: 'var(--skill-orchid)', // kulu (breakable tiles)
   slate: 'var(--skill-slate)', // kulu (demolition zone)
-  white: '#ffffff', // phraesto
+  white: 'var(--skill-white)', // phraesto
 } as const
