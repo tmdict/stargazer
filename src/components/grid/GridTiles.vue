@@ -587,12 +587,12 @@ onUnmounted(() => {
 
 .grid-event-layer.drop-target.drag-hover polygon,
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
-  fill: rgba(255, 255, 255, 0.3);
+  fill: var(--tile-highlight-fill);
   stroke-width: var(--tile-highlight-stroke-width);
 }
 
 .grid-event-layer.drop-target.drag-hover:not(.occupied):not(.invalid-drop) polygon {
-  stroke: var(--color-primary);
+  stroke: var(--tile-highlight-stroke);
   filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent));
 }
 
@@ -602,23 +602,23 @@ onUnmounted(() => {
 }
 
 .grid-event-layer.drop-target.drag-hover.invalid-drop polygon {
-  stroke: var(--color-danger);
+  stroke: var(--color-danger-text);
   filter: var(--invalid-drop-glow);
 }
 
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
-  stroke: var(--color-primary);
+  stroke: var(--tile-highlight-stroke);
 }
 
 .grid-event-layer.targeted polygon {
-  fill: rgba(247, 216, 124, 0.35);
+  fill: var(--tile-targeted-fill);
   stroke: #f7d87c;
   stroke-width: var(--tile-highlight-stroke-width);
 }
 
 .grid-event-layer.lifted polygon {
   fill: color-mix(in srgb, var(--color-primary) 30%, transparent);
-  stroke: var(--color-primary);
+  stroke: var(--tile-highlight-stroke);
   stroke-width: var(--tile-highlight-stroke-width);
 }
 </style>
