@@ -61,6 +61,7 @@
   --unit-disc: #c4baa6;
   --unit-disc-phantimal: #b0b6bb;
   --unit-ring: #fff;
+  --skill-slate: #565b63;
 
   /* Boards in BoardThumbnail's crisp look */
   --tile-crisp-fill-void: rgba(255, 255, 255, 0.08);
@@ -294,6 +295,7 @@
   --unit-disc: #2a313b;
   --unit-disc-phantimal: #3d4654;
   --unit-ring: #98a3b9;
+  --skill-slate: #8a929c;
 
   --tile-crisp-fill-void: var(--tile-fill-default);
   --tile-crisp-fill-ally: var(--tile-fill-ally);
