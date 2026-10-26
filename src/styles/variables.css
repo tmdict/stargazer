@@ -61,7 +61,26 @@
   --unit-disc: #c4baa6;
   --unit-disc-phantimal: #b0b6bb;
   --unit-ring: #fff;
+
+  /* Skill effects */
+  --skill-red: #e57373;
+  --skill-crimson: #c83232;
+  --skill-rust: #cd7169;
+  --skill-amber: #ffa000;
+  --skill-gold: #fbc02d;
+  --skill-green: #98be5d;
+  --skill-teal: #6d9c86;
+  --skill-blue: #0288d1;
+  --skill-sky: #51abcb;
+  --skill-steel: #7badc4;
+  --skill-lavender: #b0a8d0;
+  --skill-purple: #9661f1;
+  --skill-lilac: #b08cf6;
+  --skill-orchid: #a47fb8;
   --skill-slate: #565b63;
+  --skill-white: #fff;
+  --skill-edge: #fff;
+  --skill-line-opacity: 0.8;
 
   /* Boards in BoardThumbnail's crisp look */
   --tile-crisp-fill-void: rgba(255, 255, 255, 0.08);
@@ -295,7 +314,25 @@
   --unit-disc: #2a313b;
   --unit-disc-phantimal: #3d4654;
   --unit-ring: #98a3b9;
+
+  --skill-red: #f6918e;
+  --skill-crimson: #c6473b;
+  --skill-rust: #d89690;
+  --skill-amber: #f29a2c;
+  --skill-gold: #ecba4c;
+  --skill-green: #a1c272;
+  --skill-teal: #78af93;
+  --skill-blue: #429ae0;
+  --skill-sky: #53b6d8;
+  --skill-steel: #83b3cd;
+  --skill-lavender: #bab3db;
+  --skill-purple: #a281eb;
+  --skill-lilac: #be9dfd;
+  --skill-orchid: #b292c3;
   --skill-slate: #8a929c;
+  --skill-white: #e9ebef;
+  --skill-edge: transparent;
+  --skill-line-opacity: 1;
 
   --tile-crisp-fill-void: var(--tile-fill-default);
   --tile-crisp-fill-ally: var(--tile-fill-ally);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* A straight connection line between two hexes: center to center (border to border),
    or corner to corner when startCorner/endCorner are given. Mirrors GridArrow's stroke
-   styling (white shadow + colored line) but with no curve and no arrowhead. */
+   styling (an edge under a colored line) but with no curve and no arrowhead. */
 
 import { computed } from 'vue'
 
@@ -39,11 +39,10 @@ const pathData = computed(() =>
 
 <template>
   <g class="grid-line">
-    <!-- White shadow path for visibility over tiles. -->
     <path
       v-if="pathData"
+      class="line-edge"
       :d="pathData"
-      stroke="white"
       :stroke-width="strokeWidth + 4"
       fill="none"
       opacity="0.8"
@@ -51,12 +50,22 @@ const pathData = computed(() =>
     />
     <path
       v-if="pathData"
+      class="line-core"
       :d="pathData"
-      :stroke="color"
+      :style="{ stroke: color }"
       :stroke-width="strokeWidth"
       fill="none"
-      opacity="0.8"
       stroke-linecap="round"
     />
   </g>
 </template>
+
+<style scoped>
+.line-edge {
+  stroke: var(--skill-edge);
+}
+
+.line-core {
+  opacity: var(--skill-line-opacity);
+}
+</style>
