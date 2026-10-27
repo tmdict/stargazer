@@ -1,11 +1,8 @@
 <script setup lang="ts">
-/* The wall hatch patterns for one board SVG. The preview board's bold set
-   hatches every wall, in both looks. A `board` instance (live board, Help
-   boards, legend swatches) holds both of its looks' sets for TileHatch: a fine
-   hatch on breakable walls for the light look, and a bold set in the board's
-   own stripe colours, at `${id}-dark-…`, for the dark look. Spacing scales with
-   the board's hex radius so the hatch reads the same at every board size. Goes
-   inside the SVG's <defs>. */
+/* The wall hatch patterns for one board SVG, inside its <defs>. A `board`
+   instance holds both looks' sets for TileHatch, the dark one under
+   `${id}-dark-…`. Spacing scales with the hex radius so the hatch reads the
+   same at every board size. */
 
 import { computed } from 'vue'
 

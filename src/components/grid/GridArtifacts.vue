@@ -181,7 +181,6 @@ const popupTeam = ref<Team | null>(null)
 const popupPosition = ref({ x: 0, y: 0 })
 
 const openPopup = (team: Team, center: { x: number; y: number }) => {
-  const scale = ctx.hexScale
   if (props.tapMode) {
     setArtifactTarget(team, ctx.id)
     requestTab('seasonal')
@@ -189,7 +188,7 @@ const openPopup = (team: Team, center: { x: number; y: number }) => {
   }
   const screen = svgPointToScreen(center, cellLayerRef.value)
   if (!screen) return
-  popupPosition.value = { x: screen.x + 30 * scale, y: screen.y - 50 * scale }
+  popupPosition.value = { x: screen.x + 30 * ctx.hexScale, y: screen.y - 50 * ctx.hexScale }
   popupTeam.value = team
   showPopup.value = true
 }

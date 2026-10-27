@@ -3,7 +3,6 @@ import type { PvpSeasonSummary } from '@/lib/types/pvp'
 import { S7 } from './s7/summary'
 import { S8 } from './s8/summary'
 
-/* Seasons, newest first. The guide index lists every entry's report. A new
- * season is a new `s<N>/summary.ts` beside its report template, added at the
- * front. */
+/* Seasons, newest first. A new season is a new `s<N>/summary.ts` beside its
+ * report template, added at the front. */
 export const PVP_SEASONS: readonly PvpSeasonSummary[] = [S8, S7]
