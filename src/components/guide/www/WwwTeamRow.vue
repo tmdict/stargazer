@@ -19,7 +19,8 @@ export const sideLabelKey = (side: TeamSide): string =>
 
 <script setup lang="ts">
 /* One team's row, from the outside in: its artifact, its phantimal and its
-   five heroes, each hero with the P/R pill that steps its levels. Team B's
+   five heroes, each hero with the P/R pill that steps its levels, under a
+   menu that sets a level on all of the team's heroes at once. Team B's
    row runs the other way, so both teams' heroes meet in the middle. Where
    the two rows do not fit side by side, each team is a column instead, its
    heroes over its phantimal and artifact, with the icons toward the middle.
@@ -29,7 +30,10 @@ import { computed } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
+import DropdownSelect from '@/components/ui/DropdownSelect.vue'
+import UpgradeLevelChips from '@/components/ui/UpgradeLevelChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -46,8 +50,15 @@ const { side, team, target } = defineProps<{
 const emit = defineEmits<{
   slot: [index: number]
   artifact: [event: MouseEvent]
-  level: [index: number, attr: 'paragon' | 'refinement', level: number]
+  level: [index: number, attr: LevelAttr, level: number]
+  teamLevel: [attr: LevelAttr, level: number]
 }>()
+
+type LevelAttr = 'paragon' | 'refinement'
+const LEVEL_ATTRS = [
+  { attr: 'paragon', id: ATTR_PARAGON },
+  { attr: 'refinement', id: ATTR_REFINEMENT },
+] as const
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
@@ -64,13 +75,35 @@ const artifact = computed(() =>
   team.artifact === null ? undefined : gameData.getArtifactById(team.artifact),
 )
 
+const sharedLevel = (attr: LevelAttr): number | null => {
+  const levels = new Set(team.heroes.flatMap((h) => (h ? [h[attr]] : [])))
+  return levels.size === 1 ? [...levels][0]! : null
+}
+
 const heroName = (id: number): string =>
   curatedHeroName(gameData.getCharacterNameById(id) ?? '', i18n.currentLocale)
 </script>
 
 <template>
   <div class="www-team" :class="side">
-    <span class="www-team-label">{{ i18n.t(sideLabelKey(side)) }}</span>
+    <div class="www-team-head">
+      <span class="www-team-label">{{ i18n.t(sideLabelKey(side)) }}</span>
+      <DropdownSelect :label="i18n.t('app.upgrades')" floating>
+        <template #default>
+          <div class="www-levels">
+            <template v-for="{ attr, id } in LEVEL_ATTRS" :key="attr">
+              <span class="www-levels-label">{{ i18n.t(`app.${attr}`) }}</span>
+              <UpgradeLevelChips
+                :attr-id="id"
+                :lit="sharedLevel(attr)"
+                :disabled="!heroIds.length"
+                @pick="emit('teamLevel', attr, $event)"
+              />
+            </template>
+          </div>
+        </template>
+      </DropdownSelect>
+    </div>
     <div class="www-team-row">
       <div class="www-extras">
         <div class="www-cell">
@@ -144,12 +177,36 @@ const heroName = (id: number): string =>
   --ring: var(--unit-frame-enemy);
 }
 
+.www-team-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+}
+
 .www-team-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ring);
+}
+
+.www-levels {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding: var(--spacing-sm);
+}
+
+.www-levels-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .www-team-row {
