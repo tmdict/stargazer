@@ -1,6 +1,6 @@
 /* The set the generator gives before a roster is picked. The guide index's
  * card draws it, worked out once per build (scripts/slPreview.ts) so the index
- * loads neither the data file nor the chooser. */
+ * loads neither the data file, the model nor the chooser. */
 
 import {
   ATTR_PARAGON,
@@ -8,9 +8,11 @@ import {
   attrMax,
   type AttrRecord,
 } from '@/lib/characters/attributes'
+import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
+import { decodeSlData } from '../data/codec'
+import { learnSeason } from '../model/models'
 import { chooseSlSet } from './chooser'
-import { decodeSlData } from './codec'
 import { choiceSeason, slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
 
@@ -40,7 +42,7 @@ export async function defaultSlSet(bytes: Uint8Array): Promise<SlDefaultSet | nu
       paragon: TOP_LEVELS[ATTR_PARAGON]!,
       refinement: TOP_LEVELS[ATTR_REFINEMENT]!,
     }))
-  const set = chooseSlSet(file, picks)
+  const set = chooseSlSet(file, learnSeason(file), picks, (id) => artifactSurvives(file.season, id))
   if (!set) return null
   return {
     data: slTeamData(file, set, picks),

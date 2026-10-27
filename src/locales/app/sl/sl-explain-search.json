@@ -1,5 +1,5 @@
 {
-  "en": "The generator tries every way of picking five recorded teams, one for each map, with no hero used twice. It keeps the set with the best chance to win the match, which can mean a weaker team on one map so that the others are stronger.",
-  "zh": "生成器会尝试所有挑选五支记录队伍的方式，每张地图一支，同一英雄只用一次，然后保留赢下整场比赛几率最高的一套。这可能意味着在一张地图上用较弱的队伍，让其他地图更强。",
-  "ko": "생성기는 맵마다 한 팀씩, 같은 영웅을 두 번 쓰지 않게 기록된 팀 다섯을 고르는 모든 방법을 시도하고, 매치를 이길 확률이 가장 높은 세트를 남깁니다. 그래서 다른 맵을 더 강하게 하려고 한 맵에 약한 팀을 둘 수도 있습니다."
+  "en": "The generator tries every way of picking five recorded teams, one for each map, with no hero used twice, and gives each team its own artifact. A team gets an artifact players used with it. If another team in the set already has that one, it gets the artifact teams of its comp used most. The generator keeps the set with the best chance to win the match, which can mean a weaker team on one map so that the others are stronger.",
+  "zh": "生成器会尝试所有挑选五支记录队伍的方式，每张地图一支，同一英雄只用一次，并给每支队伍各配一件神器。队伍会拿到玩家搭配它用过的神器。如果同一套中已有其他队伍拿了这件神器，它就改用同阵容队伍用得最多的神器。生成器会保留赢下整场比赛几率最高的一套，这可能意味着在一张地图上用较弱的队伍，让其他地图更强。",
+  "ko": "생성기는 맵마다 한 팀씩, 같은 영웅을 두 번 쓰지 않게 기록된 팀 다섯을 고르는 모든 방법을 시도하고, 팀마다 메아리를 하나씩 줍니다. 팀은 플레이어들이 그 팀과 함께 쓴 메아리를 받습니다. 세트의 다른 팀이 이미 그 메아리를 가졌다면, 같은 조합의 팀들이 가장 많이 쓴 메아리를 받습니다. 생성기는 매치를 이길 확률이 가장 높은 세트를 남기므로, 다른 맵을 더 강하게 하려고 한 맵에 약한 팀을 둘 수도 있습니다."
 }

@@ -1,5 +1,5 @@
 {
-  "en": "A typical opponent's teams are as strong as the average recorded team, and all their heroes are fully upgraded. Yours count at the levels you picked.",
-  "zh": "一般水平的对手是指：队伍强度与记录中的平均队伍相当，英雄全部满强化。你的英雄则按你选择的等级计算。",
-  "ko": "보통 수준의 상대란 팀 전력이 기록된 평균적인 팀과 비슷하고 영웅이 모두 최대 강화인 상대입니다. 내 영웅은 고른 강화 수준으로 계산합니다."
+  "en": "A typical opponent's teams are as strong as the average recorded team, artifacts included, and all their heroes are fully upgraded. Yours count at the levels you picked, with the artifacts shown.",
+  "zh": "一般水平的对手是指：队伍强度（包括神器）与记录中的平均队伍相当，英雄全部满强化。你的英雄按你选择的等级计算，神器按页面上显示的计算。",
+  "ko": "보통 수준의 상대란 메아리까지 포함한 팀 전력이 기록된 평균적인 팀과 비슷하고 영웅이 모두 최대 강화인 상대입니다. 내 영웅은 고른 강화 수준으로, 메아리는 보이는 대로 계산합니다."
 }

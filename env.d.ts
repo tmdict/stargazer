@@ -2,7 +2,7 @@
 
 /** The Supreme League generator's set before a roster is picked (scripts/slPreview.ts). */
 declare module 'virtual:sl-preview' {
-  const set: import('@/lib/pvp/sl/defaultSet').SlDefaultSet | null
+  const set: import('@/lib/pvp/sl/generator/defaultSet').SlDefaultSet | null
   export default set
 }
 

@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
-import { chooseSlSet } from '@/lib/pvp/sl/chooser'
-import { loadSlData } from '@/lib/pvp/sl/codec'
-import { slTeamData } from '@/lib/pvp/sl/team'
-import type { SlChoice, SlPick } from '@/lib/pvp/sl/types'
+import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
+import { slTeamData } from '@/lib/pvp/sl/generator/team'
+import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
+import { learnSeason } from '@/lib/pvp/sl/model/models'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
 import { loadCharacters } from '@/utils/dataLoader'
@@ -19,6 +20,7 @@ vi.stubGlobal(
 )
 const data = await loadSlData()
 vi.unstubAllGlobals()
+const learned = learnSeason(data)
 const faction = new Map(loadCharacters().map((c) => [c.id, c.faction]))
 const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((id, i) => ({
   id,
@@ -26,7 +28,7 @@ const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((i
   paragon: i % 5,
   refinement: 4,
 }))
-const set = chooseSlSet(data, picks)!
+const set = chooseSlSet(data, learned, picks)!
 const byTile = (a: number[], b: number[]) => a[0]! - b[0]!
 const decoded = (season: number) =>
   decodeMultiGridStateFromUrl(slTeamData({ ...data, season }, set, picks))!
@@ -73,7 +75,7 @@ describe('a set saved as a team', () => {
     ]
       .filter((id) => !['celestial', 'hypogean'].includes(faction.get(id)!))
       .map((id) => ({ id, faction: faction.get(id)!, paragon: 4, refinement: 4 }))
-    const chosen = chooseSlSet(data, fewer)!
+    const chosen = chooseSlSet(data, learned, fewer)!
     expect(chosen.teams.some((t) => t.source === 1)).toBe(true)
     expectSaved(chosen, fewer)
   })

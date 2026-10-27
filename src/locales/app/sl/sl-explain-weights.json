@@ -1,5 +1,5 @@
 {
-  "en": "Wins against strong opponents count for more, and wins with an upgrade advantage count for less.",
-  "zh": "战胜强敌的胜场算得更多，有强化优势时的胜场算得更少。",
-  "ko": "강한 상대를 이긴 승리는 더 높게, 강화가 앞선 상태로 이긴 승리는 더 낮게 평가합니다."
+  "en": "Wins against strong opponents count for more, and wins with an upgrade advantage or a strong artifact count for less.",
+  "zh": "战胜强敌的胜场算得更多，有强化优势或强力神器时的胜场算得更少。",
+  "ko": "강한 상대를 이긴 승리는 더 높게, 강화가 앞서거나 강한 메아리를 들고 이긴 승리는 더 낮게 평가합니다."
 }

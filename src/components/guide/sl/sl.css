@@ -3,9 +3,6 @@
    look in both looks. */
 
 .sl-page {
-  --sl-good: #4ec9a5;
-  --sl-bad: #e2686f;
-
   background: var(--color-bg-page);
   color: var(--color-text-primary);
 }

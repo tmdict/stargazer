@@ -11,13 +11,14 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
 import type { MapConfig } from '@/lib/maps'
-import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
+import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlChoice, SlChoiceTeam, SlData, SlMap, SlPick } from './types'
+import type { SlData, SlMap } from '../data/types'
+import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 
 // The season a chosen team comes from: this season's, or the season before's.
 export const choiceSeason = (data: SlData, choice: Pick<SlChoiceTeam, 'source'>) =>
@@ -59,8 +60,7 @@ export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),
-      allyArtifact:
-        artifact !== null && (!retired || isPermanentArtifactId(artifact)) ? artifact : null,
+      allyArtifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : null,
       enemyArtifact: null,
       map: map.key,
       getAttrs: (side, unitId) => (side === Team.ALLY ? (levels.get(unitId) ?? {}) : {}),

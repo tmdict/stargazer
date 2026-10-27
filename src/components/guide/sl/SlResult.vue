@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { SlChoiceTeam, SlFamily } from '@/lib/pvp/sl/types'
+import type { SlFamily } from '@/lib/pvp/sl/data/types'
+import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
 
 // A chosen team as the page shows it, read off the data file once.
 export interface SlShownTeam extends Pick<
@@ -15,8 +16,6 @@ export interface SlShown {
   chance: number
   // The chance of winning each number of maps, 0 to 5.
   odds: number[]
-  // The notional games each chance starts with.
-  prior: number
   // Under this many Celestial and Hypogean heroes last season's teams join;
   // null when the data file has none.
   beforeUnder: number | null
