@@ -1,8 +1,8 @@
 <script setup lang="ts">
-/* Guide index. On wide screens the report cards span the rows beside the
-   generator and the top of Upgrades, so every card keeps its own height and
-   each column's second card follows its first however many seasons there
-   are. */
+/* Guide index. On wide screens two columns, the reports over Mechanics and
+   the generator over Upgrades, so each card follows the one above it however
+   tall its neighbour is. On narrow screens the columns dissolve into one
+   stack, ordered by the grid's areas. */
 
 import { computed } from 'vue'
 
@@ -29,12 +29,16 @@ useGameDataStore().initializeContentData()
 
 <template>
   <main class="guide-index">
-    <div class="reports">
-      <GuidePvpReport v-for="summary in PVP_SEASONS" :key="summary.season" :summary :lang />
+    <div class="column">
+      <div class="reports">
+        <GuidePvpReport v-for="summary in PVP_SEASONS" :key="summary.season" :summary :lang />
+      </div>
+      <GuideMechanicsIndex class="mechanics" :lang />
     </div>
-    <SlGuideEntry class="generator" :lang />
-    <GuideUpgradesIndex class="upgrades" :lang />
-    <GuideMechanicsIndex class="mechanics" :lang />
+    <div class="column">
+      <SlGuideEntry class="generator" :lang />
+      <GuideUpgradesIndex class="upgrades" :lang />
+    </div>
   </main>
 </template>
 
@@ -49,6 +53,9 @@ useGameDataStore().initializeContentData()
     'mechanics';
   align-items: start;
   gap: var(--stack-gap);
+}
+.column {
+  display: contents;
 }
 .reports {
   grid-area: reports;
@@ -68,10 +75,12 @@ useGameDataStore().initializeContentData()
 @media (min-width: 1100px) {
   .guide-index {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-areas:
-      'reports generator'
-      'reports upgrades'
-      'mechanics upgrades';
+    grid-template-areas: none;
+  }
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-gap);
   }
 }
 </style>
