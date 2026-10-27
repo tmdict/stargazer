@@ -3,6 +3,7 @@
 
 import { computed, useId } from 'vue'
 
+import TileBevel from '@/components/grid/TileBevel.vue'
 import TileHatch from '@/components/grid/TileHatch.vue'
 import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
 import { State } from '@/lib/types/state'
@@ -72,16 +73,20 @@ const tiles = computed(() =>
     const col = i % COLS
     const painted = paint.find(({ at }) => at[0] === row && at[1] === col)
     const state = painted?.state ?? ROW_STATE[row]!
+    const at = center([row, col])
     return {
       key: i,
       state,
       fill: getTileFillColor(state),
       outline: getTileStrokeColor(state),
-      points: points(center([row, col])),
+      corners: corners(at),
+      points: points(at),
       stroke: getWallStrokeColor(state),
     }
   }),
 )
+
+const framedTiles = computed(() => tiles.value.filter((tile) => tile.state !== State.DEFAULT))
 
 const wallTiles = computed(() =>
   tiles.value
@@ -163,7 +168,7 @@ const arrowPath = computed(() => {
         :style="{ fill: tile.fill, stroke: tile.outline }"
         stroke-width="1"
       />
-      <TileHatch :pattern-id="id" :state="tile.state" :points="tile.points" />
+      <TileHatch :pattern-id="id" :state="tile.state" :corners="tile.corners" />
     </template>
     <polygon
       v-for="tile in wallTiles"
@@ -172,6 +177,12 @@ const arrowPath = computed(() => {
       fill="none"
       :style="{ stroke: tile.stroke }"
       stroke-width="1"
+    />
+    <TileBevel
+      v-for="tile in framedTiles"
+      :key="`bevel-${tile.key}`"
+      :corners="tile.corners"
+      :outline-width="1"
     />
     <polygon
       v-if="highlight"

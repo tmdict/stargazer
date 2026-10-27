@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useId, watchEffect } from 'vue'
 
+import TileBevel from './TileBevel.vue'
 import TileHatch from './TileHatch.vue'
 import TileHatchPatterns from './TileHatchPatterns.vue'
 import SkillCornerLines from '@/components/SkillCornerLines.vue'
@@ -332,24 +333,28 @@ const wallHexes = computed(() =>
   regularHexes.value.flatMap((hex) => {
     const state = ctx.grid.getTile(hex).state
     const stroke = getWallStrokeColor(state)
-    return stroke
-      ? [
-          {
-            id: hex.getId(),
-            state,
-            stroke,
-            points: props.layout
-              .polygonCorners(hex)
-              .map((p) => `${p.x},${p.y}`)
-              .join(' '),
-          },
-        ]
-      : []
+    if (!stroke) return []
+    const corners = props.layout.polygonCorners(hex)
+    return [
+      {
+        id: hex.getId(),
+        state,
+        stroke,
+        corners,
+        points: corners.map((p) => `${p.x},${p.y}`).join(' '),
+      },
+    ]
   }),
 )
 
 const wallBorderHexes = computed(() =>
   [...wallHexes.value].sort((a, b) => compareWallDrawOrder(a.state, b.state)),
+)
+
+const framedHexes = computed(() =>
+  [...regularHexes.value, ...elevatedHexes.value]
+    .filter((hex) => !isOpenGround(hex))
+    .map((hex) => ({ id: hex.getId(), corners: props.layout.polygonCorners(hex) })),
 )
 
 const handleCharacterHoverEnter = (hexId: number) => {
@@ -412,7 +417,7 @@ onUnmounted(() => {
           class="grid-tile"
           :pattern-id="hatchId"
           :state="tile.state"
-          :points="tile.points"
+          :corners="tile.corners"
         />
 
         <!-- Elevated hexes (render above regular hexes, but below skill highlights) -->
@@ -438,6 +443,13 @@ onUnmounted(() => {
           fill="none"
           :style="{ stroke: tile.stroke }"
           :stroke-width="scaledStrokeWidth"
+        />
+
+        <TileBevel
+          v-for="tile in framedHexes"
+          :key="`bevel-${tile.id}`"
+          :corners="tile.corners"
+          :outline-width="scaledStrokeWidth"
         />
 
         <!-- Skill-highlighted hexes (render on top to ensure skill borders are visible) -->
