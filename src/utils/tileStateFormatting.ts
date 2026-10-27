@@ -76,12 +76,16 @@ export const teamTint = (team: Team, alpha: number): string => {
 // Board colours are tokens (variables.css) with a value for each look, so they
 // are set through `style`: an SVG attribute does not read var().
 export const TILE_STROKE_COLOR = 'var(--tile-stroke)'
-export const TILE_STROKE_COLOR_STRONG = 'var(--tile-stroke-strong)'
+const TILE_STROKE_COLOR_STRONG = 'var(--tile-stroke-strong)'
 
 // Open ground's outline is dimmer than a deployment tile's or a wall's in the
 // dark look.
 export const getTileStrokeColor = (state: State): string =>
   state === State.DEFAULT ? 'var(--tile-stroke-default)' : TILE_STROKE_COLOR
+
+// Tile buttons' heavier outline, where open ground is dim only in the dark look.
+export const getStrongTileStrokeColor = (state: State): string =>
+  state === State.DEFAULT ? 'var(--tile-stroke-strong-default)' : TILE_STROKE_COLOR_STRONG
 
 // The outline of a tile with a unit on it, which in the dark look is the
 // unit's frame.
@@ -111,12 +115,18 @@ export const getWallStrokeColor = (state: State): string | null => {
 export const compareWallDrawOrder = (a: State, b: State): number =>
   Number(a === State.BLOCKED) - Number(b === State.BLOCKED)
 
-// Framed thumbnails leave room for their inner border.
+// A framed tile's stripes stop inside its inner line. Fractions of the hex
+// radius.
 const HATCH_INSET = 4 / 18
+export const BEVEL_INSET = 2.5 / 18
 
-export const getTileHatchPoints = (corners: Point[]): string => {
+const insetPoints = (corners: Point[], inset: number): string => {
   const cx = corners.reduce((sum, p) => sum + p.x, 0) / corners.length
   const cy = corners.reduce((sum, p) => sum + p.y, 0) / corners.length
-  const k = 1 - HATCH_INSET
+  const k = 1 - inset
   return corners.map((p) => `${cx + (p.x - cx) * k},${cy + (p.y - cy) * k}`).join(' ')
 }
+
+export const getTileHatchPoints = (corners: Point[]): string => insetPoints(corners, HATCH_INSET)
+
+export const getTileBevelPoints = (corners: Point[]): string => insetPoints(corners, BEVEL_INSET)

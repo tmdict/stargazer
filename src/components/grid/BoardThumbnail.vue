@@ -8,6 +8,7 @@ import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import {
+  BEVEL_INSET,
   getTileHatchPoints,
   getWallHatchFill,
   TEAM_COLORS,
@@ -140,10 +141,7 @@ function getTileFill(state: State | undefined): string {
    frames, with one border on every deployment and wall tile, a dark bevel line
    inside each framed tile, and each portrait clipped under a dark rim inside
    its frame. Ratios are of hexSize; strokes are fixed in screen pixels. */
-const CRISP = {
-  inset: 1.6 / 18,
-  bevel: 2.5 / 18,
-}
+const CRISP_INSET = 1.6 / 18
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
   switch (state) {
@@ -267,7 +265,7 @@ const crispTiles = computed(() => {
         hexId,
         zone,
         points: geometry.value.points.get(hexId)!,
-        bevel: hexAt(center, size - size * CRISP.bevel),
+        bevel: hexAt(center, size - size * BEVEL_INSET),
         center,
       }
     })
@@ -288,7 +286,7 @@ const placedUnits = computed(() =>
       frame: UNIT_FRAME_COLORS[unit.team],
       imageSize: hexSize * 2.2,
       // The crisp look clips the portrait under the rim, inside the frame.
-      inner: hexAt(geometry.value.centers.get(unit.hexId)!, hexSize - hexSize * CRISP.inset),
+      inner: hexAt(geometry.value.centers.get(unit.hexId)!, hexSize - hexSize * CRISP_INSET),
     })),
 )
 

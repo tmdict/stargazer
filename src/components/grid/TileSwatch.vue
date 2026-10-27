@@ -4,13 +4,14 @@
 
 import { computed, useId } from 'vue'
 
+import TileBevel from './TileBevel.vue'
 import TileHatch from './TileHatch.vue'
 import TileHatchPatterns from './TileHatchPatterns.vue'
-import type { State } from '@/lib/types/state'
+import { State } from '@/lib/types/state'
 import {
+  getStrongTileStrokeColor,
   getTileFillColor,
   getWallStrokeColor,
-  TILE_STROKE_COLOR_STRONG,
 } from '@/utils/tileStateFormatting'
 
 const { state, points } = defineProps<{
@@ -39,11 +40,12 @@ const stroke = computed(() => getWallStrokeColor(state))
   <TileHatchPatterns v-if="stroke" :id :hex-size board :stroke-width="hexSize / 10" />
   <polygon
     :points
-    :style="{ fill: getTileFillColor(state), stroke: TILE_STROKE_COLOR_STRONG }"
+    :style="{ fill: getTileFillColor(state), stroke: getStrongTileStrokeColor(state) }"
     stroke-width="2"
   />
   <template v-if="stroke">
-    <TileHatch :pattern-id="id" :state :points />
+    <TileHatch :pattern-id="id" :state :corners />
     <polygon :points fill="none" :style="{ stroke }" stroke-width="2" />
   </template>
+  <TileBevel v-if="state !== State.DEFAULT" :corners :outline-width="2" />
 </template>

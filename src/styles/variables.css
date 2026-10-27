@@ -49,11 +49,13 @@
   --tile-stroke: #a9afb6;
   --tile-stroke-default: #a9afb6;
   --tile-stroke-strong: #8a8f98;
+  --tile-stroke-strong-default: var(--tile-stroke-strong);
   --tile-stroke-held-ally: var(--tile-stroke-strong);
   --tile-stroke-held-enemy: var(--tile-stroke-strong);
   --tile-wall-blocked: #858b91;
   --tile-wall-breakable: #a0a59d;
-  --tile-hatch: #b2b6af;
+  --tile-hatch-blocked: transparent;
+  --tile-hatch-breakable: #b2b6af;
   --tile-text: #222;
   --tile-coordinate: #555;
   --unit-frame-ally: var(--color-ally);
@@ -304,10 +306,13 @@
   --tile-stroke: #98a3b9;
   --tile-stroke-default: #3b424d;
   --tile-stroke-strong: #98a3b9;
+  --tile-stroke-strong-default: var(--tile-stroke-default);
   --tile-stroke-held-ally: var(--unit-frame-ally);
   --tile-stroke-held-enemy: var(--unit-frame-enemy);
   --tile-wall-blocked: var(--tile-stroke);
   --tile-wall-breakable: var(--tile-stroke);
+  --tile-hatch-blocked: #3a4252;
+  --tile-hatch-breakable: #5f6a80;
   --tile-text: #8a95ab;
   --tile-coordinate: #737e93;
   --tile-highlight-fill: color-mix(in srgb, var(--color-accent) 10%, transparent);
