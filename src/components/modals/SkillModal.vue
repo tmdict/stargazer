@@ -41,7 +41,6 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
     :label
     :link-param="skillName"
     :locale-override="selected"
-    max-width="var(--skill-popup-width)"
     :top-anchor="true"
     @close="emit('close')"
   >

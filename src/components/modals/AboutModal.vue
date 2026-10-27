@@ -32,7 +32,7 @@ const closeOnLink = (event: MouseEvent): void => {
 </script>
 
 <template>
-  <BaseModal :show="show" :label="i18n.t('app.about')" max-width="1000px" @close="emit('close')">
+  <BaseModal :show="show" :label="i18n.t('app.about')" @close="emit('close')">
     <component :is="content" @click="closeOnLink" />
   </BaseModal>
 </template>
