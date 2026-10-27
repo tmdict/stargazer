@@ -116,6 +116,10 @@ const setLevel = (
   if (hero) hero[attr] = level
 }
 
+const setTeamLevel = (side: TeamSide, attr: 'paragon' | 'refinement', level: number): void => {
+  for (const hero of teams.value[side].heroes) if (hero) hero[attr] = level
+}
+
 const artifactPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
 const toggleArtifactPicker = (side: TeamSide, event: MouseEvent): void => {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
@@ -212,6 +216,7 @@ const predictWinner = async (): Promise<void> => {
             @slot="pickSlot(side, $event)"
             @artifact="toggleArtifactPicker(side, $event)"
             @level="(slot, attr, level) => setLevel(side, slot, attr, level)"
+            @team-level="(attr, level) => setTeamLevel(side, attr, level)"
           />
         </template>
       </div>
@@ -272,6 +277,11 @@ const predictWinner = async (): Promise<void> => {
 </template>
 
 <style scoped>
+.www-page {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
 .www-match {
   display: flex;
   flex-direction: column;
