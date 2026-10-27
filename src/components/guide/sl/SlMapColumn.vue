@@ -18,14 +18,9 @@ import { usePreviewImages } from '@/composables/usePreviewImages'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
-const {
-  team,
-  board,
-  numbered = true,
-} = defineProps<{
+const { team } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'>
   board: PreviewBoard | undefined
-  numbered?: boolean
 }>()
 
 const TONE_GAMES = 8
@@ -67,7 +62,6 @@ const record = computed(() => {
       :artifacts="{ ally: thumbnailArtifact(board.artifacts.ally) }"
       :hex-size="18"
       crisp
-      :numbered
     />
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">

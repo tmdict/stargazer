@@ -46,13 +46,7 @@ const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
       <p class="guide-blurb">{{ appLabel('sl-blurb', lang) }}</p>
       <!-- In the generator's board colours, which its page keeps in both looks. -->
       <div v-if="maps.length" class="maps" data-theme="dark">
-        <SlMapColumn
-          v-for="{ team, board } in maps"
-          :key="team.map"
-          :team
-          :board
-          :numbered="false"
-        />
+        <SlMapColumn v-for="{ team, board } in maps" :key="team.map" :team :board />
       </div>
     </section>
   </article>
