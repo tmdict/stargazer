@@ -68,8 +68,9 @@ const outcomes = computed(() => [
       <li>{{ i18n.t('app.sl-explain-step-1') }}</li>
       <li>{{ i18n.t('app.sl-explain-step-2') }}</li>
       <li>{{ i18n.t('app.sl-explain-step-3') }}</li>
+      <li>{{ i18n.t('app.sl-explain-step-4') }}</li>
     </ol>
-    <p>{{ i18n.t('app.sl-explain-steps', { prior: shown.prior }) }}</p>
+    <p>{{ i18n.t('app.sl-explain-steps') }}</p>
     <p>{{ i18n.t('app.sl-explain-weights') }}</p>
 
     <h2>{{ i18n.t('app.sl-explain-sum-head') }}</h2>

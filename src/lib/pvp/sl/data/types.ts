@@ -1,15 +1,22 @@
-/* The Supreme League generator's data file, as codec.ts reads it, and the
- * chooser's input and answer. The format and a complete example are in
- * docs/architecture/GUIDE.md ("Supreme League generator"). */
+/* The Supreme League data file, as codec.ts reads it. The format and a
+ * complete example are in docs/architecture/GUIDE.md ("The data file"). */
 
-// [team, result, gap, opponent]: the team's index, a win, a loss or a tie, the
-// upgrade gap toward the team in Rivalry points, and the opponent's log rating.
-export type SlGame = [team: number, result: 'w' | 'l' | 't', gap: number, opponent: number]
+export type SlResult = 'w' | 'l' | 't'
+
+// [team, result, gap, artifact]: the team's index, a win, a loss or a tie, the
+// upgrade gap toward the team in Rivalry points, and the artifact on its board
+// (null for none). Entries 2k and 2k + 1 are the two sides of one game.
+export type SlGame = [team: number, result: SlResult, gap: number, artifact: number | null]
+
+// Last season's games carry no artifact: its seasonal ids name other
+// artifacts now.
+export type SlBeforeGame = [team: number, result: SlResult, gap: number]
 
 // [tile, unit id], tiles numbered from the ally side.
 export type SlUnit = [tile: number, id: number]
 
 export interface SlPlacement {
+  // The decided games played with it.
   games: number[]
   use: number
   players: number
@@ -32,7 +39,6 @@ interface SlTeamBase {
   rank: number
   players: number
   games: number[]
-  lineup: number[]
   placements: SlPlacement[]
 }
 
@@ -41,8 +47,8 @@ export interface SlTeam extends SlTeamBase {
   artifacts: [id: number, share: number][]
 }
 
-// A team of the season before takes this season's artifacts: the first of
-// these no team before it in the set holds.
+// A team of the season before takes this season's artifacts, the first of
+// these the set leaves free.
 export interface SlBeforeTeam extends SlTeamBase {
   like: number[]
 }
@@ -50,10 +56,9 @@ export interface SlBeforeTeam extends SlTeamBase {
 export interface SlFamily {
   // By language code; a site language missing here names the group by its core.
   name: Partial<Record<string, string>>
-  expected: number
-  spread: number
   core: number[]
-  swaps: [heroes: number[], chance: number][]
+  // The group's recorded teams, for the swaps.
+  swaps: number[][]
   // [players, wins, losses] on each map.
   perMap: [players: number, wins: number, losses: number][]
 }
@@ -66,11 +71,9 @@ export interface SlSample {
   players: number
 }
 
-export interface SlSeason<Team> {
+export interface SlSeason<Team, Game> {
   sample: SlSample
-  theta: number
-  oneOffStart: number
-  games: SlGame[]
+  games: Game[]
   teams: Team[]
   families: SlFamily[]
 }
@@ -87,7 +90,14 @@ export interface SlMap {
   grid: { ally: number[]; enemy: number[]; blocked: number[]; breakable: number[] }
 }
 
-export interface SlData extends SlSeason<SlTeam> {
+export interface SlPrices {
+  paragon: Record<string, number[]>
+  refinement: number[]
+}
+
+export type SlBefore = SlSeason<SlBeforeTeam, SlBeforeGame> & { season: number }
+
+export interface SlData extends SlSeason<SlTeam, SlGame> {
   season: number
   // YYYY-MM-DD
   exportedAt: string
@@ -97,48 +107,10 @@ export interface SlData extends SlSeason<SlTeam> {
   // The strict rule first, then the relaxed one.
   evidence: SlEvidence[]
   flex: { heroes: number; options: number }
-  // Rivalry points by level (the index); the opponent stands at the last.
-  prices: { paragon: Record<string, number[]>; refinement: number[] }
+  // Rivalry points by level (the index); the top level is the last.
+  prices: SlPrices
   // Every hero id in the order of their English names, for ties.
   order: number[]
-  before?: SlSeason<SlBeforeTeam> & { season: number }
+  before?: SlBefore
   beforeUnder?: number
-}
-
-// A selected hero at its levels.
-export interface SlPick {
-  id: number
-  faction: string
-  paragon: number
-  refinement: number
-}
-
-export interface SlChoiceTeam {
-  // 0 for this season's teams, 1 for the season before's.
-  source: number
-  // Index into that season's teams.
-  team: number
-  heroes: number[]
-  family: number | null
-  rate: number
-  chance: number
-  // The comp's [players, wins, losses] on this map.
-  comp: [number, number, number] | null
-  artifact: number | null
-  // Index into the team's placements: the board drawn.
-  placement: number
-  core: number[]
-  flex: { out: number; options: number[] }[]
-  // Two-hero swaps: two heroes out, and the pairs that can take their places.
-  pairs: { out: number[]; options: number[][] }[]
-}
-
-export interface SlChoice {
-  // Index into SlData.evidence.
-  evidence: number
-  chance: number
-  // The chance of winning each number of maps, 0 to 5.
-  odds: number[]
-  // One per map, in map order.
-  teams: SlChoiceTeam[]
 }

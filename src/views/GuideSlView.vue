@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /* The Supreme League generator: for the heroes and levels a visitor picks,
    the set of five recorded teams, one per map and no hero twice, with the
-   best chance to win a match (lib/pvp/sl). The picker edits a copy of the
-   active roster, so trying a hero out never changes the roster, and picking
-   or importing another roster takes a fresh copy. The set is chosen only on
+   best chance to win a match (lib/pvp/sl), chosen in the Supreme League
+   worker (useSlEngine) so the page stays responsive. The picker edits a copy
+   of the active roster, so trying a hero out never changes the roster, and
+   picking or importing another roster takes a fresh copy. The set is chosen only on
    Generate and stays as it is while the selection changes, and Save as team
    opens the saved set on the Teams page. The page is pre-rendered with its
    heading alone: the picker and the set follow the visitor's rosters, which
@@ -21,13 +22,14 @@ import { slPercent } from '@/components/guide/sl/useSlNames'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readTeamsSlot } from '@/composables/useGridPersistence'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
-import { chooseSlSet } from '@/lib/pvp/sl/chooser'
-import { loadSlData } from '@/lib/pvp/sl/codec'
-import { TOP_LEVELS } from '@/lib/pvp/sl/defaultSet'
-import { choiceSeason, slTeamData } from '@/lib/pvp/sl/team'
-import type { SlData, SlPick, SlSample } from '@/lib/pvp/sl/types'
+import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
+import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
+import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
+import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { MAX_SAVED_TEAMS, TEAM_VARIANTS } from '@/lib/teams/modes'
@@ -51,6 +53,7 @@ const library = useTeamLibrary()
 const route = useRoute()
 const router = useRouter()
 const { error, success, show } = useToast()
+const { status: engineStatus, generate: generateSet } = useSlEngine()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 
@@ -62,8 +65,8 @@ const {
   onTouchStart: betaTouchStart,
 } = useInfoTip()
 
-// Plain, never reactive: a proxy over every recorded game would slow the
-// chooser, and the decoded data stays out of anything the console can reach.
+// Plain, never reactive, so the decoded data stays out of anything the
+// console can reach.
 let data: SlData | null = null
 const heading = ref<{
   season: number
@@ -163,14 +166,11 @@ const generate = async (): Promise<void> => {
   if (!file) return
   busy.value = true
   try {
-    // Let the busy state paint before the choice holds the thread.
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     const picks = picksOf(copy.value)
-    const set = chooseSlSet(file, picks)
+    const set = await generateSet(picks)
     shown.value = set && {
       chance: set.chance,
       odds: set.odds,
-      prior: file.prior,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
       teams: set.teams.map((t) => {
         const season = choiceSeason(file, t)
@@ -189,7 +189,8 @@ const generate = async (): Promise<void> => {
     }
     noSet.value = !set
   } catch {
-    // A file whose parts do not line up passes the shape check and fails here.
+    // A file whose parts do not line up passes the shape check and fails in
+    // the worker or here.
     shown.value = null
     failed.value = true
   } finally {
@@ -282,7 +283,9 @@ const save = (): void => {
     <p v-else-if="heading?.rotation" class="sl-line sl-note">
       {{ i18n.t('app.sl-previous-rotation') }}
     </p>
-    <p v-if="failed" class="sl-line sl-note">{{ i18n.t('app.sl-load-failed') }}</p>
+    <p v-if="failed || engineStatus === 'failed'" class="sl-line sl-note">
+      {{ i18n.t('app.sl-load-failed') }}
+    </p>
 
     <div v-if="mounted" ref="result" class="sl-result-slot">
       <SlResult v-if="shown" :shown :save-armed @save="save" />
@@ -290,7 +293,12 @@ const save = (): void => {
     </div>
 
     <section v-if="mounted" class="sl-picker">
-      <SlBar :busy :ready="!!heading" @generate="generate" />
+      <SlBar
+        :busy
+        :ready="!!heading && engineStatus === 'ready'"
+        :waiting="!failed && engineStatus === 'loading'"
+        @generate="generate"
+      />
       <RosterEditor
         :heroes
         :levels="copy"
@@ -374,7 +382,7 @@ const save = (): void => {
 }
 
 .sl-line.sl-note {
-  color: var(--sl-bad);
+  color: var(--color-danger-text);
 }
 
 .sl-result-slot {

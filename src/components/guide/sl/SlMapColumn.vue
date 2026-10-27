@@ -180,11 +180,11 @@ const record = computed(() => {
 }
 
 .sl-stat .good {
-  color: var(--sl-good);
+  color: var(--color-success);
 }
 
 .sl-stat .bad {
-  color: var(--sl-bad);
+  color: var(--color-danger-text);
 }
 
 .sl-small-icon {

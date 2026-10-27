@@ -37,6 +37,10 @@ export const isPermanentArtifactId = (id: number): boolean => PERMANENT_ARTIFACT
 
 export const isRetiredSeason = (season: number): boolean => season !== CURRENT_SEASON
 
+// Whether an artifact id from a season's data still names that artifact.
+export const artifactSurvives = (season: number, id: number): boolean =>
+  !isRetiredSeason(season) || isPermanentArtifactId(id)
+
 /* Remove a board's seasonal content unconditionally: all phantimals, and
  * artifact ids outside the permanent set (nulled per side so the other side's
  * permanent artifact survives; a fully-null pair drops). The retired gate

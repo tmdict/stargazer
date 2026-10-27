@@ -1,4 +1,4 @@
-/* Reads the Supreme League generator's data file (src/content/pvp/sl/sl.bin).
+/* Reads the Supreme League data file (src/content/pvp/sl/sl.bin).
  * The file is the JSON compressed with raw deflate, each byte then combined
  * with a repeatable keystream (mulberry32 from SEED), so it is noise in the
  * browser's network panel. The writer holds the same seed. It deters a casual
@@ -32,15 +32,35 @@ const isNumbers = (value: unknown, length?: number): boolean =>
   value.every((n) => typeof n === 'number') &&
   (length === undefined || value.length === length)
 
+const RESULTS: readonly unknown[] = ['w', 'l', 't']
+
+// A game's entry: this season's ends with its artifact, last season's has none.
+const isGame = (value: unknown, withArtifact: boolean): boolean =>
+  Array.isArray(value) &&
+  value.length === (withArtifact ? 4 : 3) &&
+  Number.isInteger(value[0]) &&
+  RESULTS.includes(value[1]) &&
+  typeof value[2] === 'number' &&
+  (!withArtifact || value[3] === null || Number.isInteger(value[3]))
+
+const isFamily = (value: unknown): boolean =>
+  isObject(value) &&
+  isObject(value.name) &&
+  isNumbers(value.core) &&
+  Array.isArray(value.swaps) &&
+  value.swaps.every((team: unknown) => isNumbers(team, 5)) &&
+  Array.isArray(value.perMap) &&
+  value.perMap.every((record: unknown) => isNumbers(record, 3))
+
 // One season's part of the file: its games, teams and groups.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
   isObject(value) &&
   isObject(value.sample) &&
   isNumbers([value.sample.matches, value.sample.games, value.sample.players]) &&
-  typeof value.theta === 'number' &&
-  typeof value.oneOffStart === 'number' &&
   Array.isArray(value.games) &&
+  value.games.every((g: unknown) => isGame(g, artifacts === 'artifacts')) &&
   Array.isArray(value.families) &&
+  value.families.every(isFamily) &&
   Array.isArray(value.teams) &&
   value.teams.every(
     (t: unknown) =>
@@ -57,9 +77,10 @@ const isMap = (value: unknown): boolean => {
   return ['ally', 'enemy', 'blocked', 'breakable'].every((zone) => isNumbers(grid[zone]))
 }
 
-/* The shape the chooser and the page rely on: a file of another shape (one
- * written for other code, or a page the host served in its place) is refused
- * whole. The levels' prices must cover every level Stargazer offers. */
+/* The shape the model, the generator and the pages rely on: a file of another
+ * shape (one written for other code, or a page the host served in its place)
+ * is refused whole. The levels' prices must cover every level Stargazer
+ * offers. */
 function isSlData(value: unknown): value is SlData {
   if (!isObject(value) || !isSeason(value, 'artifacts')) return false
   const { prices, before } = value

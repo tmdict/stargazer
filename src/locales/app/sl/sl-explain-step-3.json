@@ -1,5 +1,5 @@
 {
-  "en": "How this exact team has done on this map.",
-  "zh": "这支队伍本身在这张地图上的表现。",
-  "ko": "정확히 이 팀으로 이 맵에서 거둔 성적."
+  "en": "Counters: how teams with each of its heroes did against the other comps.",
+  "zh": "克制：带有其中每位英雄的队伍对上其他阵容时的表现。",
+  "ko": "상성: 이 팀의 영웅이 각각 들어간 팀들이 다른 조합을 상대로 거둔 성적."
 }

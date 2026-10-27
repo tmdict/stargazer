@@ -5,7 +5,7 @@
 import { computed } from 'vue'
 
 import BaseModal from '@/components/modals/BaseModal.vue'
-import type { SlSample } from '@/lib/pvp/sl/types'
+import type { SlSample } from '@/lib/pvp/sl/data/types'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 

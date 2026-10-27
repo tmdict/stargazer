@@ -7,7 +7,8 @@ import RosterTransferActions from '@/components/RosterTransferActions.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import { useI18nStore } from '@/stores/i18n'
 
-const { busy, ready } = defineProps<{ busy: boolean; ready: boolean }>()
+// waiting: the Supreme League worker is still learning the model.
+const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; waiting: boolean }>()
 
 const emit = defineEmits<{ generate: [] }>()
 
@@ -27,7 +28,9 @@ const i18n = useI18nStore()
         :aria-busy="busy"
         @click="emit('generate')"
       >
-        {{ i18n.t(busy ? 'app.sl-generating' : 'app.sl-generate') }}
+        {{
+          i18n.t(busy ? 'app.sl-generating' : waiting ? 'app.sl-getting-ready' : 'app.sl-generate')
+        }}
       </button>
     </span>
   </div>
