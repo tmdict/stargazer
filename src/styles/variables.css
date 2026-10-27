@@ -252,7 +252,7 @@
   --palette-icon-ring: 0 0 0 1px rgba(255, 255, 255, 0.2);
   --palette-inset: 4px;
 
-  --hero-icon-size: 70px;
+  --hero-icon-size: 60px;
   --hero-icon-ring: #fff;
 
   --skill-popup-width: 960px;
@@ -413,6 +413,7 @@
     --tab-font-size: 0.8rem;
     --reading-title-size: 20px;
     --reading-heading-size: 16px;
+    --hero-icon-size: 50px;
   }
 }
 
@@ -424,8 +425,13 @@
 
 @media (min-width: 769px) and (max-width: 1599px) {
   :root {
-    --hero-icon-size: 63px;
     --control-height: 32px;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --hero-icon-size: 65px;
   }
 }
 

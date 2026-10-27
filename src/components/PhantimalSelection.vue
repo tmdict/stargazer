@@ -249,8 +249,8 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
 }
 
 .phantimal {
-  width: 70px;
-  height: 70px;
+  width: var(--hero-icon-size);
+  height: var(--hero-icon-size);
   position: relative;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-raised);

@@ -195,6 +195,13 @@ main {
   }
 }
 
+@media (max-width: 480px) {
+  .section {
+    --tabview-side-border: 0;
+    --tabview-radius: 0;
+  }
+}
+
 .content {
   font-family: var(--font-content);
 }
