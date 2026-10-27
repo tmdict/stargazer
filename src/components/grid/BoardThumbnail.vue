@@ -306,18 +306,6 @@ const placedArtifacts = computed(() =>
   }),
 )
 
-// Each number names its tile's zone and whether a unit stands on it, so a
-// page can style or leave out some of them.
-const numberedTiles = computed(() => {
-  const occupied = new Set(units.map((unit) => unit.hexId))
-  return [...geometry.value.centers].map(([hexId, center]) => ({
-    hexId,
-    center,
-    zone: zoneOf(states.value.get(hexId)),
-    occupied: occupied.has(hexId),
-  }))
-})
-
 const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
 const ringedArtifacts = computed(() => placedArtifacts.value.filter((art) => art.highlight))
 const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.value.length > 0)
@@ -497,10 +485,9 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
 
     <template v-if="numbered">
       <text
-        v-for="{ hexId, center, zone, occupied } in numberedTiles"
+        v-for="[hexId, center] in geometry.centers"
         :key="`number-${hexId}`"
         class="tile-number"
-        :class="[`zone-${zone}`, { occupied }]"
         :x="center.x"
         :y="center.y + hexSize * NUMBER_DROP_RATIO"
         :font-size="hexSize * NUMBER_SIZE_RATIO"
