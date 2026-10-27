@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* The note on the generator's data, with credit for its teams and creators to
-   follow for new ones. */
+/* The note on a Supreme League page's data: where its records come from and
+   what they are slow to show, and on the generator, credit for its teams and
+   creators to follow for new ones. */
 
 import { computed } from 'vue'
 
@@ -9,8 +10,9 @@ import type { SlSample } from '@/lib/pvp/sl/data/types'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 
-const { season, date, sample, before } = defineProps<{
+const { page, season, date, sample, before } = defineProps<{
   show: boolean
+  page: 'sl' | 'www'
   season: number
   date: string
   sample: SlSample
@@ -50,7 +52,7 @@ const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
 // Chinese sets sentences side by side with no space between them.
 const lead = computed(() =>
   [
-    i18n.t('app.sl-about-sample', { season, date, ...counts(sample) }),
+    i18n.t(`app.${page}-about-sample`, { season, date, ...counts(sample) }),
     ...(before
       ? [i18n.t('app.sl-about-before', { season: before.season, ...counts(before) })]
       : []),
@@ -70,17 +72,19 @@ const lead = computed(() =>
       >{{ reportText[1] }}
     </p>
 
-    <h2>{{ i18n.t('app.sl-about-meta-head') }}</h2>
-    <p>{{ i18n.t('app.sl-about-meta') }}</p>
+    <h2>{{ i18n.t(`app.${page}-about-meta-head`) }}</h2>
+    <p>{{ i18n.t(`app.${page}-about-meta`) }}</p>
 
-    <h2>{{ i18n.t('app.sl-about-credit-head') }}</h2>
-    <p>{{ i18n.t('app.sl-about-credit') }}</p>
-    <ul class="sl-creators">
-      <li v-for="creator in CREATORS" :key="creator.url">
-        <a :href="creator.url" target="_blank" rel="noopener noreferrer">{{ creator.name }}</a>
-        <span class="reading-meta">{{ creator.site }}</span>
-      </li>
-    </ul>
+    <template v-if="page === 'sl'">
+      <h2>{{ i18n.t('app.sl-about-credit-head') }}</h2>
+      <p>{{ i18n.t('app.sl-about-credit') }}</p>
+      <ul class="sl-creators">
+        <li v-for="creator in CREATORS" :key="creator.url">
+          <a :href="creator.url" target="_blank" rel="noopener noreferrer">{{ creator.name }}</a>
+          <span class="reading-meta">{{ creator.site }}</span>
+        </li>
+      </ul>
+    </template>
   </BaseModal>
 </template>
 

@@ -6,13 +6,12 @@
  * a tie. A team outside every group has no vote, and a team with no votes is
  * outside every group (null). */
 
+import { lineupKey } from './games.ts'
 import type { SlTeam } from './types.ts'
 
 export type KindOf = (heroes: readonly number[]) => number | null
 
 const MIN_SHARED = 3
-
-const keyOf = (heroes: readonly number[]): string => [...heroes].sort((a, b) => a - b).join('/')
 
 // The group with the most votes, the lower index on a tie, a vote for no
 // group last.
@@ -31,13 +30,13 @@ const winner = (votes: ReadonlyMap<number | null, number>): number | null => {
 export function kindRule(teams: readonly Pick<SlTeam, 'heroes' | 'family'>[]): KindOf {
   const recorded = new Map<string, Map<number | null, number>>()
   for (const t of teams) {
-    const key = keyOf(t.heroes)
+    const key = lineupKey(t.heroes)
     const votes = recorded.get(key) ?? new Map<number | null, number>()
     votes.set(t.family, (votes.get(t.family) ?? 0) + 1)
     recorded.set(key, votes)
   }
   return (heroes) => {
-    const own = recorded.get(keyOf(heroes))
+    const own = recorded.get(lineupKey(heroes))
     if (own) return winner(own)
     const picked = new Set(heroes)
     let most = MIN_SHARED

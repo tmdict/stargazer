@@ -11,6 +11,10 @@ export interface Side {
   artifact: number | null
 }
 
+// The same five heroes in any order give the same key.
+export const lineupKey = (heroes: readonly number[]): string =>
+  [...heroes].sort((a, b) => a - b).join('/')
+
 // gap: the upgrade gap toward A in Rivalry points.
 export interface Game {
   a: Side

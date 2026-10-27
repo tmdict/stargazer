@@ -1,7 +1,7 @@
 import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
-import { guidePath, SL_GENERATOR_PATH, type GuidePage } from '@/lib/guide'
+import { guidePath, SL_GENERATOR_PATH, WWW_PATH, type GuidePage } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
@@ -186,11 +186,21 @@ export const setupGuideContentMeta = (locale: Ref<AppLocale>, page: GuidePage): 
 export const setupHelpContentMeta = (locale: Ref<AppLocale>): void =>
   setupPageMeta(locale, (l) => HELP_META[l], helpPath)
 
-export const setupSlContentMeta = (locale: Ref<AppLocale>): void => {
+// A page titled by its own `<prefix>-title` and `<prefix>-description` text.
+const setupTextMeta = (locale: Ref<AppLocale>, prefix: string, path: string): void => {
   const strings = loadAppLocales()
   setupPageMeta(
     locale,
-    (l) => ({ title: strings['sl-title']![l], description: strings['sl-description']![l] }),
-    SL_GENERATOR_PATH,
+    (l) => ({
+      title: strings[`${prefix}-title`]![l],
+      description: strings[`${prefix}-description`]![l],
+    }),
+    path,
   )
 }
+
+export const setupSlContentMeta = (locale: Ref<AppLocale>): void =>
+  setupTextMeta(locale, 'sl', SL_GENERATOR_PATH)
+
+export const setupWwwContentMeta = (locale: Ref<AppLocale>): void =>
+  setupTextMeta(locale, 'www', WWW_PATH)

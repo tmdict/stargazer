@@ -1,4 +1,4 @@
-import type { SlShownTeam } from './SlResult.vue'
+import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
@@ -50,13 +50,10 @@ export function useSlNames() {
 
   const heroSlug = (id: number): string => gameData.getCharacterNameById(id) ?? String(id)
 
-  const groupName = (team: SlShownTeam): string => {
-    if (!team.group) return i18n.t('app.sl-no-group')
+  const groupName = (group: Pick<SlFamily, 'name' | 'core'> | null): string => {
+    if (!group) return i18n.t('app.sl-no-group')
     const lang = i18n.currentLocale
-    return (
-      team.group.name[lang] ??
-      team.group.core.map((id) => curatedHeroName(heroSlug(id), lang)).join('/')
-    )
+    return group.name[lang] ?? group.core.map((id) => curatedHeroName(heroSlug(id), lang)).join('/')
   }
 
   return { groupName }

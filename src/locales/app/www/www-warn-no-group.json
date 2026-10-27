@@ -1,0 +1,5 @@
+{
+  "en": "No recorded team is like {team}, so counters against it are left out",
+  "zh": "没有已记录的队伍与 {team}相似，所以不计对它的克制",
+  "ko": "기록된 팀 중 {team}과 비슷한 팀이 없어 이 팀 상대 상성은 계산하지 않습니다"
+}

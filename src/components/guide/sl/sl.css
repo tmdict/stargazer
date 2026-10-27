@@ -1,10 +1,35 @@
-/* The Supreme League generator's styles. Every rule sits under the view's
-   root (.sl-page), which carries data-theme="dark" so the page keeps the dark
-   look in both looks. */
+/* The Supreme League pages' shared styles: the generator's and Who Would
+   Win?'s. Every rule sits under the view's root (.sl-page), which carries
+   data-theme="dark" so the page keeps the dark look in both looks. */
 
 .sl-page {
+  --control-height-compact: var(--control-height);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 24px 48px;
+  border-radius: var(--section-radius);
   background: var(--color-bg-page);
   color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .sl-page {
+    padding: 16px 16px 40px;
+  }
+}
+
+.sl-page .sl-line {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.sl-page .sl-line.sl-note {
+  color: var(--color-danger-text);
 }
 
 .sl-page .sl-action {
