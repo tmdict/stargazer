@@ -31,7 +31,7 @@ import { useToast } from '@/composables/useToast'
 import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
-import { useGridStore } from '@/stores/grid'
+import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -129,7 +129,7 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const { showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
+const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = useDisplayFlags()
 
 const boardPanel = ref<HTMLElement>()
 useBoardFit(boardPanel)
@@ -293,6 +293,7 @@ const handleResetMap = () => {
             :is-map-editor-mode="mapEditorActive"
             :selected-map-editor-state="selectedMapEditorState"
             :debug-panel-ref
+            :tap-mode="isNarrowBreakpoint(currentBreakpoint)"
           />
           <template v-if="info.heroCard">
             <TeamPowerPanel :context="activeContext" :show-upgrades="info.upgrades" />
@@ -402,6 +403,13 @@ const handleResetMap = () => {
   .sections-container > .section:first-child {
     flex: 0 0 660px;
     width: 660px;
+  }
+}
+
+@media (min-width: 1220px) and (max-width: 1599px) {
+  .sections-container > .section:first-child {
+    flex-basis: 640px;
+    width: 640px;
   }
 }
 </style>

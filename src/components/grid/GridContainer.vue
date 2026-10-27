@@ -26,8 +26,7 @@ interface Props {
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
-  // Force tap-to-place (true) or the desktop popup (false); omit to derive from
-  // grid scale (small grid = tap). 5 v 5 forces the popup on its small boards.
+  // The sheet layout's tap-to-place instead of the desktop popup.
   tapMode?: boolean
 }
 
@@ -35,10 +34,6 @@ const props = withDefaults(defineProps<Props>(), {
   isMapEditorMode: false,
   selectedMapEditorState: State.DEFAULT,
   readonly: false,
-  // Tri-state: keep an omitted tapMode as undefined (not the Boolean-prop default
-  // of false) so GridManager's `tapMode ?? scale < 1` falls back to grid scale on
-  // the Arena. Without this the Arena mobile cell tap shows the popup, not the sheet.
-  tapMode: undefined,
 })
 
 // `provide` snapshots its argument, but on the Arena this is bound to the *active*

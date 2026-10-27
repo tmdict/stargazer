@@ -15,11 +15,16 @@ import { getMapByKey, type MapConfig } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { useGrids } from './grids'
 
-export type Breakpoint = 'mobile' | 'tablet' | 'desktop'
+export type Breakpoint = 'mobile' | 'tablet' | 'laptop' | 'desktop'
+
+// The tiers where the side panel is a bottom sheet.
+export const isNarrowBreakpoint = (breakpoint: Breakpoint): boolean =>
+  breakpoint === 'mobile' || breakpoint === 'tablet'
 
 const BREAKPOINT_SIZES: Record<Breakpoint, { x: number; y: number }> = {
   mobile: { x: 23, y: 23 }, // 57.5% scale
   tablet: { x: 30, y: 30 }, // 75% scale
+  laptop: { x: 36, y: 36 }, // 90% scale
   desktop: { x: 40, y: 40 }, // 100% scale
 }
 

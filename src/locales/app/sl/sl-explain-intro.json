@@ -1,5 +1,5 @@
 {
-  "en": "If you played this set many times against a typical opponent, it would win about {chance} of matches, each won by taking 3 of the 5 maps.",
-  "zh": "如果用这套阵容对阵一般水平的对手打很多场，大约能赢下 {chance} 的比赛，每场比赛 5 张地图赢 3 张即获胜。",
-  "ko": "이 세트로 보통 수준의 상대와 여러 번 싸운다면 매치의 약 {chance}를 이기며, 매치는 5개 맵 중 3개를 이기면 승리합니다."
+  "en": "If you played this set many times against a typical opponent, it would win about {chance} of matches, each won by taking at least 3 of the 5 maps.",
+  "zh": "如果用这套阵容对阵一般水平的对手打很多场，大约能赢下 {chance} 的比赛，每场比赛 5 张地图至少赢 3 张即获胜。",
+  "ko": "이 세트로 보통 수준의 상대와 여러 번 싸운다면 매치의 약 {chance}를 이기며, 매치는 5개 맵 중 3개 이상을 이기면 승리합니다."
 }

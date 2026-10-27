@@ -228,8 +228,8 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 .portrait {
-  width: 80px;
-  height: 80px;
+  width: calc(var(--hero-icon-size) + 10px);
+  height: calc(var(--hero-icon-size) + 10px);
   object-fit: cover;
   z-index: 1;
 }

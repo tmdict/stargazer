@@ -16,17 +16,13 @@ const {
   paragon,
   refinement,
   editable = false,
-  compact = false,
   reserved = false,
   nested = false,
 } = defineProps<{
   paragon: number
   refinement: number
   editable?: boolean
-  // Narrower touch halves for a dense grid (the Rosters tab), keeping their height.
-  compact?: boolean
-  // Invisible but still sized, so a hero grid's cells stay one width: the pill is
-  // wider than a phone portrait.
+  // Invisible but still sized, so showing it doesn't reflow a hero grid.
   reserved?: boolean
   // Inside another control (the board panel's hero button): the halves are plain
   // spans, since a button can't hold buttons and a disabled one would swallow the
@@ -53,7 +49,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 <template>
   <span
     class="upill"
-    :class="{ editable, compact, reserved, nested }"
+    :class="{ editable, reserved, nested }"
     :style="{ background }"
     :aria-hidden="reserved || undefined"
   >
@@ -121,14 +117,18 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 }
 
 @media (pointer: coarse) {
-  .editable .useg {
-    min-width: 40px;
-    padding: 11px 8px;
+  .editable {
+    overflow: visible;
   }
 
-  .editable.compact .useg {
-    min-width: 28px;
-    padding-inline: 4px;
+  .editable .useg {
+    position: relative;
+  }
+
+  .editable .useg::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 -8px;
   }
 }
 </style>

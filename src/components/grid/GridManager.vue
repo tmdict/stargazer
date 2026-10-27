@@ -40,7 +40,7 @@ interface Props {
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
-  // Force tap-to-place vs the desktop popup; omit to derive from grid scale.
+  // The sheet layout's tap-to-place instead of the desktop popup.
   tapMode?: boolean
 }
 
@@ -84,11 +84,6 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
 
   const tile = ctx.grid.getTileById(hex.getId())
   const tileTeam = getTeamFromTileState(tile.state)
-  const scale = ctx.hexScale
-  // Tap-to-place (mobile sheet / small grids) vs the desktop popup. The page can
-  // force the popup: 5 v 5 boards are small but use the on-grid popup, not the
-  // shared tap-target state (which would highlight every board's same hex).
-  const tap = props.tapMode ?? scale < 1
   if (tileTeam === null) {
     // A non-placement tile cancels a pending lift.
     clearLiftedHex()
@@ -106,7 +101,7 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
     return
   }
 
-  if (tap) {
+  if (props.tapMode) {
     // Target this empty tile so a picker tap fills it. Allowed even when the
     // team is full: a phantimal can still be placed there, and the picker
     // re-checks character capacity before placing a character.
@@ -133,8 +128,8 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
   const screenPt = svgPointToScreen(ctx.layout.hexToPixel(hex), gridTilesRef.value?.svgEl)
   if (screenPt) {
     modalPosition.value = {
-      x: screenPt.x + 30 * scale,
-      y: screenPt.y - 50 * scale,
+      x: screenPt.x + 30 * ctx.hexScale,
+      y: screenPt.y - 50 * ctx.hexScale,
     }
     modalHex.value = hex
     showCharacterModal.value = true

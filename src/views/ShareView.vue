@@ -17,7 +17,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
-import { useGridStore } from '@/stores/grid'
+import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
@@ -67,7 +67,7 @@ useHead({
 const { currentBreakpoint, showPerspective } = useBreakpoint({ autoFlattenOnMobile: false })
 const card = ref<HTMLElement>()
 useBoardFit(card)
-const canWrap = computed(() => currentBreakpoint.value === 'desktop')
+const canWrap = computed(() => !isNarrowBreakpoint(currentBreakpoint.value))
 const applyMultiSize = () => {
   if (isMultiBoard.value) grids.hexSize = teamsBoardSize(currentBreakpoint.value)
 }
