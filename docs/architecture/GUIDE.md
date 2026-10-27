@@ -28,7 +28,7 @@ A report's page is built from its template alone ([Pre-Rendering](./PRE_RENDERIN
 
 ## Supreme League generator
 
-`/guide/pvp/sl` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per map and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself, and that generator's check runs this code on each file it writes.
+`/guide/pvp/generator` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per map and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself, and that generator's check runs this code on each file it writes.
 
 The page is pre-rendered in English with its heading alone, so search engines find it. The picker and the set follow the rosters the browser holds, so they are drawn after mount. The guide index's card for the generator draws a default set worked out once per build: `scripts/slPreview.ts` runs `defaultSlSet` (`src/lib/pvp/sl/generator/defaultSet.ts`) through Vite's module runner, so the app's imports resolve, and hands the result to the card as `virtual:sl-preview`. The index therefore loads neither the data file nor the model, and its boards are in the baked HTML.
 
