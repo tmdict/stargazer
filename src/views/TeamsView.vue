@@ -39,6 +39,7 @@ import {
 import { canonicalTeamData, holdsUnsavedWork, type SavedTeam } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
+import { isNarrowBreakpoint } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
@@ -83,7 +84,7 @@ const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
 // At sheet widths (<= tablet) the side panel is a pull-up sheet and boards place via
 // the cell-tap flow; on desktop the panel is a card and cells use the on-grid popup.
-const isSheet = computed(() => currentBreakpoint.value !== 'desktop')
+const isSheet = computed(() => isNarrowBreakpoint(currentBreakpoint.value))
 
 // Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena
 // sizing; hexSizeMode tells useBreakpoint to leave the size alone.

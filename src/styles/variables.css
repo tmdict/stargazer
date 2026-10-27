@@ -306,9 +306,8 @@
   --tile-stroke-strong: #98a3b9;
   --tile-stroke-held-ally: var(--unit-frame-ally);
   --tile-stroke-held-enemy: var(--unit-frame-enemy);
-  --tile-wall-blocked: #5d6779;
-  --tile-wall-breakable: #6c7689;
-  --tile-hatch: rgba(255, 255, 255, 0.1);
+  --tile-wall-blocked: var(--tile-stroke);
+  --tile-wall-breakable: var(--tile-stroke);
   --tile-text: #8a95ab;
   --tile-coordinate: #737e93;
   --tile-highlight-fill: color-mix(in srgb, var(--color-accent) 10%, transparent);
@@ -415,6 +414,13 @@
 @media (min-width: 1280px) {
   :root {
     --tab-font-size: 0.8rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1599px) {
+  :root {
+    --hero-icon-size: 63px;
+    --control-height: 32px;
   }
 }
 

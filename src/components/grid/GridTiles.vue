@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useId, watchEffect } from 'vue'
 
+import TileHatch from './TileHatch.vue'
 import TileHatchPatterns from './TileHatchPatterns.vue'
 import SkillCornerLines from '@/components/SkillCornerLines.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
@@ -16,7 +17,6 @@ import { useMapEditorStore } from '@/stores/mapEditor'
 import {
   compareWallDrawOrder,
   getTileFillColor,
-  getTileHatchFill,
   getTileStrokeColor,
   getWallStrokeColor,
   HELD_TILE_STROKE_COLORS,
@@ -337,7 +337,6 @@ const wallHexes = computed(() =>
           {
             id: hex.getId(),
             state,
-            fill: getTileHatchFill(hatchId, state),
             stroke,
             points: props.layout
               .polygonCorners(hex)
@@ -349,9 +348,6 @@ const wallHexes = computed(() =>
   }),
 )
 
-const hatchedHexes = computed(() =>
-  wallHexes.value.filter((tile): tile is typeof tile & { fill: string } => tile.fill !== null),
-)
 const wallBorderHexes = computed(() =>
   [...wallHexes.value].sort((a, b) => compareWallDrawOrder(a.state, b.state)),
 )
@@ -392,7 +388,7 @@ onUnmounted(() => {
   >
     <defs>
       <slot name="defs" />
-      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" light />
+      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" board />
     </defs>
     <g>
       <g>
@@ -410,12 +406,13 @@ onUnmounted(() => {
           />
         </g>
 
-        <polygon
-          v-for="tile in hatchedHexes"
+        <TileHatch
+          v-for="tile in wallHexes"
           :key="`hatch-${tile.id}`"
           class="grid-tile"
+          :pattern-id="hatchId"
+          :state="tile.state"
           :points="tile.points"
-          :fill="tile.fill"
         />
 
         <!-- Elevated hexes (render above regular hexes, but below skill highlights) -->

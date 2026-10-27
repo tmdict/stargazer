@@ -29,7 +29,7 @@ const props = defineProps<{
   showHover: boolean
   readonly?: boolean
   isMapEditorMode?: boolean
-  // Force tap-to-sheet vs the desktop popup; omit to derive from grid scale.
+  // The sheet layout's tap-to-sheet instead of the desktop popup.
   tapMode?: boolean
 }>()
 
@@ -182,9 +182,7 @@ const popupPosition = ref({ x: 0, y: 0 })
 
 const openPopup = (team: Team, center: { x: number; y: number }) => {
   const scale = ctx.hexScale
-  // Tap-to-sheet (mobile / small grids) vs the desktop popup; the page can force
-  // the popup (5 v 5 boards are small but use the on-grid popup).
-  if (props.tapMode ?? scale < 1) {
+  if (props.tapMode) {
     setArtifactTarget(team, ctx.id)
     requestTab('seasonal')
     return
@@ -213,7 +211,7 @@ const handleArtifactClick = (team: Team) => {
 // character drop pipeline. Desktop-only, interactive boards only.
 const ARTIFACT_MIME = 'application/artifact'
 
-const canDrag = computed(() => showPlaceholders.value && !(props.tapMode ?? ctx.hexScale < 1))
+const canDrag = computed(() => showPlaceholders.value && !props.tapMode)
 const allyDroppable = computed(() => canDrag.value && !allyArtifact.value)
 const enemyDroppable = computed(
   () => canDrag.value && enemySlotVisible.value && !enemyArtifact.value,

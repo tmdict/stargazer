@@ -98,6 +98,9 @@ export const UNIT_FRAME_COLORS: Record<Team, string> = {
 export const getTileHatchFill = (patternId: string, state: State): string | null =>
   state === State.BLOCKED_BREAKABLE ? `url(#${patternId}-breakable)` : null
 
+export const getWallHatchFill = (patternId: string, state: State): string | null =>
+  state === State.BLOCKED ? `url(#${patternId}-blocked)` : getTileHatchFill(patternId, state)
+
 export const getWallStrokeColor = (state: State): string | null => {
   if (state === State.BLOCKED) return 'var(--tile-wall-blocked)'
   if (state === State.BLOCKED_BREAKABLE) return 'var(--tile-wall-breakable)'

@@ -7,7 +7,9 @@
 //   480 / 768   mobile / tablet
 //   1220        two-column stack point (arena, /skills)
 //   1280        desktop-chrome boundary (padding, gaps, font tuning)
+//   1599        laptop: board, portrait and control sizes a step under desktop
 //   1600 / 1920 reader-column width steps (SkillsBrowser)
 export const MOBILE_MAX_WIDTH = 480
 export const TABLET_MAX_WIDTH = 768
 export const SPLIT_MIN_WIDTH = 1220
+export const LAPTOP_MAX_WIDTH = 1599

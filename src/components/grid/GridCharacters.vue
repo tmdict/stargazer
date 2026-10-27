@@ -42,7 +42,7 @@ interface Props {
   showSkills: boolean
   isMapEditorMode: boolean
   readonly?: boolean
-  // Force tap-to-lift vs desktop click-to-remove; omit to derive from grid scale.
+  // The sheet layout's tap-to-lift instead of desktop click-to-remove.
   tapMode?: boolean
 }
 
@@ -281,7 +281,7 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
   hideTooltip()
 
-  if ((props.tapMode ?? ctx.hexScale < 1) || isTouchClick(event)) {
+  if (props.tapMode || isTouchClick(event)) {
     // A lift is scoped to its board; tapping a hero on a different board starts a
     // fresh lift there (cross-board hero-to-hero stays a re-lift, not a swap).
     if (liftedHexId.value !== null && liftedGridId.value !== ctx.id) {

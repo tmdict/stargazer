@@ -132,9 +132,15 @@ const clearSides = computed((): ClearSide[] =>
   gap: var(--spacing-lg);
 }
 
+@media (min-width: 769px) and (max-width: 1599px) {
+  .controls-row {
+    gap: var(--spacing-md);
+  }
+}
+
 /* Touch tablets: iPadOS renders the chips' native checkboxes and text wider
    than desktop browsers, enough to push the last chip onto a second line in
-   the two-column layout's 660px grid column. */
+   the two-column layout's board column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .controls-row {
     gap: var(--spacing-sm);

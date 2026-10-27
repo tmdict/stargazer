@@ -3,13 +3,13 @@
 
 import { computed, useId } from 'vue'
 
+import TileHatch from '@/components/grid/TileHatch.vue'
 import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
 import { State } from '@/lib/types/state'
 import { useGameDataStore } from '@/stores/gameData'
 import {
   compareWallDrawOrder,
   getTileFillColor,
-  getTileHatchFill,
   getTileStrokeColor,
   getWallStrokeColor,
 } from '@/utils/tileStateFormatting'
@@ -78,7 +78,6 @@ const tiles = computed(() =>
       fill: getTileFillColor(state),
       outline: getTileStrokeColor(state),
       points: points(center([row, col])),
-      hatch: getTileHatchFill(id, state),
       stroke: getWallStrokeColor(state),
     }
   }),
@@ -156,7 +155,7 @@ const arrowPath = computed(() => {
       >
         <path d="M0,0 L10,5 L0,10z" :class="`help-arrow-${arrow?.kind ?? 'move'}`" />
       </marker>
-      <TileHatchPatterns :id :hex-size="R" light />
+      <TileHatchPatterns :id :hex-size="R" board />
     </defs>
     <template v-for="tile in tiles" :key="tile.key">
       <polygon
@@ -164,7 +163,7 @@ const arrowPath = computed(() => {
         :style="{ fill: tile.fill, stroke: tile.outline }"
         stroke-width="1"
       />
-      <polygon v-if="tile.hatch" :points="tile.points" :fill="tile.hatch" />
+      <TileHatch :pattern-id="id" :state="tile.state" :points="tile.points" />
     </template>
     <polygon
       v-for="tile in wallTiles"

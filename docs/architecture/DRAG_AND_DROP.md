@@ -74,7 +74,7 @@ The engine still has the last word. `performPlace` runs `canPlaceCharacterOnTile
 
 ## Taps and clicks
 
-A board is in tap mode when it renders below full scale (`ctx.hexScale < 1`), unless its page passes `tap-mode`. The Teams page sets it from its own sheet breakpoint, because its boards render below full scale even on desktop. Tap mode decides how an empty tile adds a hero. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts.
+A board is in tap mode when its page passes `tap-mode`. The Arena and the Teams page pass it at the sheet widths (tablet and phone, `isNarrowBreakpoint`), where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts.
 
 Adding works in two ways. In tap mode, tapping an empty tile targets it, and the next picker tap places there through `resolvePick`. A picker tap with no target auto-places on the active board, ally side first (`fillOrder`); a phantimal goes to the first side with no phantimal that it can join, so both sides can field the same one. A full team still accepts a target, because a phantimal may fit. On wide layouts, clicking an empty tile opens the multi-add popup. It opens only while `teamHasOpenSlot` holds and closes when that stops holding. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight. Artifact cells target the same way. Dismissing the picker sheet clears pending targets.
 

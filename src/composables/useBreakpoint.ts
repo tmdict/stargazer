@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref, toRef } from 'vue'
 import type { Breakpoint } from '@/stores/grid'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
-import { MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH } from '@/utils/breakpoints'
+import { LAPTOP_MAX_WIDTH, MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
 export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
   const gridStore = useGridStore()
@@ -18,10 +18,12 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
   // change events fire exactly on threshold crossings: no resize-timing race.
   let mqMobile: MediaQueryList | null = null
   let mqTablet: MediaQueryList | null = null
+  let mqLaptop: MediaQueryList | null = null
 
   const read = (): Breakpoint => {
     if (mqMobile?.matches) return 'mobile'
     if (mqTablet?.matches) return 'tablet'
+    if (mqLaptop?.matches) return 'laptop'
     return 'desktop'
   }
 
@@ -40,6 +42,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
   onMounted(() => {
     mqMobile = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`)
     mqTablet = window.matchMedia(`(max-width: ${TABLET_MAX_WIDTH}px)`)
+    mqLaptop = window.matchMedia(`(max-width: ${LAPTOP_MAX_WIDTH}px)`)
 
     // Initial sync: currentBreakpoint starts at 'desktop', so apply directly.
     currentBreakpoint.value = read()
@@ -48,11 +51,13 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
 
     mqMobile.addEventListener('change', apply)
     mqTablet.addEventListener('change', apply)
+    mqLaptop.addEventListener('change', apply)
   })
 
   onUnmounted(() => {
     mqMobile?.removeEventListener('change', apply)
     mqTablet?.removeEventListener('change', apply)
+    mqLaptop?.removeEventListener('change', apply)
   })
 
   return {

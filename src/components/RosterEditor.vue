@@ -469,7 +469,6 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
               :paragon="levelsOf(character)?.[ATTR_PARAGON] ?? 0"
               :refinement="levelsOf(character)?.[ATTR_REFINEMENT] ?? 0"
               editable
-              compact
               @paragon="setLevel(character, ATTR_PARAGON, $event)"
               @refinement="setLevel(character, ATTR_REFINEMENT, $event)"
             />
