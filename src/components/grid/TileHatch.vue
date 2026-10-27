@@ -1,9 +1,7 @@
 <script setup lang="ts">
-/* A wall's hatch on a board, from a `board` TileHatchPatterns: fine on
-   breakable walls in the light look, bold on every wall in the dark look,
-   stopping inside the tile's inner line (TileBevel). Both are drawn and the
-   look's CSS shows one, so the hatch follows a dark region of a light page as
-   the board's colours do. */
+/* A wall's hatch from a `board` TileHatchPatterns. Both looks' hatches are
+   drawn and CSS shows one, so the hatch follows a dark region of a light page
+   as the board's colours do. */
 
 import { computed } from 'vue'
 

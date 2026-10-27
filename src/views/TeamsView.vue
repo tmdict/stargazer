@@ -82,8 +82,8 @@ const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = 
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
-// At sheet widths (<= tablet) the side panel is a pull-up sheet and boards place via
-// the cell-tap flow; on desktop the panel is a card and cells use the on-grid popup.
+// At sheet widths boards place through the cell-tap flow; wider, cells use the
+// on-grid popup.
 const isSheet = computed(() => isNarrowBreakpoint(currentBreakpoint.value))
 
 // Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena

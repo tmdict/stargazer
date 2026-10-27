@@ -1,8 +1,6 @@
-/* The set the generator gives before a roster is picked: every hero at the top
- * levels, where the recorded opponents are counted, so the set is the records'
- * own best. The guide index's card draws it, worked out once per build
- * (scripts/slPreview.ts) so the index loads neither the data file nor the
- * chooser. */
+/* The set the generator gives before a roster is picked. The guide index's
+ * card draws it, worked out once per build (scripts/slPreview.ts) so the index
+ * loads neither the data file nor the chooser. */
 
 import {
   ATTR_PARAGON,

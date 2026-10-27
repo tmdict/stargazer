@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* The dark look's inner line on a board tile other than open ground, as on
-   the preview board. The light look draws none, so it is hidden there. */
+   the preview board. */
 
 import { computed } from 'vue'
 

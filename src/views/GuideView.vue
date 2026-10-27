@@ -1,10 +1,8 @@
 <script setup lang="ts">
-/* Guide index: a card per season's report, newest first, then Mechanics on
-   the left, and the Supreme League generator above Upgrades on the right. On
-   wide screens the report cards span the rows beside the generator and the
-   top of Upgrades, so every card keeps its own height and each column's
-   second card follows its first however many seasons there are. Below 1100px
-   the cards stack, the PvP ones first. */
+/* Guide index. On wide screens the report cards span the rows beside the
+   generator and the top of Upgrades, so every card keeps its own height and
+   each column's second card follows its first however many seasons there
+   are. */
 
 import { computed } from 'vue'
 

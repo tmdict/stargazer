@@ -137,10 +137,8 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-/* The crisp look, for the preview modal: its own tile colours and the unit
-   frames, with one border on every deployment and wall tile, a dark bevel line
-   inside each framed tile, and each portrait clipped under a dark rim inside
-   its frame. Ratios are of hexSize; strokes are fixed in screen pixels. */
+// The crisp look's ratios are of hexSize; its strokes are fixed in screen
+// pixels.
 const CRISP_INSET = 1.6 / 18
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
@@ -215,7 +213,7 @@ const {
   // Square viewBox with a centered board (the maps tab's framing); omitted =
   // tight-fit bounds, the right default for card thumbnails.
   viewBoxSize?: number
-  // The report's board style, for the preview modal.
+  // The report's board style.
   crisp?: boolean
   // Each tile's number, low in the hex so a portrait's face stays clear.
   numbered?: boolean
