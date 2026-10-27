@@ -23,7 +23,7 @@ Phantimals and everything in their id range hold no slot, so their companion ski
 
 A companion's id is `N × 10000` plus the placed id of its owner (`ctx.characterId`), with N from 1. A synergy hero's companions therefore land in the synergy range and a phantimal's in the phantimal range, beside the base hero's and never colliding with them. `getMainCharacterId` subtracts the index instead of taking a modulo, so each companion resolves to its own owner. The id ranges are in [Grid & Characters](../GRID.md#unit-ids).
 
-Links (`grid.companionLinks`, keyed `"${ownerId}-${team}"`) and color and image modifiers are keyed by the placed id and team, never the skill's config id. A synergy copy shares one skill object with its base hero, and config-keyed state would cross-wire the two. `tests/unit/skills/instanceIsolation.test.ts` checks this for every registered skill. The same hero on both teams keeps separate link sets.
+Links (`grid.companionLinks`, keyed `"${ownerId}-${team}"`) and color and image modifiers are keyed by the placed id and team, never the skill's config id. A synergy copy shares one skill object with its base hero, and config-keyed state would cross-wire the two. A test checks this for every registered skill. The same hero on both teams keeps separate link sets.
 
 ## Removal
 
@@ -33,7 +33,7 @@ Companions cannot move to the other team or swap across teams.
 
 ## Keeping positions
 
-Reactivating a skill respawns companions on random tiles. Cross-team moves and swaps, and the placement rollback, therefore save companion tiles with `storeCompanionPositions` before deactivating and put them back with `restoreCompanions` afterwards, which also re-applies the modifiers. They restore only when `hasCompanionSkill` is true, and that is derived from the skill having a companion color or image modifier. A new companion skill must set at least one of the two, or rollbacks will leave its companions on random tiles.
+Reactivating a skill respawns companions on random tiles. Cross-team moves and swaps, and the placement rollback, therefore save companion tiles with `storeCompanionPositions` before deactivating and put them back with `restoreCompanions` afterwards, which also re-applies the modifiers. They restore only when `hasCompanionSkill` is true, which is derived from the skill having a companion color or image modifier, so a companion skill with neither has its companions left on random tiles by a rollback.
 
 Link restore and side-load call `repositionCompanions` for each owner right after placing it, so a random spawn never takes a tile a later unit needs. It lifts every companion off before placing any, so two companions can trade tiles, and it uses the raw place and remove primitives to avoid the removal cascade. It does not refresh skills, so callers refresh once at the end.
 

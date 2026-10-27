@@ -106,13 +106,13 @@ Display toggles (skills, perspective, team view, invert, wrap) are device prefer
 | `createdAt` | number | Milliseconds since the epoch. Missing or not a number reads as `0`.                                                                                             |
 | `updatedAt` | number | Milliseconds since the epoch. Missing or not a number reads as `0`.                                                                                             |
 
-A record that breaks a rule is dropped with a console warning, and the others still load. A field not in the table is dropped the next time the library is saved. The rules a change must keep:
+A record that breaks a rule is dropped with a console warning, and the others still load. A field not in the table is dropped the next time the library is saved. These rules hold across the library:
 
 - A record's `data` is canonical: no viewer state and a fixed key order, so equal content is byte-equal. The store canonicalizes on save instead of trusting callers.
 - `teamContentKey` decides whether the boards differ from their saved team. It ignores the season stamp on teams with no seasonal content, so a season change does not mark them as edited.
-- Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS`. A new `GridState` section must be added there or it is silently dropped from saved teams, and a section with units also needs handling in `preview.ts` and `sideLoad.ts`.
+- Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS`, so a `GridState` section missing from it is silently dropped from saved teams. A section with units is also read by `preview.ts` and `sideLoad.ts`.
 - Loading validates each record on its own (known mode, matching board count, data that canonicalizes). One bad record is dropped, never the library.
-- Records on removed maps or with other seasons' content stay valid. Their cards show "S{n}" placeholders, and loading strips the old content from the boards while the record keeps it.
+- Records on removed maps or with other seasons' content stay valid. Loading strips the old content from the boards while the record keeps it.
 - `updatedAt` changes only on content edits, not renames, so the last-modified sort follows board changes.
 - Every change re-reads the stored library first. If a write fails, the store keeps working in memory and reports the loss, instead of claiming the save worked. The store never shows messages; components do.
 - The library holds at most `MAX_SAVED_TEAMS`.
@@ -127,7 +127,7 @@ The Load menu stamps a saved one-sided team onto the live boards without touchin
 
 It is deliberately not a restore. It clears the destination side with `clearTeam`, then places each unit on its saved hex, or a random free tile when the map puts that hex elsewhere or something already stands there. It never replaces a unit, so it cannot undo its own work. Companions are moved onto their saved hexes right after their main places. Phantimals place after the heroes, because their faction check needs the lineup. Maps, display flags and `sourceId` stay as they were, and the change shows up as ordinary unsaved edits.
 
-The active mode's teams load board for board. A second group offers 1v1 teams in every mode, loading onto the active board. Invert loads onto the other side and rotates every hex 180° (`rotatedHexId`).
+A team of the active mode loads board for board, and a 1v1 team loads onto the active board in any mode. Invert loads onto the other side and rotates every hex 180° (`rotatedHexId`).
 
 ## Screenshot import
 
@@ -170,13 +170,13 @@ A field the reader does not know is ignored. Import only merges; replacing every
 
 ## Rosters
 
-A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.ts`, `src/stores/rosters.ts`). The Rosters tab, on both the Arena and Teams pages, edits them, and the menu at the head of the Characters tab and of the empty-tile popup picks the active one. The active roster decides two things: which heroes the picker and the empty-tile popup offer, and the levels a hero starts with when placed from them. Search still finds every hero, but picking one outside the roster places nothing and shows a toast. Faction placeholders are always offered. With no active roster the source is All heroes, the full list at default levels.
+A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.ts`, `src/stores/rosters.ts`). The Rosters tab, on both the Arena and Teams pages, edits them, and the menu at the head of the Characters tab and of the empty-tile popup picks the active one. The active roster decides two things: which heroes the picker and the empty-tile popup offer, and the levels a hero starts with when placed from them. Faction placeholders are always offered. With no active roster the source is All heroes, the full list at default levels.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`: it edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster. The tab's Delete and the editor's Clear share one two-step confirm, so only one of them is armed at a time.
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the Supreme League generator to a copy ([Guide](./GUIDE.md)).
 
-The Rosters tab's Screenshots button reads a roster from screenshots of the game's hero roster ([Roster Import](./IMPORT_ROSTER.md)). Its Save creates the roster with its name and heroes in one write (`create`, which the tab's New calls with an automatic name and no heroes), and the new roster becomes the active one. At the limit nothing is created, and the import keeps its review.
+The roster screenshot import ([Roster Import](./IMPORT_ROSTER.md)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
 
 | Key                        | Holds                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------ |

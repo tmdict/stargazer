@@ -40,18 +40,8 @@ Each import accepts only its own screens, on every way in. The sorter turns a ro
 - Seasonal artifacts are matched against the icons the app ships, so a new season's artifacts read once the data pack holds their icons ([Seasonal Content](./SEASONAL.md)).
 - The replay camera and arena were measured on one match. A Supreme League map change needs frames of the new maps checked, and a new arena picture when the fight's surroundings change.
 - A new hero reads once its portrait is in the app, and an outfit once the data pack holds its picture. A face neither covers stays unsure until a correction teaches it.
-- A roster reads in up to three workers at once. A device reporting under 4 GB of memory reads with one, and a touch screen reporting none (Safari and Firefox report none) with two at most, so a roster takes longer there; phones have not been timed.
+- A roster reads in fewer workers on a device with little reported memory or few cores, so it takes longer there. Phones have not been timed.
 
 ## Privacy
 
 Screenshots never leave the device. The references are fetched, each screenshot is drawn to a canvas and handed to a worker as pixels, and nothing of it is stored. What persists is what the user saves (a team or a roster) and the learned face descriptors, which are numbers describing a face crop, not images ([Reference descriptors](./IMPORT.md#reference-descriptors)).
-
-## Adding a screen
-
-A new screen keeps the layering the others follow:
-
-1. A reader under `src/lib/import/screens/` that finds its own landmark, reads its cards with the card layer, and gives every field a sure flag.
-2. A kind in `src/lib/import/kinds.ts` with the reference parts it waits for, its decode widths in the engine, and its reader in the worker.
-3. A test in the sorter, when one import takes it beside other screens or another import must turn it away.
-4. An import that hands the engine its session and places each added file, a plan as pure data with unit tests, and a review built from the shared pieces.
-5. A check against labelled samples before it ships: what it marks sure must never be wrong on them.
