@@ -24,12 +24,7 @@ const outcomes = computed(() => [
 </script>
 
 <template>
-  <BaseModal
-    :show
-    :label="i18n.t('app.sl-explain-title')"
-    max-width="1000px"
-    @close="emit('close')"
-  >
+  <BaseModal :show :label="i18n.t('app.sl-explain-title')" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-explain-title') }}</h1>
 
     <h2>{{ i18n.t('app.sl-explain-meaning-head') }}</h2>

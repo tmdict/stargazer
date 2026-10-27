@@ -414,13 +414,7 @@ const handleForgetLearned = (): void => {
 </script>
 
 <template>
-  <BaseModal
-    :show
-    :label="i18n.t('app.import-title')"
-    max-width="1000px"
-    top-anchor
-    @close="emit('close')"
-  >
+  <BaseModal :show :label="i18n.t('app.import-title')" top-anchor @close="emit('close')">
     <div class="import">
       <header class="import-head">
         <h1>{{ i18n.t('app.import-title') }}</h1>

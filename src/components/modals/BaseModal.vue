@@ -17,7 +17,6 @@ interface Props {
   show: boolean
   // Announced as the dialog's name.
   label: string
-  maxWidth?: string
   // Hero slug for the permalink button; omit to hide the button (e.g. the
   // about modal, which has no standalone page).
   linkParam?: string
@@ -29,13 +28,7 @@ interface Props {
   topAnchor?: boolean
 }
 
-const {
-  show,
-  linkParam,
-  localeOverride,
-  maxWidth = '800px',
-  topAnchor = false,
-} = defineProps<Props>()
+const { show, linkParam, localeOverride, topAnchor = false } = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
@@ -68,7 +61,6 @@ watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
           aria-modal="true"
           :aria-label="label"
           tabindex="-1"
-          :style="{ maxWidth }"
           @keydown="trapTab"
           @click.stop
         >

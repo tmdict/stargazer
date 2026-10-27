@@ -17,6 +17,10 @@
   z-index: 9998;
 }
 
+.overlay.is-modal > .container {
+  max-width: var(--skill-popup-width);
+}
+
 .overlay.is-modal > .container:focus {
   outline: none;
 }

@@ -22,7 +22,7 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <BaseModal :show="show" :label="team.name" max-width="1000px" @close="emit('close')">
+  <BaseModal :show="show" :label="team.name" @close="emit('close')">
     <h1>{{ team.name }}</h1>
     <div class="team-meta">
       <span class="meta-chip">{{ i18n.t(TEAM_MODES[team.mode].labelKey) }}</span>

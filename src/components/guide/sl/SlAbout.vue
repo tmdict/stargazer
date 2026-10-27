@@ -62,7 +62,7 @@ const lead = computed(() =>
 </script>
 
 <template>
-  <BaseModal :show :label="i18n.t('app.sl-about-title')" max-width="1000px" @close="emit('close')">
+  <BaseModal :show :label="i18n.t('app.sl-about-title')" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-about-title') }}</h1>
     <p>
       {{ lead
