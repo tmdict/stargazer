@@ -134,6 +134,9 @@ const select = (tab: TabItem) => {
 }
 
 @media (max-width: 768px) {
+  /* Each tab reaches 1px under its right neighbour, so with no side border the
+     last one pokes past the window edge and would let a phone page scroll
+     sideways. */
   .tab-bar {
     overflow-x: clip;
   }
