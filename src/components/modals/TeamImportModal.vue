@@ -567,7 +567,7 @@ const handleForgetLearned = (): void => {
             :title="i18n.t('app.import-swap-sides-hint')"
             @click="swapSides = !swapSides"
           >
-            {{ i18n.t('app.import-swap-sides') }}
+            {{ i18n.t('app.swap-sides') }}
           </button>
           <small v-if="formationSwap === swapSides" class="note">
             {{ i18n.t('app.import-sides-from-formations') }}

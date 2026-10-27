@@ -7,6 +7,7 @@
 import { onMounted, readonly, ref } from 'vue'
 
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
+import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
 
 export type SlEngineStatus = 'loading' | 'ready' | 'failed'
@@ -14,7 +15,8 @@ export type SlEngineStatus = 'loading' | 'ready' | 'failed'
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
 let nextId = 0
-const waiting = new Map<number, { resolve: (set: SlChoice | null) => void; reject: () => void }>()
+type Answer = Extract<SlResponse, { type: 'generated' | 'predicted' }>
+const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
 const fail = (): void => {
   status.value = 'failed'
@@ -35,8 +37,8 @@ const start = (): void => {
     else {
       const answer = waiting.get(msg.id)
       waiting.delete(msg.id)
-      if (msg.type === 'generated') answer?.resolve(msg.set)
-      else answer?.reject()
+      if (msg.type === 'error') answer?.reject()
+      else answer?.resolve(msg)
     }
   }
   worker.onerror = fail
@@ -46,14 +48,25 @@ export function useSlEngine() {
   onMounted(start)
 
   // Rejects when the worker cannot answer.
-  const generate = (picks: SlPick[]): Promise<SlChoice | null> =>
+  const ask = (request: (id: number) => SlRequest): Promise<Answer> =>
     new Promise((resolve, reject) => {
       if (!worker) return reject()
       const id = nextId++
       waiting.set(id, { resolve, reject })
-      const message: SlRequest = { type: 'generate', id, picks }
-      worker.postMessage(message)
+      worker.postMessage(request(id))
     })
 
-  return { status: readonly(status), generate }
+  const generate = async (picks: SlPick[]): Promise<SlChoice | null> => {
+    const answer = await ask((id) => ({ type: 'generate', id, picks }))
+    if (answer.type !== 'generated') throw new Error('The worker answered another request')
+    return answer.set
+  }
+
+  const predict = async (teams: Pair<WwwTeam>): Promise<WwwPanel> => {
+    const answer = await ask((id) => ({ type: 'predict', id, teams }))
+    if (answer.type !== 'predicted') throw new Error('The worker answered another request')
+    return answer.panel
+  }
+
+  return { status: readonly(status), generate, predict }
 }

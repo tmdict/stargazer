@@ -1,6 +1,6 @@
 # Guide
 
-The guide is an index page and the reference pages it links: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, each season's PvP report and the Supreme League generator. Each guide page has one address, shows in the site language and is pre-rendered in English, as `/skills` is ([Pre-Rendering](./PRE_RENDERING.md)).
+The guide is an index page and the reference pages it links: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, each season's PvP report and the Supreme League generator. Who Would Win? sits beside the generator at its address alone, with no card on the index. Each guide page has one address, shows in the site language and is pre-rendered in English, as `/skills` is ([Pre-Rendering](./PRE_RENDERING.md)).
 
 ## Pages
 
@@ -40,13 +40,14 @@ The page keeps the dark look in both of the site's looks, the style of the seaso
 
 `src/lib/pvp/sl/` is split by job, and each part uses only the ones above it in this table:
 
-| Folder       | Holds                                                                                                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data/`      | The file's shape (`types.ts`) and reader (`codec.ts`), this season's decided games as two sides each (`games.ts`), the kind rule (`kinds.ts`) and upgrade points (`upgrades.ts`).           |
-| `model/`     | The shape every prediction model fits (`types.ts`), the list of models (`models.ts`), the shared model (`shared.ts`) and its fitting routine (`fit.ts`).                                    |
-| `generator/` | The search (`chooser.ts`), the artifact rule (`artifacts.ts`), boards and swaps (`boards.ts`), the team Save as team stores (`team.ts`) and the index card's default set (`defaultSet.ts`). |
+| Folder       | Holds                                                                                                                                                                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data/`      | The file's shape (`types.ts`) and reader (`codec.ts`), this season's decided games as two sides each (`games.ts`), the kind rule (`kinds.ts`), the records Who Would Win? shows (`records.ts`) and upgrade points (`upgrades.ts`). |
+| `model/`     | The shape every prediction model fits (`types.ts`), the list of models (`models.ts`), the shared model (`shared.ts`), its fitting routine (`fit.ts`) and the split of a chance into reasons (`reasons.ts`).                        |
+| `generator/` | The search (`chooser.ts`), the artifact rule (`artifacts.ts`), boards and swaps (`boards.ts`), the team Save as team stores (`team.ts`) and the index card's default set (`defaultSet.ts`).                                        |
+| `www/`       | Who Would Win?'s result (`panel.ts`).                                                                                                                                                                                              |
 
-The external check loads `data/` but `codec.ts`, all of `model/`, and `chooser.ts`, `artifacts.ts` and `boards.ts` in Node by stripping their types. Those files use relative imports ending in `.ts`, no `enum` or `namespace`, and nothing of the browser or Vue; one that breaks this stops the check with Node's error.
+The external check loads `data/` but `codec.ts`, all of `model/`, and `chooser.ts`, `artifacts.ts` and `boards.ts` in Node by stripping their types, and `www/panel.ts` keeps to the same rules so it can too. Those files use relative imports ending in `.ts`, no `enum` or `namespace`, and nothing of the browser or Vue; one that breaks this stops the check with Node's error.
 
 ### The model
 
@@ -58,7 +59,7 @@ A team's kind is a group in the file. A recorded team's is its own `family`; any
 
 ### The worker
 
-The model is learned and the search run in a module worker (`src/workers/sl.worker.ts`), so a long search never freezes the page. `useSlEngine` starts it when a page that needs it mounts and keeps it for the visit, so the file is read and the model learned once. Until it is ready, Generate says so and waits. A worker that fails is dropped, the page shows its failure line, and the next page to mount starts another.
+The model is learned, the search run and Who Would Win?'s result built in a module worker (`src/workers/sl.worker.ts`), so a long search never freezes the page. `useSlEngine` starts it when a page that needs it mounts and keeps it for the visit, so the file is read and the model learned once. Until it is ready, Generate and Predict winner say so and wait. A worker that fails is dropped, the page shows its failure line, and the next page to mount starts another.
 
 ### The search
 
@@ -264,6 +265,14 @@ A complete example, each list cut to one or two entries:
   "beforeUnder": 8
 }
 ```
+
+## Who Would Win?
+
+`/guide/pvp/www` (`WWW_PATH`) says which of two five-hero teams, at their levels and with their artifacts, should win a Supreme League match, and why, from the generator's data file and model. It shares the generator's root and look (`.sl-page`, `sl.css`), its heading (`SlHead`), its file load (`useSlFile`), its About dialog (`SlAbout`) and its worker, and like the generator it is pre-rendered with its heading alone. The teams live in the page alone. A hero added to Team A starts at the active roster's levels and one added to Team B at the top levels, as the generator rates a visitor's heroes against opponents at the top levels. The result is made only on Predict winner.
+
+The worker builds the result whole (`wwwPanel`, `src/lib/pvp/sl/www/panel.ts`), and the page only draws it. An artifact with no games in the file, or one `artifactSurvives` rejects, reaches the model as a typical one. The records (`data/records.ts`) count each side of every decided game on its own, so a hero on both teams of a game has a win and a loss from it.
+
+Each of the four reasons is its Shapley value: the average, over the 24 orders of adding the reasons, of how far it moves the chance. The same part of the edge is worth less near 0% and 100% than near an even match, and this way the four add up to the chance less 50% however lopsided the match (`model/reasons.ts`). The page shows tenths of a point, and the rounding keeps that sum: each reason rounds half away from zero, so swapping the teams mirrors every value, and when the four then miss the shown chance, the reasons closest to rounding the other way take the difference, a tenth each.
 
 ## Related documentation
 

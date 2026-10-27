@@ -1,6 +1,6 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The Supreme League generator (`/guide/pvp/sl`, [Guide](./GUIDE.md)) bakes its heading alone and draws its picker after mount. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The Supreme League generator (`/guide/pvp/sl`) and Who Would Win? (`/guide/pvp/www`, [Guide](./GUIDE.md)) bake their heading alone and draw the rest after mount. `/teams` is client-only. Game state never enters the baked HTML.
 
 The hard rule is that the client's first render must equal the baked HTML, or the page jumps when the app replaces it. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
@@ -22,7 +22,7 @@ The hard rule is that the client's first render must equal the baked HTML, or th
 
 `npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) and Who Would Win? (`WWW_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
 The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so the first render matches the baked page.
 
@@ -42,7 +42,7 @@ A page is baked once per path, so nothing from the query string is in its HTML. 
 
 The skill-text locale is the URL prefix on skill pages, one of `SKILL_LOCALES`. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings. On a path that carries an app locale, and on every skill page, each row of the header's language menu links to the same page under that language's prefix.
 
-A page whose prose is its content carries its language in its address: the skill pages, in every skill-text language, and Help, in every app locale. Every other page has one address and shows in the site language, and those with content to find in search, `/skills`, the guide pages and the Supreme League generator, are pre-rendered in English.
+A page whose prose is its content carries its language in its address: the skill pages, in every skill-text language, and Help, in every app locale. Every other page has one address and shows in the site language, and those with content to find in search, `/skills`, the guide pages, the Supreme League generator and Who Would Win?, are pre-rendered in English.
 
 `App.vue` watches the path and hands its app-locale prefix to `applyAddressLocale` (`src/stores/i18n.ts`), which sets the chrome locale without saving it, because following a shared `/zh/...` link must not overwrite the saved preference.
 
@@ -62,7 +62,7 @@ vite-ssg creates its own unhead instance on the server and the client, and `src/
 
 ## Chunk error recovery
 
-A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop. `reloadOntoCurrentBuild` does the reloading, and the Supreme League generator calls it too when its data file, a hashed asset of the same build, fails to load.
+A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop. `reloadOntoCurrentBuild` does the reloading, and the Supreme League pages call it too when their data file, a hashed asset of the same build, fails to load.
 
 ## PvP reports
 

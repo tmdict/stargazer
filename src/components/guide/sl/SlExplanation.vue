@@ -52,7 +52,7 @@ const outcomes = computed(() => [
         <tbody>
           <tr v-for="team in shown.teams" :key="team.map">
             <td class="sl-num">{{ team.map + 1 }}</td>
-            <td>{{ groupName(team) }}</td>
+            <td>{{ groupName(team.group) }}</td>
             <td class="sl-num">{{ team.comp ? `${team.comp[1]}–${team.comp[2]}` : '–' }}</td>
             <td class="sl-num">
               <strong>{{ percent(team.chance) }}</strong>

@@ -10,31 +10,27 @@
    heading alone: the picker and the set follow the visitor's rosters, which
    the browser holds, so they are drawn after mount. */
 
-import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar from '@/components/guide/sl/SlBar.vue'
+import SlHead from '@/components/guide/sl/SlHead.vue'
 import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { slPercent } from '@/components/guide/sl/useSlNames'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readTeamsSlot } from '@/composables/useGridPersistence'
-import { useInfoTip } from '@/composables/useInfoTip'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
-import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
 import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
-import { isRetiredSeason } from '@/lib/seasonal'
-import { MAX_SAVED_TEAMS, TEAM_VARIANTS } from '@/lib/teams/modes'
+import { MAX_SAVED_TEAMS } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
-import { reloadOntoCurrentBuild } from '@/router/routes'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -50,65 +46,14 @@ const gameData = useGameDataStore()
 gameData.initializeData()
 const rosters = useRosters()
 const library = useTeamLibrary()
-const route = useRoute()
 const router = useRouter()
 const { error, success, show } = useToast()
 const { status: engineStatus, generate: generateSet } = useSlEngine()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 
-const {
-  anchor: betaAnchor,
-  hoverOpen: betaOpen,
-  hoverClose: betaClose,
-  toggle: betaToggle,
-  onTouchStart: betaTouchStart,
-} = useInfoTip()
-
-// Plain, never reactive, so the decoded data stays out of anything the
-// console can reach.
-let data: SlData | null = null
-const heading = ref<{
-  season: number
-  date: string
-  rotation: boolean
-  retired: boolean
-  sample: SlSample
-  before: (SlSample & { season: number }) | null
-} | null>(null)
+const { file: slFile, heading, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
-const failed = ref(false)
-const mounted = ref(false)
-
-// A load can fail after the page is left, when the route is another page's.
-let active = true
-
-onUnmounted(() => {
-  active = false
-})
-
-onMounted(async () => {
-  mounted.value = true
-  try {
-    data = await loadSlData()
-  } catch {
-    // A tab left open across a deploy asks for a file the deploy replaced, so
-    // it reloads once. A browser that cannot decode the file never would.
-    if (!active) return
-    if (typeof DecompressionStream === 'undefined' || !reloadOntoCurrentBuild(route.fullPath)) {
-      failed.value = true
-    }
-    return
-  }
-  heading.value = {
-    season: data.season,
-    date: data.exportedAt,
-    rotation: data.maps.map((m) => m.key).join() !== TEAM_VARIANTS.sl.maps.join(),
-    retired: isRetiredSeason(data.season),
-    sample: data.sample,
-    before: data.before ? { season: data.before.season, ...data.before.sample } : null,
-  }
-})
 
 const sourceLevels = (id: number): AttrRecord | undefined =>
   rosters.active ? rosters.active.heroes[id] : TOP_LEVELS
@@ -162,7 +107,7 @@ const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
   })
 
 const generate = async (): Promise<void> => {
-  const file = data
+  const file = slFile()
   if (!file) return
   busy.value = true
   try {
@@ -241,38 +186,11 @@ const save = (): void => {
 
 <template>
   <main class="sl-page" data-theme="dark">
-    <header class="sl-head">
-      <h1>
-        {{ i18n.t('app.sl-title')
-        }}<button
-          type="button"
-          class="sl-beta"
-          @mouseenter="betaOpen"
-          @mouseleave="betaClose"
-          @focus="betaOpen"
-          @blur="betaClose"
-          @click="betaToggle"
-          @touchstart.passive="betaTouchStart"
-        >
-          BETA
-        </button>
-      </h1>
-      <Teleport v-if="betaAnchor" to="body">
-        <TooltipPopup :target-element="betaAnchor" variant="detailed" max-width="290px">
-          <template #content>{{ i18n.t('app.sl-beta-tip') }}</template>
-        </TooltipPopup>
-      </Teleport>
-      <p v-if="heading">
-        {{ i18n.t('app.sl-records', { season: heading.season, date: heading.date }) }}
-        <span aria-hidden="true">·</span>
-        <button type="button" class="sl-about-link" @click="aboutOpen = true">
-          {{ i18n.t('app.sl-about') }}
-        </button>
-      </p>
-    </header>
+    <SlHead :title="i18n.t('app.sl-title')" :records="heading" @about="aboutOpen = true" />
     <SlAbout
       v-if="heading"
       :show="aboutOpen"
+      page="sl"
       :season="heading.season"
       :date="heading.date"
       :sample="heading.sample"
@@ -313,78 +231,6 @@ const save = (): void => {
 </template>
 
 <style scoped>
-.sl-page {
-  --control-height-compact: var(--control-height);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 14px;
-  width: 100%;
-  padding: 18px 24px 48px;
-  border-radius: var(--section-radius);
-}
-
-.sl-head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-
-.sl-head h1 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.15;
-  font-weight: 700;
-  text-align: left;
-  color: var(--color-text-primary);
-}
-
-.sl-beta {
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
-  margin-left: 8px;
-  padding: 0 6px;
-  border: 1px solid color-mix(in srgb, var(--color-warning) 55%, transparent);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-  color: var(--color-warning);
-  font-family: inherit;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  vertical-align: top;
-  cursor: help;
-}
-
-.sl-head p,
-.sl-line {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-
-.sl-about-link {
-  margin-left: 0.35em;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: var(--color-primary);
-  cursor: pointer;
-}
-
-.sl-about-link:hover {
-  text-decoration: underline;
-}
-
-.sl-line.sl-note {
-  color: var(--color-danger-text);
-}
-
 .sl-result-slot {
   margin: 4px 0;
   line-height: 1.7;
@@ -407,9 +253,6 @@ const save = (): void => {
 }
 
 @media (max-width: 768px) {
-  .sl-page {
-    padding: 16px 16px 40px;
-  }
   .sl-picker {
     padding: 12px;
     border-color: transparent;

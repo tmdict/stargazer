@@ -8,7 +8,7 @@ import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
 import { slPreview } from './scripts/slPreview.ts'
-import { GUIDE_PAGES, guidePath, SL_GENERATOR_PATH } from './src/lib/guide.ts'
+import { GUIDE_PAGES, guidePath, SL_GENERATOR_PATH, WWW_PATH } from './src/lib/guide.ts'
 import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
 import { APP_LOCALES, isAppLocale, SKILL_LOCALES } from './src/lib/types/i18n.ts'
@@ -37,6 +37,7 @@ function getSSGRoutes(): string[] {
     '/skills',
     ...GUIDE_PAGES.map(guidePath),
     SL_GENERATOR_PATH,
+    WWW_PATH,
   ]
 
   // Help exists only in the app locales.

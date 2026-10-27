@@ -10,6 +10,7 @@ export const GUIDE_PAGES: readonly GuidePage[] = ['index', 'upgrades', 'mechanic
 export const guidePath = (page: GuidePage): string =>
   page === 'index' ? '/guide' : `/guide/${page}`
 
-// The Supreme League generator, beside the season reports, pre-rendered with
-// its heading alone (GuideSlView).
+// The Supreme League generator and Who Would Win?, beside the season reports,
+// each pre-rendered with its heading alone (GuideSlView, GuideWwwView).
 export const SL_GENERATOR_PATH = '/guide/pvp/sl'
+export const WWW_PATH = '/guide/pvp/www'

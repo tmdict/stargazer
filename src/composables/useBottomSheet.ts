@@ -87,17 +87,19 @@ export function useBottomSheet(opts: Options) {
       lastMoveTime = now
     }
   }
-  // A release that toggles the sheet also synthesizes a click (iOS), which
+  // A release that toggles the sheet also synthesizes a click, which
   // hit-tests against content that has slid under the finger mid-glide;
-  // BottomSheet swallows clicks while this is fresh.
+  // BottomSheet swallows clicks while this is fresh. The release may be the
+  // handle's or a press in the content that the page answers by toggling (a
+  // hero picked on release), so every toggle counts.
   const GHOST_CLICK_MS = 400
   let toggledAt = 0
   const justToggled = (): boolean => Date.now() - toggledAt < GHOST_CLICK_MS
+  watch(expanded, () => (toggledAt = Date.now()))
 
   function dragEnd(allowTap = true) {
     if (!dragging.value) return
     dragging.value = false
-    const was = expanded.value
     // A flick (quick release) wins first: open/close in its direction even on a
     // short swipe. Ignore stale velocity from a finger that paused before lifting.
     const isFlick = Date.now() - lastMoveTime < 100 && Math.abs(velocity) >= FLICK_VELOCITY
@@ -110,7 +112,6 @@ export function useBottomSheet(opts: Options) {
     } else {
       expanded.value = visible.value >= (opts.peek + expandedPx.value) / 2
     }
-    if (expanded.value !== was) toggledAt = Date.now()
     dragDelta.value = 0
   }
 

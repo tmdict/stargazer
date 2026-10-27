@@ -13,6 +13,7 @@
  * typical artifact, that same average, so no artifact, or one the games never
  * show, counts as a typical one. */
 
+import { lineupKey } from '../data/games.ts'
 import { fit, type Row } from './fit.ts'
 import type {
   Explanation,
@@ -32,8 +33,7 @@ const HOLD = { hero: 3, lineup: 3, counter: 5, artifact: 10, artifactOnKind: 20,
 
 const GAP = 'gap'
 const heroKey = (id: number): string => `h${id}`
-const lineupKey = (heroes: readonly number[]): string =>
-  `l${[...heroes].sort((a, b) => a - b).join('/')}`
+const lineupNumberKey = (heroes: readonly number[]): string => `l${lineupKey(heroes)}`
 const counterKey = (hero: number, kind: number): string => `c${hero}:${kind}`
 const artifactKey = (id: number): string => `a${id}`
 const artifactOnKindKey = (id: number, kind: number): string => `k${id}:${kind}`
@@ -46,7 +46,7 @@ function sideFeatures(
   out: [string, number, number][],
 ): void {
   for (const h of side.heroes) out.push([heroKey(h), sign, HOLD.hero])
-  out.push([lineupKey(side.heroes), sign, HOLD.lineup])
+  out.push([lineupNumberKey(side.heroes), sign, HOLD.lineup])
   if (other.kind !== null) {
     for (const h of side.heroes) out.push([counterKey(h, other.kind), sign, HOLD.counter])
   }
@@ -89,7 +89,7 @@ function learn(games: Game[]): Model {
   const theta = num(GAP)
 
   const heroSum = (heroes: readonly number[]): number =>
-    heroes.reduce((s, h) => s + num(heroKey(h)), 0) + num(lineupKey(heroes))
+    heroes.reduce((s, h) => s + num(heroKey(h)), 0) + num(lineupNumberKey(heroes))
   const counter = (hero: number, kind: number | null): number =>
     kind === null ? 0 : num(counterKey(hero, kind))
   const counters = (side: Side, other: Side): number =>
@@ -141,7 +141,7 @@ function learn(games: Game[]): Model {
   })
 
   const items = (side: Side, other: Side, at: 'a' | 'b'): Record<ItemReason, ReasonItem[]> => {
-    const lineup = lineupKey(side.heroes)
+    const lineup = lineupNumberKey(side.heroes)
     const line = (
       subject: ReasonItem['subject'],
       id: number | null,
