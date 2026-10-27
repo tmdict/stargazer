@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* The note on the generator's data, with credit to the content creators many
-   of the teams start with. */
+/* The note on the generator's data, with credit for its teams and creators to
+   follow for new ones. */
 
 import { computed } from 'vue'
 
@@ -9,7 +9,7 @@ import type { SlSample } from '@/lib/pvp/sl/types'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 
-const { season, sample, before } = defineProps<{
+const { season, date, sample, before } = defineProps<{
   show: boolean
   season: number
   date: string
@@ -29,12 +29,16 @@ const CREATORS = [
 
 const i18n = useI18nStore()
 
+// Small counts stay exact so an early season never reads "0+".
+const roughly = (n: number, step: number, round: (x: number) => number): number =>
+  n < step ? n : round(n / step) * step
+
 const counts = (s: SlSample): Record<string, string> => {
   const format = new Intl.NumberFormat(i18n.currentLocale)
   return {
-    matches: format.format(s.matches),
-    games: format.format(s.games),
-    players: format.format(s.players),
+    matches: format.format(roughly(s.matches, 50, Math.floor)),
+    games: format.format(roughly(s.games, 50, Math.floor)),
+    players: format.format(roughly(s.players, 10, Math.round)),
   }
 }
 
@@ -42,20 +46,24 @@ const counts = (s: SlSample): Record<string, string> => {
 const SLOT = '\u0000'
 const reportText = computed(() => i18n.t('app.sl-about-report', { report: SLOT }).split(SLOT))
 const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
+
+// Chinese sets sentences side by side with no space between them.
+const lead = computed(() =>
+  [
+    i18n.t('app.sl-about-sample', { season, date, ...counts(sample) }),
+    ...(before
+      ? [i18n.t('app.sl-about-before', { season: before.season, ...counts(before) })]
+      : []),
+    reportText.value[0],
+  ].join(i18n.currentLocale === 'zh' ? '' : ' '),
+)
 </script>
 
 <template>
   <BaseModal :show :label="i18n.t('app.sl-about-title')" max-width="1000px" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-about-title') }}</h1>
-    <p>{{ i18n.t('app.sl-about-real') }}</p>
     <p>
-      {{ i18n.t('app.sl-about-sample', { season, date, ...counts(sample) }) }}
-    </p>
-    <p v-if="before">
-      {{ i18n.t('app.sl-about-before', { season: before.season, ...counts(before) }) }}
-    </p>
-    <p>
-      {{ reportText[0]
+      {{ lead
       }}<a :href="reportHref" target="_blank" rel="noopener">{{
         i18n.t('app.sl-about-report-link', { season })
       }}</a
@@ -67,7 +75,6 @@ const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
 
     <h2>{{ i18n.t('app.sl-about-credit-head') }}</h2>
     <p>{{ i18n.t('app.sl-about-credit') }}</p>
-    <p>{{ i18n.t('app.sl-about-thanks') }}</p>
     <ul class="sl-creators">
       <li v-for="creator in CREATORS" :key="creator.url">
         <a :href="creator.url" target="_blank" rel="noopener noreferrer">{{ creator.name }}</a>
