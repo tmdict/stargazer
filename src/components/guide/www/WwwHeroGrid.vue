@@ -54,6 +54,7 @@ const pickBySlug = (slug: string): void => {
         :key="character.id"
         :character
         :dimmed="taken.includes(character.id)"
+        hide-tooltip
         inspectable
         show-outfit
         @character-click="(picked) => emit('pick', picked)"
