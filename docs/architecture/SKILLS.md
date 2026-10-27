@@ -73,7 +73,7 @@ What identifies a unit shows whatever the Skills toggle says: a companion's bord
 
 A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.
 
-`seasonalTargeting` reports whether a phantimal's data file sets `"targeting": true`. A Spirit Mark paints nothing while it is off, even with the Skills toggle on, so a mark can ship before its in-game unlock. Artifacts have no such switch ([Seasonal Content](./SEASONAL.md)).
+`seasonalTargeting` reports whether a phantimal's data file sets `"targeting": true`, which gates its Spirit Mark ([Seasonal Content](./SEASONAL.md#spirit-marks-and-the-targeting-switch)).
 
 ## Skill modes
 
@@ -101,7 +101,7 @@ A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#he
 }
 ```
 
-A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right, a [unit badge](#unit-badges). The arrows show only while the Skills toggle is on. The button shows whatever the toggle says, because the mode is part of the hero's setup, and it is in downloaded images. On an editable board a mouse click on the button cycles the mode, hovering names it while Grid Info's Details on hover is on, and a right-click opens the hero's skills as it does on the portrait; a read-only board only shows the mode. On a device with no mouse or trackpad the button only shows the mode and a tap reaches the portrait, so the lifted hero's Skills pill carries a mode button instead. A synergy copy has no button and draws the default mode's color.
+A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right, a [unit badge](#unit-badges). The button shows whatever the Skills toggle says, because the mode is part of the hero's setup. A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 
@@ -111,11 +111,7 @@ Some artifacts act on specific units, such as Enlightening on the rearmost ally,
 
 The arrows render in `SkillTargeting` in the team colors (`TEAM_COLORS`) and share the Skills toggle. Team view hides the enemy slot's arrows, and also any arrow whose target tile it crops out, such as an ally artifact pointing at enemies. `GridArrow` prefixes its SVG marker id with the board id, because marker ids are document-wide and the Teams page renders several boards.
 
-If an artifact ever needs a side effect such as a spawned unit or a capacity change, give skills a caster-agnostic source instead of extending this table.
-
-## Adding a skill
-
-Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder. If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle.
+The table only draws arrows. An artifact side effect such as a spawned unit or a capacity change would need skills to take a caster-agnostic source, since the table has no lifecycle.
 
 ## Related documentation
 

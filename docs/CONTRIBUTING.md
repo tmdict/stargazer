@@ -47,13 +47,31 @@ The hero list, skill pages and search pick the character up from those files.
 
 Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` ([Teams](./architecture/TEAMS.md)).
 
+### Adding a skill
+
+Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder ([Skills](./architecture/SKILLS.md#builders-and-composition)). If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle.
+
+### Adding a screenshot screen
+
+A new screen keeps the import's layers ([Screenshot Import](./architecture/IMPORT.md#layers)): a reader under `src/lib/import/screens/` that finds its own landmark, reads its cards with the card layer and gives every field a sure flag; a kind in `src/lib/import/kinds.ts` with the reference parts it waits for, its decode widths in the engine and its reader in the worker; a case in the sorter when one import takes it beside other screens or another import must turn it away; and an import that hands the engine its session, with a plan as pure data and a review built from the shared pieces. What it marks sure must never be wrong on the labelled samples.
+
 ### Changing a placement rule
 
 Placement, moves, swaps and removal live in `src/lib/characters/` and run inside `executeTransaction`, so a failed step undoes the earlier ones ([Grid](./architecture/GRID.md)).
 
 ### A new season
 
-Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md).
+A season ships in three phases ([Seasonal Content](./architecture/SEASONAL.md#season-cutover)). At the game's flip:
+
+1. Run the data export for the new season. It retires the previous season's text and writes the season's artifact and phantimal data files and names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. A new artifact stat needs an `ArtifactStatKey` and a label in `src/locales/game/`.
+2. Pin the pack version that holds the season with `npm run data:pin`, and review the changes the export made here.
+3. Replace `src/lib/skills/seasonal/phantimal.ts` (one companion skill per phantimal that has a companion), delete the old season's `ARTIFACT_TARGETING` entries with their tests, and replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
+4. If the Supreme League map list changed, give the new preset maps the ids the old ones free and edit the `sl` row of `TEAM_VARIANTS`. The list also changes mid-season, every couple of months, and the replay-frame reader then needs checking against frames of the new maps ([Team Import](./architecture/IMPORT_TEAM.md#replay-frames)).
+5. Run the tests and the build, commit the export's changes with `data.lock`, and deploy.
+
+When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the season's charm `tags.json` and each phantimal's and artifact's `tags`. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
+
+Add an artifact rule whenever its mechanic is known. Set a phantimal's `"targeting": true` once its Spirit Mark is live in the game.
 
 ### Styles
 
@@ -61,4 +79,4 @@ Component styles are scoped in each `.vue` file and global styles are in `src/st
 
 ## Documentation
 
-Architecture docs follow [the style guide](./STYLE_GUIDE.md). Update the relevant doc when a change alters how a system works, and check every name it mentions against the code.
+Architecture docs follow [the style guide](./STYLE_GUIDE.md).

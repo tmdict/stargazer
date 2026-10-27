@@ -24,6 +24,7 @@ Leave out:
 - Walkthroughs of what the UI shows or what a function plainly computes
 - Generic claims ("efficient", "type-safe", "simple API") and testing sections
 - Counts that drift with data (heroes, pages, files); state the rule instead
+- Steps for adding, changing or removing a feature; a short how-to goes in `CONTRIBUTING.md`
 
 ## Diagrams
 

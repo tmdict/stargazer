@@ -1,8 +1,8 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The Supreme League generator (`/guide/pvp/sl`, [Guide](./GUIDE.md)) bakes its heading alone and draws its picker after mount. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The Supreme League generator (`/guide/pvp/sl`, [Guide](./GUIDE.md)) bakes its heading alone and draws its picker after mount. `/teams` is client-only. Game state never enters the baked HTML.
 
-The hard rule is that the client's first render must equal the baked HTML, or hydration breaks. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
+The hard rule is that the client's first render must equal the baked HTML, or the page jumps when the app replaces it. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
 ## How a build runs
 
@@ -22,9 +22,9 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
 
 `npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page, so 16 languages × every hero with text. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the Supreme League generator (`SL_GENERATOR_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
-The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so hydration matches.
+The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so the first render matches the baked page.
 
 `processRenderedPage` stamps `<html lang>` from the URL prefix and `<body lang>` with the app locale the page was rendered in (English under a text-only prefix), the pair the i18n store keeps in the browser ([Architecture](../ARCHITECTURE.md)). It also removes duplicate asset links, since vite-ssg emits asset `<link>` tags in two passes and a module reachable from both appears twice. On skill pages it also preloads the language chunk and writes the meta description ([Skill Pages](./SKILL_PAGES.md)). The chunk lookup reads the client build's manifest in `dist/.vite`, which works because vite-ssg finishes the client build before rendering.
 
@@ -40,7 +40,7 @@ A page is baked once per path, so nothing from the query string is in its HTML. 
 
 ## Two locale axes
 
-The skill-text locale is the URL prefix on skill pages and has 16 values. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings. On a path that carries an app locale, and on every skill page, each row of the header's language menu links to the same page under that language's prefix.
+The skill-text locale is the URL prefix on skill pages, one of `SKILL_LOCALES`. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings. On a path that carries an app locale, and on every skill page, each row of the header's language menu links to the same page under that language's prefix.
 
 A page whose prose is its content carries its language in its address: the skill pages, in every skill-text language, and Help, in every app locale. Every other page has one address and shows in the site language, and those with content to find in search, `/skills`, the guide pages and the Supreme League generator, are pre-rendered in English.
 
@@ -52,11 +52,11 @@ A page whose prose is its content carries its language in its address: the skill
 | Skill page under an app locale, `/zh/skill/...` | the saved preference, else the prefix                  |
 | Anything else, `/`, `/guide`, `/ja/skill/...`   | the saved preference, else the locale in use           |
 
-A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so hydration matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
+A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so the first render matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
 
 ## Head tags
 
-vite-ssg creates its own unhead instance on the server and the client, and `src/main.ts` creates one from `@unhead/vue/client`. The root `@unhead/vue` range must stay within the range vite-ssg depends on, so npm installs one copy. A second copy would split the app's `useHead` calls from the server head. Bump the two together.
+vite-ssg creates its own unhead instance on the server and the client, and `src/main.ts` creates one from `@unhead/vue/client`. The root `@unhead/vue` range must stay within the range vite-ssg depends on, so npm installs one copy. A second copy would split the app's `useHead` calls from the server head.
 
 `/share` and `/skills` set their own title and canonical through `useHead`, and `/` keeps the `index.html` defaults.
 
@@ -70,7 +70,7 @@ The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pv
 
 The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies.
 
-The plugin takes images only from the imports of `src/utils/imageAssets.ts`, which holds the hero list's display variants, so other variants cut from the same PNGs stay out of the reports. That file must import nothing local, because its integration test copies it on its own. Each image module must carry exactly one `__VITE_ASSET__` reference, which the bundler resolves to the final file name. This leans on a Vite internal, so re-run `tests/integration/guideReports.test.ts` after a Vite upgrade.
+The plugin takes images only from the imports of `src/utils/imageAssets.ts`, which holds the hero list's display variants, so other variants cut from the same PNGs stay out of the reports. That file must import nothing local, because its integration test copies it on its own. Each image module must carry exactly one `__VITE_ASSET__` reference, which the bundler resolves to the final file name. This leans on a Vite internal, which the plugin's integration test exercises.
 
 The build fails on a placeholder naming a missing image, a placeholder left unresolved, or a `guide/pvp/s<N>/index.html` already present in `public/` or the bundle.
 
@@ -86,4 +86,4 @@ The host serves `dist/` as static files first and applies `public/_redirects` to
 
 - [Skill Pages](./SKILL_PAGES.md): skill locale chunks, the warm-up guard and skill page meta
 - [Guide](./GUIDE.md): guide pages and season summaries
-- [URL Serialization](./URL_SERIALIZATION.md): the `?g=` payload decoded after hydration
+- [URL Serialization](./URL_SERIALIZATION.md): the `?g=` payload decoded after mount

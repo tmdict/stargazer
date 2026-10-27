@@ -8,7 +8,7 @@ The split follows what each format needs. Links must be short and are allowed to
 
 Every link uses one self-describing codec. The envelope names a mode (the Arena is mode 0 with one board), and each page routes on the decoded mode instead of owning a format.
 
-The format has no version field. The app and its links deploy together, links are disposable, and only the Arena autosave outlives a deploy. Golden-string tests in `tests/unit/utils/binaryEncoder.test.ts` freeze the layout, so any change to field order, section order, bit width or the URL alphabet fails them.
+The format has no version field. The app and its links deploy together, links are disposable, and only the Arena autosave outlives a deploy. Golden-string tests freeze the layout, so any change to field order, section order, bit width or the URL alphabet fails them.
 
 Decoding is strict, so a payload decodes exactly or not at all. Unknown mode ids, unknown map ids and unknown bitmap bits reject it. So do a counted section with a zero count (the encoder never writes an empty section) and a map id on an Arena board. After the last board the stream must end cleanly, with fewer than 8 bits left and all of them zero. These rules exist because short payloads in other formats would otherwise read as plausible near-empty links.
 
@@ -65,27 +65,27 @@ A section left empty is omitted, which the decoder's zero-count rule relies on.
 
 A link is the envelope, then per board a header plus only the sections it uses, rounded up to whole bytes and written at 6 bits per URL character. An Arena link with 3 changed tiles, 2 heroes and 1 upgrade row is 14 + 14 + (6 + 3 × 9) + (6 + 2 × 23) + (6 + 27) = 146 bits, which is 19 bytes or 26 characters. A full board (20 changed tiles, 10 heroes at P4 and R4, both artifacts, a phantimal per side) is about 175 characters as an Arena link and about 855 as a five-board link, roughly a quarter of the same boards as JSON.
 
-Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attributes.test.ts`) fail when a mode, map or attr outgrows its field, including an attr whose max would not fit the 4-bit value, so nothing truncates on the wire. The "In use" column is a snapshot for planning; the tests, not this table, enforce the limits.
+Contract tests fail when a mode, map or attr outgrows its field, including an attr whose max would not fit the 4-bit value, so nothing truncates on the wire.
 
-| Field                  | Bits | In use                           | Capacity | Headroom                                           |
-| ---------------------- | ---- | -------------------------------- | -------- | -------------------------------------------------- |
-| Mode id                | 3    | 4 (the Arena and 3 board counts) | 8        | 4 more board counts                                |
-| Active board           | 3    | up to 5 boards                   | 8        | modes of up to 8 boards                            |
-| Display flags          | 8    | 5 flags                          | 8        | 3 more toggles                                     |
-| Map id                 | 6    | 22 maps, plus 0 for none         | 63       | 41 more maps; seasonal preset ids rotate           |
-| Section bitmap         | 8    | 7 sections                       | 8        | 1 more section                                     |
-| Hex id                 | 6    | 45 hexes                         | 63       | the grid can grow to 63 hexes                      |
-| Tile state             | 3    | 7 states                         | 8        | 1 more state                                       |
-| Character id           | 16   | heroes and companions            | 65,535   | companion index N up to 6 for base ids below 5,536 |
-| Artifact id            | 6    | 6 permanent and 12 seasonal      | 63       | seasonal ids rotate, so the pool does not grow     |
-| Phantimal local id     | 4    | 5 per season                     | 15       | 1 to 12 usable, 13 to 15 reserved for tests        |
-| Attr id                | 6    | 3                                | 63       | 60 more attributes                                 |
-| Attr value             | 4    | max level 4, 2 skill modes       | 15       | level caps up to 15, 16 modes per hero             |
-| Upgrade rows per board | 6    | up to 24 (20 levels, 4 modes)    | 63       | 6 attrs per hero on a full board                   |
+| Field                  | Bits | Capacity | Limit it sets                                      |
+| ---------------------- | ---- | -------- | -------------------------------------------------- |
+| Mode id                | 3    | 8        | the Arena plus seven board counts                  |
+| Active board           | 3    | 8        | modes of up to 8 boards                            |
+| Display flags          | 8    | 8        | bits 5 to 7 spare                                  |
+| Map id                 | 6    | 63       | 0 is no map; seasonal preset ids rotate            |
+| Section bitmap         | 8    | 8        | bit 7 spare                                        |
+| Hex id                 | 6    | 63       | the grid can grow to 63 hexes                      |
+| Tile state             | 3    | 8        | one more state                                     |
+| Character id           | 16   | 65,535   | companion index N up to 6 for base ids below 5,536 |
+| Artifact id            | 6    | 63       | seasonal ids rotate, so the pool does not grow     |
+| Phantimal local id     | 4    | 15       | 1 to 12 per season, 13 to 15 reserved for tests    |
+| Attr id                | 6    | 63       | append-only ids                                    |
+| Attr value             | 4    | 15       | level caps up to 15, 16 modes per hero             |
+| Upgrade rows per board | 6    | 63       | 6 attrs per hero on a full board of 10 heroes      |
 
 Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types and upgrade kinds, level caps up to 15, up to 3 more display toggles, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
 
-Changing the game's shape does need a new format: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format ships with new golden strings and a temporary migration that converts the Arena autosave once with a frozen copy of the old decoder. Every existing link breaks.
+Changing the game's shape does need a new format: a grid beyond 63 hexes, a ninth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format breaks every existing link, and the Arena autosave is converted once by a temporary migration holding a frozen copy of the old decoder.
 
 ## Wire registries
 

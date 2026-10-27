@@ -1,6 +1,6 @@
 # Targeting Skills
 
-Targeting helpers pick the unit a skill's arrow or highlight points at. They run again on every grid change, so each one must give exactly one answer for a formation. The helpers live in `src/lib/skills/utils/`: distances and formation ends in `distance.ts`, row and ring scans in `ring.ts`, the board mirror in `symmetry.ts`, and the candidate list and adjacent-tile picks in `targeting.ts`. Each reads a `SkillContext` and returns a target or `null`, and the builder decides what to draw.
+Targeting helpers pick the unit a skill's arrow or highlight points at. They run again on every grid change, so each one must give exactly one answer for a formation. The helpers live in `src/lib/skills/utils/`. Each reads a `SkillContext` and returns a target or `null`, and the builder decides what to draw.
 
 ## One board orientation
 
@@ -35,9 +35,9 @@ The only row that matters on this board is the diagonal row, `q - r` (`Hex.getDi
 
 `spiralSearchFromTile` (Silvina, Nara) walks rings outward from a centre hex. Within a ring an ally caster walks clockwise from just past top-right, and an enemy caster counter-clockwise from just past bottom-left. It never examines the centre tile, so callers test the mirror tile first and reach the spiral only when it holds no enemy.
 
-## When not to extend a helper
+## Rules kept in character files
 
-The shared helpers cover orderings that run one way along a team's axis. Keep a rule in its character file when it alternates direction, depends on another tile, or chains stages. Reinier accepts an adjacent ally only when that ally's mirror holds an enemy. Aliceth combines a same-row search with a furthest-enemy pick. Each would add an option to `rowScan` that only one caller uses.
+The shared helpers cover orderings that run one way along a team's axis. A rule that alternates direction, depends on another tile or chains stages stays in its character file, since each would add an option to `rowScan` that only one caller uses. Reinier accepts an adjacent ally only when that ally's mirror holds an enemy, and Aliceth combines a same-row search with a furthest-enemy pick.
 
 ## Drawing the result
 

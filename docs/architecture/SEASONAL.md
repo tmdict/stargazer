@@ -66,7 +66,7 @@ A companion spawns on a random free tile of its team, and if there is none, plac
 
 ### Spirit Marks and the targeting switch
 
-A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. In the game this unlocks weeks into a season, so a mark paints only when the phantimal's data file sets `"targeting": true`. The mark can be written and tested early and turned on with a one-field edit; until then it stays hidden even with the Skills toggle on. The flag has no UI. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withEffects` over the companion skill. A mark goes to a hero, so another phantimal or phantimal companion on the chosen tile is passed over for the next tile in the chain. A companion can carry its own mark, measured from its own tile and painted by its owner's skill (Wedge of Power marks the hero behind it).
+A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. In the game this unlocks weeks into a season, so a mark paints only when the phantimal's data file sets `"targeting": true`, and stays hidden until then even with the Skills toggle on. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withEffects` over the companion skill. A mark goes to a hero, so another phantimal or phantimal companion on the chosen tile is passed over for the next tile in the chain. A companion can carry its own mark, measured from its own tile and painted by its owner's skill (Wedge of Power marks the hero behind it).
 
 Links store phantimals in each board's `s` section by local id, with companions as `N × 10000 + L` (bit layout in [URL Serialization](./URL_SERIALIZATION.md)). An id with no data renders on the grid as a removable "?".
 
@@ -98,7 +98,7 @@ Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and 
 { "s8-10": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } } }
 ```
 
-`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. An active tag shows the whole charm with the pinned tiers accented, as it does a skill slot. A charm's effects change with the season, so the data export stops when the file names a charm the feed lacks, and deletes it with the text when the season retires.
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. A charm's effects change with the season, so the data export stops when the file names a charm the feed lacks, and deletes it with the text when the season retires.
 
 ## Season cutover
 
@@ -108,42 +108,9 @@ feed catches up ─▶ phase 2: text ───────▶ deploy
 in-game unlock ──▶ phase 3: targeting ──▶ deploy   (one phantimal at a time)
 ```
 
-Each phase ships on its own.
+Each phase ships on its own, because a season's text and its in-game unlocks arrive weeks after the flip. Phase 1 brings the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits. Until phase 2 brings the text, which artifacts, phantimals and charms may each get on a different build, their modals show a pending line (`app.skill-details-pending`). In phase 3 an artifact draws arrows from the deploy that adds its rule, and a phantimal's Spirit Mark from the one that sets its `targeting`.
 
-### Phase 1: structure, at the game's flip
-
-It needs the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits, but no text.
-
-1. Run the data export for the new season. It retires the previous season's text, writes the season's artifact and phantimal data files and their names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. A new stat needs an `ArtifactStatKey` and a label in `src/locales/game/`; the feed names it by that key.
-2. Pin the pack version that holds the season with `npm run data:pin`, and review the changes the export made here.
-3. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
-4. Replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
-5. If the Supreme League map list changed, give the new preset maps the ids the old ones free (the `id` in each arena JSON under `src/data/arena/`) and edit the `sl` row of `TEAM_VARIANTS` (`src/lib/teams/modes.ts`). Boards on the old list stop reading as Supreme League. The Supreme League maps also change mid-season, every couple of months; this step applies then too, and [Team Import](./IMPORT_TEAM.md) says what the replay-frame reader needs.
-6. Run the tests and the build, commit the export's changes with `data.lock`, and deploy. Nothing stored is rewritten: stale teams are cleaned as they are read, and each device's arena autosave on its first visit.
-
-Phase 1 is done when the tests and the build pass, every new icon loads, and modals without text show "Skill details not yet available" (`app.skill-details-pending`).
-
-### Phase 2: text, when the feed carries the season
-
-Artifacts, phantimals and charms may arrive on different builds. Run the data export, pin its pack version, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data; likewise each phantimal's and artifact's `tags` once its text is in. A failed check means a phase 1 value is wrong: fix the data file, not the check. It is done when `npm run build` lists no seasonal artifact or phantimal without text, and the charm tests run instead of skipping.
-
-### Phase 3: targeting
-
-Add an artifact rule whenever its mechanic is known; it draws from that deploy on. Write a phantimal's Spirit Mark whenever convenient, and set `"targeting": true` in its data file once the mark is live in the game.
-
-`PRE_MARKER_SEASON` does not change at a cutover.
-
-## Removing a feature
-
-Phantimals, their companions and charms each live in their own files plus a few call sites. To remove one, delete its files and follow the call sites:
-
-```sh
-grep -rn "inPhantimalBand\|isPhantimalId\|Phantimal" src tests scripts
-grep -rn "companionLocalId\|phantimalOwnerId\|PhantimalBandLocal\|raisesCapacity" src tests
-grep -rni "charm" src tests scripts .prettierignore
-```
-
-The first finds phantimals, the second only their companions, the third charms. Removing phantimals also removes the link sections at bits 3 and 6; old links that set those bits then fail to decode, which is accepted. Charms have no presence in links.
+Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change. The steps of each phase are in [Getting Started](../CONTRIBUTING.md#a-new-season).
 
 ## Related documentation
 

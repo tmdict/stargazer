@@ -4,7 +4,7 @@ The `/skills` browser, skill modal and pre-rendered `/<code>/skill/<slug>` pages
 
 ## Skill text
 
-Skill text comes from the data pack, in `src/pack/text/skill/<code>/` ([Architecture](../ARCHITECTURE.md)), which the data export writes from the upstream feed. Add a language through `SKILL_LOCALES`; the build stops until the pack holds its folder.
+Skill text comes from the data pack, in `src/pack/text/skill/<code>/` ([Architecture](../ARCHITECTURE.md#the-data-pack)), which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
 
 Each `<slug>.json` stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
@@ -62,8 +62,6 @@ The data export writes the language-independent `src/pack/text/skill/numbers.jso
 
 Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The data export reports discrepancies with the feed rather than overwriting hand-maintained hero data.
 
-Panel labels use the text language's `_terms.json`. `TERM_OVERRIDES` changes the English range label from the game's unit label, "Tiles", to "Range".
-
 ## Pages and meta
 
 Hero-list links retain a hero page's text locale; elsewhere they use `effectiveSkillLocale`: the saved globe choice, else the chrome locale. Picking a site language clears the globe preference and switches a skill page's URL. A `?l=` link sets only the chrome locale. Prefix and saved-language precedence are defined in [Pre-Rendering](./PRE_RENDERING.md#two-locale-axes).
@@ -88,7 +86,7 @@ Each attachment describes one effect and pins exactly one `{ slot: level }` or `
 
 `tagVocabulary` derives tags and modifiers from hero data; labels live in `src/locales/app/<key>.json`. A tag whose attachments all carry the same single modifier becomes one combined entry. Synergies are excluded from that rule because they describe a partner rather than the effect. Shared rules live in `src/lib/tags.ts`, independent of the data loader, for hero lists, skill chips and the [Mechanics guide](./GUIDE.md#mechanics-page).
 
-Within each tag, chips merge picks that match identical attachments, preserving activation by any represented pick. A slot heading names each of its tags once, with the non-synergy modifiers of all its effects in that slot ("Debuff (Single Target, Global)"); heading labels are not picks. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text; direct skill-page links open unfiltered.
+Within each tag, chips merge picks that match identical attachments, so any of the merged picks activates the chip. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text.
 
 Active chips combine as any-of and show matching slots or charms in full, accenting matching levels or tiers. A tagged upgrade cannot stand alone because its text depends on earlier levels. EX refinements have no tags and remain with their slot without accents.
 
@@ -96,7 +94,7 @@ Active chips combine as any-of and show matching slots or charms in full, accent
 
 `src/lib/mechanics.ts` extends tag picks with an energy pick. It matches total initial energy strictly above the threshold, including skill contributions. Energy belongs to a hero rather than a skill level, so it contributes no modal chips.
 
-`useEnergyValue` shares the threshold across hero lists and the Mechanics guide, in memory only, starting at 500 to match pre-rendered pages. The entry remains available when its current count is zero if any hero has energy, so lowering the threshold can recover results.
+`useEnergyValue` shares the threshold across hero lists and the Mechanics guide, in memory only, starting at 500 to match pre-rendered pages.
 
 ### Mechanic links
 
@@ -119,7 +117,7 @@ The guide index adds the card id as a fragment: the tag or `init-energy`. Unknow
 
 ## Commentary snippets
 
-Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after hydration, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order. `GridSnippet` resolves portraits so snippet data files need no image imports.
+Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after mount, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order. `GridSnippet` resolves portraits so snippet data files need no image imports.
 
 ## Search
 
