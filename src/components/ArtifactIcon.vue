@@ -113,4 +113,11 @@ const {
 .artifact:hover {
   transform: scale(1.05);
 }
+
+@media (max-width: 480px) {
+  .artifact {
+    width: var(--hero-icon-size);
+    height: var(--hero-icon-size);
+  }
+}
 </style>

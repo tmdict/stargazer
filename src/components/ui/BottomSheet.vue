@@ -210,6 +210,8 @@ const onSheetClickCapture = (e: MouseEvent) => {
     height: var(--sheet-expanded);
     --tabview-inset-y: 0;
     --tabview-inset-x: 0;
+    --tabview-side-border: 0;
+    --tabview-radius: 0;
     border-radius: var(--radius-large) var(--radius-large) 0 0;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     z-index: 800;

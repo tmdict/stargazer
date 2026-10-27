@@ -134,6 +134,10 @@ const select = (tab: TabItem) => {
 }
 
 @media (max-width: 768px) {
+  .tab-bar {
+    overflow-x: clip;
+  }
+
   .tab-label-long {
     display: none;
   }
@@ -147,8 +151,10 @@ const select = (tab: TabItem) => {
     gap: 0;
     background: var(--color-bg-secondary);
     border: 2px solid var(--color-border-primary);
+    border-inline-width: var(--tabview-side-border, 2px);
     border-bottom: none;
-    border-radius: var(--radius-large) var(--radius-large) 0 0;
+    border-radius: var(--tabview-radius, var(--radius-large))
+      var(--tabview-radius, var(--radius-large)) 0 0;
   }
 
   .tab-btn {
@@ -164,7 +170,7 @@ const select = (tab: TabItem) => {
   }
 
   .tab-btn:first-child {
-    border-top-left-radius: var(--radius-large);
+    border-top-left-radius: var(--tabview-radius, var(--radius-large));
   }
 
   .tab-btn:hover:not(.active) {

@@ -367,16 +367,6 @@ const handleDragEnd = (event: DragEvent) => {
   .character-wrapper {
     font-size: 0.9rem;
   }
-
-  .character-display {
-    width: 60px;
-    height: 60px;
-  }
-
-  .portrait {
-    width: 70px;
-    height: 70px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -386,8 +376,6 @@ const handleDragEnd = (event: DragEvent) => {
   }
 
   .character-display {
-    width: 50px;
-    height: 50px;
     box-shadow: 0 0 0 3px var(--hero-icon-ring);
   }
 
