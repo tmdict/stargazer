@@ -20,8 +20,10 @@ export const sideLabelKey = (side: TeamSide): string =>
 <script setup lang="ts">
 /* One team's row, from the outside in: its artifact, its phantimal and its
    five heroes, each hero with the P/R pill that steps its levels. Team B's
-   row runs the other way, so both teams' heroes meet in the middle. The
-   phantimal follows from the heroes by the game's faction rule. */
+   row runs the other way, so both teams' heroes meet in the middle. Where
+   the two rows do not fit side by side, each team is a column instead, its
+   heroes over its phantimal and artifact, with the icons toward the middle.
+   The phantimal follows from the heroes by the game's faction rule. */
 
 import { computed } from 'vue'
 
@@ -97,7 +99,7 @@ const heroName = (id: number): string =>
           >
             <img v-if="phantimal" :src="gameData.getCharacterImage(phantimal.name)" alt="" />
           </span>
-          <span class="www-tag">{{ i18n.t('app.www-auto') }}</span>
+          <span v-if="!phantimal" class="www-tag">{{ i18n.t('app.www-auto') }}</span>
         </div>
       </div>
       <div class="www-heroes">
@@ -128,6 +130,7 @@ const heroName = (id: number): string =>
 
 <style scoped>
 .www-team {
+  --slot: clamp(40px, 6cqi - 6px, 64px);
   display: grid;
   justify-items: center;
   gap: 6px;
@@ -173,16 +176,16 @@ const heroName = (id: number): string =>
   display: grid;
   justify-items: center;
   gap: 4px;
-  width: 48px;
+  width: calc(var(--slot) + 8px);
 }
 
 .www-round {
-  --pt: 40px;
+  --pt: var(--slot);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--slot);
+  height: var(--slot);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -239,27 +242,35 @@ button.www-round {
 }
 
 @container (max-width: 779px) {
-  .www-team-row {
-    display: grid;
-    grid-template-columns: repeat(5, 48px);
-    gap: 8px 3px;
+  .www-team {
+    --slot: 48px;
+  }
+  .www-team-row,
+  .b .www-team-row {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 14px;
   }
   .www-heroes {
-    grid-column: 1 / -1;
+    flex-direction: column;
+    gap: 8px;
   }
-  .a .www-extras {
-    grid-row: 1;
-    grid-column: 1 / 3;
-  }
-  .a .www-heroes {
-    grid-row: 2;
-  }
-  .b .www-heroes {
-    grid-row: 1;
-  }
+  .www-extras,
   .b .www-extras {
-    grid-row: 2;
-    grid-column: 4 / 6;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .a .www-team-row > * {
+    align-items: flex-end;
+  }
+  .www-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+  }
+  .a .www-cell {
+    flex-direction: row-reverse;
   }
 }
 </style>
