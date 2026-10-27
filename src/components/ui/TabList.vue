@@ -161,7 +161,7 @@ const select = (tab: TabItem) => {
   }
 
   .tab-btn {
-    flex: 1 1 auto;
+    flex: 1 1 var(--tabview-tab-basis, auto);
     min-width: 100px;
     justify-content: center;
     margin: 0 -1px -1px 0;
