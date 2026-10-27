@@ -315,8 +315,7 @@ const predictWinner = async (): Promise<void> => {
 
 @container (max-width: 779px) {
   .www-teams {
-    flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
 }
 

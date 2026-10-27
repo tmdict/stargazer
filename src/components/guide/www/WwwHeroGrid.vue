@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* The hero grid both teams pick from, with the Arena picker's search and
-   filters. A hero already on the team being filled is dimmed, and picking it
-   again takes it off that team; the other team may still field it. */
+   faction and class filters. A hero already on the team being filled is
+   dimmed, and picking it again takes it off that team; the other team may
+   still field it. */
 
 import { computed } from 'vue'
 
@@ -24,15 +25,9 @@ const emit = defineEmits<{ pick: [character: CharacterType] }>()
 
 const i18n = useI18nStore()
 
-const {
-  factionFilter,
-  classFilter,
-  mechanicFilter,
-  mechanicPool,
-  filteredCharacters,
-  energyPicked,
-  inspectChips,
-} = useCharacterFilters(computed(() => characters))
+const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(
+  computed(() => characters),
+)
 
 const pickBySlug = (slug: string): void => {
   const character = characters.find((c) => c.name === slug)
@@ -51,9 +46,7 @@ const pickBySlug = (slug: string): void => {
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
-      v-model:mechanic-filter="mechanicFilter"
       :characters
-      :mechanic-pool
     />
     <CharacterGrid>
       <CharacterIcon
@@ -61,9 +54,7 @@ const pickBySlug = (slug: string): void => {
         :key="character.id"
         :character
         :dimmed="taken.includes(character.id)"
-        :show-energy="energyPicked"
         inspectable
-        :inspect-chips
         show-outfit
         @character-click="(picked) => emit('pick', picked)"
       />
