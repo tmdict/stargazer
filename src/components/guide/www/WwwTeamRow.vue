@@ -19,12 +19,13 @@ export const sideLabelKey = (side: TeamSide): string =>
 
 <script setup lang="ts">
 /* One team's row, from the outside in: its artifact, its phantimal and its
-   five heroes, each hero with the P/R pill that steps its levels, under a
-   menu that sets a level on all of the team's heroes at once. Team B's
-   row runs the other way, so both teams' heroes meet in the middle. Where
-   the two rows do not fit side by side, each team is a column instead, its
-   heroes over its phantimal and artifact, with the icons toward the middle.
-   The phantimal follows from the heroes by the game's faction rule. */
+   five heroes, each hero with the P/R pill that steps its levels. Over the
+   heroes are the team's name and, at the end of the fifth hero, a menu that
+   sets a level on all of the team's heroes at once. Team B's row runs the
+   other way, so both teams' heroes meet in the middle. Where the two rows do
+   not fit side by side, each team is a column instead, its heroes over its
+   phantimal and artifact, with the icons toward the middle. The phantimal
+   follows from the heroes by the game's faction rule. */
 
 import { computed } from 'vue'
 
@@ -48,7 +49,7 @@ const { side, team, target } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  slot: [index: number]
+  slot: [index: number, event: MouseEvent]
   artifact: [event: MouseEvent]
   level: [index: number, attr: LevelAttr, level: number]
   teamLevel: [attr: LevelAttr, level: number]
@@ -88,7 +89,7 @@ const heroName = (id: number): string =>
   <div class="www-team" :class="side">
     <div class="www-team-head">
       <span class="www-team-label">{{ i18n.t(sideLabelKey(side)) }}</span>
-      <DropdownSelect :label="i18n.t('app.upgrades')" floating>
+      <DropdownSelect class="www-team-levels" :label="i18n.t('app.upgrades')" floating>
         <template #default>
           <div class="www-levels">
             <template v-for="{ attr, id } in LEVEL_ATTRS" :key="attr">
@@ -104,58 +105,54 @@ const heroName = (id: number): string =>
         </template>
       </DropdownSelect>
     </div>
-    <div class="www-team-row">
-      <div class="www-extras">
-        <div class="www-cell">
-          <button
-            type="button"
-            class="www-round www-artifact"
-            :class="{ empty: !artifact }"
-            :aria-label="
-              artifact
-                ? localizedDisplayName(i18n.t, 'artifact', artifact.name)
-                : i18n.t('app.www-pick-artifact')
-            "
-            @click="emit('artifact', $event)"
-          >
-            <ArtifactImage v-if="artifact" :artifact />
-          </button>
-          <span v-if="!artifact" class="www-tag">{{ i18n.t('app.www-none') }}</span>
-        </div>
-        <div class="www-cell">
-          <span
-            class="www-round www-phantimal"
-            :class="{ empty: !phantimal }"
-            :title="
-              phantimal ? phantimalDisplayName(i18n.currentLocale, phantimal.name) : undefined
-            "
-          >
-            <img v-if="phantimal" :src="gameData.getCharacterImage(phantimal.name)" alt="" />
-          </span>
-          <span v-if="!phantimal" class="www-tag">{{ i18n.t('app.www-auto') }}</span>
-        </div>
+    <div class="www-extras">
+      <div class="www-cell">
+        <button
+          type="button"
+          class="www-round www-artifact"
+          :class="{ empty: !artifact }"
+          :aria-label="
+            artifact
+              ? localizedDisplayName(i18n.t, 'artifact', artifact.name)
+              : i18n.t('app.www-pick-artifact')
+          "
+          @click="emit('artifact', $event)"
+        >
+          <ArtifactImage v-if="artifact" :artifact />
+        </button>
+        <span v-if="!artifact" class="www-tag">{{ i18n.t('app.www-none') }}</span>
       </div>
-      <div class="www-heroes">
-        <div v-for="(hero, index) in team.heroes" :key="index" class="www-cell">
-          <button
-            type="button"
-            class="www-round www-slot"
-            :class="{ empty: !hero, target: target === index }"
-            :aria-label="hero ? heroName(hero.id) : i18n.t('app.www-pick-hero')"
-            :aria-pressed="target === index"
-            @click="emit('slot', index)"
-          >
-            <SlPortrait v-if="hero" :id="hero.id" />
-          </button>
-          <UpgradePill
-            :paragon="hero?.paragon ?? 0"
-            :refinement="hero?.refinement ?? 0"
-            :reserved="!hero"
-            :editable="!!hero"
-            @paragon="emit('level', index, 'paragon', $event)"
-            @refinement="emit('level', index, 'refinement', $event)"
-          />
-        </div>
+      <div class="www-cell">
+        <span
+          class="www-round www-phantimal"
+          :class="{ empty: !phantimal }"
+          :title="phantimal ? phantimalDisplayName(i18n.currentLocale, phantimal.name) : undefined"
+        >
+          <img v-if="phantimal" :src="gameData.getCharacterImage(phantimal.name)" alt="" />
+        </span>
+        <span v-if="!phantimal" class="www-tag">{{ i18n.t('app.www-auto') }}</span>
+      </div>
+    </div>
+    <div class="www-heroes">
+      <div v-for="(hero, index) in team.heroes" :key="index" class="www-cell">
+        <button
+          type="button"
+          class="www-round www-slot"
+          :class="{ empty: !hero, target: target === index }"
+          :aria-label="hero ? heroName(hero.id) : i18n.t('app.www-pick-hero')"
+          :aria-pressed="target === index"
+          @click="emit('slot', index, $event)"
+        >
+          <SlPortrait v-if="hero" :id="hero.id" />
+        </button>
+        <UpgradePill
+          :paragon="hero?.paragon ?? 0"
+          :refinement="hero?.refinement ?? 0"
+          :reserved="!hero"
+          :editable="!!hero"
+          @paragon="emit('level', index, 'paragon', $event)"
+          @refinement="emit('level', index, 'refinement', $event)"
+        />
       </div>
     </div>
   </div>
@@ -165,8 +162,11 @@ const heroName = (id: number): string =>
 .www-team {
   --slot: clamp(40px, 6cqi - 6px, 64px);
   display: grid;
-  justify-items: center;
-  gap: 6px;
+  grid-template-areas:
+    '. head'
+    'extras heroes';
+  align-items: start;
+  gap: 6px 10px;
 }
 
 .a {
@@ -175,14 +175,26 @@ const heroName = (id: number): string =>
 
 .b {
   --ring: var(--unit-frame-enemy);
+  grid-template-areas:
+    'head .'
+    'heroes extras';
 }
 
 .www-team-head {
-  display: flex;
-  flex-wrap: wrap;
+  grid-area: head;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 4px 10px;
+  column-gap: 8px;
+}
+
+.www-team-label {
+  grid-column: 2;
+}
+
+.www-team-levels {
+  --control-font-size: var(--chip-dark-font-size);
+  justify-self: end;
 }
 
 .www-team-label {
@@ -209,12 +221,6 @@ const heroName = (id: number): string =>
   color: var(--color-text-secondary);
 }
 
-.www-team-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
 .www-extras,
 .www-heroes {
   display: flex;
@@ -222,7 +228,14 @@ const heroName = (id: number): string =>
   gap: 3px;
 }
 
-.b .www-team-row,
+.www-extras {
+  grid-area: extras;
+}
+
+.www-heroes {
+  grid-area: heroes;
+}
+
 .b .www-extras {
   flex-direction: row-reverse;
 }
@@ -299,14 +312,22 @@ button.www-round {
 }
 
 @container (max-width: 779px) {
-  .www-team {
+  .www-team,
+  .b {
     --slot: 48px;
+    grid-template-areas:
+      'head'
+      'heroes'
+      'extras';
   }
-  .www-team-row,
-  .b .www-team-row {
-    flex-direction: column-reverse;
-    align-items: stretch;
-    gap: 14px;
+  .www-team-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 10px;
+  }
+  .www-extras {
+    margin-top: 8px;
   }
   .www-heroes {
     flex-direction: column;
@@ -317,7 +338,8 @@ button.www-round {
     flex-direction: column-reverse;
     gap: 8px;
   }
-  .a .www-team-row > * {
+  .a .www-heroes,
+  .a .www-extras {
     align-items: flex-end;
   }
   .www-cell {
