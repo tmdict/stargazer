@@ -3,7 +3,7 @@
 // picture a skill draws it with. The portrait lists leave those names out.
 const OUTFIT = /^(.+)-skin\d+$/
 
-/** The picture an outfit file (named without its extension) belongs to; null for a picture. */
+/** The picture an outfit file (named without its extension) belongs to; null for any other name. */
 export function outfitOf(name: string): string | null {
   return OUTFIT.exec(name)?.[1] ?? null
 }
