@@ -173,11 +173,6 @@ const sideArtifacts = computed(() => ({
   [Team.ENEMY]: artifactView(Team.ENEMY),
 }))
 
-// Pre-season first, then by id: the grid popup's order.
-const artifacts = computed(() =>
-  [...gameData.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
-)
-
 const artifactPicker = ref<{ team: Team; position: { x: number; y: number } } | null>(null)
 
 const toggleArtifactPicker = (team: Team, event: MouseEvent): void => {
@@ -297,7 +292,10 @@ const closePickers = (event: MouseEvent): void => {
         @click.stop
         @keydown.esc.stop="artifactPicker = null"
       >
-        <ArtifactSelectionPalette :artifacts @pick="setArtifactPicked($event.id)" />
+        <ArtifactSelectionPalette
+          :artifacts="gameData.pickerArtifacts"
+          @pick="setArtifactPicked($event.id)"
+        />
         <button
           v-if="sideArtifacts[artifactPicker.team].artifact !== null"
           type="button"

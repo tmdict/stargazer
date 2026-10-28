@@ -10,7 +10,7 @@ import type { Model, ModelKind } from './types.ts'
 
 export const MODELS: readonly ModelKind[] = [sharedModel]
 
-export const PAGE_MODEL: ModelKind = sharedModel
+const PAGE_MODEL: ModelKind = sharedModel
 
 // A model learned from the file's season, with the kind rule for teams the
 // file does not hold as a recorded team.
@@ -19,7 +19,7 @@ export interface SlLearned {
   kindOf: KindOf
 }
 
-export const learnSeason = (data: SlData, kind: ModelKind = PAGE_MODEL): SlLearned => ({
-  model: kind.learn(decidedGames(data)),
+export const learnSeason = (data: SlData): SlLearned => ({
+  model: PAGE_MODEL.learn(decidedGames(data)),
   kindOf: kindRule(data.teams),
 })

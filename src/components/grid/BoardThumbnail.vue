@@ -137,8 +137,6 @@ function getTileFill(state: State | undefined): string {
   }
 }
 
-// The crisp look's ratios are of hexSize; its strokes are fixed in screen
-// pixels.
 const CRISP_INSET = 1.6 / 18
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {

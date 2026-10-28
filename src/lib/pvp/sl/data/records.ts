@@ -1,9 +1,6 @@
 /* The records Who Would Win? shows beside its reasons, counted from this
- * season's decided games: how teams with a hero did, overall and against a
- * kind of team, how teams with an artifact did, overall and on a kind of
- * team, a lineup's own record, and how two lineups did against each other.
- * Each side of a game counts on its own, so a hero on both teams of a game
- * has a win and a loss from it. */
+ * season's decided games. Each side of a game counts on its own, so a hero
+ * on both teams of a game has a win and a loss from it. */
 
 import { lineupKey, type Game, type Side } from './games.ts'
 
@@ -12,7 +9,7 @@ export interface WinLoss {
   losses: number
 }
 
-export interface SeasonRecords {
+interface SeasonRecords {
   hero(id: number): WinLoss
   heroAgainst(id: number, kind: number): WinLoss
   artifact(id: number): WinLoss

@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { sigmoid } from '@/lib/pvp/sl/model/fit'
 import { splitChance } from '@/lib/pvp/sl/model/reasons'
 import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
-
-const random = (seed: number) => () => {
-  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-  return seed / 2 ** 32
-}
+import { seededRandom } from '../fixtures/slSeason'
 
 const factorial = (n: number): number => (n <= 1 ? 1 : n * factorial(n - 1))
 
@@ -33,14 +29,15 @@ const exactTenths = (parts: Record<Reason, number>): Record<Reason, number> => {
 
 describe('splitChance', () => {
   it('rounds the reasons to add up to the shown chance, each near its exact worth', () => {
-    const next = random(3)
+    const next = seededRandom(3)
     let fixedUp = 0
     for (let i = 0; i < 5000; i++) {
       const parts = Object.fromEntries(REASONS.map((r) => [r, (next() - 0.5) * 4])) as Record<
         Reason,
         number
       >
-      const { chance, shown, reasons } = splitChance(parts)
+      const { shown, reasons } = splitChance(parts)
+      const chance = sigmoid(REASONS.reduce((sum, r) => sum + parts[r], 0))
       const exact = exactTenths(parts)
       expect(Math.abs(shown - chance * 1000)).toBeLessThanOrEqual(0.5)
       expect(REASONS.reduce((sum, r) => sum + reasons[r], 0)).toBe(shown - 500)

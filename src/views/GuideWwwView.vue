@@ -14,7 +14,7 @@
    alone. It is pre-rendered with its heading alone, and the teams and the
    result are drawn after mount. */
 
-import { computed, nextTick, ref, toRaw, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
@@ -25,7 +25,6 @@ import WwwResult from '@/components/guide/www/WwwResult.vue'
 import WwwTeamLevels from '@/components/guide/www/WwwTeamLevels.vue'
 import WwwTeamRow, {
   type WwwLevelAttr,
-  type WwwPoint,
   type WwwSlotHero,
   type WwwTeamState,
 } from '@/components/guide/www/WwwTeamRow.vue'
@@ -36,11 +35,11 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useSlEngine } from '@/composables/useSlEngine'
-import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
 import { compareCharacters } from '@/lib/filterOrder'
 import { BASE_TEAM_SIZE } from '@/lib/grid'
+import type { Point } from '@/lib/layout'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
-import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
 import type { Pair, TeamSide, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
@@ -61,10 +60,6 @@ const { file: slFile, heading, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
-// Pre-season first, then by id: the board's artifact popup order.
-const artifacts = computed(() =>
-  [...gameData.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
-)
 
 const emptyTeam = (): WwwTeamState => ({
   heroes: Array.from({ length: BASE_TEAM_SIZE }, () => null),
@@ -107,7 +102,7 @@ const pickerHeroes = computed(() => {
 })
 
 // A hero taken off leaves its slot the one to fill next.
-const pickSlot = (side: TeamSide, slot: number, under: WwwPoint): void => {
+const pickSlot = (side: TeamSide, slot: number, under: Point): void => {
   target.value = { side, slot }
   const slots = teams.value[side].heroes
   if (slots[slot]) {
@@ -153,7 +148,7 @@ const setTeamLevel = (side: TeamSide, attr: WwwLevelAttr, level: number): void =
 }
 
 const artifactPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
-const pickArtifact = (side: TeamSide, under: WwwPoint): void => {
+const pickArtifact = (side: TeamSide, under: Point): void => {
   if (teams.value[side].artifact !== null) {
     teams.value[side].artifact = null
     return
@@ -194,7 +189,7 @@ const resultEl = useTemplateRef<HTMLElement>('result')
 const teamFor = (side: TeamSide): WwwTeam => ({
   heroes: teams.value[side].heroes.flatMap((hero) => {
     const character = hero && gameData.getCharacterById(hero.id)
-    return hero && character ? [{ ...toRaw(hero), faction: character.faction }] : []
+    return hero && character ? [{ ...hero, faction: character.faction }] : []
   }),
   artifact: teams.value[side].artifact,
 })
@@ -207,6 +202,7 @@ const predictWinner = async (): Promise<void> => {
     const panel = await predict({ a: teamFor('a'), b: teamFor('b') })
     const group = (kind: number | null) => (kind === null ? null : file.families[kind]!)
     shown.value = { panel, groups: { a: group(panel.kinds.a), b: group(panel.kinds.b) } }
+    failed.value = false
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker.
@@ -238,7 +234,7 @@ const predictWinner = async (): Promise<void> => {
       {{ i18n.t('app.sl-load-failed') }}
     </p>
 
-    <section v-if="mounted" class="www-match">
+    <section v-if="mounted" class="sl-panel www-match">
       <div class="www-teams">
         <template v-for="side in SIDES" :key="side">
           <span v-if="side === 'b'" class="www-vs" aria-hidden="true">VS</span>
@@ -266,7 +262,7 @@ const predictWinner = async (): Promise<void> => {
           <ClearButton confirm-first @click="clear" />
           <button
             type="button"
-            class="solid-btn sl-action www-predict"
+            class="solid-btn sl-action"
             :disabled="!ready || !full || busy"
             :aria-busy="busy"
             @click="predictWinner"
@@ -309,11 +305,12 @@ const predictWinner = async (): Promise<void> => {
       <SelectionPopup
         v-if="artifactPicker"
         :position="artifactPicker.position"
-        keep-on-leave
         @close="artifactPicker = null"
-        @keydown.esc.stop="artifactPicker = null"
       >
-        <ArtifactSelectionPalette :artifacts @pick="setArtifact($event.id)" />
+        <ArtifactSelectionPalette
+          :artifacts="gameData.pickerArtifacts"
+          @pick="setArtifact($event.id)"
+        />
       </SelectionPopup>
     </Teleport>
   </main>
@@ -331,9 +328,6 @@ const predictWinner = async (): Promise<void> => {
   justify-content: center;
   gap: 24px;
   padding: 14px 16px 16px;
-  border: 1px solid var(--panel-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-primary);
   container-type: inline-size;
 }
 

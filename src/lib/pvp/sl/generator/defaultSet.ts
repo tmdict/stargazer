@@ -2,12 +2,7 @@
  * card draws it, worked out once per build (scripts/slPreview.ts) so the index
  * loads neither the data file, the model nor the chooser. */
 
-import {
-  ATTR_PARAGON,
-  ATTR_REFINEMENT,
-  attrMax,
-  type AttrRecord,
-} from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
 import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
@@ -15,13 +10,6 @@ import { learnSeason } from '../model/models'
 import { chooseSlSet } from './chooser'
 import { choiceSeason, slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
-
-// Every hero's levels before a roster is picked: the top ones, where the
-// recorded opponents are counted, so the set is the records' own best.
-export const TOP_LEVELS: AttrRecord = {
-  [ATTR_PARAGON]: attrMax(ATTR_PARAGON),
-  [ATTR_REFINEMENT]: attrMax(ATTR_REFINEMENT),
-}
 
 export interface SlDefaultSet {
   // The set as one encoded 5v5 team, as Save as team stores it.
@@ -34,6 +22,8 @@ export interface SlDefaultSet {
 
 export async function defaultSlSet(bytes: Uint8Array): Promise<SlDefaultSet | null> {
   const file = await decodeSlData(bytes)
+  // The top levels, where the recorded opponents are counted, so the set is
+  // the records' own best.
   const picks: SlPick[] = loadCharacters()
     .filter((c) => !c.placeholder)
     .map((c) => ({

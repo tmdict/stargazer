@@ -9,6 +9,7 @@ import BaseModal from '@/components/modals/BaseModal.vue'
 import type { SlSample } from '@/lib/pvp/sl/data/types'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
+import { textGap } from '@/utils/skillLabels'
 
 const { page, season, date, sample, before } = defineProps<{
   show: boolean
@@ -32,15 +33,14 @@ const CREATORS = [
 const i18n = useI18nStore()
 
 // Small counts stay exact so an early season never reads "0+".
-const roughly = (n: number, step: number, round: (x: number) => number): number =>
-  n < step ? n : round(n / step) * step
+const roughly = (n: number, step: number): number => (n < step ? n : Math.floor(n / step) * step)
 
 const counts = (s: SlSample): Record<string, string> => {
   const format = new Intl.NumberFormat(i18n.currentLocale)
   return {
-    matches: format.format(roughly(s.matches, 50, Math.floor)),
-    games: format.format(roughly(s.games, 50, Math.floor)),
-    players: format.format(roughly(s.players, 10, Math.round)),
+    matches: format.format(roughly(s.matches, 50)),
+    games: format.format(roughly(s.games, 50)),
+    players: format.format(roughly(s.players, 10)),
   }
 }
 
@@ -49,7 +49,6 @@ const SLOT = '\u0000'
 const reportText = computed(() => i18n.t('app.sl-about-report', { report: SLOT }).split(SLOT))
 const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
 
-// Chinese sets sentences side by side with no space between them.
 const lead = computed(() =>
   [
     i18n.t(`app.${page}-about-sample`, { season, date, ...counts(sample) }),
@@ -57,7 +56,7 @@ const lead = computed(() =>
       ? [i18n.t('app.sl-about-before', { season: before.season, ...counts(before) })]
       : []),
     reportText.value[0],
-  ].join(i18n.currentLocale === 'zh' ? '' : ' '),
+  ].join(textGap(i18n.currentLocale)),
 )
 </script>
 

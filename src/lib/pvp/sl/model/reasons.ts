@@ -33,10 +33,8 @@ function reasonShares(parts: Record<Reason, number>): Record<Reason, number> {
   return shares
 }
 
-export interface ShownChance {
-  // A's chance of winning, and as shown in tenths of a point (506 for
-  // 50.6%).
-  chance: number
+interface ShownChance {
+  // A's chance as shown, in tenths of a point (506 for 50.6%).
   shown: number
   // Each reason in tenths of a point toward A.
   reasons: Record<Reason, number>
@@ -66,7 +64,6 @@ export function splitChance(parts: Record<Reason, number>): ShownChance {
     missing -= step
   }
   return {
-    chance,
     shown,
     reasons: Object.fromEntries(REASONS.map((r, i) => [r, reasons[i]!])) as Record<Reason, number>,
   }

@@ -28,10 +28,8 @@ export interface SlChoiceTeam {
 }
 
 export interface SlChoice {
-  // Index into SlData.evidence.
-  evidence: number
   chance: number
-  // The chance of winning each number of maps, 0 to 5.
+  // The chance of winning each number of boards, 0 to 5.
   odds: number[]
   // One per board, in board order.
   teams: SlChoiceTeam[]

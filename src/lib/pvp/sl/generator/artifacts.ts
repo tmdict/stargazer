@@ -28,7 +28,6 @@ const count = <K>(counts: Map<K, number>, key: K): void => {
   counts.set(key, (counts.get(key) ?? 0) + 1)
 }
 
-// Each team's claim, from the file's games.
 export function artifactClaims(
   data: SlData,
 ): (source: number, team: number, kind: number | null) => ArtifactClaim {

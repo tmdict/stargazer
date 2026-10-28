@@ -7,7 +7,7 @@ import { isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { reloadOntoCurrentBuild } from '@/router/routes'
 
-export interface SlHeading {
+interface SlHeading {
   season: number
   date: string
   // The file's maps are not the current rotation's.

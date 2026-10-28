@@ -12,7 +12,7 @@ export interface SlLevels {
 export const rivalryPoints = (prices: SlPrices, hero: SlLevels): number =>
   prices.paragon[hero.faction]![hero.paragon]! + prices.refinement[hero.refinement]!
 
-export const topPoints = (prices: SlPrices, faction: string): number =>
+const topPoints = (prices: SlPrices, faction: string): number =>
   prices.paragon[faction]!.at(-1)! + prices.refinement.at(-1)!
 
 // What a hero falls short of the top levels, in Rivalry points.

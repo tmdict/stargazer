@@ -59,6 +59,11 @@ export const clampAttr = (attrId: number, value: number, characterId: number): n
  * default. Treated as a value object: transfers move the whole record. */
 export type AttrRecord = Record<number, number>
 
+export const TOP_LEVELS: AttrRecord = {
+  [ATTR_PARAGON]: attrMax(ATTR_PARAGON),
+  [ATTR_REFINEMENT]: attrMax(ATTR_REFINEMENT),
+}
+
 /* A serialized `u` row. */
 export type AttrRow = [team: Team, characterId: number, attrId: number, value: number]
 

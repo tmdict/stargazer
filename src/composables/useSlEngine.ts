@@ -10,7 +10,7 @@ import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
 
-export type SlEngineStatus = 'loading' | 'ready' | 'failed'
+type SlEngineStatus = 'loading' | 'ready' | 'failed'
 
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
