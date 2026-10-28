@@ -27,7 +27,7 @@ export const characterImages = byName(
   ),
 )
 
-// Keyed by file name (`<hero>-skin<N>`).
+// Keyed by file name (`<picture>-skin<N>`).
 export const outfitImages = byName(
   import.meta.glob<string>('@/pack/images/character/*-skin[0-9]*.png', {
     query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
