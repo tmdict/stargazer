@@ -14,6 +14,7 @@ import type { SlData, SlEvidence } from '../data/types.ts'
 import { shortfall } from '../data/upgrades.ts'
 import { sigmoid } from '../model/fit.ts'
 import type { SlLearned } from '../model/models.ts'
+import { oddsInto } from '../model/odds.ts'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts.ts'
 import { placementOf, swapsOf } from './boards.ts'
 import type { SlChoice, SlPick } from './types.ts'
@@ -39,19 +40,6 @@ interface Found {
   teams: Option[]
   artifacts: (number | null)[]
   chances: number[]
-}
-
-// The chance of winning each number of boards, each board won or lost on its own.
-// Written in place, since the search asks for it at every step.
-function oddsInto(chances: ArrayLike<number>, odds: Float64Array): Float64Array {
-  odds.fill(0)
-  odds[0] = 1
-  for (let i = 0; i < chances.length; i++) {
-    const p = chances[i]!
-    for (let k = i + 1; k > 0; k--) odds[k] = odds[k - 1]! * p + odds[k]! * (1 - p)
-    odds[0] = odds[0]! * (1 - p)
-  }
-  return odds
 }
 
 function choose(

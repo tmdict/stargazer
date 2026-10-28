@@ -1,19 +1,21 @@
 <script setup lang="ts">
-/* A team's Upgrades menu, which sets a level on all of the team's heroes at
-   once. A level is lit while every hero on the team shares it. */
+/* A side's Upgrades menu, which sets a level on all of the side's heroes at
+   once, in every game shown. A level is lit while every one of them shares it. */
 
 import { computed } from 'vue'
 
-import { sideLabelKey, type WwwLevelAttr, type WwwTeamState } from './WwwTeamRow.vue'
+import { sideLabelKey } from './WwwTeamRow.vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import UpgradeLevelChips from '@/components/ui/UpgradeLevelChips.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import type { WwwLevelAttr, WwwSlotHero } from '@/lib/pvp/sl/www/match'
 import type { TeamSide } from '@/lib/pvp/sl/www/panel'
 import { useI18nStore } from '@/stores/i18n'
 
-const { team } = defineProps<{
+const { slots } = defineProps<{
   side: TeamSide
-  team: WwwTeamState
+  // The side's hero slots in the games shown.
+  slots: readonly (WwwSlotHero | null)[]
 }>()
 
 const emit = defineEmits<{
@@ -27,7 +29,7 @@ const LEVEL_ATTRS = [
 
 const i18n = useI18nStore()
 
-const heroes = computed(() => team.heroes.flatMap((h) => (h ? [h] : [])))
+const heroes = computed(() => slots.flatMap((h) => (h ? [h] : [])))
 
 const sharedLevel = (attr: WwwLevelAttr): number | null => {
   const levels = new Set(heroes.value.map((h) => h[attr]))

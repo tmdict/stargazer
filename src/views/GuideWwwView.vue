@@ -2,17 +2,16 @@
 /* Who Would Win?: two five-hero teams at their levels, each with an optional
    artifact, and which should win and why from this season's recorded Supreme
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
-   (useSlEngine). A tap on a slot, then a hero in the grid, fills the slot.
-   Wider than a tablet, a click on an empty slot also opens the board's hero
-   picker under it, which fills the team's open slots in turn, as the board's
-   popup fills a team's tiles; narrower, the grid is a bottom sheet and the
-   tap opens it, as a board's tile tap does. As on a board, a click on a hero
-   or an artifact takes it off. A hero added to Team A starts at the active
-   roster's levels and one added to Team B at the top levels, as the
-   generator treats a visitor and their opponents. The result stays as it was
-   made until Predict winner is pressed again. The teams live in the page
-   alone. It is pre-rendered with its heading alone, and the teams and the
-   result are drawn after mount. */
+   (useSlEngine). One game holds one such game, and Match the five games of a
+   Supreme League match, with Team A's chance to win the match; useWwwGames
+   holds the games. A tap on a slot, then a hero in the grid, fills the slot. Wider than a tablet, a click on an empty slot also opens the
+   board's hero picker under it, which fills the team's open slots in turn, as
+   the board's popup fills a team's tiles; narrower, the grid is a bottom sheet
+   and the tap opens it, as a board's tile tap does. As on a board, a click on
+   a hero or an artifact takes it off. Each mode keeps the result last made in
+   it, which stays as it was made until Predict winner is pressed again. It is
+   pre-rendered with its heading alone, and the games and the result are drawn
+   after mount. */
 
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
@@ -20,31 +19,26 @@ import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
+import WwwGame from '@/components/guide/www/WwwGame.vue'
 import WwwHeroGrid from '@/components/guide/www/WwwHeroGrid.vue'
-import WwwResult from '@/components/guide/www/WwwResult.vue'
+import WwwMatchResult from '@/components/guide/www/WwwMatchResult.vue'
+import WwwResult, { type WwwShown } from '@/components/guide/www/WwwResult.vue'
 import WwwTeamLevels from '@/components/guide/www/WwwTeamLevels.vue'
-import WwwTeamRow, {
-  type WwwLevelAttr,
-  type WwwSlotHero,
-  type WwwTeamState,
-} from '@/components/guide/www/WwwTeamRow.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
+import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
+import { useWwwGames, type WwwMode, type WwwSlotAt } from '@/components/guide/www/useWwwGames'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useSlEngine } from '@/composables/useSlEngine'
-import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
 import { compareCharacters } from '@/lib/filterOrder'
-import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
-import type { SlFamily } from '@/lib/pvp/sl/data/types'
-import type { Pair, TeamSide, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
+import type { TeamSide, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { useRosters } from '@/stores/rosters'
 import { setupWwwContentMeta } from '@/utils/contentMeta'
 
 import '@/components/guide/sl/sl.css'
@@ -54,159 +48,141 @@ setupWwwContentMeta(computed(() => i18n.currentLocale))
 
 const gameData = useGameDataStore()
 gameData.initializeData()
-const rosters = useRosters()
 const { status: engineStatus, predict } = useSlEngine()
 const { file: slFile, heading, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
-const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
+const {
+  mode,
+  games,
+  target,
+  showing,
+  full,
+  heroIds,
+  elsewhere,
+  setMode,
+  selectSlot,
+  toggleHero,
+  setLevel,
+  setTeamLevel,
+  setArtifact,
+  swapSides,
+  clear,
+} = useWwwGames()
 
-const emptyTeam = (): WwwTeamState => ({
-  heroes: Array.from({ length: BASE_TEAM_SIZE }, () => null),
-  artifact: null,
-})
-const teams = ref<Pair<WwwTeamState>>({ a: emptyTeam(), b: emptyTeam() })
-const target = ref<{ side: TeamSide; slot: number } | null>({ side: 'a', slot: 0 })
+const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 const sheetExpanded = ref(false)
 
-const SIDES: readonly TeamSide[] = ['a', 'b']
-const other = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
-const ids = (side: TeamSide): number[] =>
-  teams.value[side].heroes.flatMap((hero) => (hero ? [hero.id] : []))
-const taken = computed(() => (target.value ? ids(target.value.side) : []))
+const MODES: readonly { key: WwwMode; label: string }[] = [
+  { key: 'one', label: 'app.www-one-game' },
+  { key: 'match', label: 'app.www-match' },
+]
+const modes = computed(() =>
+  MODES.map(({ key, label }) => ({ key, label: i18n.t(label), selected: mode.value === key })),
+)
 
-const startLevels = (side: TeamSide, id: number): Omit<WwwSlotHero, 'id'> => {
-  const record = side === 'a' && rosters.active ? (rosters.active.heroes[id] ?? {}) : TOP_LEVELS
-  return { paragon: record[ATTR_PARAGON] ?? 0, refinement: record[ATTR_REFINEMENT] ?? 0 }
-}
-
-// The next empty slot after `from` on its team, then on the other team.
-const nextOpen = (from: { side: TeamSide; slot: number }): typeof target.value => {
-  for (const side of [from.side, other(from.side)]) {
-    const slots = teams.value[side].heroes
-    for (let step = 1; step <= slots.length; step++) {
-      const slot = (from.slot + step) % slots.length
-      if (!slots[slot]) return { side, slot }
-    }
-  }
-  return null
-}
+const taken = computed(() => (target.value ? heroIds(target.value) : []))
+const gridHeroes = computed(() => {
+  if (!target.value) return heroes.value
+  const out = elsewhere(target.value).heroes
+  return heroes.value.filter((c) => !out.has(c.id))
+})
+const sideSlots = (side: TeamSide) =>
+  showing.value.flatMap((game) => games.value[game]![side].heroes)
 
 const narrow = useNarrowViewport()
-const heroPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
+const heroPicker = ref<{ game: number; side: TeamSide; position: Point } | null>(null)
 const pickerHeroes = computed(() => {
-  const side = heroPicker.value?.side
-  if (!side) return []
-  const on = ids(side)
-  return heroes.value.filter((c) => !on.includes(c.id)).sort(compareCharacters)
+  const at = heroPicker.value
+  if (!at) return []
+  const on = heroIds(at)
+  const out = elsewhere(at).heroes
+  return heroes.value.filter((c) => !on.includes(c.id) && !out.has(c.id)).sort(compareCharacters)
 })
 
-// A hero taken off leaves its slot the one to fill next.
-const pickSlot = (side: TeamSide, slot: number, under: Point): void => {
-  target.value = { side, slot }
-  const slots = teams.value[side].heroes
-  if (slots[slot]) {
-    slots[slot] = null
-    return
-  }
+const pickSlot = (at: WwwSlotAt, under: Point): void => {
+  if (!selectSlot(at)) return
   if (!narrow.value) {
-    heroPicker.value = { side, position: { x: under.x, y: under.y + 4 } }
+    heroPicker.value = { game: at.game, side: at.side, position: { x: under.x, y: under.y + 4 } }
     return
   }
   sheetExpanded.value = true
 }
 
 const pickHero = (character: CharacterType): void => {
-  const at = target.value
-  if (!at) return
-  const slots = teams.value[at.side].heroes
-  const held = slots.findIndex((hero) => hero?.id === character.id)
-  if (held >= 0) {
-    slots[held] = null
-    target.value = { side: at.side, slot: held }
-    return
-  }
-  slots[at.slot] = { id: character.id, ...startLevels(at.side, character.id) }
-  target.value = nextOpen(at)
-  sheetExpanded.value = false
+  if (toggleHero(character.id)) sheetExpanded.value = false
 }
 
 // The picker stays open while its team has an open slot.
 const pickFromPicker = (character: CharacterType): void => {
-  const side = heroPicker.value?.side
+  const at = heroPicker.value
   pickHero(character)
-  if (target.value?.side !== side) heroPicker.value = null
+  if (target.value?.game !== at?.game || target.value?.side !== at?.side) heroPicker.value = null
 }
 
-const setLevel = (side: TeamSide, slot: number, attr: WwwLevelAttr, level: number): void => {
-  const hero = teams.value[side].heroes[slot]
-  if (hero) hero[attr] = level
-}
-
-const setTeamLevel = (side: TeamSide, attr: WwwLevelAttr, level: number): void => {
-  for (const hero of teams.value[side].heroes) if (hero) hero[attr] = level
-}
-
-const artifactPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
-const pickArtifact = (side: TeamSide, under: Point): void => {
-  if (teams.value[side].artifact !== null) {
-    teams.value[side].artifact = null
+const artifactPicker = ref<{ game: number; side: TeamSide; position: Point } | null>(null)
+const pickArtifact = (game: number, side: TeamSide, under: Point): void => {
+  if (games.value[game]![side].artifact !== null) {
+    setArtifact({ game, side }, null)
     return
   }
+  const open = artifactPicker.value
   artifactPicker.value =
-    artifactPicker.value?.side === side ? null : { side, position: { x: under.x, y: under.y + 4 } }
+    open?.game === game && open.side === side
+      ? null
+      : { game, side, position: { x: under.x, y: under.y + 4 } }
 }
-const setArtifact = (id: number): void => {
-  const picker = artifactPicker.value
-  if (!picker) return
-  teams.value[picker.side].artifact = id
+const pickerArtifacts = computed(() => {
+  const at = artifactPicker.value
+  if (!at) return []
+  const out = elsewhere(at).artifacts
+  return gameData.pickerArtifacts.filter((artifact) => !out.has(artifact.id))
+})
+const pickedArtifact = (id: number): void => {
+  const at = artifactPicker.value
+  if (!at) return
+  setArtifact(at, id)
   artifactPicker.value = null
 }
 
-const swapSides = (): void => {
-  teams.value = { a: teams.value.b, b: teams.value.a }
-  if (target.value) target.value = { side: other(target.value.side), slot: target.value.slot }
-}
-
-const clear = (): void => {
-  teams.value = { a: emptyTeam(), b: emptyTeam() }
-  target.value = { side: 'a', slot: 0 }
-}
-
-const full = computed(
-  () => ids('a').length === BASE_TEAM_SIZE && ids('b').length === BASE_TEAM_SIZE,
-)
 const ready = computed(() => !!heading.value && engineStatus.value === 'ready')
 
-const shown = ref<{
-  panel: WwwPanel
-  groups: Pair<Pick<SlFamily, 'name' | 'core'> | null>
-} | null>(null)
+const results = ref<Record<WwwMode, WwwShown[] | null>>({ one: null, match: null })
+const shown = computed(() => results.value[mode.value])
 const busy = ref(false)
 const resultEl = useTemplateRef<HTMLElement>('result')
 
 // Plain copies: the worker cannot take Vue's reactive objects.
-const teamFor = (side: TeamSide): WwwTeam => ({
-  heroes: teams.value[side].heroes.flatMap((hero) => {
-    const character = hero && gameData.getCharacterById(hero.id)
-    return hero && character ? [{ ...hero, faction: character.faction }] : []
-  }),
-  artifact: teams.value[side].artifact,
-})
+const teamFor = (game: number, side: TeamSide): WwwTeam => {
+  const team = games.value[game]![side]
+  return {
+    heroes: team.heroes.flatMap((hero) => {
+      const character = hero && gameData.getCharacterById(hero.id)
+      return hero && character ? [{ ...hero, faction: character.faction }] : []
+    }),
+    artifact: team.artifact,
+  }
+}
 
+// One request a game; the worker answers them in turn.
 const predictWinner = async (): Promise<void> => {
   const file = slFile()
   if (!file || !full.value) return
+  const made = mode.value
   busy.value = true
   try {
-    const panel = await predict({ a: teamFor('a'), b: teamFor('b') })
     const group = (kind: number | null) => (kind === null ? null : file.families[kind]!)
-    shown.value = { panel, groups: { a: group(panel.kinds.a), b: group(panel.kinds.b) } }
+    results.value[made] = await Promise.all(
+      showing.value.map(async (game) => {
+        const panel = await predict({ a: teamFor(game, 'a'), b: teamFor(game, 'b') })
+        return { panel, groups: { a: group(panel.kinds.a), b: group(panel.kinds.b) } }
+      }),
+    )
     failed.value = false
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker.
-    shown.value = null
+    results.value[made] = null
     failed.value = true
   } finally {
     busy.value = false
@@ -234,24 +210,24 @@ const predictWinner = async (): Promise<void> => {
       {{ i18n.t('app.sl-load-failed') }}
     </p>
 
-    <section v-if="mounted" class="sl-panel www-match">
-      <div class="www-teams">
-        <template v-for="side in SIDES" :key="side">
-          <span v-if="side === 'b'" class="www-vs" aria-hidden="true">VS</span>
-          <WwwTeamRow
-            :side
-            :team="teams[side]"
-            :target="target?.side === side ? target.slot : null"
-            @slot="(slot, under) => pickSlot(side, slot, under)"
-            @artifact="pickArtifact(side, $event)"
-            @level="(slot, attr, level) => setLevel(side, slot, attr, level)"
-          />
-        </template>
+    <section v-if="mounted" class="sl-panel www-editor">
+      <SegmentedPicker class="www-mode" :segments="modes" @select="setMode" />
+      <div class="www-games">
+        <WwwGame
+          v-for="game in showing"
+          :key="game"
+          :game="games[game]!"
+          :number="mode === 'match' ? game + 1 : null"
+          :target="target?.game === game ? target : null"
+          @slot="(side, slot, under) => pickSlot({ game, side, slot }, under)"
+          @artifact="(side, under) => pickArtifact(game, side, under)"
+          @level="(side, slot, attr, level) => setLevel({ game, side, slot }, attr, level)"
+        />
       </div>
       <div class="www-actions">
         <WwwTeamLevels
           side="a"
-          :team="teams.a"
+          :slots="sideSlots('a')"
           @level="(attr, level) => setTeamLevel('a', attr, level)"
         />
         <div class="www-buttons">
@@ -280,18 +256,21 @@ const predictWinner = async (): Promise<void> => {
         </div>
         <WwwTeamLevels
           side="b"
-          :team="teams.b"
+          :slots="sideSlots('b')"
           @level="(attr, level) => setTeamLevel('b', attr, level)"
         />
       </div>
     </section>
 
     <div v-if="mounted" ref="result" class="www-result-slot">
-      <WwwResult v-if="shown" :panel="shown.panel" :groups="shown.groups" />
+      <template v-if="shown">
+        <WwwMatchResult v-if="mode === 'match'" :games="shown" />
+        <WwwResult v-else :panel="shown[0]!.panel" :groups="shown[0]!.groups" />
+      </template>
     </div>
 
     <BottomSheet v-if="mounted" v-model:expanded="sheetExpanded" :desktop-rail="false">
-      <WwwHeroGrid :characters="heroes" :taken @pick="pickHero" />
+      <WwwHeroGrid :characters="gridHeroes" :taken @pick="pickHero" />
     </BottomSheet>
 
     <Teleport to="body">
@@ -307,10 +286,7 @@ const predictWinner = async (): Promise<void> => {
         :position="artifactPicker.position"
         @close="artifactPicker = null"
       >
-        <ArtifactSelectionPalette
-          :artifacts="gameData.pickerArtifacts"
-          @pick="setArtifact($event.id)"
-        />
+        <ArtifactSelectionPalette :artifacts="pickerArtifacts" @pick="pickedArtifact($event.id)" />
       </SelectionPopup>
     </Teleport>
   </main>
@@ -322,7 +298,7 @@ const predictWinner = async (): Promise<void> => {
   margin-inline: auto;
 }
 
-.www-match {
+.www-editor {
   --www-cell-inset: 4px;
   display: grid;
   justify-content: center;
@@ -331,18 +307,13 @@ const predictWinner = async (): Promise<void> => {
   container-type: inline-size;
 }
 
-.www-teams {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 26px;
+.www-mode {
+  justify-self: center;
 }
 
-.www-vs {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+.www-games {
+  display: grid;
+  gap: 18px;
 }
 
 .www-actions {
@@ -378,12 +349,6 @@ const predictWinner = async (): Promise<void> => {
 }
 
 @container (max-width: 779px) {
-  .www-teams {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 12px;
-    width: min(100cqi, 440px);
-  }
   .www-actions {
     grid-template-columns: 1fr 1fr;
     padding-inline: 0;
@@ -398,7 +363,7 @@ const predictWinner = async (): Promise<void> => {
   .www-page {
     padding-bottom: calc(40px + var(--bottom-sheet-clearance));
   }
-  .www-match {
+  .www-editor {
     padding: 12px;
   }
 }

@@ -1,34 +1,48 @@
+<script lang="ts">
+import { sideLabelKey } from './WwwTeamRow.vue'
+import type { SlFamily } from '@/lib/pvp/sl/data/types'
+import type { Pair, WwwPanel } from '@/lib/pvp/sl/www/panel'
+
+// A game's result as the page keeps it: the worker's panel and each team's group.
+export interface WwwShown {
+  panel: WwwPanel
+  groups: Pair<Pick<SlFamily, 'name' | 'core'> | null>
+}
+
+export const verdictText = (
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  panel: WwwPanel,
+): string =>
+  t(`app.www-verdict-${panel.verdict}`, { team: t(sideLabelKey(panel.shown >= 500 ? 'a' : 'b')) })
+</script>
+
 <script setup lang="ts">
-/* Who Would Win?'s result: each team's chance with the verdict and a mark
-   whose hover card holds the warnings, the four reasons in points of chance
-   with a detail under each, and From the records. Team A is on the left and
-   Team B on the right in every row. A reason's bar grows from the middle
-   toward the team it helps, its full length 50 points, so the same length
-   means the same in every prediction; a detail's bars are on their own scale,
-   filled where the number helps that team and hollow where it hurts. */
+/* Who Would Win?'s result for one game: each team's chance with the verdict
+   and a mark whose hover card holds the warnings, the four reasons in points
+   of chance with a detail under each, and From the records. Team A is on the
+   left and Team B on the right in every row. A reason's bar grows from the
+   middle toward the team it helps, its full length 50 points, so the same
+   length means the same in every prediction; a detail's bars are on their own
+   scale, filled where the number helps that team and hollow where it hurts. */
 
 import { computed, ref } from 'vue'
 
-import { sideLabelKey } from './WwwTeamRow.vue'
+import WwwChances from './WwwChances.vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
 import IconAlertSmall from '@/components/ui/IconAlertSmall.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { slPercent, useSlNames } from '@/components/guide/sl/useSlNames'
+import { useSlNames } from '@/components/guide/sl/useSlNames'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { WinLoss } from '@/lib/pvp/sl/data/records'
-import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
-import type { Pair, TeamSide, WwwLine, WwwPanel, WwwWarning } from '@/lib/pvp/sl/www/panel'
+import type { TeamSide, WwwLine, WwwWarning } from '@/lib/pvp/sl/www/panel'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 import { curatedHeroName, textGap } from '@/utils/skillLabels'
 
-const { panel, groups } = defineProps<{
-  panel: WwwPanel
-  groups: Pair<Pick<SlFamily, 'name' | 'core'> | null>
-}>()
+const { panel, groups } = defineProps<WwwShown>()
 
 const i18n = useI18nStore()
 const gameData = useGameDataStore()
@@ -72,10 +86,7 @@ const {
   toggle: warnToggle,
   onTouchStart: warnTouchStart,
 } = useInfoTip()
-const verdict = computed(() => {
-  const team = teamName(panel.shown >= 500 ? 'a' : 'b')
-  return i18n.t(`app.www-verdict-${panel.verdict}`, { team })
-})
+const verdict = computed(() => verdictText(i18n.t, panel))
 
 // A detail's lines side by side, Team A's i-th strongest beside Team B's.
 const paired = (lines: WwwLine[]): [WwwLine | undefined, WwwLine | undefined][] => {
@@ -132,13 +143,7 @@ const warningText = (warning: WwwWarning): string => {
 
 <template>
   <section class="sl-panel www-result">
-    <div class="www-chances">
-      <span class="www-pct a">{{ slPercent(panel.shown / 1000) }}</span>
-      <span class="www-track" aria-hidden="true"
-        ><i :style="{ width: `${panel.shown / 10}%` }"
-      /></span>
-      <span class="www-pct b">{{ slPercent(1 - panel.shown / 1000) }}</span>
-    </div>
+    <WwwChances :chance="panel.shown / 1000" />
     <p class="www-verdict">
       {{ verdict
       }}<button
@@ -396,34 +401,6 @@ const warningText = (warning: WwwWarning): string => {
 
 .b {
   color: var(--unit-frame-enemy);
-}
-
-.www-chances {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-}
-
-.www-pct {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.www-track {
-  display: block;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--unit-frame-enemy);
-}
-
-.www-track > i {
-  display: block;
-  height: 100%;
-  background: var(--unit-frame-ally);
 }
 
 .www-verdict {
