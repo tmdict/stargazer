@@ -335,7 +335,7 @@ const predictWinner = async (): Promise<void> => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px 14px;
+  gap: 26px;
 }
 
 .www-vs {
@@ -379,7 +379,10 @@ const predictWinner = async (): Promise<void> => {
 
 @container (max-width: 779px) {
   .www-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     gap: 12px;
+    width: min(100cqi, 440px);
   }
   .www-actions {
     grid-template-columns: 1fr 1fr;

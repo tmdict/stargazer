@@ -139,7 +139,7 @@ const heroName = (id: number): string =>
   --slot: clamp(40px, 6cqi - 6px, 64px);
   display: grid;
   grid-template-areas:
-    '. head'
+    'head head'
     'extras heroes';
   align-items: start;
   gap: 6px 10px;
@@ -152,18 +152,23 @@ const heroName = (id: number): string =>
 .b {
   --ring: var(--unit-frame-enemy);
   grid-template-areas:
-    'head .'
+    'head head'
     'heroes extras';
 }
 
 .www-team-label {
   grid-area: head;
-  justify-self: center;
+  justify-self: start;
+  padding-inline: var(--www-cell-inset);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ring);
+}
+
+.b .www-team-label {
+  justify-self: end;
 }
 
 .www-extras,
@@ -260,10 +265,23 @@ button.www-round {
   .www-team,
   .b {
     --slot: 48px;
+    justify-self: center;
     grid-template-areas:
       'head'
       'heroes'
       'extras';
+  }
+  .www-team-label {
+    width: var(--slot);
+    padding-inline: 0;
+    white-space: nowrap;
+  }
+  .a .www-team-label {
+    justify-self: end;
+  }
+  .b .www-team-label {
+    justify-self: start;
+    text-align: right;
   }
   .www-extras {
     margin-top: 8px;

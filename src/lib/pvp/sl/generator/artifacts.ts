@@ -54,7 +54,7 @@ export function artifactClaims(
   return (source, team, kind) => {
     if (source !== 0) return { own: [], fallback: data.before!.teams[team]!.like, before: true }
     const games = byTeam.get(team)
-    const own = data.teams[team]!.artifacts.map(([id]) => ({ id, games: games?.get(id) ?? 0 }))
+    const own = data.teams[team]!.artifacts.map((id) => ({ id, games: games?.get(id) ?? 0 }))
     return {
       own,
       fallback: fallbackOf(kind).filter((id) => !own.some((o) => o.id === id)),

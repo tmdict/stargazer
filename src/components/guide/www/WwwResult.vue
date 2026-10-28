@@ -417,13 +417,13 @@ const warningText = (warning: WwwWarning): string => {
   height: 6px;
   overflow: hidden;
   border-radius: 3px;
-  background: var(--color-enemy);
+  background: var(--unit-frame-enemy);
 }
 
 .www-track > i {
   display: block;
   height: 100%;
-  background: var(--color-ally);
+  background: var(--unit-frame-ally);
 }
 
 .www-verdict {
@@ -517,11 +517,11 @@ const warningText = (warning: WwwWarning): string => {
 }
 
 .l > .www-bar {
-  background: var(--color-ally);
+  background: var(--unit-frame-ally);
 }
 
 .r > .www-bar {
-  background: var(--color-enemy);
+  background: var(--unit-frame-enemy);
 }
 
 .www-total {
@@ -620,11 +620,11 @@ const warningText = (warning: WwwWarning): string => {
 }
 
 .l .www-strength i {
-  background: var(--color-ally);
+  background: var(--unit-frame-ally);
 }
 
 .r .www-strength i {
-  background: var(--color-enemy);
+  background: var(--unit-frame-enemy);
 }
 
 .www-strength i.hollow {

@@ -17,7 +17,7 @@ import IconArrowRight from '@/components/ui/IconArrowRight.vue'
   gap: 10px;
   padding: 14px;
   font-family: var(--font-ui);
-  background: var(--help-panel);
+  background: var(--reading-picture);
   border-radius: var(--radius-large);
 }
 

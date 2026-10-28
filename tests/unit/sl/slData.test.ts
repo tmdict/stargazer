@@ -85,7 +85,7 @@ describe('the shipped Supreme League data', () => {
     const phantimals = new Set(loadPhantimals().map((p) => p.id))
     for (const s of seasons) {
       for (const t of s.teams) {
-        const ids = 'artifacts' in t ? t.artifacts.map(([id]) => id) : t.like
+        const ids = 'artifacts' in t ? t.artifacts : t.like
         expect(ids.filter((id) => !artifacts.has(id))).toEqual([])
         const used = t.placements.flatMap((p) => (p.s[0] ? [p.s[0][1]] : []))
         expect(used.filter((id) => !phantimals.has(id))).toEqual([])

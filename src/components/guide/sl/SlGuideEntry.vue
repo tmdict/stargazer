@@ -41,7 +41,7 @@ const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
   <article class="container page-panel guide-panel">
     <section class="content guide-link">
       <RouterLink class="guide-title" :to="SL_GENERATOR_PATH">
-        <h2>{{ appLabel('sl-guide-title', lang) }}<SlBeta in-link /></h2>
+        <h2>{{ appLabel('sl-title', lang) }}<SlBeta in-link /></h2>
         <IconChevronRight :size="18" />
       </RouterLink>
       <p class="guide-blurb">{{ appLabel('sl-blurb', lang) }}</p>
