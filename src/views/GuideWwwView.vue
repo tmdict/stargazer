@@ -285,7 +285,7 @@ const predictWinner = async (): Promise<void> => {
 .www-match {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 24px;
   padding: 14px 16px 16px;
   border: 1px solid var(--panel-edge);
   border-radius: var(--radius-large);
