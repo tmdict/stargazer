@@ -13,9 +13,9 @@ import {
 } from '@/lib/teams/formationImport'
 import { Team } from '@/lib/types/team'
 
-// Code-registered companion skills: Zanie's two turrets share an image of
-// their own; Elijah & Lailah's companion is drawn with their art; Wedge of
-// Matter (phantimal 5) brings Wedge of Power, also with an image of its own.
+// Code-registered companion skills, each companion with a picture of its own:
+// Zanie's two turrets share one, Elijah & Lailah's companion is Lailah, and
+// Wedge of Matter (phantimal 5) brings Wedge of Power.
 const ZANIE = 89
 const TURRET = COMPANION_ID_OFFSET + ZANIE
 const ELIJAH_LAILAH = 68
@@ -74,6 +74,18 @@ describe('assignUnits', () => {
     ])
     // Hero 12 leads hero 11 by too little to be sure.
     expect(assigned.map((a) => a.state)).toEqual(['sure', 'sure', 'sure', 'sure', 'review'])
+  })
+
+  it('ranks Elijah and Lailah under pictures of their own, so each can be sure', () => {
+    const LAILAH = COMPANION_ID_OFFSET + ELIJAH_LAILAH
+    const units = [
+      unit(1, { [ELIJAH_LAILAH]: 0.9, [LAILAH]: 0.5 }),
+      unit(2, { [LAILAH]: 0.85, [ELIJAH_LAILAH]: 0.55 }),
+    ]
+    expect(assignUnits(units, [ELIJAH_LAILAH], {}, () => true)).toEqual([
+      { unitId: ELIJAH_LAILAH, state: 'sure' },
+      { unitId: LAILAH, state: 'sure' },
+    ])
   })
 
   it('leaves a portrait unlike any art to the unit left over, for review', () => {

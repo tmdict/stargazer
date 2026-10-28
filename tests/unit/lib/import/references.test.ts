@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { DESCRIPTOR_LENGTH, encodeLearned, rankHeroes } from '@/lib/import/card/heroes'
 import type { LearnedIcon } from '@/lib/import/card/types'
+import { BOARD_BACKDROP } from '@/lib/import/core/image'
 import { readLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
-import { buildImportHeroTable } from '@/lib/import/references'
+import { buildBoardTable, buildImportHeroTable } from '@/lib/import/references'
 import { createImage } from '../../fixtures/image'
 
 vi.mock('@/pack/screenshot-import/hero-icons.json', async () => {
@@ -66,5 +67,25 @@ describe('curated hero references', () => {
       }),
     )
     for (const icon of icons) expect(heroes.some((hero) => hero.id === icon.characterId)).toBe(true)
+  })
+})
+
+describe('board references', () => {
+  it("ranks a hero under its board picture, not its portrait or outfits, over the board's backdrop", () => {
+    const picture = createImage(180, 248)
+    for (let i = 0; i < picture.data.length; i += 4) picture.data.set([200, 0, 0, 255], i)
+    const table = buildBoardTable(
+      [...portraits, { characterId: 7, image: createImage(180, 248), costume: true }],
+      [{ characterId: 7, image: picture }],
+    )
+    const colourOf = (characterId: number) => {
+      const row = Array.from(table.ids).indexOf(characterId)
+      return Array.from(table.portraits[table.sources[row]!]!.image.data.slice(0, 3))
+    }
+    expect(table.portraits).toHaveLength(2)
+    expect(colourOf(7)).toEqual([200, 0, 0])
+    expect(colourOf(9)).toEqual([...BOARD_BACKDROP])
+    // Hero 7's curated face is a card's, which the board leaves out.
+    expect(table.learnedRows.every((row) => row === 0)).toBe(true)
   })
 })
