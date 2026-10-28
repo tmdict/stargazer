@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
-import type { HeroReading } from '@/lib/import/card/types'
-import type { FrameFamily, RosterSlot } from '@/lib/import/screens/roster/types'
+import type { FrameFamily, HeroReading } from '@/lib/import/card/types'
+import type { RosterSlot } from '@/lib/import/screens/roster/types'
 import { createImage } from '../fixtures/image'
 import { FakeWorker, file, stubImportBrowser } from '../fixtures/importBrowser'
 

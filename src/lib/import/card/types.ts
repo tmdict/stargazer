@@ -28,6 +28,15 @@ export interface HeroIdentity {
   sure: boolean
 }
 
+// A paragon frame (S+, which the app calls P0, to P4), or a card below S+: a plate
+// with no frame, or a lower tier's frame.
+export type FrameFamily = 'paragon' | 'below'
+
+export interface FrameFamilyReading {
+  family: FrameFamily
+  sure: boolean
+}
+
 export interface ParagonReading {
   level: number
   score: number
