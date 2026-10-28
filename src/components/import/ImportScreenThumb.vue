@@ -107,6 +107,7 @@ defineProps<{ screen: 'result' | 'roster' | 'matchup' }>()
 
 .hands > i {
   height: 12px;
+  background: var(--import-roster-hands);
 }
 
 .heroes {
