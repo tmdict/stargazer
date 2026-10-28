@@ -65,7 +65,7 @@ const {
 </script>
 
 <template>
-  <section class="sl-band">
+  <section class="sl-panel sl-band">
     <div class="sl-band-head">
       <span class="sl-chance">
         <span class="sl-chance-line">
@@ -126,9 +126,6 @@ const {
 
 <style scoped>
 .sl-band {
-  border: 1px solid var(--panel-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-primary);
   overflow: hidden;
   container-type: inline-size;
 }
@@ -237,7 +234,7 @@ const {
 }
 
 @media (max-width: 768px) {
-  .sl-band {
+  .sl-panel.sl-band {
     border-color: transparent;
   }
 }

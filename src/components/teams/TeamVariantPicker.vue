@@ -4,9 +4,7 @@
    boards' maps, so hand-picked maps light nothing. Selecting moves every
    board onto the chosen list's map; a hero keeps its tile only where the new
    map has it, hence the two-step confirm whenever a board holds anything.
-   Hidden where there is nothing to choose (1v1 has no named types). The
-   Supreme League generator picks the type of set it makes with it, with
-   nothing to confirm. */
+   Hidden where there is nothing to choose (1v1 has no named types). */
 
 import { computed, watch } from 'vue'
 

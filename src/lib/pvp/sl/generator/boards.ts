@@ -22,40 +22,41 @@ function rateFrom(games: { won: boolean; offset: number }[], prior: number, star
   return sigmoid((lo + hi) / 2)
 }
 
-/* The placement the team's board draws, as an example board is chosen: by
- * results times use to the power alpha, ties by players, set-ups, agreement
- * and the file's order. A placement's results start from the team's own
- * chance against a typical opponent at equal upgrades (`start`), and each of
- * its games counts its opponent, the game's other entry, by the model. */
+/* The placement the team's board draws, as an example board is chosen. A
+ * placement's results start from the team's chance with `artifact` against a
+ * typical opponent at equal upgrades, and the model weighs each game by its
+ * opponent and the artifact the team played, so a placement gains nothing
+ * from games won on a stronger artifact than the set gives. */
 export function placementOf(
   data: SlData,
   { model, kindOf }: SlLearned,
   source: number,
   team: number,
-  start: number,
+  artifact: number | null,
 ): number {
   const sideOf = (i: number): Side => {
     if (source === 0) {
-      const [t, , , artifact] = data.games[i]!
-      return { heroes: data.teams[t]!.heroes, kind: data.teams[t]!.family, artifact }
+      const [t, , , used] = data.games[i]!
+      return { heroes: data.teams[t]!.heroes, kind: data.teams[t]!.family, artifact: used }
     }
     const heroes = data.before!.teams[data.before!.games[i]![0]]!.heroes
     return { heroes, kind: kindOf(heroes), artifact: null }
   }
   const season = source === 0 ? data : data.before!
   const { heroes, family } = season.teams[team]!
-  // The team's own artifact counts the same in both, so it is left out.
-  const own: Side = { heroes, kind: source === 0 ? family : kindOf(heroes), artifact: null }
+  const own: Side = { heroes, kind: source === 0 ? family : kindOf(heroes), artifact }
   const alone = model.againstTypical(own, 0)
   const rated = (ids: number[]) =>
     ids.map((i) => {
       const [, result, gap] = season.games[i]!
-      // Entries 2k and 2k + 1 are one game.
-      const offset = model.edge({ a: own, b: sideOf(i ^ 1), gap }) - alone
+      // Last season's games carry no artifact, so its teams count as playing
+      // with `artifact`. Entries 2k and 2k + 1 are one game.
+      const played = source === 0 ? sideOf(i) : own
+      const offset = model.edge({ a: played, b: sideOf(i ^ 1), gap }) - alone
       return { won: result === 'w', offset }
     })
   const ranked = season.teams[team]!.placements.map((p, i) => {
-    const rate = rateFrom(rated(p.games), data.prior, start)
+    const rate = rateFrom(rated(p.games), data.prior, sigmoid(alone))
     return { ...p, i, score: rate * p.use ** data.alpha }
   })
   ranked.sort(
@@ -69,7 +70,7 @@ export function placementOf(
   return ranked[0]!.i
 }
 
-export interface SwapRules {
+interface SwapRules {
   family: SlFamily
   // The chance of a recorded team of the family at the visitor's levels.
   chanceOf: (heroes: number[]) => number

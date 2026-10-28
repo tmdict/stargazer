@@ -27,9 +27,13 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readTeamsSlot } from '@/composables/useGridPersistence'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
-import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
+import {
+  ATTR_PARAGON,
+  ATTR_REFINEMENT,
+  TOP_LEVELS,
+  type AttrRecord,
+} from '@/lib/characters/attributes'
 import type { SlData } from '@/lib/pvp/sl/data/types'
-import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
@@ -153,6 +157,7 @@ const generate = async (): Promise<void> => {
       data: slTeamData(file, set, picks),
     }
     noSet.value = !set
+    failed.value = false
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker or here.
@@ -233,7 +238,7 @@ const save = (): void => {
       <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set') }}</p>
     </div>
 
-    <section v-if="mounted" class="sl-picker">
+    <section v-if="mounted" class="sl-panel sl-picker">
       <SlBar
         v-model:variant="variant"
         :busy
@@ -271,13 +276,10 @@ const save = (): void => {
   flex-direction: column;
   gap: 14px;
   padding: 14px 16px 16px;
-  border: 1px solid var(--panel-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-primary);
 }
 
 @media (max-width: 768px) {
-  .sl-picker {
+  .sl-panel.sl-picker {
     padding: 12px;
     border-color: transparent;
   }

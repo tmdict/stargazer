@@ -13,8 +13,7 @@ export type KindOf = (heroes: readonly number[]) => number | null
 
 const MIN_SHARED = 3
 
-// The group with the most votes, the lower index on a tie, a vote for no
-// group last.
+// A vote for no group loses every tie.
 const winner = (votes: ReadonlyMap<number | null, number>): number | null => {
   let best: number | null = null
   let most = -1

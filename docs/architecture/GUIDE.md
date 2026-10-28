@@ -28,7 +28,7 @@ A report's page is built from its template alone ([Pre-Rendering](./PRE_RENDERIN
 
 ## Supreme League generator
 
-`/guide/pvp/generator` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per map and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself, and that generator's check runs this code on each file it writes.
+`/guide/pvp/generator` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per board and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself, and that generator's check runs this code on each file it writes.
 
 The page is pre-rendered in English with its heading alone, so search engines find it. The picker and the set follow the rosters the browser holds, so they are drawn after mount. The guide index's card for the generator draws a default set worked out once per build: `scripts/slPreview.ts` runs `defaultSlSet` (`src/lib/pvp/sl/generator/defaultSet.ts`) through Vite's module runner, so the app's imports resolve, and hands the result to the card as `virtual:sl-preview`. The index therefore loads neither the data file nor the model, and its boards are in the baked HTML.
 
@@ -51,7 +51,7 @@ The external check loads `data/` but `codec.ts`, all of `model/`, and `chooser.t
 
 ### The model
 
-Every prediction model fits one shape (`model/types.ts`). It learns from one season's decided games, then answers who should win a match-up and by how much (`edge`, the log-odds of A winning), how strong a team is against a typical opponent of the season at the top levels (`againstTypical`), and what a match-up's edge adds up from (`explain`). `MODELS` lists every model and `PAGE_MODEL` is the one the pages use. The tests run every model in `MODELS` through the same checks, and the external report generator's studies measure each one.
+Every prediction model fits one shape (`model/types.ts`). It learns from one season's decided games, then answers who should win a match-up and by how much (`edge`, the log-odds of A winning), how strong a team is against a typical opponent of the season at the top levels (`againstTypical`), and what a match-up's edge adds up from (`explain`). `MODELS` lists every model, which the external report generator's studies measure side by side, and `PAGE_MODEL` is the one the pages use.
 
 The shared model (`model/shared.ts`) learns, by penalised logistic regression (`model/fit.ts`), a number for each hero, each recorded five-hero team, each hero against each kind of team, each artifact, each artifact on each kind of team, and one Rivalry point of upgrade gap. Each kind of number is held toward zero by its own amount (`HOLD`). The fit starts from zero, so the same games always give the same numbers. A typical opponent is the average of every side in the season's decided games, and artifact numbers are measured from that same average, so a team with no artifact, or one the games never show, counts as having a typical one.
 
@@ -63,11 +63,11 @@ The model is learned, the search run and Who Would Win?'s result built in a modu
 
 ### The search
 
-A team's chance is the model's against a typical opponent at the top levels, at the visitor's levels: its upgrade gap is the Rivalry points its heroes fall short of the top levels, priced by `prices`. The teams the `evidence` rules allow, the strict rule first and then the relaxed one, enter a complete search that keeps the set with the best chance to win three maps. A branch is bounded by each team's best chance over the artifacts it can end up with, so the bound holds before the artifacts are handed out. Ties between teams break by `rank` and between swaps by `order`, both from the file.
+A team's chance is the model's against a typical opponent at the top levels, at the visitor's levels: its upgrade gap is the Rivalry points its heroes fall short of the top levels, priced by `prices`. The teams the `evidence` rules allow, the strict rule first and then the relaxed one, enter a complete search that keeps the set with the best chance to win three boards. A branch is bounded by each team's best chance over the artifacts it can end up with, so the bound holds before the artifacts are handed out. Ties between teams break by `rank` and between swaps by `order`, both from the file.
 
 The set's artifacts go by how much the teams played them, never by the model's numbers (`generator/artifacts.ts`). This season's teams take artifacts they were recorded with, the way that gives out the most games played winning. A team left without one takes the free artifact its kind played most, then the season's most played. Last season's teams take the first free artifact on their `like` list.
 
-A team's board is the placement with the best results times use to the power `alpha`, ties broken by players, set-ups, agreement and `order`. A placement's results start from the team's chance at equal upgrades with `prior` notional games, and each of its games counts its opponent, the game's other entry, by the model.
+A team's board is the placement with the best results times use to the power `alpha`, ties broken by players, set-ups, agreement and `order`. A placement's results start from the team's chance with the artifact the set gives it, at equal upgrades, with `prior` notional games, and each of its games counts, by the model, its opponent, the game's other entry, and the artifact the team played it with.
 
 Each team shows the swaps its comp's recorded teams make with heroes the set leaves free, best by the model's chance at the visitor's levels. A one-hero swap puts a hero out for one of up to `flex.options` heroes, and a core hero with one moves out of the core. The rows the one-hero swaps leave of `flex.heroes` take two-hero swaps: two heroes that are neither core nor in a shown one-hero swap, out together for one of up to `flex.options` pairs.
 

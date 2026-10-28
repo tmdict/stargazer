@@ -9,7 +9,7 @@ export type SlResult = 'w' | 'l' | 't'
 export type SlGame = [team: number, result: SlResult, gap: number, artifact: number | null]
 
 // Last season's games carry no artifact: its seasonal ids name other
-// artifacts now.
+// artifacts this season.
 export type SlBeforeGame = [team: number, result: SlResult, gap: number]
 
 // [tile, unit id], tiles numbered from the ally side.

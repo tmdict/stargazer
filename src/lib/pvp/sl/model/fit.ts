@@ -15,7 +15,6 @@ interface Penalised {
   slope: Float64Array
 }
 
-// The penalised log loss of `w` and its slope.
 function penalisedLoss(
   rows: readonly Row[],
   won: readonly boolean[],

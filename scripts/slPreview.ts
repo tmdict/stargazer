@@ -1,9 +1,9 @@
 // Gives the guide index the set the Supreme League generator gives before a
-// roster is picked, as `virtual:sl-preview`. The generator's own code works it
-// out (src/lib/pvp/sl/generator/defaultSet.ts), through Vite's module runner so the
-// app's imports resolve, and the page receives the set alone. The runner
-// (`runnerImport`) is marked experimental in Vite, so a Vite upgrade checks
-// that the guide index still draws the card.
+// roster is picked, as `virtual:sl-preview`. The generator's own code works
+// it out (src/lib/pvp/sl/generator/defaultSet.ts), through Vite's module
+// runner so the app's imports resolve, and the page receives the set alone.
+// The runner (`runnerImport`) is marked experimental in Vite, so a Vite
+// upgrade checks that the guide index still draws the card.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { runnerImport, type Plugin, type ResolvedConfig } from 'vite'

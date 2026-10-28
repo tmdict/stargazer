@@ -25,7 +25,7 @@ export interface WwwTeam {
 
 // The verdict's bands, by the favourite's shown chance in tenths of a point:
 // how often the model's calls in each came true on games it had not seen.
-export type Verdict = 'close' | 'slight' | 'favoured' | 'strong'
+type Verdict = 'close' | 'slight' | 'favoured' | 'strong'
 const VERDICTS: readonly (readonly [number, Verdict])[] = [
   [800, 'strong'],
   [700, 'favoured'],
@@ -49,7 +49,7 @@ export interface WwwLine {
   record: WinLoss | null
 }
 
-export interface WwwArtifactLine {
+interface WwwArtifactLine {
   id: number | null
   value: number
   // Null when the team has no artifact or the file has no games for it.
@@ -66,8 +66,7 @@ export type WwwWarning =
   | { type: 'no-group'; side: TeamSide }
 
 export interface WwwPanel {
-  // A's chance of winning, and as shown in tenths of a point.
-  chance: number
+  // A's chance as shown, in tenths of a point.
   shown: number
   verdict: Verdict
   // Each reason in tenths of a point toward A; they add up to shown - 500.
@@ -115,7 +114,7 @@ export function wwwPanel(
   const points = { a: pointsOf('a'), b: pointsOf('b') }
   const matchup = { a: sideOf('a'), b: sideOf('b'), gap: points.a - points.b }
   const { parts, items } = learned.model.explain(matchup)
-  const { chance, shown, reasons } = splitChance(parts)
+  const { shown, reasons } = splitChance(parts)
   const favourite = Math.max(shown, 1000 - shown)
 
   const otherSide = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
@@ -195,7 +194,6 @@ export function wwwPanel(
 
   const met = recorded.headToHead(heroIds('a'), heroIds('b'))
   return {
-    chance,
     shown,
     verdict: VERDICTS.find(([from]) => favourite >= from)![1],
     reasons,

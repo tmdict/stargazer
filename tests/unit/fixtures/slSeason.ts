@@ -1,5 +1,5 @@
 /**
- * Made-up Supreme League seasons for the generator's tests: five maps, two
+ * Made-up Supreme League seasons for the Supreme League tests: five maps, two
  * groups, and one evidence rule every team with a decided game passes.
  */
 

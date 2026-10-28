@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { Point } from '@/lib/layout'
 import type { TeamSide } from '@/lib/pvp/sl/www/panel'
 
-// A hero in one of a team's slots, at its levels.
 export interface WwwSlotHero {
   id: number
   paragon: number
@@ -15,22 +15,15 @@ export interface WwwTeamState {
 
 export type WwwLevelAttr = 'paragon' | 'refinement'
 
-export interface WwwPoint {
-  x: number
-  y: number
-}
-
 export const sideLabelKey = (side: TeamSide): string =>
   side === 'a' ? 'app.www-team-a' : 'app.www-team-b'
 </script>
 
 <script setup lang="ts">
-/* One team's row, from the outside in: its artifact, its phantimal and its
-   five heroes, each hero with the P/R pill that steps its levels, and the
-   team's name over the heroes. Team B's row runs the other way, so both teams' heroes meet in the middle. Where the two rows do
-   not fit side by side, each team is a column instead, its heroes over its
-   phantimal and artifact, with the icons toward the middle. The phantimal
-   follows from the heroes by the game's faction rule. */
+/* One team's row, from the outside in: its artifact, phantimal and five
+   heroes. Team B's row runs the other way, so both teams' heroes meet in the
+   middle. Where the rows do not fit side by side, each team is a column. The
+   phantimal follows from the heroes by the game's faction rule. */
 
 import { computed } from 'vue'
 
@@ -53,8 +46,8 @@ const { side, team, target } = defineProps<{
 const emit = defineEmits<{
   // `under`: below the clicked slot's whole cell, clear of its pill or tag,
   // where a picker opens.
-  slot: [index: number, under: WwwPoint]
-  artifact: [under: WwwPoint]
+  slot: [index: number, under: Point]
+  artifact: [under: Point]
   level: [index: number, attr: WwwLevelAttr, level: number]
 }>()
 
@@ -73,7 +66,7 @@ const artifact = computed(() =>
   team.artifact === null ? undefined : gameData.getArtifactById(team.artifact),
 )
 
-const underCell = (event: MouseEvent): WwwPoint => {
+const underCell = (event: MouseEvent): Point => {
   const button = event.currentTarget as HTMLElement
   return {
     x: button.getBoundingClientRect().left,

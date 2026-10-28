@@ -70,6 +70,12 @@
   }
 }
 
+.sl-page .sl-panel {
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-large);
+  background: var(--color-bg-primary);
+}
+
 .sl-page .sl-help {
   padding: 0;
   border: 0;

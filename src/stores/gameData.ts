@@ -1,4 +1,4 @@
-import { readonly, ref } from 'vue'
+import { computed, readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
@@ -24,6 +24,10 @@ export const useGameDataStore = defineStore('gameData', () => {
   const artifactImages = ref<Record<string, string>>({})
   const icons = ref<Record<string, string>>({})
   const dataLoaded = ref(false)
+
+  const pickerArtifacts = computed(() =>
+    [...artifacts.value].sort((a, b) => a.season - b.season || a.id - b.id),
+  )
 
   // Character ranges - internal state
   const characterRanges = ref(new Map<number, number>())
@@ -169,6 +173,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     // State (readonly)
     characters: readonly(characters),
     artifacts: readonly(artifacts),
+    pickerArtifacts,
     phantimals: readonly(phantimals),
     characterImages: readonly(characterImages),
     artifactImages: readonly(artifactImages),

@@ -28,15 +28,10 @@ const grids = useGrids()
 // another board can move while the popup is open.
 const ctx = useGridContext()
 
-// Pre-season first, then by id: mirrors the Seasonal tab ordering.
-const sortedArtifacts = computed(() =>
-  [...gameDataStore.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
-)
-
 // Drop artifacts already assigned to this team on any board (page-wide per-team
 // uniqueness), like the character popup hides placed heroes.
 const availableArtifacts = computed(() =>
-  sortedArtifacts.value.filter((a) => !grids.isArtifactUsed(a.id, props.team)),
+  gameDataStore.pickerArtifacts.filter((a) => !grids.isArtifactUsed(a.id, props.team)),
 )
 
 const handleSelect = (artifact: ArtifactType) => {

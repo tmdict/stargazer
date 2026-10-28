@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { kindRule } from '@/lib/pvp/sl/data/kinds'
+import type { SlGame } from '@/lib/pvp/sl/data/types'
 import {
   artifactClaims,
   handOutArtifacts,
   type ArtifactClaim,
 } from '@/lib/pvp/sl/generator/artifacts'
-import { madeUpData } from '../fixtures/slSeason'
+import { placementOf } from '@/lib/pvp/sl/generator/boards'
+import { learnSeason } from '@/lib/pvp/sl/model/models'
+import { madeUpData, type MadeUpTeam } from '../fixtures/slSeason'
 
 describe('a team’s kind', () => {
   const kindOf = kindRule([
@@ -102,5 +105,54 @@ describe('the artifact rule', () => {
       before: false,
     })
     expect(claimOf(0, 2, null).fallback).toEqual([1, 3, 2, 4])
+  })
+})
+
+describe('a team’s board', () => {
+  // Artifact 1 wins most of the games it meets artifact 2 in. Team 0 went 5–1
+  // with artifact 1 on its first placement and 4–2 with artifact 2 on its
+  // second, so the second did better than its artifact predicts.
+  const season = () => {
+    const teams: MadeUpTeam[] = Array.from({ length: 10 }, (_, i) => ({
+      map: 0,
+      family: null,
+      heroes: [1, 2, 3, 4, 5].map((h) => 5 * i + h),
+      artifacts: [
+        [1, 0.5],
+        [2, 0.5],
+      ],
+    }))
+    const games: SlGame[] = []
+    for (let k = 0; k < 200; k++) {
+      const [a, b] = [1 + (k % 9), 1 + ((k + 1 + (k % 8)) % 9)]
+      const won = k % 10 < 8
+      games.push([a, won ? 'w' : 'l', 0, 1], [b, won ? 'l' : 'w', 0, 2])
+    }
+    const placed = (artifact: number, results: string): number[] =>
+      [...results].map((r, k) => {
+        games.push([0, r === 'w' ? 'w' : 'l', 0, artifact], [1 + k, r === 'w' ? 'l' : 'w', 0, null])
+        return games.length - 2
+      })
+    const strong = placed(1, 'wwwwwl')
+    const weak = placed(2, 'wwwwll')
+    const data = madeUpData(teams, games)
+    data.teams[0]!.placements = [strong, weak].map((ids, order) => ({
+      games: ids,
+      use: 1,
+      players: 1,
+      setups: 1,
+      agree: 1,
+      order,
+      c: [],
+      s: [],
+    }))
+    return data
+  }
+
+  it('gives a placement nothing for games won on a stronger artifact', () => {
+    const data = season()
+    const learned = learnSeason(data)
+    expect(placementOf(data, learned, 0, 0, 1)).toBe(1)
+    expect(placementOf(data, learned, 0, 0, null)).toBe(1)
   })
 })

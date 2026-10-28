@@ -41,7 +41,7 @@ interface Found {
   chances: number[]
 }
 
-// The chance of winning each number of maps, each map won or lost on its own.
+// The chance of winning each number of boards, each board won or lost on its own.
 // Written in place, since the search asks for it at every step.
 function oddsInto(chances: ArrayLike<number>, odds: Float64Array): Float64Array {
   odds.fill(0)
@@ -211,20 +211,16 @@ function choose(
   const position = new Map(data.order.map((id, i) => [id, i]))
   const before = (a: number, b: number): boolean => position.get(a)! < position.get(b)!
 
-  for (const [evidence, proof] of data.evidence.entries()) {
+  for (const proof of data.evidence) {
     const set = bestSet(optionsFor(proof))
     if (!set) continue
     return {
-      evidence,
       chance: set.chance,
       odds: [...oddsInto(set.chances, new Float64Array(boards.length + 1))],
       teams: set.teams.map((t, i) => {
         const s = t.source === 0 ? data : data.before!
         const artifact = set.artifacts[i] ?? null
         const counted = artifact !== null && counts(artifact) ? artifact : null
-        const start = sigmoid(
-          model.againstTypical({ heroes: t.heroes, kind: t.kind, artifact: counted }, 0),
-        )
         const elsewhere = new Set(set.teams.filter((o) => o !== t).flatMap((o) => o.heroes))
         const swaps =
           t.family === null
@@ -250,7 +246,7 @@ function choose(
           chance: set.chances[i]!,
           comp: t.family === null ? null : s.families[t.family]!.perMap[t.map]!,
           artifact,
-          placement: placementOf(data, learned, t.source, t.team, start),
+          placement: placementOf(data, learned, t.source, t.team, counted),
           ...swaps,
         }
       }),
@@ -260,10 +256,10 @@ function choose(
 }
 
 /* The set for `picks`, or null when none can be made. `boards` holds each
- * board's map, an index into the file's maps. The season before's
- * teams join when the selection holds fewer than `beforeUnder` Celestial and
- * Hypogean heroes that some recorded team holds, or when this season's teams
- * alone make no set. `counts` says whether an artifact counts toward a
+ * board's map, an index into the file's maps. The season before's teams join
+ * when the selection holds fewer than `beforeUnder` Celestial and Hypogean
+ * heroes that some recorded team holds, or when this season's teams alone
+ * make no set. `counts` says whether an artifact counts toward a
  * chance: after a season change the file's seasonal artifacts are out of the
  * game, so the set still hands them out and counts them as typical ones. */
 export function chooseSlSet(

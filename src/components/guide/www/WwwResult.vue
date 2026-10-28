@@ -23,7 +23,7 @@ import type { Pair, TeamSide, WwwLine, WwwPanel, WwwWarning } from '@/lib/pvp/sl
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
-import { curatedHeroName } from '@/utils/skillLabels'
+import { curatedHeroName, textGap } from '@/utils/skillLabels'
 
 const { panel, groups } = defineProps<{
   panel: WwwPanel
@@ -41,7 +41,6 @@ const REASON_LABELS: Record<Reason, string> = {
   artifacts: 'app.www-artifacts',
   upgrades: 'app.upgrades',
 }
-// From an even match to a certain win.
 const FULL_BAR = 500
 
 const open = ref<Reason | null>(null)
@@ -94,7 +93,6 @@ const heroRows = computed(() => paired(panel.heroes))
 const counterRows = computed(() => paired(panel.counters))
 const artifactLines = computed(() => SIDES.map((side) => ({ side, ...panel.artifacts[side] })))
 
-// Chinese sets sentences side by side with no space between them.
 const countersNote = computed(() => {
   const side = toward(panel.reasons.counters)
   return [
@@ -102,7 +100,7 @@ const countersNote = computed(() => {
     side
       ? i18n.t('app.www-counters-for', { team: teamName(side) })
       : i18n.t('app.www-counters-even'),
-  ].join(i18n.currentLocale === 'zh' ? '' : ' ')
+  ].join(textGap(i18n.currentLocale))
 })
 
 const lineName = (line: WwwLine): string =>
@@ -133,7 +131,7 @@ const warningText = (warning: WwwWarning): string => {
 </script>
 
 <template>
-  <section class="www-result">
+  <section class="sl-panel www-result">
     <div class="www-chances">
       <span class="www-pct a">{{ slPercent(panel.shown / 1000) }}</span>
       <span class="www-track" aria-hidden="true"
@@ -389,9 +387,6 @@ const warningText = (warning: WwwWarning): string => {
   gap: 8px;
   min-width: 0;
   padding: 14px 16px 16px;
-  border: 1px solid var(--panel-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-primary);
   container-type: inline-size;
 }
 

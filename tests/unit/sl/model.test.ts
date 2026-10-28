@@ -3,16 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { fit, sigmoid, type Row } from '@/lib/pvp/sl/model/fit'
 import { MODELS } from '@/lib/pvp/sl/model/models'
 import { REASONS, type Game, type Matchup, type Side } from '@/lib/pvp/sl/model/types'
-
-const random = (seed: number) => () => {
-  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-  return seed / 2 ** 32
-}
+import { seededRandom } from '../fixtures/slSeason'
 
 // A season of 400 games among 14 heroes, three kinds of team and four
 // artifacts, where hero 1, artifact 2 and the upgrade gap help a side win.
 const madeUpSeason = (): Game[] => {
-  const next = random(7)
+  const next = seededRandom(7)
   const side = (): Side => {
     const heroes = new Set<number>()
     while (heroes.size < 5) heroes.add(1 + Math.floor(next() * 14))
@@ -68,7 +64,7 @@ describe.each(MODELS.map((kind) => [kind.id, kind] as const))('the %s model', (_
 
 describe('fit', () => {
   it('finds the numbers no small change explains the games better than', () => {
-    const next = random(11)
+    const next = seededRandom(11)
     const lambdas = [0.01, 1, 3, 5, 10, 20]
     const truth = [0.8, -0.5, 0.3, 1.2, -1, 0.1]
     const rows: Row[] = Array.from({ length: 300 }, () =>

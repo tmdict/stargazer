@@ -16,12 +16,14 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
+// Chinese sets words and sentences side by side with no space between them.
+export const textGap = (lang: AppLocale): string => (lang === 'zh' ? '' : ' ')
+
 /** A tag modifier's label in two parts, for a list that sets a hero's name
  * apart: "<Hero> Synergy" is `hero` plus `rest`, any other modifier all `rest`. */
 export function modifierLabelParts(mod: string, lang: AppLocale): { hero?: string; rest: string } {
   if (!isHeroModifier(mod)) return { rest: appLabel(mod, lang) }
-  const gap = lang === 'zh' ? '' : ' '
-  return { hero: curatedHeroName(mod, lang), rest: `${gap}${appLabel('synergy', lang)}` }
+  return { hero: curatedHeroName(mod, lang), rest: `${textGap(lang)}${appLabel('synergy', lang)}` }
 }
 
 export function modifierLabel(mod: string, lang: AppLocale): string {

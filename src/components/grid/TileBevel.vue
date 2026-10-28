@@ -1,6 +1,5 @@
 <script setup lang="ts">
-/* The dark look's inner line on a board tile other than open ground, as on
-   the preview board. */
+/* The dark look's inner line on a board tile other than open ground. */
 
 import { computed } from 'vue'
 
