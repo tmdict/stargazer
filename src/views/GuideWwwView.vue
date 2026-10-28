@@ -3,14 +3,15 @@
    artifact, and which should win and why from this season's recorded Supreme
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
    (useSlEngine). A tap on a slot, then a hero in the grid, fills the slot.
-   Wider than a tablet, a click on an empty slot also opens the board's hero
-   picker beside it, which fills the team's open slots in turn, as the
-   board's popup fills a team's tiles; narrower, the grid is a bottom sheet
-   and the tap opens it, as a board's tile tap does. A hero added to Team A starts at the active roster's levels and one added to
-   Team B at the top levels, as the generator treats a visitor and their
-   opponents. The result stays as it was made until Predict winner is pressed
-   again. The teams live in the page alone. It is pre-rendered with its
-   heading alone, and the teams and the result are drawn after mount. */
+   Wider than a tablet, a click on a slot also opens the board's hero picker
+   under it, which fills the team's open slots in turn, as the board's popup
+   fills a team's tiles, and on a filled slot can remove its hero; narrower,
+   the grid is a bottom sheet and the tap opens it, as a board's tile tap
+   does. A hero added to Team A starts at the active roster's levels and one
+   added to Team B at the top levels, as the generator treats a visitor and
+   their opponents. The result stays as it was made until Predict winner is
+   pressed again. The teams live in the page alone. It is pre-rendered with
+   its heading alone, and the teams and the result are drawn after mount. */
 
 import { computed, nextTick, ref, toRaw, useTemplateRef } from 'vue'
 
@@ -20,7 +21,10 @@ import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import WwwHeroGrid from '@/components/guide/www/WwwHeroGrid.vue'
 import WwwResult from '@/components/guide/www/WwwResult.vue'
+import WwwTeamLevels from '@/components/guide/www/WwwTeamLevels.vue'
 import WwwTeamRow, {
+  type WwwLevelAttr,
+  type WwwPoint,
   type WwwSlotHero,
   type WwwTeamState,
 } from '@/components/guide/www/WwwTeamRow.vue'
@@ -101,11 +105,10 @@ const pickerHeroes = computed(() => {
   return heroes.value.filter((c) => !on.includes(c.id)).sort(compareCharacters)
 })
 
-const pickSlot = (side: TeamSide, slot: number, event: MouseEvent): void => {
+const pickSlot = (side: TeamSide, slot: number, under: WwwPoint): void => {
   target.value = { side, slot }
-  if (!narrow.value && !teams.value[side].heroes[slot]) {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    heroPicker.value = { side, position: { x: rect.left, y: rect.bottom + 4 } }
+  if (!narrow.value) {
+    heroPicker.value = { side, position: { x: under.x, y: under.y + 4 } }
     return
   }
   sheetExpanded.value = true
@@ -133,27 +136,28 @@ const pickFromPicker = (character: CharacterType): void => {
   if (target.value?.side !== side) heroPicker.value = null
 }
 
-const setLevel = (
-  side: TeamSide,
-  slot: number,
-  attr: 'paragon' | 'refinement',
-  level: number,
-): void => {
+const targetFilled = computed(() =>
+  target.value ? teams.value[target.value.side].heroes[target.value.slot] !== null : false,
+)
+const removeHero = (): void => {
+  const at = target.value
+  if (at) teams.value[at.side].heroes[at.slot] = null
+  heroPicker.value = null
+}
+
+const setLevel = (side: TeamSide, slot: number, attr: WwwLevelAttr, level: number): void => {
   const hero = teams.value[side].heroes[slot]
   if (hero) hero[attr] = level
 }
 
-const setTeamLevel = (side: TeamSide, attr: 'paragon' | 'refinement', level: number): void => {
+const setTeamLevel = (side: TeamSide, attr: WwwLevelAttr, level: number): void => {
   for (const hero of teams.value[side].heroes) if (hero) hero[attr] = level
 }
 
 const artifactPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
-const toggleArtifactPicker = (side: TeamSide, event: MouseEvent): void => {
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+const toggleArtifactPicker = (side: TeamSide, under: WwwPoint): void => {
   artifactPicker.value =
-    artifactPicker.value?.side === side
-      ? null
-      : { side, position: { x: rect.left, y: rect.bottom + 4 } }
+    artifactPicker.value?.side === side ? null : { side, position: { x: under.x, y: under.y + 4 } }
 }
 const setArtifact = (id: number | null): void => {
   const picker = artifactPicker.value
@@ -240,36 +244,47 @@ const predictWinner = async (): Promise<void> => {
             :side
             :team="teams[side]"
             :target="target?.side === side ? target.slot : null"
-            @slot="(slot, event) => pickSlot(side, slot, event)"
+            @slot="(slot, under) => pickSlot(side, slot, under)"
             @artifact="toggleArtifactPicker(side, $event)"
             @level="(slot, attr, level) => setLevel(side, slot, attr, level)"
-            @team-level="(attr, level) => setTeamLevel(side, attr, level)"
           />
         </template>
       </div>
       <div class="www-actions">
-        <button type="button" class="solid-btn sl-action outline" @click="swapSides">
-          <IconSwap :size="14" />
-          {{ i18n.t('app.swap-sides') }}
-        </button>
-        <ClearButton confirm-first @click="clear" />
-        <button
-          type="button"
-          class="solid-btn sl-action www-predict"
-          :disabled="!ready || !full || busy"
-          :aria-busy="busy"
-          @click="predictWinner"
-        >
-          {{
-            i18n.t(
-              busy
-                ? 'app.www-predicting'
-                : !failed && engineStatus === 'loading'
-                  ? 'app.sl-getting-ready'
-                  : 'app.www-predict',
-            )
-          }}
-        </button>
+        <WwwTeamLevels
+          side="a"
+          :team="teams.a"
+          @level="(attr, level) => setTeamLevel('a', attr, level)"
+        />
+        <div class="www-buttons">
+          <button type="button" class="solid-btn sl-action outline" @click="swapSides">
+            <IconSwap :size="14" />
+            {{ i18n.t('app.swap-sides') }}
+          </button>
+          <ClearButton confirm-first @click="clear" />
+          <button
+            type="button"
+            class="solid-btn sl-action www-predict"
+            :disabled="!ready || !full || busy"
+            :aria-busy="busy"
+            @click="predictWinner"
+          >
+            {{
+              i18n.t(
+                busy
+                  ? 'app.www-predicting'
+                  : !failed && engineStatus === 'loading'
+                    ? 'app.sl-getting-ready'
+                    : 'app.www-predict',
+              )
+            }}
+          </button>
+        </div>
+        <WwwTeamLevels
+          side="b"
+          :team="teams.b"
+          @level="(attr, level) => setTeamLevel('b', attr, level)"
+        />
       </div>
     </section>
 
@@ -288,6 +303,9 @@ const predictWinner = async (): Promise<void> => {
           :enter-hint="i18n.t('app.place-hero')"
           @pick="pickFromPicker"
         />
+        <button v-if="targetFilled" type="button" class="picker-remove" @click="removeHero">
+          {{ i18n.t('app.remove-hero') }}
+        </button>
       </SelectionPopup>
       <SelectionPopup
         v-if="artifactPicker"
@@ -317,8 +335,9 @@ const predictWinner = async (): Promise<void> => {
 }
 
 .www-match {
-  display: flex;
-  flex-direction: column;
+  --www-cell-inset: 4px;
+  display: grid;
+  justify-content: center;
   gap: 24px;
   padding: 14px 16px 16px;
   border: 1px solid var(--panel-edge);
@@ -342,6 +361,22 @@ const predictWinner = async (): Promise<void> => {
 }
 
 .www-actions {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px var(--spacing-sm);
+  padding-inline: var(--www-cell-inset);
+}
+
+.www-actions > :first-child {
+  justify-self: start;
+}
+
+.www-actions > :last-child {
+  justify-self: end;
+}
+
+.www-buttons {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -360,6 +395,14 @@ const predictWinner = async (): Promise<void> => {
 @container (max-width: 779px) {
   .www-teams {
     gap: 12px;
+  }
+  .www-actions {
+    grid-template-columns: 1fr 1fr;
+    padding-inline: 0;
+  }
+  .www-buttons {
+    grid-row: 2;
+    grid-column: 1 / -1;
   }
 }
 
