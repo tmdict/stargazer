@@ -66,7 +66,7 @@ A hero with an issue shows its cards one by one, each corrected on its own, sinc
 
 Save creates the roster with its name and heroes in one write (`rosters.create`), and it becomes the active roster ([Teams](./TEAMS.md#rosters)). Save waits while screenshots are added or read, while an entry's issue holds it back, and while no hero is found.
 
-Each import turns away the other's screenshots however they are added, and reads one the sorter cannot place as a roster ([Screenshot Import](./IMPORT.md#the-engine)).
+Each import turns away the others' screenshots however they are added, and this one reads a screenshot the sorter cannot place as a roster ([Screenshot Import](./IMPORT.md#the-engine)).
 
 ## Related documentation
 

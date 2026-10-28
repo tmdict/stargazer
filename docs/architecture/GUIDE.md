@@ -272,6 +272,8 @@ A complete example, each list cut to one or two entries:
 
 A switch chooses between One game and Match, the five games of a Supreme League match. The games, the mode and the slot being filled live in `useWwwGames` (`src/components/guide/www/`), and switching keeps them: One game shows game 1, and Match all five. The page's buttons act on the games shown: in Match the Upgrades menus set a level on a side's heroes in all five games, Swap sides swaps every game's teams, Clear empties all five, and Predict winner waits until all ten teams are full. A player fields each hero and each artifact once in a match, so in Match the pickers leave out what that side fields in its other games; One game has no such rule. Each mode keeps the result last made in it.
 
+The Screenshots button fills the games from screenshots of the Supreme League's knockout list, which shows a match's five games ([Matchup Import](./IMPORT_WWW.md)). Its Fill replaces all five games, the left team of each game as Team A, and switches to Match from either mode; a game the screenshots do not show becomes an empty one. The heroes keep the levels read, and an artifact not recognised is left empty.
+
 In Match, Predict winner asks the worker for each game's result as One game does, one request a game, and the page works out the match from the five chances as shown, each game won or lost on its own as the generator takes its boards (`matchOdds`, on the `oddsInto` the generator's search uses), so the match's numbers agree with the game lines. The match result (`WwwMatchResult`) gives Team A's chance to win the match, three games of five, the chance of each final score, and a line per game with its chance and verdict; picking a line shows that game's result below, drawn by `WwwResult` as in One game.
 
 The worker builds the result whole (`wwwPanel`, `src/lib/pvp/sl/www/panel.ts`), and the page only draws it. An artifact with no games in the file, or one `artifactSurvives` rejects, reaches the model as a typical one. The records (`data/records.ts`) count each side of every decided game on its own, so a hero on both teams of a game has a win and a loss from it.
@@ -282,4 +284,5 @@ Each of the four reasons is its Shapley value: the average, over the 24 orders o
 
 - [Pre-Rendering](./PRE_RENDERING.md): the route list, the report plugin and chunk error recovery
 - [Teams](./TEAMS.md): rosters, the roster editor and saved teams
+- [Matchup Import](./IMPORT_WWW.md): Who Would Win?'s screenshot import
 - [Skill Pages](./SKILL_PAGES.md): the tags behind the mechanics page
