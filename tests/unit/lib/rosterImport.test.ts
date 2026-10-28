@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
-import type { HeroReading } from '@/lib/import/card/types'
+import type { FrameFamily, HeroReading } from '@/lib/import/card/types'
 import type { CellOverride } from '@/lib/import/review'
-import type { FrameFamily, RosterSlot } from '@/lib/import/screens/roster/types'
+import type { RosterSlot } from '@/lib/import/screens/roster/types'
 import { buildRosterImportPlan, type RosterShotInput } from '@/lib/rosterImport'
 import { createImage } from '../fixtures/image'
 

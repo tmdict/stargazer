@@ -17,13 +17,14 @@
  * leads every other hero it was ranked against, since among some thirty cards the
  * elimination the match screens settle by would pass weak readings as sure. */
 
-import { readCard, settleCards, type CardRead } from '../../card/card'
+import { readCardBoxes, settleCards } from '../../card/card'
+import { CARD_ASPECT, frameFamily, READ_WIDTH, withFamily } from '../../card/frames'
 import { starRowTop, type StarRow } from '../../card/stars'
-import type { CardReferences, HeroReading, ParagonReading } from '../../card/types'
-import { cropResize, maskedNcc, resample } from '../../core/image'
+import type { CardReferences } from '../../card/types'
+import { resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { fitComb, median, type Comb } from './comb'
-import type { FrameFamily, Grid, RosterReading, RosterSlot, Slot } from './types'
+import type { Grid, RosterReading, Slot } from './types'
 
 // The cream ground: about (235, 230, 220) on every set, saturation 0.05 to 0.08,
 // value 0.91 to 0.93. Grey (the empty slot's placeholder) counts as ground too;
@@ -36,10 +37,6 @@ export const WORK_MAX = 1000
 // decoding. Narrower than the least, its cards are too small to read.
 export const ROSTER_MAX_WIDTH = 2560
 export const ROSTER_MIN_WIDTH = 600
-// The frame's height over its width (the templates are 280 x 404).
-const CARD_ASPECT = 404 / 280
-// Cards are read on a copy where they are the frame templates' middle width.
-const READ_WIDTH = 280 * 0.265
 // The star row of a card read at READ_WIDTH, larger than a result card's: on the
 // labelled roster shots a refined row's stars are 9.8 to 10 px apart, centred
 // from 0.1 px right to 0.6 px left of the box's middle, and a seven-row band
@@ -661,144 +658,6 @@ function handsOf(m: Mask, grid: Comb, h: number, yMax: number): Rect[] | null {
 // The frame templates' opaque part is 261 of their 280 px (all but the winged P4),
 // so a template box is wider than the card it matches.
 const OPAQUE_SHARE = 261 / 280
-// The card width the grid gives is off by its gutter estimate; the frames settle the
-// template's width among these factors of it.
-const SCALES = [0.94, 1, 1.06] as const
-const SCALE_STEP = 0.03
-
-/* The cards of one size, each read on a copy where they meet the frame
- * templates, the box's top-left the seed. The copy's scale is the one at which
- * the frames of the first cards match best. A card whose box starts above `top`,
- * where the header covers it, is read on the copy's rows from there down, so its
- * frame is matched on what shows of it, as one at a shot's edge is. */
-function readSlots(img: RgbaImage, slots: Slot[], refs: CardReferences, top = 0): CardRead[] {
-  if (slots.length === 0) return []
-  const margin = 0.3 * slots[0]!.box.w
-  const x0 = Math.max(0, Math.min(...slots.map((s) => s.box.x)) - margin)
-  const y0 = Math.max(0, Math.min(...slots.map((s) => s.box.y)) - margin)
-  const x1 = Math.min(img.width, Math.max(...slots.map((s) => s.box.x + s.box.w)) + margin)
-  const y1 = Math.min(img.height, Math.max(...slots.map((s) => s.box.y + s.box.h)) + margin)
-  const region = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
-  if (region.w < 4 || region.h < 4) return []
-  const at = (k: number) => {
-    const scaled = resample(img, region, Math.round(region.w * k), Math.round(region.h * k))
-    // The template box at this scale, about the slot's centre.
-    const seeds = slots.map((s) => ({
-      x: Math.round((s.box.x + s.box.w / 2 - x0) * k - READ_WIDTH / 2),
-      y: Math.round((s.box.y + s.box.h / 2 - y0) * k - (READ_WIDTH * CARD_ASPECT) / 2),
-    }))
-    return { scaled, seeds }
-  }
-  const middle = refs.frames.filter((r) => Math.abs(r.scale - 0.265) < 1e-6)
-  // The first cards the header leaves whole, then any.
-  const probe = [...slots.keys()]
-    .sort((i, j) => Number(slots[i]!.box.y < top) - Number(slots[j]!.box.y < top))
-    .slice(0, 8)
-  // How well the probe's frames match at a factor of the box's width.
-  const fit = (factor: number): { factor: number; k: number; score: number } => {
-    const k = READ_WIDTH / (slots[0]!.box.w * factor)
-    const { scaled, seeds } = at(k)
-    let sum = 0
-    for (const seed of probe.map((i) => seeds[i]!)) {
-      let b = -1
-      for (let dy = -8; dy <= 8; dy += 2) {
-        for (let dx = -6; dx <= 6; dx += 2) {
-          for (const r of middle)
-            b = Math.max(b, maskedNcc(scaled, r.image, seed.x + dx, seed.y + dy, 3))
-        }
-      }
-      sum += b
-    }
-    return { factor, k, score: sum / probe.length }
-  }
-  // Coarse, then a step either side of the best.
-  const better = <T extends { score: number }>(a: T, b: T): T => (b.score > a.score ? b : a)
-  const coarse = SCALES.map(fit).reduce(better)
-  const best = [coarse.factor - SCALE_STEP, coarse.factor + SCALE_STEP]
-    .map(fit)
-    .reduce(better, coarse)
-  const { scaled, seeds } = at(best.k)
-  const cut = Math.min(scaled.height, Math.max(0, Math.ceil((top - y0) * best.k)))
-  const below =
-    cut > 0
-      ? cropResize(
-          scaled,
-          { x: 0, y: cut, w: scaled.width, h: scaled.height - cut },
-          scaled.width,
-          scaled.height - cut,
-        )
-      : scaled
-  // A card's box back in the screenshot's pixels, as every screen gives it.
-  const sx = region.w / scaled.width
-  const sy = region.h / scaled.height
-  return seeds.map((seed) => {
-    const covered = seed.y < cut
-    const read = covered
-      ? readCard(below, refs, { x: seed.x, y: seed.y - cut }, true, CARD_STARS)
-      : readCard(scaled, refs, seed, true, CARD_STARS)
-    const { x, w, h } = read.cell.box
-    const y = read.cell.box.y + (covered ? cut : 0)
-    const box = {
-      x: Math.round(x0 + x * sx),
-      y: Math.round(y0 + y * sy),
-      w: Math.round(w * sx),
-      h: Math.round(h * sy),
-    }
-    return { ...read, cell: { ...read.cell, box } }
-  })
-}
-
-// The frame family from the paragon frame match. On labelled roster cards a paragon
-// frame matches its template at 0.55 to 0.88 and a card below S+ at 0.22 to 0.56,
-// except the winged P4, which scores as low as 0.46 but leads the other levels by
-// 0.09 or more, where a card below S+ read as P4 leads by 0.06 or less (bar one at a
-// score of 0.36). Between the bounds the family is unsure.
-const PARAGON = { score: 0.565, sure: 0.62 } as const
-const WINGED = { score: 0.42, lead: 0.08, sureScore: 0.45, sureLead: 0.09 } as const
-const BELOW = { sure: 0.5, wingedLead: 0.07 } as const
-// A paragon level is sure on a roster card only when it leads the next level by
-// this much, whatever its score: P0, P2 and P3 frames match one another's templates
-// within 0.014 on misread roster cards, some at scores the match import takes as sure.
-const LEVEL_LEAD = 0.02
-
-const frameFamily = ({
-  level,
-  score,
-  runnerUp,
-}: ParagonReading): {
-  family: FrameFamily
-  sure: boolean
-} => {
-  const lead = score - runnerUp
-  const winged = level === 4 && lead >= WINGED.lead && score >= WINGED.score
-  if (score >= PARAGON.score || winged) {
-    const sure =
-      score >= PARAGON.sure || (level === 4 && lead >= WINGED.sureLead && score >= WINGED.sureScore)
-    return { family: 'paragon', sure }
-  }
-  return {
-    family: 'below',
-    sure: score <= BELOW.sure && !(level === 4 && lead >= BELOW.wingedLead),
-  }
-}
-
-/* A card's levels as its family has them: P0, R0 by rule below S+, and in doubt
- * whenever the family is. */
-const withFamily = (cell: HeroReading, frame: NonNullable<RosterSlot['frame']>): HeroReading => {
-  if (frame.family === 'below') {
-    return {
-      ...cell,
-      paragon: { ...cell.paragon, level: 0, sure: frame.sure },
-      refinement: { ...cell.refinement, level: 0, sure: frame.sure },
-    }
-  }
-  const lead = cell.paragon.score - cell.paragon.runnerUp
-  return {
-    ...cell,
-    paragon: { ...cell.paragon, sure: frame.sure && lead >= LEVEL_LEAD },
-    refinement: { ...cell.refinement, sure: frame.sure && cell.refinement.sure },
-  }
-}
 
 /* Whether a shot shows the roster's grid, the comb of six columns on the cream
  * ground that `readRoster` starts from. */
@@ -817,16 +676,18 @@ export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading 
   const hands = slots.flatMap((s, i) => (s.hands ? [i] : []))
   const settled = settleCards(
     [
-      ...readSlots(
+      ...readCardBoxes(
         img,
-        read.map((i) => slots[i]!),
+        read.map((i) => slots[i]!.box),
         refs,
+        CARD_STARS,
         top,
       ),
-      ...readSlots(
+      ...readCardBoxes(
         img,
-        hands.map((i) => slots[i]!),
+        hands.map((i) => slots[i]!.box),
         refs,
+        CARD_STARS,
       ),
     ],
     'all',
