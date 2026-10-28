@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* Guide index. On wide screens two columns, the reports over Mechanics and
-   the generator over Upgrades, so each card follows the one above it however
-   tall its neighbour is. On narrow screens the columns dissolve into one
-   stack, ordered by the grid's areas. */
+   the generator and Who Would Win? over Upgrades, so each card follows the
+   one above it however tall its neighbour is. On narrow screens the columns
+   dissolve into one stack, ordered by the grid's areas. */
 
 import { computed } from 'vue'
 
@@ -10,6 +10,7 @@ import GuideMechanicsIndex from '@/components/guide/GuideMechanicsIndex.vue'
 import GuidePvpReport from '@/components/guide/GuidePvpReport.vue'
 import GuideUpgradesIndex from '@/components/guide/GuideUpgradesIndex.vue'
 import SlGuideEntry from '@/components/guide/sl/SlGuideEntry.vue'
+import WwwGuideEntry from '@/components/guide/www/WwwGuideEntry.vue'
 import { PVP_SEASONS } from '@/content/pvp/seasons'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -37,6 +38,7 @@ useGameDataStore().initializeContentData()
     </div>
     <div class="column">
       <SlGuideEntry class="generator" :lang />
+      <WwwGuideEntry class="www" :lang />
       <GuideUpgradesIndex class="upgrades" :lang />
     </div>
   </main>
@@ -49,6 +51,7 @@ useGameDataStore().initializeContentData()
   grid-template-areas:
     'reports'
     'generator'
+    'www'
     'upgrades'
     'mechanics';
   align-items: start;
@@ -64,6 +67,9 @@ useGameDataStore().initializeContentData()
 }
 .generator {
   grid-area: generator;
+}
+.www {
+  grid-area: www;
 }
 .upgrades {
   grid-area: upgrades;

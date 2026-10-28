@@ -1,6 +1,6 @@
 # Guide
 
-The guide is an index page and the reference pages it links: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, each season's PvP report and the Supreme League generator. Who Would Win? sits beside the generator at its address alone, with no card on the index. Each guide page has one address, shows in the site language and is pre-rendered in English, as `/skills` is ([Pre-Rendering](./PRE_RENDERING.md)).
+The guide is an index page and the reference pages it links: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, each season's PvP report, the Supreme League generator and Who Would Win?. Each guide page has one address, shows in the site language and is pre-rendered in English, as `/skills` is ([Pre-Rendering](./PRE_RENDERING.md)).
 
 ## Pages
 
