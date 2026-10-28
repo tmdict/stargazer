@@ -42,6 +42,7 @@ import {
   serializeLearnedIcons,
 } from '@/lib/import/learned'
 import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH } from '@/lib/import/screens/formation/formation'
+import { MATCHUP_MAX_WIDTH, MATCHUP_MIN_WIDTH } from '@/lib/import/screens/matchup/layout'
 import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
 import { ROSTER_MAX_WIDTH, ROSTER_MIN_WIDTH } from '@/lib/import/screens/roster/roster'
 import { SORT_WIDTH } from '@/lib/import/sort'
@@ -112,6 +113,7 @@ const DECODE_WIDTHS: Record<ImportKind, { min: number; max: number }> = {
   formation: { min: FORMATION_MIN_WIDTH, max: FORMATION_MAX_WIDTH },
   replay: { min: 600, max: RESULT_MAX_WIDTH },
   roster: { min: ROSTER_MIN_WIDTH, max: ROSTER_MAX_WIDTH },
+  matchup: { min: MATCHUP_MIN_WIDTH, max: MATCHUP_MAX_WIDTH },
 }
 
 const PARTS: readonly ReferencePart[] = ['heroes', 'match']

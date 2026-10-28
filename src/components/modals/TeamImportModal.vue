@@ -279,6 +279,7 @@ const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Pro
     batch.ids.push(id)
   })
   if (refused.roster) error(i18n.t('app.import-roster-shots'))
+  else if (refused.matchup) error(i18n.t('app.import-matchup-shots'))
   else if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))

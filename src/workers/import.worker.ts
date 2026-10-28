@@ -11,6 +11,7 @@ import { prepareFrameRefs } from '@/lib/import/card/frames'
 import type { HeroTable, LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
 import {
+  isMatchupReading,
   isRosterReading,
   partsOf,
   type ImportKind,
@@ -22,6 +23,7 @@ import { readFormation } from '@/lib/import/screens/formation/formation'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { buildArtifactTable } from '@/lib/import/screens/match/artifacts'
 import type { ReferenceSet } from '@/lib/import/screens/match/types'
+import { readMatchup } from '@/lib/import/screens/matchup/matchup'
 import { prepareArena, readReplay } from '@/lib/import/screens/replay/replay'
 import type { ArenaRef } from '@/lib/import/screens/replay/types'
 import { readScreenshot } from '@/lib/import/screens/result/result'
@@ -99,6 +101,7 @@ const readers: Record<ImportKind, (image: RgbaImage) => ImportReading> = {
     return readReplay(image, arena)
   },
   roster: (image) => readRoster(image, card!),
+  matchup: (image) => readMatchup(image, { ...card!, ...match! }),
 }
 
 const transferablesOf = (reading: ImportReading): Transferable[] => {
@@ -106,6 +109,15 @@ const transferablesOf = (reading: ImportReading): Transferable[] => {
   if (isRosterReading(reading)) {
     for (const slot of reading.slots) {
       if (slot.cell) out.push(slot.cell.card.data.buffer, slot.cell.descriptor.buffer)
+    }
+    return out
+  }
+  if (isMatchupReading(reading)) {
+    for (const panel of reading.panels) {
+      for (const team of Object.values(panel)) {
+        for (const cell of team.cards ?? []) out.push(cell.card.data.buffer, cell.descriptor.buffer)
+        out.push(team.artifact.card.data.buffer)
+      }
     }
     return out
   }

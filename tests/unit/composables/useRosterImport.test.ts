@@ -127,9 +127,9 @@ describe('roster import', () => {
     stubImportBrowser()
     const api = holdImport()
     FakeWorker.sortAs = 'result'
-    expect(await api.addFiles([file('match.png')])).toEqual({ added: 0, refused: 1 })
+    expect(await api.addFiles([file('match.png')])).toEqual({ added: 0, refused: { result: 1 } })
     FakeWorker.sortAs = null
-    expect(await api.addFiles([file('roster.png')])).toEqual({ added: 1, refused: 0 })
+    expect(await api.addFiles([file('roster.png')])).toEqual({ added: 1, refused: {} })
     expect(api.shots.value.map((s) => s.name)).toEqual(['roster.png'])
   })
 

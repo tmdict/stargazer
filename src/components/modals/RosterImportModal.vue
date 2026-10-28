@@ -77,7 +77,8 @@ watch(
 
 const handleAdd = async (files: File[]): Promise<void> => {
   const { added, refused } = await addFiles(files)
-  if (refused) error(i18n.t('app.roster-import-match-shots'))
+  if (refused.matchup) error(i18n.t('app.import-matchup-shots'))
+  else if (Object.keys(refused).length) error(i18n.t('app.roster-import-match-shots'))
   else if (added === 0) error(i18n.t('app.no-valid-images'))
 }
 

@@ -4,14 +4,16 @@
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
    (useSlEngine). One game holds one such game, and Match the five games of a
    Supreme League match, with Team A's chance to win the match; useWwwGames
-   holds the games. A tap on a slot, then a hero in the grid, fills the slot. Wider than a tablet, a click on an empty slot also opens the
-   board's hero picker under it, which fills the team's open slots in turn, as
-   the board's popup fills a team's tiles; narrower, the grid is a bottom sheet
-   and the tap opens it, as a board's tile tap does. As on a board, a click on
-   a hero or an artifact takes it off. Each mode keeps the result last made in
-   it, which stays as it was made until Predict winner is pressed again. It is
-   pre-rendered with its heading alone, and the games and the result are drawn
-   after mount. */
+   holds the games, and Screenshots fills all five from screenshots of the
+   Supreme League's knockout list (WwwImportButton). A tap on a slot, then a
+   hero in the grid, fills the slot. Wider than a tablet, a click on an empty
+   slot also opens the board's hero picker under it, which fills the team's
+   open slots in turn, as the board's popup fills a team's tiles; narrower, the
+   grid is a bottom sheet and the tap opens it, as a board's tile tap does. As
+   on a board, a click on a hero or an artifact takes it off. Each mode keeps
+   the result last made in it, which stays as it was made until Predict winner
+   is pressed again. It is pre-rendered with its heading alone, and the games
+   and the result are drawn after mount. */
 
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
@@ -21,6 +23,7 @@ import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import WwwGame from '@/components/guide/www/WwwGame.vue'
 import WwwHeroGrid from '@/components/guide/www/WwwHeroGrid.vue'
+import WwwImportButton from '@/components/guide/www/WwwImportButton.vue'
 import WwwMatchResult from '@/components/guide/www/WwwMatchResult.vue'
 import WwwResult, { type WwwShown } from '@/components/guide/www/WwwResult.vue'
 import WwwTeamLevels from '@/components/guide/www/WwwTeamLevels.vue'
@@ -68,6 +71,7 @@ const {
   setArtifact,
   swapSides,
   clear,
+  fill,
 } = useWwwGames()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
@@ -231,6 +235,7 @@ const predictWinner = async (): Promise<void> => {
           @level="(attr, level) => setTeamLevel('a', attr, level)"
         />
         <div class="www-buttons">
+          <WwwImportButton @fill="fill" />
           <button type="button" class="solid-btn sl-action outline" @click="swapSides">
             <IconSwap :size="14" />
             {{ i18n.t('app.swap-sides') }}
