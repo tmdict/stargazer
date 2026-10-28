@@ -672,8 +672,9 @@ const statusOf = (parts: readonly ReferencePart[]): ReferenceStatus => {
 export interface ImportEngine {
   referenceStatus: ComputedRef<ReferenceStatus>
   learnedCount: ComputedRef<number>
-  // Files an `addFiles` call has yet to sort and add.
-  adding: ComputedRef<number>
+  // The screenshots read and to read, counting files still being sorted and
+  // added, while any is not yet read.
+  progress: ComputedRef<{ read: number; total: number } | null>
   ensureReferences: () => Promise<void>
   addFiles: <K extends ImportKind, S extends EngineShot>(
     files: File[],
@@ -749,7 +750,12 @@ export function useImportEngine(session: ShotSession): ImportEngine {
   return {
     referenceStatus: computed(() => statusOf(parts)),
     learnedCount,
-    adding: computed(() => adding.value),
+    progress: computed(() => {
+      const shots = session.shots()
+      const waiting = adding.value + shots.filter((s) => s.status === 'reading').length
+      const total = shots.length + adding.value
+      return waiting ? { read: total - waiting, total } : null
+    }),
     ensureReferences,
     addFiles,
     dropShot,

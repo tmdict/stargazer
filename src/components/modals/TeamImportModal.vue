@@ -13,6 +13,7 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
+import ImportProgress from '@/components/import/ImportProgress.vue'
 import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
@@ -85,7 +86,7 @@ const {
   learnedCount,
   plan,
   addFiles,
-  adding,
+  progress,
   removeShot,
   clearImport,
   setMap,
@@ -389,7 +390,7 @@ const issueText = (issue: PlanIssue): string => {
 
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
 // Files still being sorted are not shots yet, and Save waits for them too.
-const reading = computed(() => adding.value > 0 || shots.value.some((s) => s.status === 'reading'))
+const reading = computed(() => progress.value !== null)
 const blocked = computed(
   () =>
     mappedCount.value === 0 ||
@@ -451,6 +452,7 @@ const handleForgetLearned = (): void => {
           :disabled="resultsClosed"
           @add="handleAdd"
         />
+        <ImportProgress v-if="progress" v-bind="progress" />
         <p v-if="resultsClosed" class="note closed">{{ i18n.t('app.import-results-closed') }}</p>
         <TeamImportShotList
           v-if="resultShots.length"

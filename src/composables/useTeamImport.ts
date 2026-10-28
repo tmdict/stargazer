@@ -185,8 +185,7 @@ export function useTeamImport(
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
   ) => Promise<IntakeResult>
-  // Files still being sorted and added.
-  adding: ImportEngine['adding']
+  progress: ImportEngine['progress']
   resultsClosed: ComputedRef<boolean>
   formationsClosed: ComputedRef<boolean>
   replayOpen: ComputedRef<boolean>
@@ -465,7 +464,7 @@ export function useTeamImport(
     unitsOf,
     phantimalFits,
     addFiles,
-    adding: engine.adding,
+    progress: engine.progress,
     resultsClosed,
     formationsClosed,
     replayOpen,

@@ -134,8 +134,7 @@ export function useRosterImport(): {
   referenceStatus: ImportEngine['referenceStatus']
   learnedCount: ComputedRef<number>
   plan: ComputedRef<RosterImportPlan>
-  // The screenshots read and to read, while any is still being added or read.
-  progress: ComputedRef<{ read: number; total: number } | null>
+  progress: ImportEngine['progress']
   addFiles: (files: File[]) => Promise<IntakeResult>
   removeShot: (id: string) => void
   clearImport: () => void
@@ -257,18 +256,12 @@ export function useRosterImport(): {
     }
   }
 
-  const progress = computed(() => {
-    const waiting = engine.adding.value + shots.value.filter((s) => s.status === 'reading').length
-    const total = shots.value.length + engine.adding.value
-    return waiting ? { read: total - waiting, total } : null
-  })
-
   return {
     shots,
     referenceStatus: engine.referenceStatus,
     learnedCount: engine.learnedCount,
     plan,
-    progress,
+    progress: engine.progress,
     addFiles,
     removeShot,
     clearImport,
