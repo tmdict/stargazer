@@ -11,9 +11,11 @@
  * average of every side in the season's decided games, so a team against it
  * counts its numbers less that average. Artifact numbers are measured from a
  * typical artifact, that same average, so no artifact, or one the games never
- * show, counts as a typical one. */
+ * show, counts as a typical one. A team of fewer than five heroes, which the
+ * games never show, counts each empty slot as far below the season's weakest
+ * hero as that hero is below the average hero fielded. */
 
-import { lineupKey } from '../data/games.ts'
+import { lineupKey, TEAM_HEROES } from '../data/games.ts'
 import { fit, type Row } from './fit.ts'
 import type {
   Explanation,
@@ -88,8 +90,19 @@ function learn(games: Game[]): Model {
   }
   const theta = num(GAP)
 
+  const sides = games.flatMap((g) => [g.a, g.b])
+  const mean = (value: (side: Side) => number): number =>
+    sides.reduce((s, side) => s + value(side), 0) / sides.length
+
+  const fielded = sides.flatMap((s) => s.heroes.map((h) => num(heroKey(h))))
+  const weakest = fielded.reduce((low, v) => Math.min(low, v), Infinity)
+  const typicalHero = fielded.reduce((sum, v) => sum + v, 0) / fielded.length
+  const emptySlot = weakest - (typicalHero - weakest)
+
   const heroSum = (heroes: readonly number[]): number =>
-    heroes.reduce((s, h) => s + num(heroKey(h)), 0) + num(lineupNumberKey(heroes))
+    heroes.reduce((s, h) => s + num(heroKey(h)), 0) +
+    num(lineupNumberKey(heroes)) +
+    (TEAM_HEROES - heroes.length) * emptySlot
   const counter = (hero: number, kind: number | null): number =>
     kind === null ? 0 : num(counterKey(hero, kind))
   const counters = (side: Side, other: Side): number =>
@@ -97,9 +110,6 @@ function learn(games: Game[]): Model {
   const rawArtifact = (id: number, kind: number | null): number =>
     num(artifactKey(id)) + (kind === null ? 0 : num(artifactOnKindKey(id, kind)))
 
-  const sides = games.flatMap((g) => [g.a, g.b])
-  const mean = (value: (side: Side) => number): number =>
-    sides.reduce((s, side) => s + value(side), 0) / sides.length
   const typicalArtifact = mean((s) => (s.artifact === null ? 0 : rawArtifact(s.artifact, s.kind)))
   const typicalHeroes = mean((s) => heroSum(s.heroes))
   const artifact = (side: Side): number =>
@@ -156,6 +166,9 @@ function learn(games: Game[]): Model {
       heroes: [
         ...side.heroes.map((id) => line('hero', id, num(heroKey(id)))),
         ...(index.has(lineup) ? [line('lineup', null, num(lineup))] : []),
+        ...Array.from({ length: TEAM_HEROES - side.heroes.length }, () =>
+          line('empty', null, emptySlot),
+        ),
       ],
       counters:
         other.kind === null

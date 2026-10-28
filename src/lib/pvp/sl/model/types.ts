@@ -19,12 +19,13 @@ export type Reason = 'heroes' | 'counters' | 'artifacts' | 'upgrades'
 
 export const REASONS: readonly Reason[] = ['heroes', 'counters', 'artifacts', 'upgrades']
 
-// One line under a reason: a hero, the five heroes together, or the artifact
-// of one side, with its number toward that side on the edge's scale.
+// One line under a reason: a hero, the five heroes together, an empty slot, or
+// the artifact of one side, with its number toward that side on the edge's
+// scale.
 export interface ReasonItem {
   side: 'a' | 'b'
-  subject: 'hero' | 'lineup' | 'artifact'
-  // The hero or artifact id; null for the lineup.
+  subject: 'hero' | 'lineup' | 'empty' | 'artifact'
+  // The hero or artifact id; null for the lineup and an empty slot.
   id: number | null
   value: number
 }

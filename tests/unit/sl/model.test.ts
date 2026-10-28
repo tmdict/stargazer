@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { lineupKey } from '@/lib/pvp/sl/data/games'
 import { fit, sigmoid, type Row } from '@/lib/pvp/sl/model/fit'
 import { MODELS } from '@/lib/pvp/sl/model/models'
 import { REASONS, type Game, type Matchup, type Side } from '@/lib/pvp/sl/model/types'
@@ -51,6 +52,21 @@ describe.each(MODELS.map((kind) => [kind.id, kind] as const))('the %s model', (_
     expect(model.againstTypical(unseen, 0)).toBe(
       model.againstTypical({ ...unseen, artifact: null }, 0),
     )
+  })
+
+  it('counts an empty slot below any hero the season saw', () => {
+    const recorded = new Set(games.flatMap((g) => [g.a, g.b]).map((s) => lineupKey(s.heroes)))
+    for (const m of matchups) {
+      const four = m.a.heroes.slice(1)
+      const short = model.explain({ ...m, a: { ...m.a, heroes: four } }).parts.heroes
+      for (let hero = 1; hero <= 14; hero++) {
+        const five = [...four, hero]
+        if (four.includes(hero) || recorded.has(lineupKey(five))) continue
+        expect(model.explain({ ...m, a: { ...m.a, heroes: five } }).parts.heroes).toBeGreaterThan(
+          short,
+        )
+      }
+    }
   })
 
   it('splits the edge into reasons that add up to it', () => {
