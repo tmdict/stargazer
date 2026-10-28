@@ -1,13 +1,14 @@
 <script setup lang="ts">
 /* Who Would Win?'s match result: Team A's chance to win the match and of each
    final score, worked out from the games' chances as shown so that they agree
-   with the game lines; a line per game; and the game picked from its line,
-   game 1 to begin with, drawn as One game draws its result. */
+   with the game lines; a line per game, its name in the middle and each
+   team's chance growing from it toward that team's side; and the game picked
+   from its line, game 1 to begin with, drawn as One game draws its result. */
 
 import { computed, ref } from 'vue'
 
 import WwwChances from './WwwChances.vue'
-import WwwResult, { verdictText, type WwwShown } from './WwwResult.vue'
+import WwwResult, { type WwwShown } from './WwwResult.vue'
 import { slPercent } from '@/components/guide/sl/useSlNames'
 import { matchOdds } from '@/lib/pvp/sl/www/match'
 import { useI18nStore } from '@/stores/i18n'
@@ -56,15 +57,26 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
           :aria-pressed="picked === index"
           @click="picked = index"
         >
-          <span class="www-line-name">{{ gameName(index) }}</span>
-          <WwwChances class="www-line-chances" :chance="game.panel.shown / 1000" small />
-          <span class="www-line-verdict">{{ verdictText(i18n.t, game.panel) }}</span>
+          <span class="l">
+            <span class="www-pct a">{{ slPercent(game.panel.shown / 1000) }}</span>
+            <span class="www-half"><i :style="{ width: `${game.panel.shown / 10}%` }" /></span>
+          </span>
+          <span class="c">{{ gameName(index) }}</span>
+          <span class="r">
+            <span class="www-half"
+              ><i :style="{ width: `${100 - game.panel.shown / 10}%` }"
+            /></span>
+            <span class="www-pct b">{{ slPercent(1 - game.panel.shown / 1000) }}</span>
+          </span>
         </button>
       </div>
     </section>
 
-    <p class="www-picked">{{ gameName(picked) }}</p>
-    <WwwResult :panel="games[picked]!.panel" :groups="games[picked]!.groups" />
+    <WwwResult
+      :panel="games[picked]!.panel"
+      :groups="games[picked]!.groups"
+      :title="gameName(picked)"
+    />
   </div>
 </template>
 
@@ -97,8 +109,7 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
   color: var(--color-text-primary);
 }
 
-.www-sub,
-.www-picked {
+.www-sub {
   margin: 6px 0 0;
   font-size: 10.5px;
   font-weight: 700;
@@ -106,12 +117,6 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
   text-transform: uppercase;
   text-align: center;
   color: var(--color-text-secondary);
-}
-
-.www-picked {
-  margin: 0;
-  font-size: 12px;
-  color: var(--color-text-primary);
 }
 
 .www-scores {
@@ -144,16 +149,15 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
 
 .www-line {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 16rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 5.2rem minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   padding: 7px 8px;
   border: 0;
   border-top: 1px solid var(--color-border-light);
   background: none;
   font: inherit;
-  text-align: left;
   color: inherit;
   cursor: pointer;
 }
@@ -163,34 +167,65 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
   background: var(--color-bg-raised);
 }
 
-.www-line-name {
+.www-line > .l,
+.www-line > .r {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.www-line > .c {
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-align: center;
   color: var(--color-text-secondary);
 }
 
-.www-line.picked .www-line-name {
+.www-line.picked > .c {
   color: var(--color-text-primary);
 }
 
-.www-line-verdict {
-  font-size: 13px;
-  color: var(--color-text-primary);
+.www-pct {
+  min-width: 3.2em;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-@container (max-width: 519px) {
-  .www-line {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 4px 10px;
-  }
-  .www-line-chances {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .www-line-verdict {
-    text-align: right;
-  }
+.l > .www-pct {
+  text-align: left;
+}
+
+.r > .www-pct {
+  text-align: right;
+}
+
+.www-half {
+  display: flex;
+  flex: 1;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--color-border-light);
+}
+
+.l > .www-half {
+  justify-content: flex-end;
+}
+
+.www-half > i {
+  display: block;
+  height: 100%;
+}
+
+.l > .www-half > i {
+  background: var(--unit-frame-ally);
+}
+
+.r > .www-half > i {
+  background: var(--unit-frame-enemy);
 }
 </style>

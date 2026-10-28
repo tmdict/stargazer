@@ -8,12 +8,6 @@ export interface WwwShown {
   panel: WwwPanel
   groups: Pair<Pick<SlFamily, 'name' | 'core'> | null>
 }
-
-export const verdictText = (
-  t: (key: string, vars?: Record<string, string | number>) => string,
-  panel: WwwPanel,
-): string =>
-  t(`app.www-verdict-${panel.verdict}`, { team: t(sideLabelKey(panel.shown >= 500 ? 'a' : 'b')) })
 </script>
 
 <script setup lang="ts">
@@ -42,7 +36,8 @@ import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 import { curatedHeroName, textGap } from '@/utils/skillLabels'
 
-const { panel, groups } = defineProps<WwwShown>()
+// The match result names the game shown at the top of its panel.
+const { panel, groups, title } = defineProps<WwwShown & { title?: string }>()
 
 const i18n = useI18nStore()
 const gameData = useGameDataStore()
@@ -86,7 +81,9 @@ const {
   toggle: warnToggle,
   onTouchStart: warnTouchStart,
 } = useInfoTip()
-const verdict = computed(() => verdictText(i18n.t, panel))
+const verdict = computed(() =>
+  i18n.t(`app.www-verdict-${panel.verdict}`, { team: teamName(panel.shown >= 500 ? 'a' : 'b') }),
+)
 
 // A detail's lines side by side, Team A's i-th strongest beside Team B's.
 const paired = (lines: WwwLine[]): [WwwLine | undefined, WwwLine | undefined][] => {
@@ -143,6 +140,7 @@ const warningText = (warning: WwwWarning): string => {
 
 <template>
   <section class="sl-panel www-result">
+    <p v-if="title" class="www-title">{{ title }}</p>
     <WwwChances :chance="panel.shown / 1000" />
     <p class="www-verdict">
       {{ verdict
@@ -406,6 +404,16 @@ const warningText = (warning: WwwWarning): string => {
 .www-verdict {
   margin: 0;
   font-size: 14px;
+  text-align: center;
+  color: var(--color-text-primary);
+}
+
+.www-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-align: center;
   color: var(--color-text-primary);
 }
