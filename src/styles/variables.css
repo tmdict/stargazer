@@ -112,6 +112,8 @@
   --import-good: #81c995;
   --import-ally: #d9782f;
   --import-enemy: #4f78c0;
+  --import-matchup-left: #4f78c0;
+  --import-matchup-right: #c8474d;
 
   /* Status colors */
   --color-success: #36958e;
