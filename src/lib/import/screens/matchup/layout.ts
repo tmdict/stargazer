@@ -15,6 +15,13 @@ export const MATCHUP_MIN_WIDTH = 900
 // below the bar's top.
 export const CARDS = { x: 0.004, pitch: 0.1903, y: 0.145, w: 0.2 } as const
 
+// A slot with no hero, where a team fields fewer than five, is a flat light grey
+// box. In the middle of a card box (fractions of its width and height, clear of
+// the frame and the level plate), the samples' three empty slots are that grey
+// throughout and their 377 hero cards at most 0.59 of it; a slot is empty from
+// `share` up.
+export const EMPTY = { x: [0.25, 0.75], y: [0.25, 0.65], share: 0.9 } as const
+
 // The artifact's art disc: its centre `dx` in from the bar's outer end (the left
 // end of a blue bar, the right end of a red one) and `dy` below its top, and its
 // diameter.

@@ -115,7 +115,9 @@ const transferablesOf = (reading: ImportReading): Transferable[] => {
   if (isMatchupReading(reading)) {
     for (const panel of reading.panels) {
       for (const team of Object.values(panel)) {
-        for (const cell of team.cards ?? []) out.push(cell.card.data.buffer, cell.descriptor.buffer)
+        for (const cell of team.cards ?? []) {
+          if (cell) out.push(cell.card.data.buffer, cell.descriptor.buffer)
+        }
         out.push(team.artifact.card.data.buffer)
       }
     }

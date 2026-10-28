@@ -86,8 +86,8 @@ export interface WwwBadge {
 }
 
 export interface WwwTeamPlan {
-  // Left to right.
-  slots: WwwSlot[]
+  // Left to right; null for an empty slot.
+  slots: (WwwSlot | null)[]
   badges: WwwBadge[]
   artifactId: number | null
   artifactEdited: boolean
@@ -162,6 +162,7 @@ const signOf = (shot: WwwShotInput, panel: number): Record<BarColour, TeamSign> 
         cards &&
         new Set(
           cards.flatMap((cell, slot) => {
+            if (!cell) return []
             const card = cardOf(shot, cardKey(panel, colour, slot), cell)
             return card.characterId !== null && !card.doubtful.includes('hero')
               ? [card.characterId]
@@ -299,19 +300,21 @@ function teamOf(
   const picked = badges.filter((b) => b.edited)
   const settled = picked.length ? picked : badges.filter((b) => b.artifactId !== null)
   return {
-    slots: (reads[0]?.cards ?? []).map((_, slot) =>
-      slotOf(
-        reads.flatMap(({ input, panel, cards }) =>
-          cards[slot] ? [cardOf(input, cardKey(panel, colour, slot), cards[slot])] : [],
-        ),
-      ),
-    ),
+    slots: (reads[0]?.cards ?? []).map((_, slot) => {
+      const cards = reads.flatMap(({ input, panel, cards }) =>
+        cards[slot] ? [cardOf(input, cardKey(panel, colour, slot), cards[slot])] : [],
+      )
+      return cards.length ? slotOf(cards) : null
+    }),
     badges,
     artifactId: settled[0]?.artifactId ?? null,
     artifactEdited: picked.length > 0,
     artifactIssues: new Set(settled.map((b) => b.artifactId)).size > 1 ? ['differ'] : [],
   }
 }
+
+export const filledSlots = (team: WwwTeamPlan): WwwSlot[] =>
+  team.slots.filter((slot) => slot !== null)
 
 // A side fields each hero and each artifact in one place only.
 function markRepeats(teams: readonly WwwTeamPlan[]): void {
@@ -326,7 +329,7 @@ function markRepeats(teams: readonly WwwTeamPlan[]): void {
       return key !== null && counts.get(key)! > 1
     })
   }
-  const slots = teams.flatMap((t) => t.slots)
+  const slots = teams.flatMap(filledSlots)
   for (const slot of repeated(slots, (s) => s.characterId)) {
     slot.state = 'duplicate'
     slot.doubtful = []
@@ -336,8 +339,10 @@ function markRepeats(teams: readonly WwwTeamPlan[]): void {
 }
 
 const fillTeam = (team: WwwTeamPlan): WwwTeamState => ({
-  heroes: team.slots.map(({ characterId, paragon, refinement }) =>
-    characterId === null ? null : { id: characterId, paragon, refinement },
+  heroes: team.slots.map((slot) =>
+    slot && slot.characterId !== null
+      ? { id: slot.characterId, paragon: slot.paragon, refinement: slot.refinement }
+      : null,
   ),
   artifact: team.artifactId,
 })
@@ -369,7 +374,7 @@ export function buildWwwImportPlan(shots: readonly WwwShotInput[]): WwwImportPla
   }
 
   const teams = games.flatMap((game) => (game ? [game.a, game.b] : []))
-  const slots = teams.flatMap((t) => t.slots)
+  const slots = teams.flatMap(filledSlots)
   return {
     numbers,
     games,

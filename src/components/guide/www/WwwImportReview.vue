@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /* Who Would Win?'s import review: the match's games in the screen's order,
-   each with Team A's artifact and five cards above Team B's. A card is one
+   each with Team A's artifact and five cards above Team B's, an empty slot
+   shown as one. A card is one
    cell however many screenshots show it, its edits applying to each reading;
    one the screenshots read differently is tagged, and so is a hero or an
    artifact its side fields twice. An artifact not recognised stays empty
@@ -12,6 +13,7 @@ import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
+import ImportCell from '@/components/import/ImportCell.vue'
 import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
 import ImportCellState from '@/components/import/ImportCellState.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
@@ -21,12 +23,13 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { ShotRef, WwwImportShot } from '@/composables/useWwwImport'
 import type { Point } from '@/lib/layout'
 import type { TeamSide } from '@/lib/pvp/sl/www/panel'
-import type {
-  WwwCard,
-  WwwImportPlan,
-  WwwIssue,
-  WwwSlot,
-  WwwTeamPlan,
+import {
+  filledSlots,
+  type WwwCard,
+  type WwwImportPlan,
+  type WwwIssue,
+  type WwwSlot,
+  type WwwTeamPlan,
 } from '@/lib/pvp/sl/www/wwwImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
@@ -67,7 +70,8 @@ const legend = computed(() =>
   (['differ', 'twice'] as const).filter((issue) =>
     teams.value.some(
       (team) =>
-        team.artifactIssues.includes(issue) || team.slots.some((s) => s.issues.includes(issue)),
+        team.artifactIssues.includes(issue) ||
+        filledSlots(team).some((s) => s.issues.includes(issue)),
     ),
   ),
 )
@@ -120,7 +124,7 @@ const holds = (refs: readonly ShotRef[], ref: ShotRef): boolean =>
 const pickerSlot = computed(() => {
   const card = picker.value?.card
   if (!card) return null
-  return teams.value.flatMap((t) => t.slots).find((slot) => holds(slot.cards, card)) ?? null
+  return teams.value.flatMap(filledSlots).find((slot) => holds(slot.cards, card)) ?? null
 })
 const artifactTeam = computed(() => {
   const badge = artifactPicker.value?.badge
@@ -224,7 +228,13 @@ const closePickers = (event: MouseEvent): void => {
           </ImportSideHead>
           <ImportCellGrid>
             <div v-for="(slot, k) in game[side].slots" :key="k" class="placed">
+              <ImportCell v-if="!slot" class="empty" card="" :portrait="null">
+                <template #name>
+                  <span class="empty-name">{{ i18n.t('app.www-import-empty-slot') }}</span>
+                </template>
+              </ImportCell>
               <ImportHeroCell
+                v-else
                 :card="image(slot.cards[0]!, 'cards')"
                 :character-id="slot.characterId"
                 :paragon="slot.paragon"
@@ -238,7 +248,7 @@ const closePickers = (event: MouseEvent): void => {
                 @paragon="emit('setLevel', slot.cards, 'paragon', $event)"
                 @refinement="emit('setLevel', slot.cards, 'refinement', $event)"
               />
-              <span v-if="slotTags(slot).length" class="tags">
+              <span v-if="slot && slotTags(slot).length" class="tags">
                 <span v-for="issue in slotTags(slot)" :key="issue" class="tag">
                   {{ i18n.t(ISSUE_TAG[issue]) }}
                 </span>
@@ -321,6 +331,16 @@ const closePickers = (event: MouseEvent): void => {
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+
+.placed > .empty {
+  border-style: dashed;
+}
+
+.empty-name {
+  padding: 4px 6px;
+  font-size: 0.78rem;
+  color: var(--import-text-dim);
 }
 
 .tags {

@@ -96,6 +96,23 @@ describe('buildWwwImportPlan', () => {
     expect(plan.blocked).toBe(true)
   })
 
+  it('leaves an empty slot empty, with nothing to check', () => {
+    const short = game(1)
+    short.blue.cards![3] = null
+    short.blue.cards![4] = null
+    const plan = buildWwwImportPlan([shot('one', [short]), shot('two', [short])])
+    expect(plan.games[0]!.a.slots.map((slot) => slot?.cards.length ?? null)).toEqual([
+      2,
+      2,
+      2,
+      null,
+      null,
+    ])
+    expect(leftHeroes(plan, 1)).toEqual([11, 12, 13, null, null])
+    expect(plan.toCheck).toBe(0)
+    expect(plan.blocked).toBe(false)
+  })
+
   it('calls more than five games, or links that disagree, another match', () => {
     const five = shot('five', [game(1), game(2), game(3), game(4), game(5)])
     const past = buildWwwImportPlan([five, shot('past', [game(5), game(6)])])

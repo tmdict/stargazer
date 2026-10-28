@@ -1,7 +1,8 @@
 /* A screenshot of the Supreme League's knockout matchup list: its games'
  * panels, found by their team bars (bars.ts), and in each team box the five hero
  * cards, read with the card reader at the scale where their frames match best,
- * and the artifact, read with the match screens' artifact reader. A player
+ * and the artifact, read with the match screens' artifact reader. An empty
+ * slot, flat grey where a card's face would be, is no card. A player
  * fields each hero once in a match, so one side's cards across the shot are
  * settled together, each lead measured over every hero the card was ranked
  * against, as the roster's are. A box whose foot is out of view, under the
@@ -16,7 +17,7 @@ import type { Rect, RgbaImage } from '../../core/types'
 import { readArtifact } from '../match/artifacts'
 import type { ReferenceSet } from '../match/types'
 import { findPanels } from './bars'
-import { CARD_STARS, CARDS, DISC, FOOT } from './layout'
+import { CARD_STARS, CARDS, DISC, EMPTY, FOOT } from './layout'
 import type { BarColour, MatchupReading, MatchupTeam } from './types'
 
 type MatchupReferences = Pick<ReferenceSet, 'frames' | 'heroes' | 'artifacts'>
@@ -24,6 +25,11 @@ type MatchupReferences = Pick<ReferenceSet, 'frames' | 'heroes' | 'artifacts'>
 const isWhite = (img: RgbaImage, x: number, y: number): boolean => {
   const [, s, v] = hsvAt(img, x, y)
   return v > 0.94 && s < 0.06
+}
+
+const isGrey = (img: RgbaImage, x: number, y: number): boolean => {
+  const [, s, v] = hsvAt(img, x, y)
+  return s < 0.08 && v > 0.75 && v < 0.97
 }
 
 const cardsInView = (img: RgbaImage, bar: Rect): boolean => {
@@ -50,6 +56,29 @@ const cardBoxes = (bar: Rect): Rect[] =>
     h: Math.round(CARDS.w * bar.w * CARD_ASPECT),
   }))
 
+const isEmptySlot = (img: RgbaImage, box: Rect): boolean => {
+  let grey = 0
+  let n = 0
+  for (let y = Math.round(box.y + EMPTY.y[0] * box.h); y < box.y + EMPTY.y[1] * box.h; y += 2) {
+    for (let x = Math.round(box.x + EMPTY.x[0] * box.w); x < box.x + EMPTY.x[1] * box.w; x += 2) {
+      n++
+      if (isGrey(img, x, y)) grey++
+    }
+  }
+  return grey >= EMPTY.share * n
+}
+
+// The box's cards, null for an empty slot.
+const readSlots = (img: RgbaImage, bar: Rect, refs: MatchupReferences): (CardRead | null)[] => {
+  const boxes = cardBoxes(bar)
+  const filled = boxes.filter((box) => !isEmptySlot(img, box))
+  const reads = readCardBoxes(img, filled, refs, CARD_STARS)
+  return boxes.map((box) => {
+    const i = filled.indexOf(box)
+    return i < 0 ? null : reads[i]!
+  })
+}
+
 // A card below S+ reads as P0, R0 (frameFamily).
 const withOwnFamily = (cell: HeroReading): HeroReading =>
   withFamily(cell, frameFamily(cell.paragon))
@@ -59,7 +88,7 @@ const readTeam = (
   bar: Rect,
   colour: BarColour,
   refs: MatchupReferences,
-): Omit<MatchupTeam, 'cards'> & { reads: CardRead[] | null } => {
+): Omit<MatchupTeam, 'cards'> & { reads: (CardRead | null)[] | null } => {
   const discX = colour === 'blue' ? bar.x + DISC.dx * bar.w : bar.x + bar.w - DISC.dx * bar.w
   return {
     bar,
@@ -70,7 +99,7 @@ const readTeam = (
       refs.artifacts,
       Math.round(DISC.diameter * bar.w),
     ),
-    reads: cardsInView(img, bar) ? readCardBoxes(img, cardBoxes(bar), refs, CARD_STARS) : null,
+    reads: cardsInView(img, bar) ? readSlots(img, bar, refs) : null,
   }
 }
 
@@ -79,15 +108,14 @@ export function readMatchup(img: RgbaImage, refs: MatchupReferences): MatchupRea
   const side = (colour: BarColour): MatchupTeam[] => {
     const teams = panels.map((panel) => readTeam(img, panel[colour], colour, refs))
     const cells = settleCards(
-      teams.flatMap((team) => team.reads ?? []),
+      teams.flatMap((team) => team.reads?.filter((read) => read !== null) ?? []),
       'all',
     )
     let at = 0
-    return teams.map(({ reads, ...team }) => {
-      const cards = reads && cells.slice(at, at + reads.length).map(withOwnFamily)
-      at += reads?.length ?? 0
-      return { ...team, cards }
-    })
+    return teams.map(({ reads, ...team }) => ({
+      ...team,
+      cards: reads && reads.map((read) => (read ? withOwnFamily(cells[at++]!) : null)),
+    }))
   }
   const blue = side('blue')
   const red = side('red')
