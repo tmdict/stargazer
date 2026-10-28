@@ -178,34 +178,6 @@ const {
   font-size: 24px;
 }
 
-.sl-help {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  white-space: nowrap;
-  cursor: help;
-}
-
-.sl-help-mark {
-  margin-left: 4px;
-  opacity: var(--help-mark-opacity);
-  vertical-align: calc(0.5cap - 7px);
-  transition: all var(--transition-fast);
-}
-
-.sl-help:is(:hover, :focus-visible) .sl-help-mark {
-  opacity: 1;
-  color: var(--color-primary);
-}
-
-.sl-help:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
 .sl-actions {
   display: inline-flex;
   flex-wrap: wrap;

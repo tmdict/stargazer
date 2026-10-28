@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* Who Would Win?'s result: each team's chance with the verdict, the four
-   reasons in points of chance with a detail under each, From the records,
-   the note on where predictions come from, and the warnings. Team A is on
+/* Who Would Win?'s result: each team's chance with the verdict and a mark
+   whose hover card holds the warnings, the four reasons in points of chance
+   with a detail under each, From the records, and the note on where
+   predictions come from. Team A is on
    the left and Team B on the right in every row. A reason's bar grows from
    the middle toward the team it helps, its full length 50 points, so the same
    length means the same in every prediction; a detail's bars are on their own
@@ -12,7 +13,10 @@ import { computed, ref } from 'vue'
 import { sideLabelKey } from './WwwTeamRow.vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
+import IconAlertSmall from '@/components/ui/IconAlertSmall.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { slPercent, useSlNames } from '@/components/guide/sl/useSlNames'
+import { useInfoTip } from '@/composables/useInfoTip'
 import type { WinLoss } from '@/lib/pvp/sl/data/records'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
@@ -62,6 +66,14 @@ const artifactName = (id: number): string =>
   localizedDisplayName(i18n.t, 'artifact', artifactOf(id)?.name ?? String(id))
 
 const total = computed(() => panel.shown - 500)
+
+const {
+  anchor: warnAnchor,
+  hoverOpen: warnOpen,
+  hoverClose: warnClose,
+  toggle: warnToggle,
+  onTouchStart: warnTouchStart,
+} = useInfoTip()
 const verdict = computed(() => {
   const team = teamName(panel.shown >= 500 ? 'a' : 'b')
   return i18n.t(`app.www-verdict-${panel.verdict}`, { team })
@@ -119,7 +131,23 @@ const warningText = (warning: WwwWarning): string => {
       /></span>
       <span class="www-pct b">{{ slPercent(1 - panel.shown / 1000) }}</span>
     </div>
-    <p class="www-verdict">{{ verdict }}</p>
+    <p class="www-verdict">
+      {{ verdict
+      }}<button
+        v-if="panel.warnings.length"
+        type="button"
+        class="sl-help"
+        :aria-label="panel.warnings.map(warningText).join('. ')"
+        @mouseenter="warnOpen"
+        @mouseleave="warnClose"
+        @focus="warnOpen"
+        @blur="warnClose"
+        @click="warnToggle"
+        @touchstart.passive="warnTouchStart"
+      >
+        <IconAlertSmall :size="14" class="sl-help-mark" aria-hidden="true" />
+      </button>
+    </p>
 
     <p class="www-sub">{{ i18n.t('app.www-why') }}</p>
     <div class="www-rows">
@@ -343,10 +371,16 @@ const warningText = (warning: WwwWarning): string => {
     </div>
 
     <p class="www-note">{{ i18n.t('app.www-note') }}</p>
+    <Teleport v-if="warnAnchor" to="body">
+      <TooltipPopup :target-element="warnAnchor" variant="detailed" max-width="290px">
+        <template #content>
+          <span v-for="(warning, i) in panel.warnings" :key="i" class="www-warning">{{
+            warningText(warning)
+          }}</span>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </section>
-  <ul v-if="panel.warnings.length" class="www-warnings">
-    <li v-for="(warning, i) in panel.warnings" :key="i">{{ warningText(warning) }}</li>
-  </ul>
 </template>
 
 <style scoped>
@@ -648,18 +682,12 @@ const warningText = (warning: WwwWarning): string => {
   color: var(--color-text-secondary);
 }
 
-.www-warnings {
-  display: grid;
-  gap: 4px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
+.www-warning {
+  display: block;
 }
 
-.www-warnings li {
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--color-warning);
+.www-warning + .www-warning {
+  margin-top: 6px;
 }
 
 @container (max-width: 519px) {

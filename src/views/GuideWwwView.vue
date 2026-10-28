@@ -2,8 +2,11 @@
 /* Who Would Win?: two five-hero teams at their levels, each with an optional
    artifact, and which should win and why from this season's recorded Supreme
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
-   (useSlEngine). A tap on a slot, then a hero in the grid, fills the slot; a
-   hero added to Team A starts at the active roster's levels and one added to
+   (useSlEngine). A tap on a slot, then a hero in the grid, fills the slot.
+   Wider than a tablet, a click on an empty slot also opens the board's hero
+   picker beside it, which fills the team's open slots in turn, as the
+   board's popup fills a team's tiles; narrower, the grid is a bottom sheet
+   and the tap opens it, as a board's tile tap does. A hero added to Team A starts at the active roster's levels and one added to
    Team B at the top levels, as the generator treats a visitor and their
    opponents. The result stays as it was made until Predict winner is pressed
    again. The teams live in the page alone. It is pre-rendered with its
@@ -12,6 +15,7 @@
 import { computed, nextTick, ref, toRaw, useTemplateRef } from 'vue'
 
 import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
+import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import WwwHeroGrid from '@/components/guide/www/WwwHeroGrid.vue'
@@ -25,8 +29,10 @@ import ClearButton from '@/components/ui/ClearButton.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
+import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { compareCharacters } from '@/lib/filterOrder'
 import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
@@ -86,8 +92,22 @@ const nextOpen = (from: { side: TeamSide; slot: number }): typeof target.value =
   return null
 }
 
-const pickSlot = (side: TeamSide, slot: number): void => {
+const narrow = useNarrowViewport()
+const heroPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
+const pickerHeroes = computed(() => {
+  const side = heroPicker.value?.side
+  if (!side) return []
+  const on = ids(side)
+  return heroes.value.filter((c) => !on.includes(c.id)).sort(compareCharacters)
+})
+
+const pickSlot = (side: TeamSide, slot: number, event: MouseEvent): void => {
   target.value = { side, slot }
+  if (!narrow.value && !teams.value[side].heroes[slot]) {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    heroPicker.value = { side, position: { x: rect.left, y: rect.bottom + 4 } }
+    return
+  }
   sheetExpanded.value = true
 }
 
@@ -104,6 +124,13 @@ const pickHero = (character: CharacterType): void => {
   slots[at.slot] = { id: character.id, ...startLevels(at.side, character.id) }
   target.value = nextOpen(at)
   sheetExpanded.value = false
+}
+
+// The picker stays open while its team has an open slot.
+const pickFromPicker = (character: CharacterType): void => {
+  const side = heroPicker.value?.side
+  pickHero(character)
+  if (target.value?.side !== side) heroPicker.value = null
 }
 
 const setLevel = (
@@ -213,7 +240,7 @@ const predictWinner = async (): Promise<void> => {
             :side
             :team="teams[side]"
             :target="target?.side === side ? target.slot : null"
-            @slot="pickSlot(side, $event)"
+            @slot="(slot, event) => pickSlot(side, slot, event)"
             @artifact="toggleArtifactPicker(side, $event)"
             @level="(slot, attr, level) => setLevel(side, slot, attr, level)"
             @team-level="(attr, level) => setTeamLevel(side, attr, level)"
@@ -255,6 +282,13 @@ const predictWinner = async (): Promise<void> => {
     </BottomSheet>
 
     <Teleport to="body">
+      <SelectionPopup v-if="heroPicker" :position="heroPicker.position" @close="heroPicker = null">
+        <CharacterSelectionPalette
+          :characters="pickerHeroes"
+          :enter-hint="i18n.t('app.place-hero')"
+          @pick="pickFromPicker"
+        />
+      </SelectionPopup>
       <SelectionPopup
         v-if="artifactPicker"
         :position="artifactPicker.position"
