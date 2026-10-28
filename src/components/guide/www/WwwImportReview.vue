@@ -184,7 +184,7 @@ const closePickers = (event: MouseEvent): void => {
       <div class="group-label">{{ i18n.t('app.www-game', { n: g + 1 }) }}</div>
       <p v-if="!game" class="note">{{ i18n.t('app.www-import-game-missing') }}</p>
       <template v-else>
-        <div v-for="side in SIDES" :key="side" class="side">
+        <div v-for="side in SIDES" :key="side" class="side" :class="side">
           <ImportSideHead :label="i18n.t(SIDE_LABEL[side])">
             <template #default>
               <span class="artifact">
@@ -333,6 +333,14 @@ const closePickers = (event: MouseEvent): void => {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--import-bad);
+}
+
+.side.a :deep(.side-label) {
+  color: var(--unit-frame-ally);
+}
+
+.side.b :deep(.side-label) {
+  color: var(--unit-frame-enemy);
 }
 
 .artifact {

@@ -1,7 +1,7 @@
 /* Who Would Win?'s screenshot import plan: the panels of every matchup
  * screenshot put together into the match's games, each card's readings with
  * the reviewer's corrections beside them, what the review asks about and what
- * holds back Fill, and the five games Fill puts in. A player fields each hero
+ * holds back Save, and the five games Save puts in. A player fields each hero
  * and each artifact once in a match, so a team's sure hero (or, beside a panel
  * whose cards are out of view, its sure artifact) seen in two screenshots
  * places them against each other. The plan is worked out again from the
@@ -58,7 +58,7 @@ export interface WwwCard {
 }
 
 // What a card or an artifact asks about: its screenshots read it differently,
-// or its side fields it in two places. Both hold back Fill.
+// or its side fields it in two places. Both hold back Save.
 export type WwwIssue = 'differ' | 'twice'
 
 // A card of a game: every screenshot's reading of it and what they settle on.
@@ -109,7 +109,7 @@ export interface WwwImportPlan {
   toCheck: number
   // The cards the review confirms as read in one go: a doubt and no issue.
   confirmable: WwwSlot[]
-  // What Fill puts in: five games, null for those not shown.
+  // What Save puts in: five games, null for those not shown.
   fill: (WwwGame | null)[]
   blocked: boolean
 }

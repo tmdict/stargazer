@@ -20,7 +20,7 @@ A match imports from its result screenshots, and formation screenshots or replay
 
 Every field carries its own sure flag, so a doubt about a frame never hides behind a sure hero. The review shows what is unsure first, and a correction is kept beside the reading instead of changing it. The bar for marking a reading sure is that nothing read wrongly is marked sure on the labelled samples kept outside this repo. A misreading may slip by only as an unsure reading the review asks about.
 
-Save, or Fill, waits for what would put something wrong on a board, in a roster or in Who Would Win?'s games:
+Save waits for what would put something wrong on a board, in a roster or in Who Would Win?'s games:
 
 - the team import, for a map filled twice, a hero twice on a side, a hero or artifact repeated across boards, or a record name it cannot use;
 - the roster import, for a hero whose cards disagree on its levels, or a hero read twice in one screenshot;

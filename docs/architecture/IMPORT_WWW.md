@@ -1,6 +1,6 @@
 # Matchup Import
 
-Who Would Win?'s screenshot import reads the Supreme League's knockout matchup list on the device and fills the page's five games with what it shows: each team's five heroes with their paragon and refinement, and its artifact. It opens from the Screenshots button on Who Would Win? ([Guide](./GUIDE.md#who-would-win)), in One game or in Match, and loads on first use. The screens are read by the shared screenshot import ([Screenshot Import](./IMPORT.md)), the same engine, worker, card reader and references the other imports run on. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Fill changes the games.
+Who Would Win?'s screenshot import reads the Supreme League's knockout matchup list on the device and fills the page's five games with what it shows: each team's five heroes with their paragon and refinement, and its artifact. It opens from the Screenshots button on Who Would Win? ([Guide](./GUIDE.md#who-would-win)), in One game or in Match, and loads on first use. The screens are read by the shared screenshot import ([Screenshot Import](./IMPORT.md)), the same engine, worker, card reader and references the other imports run on. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save changes the games.
 
 Players take the list in one or two screenshots, scrolling between them, and two screenshots often share a game or show the same game's cards twice, so the import puts every screenshot's panels together into the match's games.
 
@@ -8,7 +8,7 @@ Players take the list in one or two screenshots, scrolling between them, and two
 
 ```
 ┌─ WwwImportModal ─────────┐            ┌─ WwwImportButton ────────┐
-│ drop zone, review, Fill  │  games     │ useWwwGames.fill         │
+│ drop zone, review, Save  │  games     │ useWwwGames.fill         │
 │                          │───────────▶│ (all five, then Match)   │
 └───────────────────┬──┬───┘            └──────────────────────────┘
        shots, edits │  ▲
@@ -50,18 +50,18 @@ The bottom bar with the back button covers the last row when the list is scrolle
 
 A team seen in two screenshots keeps each card's readings. For each part of a card (the hero, the paragon, the refinement), the sure readings stand over the unsure ones, and readings that still disagree are asked about. An artifact is the one picked in review, else the one read surely; one not read surely is left empty (not recognised), so another season's artifact, whose icon the app does not have, never goes in as a wrong one.
 
-A card or an artifact asks about two things (`WwwIssue`), and both hold back Fill:
+A card or an artifact asks about two things (`WwwIssue`), and both hold back Save:
 
 - `differ`: its screenshots read it differently.
 - `twice`: its side fields it in two games, which a match never does.
 
 The plan is worked out again from the readings and corrections on every change, so the screenshots give the same games whichever is read first.
 
-## Review and Fill
+## Review and Save
 
 The review shows each screenshot with its team boxes outlined and numbered by the game they fill, a box whose cards are out of view dashed, then the five games in order, Team A above Team B: each team's artifact and five cards, with what is left to check marked and each issue tagged. A missing game's row says how to add it. A correction of an unsure card's hero teaches its face, as the roster import's does ([Roster Import](./IMPORT_ROSTER.md#review-and-save)). Confirm all takes every card with a doubt and no issue as read (`confirmable`).
 
-Fill replaces all five games and switches the page to Match, whichever mode was showing: a missing game becomes an empty one. Fill waits while screenshots are added or read, while an issue holds it back, and while the screenshots do not fit one match.
+Save replaces all five games and switches the page to Match, whichever mode was showing: a missing game becomes an empty one. Save waits while screenshots are added or read, while an issue holds it back, and while the screenshots do not fit one match.
 
 Each import turns away the others' screenshots however they are added, naming the place that reads them, and this one reads a screenshot the sorter cannot place as a matchup list ([Screenshot Import](./IMPORT.md#the-engine)).
 
