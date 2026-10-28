@@ -1,19 +1,7 @@
 <script lang="ts">
 import type { Point } from '@/lib/layout'
+import type { WwwLevelAttr, WwwTeamState } from '@/lib/pvp/sl/www/match'
 import type { TeamSide } from '@/lib/pvp/sl/www/panel'
-
-export interface WwwSlotHero {
-  id: number
-  paragon: number
-  refinement: number
-}
-
-export interface WwwTeamState {
-  heroes: (WwwSlotHero | null)[]
-  artifact: number | null
-}
-
-export type WwwLevelAttr = 'paragon' | 'refinement'
 
 export const sideLabelKey = (side: TeamSide): string =>
   side === 'a' ? 'app.www-team-a' : 'app.www-team-b'
