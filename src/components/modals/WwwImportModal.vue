@@ -9,6 +9,7 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import WwwImportReview from '@/components/guide/www/WwwImportReview.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
+import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
@@ -124,23 +125,13 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-failed-references') }}
           </span>
         </div>
-        <div class="www-import-intro">
-          <span class="www-import-thumb" aria-hidden="true">
-            <span v-for="game in 3" :key="game" class="thumb-game">
-              <span class="thumb-name" />
-              <span v-for="side in ['left', 'right']" :key="side" class="thumb-team" :class="side">
-                <i class="thumb-bar" />
-                <span class="thumb-cards"><i v-for="card in 5" :key="card" /></span>
-              </span>
-            </span>
-          </span>
-          <p class="note intro">
-            <template v-for="(part, i) in tipParts" :key="i">
-              <strong v-if="i % 2">{{ part }}</strong>
-              <template v-else>{{ part }}</template>
-            </template>
-          </p>
-        </div>
+        <ImportScreenThumb screen="matchup" />
+        <p class="note intro">
+          <template v-for="(part, i) in tipParts" :key="i">
+            <strong v-if="i % 2">{{ part }}</strong>
+            <template v-else>{{ part }}</template>
+          </template>
+        </p>
       </header>
 
       <section class="drop-section">
@@ -206,75 +197,5 @@ const handleForgetLearned = (): void => {
 
 .progress {
   margin: 0;
-}
-
-.www-import-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  max-width: 48em;
-}
-
-/* The knockout screen drawn small, as the help page draws the screens: three
-   games' panels, a header line over two teams side by side, each a bar and
-   five cards. */
-.www-import-thumb {
-  display: grid;
-  flex: none;
-  gap: 6px;
-  width: 96px;
-  padding: 6px;
-  border-radius: var(--radius-medium);
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.thumb-game {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 4px;
-}
-
-.thumb-name {
-  grid-column: 1 / -1;
-  width: 40%;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.thumb-team {
-  display: grid;
-  gap: 2px;
-}
-
-.thumb-bar {
-  height: 3px;
-}
-
-.left > .thumb-bar {
-  background: var(--import-matchup-left);
-}
-
-.right > .thumb-bar {
-  background: var(--import-matchup-right);
-}
-
-.thumb-cards {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1px;
-}
-
-.thumb-cards > i {
-  height: 9px;
-  border-radius: 1px;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-@media (max-width: 480px) {
-  .www-import-intro {
-    flex-direction: column;
-    align-items: center;
-  }
 }
 </style>
