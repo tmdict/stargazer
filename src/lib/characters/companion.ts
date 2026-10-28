@@ -23,9 +23,9 @@ export function companionIdsOf(ownerId: number): number[] {
   return Array.from({ length: count }, (_, i) => (i + 1) * COMPANION_ID_OFFSET + ownerId)
 }
 
-// Companions drawn with an image of their own (Zanie's turrets, Wedge of Power)
-// rather than their owner's portrait: the image's name, under the id of the
-// first companion, since a skill's companions all share it.
+// The pictures companions are drawn with (Zanie's turrets, Lailah, Wedge of
+// Power): the image's name, under the id of the first companion, since a
+// skill's companions all share it.
 export function companionImages(): { unitId: number; image: string }[] {
   return getRegisteredSkills().flatMap((skill) => {
     const [first] = companionIdsOf(skill.characterId)
@@ -33,6 +33,14 @@ export function companionImages(): { unitId: number; image: string }[] {
       ? [{ unitId: first, image: skill.companionImageModifier }]
       : []
   })
+}
+
+// The owners drawn with a picture of their own in place of their portrait
+// (Elijah alone): the image's name, under the owner's id.
+export function ownerImages(): { unitId: number; image: string }[] {
+  return getRegisteredSkills().flatMap((skill) =>
+    skill.imageModifier ? [{ unitId: skill.characterId, image: skill.imageModifier }] : [],
+  )
 }
 
 export function isCompanionId(grid: Grid, characterId: number): boolean {
@@ -102,8 +110,8 @@ export function storeCompanionPositions(
 // Move companions onto target hexes. Lifts them all off first, then places
 // them, so two companions can trade hexes (Zanie) without the first place
 // failing on the second's tile. Raw ops sidestep the owner-removal cascade in
-// executeRemoveCharacter; color and image modifiers key off id + team and so
-// survive the move.
+// executeRemoveCharacter; image modifiers key off id + team and so survive the
+// move.
 export function repositionCompanions(
   grid: Grid,
   team: Team,
@@ -141,9 +149,6 @@ export function restoreCompanions(
         }
         performPlace(grid, originalHexId, companionId, team)
         const skill = getCharacterSkill(mainCharId)
-        if (skill?.companionColorModifier) {
-          skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
-        }
         if (skill?.companionImageModifier) {
           skillManager.addCharacterImageModifier(companionId, team, skill.companionImageModifier)
         }

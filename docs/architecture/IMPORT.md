@@ -16,7 +16,7 @@ Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`). It runs un
                                                              ▼  │
 ┌─ import.worker ──────────┐            ┌─ useImportEngine ──┴──┴──┐
 │ a reader per kind        │◀───────────│ decoding, read queue     │
-│ hero and unit tables     │   images   │ references               │
+│ hero, board, unit tables │   images   │ references               │
 │ artifacts, arena         │───────────▶│ learned faces            │
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
@@ -41,7 +41,7 @@ A screenshot is decoded on the main thread at its own size, within its kind's wi
 
 Every import adds its files through the engine's `addFiles`, one at a time. Each file is sorted first, then the import places it: the kind to read it as, or turned away. A file whose name and size match a shot's is skipped, and adding stops once the import's modal closes or the page is left. Until a file is placed it is not a shot yet, so the engine counts the files still being added (`adding`), and Save waits for them as it waits for the screenshots being read.
 
-The references come in two parts (`lib/import/kinds.ts`): the hero part every kind reads with (the paragon frames, the portraits and costumes, the learned faces) and the match part the match screens add (artifacts, phantimals and companions, the arena), so a roster read never waits on the match part. Each part is fetched once per visit, on an import's first use, and each reading worker gets its own copy. A screenshot added while its parts load waits for them. When a part fails, the screenshots waiting on it fail too but stay queued, and the next one added retries the load. A reader that crashes, or fails to build a part's tables, is dropped with the screenshot it was reading. While other readers remain they carry on, and the pool grows no further that visit, since a device short of memory would fail a new reader the same way. With none left the references count as failed, and the next attempt starts a fresh reader.
+The references come in two parts (`lib/import/kinds.ts`): the hero part every kind reads with (the paragon frames, the portraits and costumes, the learned faces) and the match part the match screens add (artifacts, phantimals and companions, the pictures a board draws some heroes with, the arena), so a roster read never waits on the match part. Each part is fetched once per visit, on an import's first use, and each reading worker gets its own copy. A screenshot added while its parts load waits for them. When a part fails, the screenshots waiting on it fail too but stay queued, and the next one added retries the load. A reader that crashes, or fails to build a part's tables, is dropped with the screenshot it was reading. While other readers remain they carry on, and the pool grows no further that visit, since a device short of memory would fail a new reader the same way. With none left the references count as failed, and the next attempt starts a fresh reader.
 
 One worker script serves every kind of screenshot, with a reader for each. One reads to begin with. While a roster screenshot waits with every reader busy, the engine starts another, so the several screenshots of a roster read in parallel, up to a limit set by the device's cores and reported memory. One more worker holds only the arena and sorts every screenshot added (`sortScreenshot`), so each is sorted at once while the readers work. Each import refuses a screenshot the sorter finds to be the other's, whether it was dropped, picked or pasted, and reads one the sorter cannot place as the kind of where it was added.
 
@@ -90,7 +90,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ## Reference pictures
 
-Every reference picture is built into the site from the data pack (`src/pack/`). The paragon frames `frame-p0` to `frame-p4-crown` sit in `screenshot-import/`, and a hero's outfits beside its portrait as `<hero>-skin<N>.png` (`src/lib/characters/outfit.ts`). Both are encoded at the settings the matching was tuned on. Portraits and phantimals load at 180 px, artifact references are every artifact's icon capped at 128 px, and the replay arena is `screenshot-import/replay-arena.png`. Without a pack the frames are missing, and the import says its reference images could not be loaded.
+Every reference picture is built into the site from the data pack (`src/pack/`). The paragon frames `frame-p0` to `frame-p4-crown` sit in `screenshot-import/`, and a picture's outfits beside it as `<picture>-skin<N>.png` (`src/lib/characters/outfit.ts`): a hero's beside its portrait, a companion's or Elijah's alone beside the picture its skill draws it with. Both are encoded at the settings the matching was tuned on. Portraits and phantimals load at 180 px, artifact references are every artifact's icon capped at 128 px, and the replay arena is `screenshot-import/replay-arena.png`. Without a pack the frames are missing, and the import says its reference images could not be loaded.
 
 ## Review pieces
 

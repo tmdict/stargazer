@@ -137,7 +137,6 @@ export interface GridContext {
   perspective: boolean
 
   // Per-board skill queries (each board has its own SkillManager)
-  getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getImageModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getTileColorModifier: (hexId: number) => string[] | undefined
   getTileFillModifier: (hexId: number) => string[] | undefined
@@ -606,7 +605,6 @@ export function createGridContext(
     const perspectiveActive = computed(() => perspective.value)
 
     // Per-board skill-derived data, read by the tile / character / targeting layers.
-    const colorModifiers = computed(() => skillManager.getColorModifiersByCharacterAndTeam())
     const imageModifiers = computed(() => skillManager.getImageModifiersByCharacterAndTeam())
     const tileColorModifiers = computed(() => {
       skillManager.getTargetVersion()
@@ -628,8 +626,6 @@ export function createGridContext(
       skillManager.getTargetVersion()
       return skillManager.getSkillBadges()
     })
-    const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined =>
-      colorModifiers.value.get(`${characterId}-${team}`)
     const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
       imageModifiers.value.get(`${characterId}-${team}`)
     const getTileColorModifier = (hexId: number): string[] | undefined =>
@@ -694,7 +690,6 @@ export function createGridContext(
       skillTargets,
       skillLines,
       skillBadges,
-      getColorModifierForCharacter,
       getImageModifierForCharacter,
       getTileColorModifier,
       getTileFillModifier,

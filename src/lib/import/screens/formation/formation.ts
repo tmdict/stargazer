@@ -83,16 +83,22 @@ function ringScore(img: RgbaImage, cx: number, cy: number, r: number): number {
   return hit / RING_SAMPLES
 }
 
+const FACE_ASPECT = 0.75
 // Face crops of a portrait in ring radii (width, and top relative to the ring's
 // centre), in the hero table's landscape shape. The first ranks the whole
 // table; the others suit heroes framed wider or higher and re-score the leaders.
+// Each takes FACE_MARGIN times the face's framing about its centre, which puts
+// a board face mid-way in the table's window grid rather than at its edge.
+const FACE_MARGIN = 1.3
 const FACE_BOXES = [
   { w: 1.0, top: -0.45 },
   { w: 1.2, top: -0.5 },
   { w: 1.1, top: -0.6 },
   { w: 1.2, top: -0.62 },
-] as const
-const FACE_ASPECT = 0.75
+].map(({ w, top }) => ({
+  w: w * FACE_MARGIN,
+  top: top - (FACE_ASPECT / 2) * w * (FACE_MARGIN - 1),
+}))
 // Enough candidates that a lineup read elsewhere still finds its hero among them.
 const UNIT_CANDIDATES = 60
 const UNIT_CARD = 64
@@ -133,7 +139,7 @@ function identify(shot: RgbaImage, refs: ReferenceSet, unit: FoundUnit): UnitRea
     })
   })
   const candidates = [
-    ...rankHeroes(refs.heroes, alignments, UNIT_CANDIDATES),
+    ...rankHeroes(refs.board, alignments, UNIT_CANDIDATES),
     ...rankHeroes(refs.units, alignments, UNIT_CANDIDATES),
   ].sort((a, b) => b.score - a.score)
   const side = Math.round(2 * r)

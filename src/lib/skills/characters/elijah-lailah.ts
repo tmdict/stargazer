@@ -79,8 +79,8 @@ registerSkill(
     createCompanionSkill({
       id: 'elijah-lailah',
       characterId: 68,
-      colorModifier: SKILL_COLOR,
-      companionColorModifier: COMPANION_COLOR,
+      imageModifier: 'elijah-lailah-elijah',
+      companionImageModifier: 'elijah-lailah-lailah',
       companionRange: 1,
     }),
     (ctx) => ({ tiles: calculateBetweenTiles(ctx), lines: calculateLine(ctx) }),

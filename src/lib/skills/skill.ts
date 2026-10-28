@@ -101,10 +101,7 @@ export class SkillManager {
   // Track which characters have active skills on which hexes
   // Key is "characterId-team" to allow same character on different teams
   private activeSkills: Record<string, { characterId: number; hexId: number; team: Team }> = {}
-  // Track color modifiers for specific characters (for companions)
-  // Key is "characterId-team" to support same companion ID on different teams
-  private characterColorModifiers: Record<string, string> = {}
-  // Track image modifiers for specific characters (for companions with custom images)
+  // Track image modifiers for specific characters (for companions)
   // Key is "characterId-team" to support same companion ID on different teams
   private characterImageModifiers: Record<string, string> = {}
   // Two independent tile-paint channels, each keyed by hex id and holding the
@@ -207,7 +204,6 @@ export class SkillManager {
   // Reset all state (used when switching maps)
   reset(): void {
     this.activeSkills = {}
-    this.characterColorModifiers = {}
     this.characterImageModifiers = {}
     this.tileColorModifiers.clear()
     this.tileFillModifiers.clear()
@@ -216,17 +212,6 @@ export class SkillManager {
     this.skillLines.clear()
     this.skillBadges.clear()
     this.targetVersion++
-  }
-
-  // Add color modifier for a specific character (used by skills for companions)
-  addCharacterColorModifier(characterId: number, team: Team, color: string): void {
-    const key = this.getSkillKey(characterId, team)
-    this.characterColorModifiers[key] = color
-  }
-
-  removeCharacterColorModifier(characterId: number, team: Team): void {
-    const key = this.getSkillKey(characterId, team)
-    delete this.characterColorModifiers[key]
   }
 
   // Add image modifier for a specific character (used by skills for companions)
@@ -240,9 +225,14 @@ export class SkillManager {
     delete this.characterImageModifiers[key]
   }
 
-  // Get all character image modifiers (exposed for UI reactivity)
+  // Image modifiers mapped by "characterId-team": active skills' owners, then
+  // companions (exposed for UI reactivity)
   getImageModifiersByCharacterAndTeam(): Map<string, string> {
     const modifiers = new Map<string, string>()
+    for (const [key, { characterId }] of Object.entries(this.activeSkills)) {
+      const imageName = getCharacterSkill(characterId)?.imageModifier
+      if (imageName) modifiers.set(key, imageName)
+    }
     for (const [key, imageName] of Object.entries(this.characterImageModifiers)) {
       modifiers.set(key, imageName)
     }
@@ -386,26 +376,6 @@ export class SkillManager {
       if (!unique.has(key)) unique.set(key, badge)
     }
     return [...unique.values()]
-  }
-
-  // Get color modifiers mapped by "characterId-team"
-  getColorModifiersByCharacterAndTeam(): Map<string, string> {
-    const modifiers = new Map<string, string>()
-
-    // Add modifiers from active skills (main characters)
-    Object.entries(this.activeSkills).forEach(([key, { characterId }]) => {
-      const skill = getCharacterSkill(characterId)
-      if (skill?.colorModifier) {
-        modifiers.set(key, skill.colorModifier)
-      }
-    })
-
-    // Add character-specific modifiers (companions)
-    Object.entries(this.characterColorModifiers).forEach(([key, color]) => {
-      modifiers.set(key, color)
-    })
-
-    return modifiers
   }
 
   // Skill targeting methods

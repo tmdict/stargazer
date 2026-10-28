@@ -105,16 +105,16 @@ export const useGameDataStore = defineStore('gameData', () => {
     return getCharacterById(toBaseHeroId(characterId))?.name
   }
 
-  // Portrait image name for a unit id: a companion uses its skill's static
-  // companion image when one is defined (e.g. Zanie's turret), otherwise its
-  // main hero's portrait, matching what the live grid renders.
+  // Portrait image name for a unit id as the live grid draws it: a companion's
+  // skill picture (Zanie's turret, Lailah), or an owner's own picture when its
+  // skill names one (Elijah alone), else the hero's portrait.
   const getCharacterImageNameById = (characterId: number): string | undefined => {
     if (inPhantimalBand(characterId)) return getPhantimalUnitSlug(characterId)
-    if (isCompanionUnitId(characterId)) {
-      const custom = getCharacterSkill(toBaseHeroId(characterId))?.companionImageModifier
-      if (custom) return custom
-    }
-    return getCharacterNameById(characterId)
+    const skill = getCharacterSkill(toBaseHeroId(characterId))
+    const own = isCompanionUnitId(characterId)
+      ? skill?.companionImageModifier
+      : skill?.imageModifier
+    return own ?? getCharacterNameById(characterId)
   }
 
   const getArtifactById = (artifactId: number): ArtifactType | undefined => {

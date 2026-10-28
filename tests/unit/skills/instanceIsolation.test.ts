@@ -31,7 +31,6 @@ import { NO_LOOKUPS } from '../fixtures/skills'
 
 interface ManagerSnapshot {
   targets: [string, unknown][]
-  colors: [string, string][]
   images: [string, string][]
   tileColors: [number, string[]][]
   tileFills: [number, string[]][]
@@ -41,7 +40,6 @@ interface ManagerSnapshot {
 
 const snapshot = (sm: SkillManager): ManagerSnapshot => ({
   targets: [...sm.getAllSkillTargets().entries()],
-  colors: [...sm.getColorModifiersByCharacterAndTeam().entries()],
   images: [...sm.getImageModifiersByCharacterAndTeam().entries()],
   tileColors: [...sm.getTileColorModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
   tileFills: [...sm.getTileFillModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
@@ -51,7 +49,6 @@ const snapshot = (sm: SkillManager): ManagerSnapshot => ({
 
 const hasEffect = (s: ManagerSnapshot): boolean =>
   s.targets.length +
-    s.colors.length +
     s.images.length +
     s.tileColors.length +
     s.tileFills.length +
@@ -133,7 +130,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
       // Every id-keyed entry must belong to one of the two instances or a
       // companion derived from one of them.
       const during = snapshot(sm)
-      for (const [key] of [...during.targets, ...during.colors, ...during.images]) {
+      for (const [key] of [...during.targets, ...during.images]) {
         const owner = decomposeUnitId(parseInt(key, 10)).localId % 10000
         expect(owner, `state key ${key} belongs to neither instance`).toBe(baseId)
       }
@@ -144,7 +141,6 @@ describe('skill instance isolation (divergent-id contract)', () => {
       expect(executeRemoveCharacter(grid, sm, copyHex)).toBe(true)
       const after = snapshot(sm)
       expect(keyed(after.targets, baseId)).toEqual(keyed(soloState.targets, baseId))
-      expect(keyed(after.colors, baseId)).toEqual(keyed(soloState.colors, baseId))
       expect(keyed(after.images, baseId)).toEqual(keyed(soloState.images, baseId))
       expect(after.tileColors).toEqual(soloState.tileColors)
       expect(after.tileFills).toEqual(soloState.tileFills)
@@ -155,7 +151,6 @@ describe('skill instance isolation (divergent-id contract)', () => {
       expect(executeRemoveCharacter(grid, sm, baseHex)).toBe(true)
       const final = snapshot(sm)
       expect(final.targets).toEqual([])
-      expect(final.colors).toEqual([])
       expect(final.images).toEqual([])
       expect(final.tileColors).toEqual([])
       expect(final.tileFills).toEqual([])
@@ -183,8 +178,8 @@ describe('skill instance isolation (divergent-id contract)', () => {
     expect(placed.has(210050)).toBe(true)
 
     expect([...grid.companionLinks.keys()].sort()).toEqual(['200050-1', '50-1'])
-    const colorKeys = [...sm.getColorModifiersByCharacterAndTeam().keys()].sort()
-    expect(colorKeys).toEqual(['10050-1', '210050-1'])
+    const imageKeys = [...sm.getImageModifiersByCharacterAndTeam().keys()].sort()
+    expect(imageKeys).toEqual(['10050-1', '210050-1'])
   })
 
   it('a tile-highlight copy survives an update cycle without touching the base paint', () => {

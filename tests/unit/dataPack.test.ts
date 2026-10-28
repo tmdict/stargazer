@@ -92,13 +92,13 @@ describe('build checks', () => {
     })
   })
 
-  it('note a companion picture in neither picture folder', () => {
+  it('note a board picture in neither picture folder', () => {
     expect(
       packProblems(join(dir, 'pack'), join(dir, 'repo'), ['odie', 'beetle', 'turret']).notes,
     ).toEqual([
       'frosthelm has no text in the pack',
       'beetle has no text in the pack',
-      'the companion picture turret is not in the pack',
+      'the board picture turret is not in the pack',
     ])
   })
 

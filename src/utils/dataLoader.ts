@@ -1,6 +1,6 @@
 import { shallowReactive } from 'vue'
 
-import { outfitHero } from '@/lib/characters/outfit'
+import { outfitOf } from '@/lib/characters/outfit'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -95,16 +95,17 @@ export function loadCharacterImages(): Record<string, string> {
   return characterImages
 }
 
-// Each hero's first outfit at the portraits' display size, keyed by hero. The
-// glob lists names as text, where -skin10 comes before -skin2.
+// Each picture's first outfit at the portraits' display size, keyed by the
+// picture (a hero's portrait under its slug). The glob lists names as text,
+// where -skin10 comes before -skin2.
 function loadOutfitImages(): Record<string, string> {
   const outfits: Record<string, string> = {}
   const byNumber = Object.entries(outfitImages).sort(([a], [b]) =>
     a.localeCompare(b, 'en', { numeric: true }),
   )
   for (const [name, url] of byNumber) {
-    const hero = outfitHero(name)
-    if (hero) outfits[hero] ??= url
+    const picture = outfitOf(name)
+    if (picture) outfits[picture] ??= url
   }
   return outfits
 }
@@ -124,8 +125,8 @@ export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
   return loadAssetsDict(modules)
 }
 
-// The paragon frames by name (p0 … p4-crown) and each hero's outfits, for the
-// screenshot import. Both are encoded at the settings the import's matching
+// The paragon frames by name (p0 … p4-crown) and each picture's outfits, for
+// the screenshot import. Both are encoded at the settings the import's matching
 // was tuned on.
 export function loadImportFrames(): Record<string, () => Promise<string>> {
   const modules = import.meta.glob<string>('@/pack/screenshot-import/frame-*.png', {
@@ -147,8 +148,8 @@ export function loadOutfitPortraits(): Record<string, (() => Promise<string>)[]>
   })
   const outfits: Record<string, (() => Promise<string>)[]> = {}
   for (const [path, load] of Object.entries(modules)) {
-    const hero = outfitHero(extractFileName(path))
-    if (hero) (outfits[hero] ??= []).push(load)
+    const picture = outfitOf(extractFileName(path))
+    if (picture) (outfits[picture] ??= []).push(load)
   }
   return outfits
 }

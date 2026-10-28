@@ -80,13 +80,15 @@ const windowVector = (portrait: RgbaImage, rect: Rect): Float32Array =>
 export function buildHeroTable(
   portraits: readonly PortraitRef[],
   learned: readonly LearnedIcon[] = [],
+  // The colour behind the faces the table is matched against.
+  backdrop: readonly [number, number, number] = PORTRAIT_BACKGROUND,
 ): HeroTable {
   const rows: { id: number; learned: boolean; source: number; v: Int8Array }[] = []
   const stored: HeroTable['portraits'] = []
   for (const { characterId, image, costume } of portraits) {
     const scale = costume ? COSTUME_SCALE : 1
     const portrait = cropResize(
-      flatten(image, PORTRAIT_BACKGROUND),
+      flatten(image, backdrop),
       { x: 0, y: 0, w: image.width, h: image.height },
       PORTRAIT_SIZE.width * scale,
       PORTRAIT_SIZE.height * scale,
