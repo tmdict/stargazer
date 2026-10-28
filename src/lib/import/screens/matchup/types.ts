@@ -1,5 +1,5 @@
 /* What a screenshot of the Supreme League's knockout matchup list reads: its
- * games' panels top to bottom, each two teams of five hero cards and an
+ * games' panels top to bottom, each two teams of up to five hero cards and an
  * artifact. */
 
 import type { HeroReading } from '../../card/types'
@@ -13,9 +13,9 @@ export interface MatchupTeam {
   // The box's bar, in the screenshot's pixels; everything else in the box is
   // placed from it.
   bar: Rect
-  // Left to right; null when the box's lower edge is out of view (under the
-  // bottom bar, or past the shot's edge).
-  cards: HeroReading[] | null
+  // Left to right, null for an empty slot; null when the box's lower edge is
+  // out of view (under the bottom bar, or past the shot's edge).
+  cards: (HeroReading | null)[] | null
   artifact: ArtifactReading
 }
 

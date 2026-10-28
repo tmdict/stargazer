@@ -10,6 +10,7 @@ import { createImage } from '../../../../fixtures/image'
 const GROUND = [229, 225, 214] as const
 const WHITE = [254, 250, 245] as const
 const CARD = [90, 60, 40] as const
+const SLOT = [226, 226, 226] as const
 
 const fill = (
   img: RgbaImage,
@@ -27,8 +28,9 @@ const fill = (
 
 // Two panels of a list 1000 px wide, team boxes 440 px wide under their bars:
 // cards from 64 to 189 px below the bar, the box's white foot under them to 210.
-// The list ends at `clip`, the page's ground below it.
-const list = (clip: number): RgbaImage => {
+// The list ends at `clip`, the page's ground below it. The first left box's
+// `empty` slots are flat grey.
+const list = (clip: number, empty: readonly number[] = []): RgbaImage => {
   const img = createImage(1000, 1400)
   fill(img, 0, 0, 1000, 1400, GROUND)
   for (const y of [300, 680]) {
@@ -38,7 +40,10 @@ const list = (clip: number): RgbaImage => {
     ] as const) {
       fill(img, x, y, 440, 10, colour)
       fill(img, x, y + 10, 440, 200, WHITE)
-      for (let k = 0; k < 5; k++) fill(img, x + 8 + 84 * k, y + 64, 80, 125, CARD)
+      for (let k = 0; k < 5; k++) {
+        const slot = y === 300 && x === 40 && empty.includes(k)
+        fill(img, x + 8 + 84 * k, y + 64, 80, 125, slot ? SLOT : CARD)
+      }
     }
   }
   fill(img, 0, clip, 1000, 1400 - clip, GROUND)
@@ -59,5 +64,17 @@ describe('readMatchup', () => {
       [null, null],
     ])
     expect(panels[1]!.blue.artifact).toBeDefined()
+  })
+
+  it('reads a flat grey slot as empty and the cards beside it', () => {
+    const { panels } = readMatchup(list(1400, [1, 4]), refs)
+    expect(panels[0]!.blue.cards!.map((card) => card === null)).toEqual([
+      false,
+      true,
+      false,
+      false,
+      true,
+    ])
+    expect(panels[0]!.red.cards!.every((card) => card !== null)).toBe(true)
   })
 })

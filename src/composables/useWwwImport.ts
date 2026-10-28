@@ -135,7 +135,7 @@ const applyReading = (shot: WwwImportShot, reading: MatchupReading): void => {
       const team = panel[colour]
       shot.badges[teamKey(p, colour)] = imageToDataUrl(team.artifact.card)
       team.cards?.forEach((cell, slot) => {
-        shot.cards[cardKey(p, colour, slot)] = imageToDataUrl(cell.card)
+        if (cell) shot.cards[cardKey(p, colour, slot)] = imageToDataUrl(cell.card)
       })
     }
   })
