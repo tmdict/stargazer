@@ -29,7 +29,8 @@ export const doubtfulParts = (cell: HeroReading, override: CellOverride = {}): R
   return parts
 }
 
-const PART_STATE: Record<ReviewPart, CellState> = {
+// The state a cell shows while a part is its first in doubt.
+export const PART_STATE: Record<ReviewPart, CellState> = {
   hero: 'review',
   paragon: 'paragon',
   refinement: 'refinement',

@@ -153,6 +153,14 @@ export function useWwwGames() {
     target.value = { game: 0, side: 'a', slot: 0 }
   }
 
+  // Replaces all five games, whichever mode is shown, a null one with an empty
+  // game, and switches to Match.
+  const fill = (next: readonly (WwwGame | null)[]): void => {
+    games.value = Array.from({ length: WWW_GAMES }, (_, i) => next[i] ?? emptyGame())
+    mode.value = 'match'
+    target.value = nextOpen({ game: 0, side: 'a', slot: -1 })
+  }
+
   return {
     mode: readonly(mode),
     games,
@@ -169,5 +177,6 @@ export function useWwwGames() {
     setArtifact,
     swapSides,
     clear,
+    fill,
   }
 }

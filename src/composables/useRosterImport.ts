@@ -12,6 +12,7 @@ import {
   imageToDataUrl,
   useImportEngine,
   type ImportEngine,
+  type IntakeResult,
   type ShotError,
   type ShotSession,
   type ShotStatus,
@@ -135,7 +136,7 @@ export function useRosterImport(): {
   plan: ComputedRef<RosterImportPlan>
   // The screenshots read and to read, while any is still being added or read.
   progress: ComputedRef<{ read: number; total: number } | null>
-  addFiles: (files: File[]) => Promise<{ added: number; refused: number }>
+  addFiles: (files: File[]) => Promise<IntakeResult>
   removeShot: (id: string) => void
   clearImport: () => void
   setHero: (cards: readonly CardRef[], characterId: number | null) => void
@@ -160,11 +161,11 @@ export function useRosterImport(): {
   // Leaving the page unmounts the modal, and its shots go with the engine.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
-  // One the sorter finds to be a match screen is refused and counted; one it
-  // cannot place is read as a roster.
-  const addFiles = async (files: File[]): Promise<{ added: number; refused: number }> => {
+  // One the sorter finds to be another import's is refused and counted by
+  // kind; one it cannot place is read as a roster.
+  const addFiles = (files: File[]): Promise<IntakeResult> => {
     const mine = opening
-    const { added, refused } = await engine.addFiles(files, {
+    return engine.addFiles(files, {
       current: () => mine === opening,
       replay: () => true,
       place: (sorted) =>
@@ -187,7 +188,6 @@ export function useRosterImport(): {
         return shot
       },
     })
-    return { added, refused: Object.values(refused).reduce((sum, n) => sum + n, 0) }
   }
 
   const removeShot = (id: string): void => {

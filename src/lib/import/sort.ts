@@ -4,6 +4,7 @@ import { resample } from './core/image'
 import type { RgbaImage } from './core/types'
 import type { ImportKind } from './kinds'
 import { FIT_WIDTH, fitBoard } from './screens/formation/board'
+import { isMatchupScreen } from './screens/matchup/bars'
 import { isReplayFrame } from './screens/replay/replay'
 import type { ArenaRef } from './screens/replay/types'
 import { findTabs } from './screens/result/strip'
@@ -13,13 +14,16 @@ import { isRosterScreen, WORK_MAX } from './screens/roster/roster'
 // the match screens on one FIT_WIDTH wide.
 export const SORT_WIDTH = WORK_MAX
 
-/* A roster screen when the roster's grid shows; a formation panel when a whole
- * board fits it; a result screen when its tabs show; a replay frame when the
- * replay step takes one (`arena` given) and the arena matches; null when none is
- * found. `image` is at most SORT_WIDTH wide. The roster's test goes first: it
- * leaves a match screen at once, for want of the roster's cream ground. */
+/* A roster screen when the roster's grid shows; a matchup list when a game's
+ * pair of team bars shows; a formation panel when a whole board fits it; a
+ * result screen when its tabs show; a replay frame when the replay step takes
+ * one (`arena` given) and the arena matches; null when none is found. `image`
+ * is at most SORT_WIDTH wide. The roster's test goes first: it leaves a match
+ * screen at once, for want of the roster's cream ground. The bars are measured
+ * in shares of the shot's width, so their test takes the same copy. */
 export const sortScreenshot = (image: RgbaImage, arena: ArenaRef | null): ImportKind | null => {
   if (isRosterScreen(image)) return 'roster'
+  if (isMatchupScreen(image)) return 'matchup'
   const k = Math.min(1, FIT_WIDTH / image.width)
   const fit =
     k === 1

@@ -26,7 +26,7 @@ import {
   type ShotStatus,
 } from '@/composables/useImportEngine'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { isRosterReading } from '@/lib/import/kinds'
+import { isMatchupReading, isRosterReading } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
 import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
 import type { ScreenshotReading, ShotKind } from '@/lib/import/screens/match/types'
@@ -155,8 +155,11 @@ const session: ShotSession = {
   shots: () => shots.value,
   apply: (id, reading) => {
     const shot = findShot(id)
-    // Its shots are match screens, whose readers never give a roster's reading.
-    if (shot && !isRosterReading(reading)) applyReading(shot, reading)
+    // Its shots are match screens, whose readers never give a roster's or a
+    // matchup list's reading.
+    if (shot && !isRosterReading(reading) && !isMatchupReading(reading)) {
+      applyReading(shot, reading)
+    }
   },
 }
 
@@ -248,12 +251,12 @@ export function useTeamImport(
   )
   const formationsClosed = computed(() => shots.value.some((s) => s.kind === 'replay'))
 
-  // Shots refused because their drop is closed, or because they are roster
-  // screenshots, are counted by kind, so the caller can say why they were not
-  // added. A dropped file is read as the kind of its drop unless the sorter
-  // finds a roster screen; a paste goes where the sorter places it, and one it
-  // cannot place to the results, or to the formations while those are
-  // imported alone.
+  // Shots refused because their drop is closed, or because they are roster or
+  // matchup screenshots, are counted by kind, so the caller can say why they
+  // were not added. A dropped file is read as the kind of its drop unless the
+  // sorter finds a roster or matchup screen; a paste goes where the sorter
+  // places it, and one it cannot place to the results, or to the formations
+  // while those are imported alone.
   const addFiles = (
     files: File[],
     kind: ShotKind | 'sort',
@@ -264,7 +267,7 @@ export function useTeamImport(
       current: () => mine === opening,
       replay: () => kind === 'sort' && replayOpen.value,
       place: (sorted): Placement<ShotKind> => {
-        if (sorted === 'roster') return { refused: 'roster' }
+        if (sorted === 'roster' || sorted === 'matchup') return { refused: sorted }
         const shotKind =
           kind === 'sort' ? (sorted ?? (resultsClosed.value ? 'formation' : 'result')) : kind
         const closed =
