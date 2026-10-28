@@ -4,13 +4,13 @@
  * 1. This season's teams take artifacts they were recorded with. Among the
  *    ways to give them out, the one with the most games played on the
  *    artifacts given wins, and of equal ways the first found, which leaves an
- *    artifact with the team on the earlier map.
+ *    artifact with the team on the earlier board.
  * 2. A team left without one takes the free artifact its kind of team played
- *    most this season, then the season's most played, maps in order.
+ *    most this season, then the season's most played, boards in order.
  * 3. Last season's teams take the first free artifact on their `like` list,
- *    maps in order.
+ *    boards in order.
  *
- * With five maps a team's artifact is always one of its own or among the
+ * With five boards a team's artifact is always one of its own or among the
  * first five it falls back to, which bounds the search (chooser.ts). */
 
 import type { SlData } from '../data/types.ts'
@@ -64,7 +64,7 @@ export function artifactClaims(
   }
 }
 
-// The artifact of each claim, in map order; null only when no artifact is free.
+// The artifact of each claim, in board order; null only when no artifact is free.
 export function handOutArtifacts(claims: readonly ArtifactClaim[]): (number | null)[] {
   const out: (number | null)[] = claims.map(() => null)
   const now = claims.flatMap((c, i) => (c.before ? [] : [i]))

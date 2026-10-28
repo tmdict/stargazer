@@ -1,16 +1,20 @@
 <script setup lang="ts">
-/* The generator's roster bar. Picking or importing a roster makes it the
-   active one, which the page copies. */
+/* The generator's roster bar, with the type of set to generate. Picking or
+   importing a roster makes it the active one, which the page copies. */
 
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
+import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
+import type { TeamVariantChoice } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
 // waiting: the Supreme League worker is still learning the model.
 const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; waiting: boolean }>()
 
 const emit = defineEmits<{ generate: [] }>()
+
+const variant = defineModel<TeamVariantChoice>('variant', { required: true })
 
 const i18n = useI18nStore()
 </script>
@@ -21,6 +25,13 @@ const i18n = useI18nStore()
     <RosterMenu />
     <span class="sl-bar-actions">
       <RosterTransferActions />
+      <TeamVariantPicker
+        active-mode="5v5"
+        :match="variant"
+        :source-id="null"
+        :has-content="false"
+        @select-variant="variant = $event"
+      />
       <button
         type="button"
         class="solid-btn sl-action"
@@ -60,7 +71,7 @@ const i18n = useI18nStore()
     grid-template-columns: auto 1fr;
   }
   .sl-bar-actions {
-    grid-column: 2;
+    grid-column: 1 / -1;
   }
   .sl-bar-actions .sl-action {
     margin-left: auto;

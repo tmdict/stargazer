@@ -33,6 +33,6 @@ export interface SlChoice {
   chance: number
   // The chance of winning each number of maps, 0 to 5.
   odds: number[]
-  // One per map, in map order.
+  // One per board, in board order.
   teams: SlChoiceTeam[]
 }

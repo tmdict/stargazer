@@ -1,8 +1,10 @@
-/* The Supreme League generator's choice: the set of five recorded teams, one
- * per map and no hero twice, each with an artifact by the artifact rule, with
- * the best chance to win three maps, for the heroes a visitor selects at their
- * levels. Each team's chance is the model's, against a typical opponent at the
- * top levels.
+/* The Supreme League generator's choice: the set of recorded teams, one per
+ * board and no hero twice, each with an artifact by the artifact rule, with
+ * the best chance to win most of the boards, for the heroes a visitor selects
+ * at their levels. A board takes the teams recorded on its map: the file's
+ * maps in order give a Supreme League set, the same map on every board a set
+ * for the Teams page's default 5v5 maps. Each team's chance is the model's,
+ * against a typical opponent at the top levels.
  *
  * The external report generator's check loads this file in Node by stripping
  * its types, so it and what it imports use relative imports ending in .ts and
@@ -58,14 +60,15 @@ function choose(
   sources: number[],
   picked: ReadonlyMap<number, SlPick>,
   counts: (artifact: number) => boolean,
+  boards: readonly number[],
 ): SlChoice | null {
   const { model, kindOf } = learned
   const excluded = (id: number): boolean => !picked.has(id)
   const gap = (heroes: number[]): number =>
     -heroes.reduce((n, id) => n + shortfall(data.prices, picked.get(id)!), 0)
   const claimOf = artifactClaims(data)
-  const needed = Math.floor(data.maps.length / 2) + 1
-  const odds = new Float64Array(data.maps.length + 1)
+  const needed = Math.floor(boards.length / 2) + 1
+  const odds = new Float64Array(boards.length + 1)
   const matchChance = (chances: ArrayLike<number>): number => {
     oddsInto(chances, odds)
     let sum = 0
@@ -73,10 +76,13 @@ function choose(
     return sum
   }
 
-  // Each map's teams the selection allows with the evidence asked, from each
-  // season, the best first.
-  const optionsFor = (proof: SlEvidence): Option[][] =>
-    data.maps.map((_, map) => {
+  // Each board's teams the selection allows with the evidence asked, from
+  // each season, the best first. Boards on one map share one pool, which the
+  // search relies on.
+  const optionsFor = (proof: SlEvidence): Option[][] => {
+    const pools = new Map<number, Option[]>()
+    return boards.map((map) => {
+      if (pools.has(map)) return pools.get(map)!
       const found: Option[] = []
       for (const source of sources) {
         const s = source === 0 ? data : data.before!
@@ -109,10 +115,10 @@ function choose(
             }
             const reachable: (number | null)[] = [
               ...claim.own.map((o) => o.id),
-              ...claim.fallback.slice(0, data.maps.length),
+              ...claim.fallback.slice(0, boards.length),
             ]
-            // The other four teams hold four artifacts at most.
-            if (reachable.length < data.maps.length) reachable.push(null)
+            // The other teams hold one artifact each at most.
+            if (reachable.length < boards.length) reachable.push(null)
             const best = Math.max(...reachable.map(chanceWith))
             found.push({
               source,
@@ -129,14 +135,19 @@ function choose(
           }
         }
       }
-      return found.sort((a, b) => b.best - a.best || a.rank - b.rank)
+      found.sort((a, b) => b.best - a.best || a.rank - b.rank)
+      pools.set(map, found)
+      return found
     })
+  }
 
-  // A complete search, the map with the fewest teams first. The match chance
-  // rises with each map's chance, so a branch is bounded by its teams' best
-  // chances and, on each open map, the best chance of the first team that
-  // still fits. A map's teams come best first, so once one falls short, the
-  // rest of that map's teams do too.
+  // A complete search, the board with the fewest teams first. The match
+  // chance rises with each board's chance, so a branch is bounded by its
+  // teams' best chances and, on each open board, the best chance of the first
+  // team that still fits. A board's teams come best first, so once one falls
+  // short, the rest of that board's teams do too. Boards sharing a pool take
+  // its teams in pool order, so the same teams are never tried again in
+  // another order; on such boards an artifact tie goes to the better team.
   const bestSet = (pools: Option[][]): Found | null => {
     if (pools.some((pool) => !pool.length)) return null
     const n = pools.length
@@ -151,6 +162,10 @@ function choose(
     // forward.
     const first = Array.from({ length: n + 1 }, () => new Int32Array(n))
     const bound = new Float64Array(n)
+    // The depth above with the same pool (-1 for none), and the team taken at
+    // each depth.
+    const twin = byDepth.map((pool, d) => byDepth.slice(0, d).lastIndexOf(pool))
+    const taken = new Int32Array(n)
     const boundFrom = (d: number, open: Int32Array): number => {
       for (let j = d + 1; j < n; j++) bound[j] = byDepth[j]![open[j]!]!.best
       return matchChance(bound)
@@ -166,7 +181,8 @@ function choose(
       const pool = byDepth[d]!
       const here = first[d]!
       const next = first[d + 1]!
-      for (let k = here[d]!; k < pool.length; k++) {
+      const after = twin[d]! < 0 ? 0 : taken[twin[d]!]! + 1
+      for (let k = Math.max(here[d]!, after); k < pool.length; k++) {
         const t = pool[k]!
         if (!fits(t)) continue
         bound[d] = t.best
@@ -181,6 +197,7 @@ function choose(
           open = i < later.length
         }
         if (open && (!best || boundFrom(d, next) > best.chance)) {
+          taken[d] = k
           chosen[order[d]!] = t
           walk(d + 1)
         }
@@ -200,7 +217,7 @@ function choose(
     return {
       evidence,
       chance: set.chance,
-      odds: [...oddsInto(set.chances, new Float64Array(data.maps.length + 1))],
+      odds: [...oddsInto(set.chances, new Float64Array(boards.length + 1))],
       teams: set.teams.map((t, i) => {
         const s = t.source === 0 ? data : data.before!
         const artifact = set.artifacts[i] ?? null
@@ -242,7 +259,8 @@ function choose(
   return null
 }
 
-/* The set for `picks`, or null when none can be made. The season before's
+/* The set for `picks`, or null when none can be made. `boards` holds each
+ * board's map, an index into the file's maps. The season before's
  * teams join when the selection holds fewer than `beforeUnder` Celestial and
  * Hypogean heroes that some recorded team holds, or when this season's teams
  * alone make no set. `counts` says whether an artifact counts toward a
@@ -253,15 +271,15 @@ export function chooseSlSet(
   learned: SlLearned,
   picks: readonly SlPick[],
   counts: (artifact: number) => boolean = () => true,
+  boards: readonly number[] = data.maps.map((_, i) => i),
 ): SlChoice | null {
   const picked = new Map(picks.map((pick) => [pick.id, pick]))
   const { before, beforeUnder = 0 } = data
-  if (!before) return choose(data, learned, [0], picked, counts)
+  const chooseFrom = (sources: number[]) => choose(data, learned, sources, picked, counts, boards)
+  if (!before) return chooseFrom([0])
   const held = new Set([...data.teams, ...before.teams].flatMap((t) => t.heroes))
   const rare = picks.filter(
     (pick) => CELESTIAL_HYPOGEAN.includes(pick.faction) && held.has(pick.id),
   ).length
-  return rare < beforeUnder
-    ? choose(data, learned, [0, 1], picked, counts)
-    : (choose(data, learned, [0], picked, counts) ?? choose(data, learned, [0, 1], picked, counts))
+  return rare < beforeUnder ? chooseFrom([0, 1]) : (chooseFrom([0]) ?? chooseFrom([0, 1]))
 }

@@ -95,6 +95,66 @@ const tryEvery = (
   return best
 }
 
+// Twenty-four teams on one map, four ways of splitting thirty heroes into
+// six teams, so many sets of five share no hero, and no artifacts, so the
+// order of a set's boards cannot change its chance.
+const oneMapSeason = (next: () => number): SlData => {
+  const teams: MadeUpTeam[] = Array.from({ length: 4 }).flatMap(() => {
+    const heroes = Array.from({ length: 30 }, (_, i) => i + 1).sort(() => next() - 0.5)
+    return Array.from({ length: 6 }, (_, k) => {
+      const family = Math.floor(next() * 3)
+      return {
+        map: 0,
+        family: family === 2 ? null : family,
+        heroes: heroes.slice(5 * k, 5 * k + 5),
+        artifacts: [],
+      }
+    })
+  })
+  const games: SlGame[] = []
+  for (let k = 0; k < 200; k++) {
+    const a = Math.floor(next() * 24)
+    const b = (a + 1 + Math.floor(next() * 23)) % 24
+    const gap = Math.round((next() - 0.5) * 200)
+    const won = next() < sigmoid((a % 4) - (b % 4) + gap / 100)
+    games.push([a, won ? 'w' : 'l', gap, null], [b, won ? 'l' : 'w', -gap, null])
+  }
+  return madeUpData(teams, games)
+}
+
+// Every set of five teams on map 0 with no hero twice, the best kept.
+const tryEveryOnOneMap = (
+  data: SlData,
+  { model }: SlLearned,
+  picks: SlPick[],
+): { chance: number; teams: number[] } | null => {
+  const picked = new Map(picks.map((p) => [p.id, p]))
+  const pool = data.teams.flatMap((t, i) =>
+    t.heroes.every((h) => picked.has(h)) && t.games.some((k) => data.games[k]![1] !== 't')
+      ? [i]
+      : [],
+  )
+  const chanceOf = (i: number): number => {
+    const t = data.teams[i]!
+    const gap = -t.heroes.reduce((n, h) => n + shortfall(data.prices, picked.get(h)!), 0)
+    return sigmoid(model.againstTypical({ heroes: t.heroes, kind: t.family, artifact: null }, gap))
+  }
+  let best: { chance: number; teams: number[] } | null = null
+  const walk = (chosen: number[], from: number): void => {
+    if (chosen.length === 5) {
+      const chance = atLeastThree(chosen.map(chanceOf))
+      if (!best || chance > best.chance) best = { chance, teams: chosen }
+      return
+    }
+    for (let k = from; k < pool.length; k++) {
+      const heroes = [...chosen, pool[k]!].flatMap((i) => data.teams[i]!.heroes)
+      if (new Set(heroes).size === heroes.length) walk([...chosen, pool[k]!], k + 1)
+    }
+  }
+  walk([], 0)
+  return best
+}
+
 describe('the search', () => {
   it.each([3, 5, 8])('finds the set trying every set finds (season %i)', (seed) => {
     const next = seededRandom(seed)
@@ -112,6 +172,27 @@ describe('the search', () => {
       const expected = tryEvery(data, learned, picks)
       const set = chooseSlSet(data, learned, picks)
       expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
+      expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
+    }
+  })
+
+  it.each([3, 5, 8])('finds the best set when every board is on one map (season %i)', (seed) => {
+    const next = seededRandom(seed)
+    const data = oneMapSeason(next)
+    const learned = learnSeason(data)
+    for (let i = 0; i < 8; i++) {
+      const picks: SlPick[] = data.order
+        .filter(() => next() < 0.9)
+        .map((id) => ({
+          id,
+          faction: 'f',
+          paragon: Math.floor(next() * 5),
+          refinement: Math.floor(next() * 5),
+        }))
+      const expected = tryEveryOnOneMap(data, learned, picks)
+      const set = chooseSlSet(data, learned, picks, () => true, [0, 0, 0, 0, 0])
+      const teams = set?.teams.map((t) => t.team).sort((a, b) => a - b) ?? null
+      expect(teams).toEqual(expected?.teams.sort((a, b) => a - b) ?? null)
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
     }
   })

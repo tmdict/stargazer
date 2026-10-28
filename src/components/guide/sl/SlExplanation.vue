@@ -6,6 +6,7 @@ import { computed } from 'vue'
 
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
+import { DEFAULT_VARIANT } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent as percent, useSlNames } from './useSlNames'
 
@@ -15,6 +16,10 @@ const emit = defineEmits<{ close: [] }>()
 
 const i18n = useI18nStore()
 const { groupName } = useSlNames()
+
+const setLine = computed(() =>
+  shown.variant === DEFAULT_VARIANT ? 'app.sl-explain-set-default' : 'app.sl-explain-set',
+)
 
 const outcomes = computed(() => [
   { label: 'app.sl-explain-won-5', chance: shown.odds[5] ?? 0 },
@@ -33,7 +38,7 @@ const outcomes = computed(() => [
     <p>{{ i18n.t('app.sl-explain-forecast') }}</p>
 
     <h2>{{ i18n.t('app.sl-explain-teams-head') }}</h2>
-    <p>{{ i18n.t('app.sl-explain-set') }}</p>
+    <p>{{ i18n.t(setLine) }}</p>
     <div class="sl-table-wrap">
       <table class="sl-table">
         <thead>
@@ -45,7 +50,7 @@ const outcomes = computed(() => [
           </tr>
         </thead>
         <tbody>
-          <tr v-for="team in shown.teams" :key="team.map">
+          <tr v-for="(team, index) in shown.teams" :key="index">
             <td class="sl-num">{{ team.map + 1 }}</td>
             <td>{{ groupName(team.group) }}</td>
             <td class="sl-num">{{ team.comp ? `${team.comp[1]}–${team.comp[2]}` : '–' }}</td>
