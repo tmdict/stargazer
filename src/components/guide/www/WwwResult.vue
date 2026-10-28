@@ -112,7 +112,11 @@ const countersNote = computed(() => {
 })
 
 const lineName = (line: WwwLine): string =>
-  line.id === null ? i18n.t('app.www-five-together') : heroName(line.id)
+  line.subject === 'empty'
+    ? i18n.t('app.www-empty-slot')
+    : line.id === null
+      ? i18n.t('app.www-five-together')
+      : heroName(line.id)
 
 const warningText = (warning: WwwWarning): string => {
   switch (warning.type) {
@@ -134,6 +138,8 @@ const warningText = (warning: WwwWarning): string => {
       })
     case 'no-group':
       return i18n.t('app.www-warn-no-group', { team: teamName(warning.side) })
+    case 'empty-slots':
+      return i18n.t('app.www-warn-empty-slots', { team: teamName(warning.side) })
   }
 }
 </script>
@@ -312,10 +318,12 @@ const warningText = (warning: WwwWarning): string => {
                 <span v-if="!panel.short[side].length" class="www-quiet">{{
                   i18n.t('app.www-at-top')
                 }}</span>
-                <span v-for="hero in panel.short[side]" :key="hero.id" class="www-who">
+                <span v-for="(hero, i) in panel.short[side]" :key="i" class="www-who">
                   <span class="www-rec">−{{ numberText(hero.points) }}</span>
-                  <span class="www-name">{{ heroName(hero.id) }}</span>
-                  <SlPortrait :id="hero.id" class="www-mini" />
+                  <span class="www-name">{{
+                    hero.id === null ? i18n.t('app.www-empty-slot') : heroName(hero.id)
+                  }}</span>
+                  <SlPortrait v-if="hero.id !== null" :id="hero.id" class="www-mini" />
                 </span>
               </span>
               <span class="c">{{ i18n.t('app.www-below-top') }}</span>

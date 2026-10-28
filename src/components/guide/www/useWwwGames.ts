@@ -49,10 +49,9 @@ export function useWwwGames() {
   const heroIds = (at: { game: number; side: TeamSide }): number[] =>
     teamAt(at).heroes.flatMap((hero) => (hero ? [hero.id] : []))
 
-  const full = computed(() =>
-    showing.value.every((game) =>
-      SIDES.every((side) => heroIds({ game, side }).length === BASE_TEAM_SIZE),
-    ),
+  // A team short of five is predicted with its empty slots.
+  const fielded = computed(() =>
+    showing.value.every((game) => SIDES.every((side) => heroIds({ game, side }).length > 0)),
   )
 
   // What the side fields in Match's other games.
@@ -166,7 +165,7 @@ export function useWwwGames() {
     games,
     target: readonly(target),
     showing,
-    full,
+    fielded,
     heroIds,
     elsewhere,
     setMode,

@@ -3,6 +3,10 @@
 
 import type { SlData, SlGame } from './types.ts'
 
+// A recorded team fields five heroes; a team of fewer fills the rest with
+// empty slots.
+export const TEAM_HEROES = 5
+
 // One team: its heroes, its kind (a group in the data file, null outside
 // every group) and its artifact (null for none, counted as a typical one).
 export interface Side {

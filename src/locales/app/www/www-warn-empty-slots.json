@@ -1,0 +1,5 @@
+{
+  "en": "{team} has empty slots. No recorded game has one, so each counts as weaker than the season's weakest hero, with no upgrades",
+  "zh": "{team}有空位。已记录的对局中没有空位，所以每个空位按比本赛季最弱的英雄更弱、且没有升级来计算",
+  "ko": "{team}에 빈 자리가 있습니다. 기록된 경기에는 빈 자리가 없어, 빈 자리마다 이번 시즌 가장 약한 영웅보다 약하고 업그레이드가 없는 것으로 계산합니다"
+}

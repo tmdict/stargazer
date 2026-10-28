@@ -230,7 +230,7 @@ const closePickers = (event: MouseEvent): void => {
             <div v-for="(slot, k) in game[side].slots" :key="k" class="placed">
               <ImportCell v-if="!slot" class="empty" card="" :portrait="null">
                 <template #name>
-                  <span class="empty-name">{{ i18n.t('app.www-import-empty-slot') }}</span>
+                  <span class="empty-name">{{ i18n.t('app.www-empty-slot') }}</span>
                 </template>
               </ImportCell>
               <ImportHeroCell

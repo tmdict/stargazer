@@ -56,7 +56,7 @@ A card or an artifact asks about two things (`WwwIssue`), and both hold back Sav
 - `differ`: its screenshots read it differently.
 - `twice`: its side fields it in two games, which a match never does.
 
-An empty slot stays empty: it asks nothing, and Save leaves it open.
+An empty slot stays empty: it asks nothing, Save leaves it open, and the prediction counts it as an empty slot ([Guide](./GUIDE.md#who-would-win)).
 
 The plan is worked out again from the readings and corrections on every change, so the screenshots give the same games whichever is read first.
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* Who Would Win?: two five-hero teams at their levels, each with an optional
+/* Who Would Win?: two teams of heroes at their levels, each with an optional
    artifact, and which should win and why from this season's recorded Supreme
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
    (useSlEngine). One game holds one such game, and Match the five games of a
@@ -60,7 +60,7 @@ const {
   games,
   target,
   showing,
-  full,
+  fielded,
   heroIds,
   elsewhere,
   setMode,
@@ -171,7 +171,7 @@ const teamFor = (game: number, side: TeamSide): WwwTeam => {
 // One request a game; the worker answers them in turn.
 const predictWinner = async (): Promise<void> => {
   const file = slFile()
-  if (!file || !full.value) return
+  if (!file || !fielded.value) return
   const made = mode.value
   busy.value = true
   try {
@@ -244,7 +244,7 @@ const predictWinner = async (): Promise<void> => {
           <button
             type="button"
             class="solid-btn sl-action"
-            :disabled="!ready || !full || busy"
+            :disabled="!ready || !fielded || busy"
             :aria-busy="busy"
             @click="predictWinner"
           >

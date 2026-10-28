@@ -3,12 +3,14 @@
  * detail behind each, the records shown beside them, and warnings where the
  * records are thin. Each team's kind comes from the kind rule, and an
  * artifact the data file has no games for, or whose id named another
- * artifact in the file's season, counts as a typical one. */
+ * artifact in the file's season, counts as a typical one. A team of fewer
+ * than five heroes has empty slots, which the model counts and the page
+ * warns of. */
 
-import { decidedGames } from '../data/games.ts'
+import { decidedGames, TEAM_HEROES } from '../data/games.ts'
 import { gamesIn, seasonRecords, type WinLoss } from '../data/records.ts'
 import type { SlData } from '../data/types.ts'
-import { rivalryPoints, shortfall } from '../data/upgrades.ts'
+import { emptyShortfall, rivalryPoints, shortfall } from '../data/upgrades.ts'
 import type { SlPick } from '../generator/types.ts'
 import type { SlLearned } from '../model/models.ts'
 import { splitChance } from '../model/reasons.ts'
@@ -39,10 +41,12 @@ const THIN_COUNTER = 10
 // The heroes the Upgrades detail names on each side.
 const SHORT_HEROES = 3
 
-// A hero, or with no id the five heroes together, with its number toward its
-// own team on the model's scale.
+// A hero, the five heroes together or an empty slot, with its number toward
+// its own team on the model's scale.
 export interface WwwLine {
   side: TeamSide
+  subject: ReasonItem['subject']
+  // Null for the lineup and an empty slot.
   id: number | null
   value: number
   // Null where the records are too thin to show.
@@ -64,6 +68,7 @@ export type WwwWarning =
   | { type: 'artifact-unrecorded'; artifact: number }
   | { type: 'artifact-few-on-kind'; artifact: number; games: number }
   | { type: 'no-group'; side: TeamSide }
+  | { type: 'empty-slots'; side: TeamSide }
 
 export interface WwwPanel {
   // A's chance as shown, in tenths of a point.
@@ -77,7 +82,8 @@ export interface WwwPanel {
   counters: WwwLine[]
   artifacts: Pair<WwwArtifactLine>
   points: Pair<number>
-  short: Pair<{ id: number; points: number }[]>
+  // Each hero below the top levels, and each empty slot with a null id.
+  short: Pair<{ id: number | null; points: number }[]>
   lineups: Pair<WinLoss | null>
   // Each lineup's wins in their games against each other.
   met: Pair<number>
@@ -119,16 +125,31 @@ export function wwwPanel(
 
   const otherSide = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
   const shared = new Set(heroIds('a').filter((id) => heroIds('b').includes(id)))
-  const sameLineup = shared.size === teams.a.heroes.length
+  const sameLineup = shared.size === teams.a.heroes.length && shared.size === teams.b.heroes.length
+  const empty = (side: TeamSide): number => TEAM_HEROES - teams[side].heroes.length
+  // What both teams field cancels out and is not shown: a hero on both, the
+  // same five, and the empty slots both have.
+  const emptyOnBoth = Math.min(empty('a'), empty('b'))
+  const emptySeen = { a: 0, b: 0 }
+  const shows = (item: ReasonItem): boolean => {
+    if (item.subject === 'empty') return ++emptySeen[item.side] > emptyOnBoth
+    return item.id === null ? !sameLineup : !shared.has(item.id)
+  }
   const heroLine = (item: ReasonItem): WwwLine => ({
     side: item.side,
+    subject: item.subject,
     id: item.id,
     value: item.value,
     record:
-      item.id === null ? recorded.lineup(heroIds(item.side)) : recordOrNull(recorded.hero(item.id)),
+      item.subject === 'empty'
+        ? null
+        : item.id === null
+          ? recorded.lineup(heroIds(item.side))
+          : recordOrNull(recorded.hero(item.id)),
   })
   const counterLine = (item: ReasonItem): WwwLine => ({
     side: item.side,
+    subject: 'hero',
     id: item.id,
     value: item.value,
     record: recordOrNull(
@@ -150,9 +171,14 @@ export function wwwPanel(
     }
   }
 
-  const shortOf = (side: TeamSide): { id: number; points: number }[] =>
-    teams[side].heroes
-      .map((h) => ({ id: h.id, points: shortfall(data.prices, h) }))
+  const shortOf = (side: TeamSide): { id: number | null; points: number }[] =>
+    [
+      ...teams[side].heroes.map((h) => ({ id: h.id, points: shortfall(data.prices, h) })),
+      ...Array.from({ length: empty(side) }, () => ({
+        id: null,
+        points: emptyShortfall(data.prices),
+      })),
+    ]
       .filter((h) => h.points > 0)
       .sort((x, y) => y.points - x.points)
       .slice(0, SHORT_HEROES)
@@ -191,6 +217,9 @@ export function wwwPanel(
   for (const side of ['a', 'b'] as const) {
     if (kinds[side] === null) warn(`g${side}`, { type: 'no-group', side })
   }
+  for (const side of ['a', 'b'] as const) {
+    if (empty(side) > 0) warn(`e${side}`, { type: 'empty-slots', side })
+  }
 
   const met = recorded.headToHead(heroIds('a'), heroIds('b'))
   return {
@@ -198,11 +227,7 @@ export function wwwPanel(
     verdict: VERDICTS.find(([from]) => favourite >= from)![1],
     reasons,
     kinds,
-    heroes: strongestFirst(
-      (items.heroes ?? [])
-        .filter((item) => (item.id === null ? !sameLineup : !shared.has(item.id)))
-        .map(heroLine),
-    ),
+    heroes: strongestFirst((items.heroes ?? []).filter(shows).map(heroLine)),
     counters: strongestFirst((items.counters ?? []).map(counterLine)),
     artifacts: { a: artifactLine('a'), b: artifactLine('b') },
     points,
