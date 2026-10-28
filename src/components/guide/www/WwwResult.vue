@@ -1,12 +1,11 @@
 <script setup lang="ts">
 /* Who Would Win?'s result: each team's chance with the verdict and a mark
    whose hover card holds the warnings, the four reasons in points of chance
-   with a detail under each, From the records, and the note on where
-   predictions come from. Team A is on
-   the left and Team B on the right in every row. A reason's bar grows from
-   the middle toward the team it helps, its full length 50 points, so the same
-   length means the same in every prediction; a detail's bars are on their own
-   scale, filled where the number helps that team and hollow where it hurts. */
+   with a detail under each, and From the records. Team A is on the left and
+   Team B on the right in every row. A reason's bar grows from the middle
+   toward the team it helps, its full length 50 points, so the same length
+   means the same in every prediction; a detail's bars are on their own scale,
+   filled where the number helps that team and hollow where it hurts. */
 
 import { computed, ref } from 'vue'
 
@@ -94,6 +93,17 @@ const strength = (value: number, lines: readonly { value: number }[]): string =>
 const heroRows = computed(() => paired(panel.heroes))
 const counterRows = computed(() => paired(panel.counters))
 const artifactLines = computed(() => SIDES.map((side) => ({ side, ...panel.artifacts[side] })))
+
+// Chinese sets sentences side by side with no space between them.
+const countersNote = computed(() => {
+  const side = toward(panel.reasons.counters)
+  return [
+    i18n.t('app.www-counters-note'),
+    side
+      ? i18n.t('app.www-counters-for', { team: teamName(side) })
+      : i18n.t('app.www-counters-even'),
+  ].join(i18n.currentLocale === 'zh' ? '' : ' ')
+})
 
 const lineName = (line: WwwLine): string =>
   line.id === null ? i18n.t('app.www-five-together') : heroName(line.id)
@@ -233,16 +243,7 @@ const warningText = (warning: WwwWarning): string => {
                   </template>
                 </span>
               </div>
-              <p class="www-explain">
-                {{ i18n.t('app.www-counters-note') }}
-                {{
-                  toward(panel.reasons.counters)
-                    ? i18n.t('app.www-counters-for', {
-                        team: teamName(toward(panel.reasons.counters)!),
-                      })
-                    : i18n.t('app.www-counters-even')
-                }}
-              </p>
+              <p class="www-explain">{{ countersNote }}</p>
             </template>
             <p v-else class="www-explain">{{ i18n.t('app.www-counters-none') }}</p>
           </template>
@@ -370,7 +371,6 @@ const warningText = (warning: WwwWarning): string => {
       </div>
     </div>
 
-    <p class="www-note">{{ i18n.t('app.www-note') }}</p>
     <Teleport v-if="warnAnchor" to="body">
       <TooltipPopup :target-element="warnAnchor" variant="detailed" max-width="290px">
         <template #content>
@@ -671,15 +671,6 @@ const warningText = (warning: WwwWarning): string => {
 
 .www-evidence .www-row > .c {
   font-weight: 500;
-}
-
-.www-note {
-  margin: 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--color-border-light);
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--color-text-secondary);
 }
 
 .www-warning {

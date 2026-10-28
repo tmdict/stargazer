@@ -1,5 +1,5 @@
 {
-  "en": "A bar shows how teams with that hero did against the other kind of team compared with what their heroes predict, so a winning record can still count against.",
-  "zh": "横条表示带这名英雄的队伍对阵另一类队伍时，比其英雄预计的表现好多少或差多少，所以胜多负少的战绩也可能算作不利。",
-  "ko": "막대는 그 영웅이 있는 팀이 상대 유형의 팀을 만났을 때, 영웅 구성으로 예상한 것보다 얼마나 잘했는지 보여 줍니다. 그래서 이긴 횟수가 더 많아도 불리하게 계산될 수 있습니다."
+  "en": "A bar shows whether teams with that hero did better or worse than expected against teams like the other side. Even a winning record can count against a hero if more wins were expected.",
+  "zh": "横条表示带这名英雄的队伍，对阵与对方相似的队伍时，表现比预期好还是差。即使胜多负少，如果本该赢得更多，也可能算作不利。",
+  "ko": "막대는 그 영웅이 있는 팀이 상대와 비슷한 팀을 만났을 때 예상보다 잘했는지 못했는지 보여 줍니다. 이긴 횟수가 더 많아도 더 많이 이길 것으로 예상됐다면 불리하게 계산될 수 있습니다."
 }
