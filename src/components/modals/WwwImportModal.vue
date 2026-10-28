@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* Who Would Win?'s import: drop or paste screenshots of the Supreme League's
-   knockout matchup list, review what was read, and Fill the five games. State
+   knockout matchup list, review what was read, and Save it into the five games. State
    lives in useWwwImport, and closing the modal clears it, so each opening is
    a new import. The modal only renders and emits the games upward. */
 
@@ -50,7 +50,7 @@ const {
 // The tip marks what it bolds with **, so a translation keeps its own stress.
 const tipParts = computed(() => i18n.t('app.www-import-tip').split('**'))
 
-// Every opening starts fresh: closing, by Fill or otherwise, clears it.
+// Every opening starts fresh: closing, by Save or otherwise, clears it.
 watch(
   () => show,
   (open) => {
@@ -99,7 +99,7 @@ const status = (shot: WwwImportShot): ShotStatusView => {
 const found = computed(() => WWW_GAMES - plan.value.missing.length)
 const blocked = computed(() => progress.value !== null || plan.value.blocked || found.value === 0)
 
-const handleFill = (): void => {
+const handleSave = (): void => {
   if (blocked.value) return
   emit('fill', plan.value.fill)
 }
@@ -188,8 +188,8 @@ const handleForgetLearned = (): void => {
       </section>
 
       <div class="footer">
-        <button type="button" class="footer-btn danger" :disabled="blocked" @click="handleFill">
-          {{ i18n.t('app.fill') }}
+        <button type="button" class="footer-btn danger" :disabled="blocked" @click="handleSave">
+          {{ i18n.t('app.save') }}
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
@@ -210,7 +210,7 @@ const handleForgetLearned = (): void => {
 
 .www-import-intro {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
   max-width: 48em;
 }
@@ -274,6 +274,7 @@ const handleForgetLearned = (): void => {
 @media (max-width: 480px) {
   .www-import-intro {
     flex-direction: column;
+    align-items: center;
   }
 }
 </style>
