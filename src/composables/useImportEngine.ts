@@ -24,7 +24,7 @@ import {
 } from 'vue'
 
 import { isBaseHeroId } from '@/lib/characters/character'
-import { companionImages } from '@/lib/characters/companion'
+import { companionImages, ownerImages } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/card/frames'
 import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
@@ -313,24 +313,38 @@ async function loadMatchPart(): Promise<MatchReferences> {
       ),
     )
   ).filter((ref): ref is MatchReferences['artifacts'][number] => ref !== null)
-  // Phantimals and the companions drawn with art of their own, for the units
-  // standing on a formation board; one that fails to load is skipped.
-  const units = (
-    await Promise.all(
-      [
-        ...gameData.phantimals.map(async ({ id, name }) => ({
-          characterId: toPhantimalId(id),
-          image: await fetchImage(await portraitLoaders[name]!()),
-        })),
-        ...companionImages().map(async ({ unitId, image }) => ({
-          characterId: unitId,
-          image: await fetchImage(await portraitLoaders[image]!()),
-        })),
-      ].map((job) => job.catch(() => null)),
-    )
-  ).filter((ref): ref is PortraitRef => ref !== null)
+  // A picture under a unit id, with its outfits; one that fails to load is
+  // skipped.
+  const outfitLoaders = loadOutfitPortraits()
+  const pictures = async (jobs: { characterId: number; name: string }[]): Promise<PortraitRef[]> =>
+    (
+      await Promise.all(
+        jobs
+          .flatMap(({ characterId, name }) => [
+            (async () => ({
+              characterId,
+              image: await fetchImage(await portraitLoaders[name]!()),
+            }))(),
+            ...(outfitLoaders[name] ?? []).map(async (load) => ({
+              characterId,
+              image: await fetchImage(await load()),
+              costume: true,
+            })),
+          ])
+          .map((job) => job.catch(() => null)),
+      )
+    ).filter((ref): ref is PortraitRef => ref !== null)
+  // The units standing on a formation board that are not heroes, and the
+  // heroes a board draws with a picture of their own.
+  const [units, board] = await Promise.all([
+    pictures([
+      ...gameData.phantimals.map(({ id, name }) => ({ characterId: toPhantimalId(id), name })),
+      ...companionImages().map(({ unitId, image }) => ({ characterId: unitId, name: image })),
+    ]),
+    pictures(ownerImages().map(({ unitId, image }) => ({ characterId: unitId, name: image }))),
+  ])
   // Only replay frames need the arena, so the rest read without it.
-  return { artifacts, units, arena: await loadArena().then(copyImage, () => null) }
+  return { artifacts, units, board, arena: await loadArena().then(copyImage, () => null) }
 }
 
 // A reader's own copy of a fetched part, its pixels handed over with it.
@@ -347,11 +361,13 @@ const postPart = (reader: Reader, part: ReferencePart): void => {
   if (part === 'match' && loaded.match) {
     const artifacts = loaded.match.artifacts.map((a) => ({ ...a, image: copyImage(a.image) }))
     const units = loaded.match.units.map((u) => ({ ...u, image: copyImage(u.image) }))
+    const board = loaded.match.board.map((b) => ({ ...b, image: copyImage(b.image) }))
     const arena = loaded.match.arena && copyImage(loaded.match.arena)
-    const message: ImportRequest = { type: 'match', artifacts, units, arena }
+    const message: ImportRequest = { type: 'match', artifacts, units, board, arena }
     reader.worker.postMessage(message, [
       ...artifacts.map((a) => a.image.data.buffer),
       ...units.map((u) => u.image.data.buffer),
+      ...board.map((b) => b.image.data.buffer),
       ...(arena ? [arena.data.buffer] : []),
     ])
   }

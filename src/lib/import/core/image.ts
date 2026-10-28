@@ -126,7 +126,8 @@ export function resample(src: RgbaImage, rect: Rect, w: number, h: number): Rgba
 }
 
 /* Composite transparent art onto a flat colour. The game draws portraits on
- * a light card, so references are flattened onto a matching cream. */
+ * a light card and over a formation board's mauve, so references are
+ * flattened onto the colour they are matched against. */
 export function flatten(src: RgbaImage, bg: readonly [number, number, number]): RgbaImage {
   const out = createImage(src.width, src.height)
   for (let i = 0; i < src.data.length; i += 4) {
@@ -140,6 +141,9 @@ export function flatten(src: RgbaImage, bg: readonly [number, number, number]): 
 }
 
 export const PORTRAIT_BACKGROUND: readonly [number, number, number] = [236, 229, 216]
+// What a formation board shows inside a portrait's ring where the art is
+// see-through, alike on every map.
+export const BOARD_BACKDROP: readonly [number, number, number] = [153, 118, 123]
 
 /* Hue in degrees, saturation and value in 0..1. */
 function rgbToHsv(r: number, g: number, b: number): [number, number, number] {

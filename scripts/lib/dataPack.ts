@@ -21,7 +21,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { createServer } from 'vite'
 
-import { outfitHero } from '../../src/lib/characters/outfit.ts'
+import { outfitOf } from '../../src/lib/characters/outfit.ts'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
 import { SKILL_LOCALES } from '../../src/lib/types/i18n.ts'
 
@@ -166,9 +166,10 @@ const hasFile = (pack: string, path: string): boolean => {
   )
 }
 
-/** The pictures the skill code draws companions with. The skills register
+/** The pictures the skill code draws units with on a board: the companions'
+ * and owners' drawn with one of their own (Elijah alone). The skills register
  * through import.meta.glob, so they load through Vite. */
-export async function companionPictures(root: string): Promise<string[]> {
+export async function boardPictures(root: string): Promise<string[]> {
   const vite = await createServer({
     configFile: false,
     root,
@@ -179,10 +180,11 @@ export async function companionPictures(root: string): Promise<string[]> {
     optimizeDeps: { noDiscovery: true, include: [] },
   })
   try {
-    const { companionImages } = (await vite.ssrLoadModule('/src/lib/characters/companion.ts')) as {
-      companionImages: () => { image: string }[]
-    }
-    return companionImages().map(({ image }) => image)
+    type Pictures = () => { image: string }[]
+    const { companionImages, ownerImages } = (await vite.ssrLoadModule(
+      '/src/lib/characters/companion.ts',
+    )) as { companionImages: Pictures; ownerImages: Pictures }
+    return [...companionImages(), ...ownerImages()].map(({ image }) => image)
   } finally {
     await vite.close()
   }
@@ -193,12 +195,12 @@ export async function companionPictures(root: string): Promise<string[]> {
  * the feed is only a note: a hero with no portrait or skill text yet, and a
  * seasonal unit with no text yet. A seasonal unit's pictures come with its
  * season, so a missing one is what a season shipped without a new pin looks
- * like, and stops the build. A companion picture the pack lacks is a note,
- * since the companion is still drawn, without a picture. */
+ * like, and stops the build. A board picture the pack lacks is a note, since
+ * the unit is still drawn, without a picture. */
 export function packProblems(
   pack: string,
   root: string,
-  companions: readonly string[],
+  board: readonly string[],
 ): { problems: string[]; notes: string[] } {
   const problems: string[] = []
   const notes: string[] = []
@@ -251,7 +253,7 @@ export function packProblems(
     listFiles(join(pack, 'images/character'))
       .filter((f) => f.endsWith('.png'))
       .map((f) => f.slice(0, -'.png'.length))
-      .filter((name) => outfitHero(name) === null),
+      .filter((name) => outfitOf(name) === null),
   )
   for (const slug of english) {
     if (!known.has(slug)) problems.push(`the pack has skill text for ${slug}, who has no hero file`)
@@ -265,9 +267,9 @@ export function packProblems(
     if (!withText.has(slug)) notes.push(`${slug} has no skill text yet`)
   }
   const pictures = ['images/character', 'images/seasonal/phantimal']
-  for (const name of companions) {
+  for (const name of board) {
     if (!pictures.some((folder) => existsSync(join(pack, folder, `${name}.png`))))
-      notes.push(`the companion picture ${name} is not in the pack`)
+      notes.push(`the board picture ${name} is not in the pack`)
   }
   return { problems, notes }
 }

@@ -59,7 +59,10 @@ export interface ReferenceSet {
   frames: FrameRef[]
   heroes: HeroTable
   artifacts: ArtifactTable
-  // Companions and phantimals with art of their own, by unit id, kept apart
-  // from the heroes so a result card never ranks against them.
+  // The heroes as a formation board draws them (references.buildBoardTable),
+  // which its portraits rank against instead of the result cards' `heroes`.
+  board: HeroTable
+  // Companions and phantimals, by unit id, kept apart from the heroes so a
+  // result card never ranks against them.
   units: HeroTable
 }

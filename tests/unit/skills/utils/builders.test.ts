@@ -151,8 +151,7 @@ describe('createCompanionSkill', () => {
     createCompanionSkill({
       id: 'test-companion',
       characterId: CHARACTER_ID,
-      colorModifier: '#111111',
-      companionColorModifier: '#222222',
+      companionImageModifier: 'companion-art',
       ...overrides,
     })
 
@@ -168,7 +167,7 @@ describe('createCompanionSkill', () => {
   const companionTiles = () =>
     grid.getAllTiles().filter((t) => t.characterId !== undefined && t.characterId > 10000)
 
-  it('places one linked companion, bumps capacity, and applies modifiers', () => {
+  it('places one linked companion, bumps capacity, and gives it its picture', () => {
     makeSkill().onActivate(context())
 
     const placed = companionTiles()
@@ -178,9 +177,10 @@ describe('createCompanionSkill', () => {
     expect(getCompanions(grid, CHARACTER_ID, Team.ALLY).size).toBe(1)
     expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE + 1)
 
-    const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-    expect(modifiers.get(`${CHARACTER_ID}-${Team.ALLY}`)).toBe('#111111')
-    expect(modifiers.get(`${grid.companionIdOffset + CHARACTER_ID}-${Team.ALLY}`)).toBe('#222222')
+    const images = skillManager.getImageModifiersByCharacterAndTeam()
+    expect(images.get(`${grid.companionIdOffset + CHARACTER_ID}-${Team.ALLY}`)).toBe(
+      'companion-art',
+    )
   })
 
   it('places count companions with namespaced IDs on distinct tiles', () => {

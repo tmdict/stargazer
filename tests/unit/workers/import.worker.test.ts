@@ -38,6 +38,7 @@ const match = (): ImportRequest =>
     type: 'match',
     artifacts: [],
     units: [],
+    board: [],
     arena: null,
   }) satisfies MatchReferences & { type: 'match' }
 

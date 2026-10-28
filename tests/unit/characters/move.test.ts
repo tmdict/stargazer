@@ -5,7 +5,6 @@ import { executeMoveCharacter } from '@/lib/characters/move'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
-import { SKILL_COLORS } from '@/lib/skills/utils/colors'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { ALLY_A, ALLY_B, ENEMY_A, PHRAESTO, PHRAESTO_COMPANION } from '../fixtures/characters'
@@ -189,12 +188,12 @@ describe('move.ts', () => {
       expect(grid.getTileById(1).characterId).toBe(PHRAESTO)
       expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(storedHex)
       expect(grid.getTileById(otherHex).characterId).toBeUndefined()
-      // The restored companion keeps its color modifier
+      // The restored companion keeps its picture
       expect(
         skillManager
-          .getColorModifiersByCharacterAndTeam()
+          .getImageModifiersByCharacterAndTeam()
           .get(`${PHRAESTO_COMPANION}-${Team.ALLY}`),
-      ).toBe(SKILL_COLORS.crimson)
+      ).toBe('phraesto-shadow')
       random.mockRestore()
     })
   })

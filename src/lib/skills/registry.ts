@@ -4,12 +4,14 @@ import { decomposeUnitId } from '../characters/synergy'
 export interface SkillBase<Context = unknown> {
   id: string
   characterId: number
-  colorModifier?: string
+  // The picture a board draws the owner with in place of its portrait (Elijah
+  // alone, beside Lailah).
+  imageModifier?: string
   // How many companions the skill spawns, each N * companionIdOffset + its
   // owner (N from 1); absent when it spawns none.
   companionCount?: number
+  // The picture a board draws the companions with.
   companionImageModifier?: string
-  companionColorModifier?: string
   targetingColorModifier?: string
   companionRange?: number
   onActivate: (context: Context) => void
@@ -42,6 +44,5 @@ export function getRegisteredSkills(): ReadonlyArray<SkillBase<unknown>> {
 }
 
 export function hasCompanionSkill(characterId: number): boolean {
-  const skill = getCharacterSkill(characterId)
-  return skill?.companionColorModifier !== undefined || skill?.companionImageModifier !== undefined
+  return getCharacterSkill(characterId)?.companionCount !== undefined
 }

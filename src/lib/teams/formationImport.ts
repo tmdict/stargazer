@@ -14,7 +14,6 @@ import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characte
 import { BASE_TEAM_SIZE } from '@/lib/grid'
 import type { FormationReading, UnitReading } from '@/lib/import/screens/formation/types'
 import { deploymentTiles, MAPS } from '@/lib/maps'
-import { getCharacterSkill } from '@/lib/skills/registry'
 import type { SideLoadBoard, SideLoadCompanion } from './sideLoad'
 import type { LineupEntry } from './teamImport'
 
@@ -48,8 +47,7 @@ export function identifyMap(
 // ---------- the units ----------
 
 // A unit a side can field, and the reference its portrait ranks under: its
-// own art (a hero, a phantimal, a companion with an image of its own), else
-// its owner's (Lailah, Phraesto's shadow).
+// own picture, which a skill's companions share under the first one's id.
 interface Slot {
   unitId: number
   art: number
@@ -58,14 +56,9 @@ interface Slot {
 
 const slotsOf = (ownerId: number): Slot[] => {
   const companions = companionIdsOf(ownerId)
-  const ownArt = getCharacterSkill(ownerId)?.companionImageModifier !== undefined
   return [
     { unitId: ownerId, art: ownerId, owner: null },
-    ...companions.map((unitId) => ({
-      unitId,
-      art: ownArt ? companions[0]! : ownerId,
-      owner: ownerId,
-    })),
+    ...companions.map((unitId) => ({ unitId, art: companions[0]!, owner: ownerId })),
   ]
 }
 
@@ -80,7 +73,7 @@ const scoreOf = (unit: UnitReading, art: number): number =>
 const ASSIGN_FLOOR = 0.2
 // A phantimal stands on the board when some portrait matches its art better
 // than any hero's, and this well: on every capture measured the phantimal's
-// own portrait does (0.81 to 0.94), while a hero's can resemble phantimal art
+// own portrait does (0.84 to 0.96), while a hero's can resemble phantimal art
 // more than the floor yet still matches a hero better.
 const PHANTIMAL_FLOOR = 0.6
 // A match is sure when it scores this well and leads every unit of other art
@@ -155,8 +148,8 @@ export function assignUnits(
     out[i] = { unitId: slot.unitId, state: sure ? 'sure' : 'review' }
   }
   // A portrait left over is still one of the side's units, and one with no
-  // likeness to its own art (Lailah, drawn on her own in game but beside
-  // Elijah in the app's art) is matched last by elimination, for review.
+  // likeness to its own art (an outfit the data pack lacks) is matched last by
+  // elimination, for review.
   const leftover = units.flatMap((unit, i) =>
     out[i]!.state === 'none' && overrides[i] === undefined && !unfit.has(i)
       ? pool

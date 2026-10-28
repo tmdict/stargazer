@@ -199,17 +199,6 @@ const badgeDimensions = computed(() => {
   }
 })
 
-const getSkillBorderStyle = (characterId: number, hexId: number) => {
-  const team = getCharacterTeam(ctx.grid, hexId)
-  if (!team) return {}
-
-  const borderColor = ctx.getColorModifierForCharacter(characterId, team)
-  if (borderColor) {
-    return { borderColor }
-  }
-  return {}
-}
-
 const getCharacterStyle = (hexId: number) => {
   const position = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const { size, offset, borderWidth } = characterDimensions.value
@@ -456,7 +445,6 @@ const liftedMode = computed(() =>
           :src="gameDataStore.getCharacterImage(getCharacterName(characterId, hexId))"
           :alt="getCharacterName(characterId, hexId)"
           class="character-image"
-          :style="getSkillBorderStyle(characterId, hexId)"
           draggable="false"
         />
         <GridPointer v-if="ctx.perspective" />

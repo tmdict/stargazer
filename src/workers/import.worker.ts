@@ -8,8 +8,7 @@
  * only the arena and sorts the screenshots added. */
 
 import { prepareFrameRefs } from '@/lib/import/card/frames'
-import { buildHeroTable } from '@/lib/import/card/heroes'
-import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
+import type { HeroTable, LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
 import {
   isRosterReading,
@@ -18,7 +17,7 @@ import {
   type ImportReading,
   type ReferencePart,
 } from '@/lib/import/kinds'
-import { buildImportHeroTable } from '@/lib/import/references'
+import { buildBoardTable, buildImportHeroTable, buildUnitTable } from '@/lib/import/references'
 import { readFormation } from '@/lib/import/screens/formation/formation'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { buildArtifactTable } from '@/lib/import/screens/match/artifacts'
@@ -38,8 +37,11 @@ export interface HeroReferences {
 
 export interface MatchReferences {
   artifacts: { artifactId: number; image: RgbaImage }[]
-  // Phantimals and companions with art of their own, by unit id.
+  // Phantimals and companions, by unit id, with their outfits.
   units: PortraitRef[]
+  // The heroes a board draws with a picture of their own (Elijah alone), with
+  // its outfits, by hero id.
+  board: PortraitRef[]
   // The Supreme League arena that places replay frames; null when it failed
   // to load, and replay frames then fail to read.
   arena: RgbaImage | null
@@ -71,6 +73,11 @@ const scope = self as unknown as {
 let card: Pick<ReferenceSet, 'frames' | 'heroes'> | null = null
 let match: Pick<ReferenceSet, 'artifacts' | 'units'> | null = null
 let portraits: PortraitRef[] = []
+// The board's own pictures as the match part sent them, and the board table
+// built from them and the portraits when a formation shot is first read: most
+// of a second and tens of megabytes, which no other kind needs.
+let boardPictures: PortraitRef[] = []
+let board: HeroTable | null = null
 // The learned faces as last sent, for the next read to rebuild the hero table
 // with. A rebuild takes most of a second, and a review can send correction
 // after correction while screenshots still wait to be read.
@@ -83,7 +90,10 @@ const has = (part: ReferencePart): boolean => (part === 'heroes' ? card !== null
 // The reader for each kind of screenshot; a replay frame needs only the arena.
 const readers: Record<ImportKind, (image: RgbaImage) => ImportReading> = {
   result: (image) => readScreenshot(image, { ...card!, ...match! }),
-  formation: (image) => readFormation(image, { ...card!, ...match! }),
+  formation: (image) => {
+    board ??= buildBoardTable(portraits, boardPictures)
+    return readFormation(image, { ...card!, ...match!, board })
+  },
   replay: (image) => {
     if (!arena) throw new Error('arena not loaded')
     return readReplay(image, arena)
@@ -130,6 +140,7 @@ scope.addEventListener('message', (event) => {
     }
     if (msg.type === 'heroes') {
       portraits = msg.portraits
+      board = null
       card = {
         frames: prepareFrameRefs(msg.frames),
         heroes: buildImportHeroTable(portraits, msg.learned),
@@ -139,7 +150,9 @@ scope.addEventListener('message', (event) => {
       return
     }
     if (msg.type === 'match') {
-      match = { artifacts: buildArtifactTable(msg.artifacts), units: buildHeroTable(msg.units) }
+      match = { artifacts: buildArtifactTable(msg.artifacts), units: buildUnitTable(msg.units) }
+      boardPictures = msg.board
+      board = null
       arena = msg.arena ? prepareArena(msg.arena) : null
       scope.postMessage({ type: 'ready', part: 'match' })
       return

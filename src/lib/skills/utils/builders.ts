@@ -228,9 +228,10 @@ interface CompanionSkillConfig {
   /** False for an owner that holds no team slot (a phantimal): its companions
    * hold none either, so capacity stays put. */
   raisesCapacity?: boolean
-  colorModifier?: string
-  companionColorModifier?: string
-  companionImageModifier?: string
+  /** The owner's picture on a board, when not its portrait. */
+  imageModifier?: string
+  /** The companions' picture on a board, which tells them from their owner. */
+  companionImageModifier: string
   companionRange?: number
 }
 
@@ -239,18 +240,17 @@ interface CompanionSkillConfig {
  *
  * Activation raises the team capacity by `count`, places the companions
  * (IDs namespaced as N * companionIdOffset + characterId), links them to the
- * main character, and applies the configured modifiers. A placement failure
+ * main character, and gives them their picture. A placement failure
  * rolls back already-placed companions and the capacity bump, then throws so
  * the surrounding placement transaction fails as a whole. Deactivation
- * removes the companions, their links and modifiers, and restores capacity.
+ * removes the companions, their links and pictures, and restores capacity.
  */
 export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   const {
     id,
     count = 1,
     raisesCapacity = true,
-    colorModifier,
-    companionColorModifier,
+    imageModifier,
     companionImageModifier,
     companionRange,
   } = config
@@ -259,8 +259,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
     id,
     characterId: config.characterId,
     companionCount: count,
-    colorModifier,
-    companionColorModifier,
+    imageModifier,
     companionImageModifier,
     companionRange,
 
@@ -307,28 +306,16 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
         availableTiles.splice(randomIndex, 1)
 
         addCompanionLink(grid, characterId, companionId, team)
-        if (companionColorModifier) {
-          skillManager.addCharacterColorModifier(companionId, team, companionColorModifier)
-        }
-        if (companionImageModifier) {
-          skillManager.addCharacterImageModifier(companionId, team, companionImageModifier)
-        }
-      }
-
-      if (colorModifier) {
-        skillManager.addCharacterColorModifier(characterId, team, colorModifier)
+        skillManager.addCharacterImageModifier(companionId, team, companionImageModifier)
       }
     },
 
     onDeactivate(ctx: SkillContext): void {
       const { grid, team, skillManager, characterId } = ctx
 
-      skillManager.removeCharacterColorModifier(characterId, team)
-
       for (const companionId of getCompanions(grid, characterId, team)) {
         const companionHex = findCharacterHex(grid, companionId, team)
         if (companionHex !== null) {
-          skillManager.removeCharacterColorModifier(companionId, team)
           skillManager.removeCharacterImageModifier(companionId, team)
           if (!performRemove(grid, companionHex)) {
             console.warn(

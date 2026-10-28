@@ -40,7 +40,7 @@ import { readStrip, readTab, type TabPair } from './strip'
 
 // A result screen never shows a companion or phantimal, so its reading needs
 // no unit table.
-type ResultReferences = Omit<ReferenceSet, 'units'>
+type ResultReferences = Omit<ReferenceSet, 'board' | 'units'>
 
 interface Columns {
   tabs: TabPair | null

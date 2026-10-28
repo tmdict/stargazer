@@ -67,7 +67,7 @@ A unit badge is an icon in a colored disc on a portrait's rim, drawn by `UnitBad
 
 A skill shows badges the way it draws lines. The `badges` that `withEffects`' `calculate` returns replace the instance's `SkillBadge` list (a hex, an icon key and a color) on activate and update and are cleared on deactivate, and `GridCharacters` draws the flattened list on the units standing on those hexes, one badge per hex and icon however many instances show it. Himmel badges each member of his party with its class, in the color of the party's tiles.
 
-What identifies a unit shows whatever the Skills toggle says: a companion's border color and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
+What identifies a unit shows whatever the Skills toggle says: the picture a skill draws a unit with (a companion, or Elijah alone) and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
 
 ## Lookups
 
