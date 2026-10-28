@@ -10,7 +10,7 @@ import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/w
 import { artifactSurvives } from '@/lib/seasonal'
 
 export type SlRequest =
-  | { type: 'generate'; id: number; picks: SlPick[] }
+  | { type: 'generate'; id: number; picks: SlPick[]; boards: number[] }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
 export type SlResponse =
@@ -40,7 +40,7 @@ scope.addEventListener('message', async (event) => {
     const { data, learned } = await engine
     const counts = (id: number): boolean => artifactSurvives(data.season, id)
     if (msg.type === 'generate') {
-      const set = chooseSlSet(data, learned, msg.picks, counts)
+      const set = chooseSlSet(data, learned, msg.picks, counts, msg.boards)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else {
       const panel = wwwPanel(data, learned, msg.teams, counts)

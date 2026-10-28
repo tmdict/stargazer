@@ -61,7 +61,7 @@ describe('the artifact rule', () => {
     ).toEqual([2, 1])
   })
 
-  it('leaves an artifact with the team on the earlier map when two ways tie', () => {
+  it('leaves an artifact with the team on the earlier board when two ways tie', () => {
     expect(handOutArtifacts([now([[1, 5]]), now([[1, 5]], [3])])).toEqual([1, 3])
   })
 

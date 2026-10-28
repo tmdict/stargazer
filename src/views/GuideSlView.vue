@@ -1,14 +1,17 @@
 <script setup lang="ts">
 /* The Supreme League generator: for the heroes and levels a visitor picks,
-   the set of five recorded teams, one per map and no hero twice, with the
+   the set of five recorded teams, one per board and no hero twice, with the
    best chance to win a match (lib/pvp/sl), chosen in the Supreme League
-   worker (useSlEngine) so the page stays responsive. The picker edits a copy
-   of the active roster, so trying a hero out never changes the roster, and
-   picking or importing another roster takes a fresh copy. The set is chosen only on
-   Generate and stays as it is while the selection changes, and Save as team
-   opens the saved set on the Teams page. The page is pre-rendered with its
-   heading alone: the picker and the set follow the visitor's rosters, which
-   the browser holds, so they are drawn after mount. */
+   worker (useSlEngine) so the page stays responsive. The boards are the
+   Supreme League maps, or with the Default type all on map 1, as the Teams
+   page's default 5v5 boards are. The picker edits a copy of the active
+   roster, so trying a hero out never changes the roster, and picking or
+   importing another roster takes a fresh copy. The set is chosen only on
+   Generate and stays as it is while the selection or the type changes, and
+   Save as team opens the saved set on the Teams page. The page is
+   pre-rendered with its heading alone: the picker and the set follow the
+   visitor's rosters, which the browser holds, so they are drawn after
+   mount. */
 
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -25,11 +28,17 @@ import { readTeamsSlot } from '@/composables/useGridPersistence'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
+import type { SlData } from '@/lib/pvp/sl/data/types'
 import { TOP_LEVELS } from '@/lib/pvp/sl/generator/defaultSet'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
-import { MAX_SAVED_TEAMS } from '@/lib/teams/modes'
+import {
+  DEFAULT_VARIANT,
+  MAX_SAVED_TEAMS,
+  variantMaps,
+  type TeamVariantChoice,
+} from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -86,6 +95,15 @@ const edit = (changes: Record<string, AttrRecord | null>): void => {
 
 const armedConfirm = useArmedConfirm()
 
+const variant = ref<TeamVariantChoice>('sl')
+
+// Supreme League keeps the file's own maps, which can be an earlier
+// rotation's. A map the file does not hold leaves its board without teams.
+const boardsOf = (file: SlData, choice: TeamVariantChoice): number[] =>
+  choice === DEFAULT_VARIANT
+    ? variantMaps('5v5', DEFAULT_VARIANT).map((key) => file.maps.findIndex((m) => m.key === key))
+    : file.maps.map((_, i) => i)
+
 const shown = ref<SlShown | null>(null)
 const noSet = ref(false)
 const busy = ref(false)
@@ -112,8 +130,10 @@ const generate = async (): Promise<void> => {
   busy.value = true
   try {
     const picks = picksOf(copy.value)
-    const set = await generateSet(picks)
+    const chosenFor = variant.value
+    const set = await generateSet(picks, boardsOf(file, chosenFor))
     shown.value = set && {
+      variant: chosenFor,
       chance: set.chance,
       odds: set.odds,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
@@ -164,7 +184,10 @@ const save = (): void => {
     show(i18n.t('app.sl-save-replaces'), 'info')
     return
   }
-  const name = i18n.t('app.sl-team-name', { chance: slPercent(shown.value.chance) })
+  const name = i18n.t(
+    shown.value.variant === DEFAULT_VARIANT ? 'app.sl-team-name-default' : 'app.sl-team-name',
+    { chance: slPercent(shown.value.chance) },
+  )
   const team = library.saveAsNew('5v5', shown.value.data, name)
   if (!team) {
     // The library re-reads storage first, so another tab may have filled it.
@@ -212,6 +235,7 @@ const save = (): void => {
 
     <section v-if="mounted" class="sl-picker">
       <SlBar
+        v-model:variant="variant"
         :busy
         :ready="!!heading && engineStatus === 'ready'"
         :waiting="!failed && engineStatus === 'loading'"

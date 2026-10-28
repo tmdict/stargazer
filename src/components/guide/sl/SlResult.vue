@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
+import type { TeamVariantChoice } from '@/lib/teams/modes'
 
 // A chosen team as the page shows it, read off the data file once.
 export interface SlShownTeam extends Pick<
@@ -13,6 +14,8 @@ export interface SlShownTeam extends Pick<
 }
 
 export interface SlShown {
+  // The type the set was chosen for.
+  variant: TeamVariantChoice
   chance: number
   // The chance of winning each number of maps, 0 to 5.
   odds: number[]
@@ -29,7 +32,7 @@ export interface SlShown {
 <script setup lang="ts">
 /* The chosen set: its chance to win the match with a tooltip and a line on
    what it is measured against, the explanation, Save as team, and one column
-   per map. */
+   per board. */
 
 import { computed, ref } from 'vue'
 
