@@ -120,7 +120,9 @@ describe('import engine', () => {
       refused: {},
     })
     expect(shots.map((s) => `${s.name}:${s.size}`)).toEqual(['a.png:1', 'c.png:1', 'c.png:3'])
-    expect(engine.adding.value).toBe(0)
+    // Every file is placed, so only the three shots, still waiting on their
+    // references, count.
+    expect(engine.progress.value).toEqual({ read: 0, total: 3 })
   })
 
   it('counts the files still being added, and adds none once the opening ends', async () => {
@@ -131,12 +133,12 @@ describe('import engine', () => {
       () => new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
     )
     const adding = add([file('a.png'), file('b.png')])
-    expect(engine.adding.value).toBe(2)
+    expect(engine.progress.value).toEqual({ read: 0, total: 2 })
     opening.open = false
     decoded()
     expect(await adding).toEqual({ added: 0, refused: {} })
     expect(shots).toEqual([])
-    expect(engine.adding.value).toBe(0)
+    expect(engine.progress.value).toBeNull()
   })
 
   it('never reads a shot its import let go of', async () => {

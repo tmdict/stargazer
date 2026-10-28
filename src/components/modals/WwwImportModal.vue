@@ -9,6 +9,7 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import WwwImportReview from '@/components/guide/www/WwwImportReview.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
+import ImportProgress from '@/components/import/ImportProgress.vue'
 import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
@@ -136,9 +137,7 @@ const handleForgetLearned = (): void => {
 
       <section class="drop-section">
         <ImageDropZone dark :compact="shots.length > 0" :paste-active="false" @add="handleAdd" />
-        <p v-if="progress" class="note progress" role="status">
-          {{ i18n.t('app.roster-import-progress', progress) }}
-        </p>
+        <ImportProgress v-if="progress" v-bind="progress" />
         <div v-if="shots.length" class="shot-list">
           <ImportShotCard
             v-for="shot in shots"
@@ -193,9 +192,5 @@ const handleForgetLearned = (): void => {
 <style scoped>
 .www-import {
   --import-columns: repeat(5, minmax(0, 1fr));
-}
-
-.progress {
-  margin: 0;
 }
 </style>
