@@ -1,12 +1,13 @@
 <script setup lang="ts">
-/* Frosted contact panel: submits the "contact" form via fetch, so no page
-   navigation happens. public/forms.html carries the hidden twin that
-   registers the form at deploy; the field names must match. */
+/* Frosted contact panel: sends the message to FormSubmit via fetch, so no
+   page navigation happens. */
 
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useToast } from '@/composables/useToast'
 import { useI18nStore } from '@/stores/i18n'
+
+const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/732e046a45752d1b51ca4fda51e1f045'
 
 const { trigger = null } = defineProps<{
   // The header button that toggles the panel. Its presses are excluded from
@@ -38,19 +39,21 @@ const submit = async (): Promise<void> => {
   if (sending.value || !message.value.trim()) return
   sending.value = true
   try {
-    // Form posts are accepted on any path; form-name routes them, and the
-    // empty honeypot field marks the submission as human.
-    const res = await fetch('/', {
+    const res = await fetch(CONTACT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       body: new URLSearchParams({
-        'form-name': 'contact',
         name: name.value.trim(),
         message: message.value.trim(),
-        'bot-field': '',
+        _subject: 'Stargazer contact',
       }).toString(),
     })
-    if (!res.ok) throw new Error(`contact form POST failed: ${res.status}`)
+    // FormSubmit answers 200 even when it turns a message away.
+    const reply: { success?: string } = await res.json()
+    if (reply.success !== 'true') throw new Error(`contact form rejected: ${res.status}`)
     name.value = ''
     message.value = ''
     open.value = false

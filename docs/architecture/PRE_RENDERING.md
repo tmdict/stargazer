@@ -80,8 +80,6 @@ The host serves `dist/` as static files first and applies `public/_redirects` to
 
 `public/_headers` caches `/assets/*` as `immutable` for a year, since hashed output never changes behind a URL. Unhashed files keep the host's revalidate default. `/site.webmanifest` gets an explicit `application/manifest+json` type, because the host has no mapping for that extension.
 
-`public/forms.html` is a hidden twin of the contact form, published so the host's form detection registers the form at deploy. Its field names must match what `ContactForm.vue` submits. The sitemap excludes it along with `/share`.
-
 ## Related documentation
 
 - [Skill Pages](./SKILL_PAGES.md): skill locale chunks, the warm-up guard and skill page meta
