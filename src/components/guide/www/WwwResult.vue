@@ -513,11 +513,6 @@ const warningText = (warning: WwwWarning): string => {
   border-top-color: var(--color-text-secondary);
 }
 
-.www-total .www-bar {
-  height: 6px;
-  border-radius: 3px;
-}
-
 .www-total > .c {
   color: var(--color-text-primary);
 }

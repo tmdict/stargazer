@@ -43,9 +43,9 @@ const { chance } = defineProps<{
 
 .www-track {
   display: block;
-  height: 6px;
+  height: 4px;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--unit-frame-enemy);
 }
 

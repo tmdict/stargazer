@@ -35,14 +35,9 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
 
       <p class="www-sub">{{ i18n.t('app.www-scores') }}</p>
       <div class="www-scores">
-        <span
-          v-for="score in scores"
-          :key="score.won"
-          class="www-score"
-          :class="score.won > score.lost ? 'a' : 'b'"
-        >
+        <span v-for="score in scores" :key="score.won" class="www-score">
           <b>{{ score.won }}–{{ score.lost }}</b>
-          <span>{{ slPercent(score.chance) }}</span>
+          <span :class="score.won > score.lost ? 'a' : 'b'">{{ slPercent(score.chance) }}</span>
         </span>
       </div>
 
@@ -140,7 +135,7 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
 }
 
 .www-score > span {
-  color: var(--color-text-secondary);
+  font-weight: 700;
 }
 
 .www-lines {
