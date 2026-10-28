@@ -9,9 +9,11 @@
  * of any reference, and every reference is scored on that one disc: one left
  * to find its own place can win a crop beside the art (over the disc's rim)
  * and narrow a clear lead to a doubtful one. A reading is sure only when it
- * leads clearly, its shapes match well enough, and the crop holds art at all:
- * the colour term alone still ranks a black or empty disc. A player who
- * fields no artifact gets no badge, and that header reads as none. */
+ * leads clearly, scores as a known icon does, its shapes match well enough,
+ * and the crop holds art at all: the colour term alone still ranks a black or
+ * empty disc, and a past season's icon, which no reference shows, can still
+ * lead its nearest one clearly. A player who fields no artifact gets no badge,
+ * and that header reads as none. */
 
 import { cropResize, dot, normalizedVectorMasked } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
@@ -38,6 +40,8 @@ const COLOUR_WEIGHT = 1
 // The floors sit under every correctly read icon measured on labelled
 // screenshots and above black, empty and icon-less crops.
 const SURE_MARGIN = 0.1
+// Correctly read icons score 1.34 or more, past seasons' icons at most 1.25.
+const SURE_SCORE = 1.3
 const SHAPE_FLOOR = 0.34
 const SPREAD_FLOOR = 24
 const DARK_LEVEL = 20
@@ -202,6 +206,10 @@ export function readArtifact(
     : []
   const margin = candidates.length > 1 ? candidates[0]!.score - candidates[1]!.score : 0
   const sure =
-    disc !== null && margin >= SURE_MARGIN && top.shape >= SHAPE_FLOOR && holdsArt(disc.crop)
+    disc !== null &&
+    top.score >= SURE_SCORE &&
+    margin >= SURE_MARGIN &&
+    top.shape >= SHAPE_FLOOR &&
+    holdsArt(disc.crop)
   return { candidates, margin, sure, card: cardImage }
 }
