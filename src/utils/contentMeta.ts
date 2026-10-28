@@ -79,17 +79,17 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
     en: {
       title: 'Guide',
       description:
-        'AFK Journey arena guide: season PvP reports, a Supreme League team generator, heroes grouped by skill mechanic, and Paragon and EX Refinement stat tables.',
+        'AFK Journey arena guide: season PvP reports, a 5v5 team generator, Who Would Win? match predictions, heroes grouped by skill mechanic, and Paragon and EX Refinement stat tables.',
     },
     zh: {
       title: '攻略',
       description:
-        '剑与远征启程竞技场攻略：赛季 PvP 报告、巅峰联赛阵容生成器、按技能机制分组的英雄，以及冠阶与精炼属性表。',
+        '剑与远征启程竞技场攻略：赛季 PvP 报告、5v5阵容生成器、“谁会赢？”对局预测、按技能机制分组的英雄，以及冠阶与精炼属性表。',
     },
     ko: {
       title: '가이드',
       description:
-        'AFK: 새로운 여정 아레나 가이드. 시즌 PvP 리포트, 최강자 리그 조합 생성기, 스킬 메커니즘별 영웅, 파라곤 및 전용 장비 제련 속성표를 제공합니다.',
+        "AFK: 새로운 여정 아레나 가이드. 시즌 PvP 리포트, 5v5 조합 생성기, '누가 이길까?' 승부 예측, 스킬 메커니즘별 영웅, 파라곤 및 전용 장비 제련 속성표를 제공합니다.",
     },
   },
   upgrades: {
