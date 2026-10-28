@@ -42,8 +42,6 @@ onMounted(() => {
 
 <style scoped>
 .help {
-  /* Read by HelpScene and HelpBasicsPicture. */
-  --help-panel: rgba(255, 255, 255, 0.06);
   container: help / inline-size;
   max-width: 1180px;
 }

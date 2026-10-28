@@ -81,8 +81,8 @@ describe('the artifact rule', () => {
   it('falls back to what the team’s kind played most, then the season, then the lower id', () => {
     const data = madeUpData(
       [
-        { map: 0, family: 0, heroes: [1, 2, 3, 4, 5], artifacts: [[4, 1]] },
-        { map: 0, family: 1, heroes: [6, 7, 8, 9, 10], artifacts: [[1, 1]] },
+        { map: 0, family: 0, heroes: [1, 2, 3, 4, 5], artifacts: [4] },
+        { map: 0, family: 1, heroes: [6, 7, 8, 9, 10], artifacts: [1] },
         { map: 0, family: null, heroes: [11, 12, 13, 14, 15], artifacts: [] },
       ],
       [
@@ -117,10 +117,7 @@ describe('a team’s board', () => {
       map: 0,
       family: null,
       heroes: [1, 2, 3, 4, 5].map((h) => 5 * i + h),
-      artifacts: [
-        [1, 0.5],
-        [2, 0.5],
-      ],
+      artifacts: [1, 2],
     }))
     const games: SlGame[] = []
     for (let k = 0; k < 200; k++) {

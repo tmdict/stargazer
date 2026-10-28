@@ -165,7 +165,7 @@ const narrow = useNarrowViewport()
   height: 150px;
   overflow: hidden;
   font-family: var(--font-ui);
-  background: var(--help-panel);
+  background: var(--reading-picture);
   border-radius: var(--radius-large);
 }
 

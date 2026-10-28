@@ -10,7 +10,8 @@ import { useGameDataStore } from '@/stores/gameData'
 import { curatedHeroName } from '@/utils/skillLabels'
 
 // Without `size` the disc takes `--size` from its host's stylesheet (or the
-// 28px default), so a host can resize its portraits in a container query.
+// 28px default), so a host can resize its portraits in a container query; a
+// host can colour the ring with `--disc-ring`.
 const { slug, lang, size } = defineProps<{ slug: string; lang: AppLocale; size?: number }>()
 
 const gameData = useGameDataStore()
@@ -42,7 +43,7 @@ const level = computed(() => gameData.characters.find((c) => c.name === slug)?.l
   height: var(--size, 28px);
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--disc-ring, #fff);
   background-size: cover;
   background-position: center;
 }

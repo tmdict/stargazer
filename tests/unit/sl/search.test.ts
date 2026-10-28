@@ -26,7 +26,7 @@ const randomSeason = (next: () => number): SlData => {
       map: i % 5,
       family: family === 2 ? null : family,
       heroes: [...pick(5 - shared, 7, (i % 5) * 7), ...pick(shared, 6, 35)],
-      artifacts: pick(Math.floor(next() * 3), 7, 0).map((id): [number, number] => [id, 0.5]),
+      artifacts: pick(Math.floor(next() * 3), 7, 0),
     }
   })
   const games: SlGame[] = []
@@ -36,7 +36,7 @@ const randomSeason = (next: () => number): SlData => {
     const gap = Math.round((next() - 0.5) * 200)
     const artifact = (team: number) => {
       const own = teams[team]!.artifacts
-      return own.length ? own[Math.floor(next() * own.length)]![0] : null
+      return own.length ? own[Math.floor(next() * own.length)]! : null
     }
     const [x, y] = [artifact(a), artifact(b)]
     const won = next() < sigmoid((x === 1 ? 1.5 : 0) - (y === 1 ? 1.5 : 0) + gap / 100)
@@ -108,9 +108,7 @@ const oneMapSeason = (next: () => number): SlData => {
         map: 0,
         family: family === 2 ? null : family,
         heroes: heroes.slice(5 * k, 5 * k + 5),
-        artifacts: artifacts
-          .slice(0, Math.floor(next() * 3))
-          .map((id): [number, number] => [id, 0.5]),
+        artifacts: artifacts.slice(0, Math.floor(next() * 3)),
       }
     })
   })
@@ -121,7 +119,7 @@ const oneMapSeason = (next: () => number): SlData => {
     const gap = Math.round((next() - 0.5) * 200)
     const artifact = (team: number) => {
       const own = teams[team]!.artifacts
-      return own.length ? own[Math.floor(next() * own.length)]![0] : null
+      return own.length ? own[Math.floor(next() * own.length)]! : null
     }
     const [x, y] = [artifact(a), artifact(b)]
     const lift = (x === 1 ? 1.5 : 0) - (y === 1 ? 1.5 : 0)

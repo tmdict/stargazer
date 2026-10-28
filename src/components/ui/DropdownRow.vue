@@ -16,14 +16,17 @@ defineProps<{
   // Does something other than choose (Manage, a link); set apart by a rule.
   action?: boolean
   to?: RouteLocationRaw
+  // A page outside the app's routes.
+  href?: string
 }>()
 </script>
 
 <template>
   <component
-    :is="to ? RouterLink : 'button'"
+    :is="to ? RouterLink : href ? 'a' : 'button'"
     :to
-    :type="to ? undefined : 'button'"
+    :href
+    :type="to || href ? undefined : 'button'"
     class="row"
     :class="{ selected, sub, action }"
   >

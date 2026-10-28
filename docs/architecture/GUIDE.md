@@ -4,7 +4,7 @@ The guide is an index page and the reference pages it links: the Paragon and EX 
 
 ## Pages
 
-`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. The site language can switch while a page is open, so `setupGuideContentMeta` passes `useHead` a computed that follows it instead of the value at setup.
+`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. The top bar's Guide tab lists the pages for a mouse hovering over it (`GuideMenu`), so a new page also joins that list; a season's report joins it with its `PVP_SEASONS` entry. The site language can switch while a page is open, so `setupGuideContentMeta` passes `useHead` a computed that follows it instead of the value at setup.
 
 Each index panel's title link is stretched over its `.guide-link` area (`src/styles/guide.css`), so the whole panel opens the page. A control placed inside that area must raise itself with `position: relative; z-index: 2`, or the stretched link swallows its clicks.
 
@@ -96,7 +96,7 @@ A game's two sides are consecutive entries starting at an even index, so entries
 | `prices`                | Each level's Rivalry points, paragon by faction and refinement for all, the level being the index. Each list has one entry per level Stargazer offers, and the opponent stands at the last.                                                                                                                              |
 | `order`                 | Every hero id the file names, in plain string order of their English names.                                                                                                                                                                                                                                              |
 | `games`                 | Every recorded league game on these maps, two entries a game: the team's index, `w`, `l` or `t`, the upgrade gap toward the team in Rivalry points, and the artifact on its board (null for none).                                                                                                                       |
-| `teams`                 | Every five-hero team on one map: its map, group (`family`, null outside every group), hero ids, tie `rank`, players, games, its artifacts with the share of its boards that used each, and its placements.                                                                                                               |
+| `teams`                 | Every five-hero team on one map: its map, group (`family`, null outside every group), hero ids, tie `rank`, players, games, the ids of the artifacts its boards used (most used first, ties in order of their English names), and its placements.                                                                        |
 | `teams[].placements`    | Each recorded placement with its games, use, players, set-ups, agreement and tie `order`. `c` holds the heroes and their companions as `[tile, id]` (a companion as N × 10000 plus its hero's id), `s` the phantimal and its companions, tiles from the ally side.                                                       |
 | `families`              | Every team group: its name by language code (a missing language names it by its `core`), its core heroes, its recorded teams with a decided game (`swaps`, each as its hero ids) and its record on each map.                                                                                                             |
 | `before`, `beforeUnder` | Last season's teams on these maps with its own `season`, `sample`, `games` and `families`, its games carrying no artifact, since its seasonal ids name other artifacts now, and its teams carrying `like` (this season's artifacts it can take, best first) instead of `artifacts`. Absent when there is no such season. |
@@ -160,7 +160,7 @@ A complete example, each list cut to one or two entries:
       "rank": 347,
       "players": 1,
       "games": [0, 1931, 2000],
-      "artifacts": [[7, 1]],
+      "artifacts": [7],
       "placements": [
         {
           "games": [0, 1931, 2000],

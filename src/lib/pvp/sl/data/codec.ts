@@ -66,7 +66,7 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
     (t: unknown) =>
       isObject(t) &&
       isNumbers(t.heroes, 5) &&
-      Array.isArray(t[artifacts]) &&
+      isNumbers(t[artifacts]) &&
       Array.isArray(t.placements) &&
       t.placements.length > 0,
   )

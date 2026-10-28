@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
+import GuideMenu from '@/components/guide/GuideMenu.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
 import InspectModals from '@/components/modals/InspectModals.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
@@ -140,12 +141,14 @@ onUnmounted(() => {
           :class="{ active: route.path === '/skills' }"
           >{{ i18n.t('app.skills') }}</RouterLink
         >
-        <RouterLink
-          :to="guidePath('index')"
-          class="nav-text-link"
-          :class="{ active: route.path.includes('/guide') }"
-          >{{ i18n.t('app.guide') }}</RouterLink
-        >
+        <GuideMenu class="nav-guide">
+          <RouterLink
+            :to="guidePath('index')"
+            class="nav-text-link"
+            :class="{ active: route.path.includes('/guide') }"
+            >{{ i18n.t('app.guide') }}</RouterLink
+          >
+        </GuideMenu>
       </div>
       <ul class="menu">
         <li class="menu-search">
@@ -396,6 +399,9 @@ nav ul li {
   .nav-tabs {
     order: 2;
     flex-basis: 100%;
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
     margin-left: 0;
     gap: 0.5rem;
     padding-bottom: 0.3rem;

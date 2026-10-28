@@ -8,9 +8,10 @@
    Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
    the tab strip, list right-aligned), `dark` (translucent, inside the dark
    on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
-   accessible name, list dark and right-aligned). The owner can fix the
-   trigger width with `--dropdown-trigger-width` or give it a floor with
-   `--dropdown-trigger-min-width`.
+   accessible name, list dark and right-aligned), `nav` (the owner's own
+   `trigger` slot on dark chrome, such as a top bar link, list dark). The
+   owner can fix the trigger width with `--dropdown-trigger-width` or give it
+   a floor with `--dropdown-trigger-min-width`.
 
    `floating` moves the list to <body>, for a dropdown inside a scrolling
    panel that would otherwise cut the list off. `clickOnly` and the `open`
@@ -37,6 +38,7 @@ export interface DropdownItem {
   selected: boolean
   // Makes the row a link; `select` still fires when it is followed here.
   to?: RouteLocationRaw
+  href?: string
 }
 
 const {
@@ -49,7 +51,7 @@ const {
 } = defineProps<{
   label: string
   items?: readonly DropdownItem[]
-  variant?: 'pill' | 'tab' | 'dark' | 'icon'
+  variant?: 'pill' | 'tab' | 'dark' | 'icon' | 'nav'
   large?: boolean
   floating?: boolean
   // Accent the trigger, e.g. while a non-default choice is active.
@@ -74,6 +76,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   icon?(): unknown
+  trigger?(): unknown
   default?(props: { close: () => void }): unknown
 }>()
 
@@ -111,7 +114,11 @@ const leave = (): void => {
   onMouseLeave()
 }
 
-const focusTrigger = (): void => triggerRef.value?.focus({ preventScroll: true })
+const tabbable = (el: HTMLElement | undefined): HTMLElement[] =>
+  el ? [...el.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')] : []
+
+const focusTrigger = (): void =>
+  (triggerRef.value ?? tabbable(rootRef.value)[0])?.focus({ preventScroll: true })
 
 // A closing list takes its rows off the page, and focus on one of them would
 // fall to <body>, so the trigger takes it. Focus a click has already moved
@@ -124,9 +131,6 @@ watch(open, (isOpen) => {
 /* A floating list sits at the end of <body>, outside the Tab order. Tab from
    the dropdown's last control enters it, and Tab or Shift+Tab off either end
    comes back to that control, the order an in-place list has. */
-const tabbable = (el: HTMLElement | undefined): HTMLElement[] =>
-  el ? [...el.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')] : []
-
 const tabIntoList = (e: KeyboardEvent): void => {
   if (!floating || !open.value || e.shiftKey) return
   const [first] = tabbable(listRef.value)
@@ -158,7 +162,7 @@ const listEvents = floating
   : {}
 
 const select = (item: DropdownItem, e: MouseEvent): void => {
-  if (item.to && opensElsewhere(e)) return
+  if ((item.to || item.href) && opensElsewhere(e)) return
   hide()
   emit('select', item.key)
 }
@@ -194,21 +198,23 @@ const pressSegment = (): void => {
   >
     <!-- Hover opens from the trigger as well as the root: coming back from the
          segment, the pointer never left the root. -->
-    <button
-      ref="triggerRef"
-      type="button"
-      class="trigger"
-      :class="{ lit, clearing }"
-      :title
-      :aria-label="variant === 'icon' ? label : undefined"
-      :aria-expanded="open"
-      @click="toggle"
-      @mouseenter="hoverTrigger"
-    >
-      <slot name="icon" />
-      <span class="trigger-label">{{ label }}</span>
-      <span v-if="!clearing" class="caret">▾</span>
-    </button>
+    <slot name="trigger">
+      <button
+        ref="triggerRef"
+        type="button"
+        class="trigger"
+        :class="{ lit, clearing }"
+        :title
+        :aria-label="variant === 'icon' ? label : undefined"
+        :aria-expanded="open"
+        @click="toggle"
+        @mouseenter="hoverTrigger"
+      >
+        <slot name="icon" />
+        <span class="trigger-label">{{ label }}</span>
+        <span v-if="!clearing" class="caret">▾</span>
+      </button>
+    </slot>
     <!-- Beside the trigger, not in it: a button cannot hold another button. -->
     <button
       v-if="clearing"
@@ -254,6 +260,7 @@ const pressSegment = (): void => {
             :meta="item.meta"
             :selected="item.selected"
             :to="item.to"
+            :href="item.href"
             @click="select(item, $event)"
           />
           <DropdownRow v-if="action" class="item" :label="action" action @click="runAction" />
@@ -497,25 +504,29 @@ const pressSegment = (): void => {
 }
 
 .list.dark,
-.list.icon {
+.list.icon,
+.list.nav {
   background: rgb(32, 32, 32);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
 .dark .item,
 .dark .item.action,
-.icon .item {
+.icon .item,
+.nav .item {
   color: rgba(255, 255, 255, 0.8);
 }
 
 .dark .item:hover,
-.icon .item:hover {
+.icon .item:hover,
+.nav .item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
 .dark .item.selected,
-.icon .item.selected {
+.icon .item.selected,
+.nav .item.selected {
   background: var(--color-primary);
   color: #fff;
 }
@@ -546,5 +557,15 @@ const pressSegment = (): void => {
 .icon .list {
   right: 0;
   left: auto;
+}
+
+/* ---- nav ---- */
+
+.nav {
+  font-size: var(--control-font-size);
+}
+
+.dropdown.nav {
+  display: flex;
 }
 </style>

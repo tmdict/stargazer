@@ -43,8 +43,8 @@ interface SlTeamBase {
 }
 
 export interface SlTeam extends SlTeamBase {
-  // [artifact id, share of its boards], most used first.
-  artifacts: [id: number, share: number][]
+  // Artifact ids, most used first.
+  artifacts: number[]
 }
 
 // A team of the season before takes this season's artifacts, the first of
