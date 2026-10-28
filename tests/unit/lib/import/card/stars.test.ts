@@ -69,6 +69,28 @@ describe('readStars', () => {
     })
   })
 
+  // A phone's JPEG can erase an R4 row's pink and leave its other colours:
+  // each star yellow above and pale blue below.
+  it('reads a rainbow row without pink as R4', () => {
+    const f = frameWithStars(6, [250, 240, 170])
+    const top = f.box.y + Math.round(f.box.h / 2) - ROW.above + 1
+    for (let y = top + 3; y < top + 5; y++)
+      for (let x = f.box.x; x < f.box.x + f.box.w; x++)
+        if (f.shot.data[(y * f.shot.width + x) * 4] === 250)
+          f.shot.data.set([190, 230, 250], (y * f.shot.width + x) * 4)
+    expect(readStars(...args(f))).toMatchObject({ family: 'white', level: 4, sure: true })
+  })
+
+  // A gold frame arc over a white row's outer stars makes the row lean yellow,
+  // but its inner stars stay blue, as no rainbow star is.
+  it('reads a white row with yellow outer stars as R0', () => {
+    const white: Rgb = [200, 225, 250]
+    const arc: Rgb = [250, 225, 150]
+    expect(
+      readStars(...args(frameWithStars(6, [arc, white, white, white, white, arc]))),
+    ).toMatchObject({ family: 'white', level: 0, sure: true })
+  })
+
   // Headwear beside an unrefined row tints its end stars: the row still reads
   // as refined, but not surely.
   it('is not sure of a refined reading that only part of the row supports', () => {

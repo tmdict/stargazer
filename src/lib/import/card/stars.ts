@@ -16,9 +16,12 @@
  * Bright headwear beside an unrefined row (a hat, a crown, coloured hair)
  * can tint the colour toward a refined family, so a refined reading is sure
  * only when its family's evidence is strong: a real refined row is one colour
- * from end to end. A full R4 row, a pale rainbow, stands out from R0 mainly by
- * a faint pink tint, which resampling can halve, so R0 is sure only when the
- * row has none. */
+ * from end to end. A full R4 row is a pale rainbow. It stands out from R0 by a
+ * faint pink tint, which resampling can halve and a phone's JPEG can erase,
+ * and by its colours: an unrefined row's stars are tinted blue, while no
+ * rainbow star is mostly blue and the row leans yellow. Either sign makes a
+ * full white row R4, and R0 is sure only when the row has no pink and a star
+ * that is mostly blue. */
 
 import { hsvAt } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
@@ -26,6 +29,8 @@ import type { RefinementReading, StarFamily } from './types'
 
 const BAND_ROWS = 7
 const BRIGHT = 0.78
+// A bright pixel is coloured above this saturation.
+const COLOURED = 0.15
 const STAR_BRIGHT = 0.72
 // A place's brightness is its bright pixels over the three columns around it. A
 // full row's inner four places beat the gaps by `lead` on average, and none of
@@ -41,9 +46,11 @@ const STAR_REACH = 4
 // Evidence a refined reading needs to be sure, about 85% of the weakest
 // correctly read row of each level on labelled screenshots: the purple share
 // (R1), colour strength and gold share (R2), red share (R3), and the share of
-// stars that carry the pink tint on their own (R4). A full R0 row is sure
-// under a pink share of `r0Pink`: unrefined rows measure below 0.005, R4 rows
-// above 0.04.
+// stars that carry the pink tint on their own (R4). An R4 row read by its
+// rainbow is sure when no star's coloured pixels are more than `rainbowBlue`
+// blue. A full R0 row is sure under a pink share of `r0Pink` (unrefined rows
+// measure below 0.005, R4 rows above 0.04) and with a star at least
+// `whiteBlue` blue.
 const SURE = {
   purple: 0.58,
   chroma: 0.29,
@@ -51,8 +58,15 @@ const SURE = {
   red: 0.37,
   pinkStars: 0.38,
   r0Pink: 0.01,
+  rainbowBlue: 0.5,
+  whiteBlue: 0.7,
 } as const
 const PINK = 0.03
+// A full white row is R4's rainbow when at least `warm` of its coloured pixels
+// are yellow and no star's are `blue` blue. On labelled screenshots R4 rows
+// hold 27% yellow or more and stars at most 43% blue, and every R0 row has a
+// star 78% blue or more.
+const RAINBOW = { warm: 0.2, blue: 0.6 } as const
 
 /* Where a screen's cards hold their star row, measured from the card's box: the
  * row's top `above` pixels over the box's centre, and a full row's six stars
@@ -118,24 +132,37 @@ const fullNearby = (shot: RgbaImage, band: Rect, { places, gaps }: StarPlaces): 
   return false
 }
 
-/* The share of the row's stars whose own bright pixels carry the pink tint. */
-const pinkStarShare = (shot: RgbaImage, band: Rect, places: readonly number[]): number => {
+/* Each star's own tint, from the bright pixels around its place: the share of
+ * the row's stars that carry the pink tint, and the largest share of blue
+ * among any one star's coloured pixels. */
+const starTints = (
+  shot: RgbaImage,
+  band: Rect,
+  places: readonly number[],
+): { pinkStars: number; bluest: number } => {
   let pink = 0
+  let bluest = 0
   for (const p of places) {
     let n = 0
+    let coloured = 0
     let m = 0
+    let blue = 0
     for (let y = band.y; y < band.y + band.h; y++) {
       for (let x = p - STAR_REACH; x <= p + STAR_REACH; x++) {
         if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
         const [h, s, v] = hsvAt(shot, x, y)
         if (v < BRIGHT) continue
         n++
-        if (s > 0.15 && h >= 300) m++
+        if (s <= COLOURED) continue
+        coloured++
+        if (h >= 300) m++
+        else if (h >= 180 && h < 240) blue++
       }
     }
     if (n && m / n >= PINK) pink++
+    if (coloured) bluest = Math.max(bluest, blue / coloured)
   }
-  return pink / places.length
+  return { pinkStars: pink / places.length, bluest }
 }
 
 export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementReading {
@@ -163,7 +190,7 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
       n++
       cx += s * Math.cos((h * Math.PI) / 180)
       cy += s * Math.sin((h * Math.PI) / 180)
-      if (s > 0.15) hist[Math.floor(h / 30)]! += 1
+      if (s > COLOURED) hist[Math.floor(h / 30)]! += 1
     }
   }
   const share = hist.map((c) => c / (n || 1))
@@ -172,9 +199,13 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
   const red = share[0]! + share[11]!
   const purple = share[8]! + share[9]!
   const magenta = share[10]! + share[11]!
+  const coloured = hist.reduce((sum, c) => sum + c, 0)
+  const warm = coloured ? (hist[1]! + hist[2]!) / coloured : 0
+  const { pinkStars, bluest } = starTints(shot, band, places)
+  const rainbow = warm >= RAINBOW.warm && bluest < RAINBOW.blue
 
   let family: StarFamily = 'white'
-  let level = magenta >= PINK ? 4 : 0
+  let level = magenta >= PINK || rainbow ? 4 : 0
   if (chroma >= 0.25 && gold >= 0.4) {
     family = 'gold'
     level = 2
@@ -192,10 +223,15 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
         ? chroma >= SURE.chroma && gold >= SURE.gold
         : level === 3
           ? red >= SURE.red
-          : level === 4 && pinkStarShare(shot, band, places) >= SURE.pinkStars
+          : level === 4 && (pinkStars >= SURE.pinkStars || (rainbow && bluest <= SURE.rainbowBlue))
   if (!full) {
     const fadedR4 = magenta >= SURE.r0Pink && fullNearby(shot, band, stars)
     return { level: 0, full, family, sure: !refined && !fadedR4 }
   }
-  return { level, full, family, sure: level === 0 ? magenta < SURE.r0Pink : refined }
+  return {
+    level,
+    full,
+    family,
+    sure: level === 0 ? magenta < SURE.r0Pink && bluest >= SURE.whiteBlue : refined,
+  }
 }
