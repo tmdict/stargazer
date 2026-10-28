@@ -9,6 +9,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
+import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
@@ -145,6 +146,7 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-failed-references') }}
           </span>
         </div>
+        <ImportScreenThumb screen="roster" />
         <p class="note intro">
           <template v-for="(part, i) in tipParts" :key="i">
             <strong v-if="i % 2">{{ part }}</strong>

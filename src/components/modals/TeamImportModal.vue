@@ -13,6 +13,7 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
+import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import TeamImportReplay from '@/components/teams/TeamImportReplay.vue'
 import TeamImportReview from '@/components/teams/TeamImportReview.vue'
 import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
@@ -434,6 +435,7 @@ const handleForgetLearned = (): void => {
             {{ i18n.t('app.import-failed-references') }}
           </span>
         </div>
+        <ImportScreenThumb screen="result" />
         <p class="note intro">{{ i18n.t('app.import-tip') }}</p>
       </header>
 
