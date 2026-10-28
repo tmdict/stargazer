@@ -3,15 +3,16 @@
    artifact, and which should win and why from this season's recorded Supreme
    League games (lib/pvp/sl/www), worked out in the Supreme League worker
    (useSlEngine). A tap on a slot, then a hero in the grid, fills the slot.
-   Wider than a tablet, a click on a slot also opens the board's hero picker
-   under it, which fills the team's open slots in turn, as the board's popup
-   fills a team's tiles, and on a filled slot can remove its hero; narrower,
-   the grid is a bottom sheet and the tap opens it, as a board's tile tap
-   does. A hero added to Team A starts at the active roster's levels and one
-   added to Team B at the top levels, as the generator treats a visitor and
-   their opponents. The result stays as it was made until Predict winner is
-   pressed again. The teams live in the page alone. It is pre-rendered with
-   its heading alone, and the teams and the result are drawn after mount. */
+   Wider than a tablet, a click on an empty slot also opens the board's hero
+   picker under it, which fills the team's open slots in turn, as the board's
+   popup fills a team's tiles; narrower, the grid is a bottom sheet and the
+   tap opens it, as a board's tile tap does. As on a board, a click on a hero
+   or an artifact takes it off. A hero added to Team A starts at the active
+   roster's levels and one added to Team B at the top levels, as the
+   generator treats a visitor and their opponents. The result stays as it was
+   made until Predict winner is pressed again. The teams live in the page
+   alone. It is pre-rendered with its heading alone, and the teams and the
+   result are drawn after mount. */
 
 import { computed, nextTick, ref, toRaw, useTemplateRef } from 'vue'
 
@@ -105,8 +106,14 @@ const pickerHeroes = computed(() => {
   return heroes.value.filter((c) => !on.includes(c.id)).sort(compareCharacters)
 })
 
+// A hero taken off leaves its slot the one to fill next.
 const pickSlot = (side: TeamSide, slot: number, under: WwwPoint): void => {
   target.value = { side, slot }
+  const slots = teams.value[side].heroes
+  if (slots[slot]) {
+    slots[slot] = null
+    return
+  }
   if (!narrow.value) {
     heroPicker.value = { side, position: { x: under.x, y: under.y + 4 } }
     return
@@ -136,15 +143,6 @@ const pickFromPicker = (character: CharacterType): void => {
   if (target.value?.side !== side) heroPicker.value = null
 }
 
-const targetFilled = computed(() =>
-  target.value ? teams.value[target.value.side].heroes[target.value.slot] !== null : false,
-)
-const removeHero = (): void => {
-  const at = target.value
-  if (at) teams.value[at.side].heroes[at.slot] = null
-  heroPicker.value = null
-}
-
 const setLevel = (side: TeamSide, slot: number, attr: WwwLevelAttr, level: number): void => {
   const hero = teams.value[side].heroes[slot]
   if (hero) hero[attr] = level
@@ -155,11 +153,15 @@ const setTeamLevel = (side: TeamSide, attr: WwwLevelAttr, level: number): void =
 }
 
 const artifactPicker = ref<{ side: TeamSide; position: { x: number; y: number } } | null>(null)
-const toggleArtifactPicker = (side: TeamSide, under: WwwPoint): void => {
+const pickArtifact = (side: TeamSide, under: WwwPoint): void => {
+  if (teams.value[side].artifact !== null) {
+    teams.value[side].artifact = null
+    return
+  }
   artifactPicker.value =
     artifactPicker.value?.side === side ? null : { side, position: { x: under.x, y: under.y + 4 } }
 }
-const setArtifact = (id: number | null): void => {
+const setArtifact = (id: number): void => {
   const picker = artifactPicker.value
   if (!picker) return
   teams.value[picker.side].artifact = id
@@ -245,7 +247,7 @@ const predictWinner = async (): Promise<void> => {
             :team="teams[side]"
             :target="target?.side === side ? target.slot : null"
             @slot="(slot, under) => pickSlot(side, slot, under)"
-            @artifact="toggleArtifactPicker(side, $event)"
+            @artifact="pickArtifact(side, $event)"
             @level="(slot, attr, level) => setLevel(side, slot, attr, level)"
           />
         </template>
@@ -303,9 +305,6 @@ const predictWinner = async (): Promise<void> => {
           :enter-hint="i18n.t('app.place-hero')"
           @pick="pickFromPicker"
         />
-        <button v-if="targetFilled" type="button" class="picker-remove" @click="removeHero">
-          {{ i18n.t('app.remove-hero') }}
-        </button>
       </SelectionPopup>
       <SelectionPopup
         v-if="artifactPicker"
@@ -315,14 +314,6 @@ const predictWinner = async (): Promise<void> => {
         @keydown.esc.stop="artifactPicker = null"
       >
         <ArtifactSelectionPalette :artifacts @pick="setArtifact($event.id)" />
-        <button
-          v-if="teams[artifactPicker.side].artifact !== null"
-          type="button"
-          class="picker-remove"
-          @click="setArtifact(null)"
-        >
-          {{ i18n.t('app.remove-artifact') }}
-        </button>
       </SelectionPopup>
     </Teleport>
   </main>
