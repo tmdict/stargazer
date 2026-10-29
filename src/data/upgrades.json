@@ -1,0 +1,25 @@
+{
+  "paragon": {
+    "maxLevel": 4,
+    "ramps": {
+      "standard": {
+        "energy": { "base": 0, "step": 15 },
+        "combat": { "base": 0, "step": 6 },
+        "rivalry": { "base": 0, "step": 4.5 }
+      },
+      "celestialHypogean": {
+        "factions": ["celestial", "hypogean"],
+        "energy": { "base": 14, "step": 11.5 },
+        "combat": { "base": 6, "step": 4.5 },
+        "rivalry": { "base": 4, "step": 3.5 }
+      }
+    }
+  },
+  "refinement": {
+    "maxLevel": 4,
+    "ramps": {
+      "energy": { "base": 0, "step": 4 },
+      "damage": { "base": 0, "step": 2 }
+    }
+  }
+}
