@@ -13,11 +13,12 @@ import ImportProgress from '@/components/import/ImportProgress.vue'
 import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
-import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
+import { readStatus, unreadStatus, type ShotStatusView } from '@/components/import/shotStatus'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useToast } from '@/composables/useToast'
 import { useWwwImport, type WwwImportShot } from '@/composables/useWwwImport'
 import { WWW_GAMES, type WwwGame } from '@/lib/pvp/sl/www/match'
+import { shotToCheck } from '@/lib/pvp/sl/www/wwwImport'
 import { useI18nStore } from '@/stores/i18n'
 import { imageFilesFromPaste } from '@/utils/imageFile'
 
@@ -80,22 +81,23 @@ const handlePaste = (event: ClipboardEvent): void => {
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
-// A screenshot's card: reading, failed, or the games it shows and those whose
-// cards are cut off, which another screenshot has to show whole.
+// A screenshot's card: unread, failed, or the games it shows, those whose cards
+// are cut off, which another screenshot has to show whole, and what the review
+// asks about it.
 const status = (shot: WwwImportShot): ShotStatusView => {
-  if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
-  if (shot.status === 'failed') {
-    return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
-  }
+  const unread = unreadStatus(shot, i18n.t)
+  if (unread) return unread
   const panels = shot.reading?.panels ?? []
   if (!panels.length) return { text: i18n.t('app.www-import-no-games'), tone: 'error' }
-  return {
-    text: i18n.t('app.www-import-shot-games', {
-      games: (plan.value.numbers[shot.id] ?? []).join(', '),
-      cut: panels.filter((p) => !p.blue.cards && !p.red.cards).length,
-    }),
-    tone: 'plain',
-  }
+  const cut = panels.filter((p) => !p.blue.cards && !p.red.cards).length
+  const games = i18n.t('app.www-import-shot-games', {
+    games: (plan.value.numbers[shot.id] ?? []).join(', '),
+  })
+  return readStatus(
+    cut ? [games, i18n.t('app.www-import-shot-cut', { cut })] : [games],
+    shotToCheck(plan.value, shot.id),
+    i18n.t,
+  )
 }
 
 const found = computed(() => WWW_GAMES - plan.value.missing.length)

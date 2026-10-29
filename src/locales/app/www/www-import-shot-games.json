@@ -1,5 +1,5 @@
 {
-  "en": "Games {games} · {cut} cut off",
-  "zh": "第 {games} 局 · {cut} 局被截断",
-  "ko": "{games}경기 · 잘림 {cut}개"
+  "en": "Games {games}",
+  "zh": "第 {games} 局",
+  "ko": "{games}경기"
 }

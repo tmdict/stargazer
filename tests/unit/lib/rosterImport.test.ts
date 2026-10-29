@@ -4,7 +4,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import type { FrameFamily, HeroReading } from '@/lib/import/card/types'
 import type { CellOverride } from '@/lib/import/review'
 import type { RosterSlot } from '@/lib/import/screens/roster/types'
-import { buildRosterImportPlan, type RosterShotInput } from '@/lib/rosterImport'
+import { buildRosterImportPlan, shotToCheck, type RosterShotInput } from '@/lib/rosterImport'
 import { createImage } from '../fixtures/image'
 
 const reading = (
@@ -135,5 +135,18 @@ describe('buildRosterImportPlan', () => {
     })
     expect(strip(buildRosterImportPlan([b, a]))).toEqual(strip(buildRosterImportPlan([a, b])))
     expect(buildRosterImportPlan([a, b]).entries.map((e) => e.characterId)).toEqual([6, 5, 7])
+  })
+})
+
+describe('shotToCheck', () => {
+  it('counts the heroes to check first and the unnamed cards each screenshot shows', () => {
+    const a = shot('a', [
+      card('1.1', reading(5)),
+      card('1.2', reading(6, { sure: false })),
+      card('1.3', reading(null)),
+    ])
+    const b = shot('b', [card('1.1', reading(6)), card('1.2', reading(7))])
+    const plan = buildRosterImportPlan([a, b])
+    expect([shotToCheck(plan, 'a'), shotToCheck(plan, 'b')]).toEqual([2, 1])
   })
 })

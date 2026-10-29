@@ -58,7 +58,8 @@ import type {
 
 const LEARNED_KEY = 'stargazer.import.learned'
 
-export type ShotStatus = 'reading' | 'ready' | 'failed'
+// `waiting` until a reading worker takes the shot, then `reading`.
+export type ShotStatus = 'waiting' | 'reading' | 'ready' | 'failed'
 // Why a shot failed: its file, the references (not loaded), a reading worker
 // that failed to start or stopped while reading it, or the reading throwing
 // on it.
@@ -67,8 +68,8 @@ export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 
 export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
 // What the engine needs of an import's screenshot: it moves the shot through
-// reading, ready and failed. A file of the same name and size is the same
-// screenshot added again.
+// waiting, reading, ready and failed. A file of the same name and size is the
+// same screenshot added again.
 export interface EngineShot {
   id: string
   kind: ImportKind
@@ -170,11 +171,13 @@ const findShot = (id: string): { shot: EngineShot; session: ShotSession } | null
   return null
 }
 
-// Fail the shots still reading, those waiting for `part` when one is given.
-const failReadingShots = (error: ShotError, part?: ReferencePart): void => {
+const unread = (shot: EngineShot): boolean => shot.status === 'waiting' || shot.status === 'reading'
+
+// Fail the shots not yet read, those that need `part` when one is given.
+const failUnreadShots = (error: ShotError, part?: ReferencePart): void => {
   for (const session of sessions) {
     for (const shot of session.shots()) {
-      if (shot.status === 'reading' && (!part || partsOf(shot.kind).includes(part))) {
+      if (unread(shot) && (!part || partsOf(shot.kind).includes(part))) {
         shot.status = 'failed'
         shot.error = error
       }
@@ -397,6 +400,8 @@ const dispatch = (): void => {
     if (at < 0) continue
     const next = queue.splice(at, 1)[0]!
     reader.reading = next.id
+    const found = findShot(next.id)
+    if (found) found.shot.status = 'reading'
     const message: ImportRequest = { type: 'read', ...next }
     reader.worker.postMessage(message, [next.image.data.buffer])
   }
@@ -419,7 +424,7 @@ const onMessage = (reader: Reader, msg: ImportResponse): void => {
     for (const { id, kind } of queue) {
       const found = findShot(id)
       if (!found || !partsOf(kind).every((p) => partStatus[p].value === 'ready')) continue
-      found.shot.status = 'reading'
+      found.shot.status = 'waiting'
       found.shot.error = null
     }
     dispatch()
@@ -549,7 +554,7 @@ function dropReader(reader: Reader, error: ShotError): void {
   for (const part of PARTS) {
     if (partStatus[part].value !== 'idle') partStatus[part].value = 'failed'
   }
-  failReadingShots(error)
+  failUnreadShots(error)
 }
 
 // Fetch a part once and give every reader its copy; ready once one says so.
@@ -578,7 +583,7 @@ async function ensurePart(part: ReferencePart): Promise<void> {
     // the failing URL is what a bug report needs.
     console.error('Screenshot import references failed to load', error)
     status.value = 'failed'
-    failReadingShots('references', part)
+    failUnreadShots('references', part)
   }
 }
 
@@ -752,9 +757,9 @@ export function useImportEngine(session: ShotSession): ImportEngine {
     learnedCount,
     progress: computed(() => {
       const shots = session.shots()
-      const waiting = adding.value + shots.filter((s) => s.status === 'reading').length
+      const pending = adding.value + shots.filter(unread).length
       const total = shots.length + adding.value
-      return waiting ? { read: total - waiting, total } : null
+      return pending ? { read: total - pending, total } : null
     }),
     ensureReferences,
     addFiles,
