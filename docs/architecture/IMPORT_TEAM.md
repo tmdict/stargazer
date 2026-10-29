@@ -41,7 +41,7 @@ Each field of a reading comes from its own visual signal. The readers therefore 
 | Reading        | Evidence                                                                                    | Consequence                                                                                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Hero           | face crop against portrait and learned descriptors                                          | new face examples improve identity without touching any other reader                                                                                                                   |
-| Paragon        | card frame against the six frame templates, searched around where the anchor puts each card | a wrong frame also displaces the face and star crops, so doubt covers the cell                                                                                                         |
+| Paragon        | card frame against the six frame templates, searched around where the anchor puts each card | a wrong frame also displaces the face and star crops, so doubt covers the cell. A level is sure only with a lead over the next, since the P0, P2 and P3 frames can match closely       |
 | Refinement     | the star row's six places and their colour, where the screen draws the row                  | independent of the hero descriptor. A short row is R0, since refinement needs six, and weak colour evidence waits for review                                                           |
 | Artifact       | the header icon's art disc against each artifact image's centre, by shape and colour        | sure only with a clear lead, a score a known icon reaches, a good shape match and art in the crop, so an icon the app does not have stays unsure. A header with no badge reads as none |
 | Map and result | strip ring and badges, Ally tab colour                                                      | which board a shot fills is settled in review                                                                                                                                          |
@@ -69,7 +69,7 @@ Formation screenshots preset the choice when they tell which way the match went 
 
 ### Learning
 
-A hero correction teaches the face only when the reader was unsure of the hero and sure of the frame. A doubtful frame means the crop may be off the face, and storing it would teach noise. Picking the reader's own top candidate, or no hero, takes back an earlier lesson for that face. Only result screenshots teach, and lessons go to the store of learned faces every import shares ([Reference descriptors](./IMPORT.md#reference-descriptors)).
+A hero correction teaches the face only when the reader was unsure of the hero and its frame match was good, whatever the level it names. A doubtful match means the crop may be off the face, and storing it would teach noise. Picking the reader's own top candidate, or no hero, takes back an earlier lesson for that face. Only result screenshots teach, and lessons go to the store of learned faces every import shares ([Reference descriptors](./IMPORT.md#reference-descriptors)).
 
 ## Plan and save
 

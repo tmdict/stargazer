@@ -109,7 +109,7 @@ describe('learning from corrections', () => {
     api.shots.value = [sample]
     api.setHero('sample', 1, 0, 7)
     cell.sure = false
-    cell.paragon.sure = false
+    cell.paragon = { ...cell.paragon, score: 0.45, sure: false }
     api.setHero('sample', 1, 0, 9)
     expect(api.learnedCount.value).toBe(0)
   })
