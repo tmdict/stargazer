@@ -149,7 +149,7 @@ const status = (shot: ImportShot): ShotStatusView => {
               v-for="team in SIDES"
               :key="team"
               type="button"
-              class="seg-btn side board"
+              class="seg-btn side"
               :class="{
                 on: shownTeam(shot) === team,
                 ally: team === Team.ALLY,
@@ -266,14 +266,6 @@ const status = (shot: ImportShot): ShotStatusView => {
 
 .seg-btn.side.on.enemy {
   background: var(--import-enemy);
-}
-
-.seg-btn.side.board.on.ally {
-  background: var(--color-ally);
-}
-
-.seg-btn.side.board.on.enemy {
-  background: var(--color-enemy);
 }
 
 @media (pointer: coarse) {

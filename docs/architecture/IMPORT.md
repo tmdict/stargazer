@@ -94,7 +94,7 @@ Every reference picture is built into the site from the data pack (`src/pack/`).
 
 ## Review pieces
 
-An import's review is built from shared pieces (`src/components/import/`). A hero card's editor emits each correction for the import's plan to apply. The modals lay out alike from `src/styles/import.css`. Their colours are the `--import-*` tokens in `src/styles/variables.css`: the import modal's dark surfaces, and the game's result colours for what mirrors the result screen. A board side takes the app's ally and enemy colours, as on the boards.
+An import's review is built from shared pieces (`src/components/import/`). A hero card's editor emits each correction for the import's plan to apply. The modals lay out alike from `src/styles/import.css`. Their colours are the `--import-*` tokens in `src/styles/variables.css`: the import modal's dark surfaces, and the game's result colours for what mirrors the game's screens and for the screenshot cards' winner and team. A side on a board takes the app's ally and enemy colours, as on the boards.
 
 ## Related documentation
 
