@@ -75,7 +75,7 @@ export const teamTint = (team: Team, alpha: number): string => {
 
 // Board colours are tokens (variables.css) with a value for each look, so they
 // are set through `style`: an SVG attribute does not read var().
-export const TILE_STROKE_COLOR = 'var(--tile-stroke)'
+const TILE_STROKE_COLOR = 'var(--tile-stroke)'
 const TILE_STROKE_COLOR_STRONG = 'var(--tile-stroke-strong)'
 
 // Open ground's outline is dimmer than a deployment tile's or a wall's in the

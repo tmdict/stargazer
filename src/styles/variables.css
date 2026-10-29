@@ -94,6 +94,14 @@
   --tile-bevel: rgba(0, 0, 0, 0.5);
   --tile-number: #fff;
 
+  /* Boards in BoardThumbnail's card look */
+  --tile-card-fill-void: rgba(255, 255, 255, 0.08);
+  --tile-card-fill-ally: color-mix(in srgb, var(--color-ally) 35%, transparent);
+  --tile-card-fill-enemy: color-mix(in srgb, var(--color-enemy) 35%, transparent);
+  --tile-card-fill-blocked: rgba(128, 128, 128, 0.45);
+  --tile-card-fill-breakable: rgba(128, 128, 128, 0.28);
+  --tile-card-stroke-void: var(--tile-stroke);
+
   /* Screenshot imports: their dark modal's text, surfaces and control
      height, the review states, and the game's result colours (orange ally,
      blue enemy). */
@@ -355,6 +363,13 @@
   --tile-crisp-stroke: var(--tile-stroke);
   --tile-bevel: #07091a;
   --tile-number: #8a95ab;
+
+  --tile-card-fill-void: var(--tile-fill-default);
+  --tile-card-fill-ally: var(--tile-fill-ally);
+  --tile-card-fill-enemy: var(--tile-fill-enemy);
+  --tile-card-fill-blocked: var(--tile-fill-blocked);
+  --tile-card-fill-breakable: var(--tile-fill-breakable);
+  --tile-card-stroke-void: var(--tile-stroke-default);
 
   --help-target-fill: color-mix(in srgb, var(--color-primary) 25%, var(--tile-fill-ally));
 

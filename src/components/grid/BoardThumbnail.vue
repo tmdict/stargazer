@@ -12,8 +12,6 @@ import {
   getTileHatchPoints,
   getWallHatchFill,
   TEAM_COLORS,
-  teamTint,
-  TILE_STROKE_COLOR,
   UNIT_FRAME_COLORS,
 } from '@/utils/tileStateFormatting'
 
@@ -43,7 +41,7 @@ interface Geometry {
   points: Map<number, string>
   hatches: Map<number, string>
   centers: Map<number, Point>
-  // `renderTiles` walks `points`, so an artifact cell listed there would draw
+  // `zonedTiles` walks `centers`, so an artifact cell listed there would draw
   // as a tile.
   artifactCenters: Record<'ally' | 'enemy', Point>
 }
@@ -118,29 +116,12 @@ function getMapStates(mapKey: string): Map<number, State> {
   return states
 }
 
-function getTileFill(state: State | undefined): string {
-  switch (state) {
-    // Portraits are partially transparent, so occupied tiles still need their
-    // zone's backing.
-    case State.AVAILABLE_ALLY:
-    case State.OCCUPIED_ALLY:
-      return teamTint(Team.ALLY, 0.35)
-    case State.AVAILABLE_ENEMY:
-    case State.OCCUPIED_ENEMY:
-      return teamTint(Team.ENEMY, 0.35)
-    case State.BLOCKED:
-      return 'rgba(128, 128, 128, 0.45)'
-    case State.BLOCKED_BREAKABLE:
-      return 'rgba(128, 128, 128, 0.28)'
-    default:
-      return 'rgba(255, 255, 255, 0.08)'
-  }
-}
-
 const CRISP_INSET = 1.6 / 18
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
   switch (state) {
+    // Portraits are partially transparent, so occupied tiles still need their
+    // zone's backing.
     case State.AVAILABLE_ALLY:
     case State.OCCUPIED_ALLY:
       return 'ally'
@@ -230,14 +211,6 @@ const states = computed(() => {
   return explicit
 })
 
-const renderTiles = computed(() =>
-  [...geometry.value.points.entries()].map(([hexId, points]) => ({
-    hexId,
-    points,
-    fill: getTileFill(states.value.get(hexId)),
-  })),
-)
-
 // At card size the hatch is noise, so only the crisp look uses it.
 const hatchedTiles = computed(() =>
   crisp
@@ -249,24 +222,18 @@ const hatchedTiles = computed(() =>
     : [],
 )
 
-// Open ground first, then every framed tile, so a shared edge always shows the
-// light border.
-const crispTiles = computed(() => {
-  const size = hexSize
-  return [...geometry.value.centers.entries()]
-    .map(([hexId, center]) => {
-      const state = states.value.get(hexId)
-      const zone = zoneOf(state)
-      return {
-        hexId,
-        zone,
-        points: geometry.value.points.get(hexId)!,
-        bevel: hexAt(center, size - size * BEVEL_INSET),
-        center,
-      }
-    })
-    .sort((a, b) => (a.zone === 'void' ? 0 : 1) - (b.zone === 'void' ? 0 : 1))
-})
+// Open ground first, then every other tile, so a shared edge always shows the
+// brighter border.
+const zonedTiles = computed(() =>
+  [...geometry.value.centers.entries()]
+    .map(([hexId, center]) => ({
+      hexId,
+      zone: zoneOf(states.value.get(hexId)),
+      points: geometry.value.points.get(hexId)!,
+      bevel: crisp ? hexAt(center, hexSize - hexSize * BEVEL_INSET) : undefined,
+    }))
+    .sort((a, b) => (a.zone === 'void' ? 0 : 1) - (b.zone === 'void' ? 0 : 1)),
+)
 
 // The unit's hex (portrait clip + ring) is the tile polygon itself: any inset
 // puts the ring parallel to the tile border and the two hairlines blur into
@@ -326,7 +293,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
     </defs>
 
     <template v-if="crisp">
-      <template v-for="tile in crispTiles" :key="tile.hexId">
+      <template v-for="tile in zonedTiles" :key="tile.hexId">
         <polygon
           :class="`tile tile-${tile.zone}`"
           :points="tile.points"
@@ -346,12 +313,11 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
     </template>
     <!-- Opaque so shared edges don't double-composite darker. -->
     <polygon
-      v-for="tile in renderTiles"
+      v-for="tile in zonedTiles"
       v-else
       :key="tile.hexId"
+      :class="`card-tile card-${tile.zone}`"
       :points="tile.points"
-      :fill="tile.fill"
-      :style="{ stroke: TILE_STROKE_COLOR }"
       stroke-width="1"
     />
     <polygon
@@ -576,6 +542,31 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
 
 .tile-bevel {
   stroke: var(--tile-bevel);
+}
+
+.card-tile {
+  stroke: var(--tile-stroke);
+}
+
+.card-void {
+  fill: var(--tile-card-fill-void);
+  stroke: var(--tile-card-stroke-void);
+}
+
+.card-ally {
+  fill: var(--tile-card-fill-ally);
+}
+
+.card-enemy {
+  fill: var(--tile-card-fill-enemy);
+}
+
+.card-blocked {
+  fill: var(--tile-card-fill-blocked);
+}
+
+.card-breakable {
+  fill: var(--tile-card-fill-breakable);
 }
 
 .tile-number {
