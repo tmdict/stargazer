@@ -7,7 +7,7 @@
    as New on it. */
 
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
-import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
+import { unreadStatus, type ShotStatusView } from '@/components/import/shotStatus'
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
@@ -83,10 +83,8 @@ const cellReviewCount = (shot: ImportShot): number => {
 }
 
 const status = (shot: ImportShot): ShotStatusView => {
-  if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
-  if (shot.status === 'failed') {
-    return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
-  }
+  const unread = unreadStatus(shot, i18n.t)
+  if (unread) return unread
   const reading = shot.reading
   if (reading?.warnings.some((w) => w.kind === 'no-board'))
     return { text: i18n.t('app.import-no-board'), tone: 'error' }

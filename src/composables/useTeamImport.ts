@@ -282,7 +282,7 @@ export function useTeamImport(
           name: file.name,
           size: file.size,
           thumb: URL.createObjectURL(file),
-          status: 'reading',
+          status: 'waiting',
           error: null,
           reading: null,
           overrides: {},

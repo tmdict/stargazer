@@ -56,7 +56,7 @@ const holdEngine = (kinds: readonly ImportKind[] = ['result', 'formation', 'repl
           kind,
           name: added.name,
           size: added.size,
-          status: 'reading',
+          status: 'waiting',
           error: null,
         }
         shots.push(shot)
@@ -94,10 +94,25 @@ describe('import engine', () => {
     await add([file('b.png')])
     const [a, b] = shots
     expect(worker.reads()).toEqual([a!.id])
+    expect([a!.status, b!.status]).toEqual(['reading', 'waiting'])
     worker.reply({ type: 'reading', id: a!.id, reading })
     expect([a!.status, b!.status]).toEqual(['ready', 'reading'])
     expect(applied).toEqual([a!.id])
     expect(worker.reads()).toEqual([a!.id, b!.id])
+  })
+
+  it('fails the unread shots when the references fail, and reads them once the next load is in', async () => {
+    const { shots, add } = holdEngine()
+    await add([file('a.png'), file('b.png')])
+    const first = await partsPosted()
+    first.reply({ type: 'error', id: null, part: 'heroes', message: 'out of memory' })
+    expect(shots.map((s) => s.status)).toEqual(['failed', 'failed'])
+
+    await add([file('c.png')])
+    const next = await partsPosted()
+    answerReady(next)
+    expect(shots.map((s) => s.status)).toEqual(['reading', 'waiting', 'waiting'])
+    expect(next.reads()).toEqual([shots[0]!.id])
   })
 
   it('places each file as its import says, skips one added again, and counts what it turns away', async () => {
@@ -273,6 +288,6 @@ describe('import engine', () => {
     first.reply({ type: 'reading', id: shots[0]!.id, reading: rosterReading })
     expect(readers().filter((w) => !w.terminated)).toEqual([first])
     expect(first.reads()).toEqual([shots[0]!.id, shots[1]!.id])
-    expect(shots.map((s) => s.status)).toEqual(['ready', 'reading', 'reading', 'reading'])
+    expect(shots.map((s) => s.status)).toEqual(['ready', 'reading', 'waiting', 'waiting'])
   })
 })

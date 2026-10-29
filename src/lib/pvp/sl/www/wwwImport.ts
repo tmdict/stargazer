@@ -316,6 +316,20 @@ function teamOf(
 export const filledSlots = (team: WwwTeamPlan): WwwSlot[] =>
   team.slots.filter((slot) => slot !== null)
 
+const toCheckSlot = (slot: WwwSlot): boolean => slot.state !== 'sure' || slot.issues.length > 0
+
+// What the review asks about one screenshot: its cards left to check and the
+// artifacts it shows that the screenshots read differently.
+export const shotToCheck = (plan: WwwImportPlan, shotId: string): number => {
+  const teams = plan.games.flatMap((game) => (game ? [game.a, game.b] : []))
+  return (
+    teams
+      .flatMap(filledSlots)
+      .filter((s) => toCheckSlot(s) && s.cards.some((c) => c.shotId === shotId)).length +
+    teams.filter((t) => t.artifactIssues.length && t.badges.some((b) => b.shotId === shotId)).length
+  )
+}
+
 // A side fields each hero and each artifact in one place only.
 function markRepeats(teams: readonly WwwTeamPlan[]): void {
   const repeated = <T>(items: readonly T[], id: (item: T) => number | null): T[] => {
@@ -380,9 +394,7 @@ export function buildWwwImportPlan(shots: readonly WwwShotInput[]): WwwImportPla
     games,
     missing: games.slice(0, WWW_GAMES).flatMap((game, g) => (game ? [] : [g + 1])),
     otherMatch: !fits,
-    toCheck:
-      slots.filter((s) => s.state !== 'sure' || s.issues.length).length +
-      teams.filter((t) => t.artifactIssues.length).length,
+    toCheck: slots.filter(toCheckSlot).length + teams.filter((t) => t.artifactIssues.length).length,
     confirmable: slots.filter((s) => s.doubtful.length && !s.issues.length),
     fill: games
       .slice(0, WWW_GAMES)

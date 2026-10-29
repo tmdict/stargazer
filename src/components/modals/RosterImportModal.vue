@@ -14,12 +14,13 @@ import ImportScreenThumb from '@/components/import/ImportScreenThumb.vue'
 import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
-import { SHOT_ERROR_TEXT, type ShotStatusView } from '@/components/import/shotStatus'
+import { readStatus, unreadStatus, type ShotStatusView } from '@/components/import/shotStatus'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { MAX_NAME_LENGTH, nextAutoName } from '@/lib/names'
+import { shotToCheck } from '@/lib/rosterImport'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 import { imageFilesFromPaste } from '@/utils/imageFile'
@@ -95,23 +96,22 @@ const handlePaste = (event: ClipboardEvent): void => {
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
-// A screenshot's card: reading, failed, or the cards it gave and those the
-// scroll cut, which another screenshot has to show whole.
+// A screenshot's card: unread, failed, or the cards it gave, those the scroll
+// cut, which another screenshot has to show whole, and what the review asks
+// about it.
 const status = (shot: RosterImportShot): ShotStatusView => {
-  if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
-  if (shot.status === 'failed') {
-    return { text: i18n.t(SHOT_ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
-  }
+  const unread = unreadStatus(shot, i18n.t)
+  if (unread) return unread
   const slots = shot.reading?.slots ?? []
   const read = slots.filter((s) => s.cell).length
   if (read === 0) return { text: i18n.t('app.roster-import-no-cards'), tone: 'error' }
-  return {
-    text: i18n.t('app.roster-import-shot-cards', {
-      count: read,
-      cut: slots.filter((s) => s.kind === 'clipped').length,
-    }),
-    tone: 'plain',
-  }
+  const cut = slots.filter((s) => s.kind === 'clipped').length
+  const cards = i18n.t('app.roster-import-shot-cards', { count: read })
+  return readStatus(
+    cut ? [cards, i18n.t('app.roster-import-shot-cut', { cut })] : [cards],
+    shotToCheck(plan.value, shot.id),
+    i18n.t,
+  )
 }
 
 const toCheck = computed(

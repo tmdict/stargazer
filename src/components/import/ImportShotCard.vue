@@ -64,6 +64,7 @@ const zoomed = ref(false)
     <div class="shot-status" :class="status.tone">
       <IconCheckCircle v-if="status.tone === 'done'" :size="12" />
       {{ status.text }}
+      <span v-if="status.tone === 'busy'" class="shot-bar"><i /></span>
     </div>
     <button
       type="button"
@@ -192,12 +193,54 @@ button.shot-name {
   color: var(--import-bad);
 }
 
+.shot-status.busy {
+  display: grid;
+  gap: 6px;
+  color: var(--color-accent);
+}
+
+.shot-bar {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--import-border);
+}
+
+.shot-bar > i {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-accent);
+  animation: shot-bar-slide 1.3s ease-in-out infinite;
+}
+
+@keyframes shot-bar-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot-bar {
+    display: none;
+  }
+}
+
 .shot-status.done {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
   color: var(--import-good);
-  font-weight: 700;
+}
+
+.shot-status.done svg {
+  flex: none;
+  margin-top: calc((1lh - 12px) / 2);
 }
 
 .shot-remove {

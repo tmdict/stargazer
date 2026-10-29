@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { HeroReading } from '@/lib/import/card/types'
 import type { MatchupPanel, MatchupTeam } from '@/lib/import/screens/matchup/types'
-import { buildWwwImportPlan, type WwwShotInput } from '@/lib/pvp/sl/www/wwwImport'
+import { buildWwwImportPlan, shotToCheck, type WwwShotInput } from '@/lib/pvp/sl/www/wwwImport'
 import { createImage } from '../fixtures/image'
 
 const hero = (characterId: number, { sure = true, paragon = 0 } = {}): HeroReading => ({
@@ -123,5 +123,20 @@ describe('buildWwwImportPlan', () => {
     const torn = buildWwwImportPlan([five, shot('torn', [game(2), game(4)])])
     expect(torn.otherMatch).toBe(true)
     expect(torn.blocked).toBe(true)
+  })
+})
+
+describe('shotToCheck', () => {
+  it('counts each card left to check against every screenshot that shows it', () => {
+    const doubtful = (g: number) => {
+      const panel = game(g)
+      panel.blue.cards![0] = hero(10 * g + 1, { sure: false })
+      return panel
+    }
+    const first = shot('first', [doubtful(1), game(2), doubtful(3), game(4)])
+    const second = shot('second', [doubtful(3), game(4), game(5)])
+    const plan = buildWwwImportPlan([first, second])
+    expect(plan.toCheck).toBe(2)
+    expect([shotToCheck(plan, 'first'), shotToCheck(plan, 'second')]).toEqual([2, 1])
   })
 })

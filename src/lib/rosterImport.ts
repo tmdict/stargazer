@@ -74,6 +74,12 @@ export interface RosterImportPlan {
 
 const BLOCKING: readonly EntryIssue[] = ['levels', 'twice']
 
+// What the review asks about one screenshot: its heroes shown first and its
+// cards no hero is taken for.
+export const shotToCheck = (plan: RosterImportPlan, shotId: string): number =>
+  plan.entries.filter((e) => e.check && e.cards.some((c) => c.shotId === shotId)).length +
+  plan.unnamed.filter((c) => c.shotId === shotId).length
+
 const cardsOf = (shot: RosterShotInput): RosterCard[] =>
   shot.reading.slots.flatMap((slot) => {
     if (!slot.cell || !slot.frame) return []

@@ -206,7 +206,7 @@ export function useWwwImport(): {
           thumb: URL.createObjectURL(file),
           marked: null,
           markedFor: null,
-          status: 'reading',
+          status: 'waiting',
           error: null,
           reading: null,
           overrides: {},

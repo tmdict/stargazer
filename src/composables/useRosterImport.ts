@@ -177,7 +177,7 @@ export function useRosterImport(): {
           size: file.size,
           thumb: URL.createObjectURL(file),
           marked: null,
-          status: 'reading',
+          status: 'waiting',
           error: null,
           reading: null,
           overrides: {},
