@@ -1,0 +1,22 @@
+{
+  "id": 131,
+  "name": "marene",
+  "level": "s",
+  "faction": "celestial",
+  "class": "mage",
+  "damage": "magic",
+  "energy": [500],
+  "range": 10,
+  "season": 8,
+  "tags": {
+    "airborne": [
+      { "ultimate": 1, "mods": ["kazim"] },
+      { "ex": 1, "mods": ["kazim"] }
+    ],
+    "debuff": [
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "awakening": 1, "mods": ["aoe", "eryndor"] }
+    ],
+    "execute": [{ "ex": 4 }]
+  }
+}
