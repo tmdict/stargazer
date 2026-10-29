@@ -90,6 +90,8 @@ describe('learning from corrections', () => {
     const sample = shot()
     const cell = sample.reading!.sides[1][0]!
     cell.sure = false
+    // Its level is in doubt, but its frame match is good.
+    cell.paragon = { ...cell.paragon, runnerUp: 0.79, sure: false }
     cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
     api.shots.value = [sample]
     api.setHero('sample', 1, 0, 7)

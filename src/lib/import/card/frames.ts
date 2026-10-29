@@ -1,7 +1,8 @@
 /* Portrait frames: the six reference images (P0 to P4, plus the winged P4)
  * matched by alpha-masked correlation. A frame match does two jobs: it names
  * the paragon level and it pins the card's exact box, which every other
- * per-card region is measured from. */
+ * per-card region is measured from. The frame's crest, its top half compared
+ * part by part, tells the levels apart where the whole-frame match cannot. */
 
 import { cropResize, maskedNcc } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
@@ -34,7 +35,10 @@ const CARD_SEARCH = { oy: [-12, 12], ox: [-4, 4], step: 1 } as const
 const SURE_SCORE = 0.65
 const SURE_FLOOR = 0.5
 const SURE_GAP = 0.05
-export const LEVEL_LEAD = 0.02
+const LEVEL_LEAD = 0.02
+
+const leadsNext = ({ score, runnerUp }: Pick<ParagonReading, 'score' | 'runnerUp'>): boolean =>
+  score - runnerUp >= LEVEL_LEAD
 
 export function prepareFrameRefs(images: readonly RgbaImage[]): FrameRef[] {
   if (images.length === 0) throw new Error('no frame references')
@@ -119,7 +123,7 @@ export function paragonFromMatch(match: CardMatch): ParagonReading {
   const level = match.ref.level
   const score = match.score
   const runnerUp = Math.max(...match.perLevel.filter((_, i) => i !== level))
-  const sure = frameTrusted({ score, runnerUp }) && score - runnerUp >= LEVEL_LEAD
+  const sure = frameTrusted({ score, runnerUp }) && leadsNext({ score, runnerUp })
   return { level, score, runnerUp, sure }
 }
 
@@ -156,10 +160,9 @@ export const withFamily = (cell: HeroReading, frame: FrameFamilyReading): HeroRe
       refinement: { ...cell.refinement, level: 0, sure: frame.sure },
     }
   }
-  const lead = cell.paragon.score - cell.paragon.runnerUp
   return {
     ...cell,
-    paragon: { ...cell.paragon, sure: frame.sure && lead >= LEVEL_LEAD },
+    paragon: { ...cell.paragon, sure: frame.sure && leadsNext(cell.paragon) },
     refinement: { ...cell.refinement, sure: frame.sure && cell.refinement.sure },
   }
 }
@@ -181,6 +184,7 @@ const distance = (a: Uint8ClampedArray, i: number, b: Uint8ClampedArray, j: numb
  * the crest is not all in the shot. */
 export function readCrest(shot: RgbaImage, refs: readonly FrameRef[], box: Rect): Crest | null {
   const sized = refs.filter((r) => r.image.width === box.w && r.image.height === box.h)
+  // The first template at a level is its plain frame: FRAME_NAMES lists the winged P4 last.
   const frame = (level: number) => sized.find((r) => r.level === level)?.image
   const plain = frame(0)
   if (!plain) return null
@@ -196,8 +200,8 @@ export function readCrest(shot: RgbaImage, refs: readonly FrameRef[], box: Rect)
     }
     return best
   }
-  // The mean over the crest's pixels a level paints and S+ leaves bare (its crown),
-  // or of how much nearer the level's paint is than S+'s where both paint apart (its tint).
+  // The card's mean distance from a level's paint where S+ leaves the crest bare (its
+  // crown), or, where both paint apart, from the level's paint less from S+'s (its tint).
   const mean = (level: number, part: 'crown' | 'tint'): number | null => {
     const t = frame(level)
     if (!t) return null
@@ -231,7 +235,7 @@ export function readCrest(shot: RgbaImage, refs: readonly FrameRef[], box: Rect)
 // labelled roster cards, whose crests sit on the cream ground, every card with a sure
 // paragon frame reads right and sure: each step clears its bound by 9 or more, but a
 // P3 crown, 3.7 or more nearer than P2's. On the match screens' cards the bounds do not
-// hold (19 of 872 would read wrong while sure), so only the roster reads the crest.
+// hold (19 of 872 would read wrong while sure), so only the roster uses the crest.
 const CREST = { crown: 25, margin: 3 } as const
 
 export function crestLevel({ p2, p3, p1Tint, p4Tint }: Crest): CrestReading {
@@ -257,12 +261,29 @@ export const atLevel = (
   sure,
 })
 
-/* A card's levels as its family and its crest have them. Where the crest shows, a
- * level it and the frame match agree on is sure when either is; a sure crest stands
- * over a frame match too close to call, and one that contradicts a clear match leaves
- * the match's level in doubt. A card whose family is in doubt still has sure levels
- * when both families give the same ones: an S+ crest and a sure R0 row are P0, R0
- * either way. */
+/* The paragon level a card's frame match and crest settle between lo and hi, or null.
+ * A level they agree on is settled when either is clear: the match by leading the
+ * other levels there by LEVEL_LEAD, the crest by being sure. A sure crest stands over
+ * a match too close to call there; any other disagreement, a sure crest naming a level
+ * outside the range included, settles nothing. */
+export function levelBetween(
+  levels: readonly number[],
+  crest: CrestReading,
+  lo: number,
+  hi: number,
+): number | null {
+  const inside = crest.level >= lo && crest.level <= hi
+  if (crest.sure && !inside) return null
+  const left = levels.map((score, level) => ({ score, level })).slice(lo, hi + 1)
+  const [best, next] = left.sort((a, b) => b.score - a.score)
+  const clear = !next || leadsNext({ score: best!.score, runnerUp: next.score })
+  if (!inside || crest.level === best!.level) return clear || crest.sure ? best!.level : null
+  return crest.sure && !clear ? crest.level : null
+}
+
+/* A card's levels as its family and its crest have them, where the crest shows. A card
+ * whose family is in doubt still has sure levels when both families give the same
+ * ones: an S+ crest and a sure R0 row are P0, R0 either way. */
 export const withCrest = (
   cell: HeroReading,
   frame: FrameFamilyReading,
@@ -277,11 +298,7 @@ export const withCrest = (
     return bare ? { ...read, paragon: atLevel(levels, 0, true), refinement } : read
   }
   if (frame.family === 'below') return read
-  const clear = cell.paragon.score - cell.paragon.runnerUp >= LEVEL_LEAD
-  if (crest.level === cell.paragon.level) {
-    return { ...read, paragon: { ...read.paragon, sure: crest.sure || clear } }
-  }
-  return crest.sure && !clear
-    ? { ...read, paragon: atLevel(levels, crest.level, true) }
-    : { ...read, paragon: { ...read.paragon, sure: false } }
+  const level = levelBetween(levels, crest, 0, levels.length - 1)
+  const paragon = level === null ? { ...read.paragon, sure: false } : atLevel(levels, level, true)
+  return { ...read, paragon }
 }
