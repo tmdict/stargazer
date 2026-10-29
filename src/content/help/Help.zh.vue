@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -21,6 +24,7 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const SKILL = {
   hero: 'frieren',
@@ -231,6 +235,7 @@ const SKILL = {
           </li>
         </ol>
         <ul class="help-notes reading-secondary">
+          <li><a href="#www">谁会赢？</a>也能导入截图，读取的是巅峰联赛淘汰赛对阵界面。</li>
           <li>可以在导入窗口的任意位置粘贴截图。</li>
           <li>裁剪过的截图和完整的手机截屏都能识别。</li>
           <li>截图不会离开你的设备。</li>
@@ -269,6 +274,131 @@ const SKILL = {
           <b>填充</b>把所有格子涂成选中的类型，<b>清除</b>把竞技场恢复原样。两者都会移除所有英雄。
         </li>
         <li>分享链接会保留你编辑过的地图。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="generator" class="help-sec">
+    <h2>5v5阵容生成器</h2>
+    <div class="help-grid">
+      <HelpGeneratorPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          用你自己的英雄，为巅峰联赛的五张地图各配一支队伍，队伍都选自玩家记录的对局。
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span
+              >在<b>攻略</b>里打开<RouterLink :to="SL_GENERATOR_PATH">5v5阵容生成器</RouterLink
+              >。</span
+            >
+          </li>
+          <li>
+            <span
+              >在<b>英雄池</b>旁选择你的英雄池，也可以用<b>截图</b>新建一个。<b>全部英雄</b>会用上所有英雄，并按满强化计算。</span
+            >
+          </li>
+          <li>
+            <span class="help-mouse">
+              点击英雄可以加入或移除，也可以按住鼠标一次拖过多个英雄。再点英雄下方的 <b>P</b> 或
+              <b>R</b> 调整等级。保存的英雄池不会改变。
+            </span>
+            <span class="help-touch">
+              点英雄可以加入或移除，再点英雄下方的 <b>P</b> 或 <b>R</b>
+              调整等级。保存的英雄池不会改变。
+            </span>
+          </li>
+          <li>
+            <span
+              >选<b>巅峰联赛</b>使用巅峰联赛的地图，选<b>默认</b>则五张都用地图
+              1。然后点<b>生成</b>。</span
+            >
+          </li>
+          <li>
+            <span
+              >结果显示在英雄上方：每张地图一支队伍，各带一件神器，同一英雄只用一次。<b>保存为阵容</b>会保存这套阵容，并在「阵容」页面打开。</span
+            >
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          每张地图下方，<SlIcon name="players" class="help-inline-icon" />
+          是在这张地图上用过这个阵容的玩家数，<SlIcon name="record" class="help-inline-icon" />
+          是这个阵容在这张地图上的胜负。
+        </li>
+        <li>
+          <SlIcon name="lock" class="help-inline-icon" />
+          标出核心英雄，这些英雄保留不动。<SlIcon name="swap" class="help-inline-icon" />
+          列出同一阵容的记录队伍中出现过的替换，只用这套阵容没用到的你的英雄：左边的一位或两位英雄可以换成右边任意一个选项，越靠前越好。
+        </li>
+        <li>
+          <b>整场获胜几率</b
+          >是对阵一般水平对手的结果，不是对你下一场比赛的预测，可以用来比较不同的阵容。<b>原理说明</b>解释了它是怎么算出来的。
+        </li>
+        <li>页面标题旁的<b>数据说明</b>写明这些队伍来自哪个赛季，以及涵盖多少局对局。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="www" class="help-sec">
+    <h2>谁会赢？</h2>
+    <div class="help-grid">
+      <HelpWwwPicture />
+      <div class="help-side">
+        <p class="help-lead">组好两支巅峰联赛队伍，看看哪一方更可能获胜，以及原因。</p>
+        <ol class="help-steps">
+          <li>
+            <span
+              >在<b>攻略</b>里打开<RouterLink :to="WWW_PATH">谁会赢？</RouterLink
+              >。选<b>单局</b>，或者选<b>整场</b>来排一场巅峰联赛的全部五局。</span
+            >
+          </li>
+          <li>
+            <span class="help-mouse">
+              点击空位，再从弹出的列表里选英雄，英雄会依次填满这支队伍的空位。点击位置上的英雄即可移除。
+            </span>
+            <span class="help-touch">先点一个位置，再点列表里的英雄。点位置上的英雄即可移除。</span>
+          </li>
+          <li>
+            <span
+              ><span class="help-mouse">点击</span
+              ><span class="help-touch">点</span
+              >队伍最外侧的圆形位置，为队伍选择神器。幻灵由英雄决定。</span
+            >
+          </li>
+          <li>
+            <span
+              >用每位英雄下方的 <b>P</b> 和
+              <b>R</b> 调整等级，或者用队伍的<b>强化</b>菜单一次设置整队。加入 A
+              队的英雄沿用你英雄池里的等级，加入 B 队的英雄为满强化。</span
+            >
+          </li>
+          <li>
+            <span
+              >点<b>预测胜者</b>。<b>原因</b>把胜率拆成英雄、克制、神器和强化四部分。<span
+                class="help-mouse"
+                >点击</span
+              ><span class="help-touch">点</span>某一行可以看到详细内容。</span
+            >
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          在<b>整场</b>里，和游戏中一样，每支队伍的每位英雄和每件神器在五局中只能出场一次，所以列表会去掉已经用过的。结果会给出
+          A
+          队五局三胜赢下整场的概率、每种最终比分的概率，以及每一局一行，选中某一局可以看到它的原因。
+        </li>
+        <li>
+          <b>截图</b
+          >可以从巅峰联赛淘汰赛对阵界面填入全部五局。一张截图即可，也可以边滚动边截多张，只要每支队伍的卡片至少在一张中完整显示。
+        </li>
+        <li>队伍可以不满五人。每个空位按比本赛季最弱的英雄更弱、且没有强化来计算。</li>
+        <li>
+          胜负结论旁的标记会提示记录不足的地方，比如本赛季记录很少的英雄。这样的英雄按接近一般水平计算。
+        </li>
+        <li><b>交换阵营</b>会交换两支队伍，<b>清除</b>会清空当前显示的对局。</li>
       </ul>
     </div>
   </section>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -21,6 +24,7 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const SKILL = {
   hero: 'frieren',
@@ -283,6 +287,10 @@ const SKILL = {
           </li>
         </ol>
         <ul class="help-notes reading-secondary">
+          <li>
+            <a href="#www">누가 이길까?</a>도 스크린샷을 가져옵니다. 최강자 리그 토너먼트 대진
+            화면을 읽습니다.
+          </li>
           <li>가져오기 창 어디에나 스크린샷을 붙여 넣을 수 있습니다.</li>
           <li>잘라낸 스크린샷도, 휴대폰 화면 전체를 찍은 스크린샷도 인식됩니다.</li>
           <li>스크린샷은 기기 밖으로 나가지 않습니다.</li>
@@ -330,6 +338,150 @@ const SKILL = {
           되돌립니다. 둘 다 모든 영웅을 제거합니다.
         </li>
         <li>공유 링크에는 편집한 맵이 그대로 담깁니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="generator" class="help-sec">
+    <h2>5v5 조합 생성기</h2>
+    <div class="help-grid">
+      <HelpGeneratorPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          내 영웅으로 최강자 리그의 다섯 맵에 팀을 하나씩 짜 줍니다. 팀은 플레이어들이 기록한
+          전투에서 골라냅니다.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              <b>가이드</b>에서 <RouterLink :to="SL_GENERATOR_PATH">5v5 조합 생성기</RouterLink>를
+              여세요.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>로스터</b> 옆에서 로스터를 고르거나, <b>스크린샷</b>으로 새로 만드세요.
+              <b>모든 영웅</b>은 모든 영웅을 최대로 강화한 상태로 씁니다.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              영웅을 클릭해 넣거나 빼고, 여러 영웅 위로 드래그할 수도 있습니다. 영웅 아래의
+              <b>P</b> 또는 <b>R</b>을 클릭하면 레벨을 설정할 수 있습니다. 저장된 로스터는 바뀌지
+              않습니다.
+            </span>
+            <span class="help-touch">
+              영웅을 눌러 넣거나 빼고, 영웅 아래의 <b>P</b> 또는 <b>R</b>을 눌러 레벨을 설정하세요.
+              저장된 로스터는 바뀌지 않습니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              최강자 리그 맵을 쓰려면 <b>최강자 리그</b>를, 다섯 맵 모두 맵 1을 쓰려면 <b>기본</b>을
+              고른 뒤 <b>생성</b>을 누르세요.
+            </span>
+          </li>
+          <li>
+            <span>
+              결과는 영웅 목록 위에 나옵니다. 맵마다 팀이 하나씩 각자 다른 메아리를 들고, 같은
+              영웅은 한 번만 씁니다. <b>진형으로 저장</b>을 누르면 저장한 뒤 진형 페이지에서 엽니다.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          각 맵 아래의 <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의
+          조합을 쓴 플레이어 수이고, <SlIcon name="record" class="help-inline-icon" /> 옆에는 그
+          맵에서 이 조합의 승패가 나옵니다.
+        </li>
+        <li>
+          <SlIcon name="lock" class="help-inline-icon" /> 표시 옆의 영웅은 바뀌지 않는 핵심
+          영웅입니다. <SlIcon name="swap" class="help-inline-icon" /> 표시 옆에는 같은 조합의 기록된
+          팀에서 나온 교체가 나옵니다. 세트에서 쓰지 않은 내 영웅으로, 왼쪽의 영웅 하나나 두 영웅을
+          오른쪽의 아무 후보로 바꿀 수 있으며 더 좋은 후보부터 표시됩니다.
+        </li>
+        <li>
+          <b>매치 승리 확률</b>은 보통 수준의 상대 기준이며, 다음 매치를 예측한 값이 아닙니다.
+          세트끼리 비교하는 데 쓰세요. <b>작동 방식</b>에서 어떻게 계산하는지 볼 수 있습니다.
+        </li>
+        <li>
+          페이지 제목 옆의 <b>데이터 안내</b>에서 팀이 어느 시즌 기록에서 나왔고 몇 판의 전투를
+          바탕으로 하는지 볼 수 있습니다.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="www" class="help-sec">
+    <h2>누가 이길까?</h2>
+    <div class="help-grid">
+      <HelpWwwPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          최강자 리그 팀 두 개를 구성하면 어느 쪽이 이길지, 그 이유와 함께 알려 줍니다.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              <b>가이드</b>에서 <RouterLink :to="WWW_PATH">누가 이길까?</RouterLink>를 여세요.
+              <b>한 경기</b>를 고르거나, 최강자 리그 매치의 다섯 경기를 모두 다루려면 <b>매치</b>를
+              고르세요.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              빈 자리를 클릭한 뒤 열리는 목록에서 영웅을 고르세요. 팀의 빈 자리가 차례로 채워집니다.
+              자리에 있는 영웅을 클릭하면 뺄 수 있습니다.
+            </span>
+            <span class="help-touch">
+              자리를 누른 뒤 목록에서 영웅을 누르세요. 자리에 있는 영웅을 누르면 뺄 수 있습니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              팀 맨 바깥쪽의 둥근 자리를 <span class="help-mouse">클릭하면</span
+              ><span class="help-touch">누르면</span> 메아리를 고를 수 있습니다. 팬텀은 영웅 구성에
+              따라 정해집니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              각 영웅 아래의 <b>P</b>와 <b>R</b>로 레벨을 정하거나, 팀의 <b>강화</b> 메뉴로 팀
+              전체를 한 번에 정하세요. A 팀 영웅은 내 로스터의 레벨로, B 팀 영웅은 최대로 강화한
+              상태로 들어갑니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>승자 예측</b>을 누르세요. <b>이유</b>는 승률을 영웅, 상성, 메아리, 강화로 나눠 보여
+              줍니다. 줄을 <span class="help-mouse">클릭하면</span
+              ><span class="help-touch">누르면</span> 자세한 내용이 나옵니다.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          <b>매치</b>에서는 실제 게임처럼 한 팀이 다섯 경기에 걸쳐 영웅과 메아리를 한 번씩만 쓸 수
+          있어서, 이미 쓴 것은 목록에서 빠집니다. 결과에는 A 팀이 5경기 중 3승으로 매치를 이길 확률,
+          최종 스코어별 확률, 경기마다 한 줄이 나옵니다. 경기를 고르면 그 경기의 이유를 볼 수
+          있습니다.
+        </li>
+        <li>
+          <b>스크린샷</b>은 최강자 리그 토너먼트 대진 화면으로 다섯 경기를 모두 채웁니다. 한 장이면
+          되고, 스크롤하며 여러 장을 찍어도 됩니다. 다만 모든 팀의 카드가 적어도 한 장에 잘리지 않고
+          나와야 합니다.
+        </li>
+        <li>
+          팀의 영웅이 다섯보다 적어도 됩니다. 빈 자리마다 이번 시즌 가장 약한 영웅보다 약하고 강화가
+          없는 것으로 계산합니다.
+        </li>
+        <li>
+          판정 옆의 표시는 이번 시즌 기록이 적은 영웅처럼 기록이 부족한 곳을 알려 줍니다. 그런
+          영웅은 보통 수준에 가깝게 계산합니다.
+        </li>
+        <li><b>진영 교체</b>는 두 팀을 맞바꾸고, <b>지우기</b>는 보이는 경기를 비웁니다.</li>
       </ul>
     </div>
   </section>
