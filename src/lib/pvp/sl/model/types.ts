@@ -4,7 +4,7 @@
  * a match-up's answer adds up from. The pages ask only these, so a model can
  * be added beside another without either page changing. */
 
-import type { Game, Side } from '../data/games.ts'
+import type { Game, Side } from '../data/games'
 
 export type { Game, Side }
 

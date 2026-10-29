@@ -13,7 +13,7 @@
  * With five boards a team's artifact is always one of its own or among the
  * first five it falls back to, which bounds the search (chooser.ts). */
 
-import type { SlData } from '../data/types.ts'
+import type { SlData } from '../data/types'
 
 export interface ArtifactClaim {
   // This season's team: each artifact it was recorded with, most used first,

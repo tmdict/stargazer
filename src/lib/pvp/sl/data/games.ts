@@ -1,7 +1,7 @@
 /* This season's decided games as two sides each, the games every model learns
  * from. A game's two sides are consecutive entries of the file's games. */
 
-import type { SlData, SlGame } from './types.ts'
+import type { SlData, SlGame } from './types'
 
 // A recorded team fields five heroes; a team of fewer fills the rest with
 // empty slots.

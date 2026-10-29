@@ -2,7 +2,7 @@
  * season's decided games. Each side of a game counts on its own, so a hero
  * on both teams of a game has a win and a loss from it. */
 
-import { lineupKey, type Game, type Side } from './games.ts'
+import { lineupKey, type Game, type Side } from './games'
 
 export interface WinLoss {
   wins: number
