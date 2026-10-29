@@ -11,6 +11,7 @@
  * registry contract test pins both.
  */
 
+import upgrades from '@/data/upgrades.json'
 import { SKILL_MODES } from '@/lib/skills/skillModes'
 import { Team } from '@/lib/types/team'
 
@@ -26,9 +27,10 @@ interface AttrConfig {
   default: number
 }
 
+// The upgrades' top levels are in src/data/upgrades.json, with their ramps.
 export const HERO_ATTRS: readonly AttrConfig[] = [
-  { id: ATTR_PARAGON, name: 'paragon', max: 4, default: 0 },
-  { id: ATTR_REFINEMENT, name: 'refinement', max: 4, default: 0 },
+  { id: ATTR_PARAGON, name: 'paragon', max: upgrades.paragon.maxLevel, default: 0 },
+  { id: ATTR_REFINEMENT, name: 'refinement', max: upgrades.refinement.maxLevel, default: 0 },
   // The position in the hero's SKILL_MODES list; max is the field's limit.
   { id: ATTR_SKILL_MODE, name: 'skill-mode', max: 15, default: 0 },
 ]

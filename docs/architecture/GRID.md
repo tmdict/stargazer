@@ -34,7 +34,7 @@ Two things make it hard. Many kinds of unit share one tile slot (heroes, placeho
 └────────────────────┘   └────────────────────┘   └────────────────────┘
 ```
 
-Every hex is a cube coordinate `(q, r, s)` with `q + r + s = 0`, which the `Hex` constructor enforces. The game's tile number is a separate id. Every map paints its tile states over the same fixed preset (`FULL_GRID`), so all maps share one hex id space.
+Every hex is a cube coordinate `(q, r, s)` with `q + r + s = 0`, which the `Hex` constructor enforces. The game's tile number is a separate id. Every map paints its tile states over the same fixed preset (`FULL_GRID`, whose rows are in `src/data/grid.json`), so all maps share one hex id space.
 
 ## Boards
 

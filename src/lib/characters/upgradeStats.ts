@@ -4,15 +4,21 @@
  * guide state "+15 per level" and the per-level table from one definition.
  * Paragon has two ramps per stat: Celestial and Hypogean heroes start above
  * zero at P0 and climb in smaller steps, meeting every other faction at P4.
+ * The numbers are in src/data/upgrades.json, which the external report
+ * generator also reads, and each ramp takes its stats here by its name there.
  */
 
+import upgrades from '@/data/upgrades.json'
 import { FACTION_ORDER } from '@/lib/filterOrder'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax, HERO_ATTRS } from './attributes'
 
 export type ParagonGroup = 'standard' | 'celestialHypogean'
 
+const { paragon, refinement } = upgrades
+const CELESTIAL_HYPOGEAN: readonly string[] = paragon.ramps.celestialHypogean.factions
+
 export const paragonGroup = (faction?: string): ParagonGroup =>
-  faction === 'celestial' || faction === 'hypogean' ? 'celestialHypogean' : 'standard'
+  faction !== undefined && CELESTIAL_HYPOGEAN.includes(faction) ? 'celestialHypogean' : 'standard'
 
 /** The factions on a paragon ramp, in hero list order. */
 export const paragonFactions = (group: ParagonGroup): string[] =>
@@ -35,22 +41,27 @@ const ENERGY = ['energy-regen-reduction', 'energy-on-hit'] as const
 const COMBAT = ['debuff-focus', 'resilience', 'dmg-boost', 'dmg-reduction'] as const
 const RIVALRY = ['inspiration', 'intimidation'] as const
 
+interface Ramp {
+  base: number
+  step: number
+}
+
+const ramp = (stats: readonly string[], { base, step }: Ramp): StatRamp => ({ stats, base, step })
+
+const paragonRamps = (group: Record<keyof ParagonRamps, Ramp>): ParagonRamps => ({
+  energy: ramp(ENERGY, group.energy),
+  combat: ramp(COMBAT, group.combat),
+  rivalry: ramp(RIVALRY, group.rivalry),
+})
+
 export const PARAGON_RAMPS: Readonly<Record<ParagonGroup, ParagonRamps>> = {
-  standard: {
-    energy: { stats: ENERGY, base: 0, step: 15 },
-    combat: { stats: COMBAT, base: 0, step: 6 },
-    rivalry: { stats: RIVALRY, base: 0, step: 4.5 },
-  },
-  celestialHypogean: {
-    energy: { stats: ENERGY, base: 14, step: 11.5 },
-    combat: { stats: COMBAT, base: 6, step: 4.5 },
-    rivalry: { stats: RIVALRY, base: 4, step: 3.5 },
-  },
+  standard: paragonRamps(paragon.ramps.standard),
+  celestialHypogean: paragonRamps(paragon.ramps.celestialHypogean),
 }
 
 export const REFINEMENT_RAMPS: readonly StatRamp[] = [
-  { stats: ENERGY, base: 0, step: 4 },
-  { stats: ['dmg-boost', 'dmg-reduction'], base: 0, step: 2 },
+  ramp(ENERGY, refinement.ramps.energy),
+  ramp(['dmg-boost', 'dmg-reduction'], refinement.ramps.damage),
 ]
 
 export const rampValue = (ramp: StatRamp, level: number): number => ramp.base + ramp.step * level

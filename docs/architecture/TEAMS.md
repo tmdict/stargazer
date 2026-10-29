@@ -31,7 +31,7 @@ Every stored form of a team, whether a mode's autosave, a saved team or a backup
 
 `src/lib/teams/modes.ts` defines both. Board counts are unique across modes, so a mode key, a board count, an autosave slot and a link's mode id all name the same thing. An in-game mode that uses an existing board count is a `TEAM_VARIANTS` row plus a label, not a new mode, and never reaches storage or links.
 
-A team's type is never stored. `matchVariant` compares the boards' maps, in order, against the default list and then the mode's types, and the result is either a type, the default, or nothing for hand-picked maps. Because it is derived, a season that changes the Supreme League map list only edits that one row: saved teams keep their maps and stop reading as Supreme League.
+A team's type is never stored. `matchVariant` compares the boards' maps, in order, against the default list and then the mode's types, and the result is either a type, the default, or nothing for hand-picked maps. Because it is derived, a season that changes the Supreme League map list only edits that one list, in `src/data/maps.json`: saved teams keep their maps and stop reading as Supreme League.
 
 A board's serialized tile states (`t`) are authoritative. Restoring resets every tile and replays `t`, with each occupied tile read as its side's available tile because placing the units marks occupancy, so a team on a map that no longer exists still loads, previews and exports. For a board saved without a map key, `resolveBoardMap` picks the preset its tiles reproduce, or the default map, and both the saved-team chip and the restore use that same rule.
 
