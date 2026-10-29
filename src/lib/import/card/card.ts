@@ -5,10 +5,17 @@
 
 import { cropResize, maskedNcc, resample } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
-import { CARD_ASPECT, FRAME_SCALES, matchCard, paragonFromMatch, READ_WIDTH } from './frames'
+import {
+  CARD_ASPECT,
+  FRAME_SCALES,
+  matchCard,
+  paragonFromMatch,
+  READ_WIDTH,
+  readCrest,
+} from './frames'
 import { assignUnique, heroDescriptor, rankHeroes, type Rivals } from './heroes'
 import { readStars, type StarRow } from './stars'
-import type { CardReferences, HeroCandidate, HeroIdentity, HeroReading } from './types'
+import type { CardReferences, Crest, HeroCandidate, HeroIdentity, HeroReading } from './types'
 
 // The face inside a matched frame: fractions of the frame box. Only the upper
 // part of the art is used, since the badges and the frame's white swirl
@@ -45,6 +52,9 @@ export interface CardRead {
   // The hero table's best matches for the face, best first; none without a
   // trusted placement.
   ranking: HeroCandidate[]
+  // The frame match's best score at each paragon level (index = level).
+  levels: number[]
+  crest: Crest | null
 }
 
 /* One card from where it is expected (its frame's top-left): its frame pins
@@ -78,6 +88,8 @@ export const readCard = (
       refinement: readStars(shot, match.box, stars),
     },
     ranking: trusted ? rankHeroes(refs.heroes, alignments) : [],
+    levels: match.perLevel,
+    crest: readCrest(shot, refs.frames, match.box),
   }
 }
 

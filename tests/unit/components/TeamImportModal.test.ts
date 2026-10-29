@@ -113,7 +113,7 @@ describe('match import review and save', () => {
     vi.useFakeTimers()
     const { api } = await mountImport()
     const cell = api.shots.value[0]!.reading!.sides[1][0]!
-    cell.paragon.sure = true
+    cell.paragon = { ...cell.paragon, score: 0.8, runnerUp: 0.2, sure: true }
     cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
     api.setHero('sample', 1, 0, 9)
     await nextTick()

@@ -45,6 +45,23 @@ export interface ParagonReading {
   sure: boolean
 }
 
+/* The frame's top half beside the S+ frame's, in mean RGB distance (0 to 255). The P2
+ * and P3 frames add a crown the S+ frame lacks: `p2` and `p3` are how far the card is
+ * from each crown where it would be. P1 and P4 paint parts of the S+ frame in colours of
+ * their own: `p1Tint` and `p4Tint` are how much nearer the card is to that level's
+ * colours than to S+'s there, negative when nearer. */
+export interface Crest {
+  p2: number
+  p3: number
+  p1Tint: number
+  p4Tint: number
+}
+
+export interface CrestReading {
+  level: number
+  sure: boolean
+}
+
 export interface RefinementReading {
   level: number
   // The row holds six stars, which refinement needs.

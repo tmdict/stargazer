@@ -18,13 +18,14 @@
  * elimination the match screens settle by would pass weak readings as sure. */
 
 import { readCardBoxes, settleCards } from '../../card/card'
-import { CARD_ASPECT, frameFamily, READ_WIDTH, withFamily } from '../../card/frames'
+import { CARD_ASPECT, crestLevel, frameFamily, READ_WIDTH, withCrest } from '../../card/frames'
 import { starRowTop, type StarRow } from '../../card/stars'
 import type { CardReferences } from '../../card/types'
 import { resample } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { fitComb, median, type Comb } from './comb'
-import type { Grid, RosterReading, Slot } from './types'
+import { settleByOrder, type CardEvidence } from './order'
+import type { Grid, RosterReading, RosterSlot, Slot } from './types'
 
 // The cream ground: about (235, 230, 220) on every set, saturation 0.05 to 0.08,
 // value 0.91 to 0.93. Grey (the empty slot's placeholder) counts as ground too;
@@ -674,35 +675,38 @@ export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading 
   const { grid, slots, top } = locate(img)
   const read = slots.flatMap((s, i) => (!s.hands && s.kind === 'card' ? [i] : []))
   const hands = slots.flatMap((s, i) => (s.hands ? [i] : []))
-  const settled = settleCards(
-    [
-      ...readCardBoxes(
-        img,
-        read.map((i) => slots[i]!.box),
-        refs,
-        CARD_STARS,
-        top,
-      ),
-      ...readCardBoxes(
-        img,
-        hands.map((i) => slots[i]!.box),
-        refs,
-        CARD_STARS,
-      ),
-    ],
-    'all',
-  )
-  const cells = new Map([...read, ...hands].map((slot, k) => [slot, settled[k]!]))
-  return {
-    grid,
-    slots: slots.map((slot, i) => {
-      const cell = cells.get(i)
-      if (!cell) return { ...slot, frame: null, cell: null }
-      // The header hides what tells a P0 frame from a P2 and a winged P4 from no
-      // frame, so a card it covers has its frame, and with it its levels, in doubt.
-      const family = frameFamily(cell.paragon)
-      const frame = !slot.hands && slot.box.y < top ? { ...family, sure: false } : family
-      return { ...slot, frame, cell: withFamily(cell, frame) }
-    }),
-  }
+  const reads = [
+    ...readCardBoxes(
+      img,
+      read.map((i) => slots[i]!.box),
+      refs,
+      CARD_STARS,
+      top,
+    ),
+    ...readCardBoxes(
+      img,
+      hands.map((i) => slots[i]!.box),
+      refs,
+      CARD_STARS,
+    ),
+  ]
+  const settled = settleCards(reads, 'all')
+  const at = new Map([...read, ...hands].map((slot, k) => [slot, k]))
+  const evidence = new Map<number, CardEvidence>()
+  const placed = slots.map((slot, i): RosterSlot => {
+    const k = at.get(i)
+    if (k === undefined) return { ...slot, frame: null, cell: null }
+    const cell = settled[k]!
+    const { levels, crest: seen } = reads[k]!
+    // The header hides what tells a P0 frame from a P2 and a winged P4 from no
+    // frame, so a card it covers has its frame, and with it its levels, in doubt,
+    // and its crest goes unread.
+    const covered = !slot.hands && slot.box.y < top
+    const family = frameFamily(cell.paragon)
+    const frame = covered ? { ...family, sure: false } : family
+    const crest = covered || !seen ? null : crestLevel(seen)
+    evidence.set(i, { stars: cell.refinement, levels, crest })
+    return { ...slot, frame, cell: withCrest(cell, frame, crest, levels) }
+  })
+  return { grid, slots: settleByOrder(placed, evidence) }
 }

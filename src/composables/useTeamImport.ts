@@ -26,6 +26,7 @@ import {
   type ShotStatus,
 } from '@/composables/useImportEngine'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
+import { frameTrusted } from '@/lib/import/card/frames'
 import { isMatchupReading, isRosterReading } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
 import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
@@ -334,7 +335,7 @@ export function useTeamImport(
     // off the face). Picking the reader's own top candidate, or no hero,
     // takes back whatever the face was taught before. Lessons come from
     // result screens only, whose card crops the learned store holds.
-    if (shot.kind !== 'result' || !cell.paragon.sure || cell.sure) return
+    if (shot.kind !== 'result' || !frameTrusted(cell.paragon) || cell.sure) return
     const teach = characterId !== null && cell.candidates[0]?.characterId !== characterId
     engine.learnFace(teach ? characterId : null, cell.descriptor)
   }
