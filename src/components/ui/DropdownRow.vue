@@ -10,6 +10,7 @@ defineProps<{
   // Shown before the label, in the owner's `--dropdown-row-lead` colour.
   lead?: string
   meta?: string | number
+  metaColor?: string
   selected?: boolean
   // Nested under the row above it.
   sub?: boolean
@@ -34,7 +35,13 @@ defineProps<{
       ><span v-if="lead" class="lead">{{ lead }}</span
       >{{ label }}</span
     >
-    <span v-if="meta !== undefined" class="meta">{{ meta }}</span>
+    <span
+      v-if="meta !== undefined"
+      class="meta"
+      :class="{ colored: metaColor }"
+      :style="metaColor && { '--meta-color': metaColor }"
+      >{{ meta }}</span
+    >
   </component>
 </template>
 
@@ -133,5 +140,10 @@ defineProps<{
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   opacity: 0.7;
+}
+
+.row:not(.selected) .meta.colored {
+  color: var(--meta-color);
+  opacity: 1;
 }
 </style>

@@ -35,6 +35,7 @@ export interface DropdownItem {
   label: string
   // Trailing detail, e.g. a count.
   meta?: string | number
+  metaColor?: string
   selected: boolean
   // Makes the row a link; `select` still fires when it is followed here.
   to?: RouteLocationRaw
@@ -258,6 +259,7 @@ const pressSegment = (): void => {
             class="item"
             :label="item.label"
             :meta="item.meta"
+            :meta-color="item.metaColor"
             :selected="item.selected"
             :to="item.to"
             :href="item.href"
