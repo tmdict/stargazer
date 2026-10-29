@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { withCrest } from '@/lib/import/card/frames'
 import type { CrestReading, HeroReading, RefinementReading } from '@/lib/import/card/types'
 import { settleByOrder, type CardEvidence } from '@/lib/import/screens/roster/order'
 import type { RosterSlot } from '@/lib/import/screens/roster/types'
@@ -79,27 +80,43 @@ describe('settleByOrder', () => {
     expect(levelsOf(settle(grid(['P0', '??', 'P0']))[1]!)).toBe('P0 R1')
   })
 
-  it('picks within the levels left by the frame match lead, or a sure crest there', () => {
+  it('picks within the levels left by the frame match and crest, or the one left', () => {
     const between = grid(['P3', '?', 'P1'])
-    expect(levelsOf(settle(between)[1]!)).toBe('P2 R1')
+    const crest = (level: number, sure = true): CrestReading => ({ level, sure })
+    expect(levelsOf(settle(between, { crest: crest(2, false) })[1]!)).toBe('P2 R1')
     const close = [0.8, 0.6, 0.7, 0.69, 0.5]
-    expect(levelsOf(settle(between, { levels: close })[1]!)).toBe('P2? R1')
-    const crest = (level: number): CrestReading => ({ level, sure: true })
+    expect(levelsOf(settle(between, { levels: close, crest: crest(2, false) })[1]!)).toBe('P2? R1')
     expect(levelsOf(settle(between, { levels: close, crest: crest(3) })[1]!)).toBe('P3 R1')
     expect(levelsOf(settle(between, { crest: crest(4) })[1]!)).toBe('P2? R1')
+    // Its crest hidden, a card takes a level only when one is left.
+    expect(levelsOf(settle(between)[1]!)).toBe('P2? R1')
   })
 
   it('reads no order across a row left short, nor in a group out of order', () => {
-    const close = [0.8, 0.6, 0.7, 0.69, 0.5]
     const broken = grid(['P1', '-', '-', '-', '-', '-'], ['?', 'P1'])
-    expect(levelsOf(settle(broken, { levels: close })[6]!)).toBe('P2? R1')
-    expect(levelsOf(settle(grid(['P3', '?', 'P1', 'P2']))[1]!)).toBe('P2? R1')
-    // A sure S+ frame after a card below S+ is out of order too.
+    expect(levelsOf(settle(broken)[6]!)).toBe('P2? R1')
+    expect(levelsOf(settle(grid(['P3', '?', 'P3', 'P4']))[1]!)).toBe('P2? R1')
+    // A card sure of its S+ frame cannot follow one below S+, so it stays in doubt.
     expect(levelsOf(settle(grid(['B', '?']))[1]!)).toBe('P2? R1')
   })
 
   it('makes a card after one sure below S+ P0, R0', () => {
     expect(levelsOf(settle(grid(['B', '??']))[1]!)).toBe('P0 R0')
+  })
+
+  it('settles a frame match and crest that disagree only where the order rules one out', () => {
+    // A clear P0 match against a crest naming P2, as withCrest leaves it.
+    const conflict = (crest: CrestReading): RosterSlot => {
+      const s = slot('?', 0, 0)
+      const cell = { ...s.cell!, paragon: { level: 0, score: 0.8, runnerUp: 0.7, sure: false } }
+      return { ...s, cell: withCrest(cell, s.frame!, crest, LEVELS) }
+    }
+    const sure = { level: 2, sure: true }
+    const unsure = { level: 2, sure: false }
+    expect(levelsOf(settle([conflict(sure)], { crest: sure })[0]!)).toBe('P0? R1')
+    expect(levelsOf(settle([conflict(unsure)], { crest: unsure })[0]!)).toBe('P0? R1')
+    const after = [conflict(sure), slot('P2', 0, 1)]
+    expect(levelsOf(settle(after, { at: 0, crest: sure })[0]!)).toBe('P2 R1')
   })
 
   it('takes a card that is S+ or below only as P0 or lower', () => {

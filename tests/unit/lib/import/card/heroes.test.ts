@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { paragonFromMatch, prepareFrameRefs } from '@/lib/import/card/frames'
+import { frameTrusted, paragonFromMatch, prepareFrameRefs } from '@/lib/import/card/frames'
 import {
   assignUnique,
   buildHeroTable,
@@ -240,5 +240,16 @@ describe('paragonFromMatch', () => {
         perLevel: [0.42, 0.1, 0.1, 0.1, 0.1],
       }).sure,
     ).toBe(false)
+  })
+
+  it('flags a level close to the next whatever its score, the match still trusted', () => {
+    const close = paragonFromMatch({
+      ref,
+      score: 0.714,
+      box: { x: 0, y: 0, w: 1, h: 1 },
+      perLevel: [0.714, 0.4, 0.4, 0.709, 0.4],
+    })
+    expect(close.sure).toBe(false)
+    expect(frameTrusted(close)).toBe(true)
   })
 })

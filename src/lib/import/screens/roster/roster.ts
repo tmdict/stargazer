@@ -700,7 +700,7 @@ export function readRoster(img: RgbaImage, refs: CardReferences): RosterReading 
     const { levels, crest: seen } = reads[k]!
     // The header hides what tells a P0 frame from a P2 and a winged P4 from no
     // frame, so a card it covers has its frame, and with it its levels, in doubt,
-    // and its crest goes unread.
+    // and its crest goes unused.
     const covered = !slot.hands && slot.box.y < top
     const family = frameFamily(cell.paragon)
     const frame = covered ? { ...family, sure: false } : family

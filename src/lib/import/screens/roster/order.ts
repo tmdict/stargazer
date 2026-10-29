@@ -1,10 +1,13 @@
 /* The grid's order as evidence for a card's levels. Inside a group the screen lists
  * heroes from the highest paragon level down, the heroes below S+ last, and a group
  * ends on a row it leaves short. A card in doubt between cards sure of their levels
- * lies between those levels, and takes one when its own reading picks it within them.
- * Each card is placed by the cards read sure on their own, not by those this places. */
+ * lies between those levels, and takes one when only one is left or when its frame
+ * match and crest settle it within them (levelBetween). Each card is placed by the
+ * cards read sure on their own, not by those this places. A group that fills its last
+ * row runs on into the next unseen, so a card in doubt beside that break can take the
+ * other group's levels. */
 
-import { atLevel, LEVEL_LEAD } from '../../card/frames'
+import { atLevel, levelBetween } from '../../card/frames'
 import type { CrestReading, HeroReading, RefinementReading } from '../../card/types'
 import type { RosterSlot } from './types'
 
@@ -13,6 +16,7 @@ export interface CardEvidence {
   stars: RefinementReading
   // The frame match's best score at each paragon level (index = level).
   levels: readonly number[]
+  // Null where the crest does not show, as on a card the header covers.
   crest: CrestReading | null
 }
 
@@ -59,20 +63,11 @@ const ordered = (bounds: readonly (Bounds | null)[]): boolean => {
   return true
 }
 
-// The paragon level a card's own reading picks between lo and hi: its sure crest, or
-// the frame match's best level there when it leads the others there by LEVEL_LEAD.
-const pick = ({ levels, crest }: CardEvidence, lo: number, hi: number): number | null => {
-  if (crest?.sure) return crest.level >= lo && crest.level <= hi ? crest.level : null
-  const range = levels.map((score, level) => ({ score, level })).slice(lo, hi + 1)
-  const [best, next] = range.sort((a, b) => b.score - a.score)
-  return !next || best!.score - next.score >= LEVEL_LEAD ? best!.level : null
-}
-
 // A card's levels between lo and hi, when they settle them: below S+ is P0, R0 by
-// rule, S+ or below with no stars is P0, R0 either way, and an S+ card takes the
-// level its own reading picks.
+// rule, S+ or below with no stars is P0, R0 either way, and an S+ card takes the one
+// level left or the one its frame match and crest settle there.
 const settle = (cell: HeroReading, seen: CardEvidence, lo: number, hi: number) => {
-  const { levels, stars } = seen
+  const { levels, stars, crest } = seen
   if (hi === BELOW) {
     const refinement = { ...stars, level: 0, sure: true }
     return { ...cell, paragon: atLevel(levels, 0, true), refinement }
@@ -81,7 +76,9 @@ const settle = (cell: HeroReading, seen: CardEvidence, lo: number, hi: number) =
     const bare = hi === 0 && stars.level === 0 && stars.sure
     return bare ? { ...cell, paragon: atLevel(levels, 0, true), refinement: stars } : null
   }
-  const level = pick(seen, lo, hi)
+  // Without the crest the frame match cannot tell P0 from P2, so the card takes a
+  // level only when one is left.
+  const level = crest ? levelBetween(levels, crest, lo, hi) : lo === hi ? lo : null
   return level === null
     ? null
     : { ...cell, paragon: atLevel(levels, level, true), refinement: stars }
