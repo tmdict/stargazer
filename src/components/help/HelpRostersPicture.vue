@@ -155,25 +155,6 @@ const HEROES = [
   font-size: 0.85rem;
 }
 
-.help-heroes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-}
-
-.help-hero {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.help-hero .upill {
-  position: relative;
-  z-index: 3;
-  margin-top: -2px;
-}
-
 .help-faction {
   width: 34px;
   height: 34px;

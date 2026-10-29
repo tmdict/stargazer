@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
+import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -21,6 +24,7 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const SKILL = {
   hero: 'frieren',
@@ -278,6 +282,10 @@ const SKILL = {
           </li>
         </ol>
         <ul class="help-notes reading-secondary">
+          <li>
+            <a href="#www">Who Would Win?</a> also takes screenshots, of the Supreme League knockout
+            matchup screen.
+          </li>
           <li>You can paste a screenshot anywhere in the import window.</li>
           <li>Cropped screenshots and whole phone screens both work.</li>
           <li>Screenshots stay on your device.</li>
@@ -325,6 +333,146 @@ const SKILL = {
           way it was. Both remove all heroes.
         </li>
         <li>A shared link keeps your edited map.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="generator" class="help-sec">
+    <h2>5v5 team generator</h2>
+    <div class="help-grid">
+      <HelpGeneratorPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          Get a Supreme League team for each of the five maps, made from your own heroes and picked
+          from games players recorded.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              In the <b>Guide</b>, open the
+              <RouterLink :to="SL_GENERATOR_PATH">5v5 team generator</RouterLink>.
+            </span>
+          </li>
+          <li>
+            <span>
+              Pick your roster next to <b>Roster</b>, or make one with <b>Screenshots</b>.
+              <b>All heroes</b> uses every hero, fully upgraded.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              Click heroes to add or remove them, or drag across several. Click <b>P</b> or
+              <b>R</b> under a hero to set its level. Your saved roster stays as it is.
+            </span>
+            <span class="help-touch">
+              Tap heroes to add or remove them, and tap <b>P</b> or <b>R</b> under a hero to set its
+              level. Your saved roster stays as it is.
+            </span>
+          </li>
+          <li>
+            <span>
+              Choose <b>SL</b> for the Supreme League maps, or <b>Default</b> to use map 1 for all
+              five. Then press <b>Generate</b>.
+            </span>
+          </li>
+          <li>
+            <span>
+              The set shows above your heroes: one team on each map, each with its own artifact, and
+              no hero used twice. <b>Save as team</b> saves it and opens it on the Teams page.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          Under each map, <SlIcon name="players" class="help-inline-icon" /> is how many players
+          used that team's comp on the map, and <SlIcon name="record" class="help-inline-icon" />
+          the comp's wins and losses there.
+        </li>
+        <li>
+          <SlIcon name="lock" class="help-inline-icon" /> marks the core heroes, which stay.
+          <SlIcon name="swap" class="help-inline-icon" /> lists swaps taken from recorded teams of
+          the same comp, using your heroes the set leaves free: the hero or pair on the left for any
+          on the right, best first.
+        </li>
+        <li>
+          <b>Chance to win the match</b> is against a typical opponent, not a forecast of your next
+          match, so use it to compare sets. <b>How it works</b> explains where it comes from.
+        </li>
+        <li>
+          <b>About the data</b>, next to the page title, says which season the teams come from and
+          how many games they cover.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="www" class="help-sec">
+    <h2>Who Would Win?</h2>
+    <div class="help-grid">
+      <HelpWwwPicture />
+      <div class="help-side">
+        <p class="help-lead">Set up two Supreme League teams and see which should win, and why.</p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              In the <b>Guide</b>, open <RouterLink :to="WWW_PATH">Who Would Win?</RouterLink>.
+              Choose <b>One game</b>, or <b>Match</b> for the five games of a Supreme League match.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              Click an empty slot, then pick heroes from the list that opens. They fill the team's
+              slots in turn. Click a hero to take it off.
+            </span>
+            <span class="help-touch">
+              Tap a slot, then tap a hero in the list. Tap a hero in a slot to take it off.
+            </span>
+          </li>
+          <li>
+            <span>
+              <span class="help-mouse">Click</span><span class="help-touch">Tap</span> the round
+              slot at the outer end of a team to pick its artifact. The phantimal follows from the
+              heroes.
+            </span>
+          </li>
+          <li>
+            <span>
+              Set levels with <b>P</b> and <b>R</b> under each hero, or for a whole team with its
+              <b>Upgrades</b> menu. Heroes start at your roster's levels on Team A, and fully
+              upgraded on Team B.
+            </span>
+          </li>
+          <li>
+            <span>
+              Press <b>Predict winner</b>. <b>Why</b> splits the chance into heroes, counters,
+              artifacts and upgrades. <span class="help-mouse">Click</span
+              ><span class="help-touch">Tap</span> a row to see what's behind it.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          In <b>Match</b>, a team fields each hero and artifact once across the five games, as in
+          the game, so the lists leave out what it already uses. The result gives Team A's chance to
+          win three games of five, the chance of each final score, and a line for each game. Pick
+          one to see its reasons.
+        </li>
+        <li>
+          <b>Screenshots</b> fills all five games from the Supreme League knockout matchup screen.
+          One screenshot will do, or several taken while scrolling, as long as each team's cards
+          show whole in at least one.
+        </li>
+        <li>
+          A team can have fewer than five heroes. Each empty slot counts as weaker than the season's
+          weakest hero, with no upgrades.
+        </li>
+        <li>
+          A mark next to the verdict warns where the records are thin, such as a hero with few
+          recorded games this season. Such a hero counts as close to average.
+        </li>
+        <li><b>Swap sides</b> swaps the two teams, and <b>Clear</b> empties the games shown.</li>
       </ul>
     </div>
   </section>

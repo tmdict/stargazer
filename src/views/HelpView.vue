@@ -71,6 +71,35 @@ onMounted(() => {
   background: var(--placed-overlay);
 }
 
+.help :deep(.help-heroes) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.help :deep(.help-hero) {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.help :deep(.help-hero .upill) {
+  position: relative;
+  z-index: 3;
+  margin-top: -2px;
+}
+
+/* The Supreme League pages' action buttons, whose rule applies only under
+   their page root. */
+.help :deep(.help-sl-action) {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .help :deep(kbd) {
   display: inline-block;
   min-width: 1.6em;
@@ -106,6 +135,13 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--color-primary);
   color: #fff;
+}
+
+.help :deep(.help-inline-icon) {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  color: var(--reading-muted);
 }
 
 .help :deep(.help-tab) {
