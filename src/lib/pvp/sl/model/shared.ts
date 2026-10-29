@@ -96,8 +96,8 @@ function learn(games: Game[]): Model {
 
   const fielded = sides.flatMap((s) => s.heroes.map((h) => num(heroKey(h))))
   const weakest = fielded.reduce((low, v) => Math.min(low, v), Infinity)
-  const typicalHero = fielded.reduce((sum, v) => sum + v, 0) / fielded.length
-  const emptySlot = weakest - (typicalHero - weakest)
+  const averageHero = fielded.reduce((sum, v) => sum + v, 0) / fielded.length
+  const emptySlot = weakest - (averageHero - weakest)
 
   const heroSum = (heroes: readonly number[]): number =>
     heroes.reduce((s, h) => s + num(heroKey(h)), 0) +

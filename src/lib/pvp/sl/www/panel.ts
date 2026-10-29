@@ -149,7 +149,7 @@ export function wwwPanel(
   })
   const counterLine = (item: ReasonItem): WwwLine => ({
     side: item.side,
-    subject: 'hero',
+    subject: item.subject,
     id: item.id,
     value: item.value,
     record: recordOrNull(
