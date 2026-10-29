@@ -299,8 +299,7 @@ const predictWinner = async (): Promise<void> => {
 
 <style scoped>
 .www-page {
-  max-width: 1280px;
-  margin-inline: auto;
+  padding-inline: max(var(--sl-page-gutter), 50% - 640px + var(--sl-page-gutter));
 }
 
 .www-editor {
