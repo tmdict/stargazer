@@ -4,20 +4,21 @@
 
 .sl-page {
   --control-height-compact: var(--control-height);
+  --sl-page-gutter: 24px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
   width: 100%;
-  padding: 18px 24px 48px;
-  border-radius: var(--section-radius);
+  padding: 18px var(--sl-page-gutter) 48px;
   background: var(--color-bg-page);
   color: var(--color-text-primary);
 }
 
 @media (max-width: 768px) {
   .sl-page {
-    padding: 16px 16px 40px;
+    --sl-page-gutter: 16px;
+    padding: 16px var(--sl-page-gutter) 40px;
   }
 }
 
