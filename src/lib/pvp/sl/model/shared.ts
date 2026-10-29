@@ -15,8 +15,8 @@
  * games never show, counts each empty slot as far below the season's weakest
  * hero as that hero is below the average hero fielded. */
 
-import { lineupKey, TEAM_HEROES } from '../data/games.ts'
-import { fit, type Row } from './fit.ts'
+import { lineupKey, TEAM_HEROES } from '../data/games'
+import { fit, type Row } from './fit'
 import type {
   Explanation,
   Game,
@@ -26,7 +26,7 @@ import type {
   Reason,
   ReasonItem,
   Side,
-} from './types.ts'
+} from './types'
 
 // Upgrades have no detail lines of the model's.
 type ItemReason = Exclude<Reason, 'upgrades'>

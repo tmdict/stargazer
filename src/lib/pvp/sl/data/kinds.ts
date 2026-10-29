@@ -6,8 +6,8 @@
  * a tie. A team outside every group has no vote, and a team with no votes is
  * outside every group (null). */
 
-import { lineupKey } from './games.ts'
-import type { SlTeam } from './types.ts'
+import { lineupKey } from './games'
+import type { SlTeam } from './types'
 
 export type KindOf = (heroes: readonly number[]) => number | null
 

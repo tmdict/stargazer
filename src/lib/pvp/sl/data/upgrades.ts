@@ -1,7 +1,7 @@
 /* A hero's Rivalry points at its upgrade levels, at the data file's prices,
  * for the upgrade gaps both pages count. An empty slot has none. */
 
-import type { SlPrices } from './types.ts'
+import type { SlPrices } from './types'
 
 export interface SlLevels {
   faction: string

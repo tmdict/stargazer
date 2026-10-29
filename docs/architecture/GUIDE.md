@@ -28,7 +28,7 @@ A report's page is built from its template alone ([Pre-Rendering](./PRE_RENDERIN
 
 ## Supreme League generator
 
-`/guide/pvp/generator` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per board and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself, and that generator's check runs this code on each file it writes.
+`/guide/pvp/generator` (`SL_GENERATOR_PATH`) picks, for the heroes and levels a visitor selects, the set of five recorded Supreme League teams, one per board and no hero twice, with the best chance to win a match. Its records come from an external report generator, which writes the data file `src/content/pvp/sl/sl.bin` with each export. Stargazer learns its prediction model from the file's games and chooses the set itself.
 
 The page is pre-rendered in English with its heading alone, so search engines find it. The picker and the set follow the rosters the browser holds, so they are drawn after mount. The guide index's card for the generator draws a default set worked out once per build: `scripts/slPreview.ts` runs `defaultSlSet` (`src/lib/pvp/sl/generator/defaultSet.ts`) through Vite's module runner, so the app's imports resolve, and hands the result to the card as `virtual:sl-preview`. The index therefore loads neither the data file nor the model, and its boards are in the baked HTML.
 
@@ -46,8 +46,6 @@ The page keeps the dark look in both of the site's looks, the style of the seaso
 | `model/`     | The shape every prediction model fits (`types.ts`), the list of models (`models.ts`), the shared model (`shared.ts`), its fitting routine (`fit.ts`), the split of a chance into reasons (`reasons.ts`) and the chance of winning each number of games (`odds.ts`). |
 | `generator/` | The search (`chooser.ts`), the artifact rule (`artifacts.ts`), boards and swaps (`boards.ts`), the team Save as team stores (`team.ts`) and the index card's default set (`defaultSet.ts`).                                                                         |
 | `www/`       | Who Would Win?'s result for a game (`panel.ts`), and its games and a match's result (`match.ts`).                                                                                                                                                                   |
-
-The external check loads `data/` but `codec.ts`, all of `model/`, and `chooser.ts`, `artifacts.ts` and `boards.ts` in Node by stripping their types, and `www/panel.ts` and `www/match.ts` keep to the same rules so they can too. Those files use relative imports ending in `.ts`, no `enum` or `namespace`, and nothing of the browser or Vue; one that breaks this stops the check with Node's error.
 
 ### The model
 

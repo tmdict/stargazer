@@ -7,14 +7,14 @@
  * than five heroes has empty slots, which the model counts and the page
  * warns of. */
 
-import { decidedGames, TEAM_HEROES } from '../data/games.ts'
-import { gamesIn, seasonRecords, type WinLoss } from '../data/records.ts'
-import type { SlData } from '../data/types.ts'
-import { emptyShortfall, rivalryPoints, shortfall } from '../data/upgrades.ts'
-import type { SlPick } from '../generator/types.ts'
-import type { SlLearned } from '../model/models.ts'
-import { splitChance } from '../model/reasons.ts'
-import type { Reason, ReasonItem, Side } from '../model/types.ts'
+import { decidedGames, TEAM_HEROES } from '../data/games'
+import { gamesIn, seasonRecords, type WinLoss } from '../data/records'
+import type { SlData } from '../data/types'
+import { emptyShortfall, rivalryPoints, shortfall } from '../data/upgrades'
+import type { SlPick } from '../generator/types'
+import type { SlLearned } from '../model/models'
+import { splitChance } from '../model/reasons'
+import type { Reason, ReasonItem, Side } from '../model/types'
 
 export type TeamSide = 'a' | 'b'
 

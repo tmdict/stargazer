@@ -4,8 +4,8 @@
  * each reason takes its average over all 24 orders (its Shapley value), and
  * the four always add up to the chance less 50%. */
 
-import { sigmoid } from './fit.ts'
-import { REASONS, type Reason } from './types.ts'
+import { sigmoid } from './fit'
+import { REASONS, type Reason } from './types'
 
 const orders = (list: readonly Reason[]): Reason[][] =>
   list.length <= 1

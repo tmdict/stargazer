@@ -2,8 +2,8 @@
  * and its artifact, and a match's result from its five games' chances, each
  * game won or lost on its own as the generator takes its boards. */
 
-import { oddsInto } from '../model/odds.ts'
-import type { Pair } from './panel.ts'
+import { oddsInto } from '../model/odds'
+import type { Pair } from './panel'
 
 export const WWW_GAMES = 5
 

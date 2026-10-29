@@ -1,10 +1,10 @@
 /* The board drawn for a chosen team and the swaps shown under it. */
 
-import type { Side } from '../data/games.ts'
-import type { SlData, SlFamily } from '../data/types.ts'
-import { sigmoid } from '../model/fit.ts'
-import type { SlLearned } from '../model/models.ts'
-import type { SlChoiceTeam } from './types.ts'
+import type { Side } from '../data/games'
+import type { SlData, SlFamily } from '../data/types'
+import { sigmoid } from '../model/fit'
+import type { SlLearned } from '../model/models'
+import type { SlChoiceTeam } from './types'
 
 // A rate from decided games, starting from `start` with `prior` notional
 // games, by bisection on its log-odds. Each game's offset is how much easier

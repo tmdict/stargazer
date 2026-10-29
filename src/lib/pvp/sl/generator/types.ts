@@ -1,7 +1,7 @@
 /* The generator's input, the heroes a visitor picks at their levels, and its
  * answer, the set of five recorded teams. */
 
-import type { SlLevels } from '../data/upgrades.ts'
+import type { SlLevels } from '../data/upgrades'
 
 export interface SlPick extends SlLevels {
   id: number

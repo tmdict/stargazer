@@ -4,20 +4,16 @@
  * at their levels. A board takes the teams recorded on its map: the file's
  * maps in order give a Supreme League set, the same map on every board a set
  * for the Teams page's default 5v5 maps. Each team's chance is the model's,
- * against a typical opponent at the top levels.
- *
- * The external report generator's check loads this file in Node by stripping
- * its types, so it and what it imports use relative imports ending in .ts and
- * nothing of the browser. */
+ * against a typical opponent at the top levels. */
 
-import type { SlData, SlEvidence } from '../data/types.ts'
-import { shortfall } from '../data/upgrades.ts'
-import { sigmoid } from '../model/fit.ts'
-import type { SlLearned } from '../model/models.ts'
-import { oddsInto } from '../model/odds.ts'
-import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts.ts'
-import { placementOf, swapsOf } from './boards.ts'
-import type { SlChoice, SlPick } from './types.ts'
+import type { SlData, SlEvidence } from '../data/types'
+import { shortfall } from '../data/upgrades'
+import { sigmoid } from '../model/fit'
+import type { SlLearned } from '../model/models'
+import { oddsInto } from '../model/odds'
+import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
+import { placementOf, swapsOf } from './boards'
+import type { SlChoice, SlPick } from './types'
 
 const CELESTIAL_HYPOGEAN = ['celestial', 'hypogean']
 
