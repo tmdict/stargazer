@@ -101,15 +101,19 @@ describe('import engine', () => {
     expect(worker.reads()).toEqual([a!.id, b!.id])
   })
 
-  it('fails the unread shots when the references fail, and reads them once the next load is in', async () => {
-    const { shots, add } = holdEngine()
+  it('fails the unread shots when the references fail, and reads them once a fresh reader holds the parts kept', async () => {
+    const { engine, shots, add } = holdEngine()
     await add([file('a.png'), file('b.png')])
     const first = await partsPosted()
     first.reply({ type: 'error', id: null, part: 'heroes', message: 'out of memory' })
     expect(shots.map((s) => s.status)).toEqual(['failed', 'failed'])
 
+    await engine.ensureReferences()
     await add([file('c.png')])
-    const next = await partsPosted()
+    const next = readers().at(-1)!
+    expect(next).not.toBe(first)
+    const posts = (part: ReferencePart) => next.received.filter((m) => m.type === part).length
+    expect([posts('heroes'), posts('match')]).toEqual([1, 1])
     answerReady(next)
     expect(shots.map((s) => s.status)).toEqual(['reading', 'waiting', 'waiting'])
     expect(next.reads()).toEqual([shots[0]!.id])

@@ -565,6 +565,8 @@ async function ensurePart(part: ReferencePart): Promise<void> {
   const mine = visit
   try {
     if (readers.length === 0) startReader()
+    // Fetched before every reader failed: the reader just started has its copy.
+    if (loaded[part]) return
     // Kept only for the visit that asked: a page left meanwhile has dropped
     // its readers, and the next visit fetches its own.
     if (part === 'heroes') {
