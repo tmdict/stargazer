@@ -16,21 +16,23 @@ import { interpolate } from '@/utils/interpolate'
 const i18n = useI18nStore()
 const route = useRoute()
 
-const page = (key: string, label: string, to: string, meta?: string): DropdownItem => ({
+const BETA = { meta: 'BETA', metaColor: 'var(--color-warning)' }
+
+const page = (key: string, label: string, to: string, tag?: typeof BETA): DropdownItem => ({
   key,
   label,
-  meta,
+  ...tag,
   selected: route.name === key,
   to,
 })
 
 const items = computed<DropdownItem[]>(() => [
-  page('guide-sl', i18n.t('app.sl-title'), SL_GENERATOR_PATH, 'BETA'),
-  page('guide-www', i18n.t('app.www-title'), WWW_PATH, 'BETA'),
+  page('guide-sl', i18n.t('app.sl-title'), SL_GENERATOR_PATH, BETA),
+  page('guide-www', i18n.t('app.www-title'), WWW_PATH, BETA),
   ...PVP_SEASONS.map(({ season, live }) => ({
     key: `report-${season}`,
     label: `${interpolate(i18n.t('app.season'), { n: season })} ${i18n.t('app.pvp-report')}`,
-    meta: live ? i18n.t('app.current-season') : undefined,
+    ...(live && { meta: i18n.t('app.current-season'), metaColor: 'var(--color-accent)' }),
     selected: false,
     href: pvpReportHref(season, i18n.currentLocale),
   })),
