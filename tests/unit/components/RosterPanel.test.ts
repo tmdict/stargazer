@@ -130,10 +130,11 @@ describe('RosterPanel select mode', () => {
   it('clears the ticks on a filter change and stops selecting on a roster change', async () => {
     const rosters = await mountPanel()
     const firstRoster = rosters.active!.id
+    const owned = heroIds().flatMap((id, i) => (rosters.active!.heroes[id] ? [i] : []))
     button('.dock-chip', 'Select').click()
     await nextTick()
-    await tap(0)
-    await tap(1)
+    await tap(owned[0]!)
+    await tap(owned[1]!)
     expect(tickedCount()).toBe('2 selected')
 
     document.querySelector<HTMLButtonElement>('.icon-option:not(.clear-option)')!.click()

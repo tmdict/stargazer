@@ -1,0 +1,24 @@
+{
+  "id": 130,
+  "name": "baden",
+  "level": "s",
+  "faction": "graveborn",
+  "class": "rogue",
+  "damage": "physical",
+  "energy": [400],
+  "range": 1,
+  "season": 8,
+  "tags": {
+    "airborne": [{ "ultimate": 1, "mods": ["kazim"] }],
+    "cheat-death": [{ "awakening": 1, "mods": ["self"] }],
+    "debuff": [
+      { "ultimate": 1, "mods": ["aoe"] },
+      { "skill3": 1, "mods": ["aoe", "eryndor"] },
+      { "ex": 1, "mods": ["aoe"] },
+      { "ex": 1, "mods": ["eryndor", "single"] }
+    ],
+    "energy-denial": [{ "ultimate": 1 }, { "skill2": 1 }],
+    "heal-denial": [{ "ultimate": 1 }],
+    "summon": [{ "skill2": 1 }, { "ex": 3 }]
+  }
+}
