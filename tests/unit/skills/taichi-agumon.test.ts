@@ -52,12 +52,15 @@ describe('taichi-agumon behind line', () => {
     expect(new Set(lines.map((line) => `${line.fromHexId}:${line.fromCorner}`)).size).toBe(13)
   })
 
+  // The board is point-symmetric, so the enemy's line has the ally's 13 edges.
   it('takes the higher rows as behind an enemy', () => {
-    for (const line of draw(23, Team.ENEMY)) {
+    const lines = draw(23, Team.ENEMY)
+    for (const line of lines) {
       const { row, acrossRow } = sides(line)
       expect(row).toBeGreaterThan(0)
       expect(acrossRow).toBeLessThanOrEqual(0)
     }
+    expect(lines).toHaveLength(13)
   })
 
   it('draws nothing from the rearmost row', () => {
