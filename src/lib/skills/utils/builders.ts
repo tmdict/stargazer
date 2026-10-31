@@ -107,36 +107,21 @@ interface TileHighlightSkillConfig {
   calculateTarget: (context: SkillContext) => SkillTargetInfo | null
 }
 
-/**
- * Skill that highlights a single tile with a color modifier.
- * Tracks the previously highlighted tile so its modifier is cleaned up
- * before applying the new one.
- */
+/** Skill that highlights a single tile with a color modifier. */
 export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skill {
   const { id, tileColor, fill, calculateTarget } = config
 
-  const paint = (sm: SkillContext['skillManager'], hexId: number): void =>
-    fill ? sm.setTileFillModifier(hexId, tileColor) : sm.setTileColorModifier(hexId, tileColor)
-  const unpaint = (sm: SkillContext['skillManager'], hexId: number): void =>
-    fill
-      ? sm.removeTileFillModifier(hexId, tileColor)
-      : sm.removeTileColorModifier(hexId, tileColor)
-
   const updateTargets = (ctx: SkillContext): void => {
     const { skillManager, team, characterId } = ctx
-
-    // Clear previous tile color before applying new one
-    const previous = skillManager.getSkillTarget(characterId, team)
-    if (previous?.targetHexId) {
-      unpaint(skillManager, previous.targetHexId)
-    }
-
     const info = calculateTarget(ctx)
     if (info?.targetHexId) {
       skillManager.setSkillTarget(characterId, team, info)
-      paint(skillManager, info.targetHexId)
+      skillManager.paintTiles(characterId, team, [
+        { hexId: info.targetHexId, color: tileColor, fill },
+      ])
     } else {
       skillManager.clearSkillTarget(characterId, team)
+      skillManager.clearPaintedTiles(characterId, team)
     }
   }
 
@@ -146,12 +131,8 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
     onActivate(ctx) {
       updateTargets(ctx)
     },
-    onDeactivate(ctx) {
-      const { skillManager, team, characterId } = ctx
-      const current = skillManager.getSkillTarget(characterId, team)
-      if (current?.targetHexId) {
-        unpaint(skillManager, current.targetHexId)
-      }
+    onDeactivate({ skillManager, team, characterId }) {
+      skillManager.clearPaintedTiles(characterId, team)
       skillManager.clearSkillTarget(characterId, team)
     },
     onUpdate(ctx) {

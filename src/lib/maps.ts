@@ -16,9 +16,7 @@ interface ArenaJson {
     blocked: number[]
     breakable: number[]
   }
-  // Tiles that buff the unit standing on them, one on each side, ally tile
-  // first. Kept beside grid, since every list in grid is a tile type and a buff
-  // tile stays an ally or enemy tile when a unit stands on it.
+  // Tiles that buff the unit standing on them, one on each side, ally tile first.
   buffTiles?: number[]
 }
 
@@ -29,7 +27,6 @@ export interface MapConfig {
     type: State
     hex: number[]
   }>
-  buffTiles?: number[]
 }
 
 const STATE_MAP: Record<keyof ArenaJson['grid'], State> = {
@@ -47,7 +44,6 @@ function parseMapConfig(json: ArenaJson): MapConfig {
       type: STATE_MAP[key as keyof ArenaJson['grid']],
       hex,
     })),
-    buffTiles: json.buffTiles,
   }
 }
 

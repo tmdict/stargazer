@@ -84,7 +84,8 @@ const SKILL = {
         <h3>Skill targeting</h3>
         <p>
           Turn on <b>Skills</b>. Arrows show which enemy each hero goes after, and skill ranges show
-          up on the map.
+          up on the map. Its menu turns these off for one hero or artifact at a time, or for all of
+          Ally or Enemy.
         </p>
       </li>
       <li>

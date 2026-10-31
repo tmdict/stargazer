@@ -1,24 +1,17 @@
 <script setup lang="ts">
-/* The Grid Info control: a split chip whose body toggles the master pref and
-   whose caret opens the children panel; a mouse also opens it on hover. Three
-   presentations: wide screens get a checkbox checklist, narrow (Arena/Teams)
-   gets a chip tray opened by tapping the pill (master chip first), and
-   ShareView gets a right-aligned checklist. State lives in the shared device pref
-   (useGridInfoPrefs); enable cascades run there, so a tap on a nested child
-   also lights its parents. A row whose surface is ineffective (master or a
-   structural parent off) dims but keeps its remembered checked state. */
+/* The Grid Info control. State lives in the shared device pref
+   (useGridInfoPrefs); enable cascades run there, so a tap on a nested child also
+   lights its parents. A row whose surface is ineffective (master or a structural
+   parent off) dims but keeps its remembered checked state. */
 
-import { computed, ref, useId } from 'vue'
+import { computed } from 'vue'
 
-import ToggleChip from '@/components/ui/ToggleChip.vue'
-import { useDropdown } from '@/composables/useDropdown'
+import ToggleChipMenu from '@/components/ui/ToggleChipMenu.vue'
 import {
   GRID_INFO_PARENTS,
   useGridInfoPrefs,
   type GridInfoKey,
 } from '@/composables/useGridInfoPrefs'
-import { useNarrowViewport } from '@/composables/useNarrowViewport'
-import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useI18nStore } from '@/stores/i18n'
 
 const { share = false } = defineProps<{
@@ -41,6 +34,7 @@ const rows: Row[] = [
   { key: 'targeting', label: 'app.targeting' },
   { key: 'heroCard', label: 'app.hero-card' },
   { key: 'upgrades', label: 'app.upgrades' },
+  { key: 'heroSkin', label: 'app.hero-skin' },
 ]
 
 // Indentation and dimming derive from the shared parent map, so the checklist
@@ -50,319 +44,31 @@ const isSub = (key: GridInfoKey): boolean => parentsOf(key).length > 0
 const ghosted = (key: GridInfoKey): boolean =>
   !prefs.master || parentsOf(key).some((parent) => !prefs[parent])
 
-const toggle = (key: GridInfoKey): void => setPref(key, !prefs[key])
+const groups = computed(() => [
+  {
+    rows: rows.map(({ key, label }) => ({
+      key,
+      label: i18n.t(label),
+      checked: prefs[key],
+      sub: isSub(key),
+      dim: ghosted(key),
+    })),
+  },
+])
 
 const master = computed({
   get: () => prefs.master,
   set: (on: boolean) => setPref('master', on),
 })
-
-// Narrow layouts swap the checklist trigger for the tray pill.
-const isNarrow = useNarrowViewport()
-
-const tray = computed(() => !share && isNarrow.value)
-
-const rootRef = ref<HTMLElement>()
-const panelRef = ref<HTMLElement>()
-const panelId = useId()
-const {
-  open,
-  toggle: togglePanel,
-  onMouseEnter,
-  onMouseLeave,
-  onTouchStart,
-} = useDropdown({ rootRef, hover: true })
-
-// The checklist starts at the chip's left edge and the tray centres under the
-// pill, both nudged inside the viewport; the share panel right-aligns instead
-// (never shifted). The root has the chip's or the pill's box, since the panel
-// is positioned out of flow.
-const panelShift = usePanelClamp(
-  rootRef,
-  panelRef,
-  () => open.value && !share,
-  () => (tray.value ? 'center' : 'left'),
-)
 </script>
 
 <template>
-  <div
-    ref="rootRef"
-    class="grid-info-toggle"
-    :class="{ share }"
-    @mouseenter="onMouseEnter"
-    @mouseleave="onMouseLeave"
-    @touchstart.passive="onTouchStart"
-  >
-    <!-- Narrow Arena/Teams: one pill, tap opens the tray (master lives inside). -->
-    <button
-      v-if="tray"
-      type="button"
-      class="pill"
-      :class="{ active: prefs.master }"
-      :aria-expanded="open"
-      :aria-controls="panelId"
-      aria-haspopup="true"
-      @click="togglePanel"
-    >
-      {{ i18n.t('app.grid-info') }}<span class="pill-caret">&#9662;</span>
-    </button>
-
-    <!-- Wide + ShareView: split chip, body toggles the master, caret opens. -->
-    <ToggleChip
-      v-else
-      v-model="master"
-      class="chip"
-      :glass="share"
-      :label="i18n.t('app.grid-info')"
-    >
-      <template #caret>
-        <button
-          type="button"
-          class="chip-caret"
-          :aria-expanded="open"
-          :aria-controls="panelId"
-          aria-haspopup="true"
-          :aria-label="i18n.t('app.grid-info-options')"
-          @click="togglePanel"
-        >
-          &#9662;
-        </button>
-      </template>
-    </ToggleChip>
-
-    <div
-      v-if="open"
-      :id="panelId"
-      ref="panelRef"
-      class="panel"
-      :class="{ tray, lalign: !tray && !share, ralign: share }"
-      :style="{ '--panel-shift': `${panelShift}px` }"
-    >
-      <template v-if="tray">
-        <button
-          type="button"
-          class="tray-chip"
-          :class="{ on: prefs.master }"
-          @click="toggle('master')"
-        >
-          {{ i18n.t('app.grid-info') }}
-        </button>
-        <span class="tray-divider" />
-        <button
-          v-for="row in rows"
-          :key="row.key"
-          type="button"
-          class="tray-chip"
-          :class="{ on: prefs[row.key], dim: ghosted(row.key) }"
-          @click="toggle(row.key)"
-        >
-          {{ i18n.t(row.label) }}
-        </button>
-      </template>
-      <template v-else>
-        <label
-          v-for="row in rows"
-          :key="row.key"
-          class="row"
-          :class="{ sub: isSub(row.key), dim: ghosted(row.key) }"
-        >
-          <input
-            type="checkbox"
-            class="row-checkbox"
-            :checked="prefs[row.key]"
-            @change="toggle(row.key)"
-          />
-          <span>{{ i18n.t(row.label) }}</span>
-        </label>
-      </template>
-    </div>
-  </div>
+  <ToggleChipMenu
+    v-model="master"
+    :label="i18n.t('app.grid-info')"
+    :options-label="i18n.t('app.grid-info-options')"
+    :groups
+    :share
+    @toggle="(key) => setPref(key, !prefs[key])"
+  />
 </template>
-
-<style scoped>
-.grid-info-toggle {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.chip-caret {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--spacing-sm);
-  border: none;
-  border-left: 1px solid var(--color-border-primary);
-  background: none;
-  color: inherit;
-  font-size: 0.7rem;
-  cursor: pointer;
-}
-
-.chip-caret:hover {
-  background: var(--color-bg-secondary);
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  border: 1px solid var(--color-border-primary);
-  border-radius: 999px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  padding: var(--toggle-chip-padding-tablet);
-  min-height: var(--control-height-tablet);
-  font-size: var(--toggle-chip-font-size-tablet);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.pill.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-
-.pill-caret {
-  font-size: 0.6rem;
-}
-
-@media (max-width: 480px) {
-  .pill {
-    padding: var(--toggle-chip-padding-mobile);
-    min-height: var(--control-height-mobile);
-    font-size: var(--toggle-chip-font-size-mobile);
-  }
-}
-
-.grid-info-toggle.share .chip {
-  min-height: 32px;
-  font-size: 0.78rem;
-}
-
-.grid-info-toggle.share .chip-caret {
-  border-left-color: rgba(255, 255, 255, 0.1);
-}
-
-.grid-info-toggle.share .chip-caret:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.grid-info-toggle.share .panel {
-  background: rgba(20, 20, 20, 0.92);
-  backdrop-filter: blur(10px);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.grid-info-toggle.share .row {
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.grid-info-toggle.share .row:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.panel {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(calc(-50% + var(--panel-shift, 0px)));
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-float);
-  padding: var(--dropdown-list-padding);
-  z-index: var(--z-dropdown);
-  min-width: max-content;
-}
-
-.panel.lalign {
-  left: 0;
-  transform: translateX(var(--panel-shift, 0px));
-}
-
-.panel.ralign {
-  left: auto;
-  right: 0;
-  transform: none;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--dropdown-row-radius);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-}
-
-.row:hover {
-  background: var(--dropdown-row-hover);
-  color: var(--color-primary);
-}
-
-.row.sub {
-  padding-left: calc(var(--spacing-md) + 18px);
-}
-
-.row.dim {
-  opacity: 0.5;
-}
-
-.row-checkbox {
-  width: 0.9rem;
-  height: 0.9rem;
-  cursor: pointer;
-  accent-color: var(--color-primary);
-  margin: 0;
-}
-
-/* The base panel's min-width: max-content would beat max-width and defeat the
-   wrap, running the tray off the phone screen. */
-.panel.tray {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  max-width: min(320px, calc(100vw - 16px));
-}
-
-.tray-chip {
-  border: 1px solid var(--color-border-primary);
-  border-radius: 999px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  padding: var(--toggle-chip-padding-tablet);
-  font-size: var(--toggle-chip-font-size-tablet);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.tray-chip.on {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-
-.tray-chip.dim {
-  opacity: 0.55;
-}
-
-.tray-divider {
-  width: 1px;
-  align-self: stretch;
-  background: var(--color-border-primary);
-}
-</style>

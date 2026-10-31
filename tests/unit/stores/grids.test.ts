@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,10 +9,12 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { artifactSkillKey, unitSkillKey } from '@/lib/skills/skill'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { BoardLineup, TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useRosters } from '@/stores/rosters'
 import {
@@ -619,6 +622,65 @@ describe('useGrids synergy', () => {
     grids.synergy = true
     grids.setGridCount(1)
     expect(grids.synergy).toBe(false)
+  })
+})
+
+describe('useGrids hidden skills', () => {
+  const KULU_ALLY = unitSkillKey(KULU, Team.ALLY)
+  const SILVINA = 39
+  const ENLIGHTENING = 3
+
+  it('hides a drawing on the board without losing it from the skill engine', () => {
+    const { grids, a } = setupBoards(1)
+    a.place(2, SILVINA, Team.ALLY)
+    a.place(40, ENEMY_A, Team.ENEMY)
+    grids.setSkillsHidden([unitSkillKey(SILVINA, Team.ALLY)], true)
+
+    expect(a.skillTargets.size).toBe(0)
+    // The Debug tab reads the engine directly.
+    expect(a.skillManager.getAllSkillTargets().size).toBe(1)
+  })
+
+  it('merges a hero and its synergy copy into one row', () => {
+    const { grids, a } = setupBoards(1)
+    a.place(1, KULU, Team.ALLY)
+    a.place(2, toSynergyId(KULU), Team.ALLY)
+
+    expect(grids.skillRows.filter((row) => row.key === KULU_ALLY)).toHaveLength(1)
+  })
+
+  it('stays hidden across boards and comes back visible after leaving them', async () => {
+    const { grids, a, b } = setupBoards()
+    a.place(1, KULU, Team.ALLY)
+    grids.setSkillsHidden([KULU_ALLY], true)
+    expect(a.getTileColorModifier(19)).toBeUndefined()
+
+    grids.routeDrop(dragPayload(0, 1, KULU), 1, 1)
+    await nextTick()
+    expect(findCharacterHex(b.grid, KULU, Team.ALLY)).toBe(1)
+    expect(grids.hiddenSkills.has(KULU_ALLY)).toBe(true)
+    expect(b.getTileColorModifier(19)).toBeUndefined()
+
+    b.remove(1)
+    await nextTick()
+    b.place(1, KULU, Team.ALLY)
+    expect(b.getTileColorModifier(19)).toBeDefined()
+  })
+
+  it('hides one side of a board artifact and lists it while it draws', () => {
+    useGameDataStore().initializeContentData()
+    const { grids, a } = setupBoards(1)
+    a.setArtifact(Team.ALLY, ENLIGHTENING)
+    a.setArtifact(Team.ENEMY, ENLIGHTENING)
+    const key = artifactSkillKey(ENLIGHTENING, Team.ALLY)
+    expect(grids.skillRows.find((row) => row.key === key)?.drawing).toBe(false)
+
+    a.place(1, ALLY_A, Team.ALLY)
+    a.place(40, ENEMY_A, Team.ENEMY)
+    expect(grids.skillRows.find((row) => row.key === key)?.drawing).toBe(true)
+
+    grids.setSkillsHidden([key], true)
+    expect(a.artifactArrows.map((arrow) => arrow.team)).toEqual([Team.ENEMY])
   })
 })
 

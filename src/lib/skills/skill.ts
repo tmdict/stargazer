@@ -1,4 +1,5 @@
 import { findCharacterHex } from '../characters/character'
+import { decomposeUnitId } from '../characters/synergy'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
 import type { BadgeIcon } from '../types/unitBadge'
@@ -85,6 +86,32 @@ export interface SkillTargetInfo {
   }
 }
 
+// A placed unit's skill, and whether it has anything on the board right now.
+interface SkillInstance {
+  characterId: number
+  team: Team
+  drawing: boolean
+}
+
+// A unit or artifact the Skills dropdown can hide, under its key in the board's
+// hidden set. `id` is the unit's base id or the artifact's id.
+export interface SkillRow {
+  key: string
+  team: Team
+  kind: 'unit' | 'artifact'
+  id: number
+  drawing: boolean
+}
+
+// A synergy copy shares its base hero's key, so one row covers both.
+export const unitSkillKey = (characterId: number, team: Team): string =>
+  `${decomposeUnitId(characterId).localId}-${team}`
+
+export const artifactSkillKey = (artifactId: number, team: Team): string =>
+  `artifact-${artifactId}-${team}`
+
+const NOTHING_HIDDEN: ReadonlySet<string> = new Set()
+
 // Concrete skill type for character implementations
 export type Skill = SkillBase<SkillContext>
 
@@ -97,6 +124,23 @@ export function registerSkill(skill: Skill): void {
   _registerSkill<SkillContext>(skill)
 }
 
+function dropTileColor(
+  map: Map<number, Map<string, number>>,
+  hexId: number,
+  color: string,
+): boolean {
+  const counts = map.get(hexId)
+  const count = counts?.get(color)
+  if (counts === undefined || count === undefined) return false
+  if (count > 1) {
+    counts.set(color, count - 1)
+  } else {
+    counts.delete(color)
+    if (counts.size === 0) map.delete(hexId)
+  }
+  return true
+}
+
 export class SkillManager {
   // Track which characters have active skills on which hexes
   // Key is "characterId-team" to allow same character on different teams
@@ -107,7 +151,8 @@ export class SkillManager {
   // Two independent tile-paint channels, each keyed by hex id and holding the
   // colors painted there: borders render as the tile stroke, fills as a tinted
   // cell fill. A skill picks one (see TilePaint.fill). Each color carries a
-  // refcount so independent skills can paint the same color on one tile.
+  // refcount so independent skills can paint the same color on one tile. Every
+  // paint goes through paintTiles, so skillPaintedTiles can name its painter.
   private tileColorModifiers: Map<number, Map<string, number>> = new Map()
   private tileFillModifiers: Map<number, Map<string, number>> = new Map()
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
@@ -255,61 +300,49 @@ export class SkillManager {
     hexId: number,
     color: string,
   ): void {
-    const counts = map.get(hexId)
-    const count = counts?.get(color)
-    if (counts === undefined || count === undefined) return
-    if (count > 1) {
-      counts.set(color, count - 1)
-    } else {
-      counts.delete(color)
-      if (counts.size === 0) map.delete(hexId)
+    if (dropTileColor(map, hexId, color)) this.targetVersion++
+  }
+
+  private isHidden(key: string, hidden: ReadonlySet<string>): boolean {
+    const info = this.activeSkills[key]
+    return info !== undefined && hidden.has(unitSkillKey(info.characterId, info.team))
+  }
+
+  // A hidden instance's share comes off a copy of the counts, so a color another
+  // skill also paints stays and the remaining colors keep their order.
+  private visibleColors(
+    channel: Map<number, Map<string, number>>,
+    fill: boolean,
+    hidden: ReadonlySet<string>,
+  ): Map<number, string[]> {
+    const counts = new Map([...channel].map(([hexId, colors]) => [hexId, new Map(colors)]))
+    for (const [key, tiles] of this.skillPaintedTiles) {
+      if (!this.isHidden(key, hidden)) continue
+      for (const tile of tiles) {
+        if (Boolean(tile.fill) === fill) dropTileColor(counts, tile.hexId, tile.color)
+      }
     }
-    this.targetVersion++
+    return new Map([...counts].map(([hexId, colors]) => [hexId, [...colors.keys()]]))
   }
 
   // Border channel
-  setTileColorModifier(hexId: number, color: string): void {
-    this.addTileColor(this.tileColorModifiers, hexId, color)
-  }
-
-  removeTileColorModifier(hexId: number, color: string): void {
-    this.removeTileColor(this.tileColorModifiers, hexId, color)
-  }
-
   getTileColorModifier(hexId: number): string[] | undefined {
     const counts = this.tileColorModifiers.get(hexId)
     return counts && counts.size > 0 ? [...counts.keys()] : undefined
   }
 
-  getTileColorModifiers(): Map<number, string[]> {
-    return new Map(
-      [...this.tileColorModifiers].map(([hexId, counts]) => [hexId, [...counts.keys()]]),
-    )
-  }
-
-  clearTileColorModifiers(): void {
-    this.tileColorModifiers.clear()
-    this.targetVersion++
+  getTileColorModifiers(hidden = NOTHING_HIDDEN): Map<number, string[]> {
+    return this.visibleColors(this.tileColorModifiers, false, hidden)
   }
 
   // Fill channel
-  setTileFillModifier(hexId: number, color: string): void {
-    this.addTileColor(this.tileFillModifiers, hexId, color)
-  }
-
-  removeTileFillModifier(hexId: number, color: string): void {
-    this.removeTileColor(this.tileFillModifiers, hexId, color)
-  }
-
   getTileFillModifier(hexId: number): string[] | undefined {
     const counts = this.tileFillModifiers.get(hexId)
     return counts && counts.size > 0 ? [...counts.keys()] : undefined
   }
 
-  getTileFillModifiers(): Map<number, string[]> {
-    return new Map(
-      [...this.tileFillModifiers].map(([hexId, counts]) => [hexId, [...counts.keys()]]),
-    )
+  getTileFillModifiers(hidden = NOTHING_HIDDEN): Map<number, string[]> {
+    return this.visibleColors(this.tileFillModifiers, true, hidden)
   }
 
   // The last call's tiles come off first, so a repaint can move or recolour
@@ -329,14 +362,16 @@ export class SkillManager {
 
   // A paint's `fill` flag selects its channel for both apply and cleanup, so a
   // tile is always removed from the same channel it was added to.
+  private tileChannel(tile: TilePaint): Map<number, Map<string, number>> {
+    return tile.fill ? this.tileFillModifiers : this.tileColorModifiers
+  }
+
   private paintTile(tile: TilePaint): void {
-    if (tile.fill) this.setTileFillModifier(tile.hexId, tile.color)
-    else this.setTileColorModifier(tile.hexId, tile.color)
+    this.addTileColor(this.tileChannel(tile), tile.hexId, tile.color)
   }
 
   private unpaintTile(tile: TilePaint): void {
-    if (tile.fill) this.removeTileFillModifier(tile.hexId, tile.color)
-    else this.removeTileColorModifier(tile.hexId, tile.color)
+    this.removeTileColor(this.tileChannel(tile), tile.hexId, tile.color)
   }
 
   // Lines render straight from the flattened set, so this just replaces the
@@ -352,8 +387,10 @@ export class SkillManager {
     if (this.skillLines.delete(this.getSkillKey(characterId, team))) this.targetVersion++
   }
 
-  getSkillLines(): SkillLine[] {
-    return [...this.skillLines.values()].flat()
+  getSkillLines(hidden = NOTHING_HIDDEN): SkillLine[] {
+    return [...this.skillLines]
+      .filter(([key]) => !this.isHidden(key, hidden))
+      .flatMap(([, lines]) => lines)
   }
 
   setSkillBadges(characterId: number, team: Team, badges: SkillBadge[]): void {
@@ -369,11 +406,14 @@ export class SkillManager {
 
   // One badge per hex and icon however many instances show it: a synergy
   // copy's party can share members with its base hero's.
-  getSkillBadges(): SkillBadge[] {
+  getSkillBadges(hidden = NOTHING_HIDDEN): SkillBadge[] {
     const unique = new Map<string, SkillBadge>()
-    for (const badge of [...this.skillBadges.values()].flat()) {
-      const key = `${badge.hexId}-${badge.icon}`
-      if (!unique.has(key)) unique.set(key, badge)
+    for (const [instance, badges] of this.skillBadges) {
+      if (this.isHidden(instance, hidden)) continue
+      for (const badge of badges) {
+        const key = `${badge.hexId}-${badge.icon}`
+        if (!unique.has(key)) unique.set(key, badge)
+      }
     }
     return [...unique.values()]
   }
@@ -396,8 +436,22 @@ export class SkillManager {
     this.targetVersion++
   }
 
-  getAllSkillTargets(): Map<string, SkillTargetInfo> {
-    return new Map(this.skillTargets)
+  getAllSkillTargets(hidden = NOTHING_HIDDEN): Map<string, SkillTargetInfo> {
+    return new Map([...this.skillTargets].filter(([key]) => !this.isHidden(key, hidden)))
+  }
+
+  // Arrows count only with an arrow color: a tile highlight stores a target too.
+  getSkillInstances(): SkillInstance[] {
+    return Object.entries(this.activeSkills).map(([key, { characterId, team }]) => ({
+      characterId,
+      team,
+      drawing:
+        !!this.skillPaintedTiles.get(key)?.length ||
+        this.skillLines.has(key) ||
+        this.skillBadges.has(key) ||
+        (!!getCharacterSkill(characterId)?.targetingColorModifier &&
+          !!this.skillTargets.get(key)?.metadata?.arrows?.length),
+    }))
   }
 
   getTargetVersion(): number {

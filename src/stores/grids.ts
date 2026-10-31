@@ -10,7 +10,7 @@
  * The single-grid Arena is setGridCount(1); the 5 v 5 page is setGridCount(5).
  */
 
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
@@ -41,6 +41,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
+import type { SkillRow } from '@/lib/skills/skill'
 import {
   sideLoadBoard,
   type SideLoadBoard,
@@ -105,6 +106,9 @@ export const useGrids = defineStore('grids', () => {
   // content, and deriveSynergy re-reads the boards after every restore path so
   // arriving state with a synergy unit lands with the box checked.
   const synergy = ref(false)
+  // What the Skills dropdown has turned off. Never serialized or persisted, so
+  // a reload or a share link shows every drawing.
+  const hiddenSkills = shallowRef<ReadonlySet<string>>(new Set())
 
   const deriveSynergy = (): void => {
     synergy.value = contexts.value.some((ctx) =>
@@ -130,6 +134,32 @@ export const useGrids = defineStore('grids', () => {
   }
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
+
+  // A key is unique across boards but for a hero and its synergy copy, which
+  // share a row that draws if either does.
+  const skillRows = computed<SkillRow[]>(() => {
+    const rows = new Map<string, SkillRow>()
+    for (const row of contexts.value.flatMap((ctx) => ctx.skillRows)) {
+      if (row.drawing || !rows.has(row.key)) rows.set(row.key, row)
+    }
+    return [...rows.values()]
+  })
+
+  const setSkillsHidden = (keys: readonly string[], hidden: boolean): void => {
+    const next = new Set(hiddenSkills.value)
+    for (const key of keys) {
+      if (hidden) next.add(key)
+      else next.delete(key)
+    }
+    hiddenSkills.value = next
+  }
+
+  // A unit taken off the boards comes back visible, as its upgrades reset.
+  watch(skillRows, (rows) => {
+    const present = new Set(rows.map((row) => row.key))
+    const kept = [...hiddenSkills.value].filter((key) => present.has(key))
+    if (kept.length !== hiddenSkills.value.size) hiddenSkills.value = new Set(kept)
+  })
 
   // Team view crops every board by the same amount (the union of all boards' shown
   // extents) so the row stays even-sized. Null on a single board (the Arena), where
@@ -172,6 +202,7 @@ export const useGrids = defineStore('grids', () => {
         perspective,
         synergy,
         sharedCrop,
+        hiddenSkills,
       }),
     )
     if (activeId.value >= clamped) activeId.value = 0
@@ -919,6 +950,9 @@ export const useGrids = defineStore('grids', () => {
     synergy,
     deriveSynergy,
     setSynergy,
+    hiddenSkills,
+    skillRows,
+    setSkillsHidden,
     setGridCount,
     setActive,
     getContext,

@@ -332,6 +332,12 @@ const {
   margin-top: 0;
 }
 
+@media (max-width: 480px) {
+  .teams-boards :deep(.grid-controls) {
+    padding: 0 var(--panel-inset);
+  }
+}
+
 .swap-drag-ghost {
   position: fixed;
   z-index: 1000;

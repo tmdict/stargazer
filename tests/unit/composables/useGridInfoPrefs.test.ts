@@ -127,6 +127,7 @@ describe('deriveGridInfoView', () => {
       upgrades: true,
       targeting: true,
       coordinates: true,
+      heroSkin: true,
     }
 
     expect(deriveGridInfoView(allOn)).toEqual({
@@ -136,6 +137,7 @@ describe('deriveGridInfoView', () => {
       heroCard: true,
       upgrades: true,
       targeting: true,
+      heroSkin: true,
     })
     const masterOff = deriveGridInfoView({ ...allOn, master: false })
     expect(Object.values(masterOff).every((v) => v === false)).toBe(true)

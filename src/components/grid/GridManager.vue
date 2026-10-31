@@ -259,6 +259,7 @@ defineExpose({
     <GridCharacters
       :characters
       :show-hover="info.hover"
+      :show-skin="info.heroSkin"
       :show-skills
       :is-map-editor-mode="isMapEditorMode"
       :readonly

@@ -1,6 +1,6 @@
-/* How the screenshot import names and pictures a unit: a hero by its
- * localised name, a hero's companion by its owner's name, marked, and a
- * phantimal and the companion it brings by their own art (Wedge of Power). */
+/* How a list off the board names and pictures a unit: a hero by its localised
+ * name, a hero's companion by its owner's name, marked, and a phantimal and the
+ * companion it brings by their own art (Wedge of Power). */
 
 import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand } from '@/lib/characters/phantimal'

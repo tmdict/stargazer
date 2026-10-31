@@ -7,5 +7,5 @@
     "def": 43.9,
     "hp": 13.2
   },
-  "tags": ["temp-buff"]
+  "tags": ["haste", "temp-buff"]
 }

@@ -180,7 +180,7 @@ export interface RowScanOptions {
   filter?: (characterId: number) => boolean
 }
 
-export interface ScannedUnit {
+interface ScannedUnit {
   hexId: number
   characterId: number
   distance: number
