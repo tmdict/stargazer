@@ -13,7 +13,7 @@ npm run dev
 
 Then open http://localhost:5173.
 
-The game's pictures and text come from a data pack kept outside this repo ([Architecture](./ARCHITECTURE.md#the-data-pack)). Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder.
+The game's pictures and text come from a data pack kept outside this repo ([Architecture](./ARCHITECTURE.md#the-data-pack)). Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder. The Supreme League generator's data file is read with the `VITE_SL_SEED` setting, which the file's writer keeps. Without it the generator's page cannot load its data, `npm run build` stops, and its two data tests are skipped ([Guide](./architecture/GUIDE.md)).
 
 ## Commands
 

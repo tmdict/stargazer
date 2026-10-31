@@ -1,21 +1,28 @@
 /* Reads the Supreme League data file (src/content/pvp/sl/sl.bin).
  * The file is the JSON compressed with raw deflate, each byte then combined
- * with a repeatable keystream (mulberry32 from SEED), so it is noise in the
- * browser's network panel. The writer holds the same seed. It deters a casual
- * look, nothing more: this code is public. The decoded data is held here and
- * handed to the page as a plain object, never put in a store or on window. */
+ * with a repeatable keystream (mulberry32 from the VITE_SL_SEED setting), so it
+ * is noise in the browser's network panel. The writer holds the same seed, and
+ * the repository none. It deters a casual look, nothing more: Vite writes the
+ * setting into this script, which every visitor downloads. The decoded data is
+ * held here and handed to the page as a plain object, never put in a store or
+ * on window. */
 
 import slFileUrl from '@/content/pvp/sl/sl.bin?url'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { TEAM_MODES } from '@/lib/teams/modes'
 import type { SlData } from './types'
 
-const SEED = 0x51a7e5ed
+function seed(): number {
+  const setting = import.meta.env.VITE_SL_SEED
+  const value = Number(setting)
+  if (!setting || !Number.isInteger(value)) throw new Error('VITE_SL_SEED is not set to a number')
+  return value >>> 0
+}
 
 // XOR with the keystream, which undoes itself.
 function unscramble(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
   const out = new Uint8Array(bytes.length)
-  let s = SEED >>> 0
+  let s = seed()
   for (let i = 0; i < bytes.length; i++) {
     s = (s + 0x6d2b79f5) >>> 0
     let t = Math.imul(s ^ (s >>> 15), 1 | s)
