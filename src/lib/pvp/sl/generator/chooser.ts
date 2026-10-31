@@ -1,16 +1,16 @@
-/* The Supreme League generator's choice: the set of recorded teams, one per
+/* The PvP team generator's choice: the set of recorded teams, one per
  * board and no hero twice, each with an artifact by the artifact rule, with
  * the best chance to win most of the boards, for the heroes a visitor selects
  * at their levels. A board takes the teams recorded on its map: the file's
  * maps in order give a Supreme League set, the same map on every board a set
- * for the Teams page's default 5v5 maps. Each team's chance is the model's,
+ * for the Teams page's default maps. Each team's chance is the model's,
  * against a typical opponent at the top levels. */
 
 import type { SlData, SlEvidence } from '../data/types'
 import { shortfall } from '../data/upgrades'
 import { sigmoid } from '../model/fit'
 import type { SlLearned } from '../model/models'
-import { oddsInto } from '../model/odds'
+import { oddsInto, winsNeeded } from '../model/odds'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
 import { placementOf, swapsOf } from './boards'
 import type { SlChoice, SlPick } from './types'
@@ -51,7 +51,7 @@ function choose(
   const gap = (heroes: number[]): number =>
     -heroes.reduce((n, id) => n + shortfall(data.prices, picked.get(id)!), 0)
   const claimOf = artifactClaims(data)
-  const needed = Math.floor(boards.length / 2) + 1
+  const needed = winsNeeded(boards.length)
   const odds = new Float64Array(boards.length + 1)
   const matchChance = (chances: ArrayLike<number>): number => {
     oddsInto(chances, odds)

@@ -6,7 +6,7 @@ import { computed } from 'vue'
 
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
-import { DEFAULT_VARIANT } from '@/lib/teams/modes'
+import { winsNeeded } from '@/lib/pvp/sl/model/odds'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent as percent, useSlNames } from './useSlNames'
 
@@ -17,15 +17,22 @@ const emit = defineEmits<{ close: [] }>()
 const i18n = useI18nStore()
 const { groupName } = useSlNames()
 
+const boards = computed(() => shown.teams.length)
+const needed = computed(() => winsNeeded(boards.value))
+
 const setLine = computed(() =>
-  shown.variant === DEFAULT_VARIANT ? 'app.sl-explain-set-default' : 'app.sl-explain-set',
+  shown.type === 'sl'
+    ? i18n.t('app.sl-explain-set')
+    : i18n.t('app.sl-explain-set-mode', { mode: shown.type, boards: boards.value }),
 )
 
-const outcomes = computed(() => [
-  { label: 'app.sl-explain-won-5', chance: shown.odds[5] ?? 0 },
-  { label: 'app.sl-explain-won-4', chance: shown.odds[4] ?? 0 },
-  { label: 'app.sl-explain-won-3', chance: shown.odds[3] ?? 0 },
-])
+const outcomes = computed(() =>
+  Array.from({ length: boards.value - needed.value + 1 }, (_, i) => {
+    const won = boards.value - i
+    const key = i ? 'app.sl-explain-won-exact' : 'app.sl-explain-won-all'
+    return { label: i18n.t(key, { count: won }), chance: shown.odds[won] ?? 0 }
+  }),
+)
 </script>
 
 <template>
@@ -33,12 +40,12 @@ const outcomes = computed(() => [
     <h1>{{ i18n.t('app.sl-explain-title') }}</h1>
 
     <h2>{{ i18n.t('app.sl-explain-meaning-head') }}</h2>
-    <p>{{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance) }) }}</p>
+    <p>{{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance), needed, boards }) }}</p>
     <p>{{ i18n.t('app.sl-explain-typical') }}</p>
     <p>{{ i18n.t('app.sl-explain-forecast') }}</p>
 
     <h2>{{ i18n.t('app.sl-explain-teams-head') }}</h2>
-    <p>{{ i18n.t(setLine) }}</p>
+    <p>{{ setLine }}</p>
     <div class="sl-table-wrap">
       <table class="sl-table">
         <thead>
@@ -79,11 +86,11 @@ const outcomes = computed(() => [
       <table class="sl-table">
         <tbody>
           <tr v-for="row in outcomes" :key="row.label">
-            <th scope="row">{{ i18n.t(row.label) }}</th>
+            <th scope="row">{{ row.label }}</th>
             <td class="sl-num">{{ percent(row.chance) }}</td>
           </tr>
           <tr class="sl-total">
-            <th scope="row">{{ i18n.t('app.sl-explain-won-match') }}</th>
+            <th scope="row">{{ i18n.t('app.sl-explain-won-match', { count: needed }) }}</th>
             <td class="sl-num">
               <strong>{{ percent(shown.chance) }}</strong>
             </td>

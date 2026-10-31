@@ -6,7 +6,7 @@ import { useI18nStore } from '@/stores/i18n'
 
 /* The images of a decoded team's units and artifacts (lib/teams/preview), for
  * the boards drawn from encoded team data: saved-team thumbnails and the
- * Supreme League generator's sets. Retired seasonal content becomes an "S{n}"
+ * PvP team generator's sets. Retired seasonal content becomes an "S{n}"
  * placeholder instead of resolving its reused id. */
 export function usePreviewImages() {
   const gameData = useGameDataStore()

@@ -74,7 +74,7 @@ A field the reader does not know is ignored and dropped by the next write.
 5. Adopt the slot's `sourceId` if that saved team still exists.
 6. Resume autosave.
 
-Every whole-board apply (mode switch, slot restore, saved-team load, `?g=` link) goes through `restoreMultiFromEncodedState`, which handles board order, companion placement, duplicate repair across boards, and the phantimal baseline. A `?g=` link overwrites its mode's slot with `sourceId` null, because a shared link is nobody's saved team. A link that fails to decode or apply, or an Arena link, falls back to the saved slot. The Supreme League generator's Save as team opens the page with the saved team's id in the history entry (`openTeam`): after the restore, that team loads as Load loads it, and the id is cleared from the entry so a reload keeps the edits made since.
+Every whole-board apply (mode switch, slot restore, saved-team load, `?g=` link) goes through `restoreMultiFromEncodedState`, which handles board order, companion placement, duplicate repair across boards, and the phantimal baseline. A `?g=` link overwrites its mode's slot with `sourceId` null, because a shared link is nobody's saved team. A link that fails to decode or apply, or an Arena link, falls back to the saved slot. The PvP team generator's Save as team opens the page with the saved team's id in the history entry (`openTeam`): after the restore, that team loads as Load loads it, and the id is cleared from the entry so a reload keeps the edits made since.
 
 Autosave only writes after the page has started it, so a page that failed to load game data can never overwrite a slot. The page resets to the Arena's single board in `onScopeDispose`, which runs synchronously on unmount, so a hot reload cannot leave the board count wrong.
 
@@ -174,7 +174,7 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the Supreme League generator to a copy ([Guide](./GUIDE.md)).
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy ([Guide](./GUIDE.md)).
 
 The roster screenshot import ([Roster Import](./IMPORT_ROSTER.md)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
 

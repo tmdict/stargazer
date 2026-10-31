@@ -2,10 +2,10 @@
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
+import SlTypePicker from '@/components/guide/sl/SlTypePicker.vue'
 import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
-import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -54,7 +54,7 @@ const characterId = (slug: string): number =>
           <DropdownSelect :label="ROSTER_NAME" lit />
         </div>
         <div class="help-mock-bar">
-          <TeamVariantPicker active-mode="5v5" match="sl" :source-id="null" :has-content="false" />
+          <SlTypePicker type="sl" />
           <span class="solid-btn help-sl-action">{{ label('sl-generate') }}</span>
         </div>
         <div class="help-heroes">

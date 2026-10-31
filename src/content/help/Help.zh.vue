@@ -281,17 +281,17 @@ const SKILL = {
   </section>
 
   <section id="generator" class="help-sec">
-    <h2>5v5阵容生成器</h2>
+    <h2>PvP阵容生成器</h2>
     <div class="help-grid">
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          用你自己的英雄，为巅峰联赛的五张地图各配一支队伍，队伍都选自玩家记录的对局。
+          用你自己的英雄，为 3v3、5v5 或巅峰联赛的每张地图各配一支队伍，队伍都选自玩家记录的对局。
         </p>
         <ol class="help-steps">
           <li>
             <span
-              >在<b>攻略</b>里打开<RouterLink :to="SL_GENERATOR_PATH">5v5阵容生成器</RouterLink
+              >在<b>攻略</b>里打开<RouterLink :to="SL_GENERATOR_PATH">PvP阵容生成器</RouterLink
               >。</span
             >
           </li>
@@ -312,8 +312,8 @@ const SKILL = {
           </li>
           <li>
             <span
-              >选<b>巅峰联赛</b>使用巅峰联赛的地图，选<b>默认</b>则五张都用地图
-              1。然后点<b>生成</b>。</span
+              >选<b>巅峰联赛</b>使用巅峰联赛的地图，选 <b>5v5</b> 则五张都用地图 1，选
+              <b>3v3</b> 则三张都用地图 1。然后点<b>生成</b>。</span
             >
           </li>
           <li>

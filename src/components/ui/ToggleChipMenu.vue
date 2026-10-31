@@ -85,7 +85,6 @@ const panelShift = usePanelClamp(
     @mouseleave="onMouseLeave"
     @touchstart.passive="onTouchStart"
   >
-    <!-- Narrow: one pill, tap opens the tray (master lives inside). -->
     <button
       v-if="tray"
       type="button"
@@ -99,7 +98,6 @@ const panelShift = usePanelClamp(
       {{ label }}<span class="pill-caret">&#9662;</span>
     </button>
 
-    <!-- Wide + share: split chip, body toggles the master, caret opens. -->
     <ToggleChip v-else v-model="master" class="chip" :glass="share" :label>
       <template #caret>
         <button

@@ -339,19 +339,19 @@ const SKILL = {
   </section>
 
   <section id="generator" class="help-sec">
-    <h2>5v5 team generator</h2>
+    <h2>PvP team generator</h2>
     <div class="help-grid">
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          Get a Supreme League team for each of the five maps, made from your own heroes and picked
-          from games players recorded.
+          Get a team for each map of a 3v3, 5v5 or Supreme League match, made from your own heroes
+          and picked from games players recorded.
         </p>
         <ol class="help-steps">
           <li>
             <span>
               In the <b>Guide</b>, open the
-              <RouterLink :to="SL_GENERATOR_PATH">5v5 team generator</RouterLink>.
+              <RouterLink :to="SL_GENERATOR_PATH">PvP team generator</RouterLink>.
             </span>
           </li>
           <li>
@@ -372,8 +372,8 @@ const SKILL = {
           </li>
           <li>
             <span>
-              Choose <b>SL</b> for the Supreme League maps, or <b>Default</b> to use map 1 for all
-              five. Then press <b>Generate</b>.
+              Choose <b>SL</b> for the Supreme League maps, <b>5v5</b> to use map 1 for all five, or
+              <b>3v3</b> to use it for all three. Then press <b>Generate</b>.
             </span>
           </li>
           <li>

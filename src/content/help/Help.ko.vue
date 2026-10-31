@@ -343,18 +343,18 @@ const SKILL = {
   </section>
 
   <section id="generator" class="help-sec">
-    <h2>5v5 조합 생성기</h2>
+    <h2>PvP 조합 생성기</h2>
     <div class="help-grid">
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          내 영웅으로 최강자 리그의 다섯 맵에 팀을 하나씩 짜 줍니다. 팀은 플레이어들이 기록한
-          전투에서 골라냅니다.
+          내 영웅으로 3v3, 5v5 또는 최강자 리그의 각 맵에 팀을 하나씩 짜 줍니다. 팀은 플레이어들이
+          기록한 전투에서 골라냅니다.
         </p>
         <ol class="help-steps">
           <li>
             <span>
-              <b>가이드</b>에서 <RouterLink :to="SL_GENERATOR_PATH">5v5 조합 생성기</RouterLink>를
+              <b>가이드</b>에서 <RouterLink :to="SL_GENERATOR_PATH">PvP 조합 생성기</RouterLink>를
               여세요.
             </span>
           </li>
@@ -377,8 +377,8 @@ const SKILL = {
           </li>
           <li>
             <span>
-              최강자 리그 맵을 쓰려면 <b>최강자 리그</b>를, 다섯 맵 모두 맵 1을 쓰려면 <b>기본</b>을
-              고른 뒤 <b>생성</b>을 누르세요.
+              유형을 고른 뒤 <b>생성</b>을 누르세요. <b>최강자 리그</b>는 최강자 리그 맵을 쓰고,
+              <b>5v5</b> 유형은 다섯 맵 모두, <b>3v3</b> 유형은 세 맵 모두 맵 1을 씁니다.
             </span>
           </li>
           <li>

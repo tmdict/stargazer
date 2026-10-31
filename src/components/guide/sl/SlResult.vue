@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
+import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
-import type { TeamVariantChoice } from '@/lib/teams/modes'
 
 // A chosen team as the page shows it, read off the data file once.
 export interface SlShownTeam extends Pick<
@@ -15,16 +15,16 @@ export interface SlShownTeam extends Pick<
 
 export interface SlShown {
   // The type the set was chosen for.
-  variant: TeamVariantChoice
+  type: SlSetType
   chance: number
-  // The chance of winning each number of maps, 0 to 5.
+  // The chance of winning each number of maps, from none to all.
   odds: number[]
   // Under this many Celestial and Hypogean heroes last season's teams join;
   // null when the data file has none.
   beforeUnder: number | null
   teams: SlShownTeam[]
-  // The set as one encoded 5v5 team: the boards drawn here, and what Save as
-  // team stores.
+  // The set as one encoded team: the boards drawn here, and what Save as team
+  // stores.
   data: string
 }
 </script>
@@ -43,6 +43,8 @@ import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { slSetMode } from '@/lib/pvp/sl/generator/setType'
+import { winsNeeded } from '@/lib/pvp/sl/model/odds'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slMood, slPercent } from './useSlNames'
@@ -98,7 +100,9 @@ const {
           type="button"
           class="solid-btn sl-action"
           :class="{ 'confirm-armed': saveArmed }"
-          :title="saveArmed ? i18n.t('app.sl-save-replaces') : undefined"
+          :title="
+            saveArmed ? i18n.t('app.sl-save-replaces', { mode: slSetMode(shown.type) }) : undefined
+          "
           @click="emit('save')"
         >
           <IconSavePlus :size="14" />
@@ -118,7 +122,14 @@ const {
         variant="detailed"
         max-width="290px"
       >
-        <template #content>{{ i18n.t('app.sl-chance-tip') }}</template>
+        <template #content>
+          {{
+            i18n.t('app.sl-chance-tip', {
+              needed: winsNeeded(shown.teams.length),
+              boards: shown.teams.length,
+            })
+          }}
+        </template>
       </TooltipPopup>
     </Teleport>
   </section>
@@ -189,6 +200,12 @@ const {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   padding: 24px 16px;
+}
+
+@container (min-width: 1171px) {
+  .sl-maps > :first-child:nth-last-child(3) {
+    grid-column-start: 2;
+  }
 }
 
 @container (max-width: 1360px) {

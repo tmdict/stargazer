@@ -2,7 +2,7 @@
  * and its artifact, and a match's result from its five games' chances, each
  * game won or lost on its own as the generator takes its boards. */
 
-import { oddsInto } from '../model/odds'
+import { oddsInto, winsNeeded } from '../model/odds'
 import type { Pair } from './panel'
 
 export const WWW_GAMES = 5
@@ -31,6 +31,5 @@ export interface WwwMatchOdds {
 
 export function matchOdds(chances: readonly number[]): WwwMatchOdds {
   const wins = [...oddsInto(chances, new Float64Array(chances.length + 1))]
-  const needed = Math.floor(chances.length / 2) + 1
-  return { chance: wins.slice(needed).reduce((sum, p) => sum + p, 0), wins }
+  return { chance: wins.slice(winsNeeded(chances.length)).reduce((sum, p) => sum + p, 0), wins }
 }

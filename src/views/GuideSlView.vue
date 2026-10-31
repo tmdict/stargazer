@@ -1,17 +1,16 @@
 <script setup lang="ts">
-/* The Supreme League generator: for the heroes and levels a visitor picks,
-   the set of five recorded teams, one per board and no hero twice, with the
-   best chance to win a match (lib/pvp/sl), chosen in the Supreme League
-   worker (useSlEngine) so the page stays responsive. The boards are the
-   Supreme League maps, or with the Default type all on map 1, as the Teams
-   page's default 5v5 boards are. The picker edits a copy of the active
-   roster, so trying a hero out never changes the roster, and picking or
-   importing another roster takes a fresh copy. The set is chosen only on
-   Generate and stays as it is while the selection or the type changes, and
-   Save as team opens the saved set on the Teams page. The page is
-   pre-rendered with its heading alone: the picker and the set follow the
-   visitor's rosters, which the browser holds, so they are drawn after
-   mount. */
+/* The PvP team generator: for the heroes and levels a visitor picks, the set
+   of recorded teams, one per board and no hero twice, with the best chance to
+   win a match (lib/pvp/sl), chosen in the Supreme League worker (useSlEngine)
+   so the page stays responsive. The boards are the Supreme League maps, or
+   with the 5v5 or 3v3 type all on map 1, as the Teams page's default boards
+   are. The picker edits a copy of the active roster, so trying a hero out
+   never changes the roster, and picking or importing another roster takes a
+   fresh copy. The set is chosen only on Generate and stays as it is while the
+   selection or the type changes, and Save as team opens the saved set on the
+   Teams page. The page is pre-rendered with its heading alone: the picker and
+   the set follow the visitor's rosters, which the browser holds, so they are
+   drawn after mount. */
 
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -34,15 +33,11 @@ import {
   type AttrRecord,
 } from '@/lib/characters/attributes'
 import type { SlData } from '@/lib/pvp/sl/data/types'
+import { slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
-import {
-  DEFAULT_VARIANT,
-  MAX_SAVED_TEAMS,
-  variantMaps,
-  type TeamVariantChoice,
-} from '@/lib/teams/modes'
+import { DEFAULT_VARIANT, MAX_SAVED_TEAMS, variantMaps, type TeamModeKey } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -99,17 +94,18 @@ const edit = (changes: Record<string, AttrRecord | null>): void => {
 
 const armedConfirm = useArmedConfirm()
 
-const variant = ref<TeamVariantChoice>('sl')
+const type = ref<SlSetType>('sl')
 
 // Supreme League keeps the file's own maps, which can be an earlier
 // rotation's. A map the file does not hold leaves its board without teams.
-const boardsOf = (file: SlData, choice: TeamVariantChoice): number[] =>
-  choice === DEFAULT_VARIANT
-    ? variantMaps('5v5', DEFAULT_VARIANT).map((key) => file.maps.findIndex((m) => m.key === key))
-    : file.maps.map((_, i) => i)
+const boardsOf = (file: SlData, choice: SlSetType): number[] =>
+  choice === 'sl'
+    ? file.maps.map((_, i) => i)
+    : variantMaps(choice, DEFAULT_VARIANT).map((key) => file.maps.findIndex((m) => m.key === key))
 
 const shown = ref<SlShown | null>(null)
-const noSet = ref(false)
+// How many teams the last Generate could not make; 0 when it made them.
+const noSet = ref(0)
 const busy = ref(false)
 const resultEl = useTemplateRef<HTMLElement>('result')
 
@@ -134,10 +130,11 @@ const generate = async (): Promise<void> => {
   busy.value = true
   try {
     const picks = picksOf(copy.value)
-    const chosenFor = variant.value
-    const set = await generateSet(picks, boardsOf(file, chosenFor))
+    const chosenFor = type.value
+    const boards = boardsOf(file, chosenFor)
+    const set = await generateSet(picks, boards)
     shown.value = set && {
-      variant: chosenFor,
+      type: chosenFor,
       chance: set.chance,
       odds: set.odds,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
@@ -156,7 +153,7 @@ const generate = async (): Promise<void> => {
       }),
       data: slTeamData(file, set, picks),
     }
-    noSet.value = !set
+    noSet.value = set ? 0 : boards.length
     failed.value = false
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
@@ -170,13 +167,18 @@ const generate = async (): Promise<void> => {
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-// Save as team replaces the Teams page's 5v5 boards, so boards there holding
-// work no saved team keeps take a second press.
-const replacesWork = (): boolean => {
-  const slot = readTeamsSlot('5v5')
+// Save as team replaces the Teams page's boards of the set's mode, so boards
+// there holding work no saved team keeps take a second press.
+const replacesWork = (mode: TeamModeKey): boolean => {
+  const slot = readTeamsSlot(mode)
   return slot !== null && holdsUnsavedWork(slot.data, library.get(slot.sourceId))
 }
-const saveArmed = computed(() => armedConfirm.armed.value === 'save-team')
+// Scoped to the mode, so a press armed for one mode's boards can never confirm
+// another's.
+const saveKey = (mode: TeamModeKey): string => `save-team:${mode}`
+const saveArmed = computed(
+  () => !!shown.value && armedConfirm.armed.value === saveKey(slSetMode(shown.value.type)),
+)
 
 // The saved team holds the levels the set was chosen with, not the levels
 // shown since. A team kept only in memory still opens on the Teams page. A
@@ -184,16 +186,18 @@ const saveArmed = computed(() => armedConfirm.armed.value === 'save-team')
 let saving = false
 const save = (): void => {
   if (!shown.value || saving) return
-  const replacing = replacesWork()
-  if (replacing && !armedConfirm.confirm('save-team')) {
-    show(i18n.t('app.sl-save-replaces'), 'info')
+  const mode = slSetMode(shown.value.type)
+  const replacing = replacesWork(mode)
+  if (replacing && !armedConfirm.confirm(saveKey(mode))) {
+    show(i18n.t('app.sl-save-replaces', { mode }), 'info')
     return
   }
-  const name = i18n.t(
-    shown.value.variant === DEFAULT_VARIANT ? 'app.sl-team-name-default' : 'app.sl-team-name',
-    { chance: slPercent(shown.value.chance) },
-  )
-  const team = library.saveAsNew('5v5', shown.value.data, name)
+  const chance = slPercent(shown.value.chance)
+  const name =
+    shown.value.type === 'sl'
+      ? i18n.t('app.sl-team-name', { chance })
+      : i18n.t('app.sl-team-name-mode', { mode, chance })
+  const team = library.saveAsNew(mode, shown.value.data, name)
   if (!team) {
     // The library re-reads storage first, so another tab may have filled it.
     error(
@@ -203,8 +207,9 @@ const save = (): void => {
     )
     return
   }
+  const message = replacing ? 'app.sl-saved-replaced' : 'app.team-saved'
   if (!library.persisted) error(i18n.t('app.team-not-stored'))
-  else success(i18n.t(replacing ? 'app.sl-saved-replaced' : 'app.team-saved', { name: team.name }))
+  else success(i18n.t(message, { name: team.name, mode }))
   saving = true
   void router.push({ path: '/teams', state: { openTeam: team.id } }).finally(() => {
     saving = false
@@ -235,12 +240,12 @@ const save = (): void => {
 
     <div v-if="mounted" ref="result" class="sl-result-slot">
       <SlResult v-if="shown" :shown :save-armed @save="save" />
-      <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set') }}</p>
+      <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set', { count: noSet }) }}</p>
     </div>
 
     <section v-if="mounted" class="sl-panel sl-picker">
       <SlBar
-        v-model:variant="variant"
+        v-model:type="type"
         :busy
         :ready="!!heading && engineStatus === 'ready'"
         :waiting="!failed && engineStatus === 'loading'"

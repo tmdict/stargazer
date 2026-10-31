@@ -10,8 +10,8 @@
  * 3. Last season's teams take the first free artifact on their `like` list,
  *    boards in order.
  *
- * With five boards a team's artifact is always one of its own or among the
- * first five it falls back to, which bounds the search (chooser.ts). */
+ * A team's artifact is always one of its own or among the first it falls back
+ * to, as many as there are boards, which bounds the search (chooser.ts). */
 
 import type { SlData } from '../data/types'
 

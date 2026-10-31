@@ -5,7 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_SL_SEED?: string
 }
 
-/** The Supreme League generator's set before a roster is picked (scripts/slPreview.ts). */
+/** The PvP team generator's set before a roster is picked (scripts/slPreview.ts). */
 declare module 'virtual:sl-preview' {
   const set: import('@/lib/pvp/sl/generator/defaultSet').SlDefaultSet | null
   export default set

@@ -2,11 +2,11 @@
 /* The generator's roster bar, with the type of set to generate. Picking or
    importing a roster makes it the active one, which the page copies. */
 
+import SlTypePicker from './SlTypePicker.vue'
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
-import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
-import type { TeamVariantChoice } from '@/lib/teams/modes'
+import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
 import { useI18nStore } from '@/stores/i18n'
 
 // waiting: the Supreme League worker is still learning the model.
@@ -14,7 +14,7 @@ const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; wa
 
 const emit = defineEmits<{ generate: [] }>()
 
-const variant = defineModel<TeamVariantChoice>('variant', { required: true })
+const type = defineModel<SlSetType>('type', { required: true })
 
 const i18n = useI18nStore()
 </script>
@@ -25,13 +25,7 @@ const i18n = useI18nStore()
     <RosterMenu />
     <span class="sl-bar-actions">
       <RosterTransferActions />
-      <TeamVariantPicker
-        active-mode="5v5"
-        :match="variant"
-        :source-id="null"
-        :has-content="false"
-        @select-variant="variant = $event"
-      />
+      <SlTypePicker :type @select="type = $event" />
       <button
         type="button"
         class="solid-btn sl-action"

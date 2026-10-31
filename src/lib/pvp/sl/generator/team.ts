@@ -1,8 +1,8 @@
-/* A chosen set as one encoded 5v5 Supreme League team, the same data a saved
- * team holds: the page draws its boards from it and Save as team stores it, so
- * a saved set opens on the Teams page as the page drew it. Each board stands
- * on its map's layout from the data file, so a set from a retired map still
- * draws and loads. Only the ally side is filled, with the selection's levels.
+/* A chosen set as one encoded team, the same data a saved team holds: the page
+ * draws its boards from it and Save as team stores it, so a saved set opens on
+ * the Teams page as the page drew it. Each board stands on its map's layout
+ * from the data file, so a set from a retired map still draws and loads. Only
+ * the ally side is filled, with the selection's levels.
  * A file from another season than Stargazer's (the gap after a cutover) has
  * its seasonal artifacts and phantimals left out, since their ids name the new
  * season's content. */
@@ -12,6 +12,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
 import type { MapConfig } from '@/lib/maps'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
+import { TEAM_MODE_ORDER, TEAM_MODES } from '@/lib/teams/modes'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -66,5 +67,6 @@ export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]
       getAttrs: (side, unitId) => (side === Team.ALLY ? (levels.get(unitId) ?? {}) : {}),
     }
   })
-  return encodeMultiGridStateToUrl(serializeMultiGridState(boards, 0, undefined, '5v5'))
+  const mode = TEAM_MODE_ORDER.find((key) => TEAM_MODES[key].boardCount === boards.length)
+  return encodeMultiGridStateToUrl(serializeMultiGridState(boards, 0, undefined, mode))
 }

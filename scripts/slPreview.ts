@@ -1,4 +1,4 @@
-// Gives the guide index the set the Supreme League generator gives before a
+// Gives the guide index the set the PvP team generator gives before a
 // roster is picked, as `virtual:sl-preview`. The generator's own code works
 // it out (src/lib/pvp/sl/generator/defaultSet.ts), through Vite's module
 // runner so the app's imports resolve, and the page receives the set alone.

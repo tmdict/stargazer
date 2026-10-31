@@ -1,6 +1,8 @@
 /* The chance of winning each number of games, each game won or lost on its
  * own: the generator's boards and Who Would Win?'s five games. */
 
+export const winsNeeded = (games: number): number => Math.floor(games / 2) + 1
+
 // Written in place, since the generator's search asks for it at every step.
 export function oddsInto(chances: ArrayLike<number>, odds: Float64Array): Float64Array {
   odds.fill(0)

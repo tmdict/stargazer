@@ -1,5 +1,5 @@
 /* The generator's input, the heroes a visitor picks at their levels, and its
- * answer, the set of five recorded teams. */
+ * answer, the set of recorded teams, one per board. */
 
 import type { SlLevels } from '../data/upgrades'
 
@@ -29,7 +29,7 @@ export interface SlChoiceTeam {
 
 export interface SlChoice {
   chance: number
-  // The chance of winning each number of boards, 0 to 5.
+  // The chance of winning each number of boards, from none to all.
   odds: number[]
   // One per board, in board order.
   teams: SlChoiceTeam[]

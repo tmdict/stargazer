@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The Supreme League generator's card on the guide index: the first three maps
+/* The PvP team generator's card on the guide index: the first three maps
    of the set the generator gives before a roster is picked, drawn by its own
    map column. Each map keeps its first swap and two heroes to swap in, so the
    three fit a phone. */

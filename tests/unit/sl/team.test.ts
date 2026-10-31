@@ -35,9 +35,10 @@ const decoded = (season: number) =>
 
 // Each board of a saved set against the team it came from, in that team's
 // season.
-const expectSaved = (chosen: SlChoice, chosenWith: SlPick[]) => {
+const expectSaved = (chosen: SlChoice, chosenWith: SlPick[], mode = '5v5') => {
   const state = decodeMultiGridStateFromUrl(slTeamData(data, chosen, chosenWith))!
-  expect(state.mode).toBe('5v5')
+  expect(state.mode).toBe(mode)
+  expect(state.boards).toHaveLength(chosen.teams.length)
   expect(state.season).toBe(CURRENT_SEASON)
   state.boards.forEach((board, i) => {
     const choice = chosen.teams[i]!
@@ -66,6 +67,12 @@ describe('a set saved as a team', () => {
   it('puts each team on its map with its units, artifact, phantimal and the levels chosen with', () => {
     expect(set.teams).toHaveLength(data.maps.length)
     expectSaved(set, picks)
+  })
+
+  it('saves a set of three boards as a 3v3 team', () => {
+    const three = chooseSlSet(data, learned, picks, undefined, [0, 0, 0])!
+    expect(three.teams).toHaveLength(3)
+    expectSaved(three, picks, '3v3')
   })
 
   // A selection with no Celestial or Hypogean hero takes last season's teams too.
