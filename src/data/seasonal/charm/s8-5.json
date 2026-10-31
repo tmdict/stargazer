@@ -1,0 +1,22 @@
+{
+  "id": "s8-5",
+  "season": 8,
+  "heroes": [
+    "alna",
+    "brutus",
+    "hepler",
+    "hodgkin",
+    "karma",
+    "kordan",
+    "lucca",
+    "seth",
+    "soren",
+    "thador"
+  ],
+  "tags": {
+    "debuff": {
+      "tiers": [3, 4],
+      "mods": ["aoe", "eryndor"]
+    }
+  }
+}

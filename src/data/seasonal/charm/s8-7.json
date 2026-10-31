@@ -1,0 +1,11 @@
+{
+  "id": "s8-7",
+  "season": 8,
+  "heroes": ["baelran", "daimon", "lucius", "pang", "scarlita", "tilaya"],
+  "tags": {
+    "temp-buff": {
+      "tiers": [1, 2, 3, 4],
+      "mods": ["orion", "perseus"]
+    }
+  }
+}

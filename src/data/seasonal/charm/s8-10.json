@@ -1,0 +1,21 @@
+{
+  "id": "s8-10",
+  "season": 8,
+  "heroes": [
+    "contess",
+    "damian",
+    "evie",
+    "hewynn",
+    "ludovic",
+    "mikola",
+    "rolan",
+    "solise",
+    "velara"
+  ],
+  "tags": {
+    "temp-buff": {
+      "tiers": [1, 2, 3, 4],
+      "mods": ["orion", "perseus"]
+    }
+  }
+}

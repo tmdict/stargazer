@@ -119,20 +119,24 @@ export interface SkillLanguage {
   phantimals: SkillPhantimals
 }
 
-// On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm
-// id → the heroes sharing it. The inverse hero → charm lookup is
+// On-disk shape of src/data/seasonal/charm/<id>.json: the data export writes
+// the id, season and the heroes sharing the charm, and keeps the fields
+// written by hand within the season. The inverse hero → charm lookup is
 // derived at load time.
-export type CharmData = Record<string, { heroes: string[] }>
+export interface CharmData {
+  id: string
+  season: number
+  heroes: string[]
+  tags?: CharmTags
+}
 
-// On-disk shape of src/data/seasonal/charm/tags.json (hand-written): charm
-// id → tag → every tier (1-4) whose text carries the effect, and the
-// modifiers that describe it. Each tier's text is complete on its own, unlike
-// a skill level's upgrade line, so an effect a charm has from Elite lists all
-// four. Written once per charm, and joined to each sharing hero's tags at
-// load time.
+// A charm's hand-written tags: tag → every tier (1-4) whose text carries the
+// effect, and the modifiers that describe it. Each tier's text is complete on
+// its own, unlike a skill level's upgrade line, so an effect a charm has from
+// Elite lists all four. Joined to each sharing hero's tags at load time.
 export interface CharmTag {
   readonly tiers: readonly number[]
   readonly mods?: readonly string[]
 }
 
-export type CharmTags = Readonly<Record<string, Readonly<Record<string, CharmTag>>>>
+export type CharmTags = Readonly<Record<string, CharmTag>>

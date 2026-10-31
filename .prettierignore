@@ -1,5 +1,2 @@
-# Written by the data export; formatting it would churn against the export's
-# output.
-src/data/seasonal/charm/charms.json
 # Generated outside this repo; preserve the exported template verbatim.
 src/content/pvp/

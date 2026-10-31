@@ -69,7 +69,7 @@ A season ships in three phases ([Seasonal Content](./architecture/SEASONAL.md#se
 4. If the Supreme League map list changed, give the new preset maps the ids the old ones free and edit the `sl` list in `src/data/maps.json`. The list also changes mid-season, every couple of months, and the replay-frame reader then needs checking against frames of the new maps ([Team Import](./architecture/IMPORT_TEAM.md#replay-frames)).
 5. Run the tests and the build, commit the export's changes with `data.lock`, and deploy.
 
-When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the season's charm `tags.json` and each phantimal's and artifact's `tags`. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
+When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the `tags` in each charm's, phantimal's and artifact's data file. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
 
 Add an artifact rule whenever its mechanic is known. Set a phantimal's `"targeting": true` once its Spirit Mark is live in the game.
 
