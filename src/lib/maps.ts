@@ -16,6 +16,10 @@ interface ArenaJson {
     blocked: number[]
     breakable: number[]
   }
+  // Tiles that buff the unit standing on them, one on each side, ally tile
+  // first. Kept beside grid, since every list in grid is a tile type and a buff
+  // tile stays an ally or enemy tile when a unit stands on it.
+  buffTiles?: number[]
 }
 
 export interface MapConfig {
@@ -25,6 +29,7 @@ export interface MapConfig {
     type: State
     hex: number[]
   }>
+  buffTiles?: number[]
 }
 
 const STATE_MAP: Record<keyof ArenaJson['grid'], State> = {
@@ -42,6 +47,7 @@ function parseMapConfig(json: ArenaJson): MapConfig {
       type: STATE_MAP[key as keyof ArenaJson['grid']],
       hex,
     })),
+    buffTiles: json.buffTiles,
   }
 }
 
@@ -61,13 +67,18 @@ function loadArenas(): Record<string, ArenaJson> {
   // A new preset usually starts as a copy of another file, and two maps on one
   // id would send that id's links to whichever loaded last.
   const owners = new Map<number, string>()
-  for (const [key, { id }] of Object.entries(arenas)) {
+  for (const [key, { id, grid, buffTiles = [] }] of Object.entries(arenas)) {
     if (!Number.isInteger(id) || id < 1) {
       throw new Error(`Map ${key}: id must be a positive integer`)
     }
     const owner = owners.get(id)
     if (owner) throw new Error(`Map ${key}: id ${id} already belongs to ${owner}`)
     owners.set(id, key)
+    for (const hex of buffTiles) {
+      if (!grid.ally.includes(hex) && !grid.enemy.includes(hex)) {
+        throw new Error(`Map ${key}: buff tile ${hex} is not an ally or enemy tile`)
+      }
+    }
   }
   return arenas
 }
