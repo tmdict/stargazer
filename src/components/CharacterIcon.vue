@@ -5,6 +5,7 @@ import CharacterTooltip from './CharacterTooltip.vue'
 import HoldRing from './ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
@@ -39,6 +40,9 @@ const props = defineProps<{
   ticked?: boolean
   // A mouse resting on the icon shows the hero's outfit.
   showOutfit?: boolean
+  // Greyed and never picked: hovering, a click or a tap shows this line under
+  // the hero's name instead.
+  lockedNote?: string
 }>()
 
 const emit = defineEmits<{
@@ -48,14 +52,42 @@ const emit = defineEmits<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
+const characterElement = ref<HTMLElement>()
+
+const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
+// A locked hero's note is info alone, so a tap shows it too.
+const {
+  anchor: noteAnchor,
+  hoverOpen: openNote,
+  hoverClose: closeNote,
+  toggle: toggleNote,
+  onTouchStart: noteTouchStart,
+} = useInfoTip()
+
 const {
   onMouseDown,
   onMouseUp,
   cancel: cancelPress,
-} = usePressClick((event: MouseEvent) => emit('characterClick', props.character, event))
-const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
+} = usePressClick((event: MouseEvent) => {
+  if (!props.lockedNote) emit('characterClick', props.character, event)
+  // Kept open when hovering opened it: the click is a pick attempt, not a dismissal.
+  else if (characterElement.value && noteAnchor.value !== characterElement.value)
+    toggleNote(characterElement.value)
+})
 
-const characterElement = ref<HTMLElement>()
+const tooltipShown = computed(() =>
+  props.lockedNote ? !!noteAnchor.value : showTooltip.value && !props.hideTooltip,
+)
+const handleMouseEnter = (event: MouseEvent) =>
+  props.lockedNote ? openNote(event) : onMouseEnter(event)
+const handleMouseLeave = () => {
+  onMouseLeave()
+  closeNote()
+}
+const handleTouchStart = () => {
+  onTouchStart()
+  noteTouchStart()
+}
 
 // A hero can join the hero list before its portrait ships, and a portrait can
 // fail to load; the tile shows the name instead.
@@ -123,7 +155,8 @@ const handleDragEnd = (event: DragEvent) => {
         :class="{
           draggable: isDraggable,
           dimmed,
-          'greyed-out': dimmed,
+          'greyed-out': dimmed || lockedNote,
+          locked: lockedNote,
           selected: isSelected,
           ticked: tickable && ticked,
           inspectable: inspectTarget,
@@ -138,11 +171,11 @@ const handleDragEnd = (event: DragEvent) => {
         @mouseup="onMouseUp"
         @pointerdown="inspectTarget && startHold($event, inspectTarget)"
         @contextmenu="handleContextMenu"
-        @mouseenter="onMouseEnter"
-        @mouseleave="onMouseLeave"
+        @mouseenter="handleMouseEnter"
+        @mouseleave="handleMouseLeave"
         @pointerenter="onPointerEnter"
         @pointerleave="hovered = false"
-        @touchstart="onTouchStart"
+        @touchstart="handleTouchStart"
       >
         <!-- The image drags only where the tile does: elsewhere a native image
              drag would start inside the hold's move tolerance and abandon it. -->
@@ -182,11 +215,12 @@ const handleDragEnd = (event: DragEvent) => {
     </div>
 
     <CharacterTooltip
-      v-if="showTooltip && characterElement && !hideTooltip"
+      v-if="tooltipShown && characterElement"
       :character
       :target-element="characterElement"
-      :variant="showSimpleTooltip ? 'simple' : 'detailed'"
+      :variant="showSimpleTooltip || lockedNote ? 'simple' : 'detailed'"
       :hint="inspectTarget ? i18n.t('app.hold-for-skills') : undefined"
+      :note="lockedNote"
     />
   </div>
 </template>
@@ -271,6 +305,10 @@ const handleDragEnd = (event: DragEvent) => {
 .inspectable {
   -webkit-touch-callout: none;
   user-select: none;
+}
+
+.character-display.locked {
+  cursor: not-allowed;
 }
 
 .draggable:active {

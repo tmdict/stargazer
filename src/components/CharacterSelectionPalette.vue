@@ -2,23 +2,28 @@
 /* The search-and-pick palette shared by the on-grid character popup and the
    match import's review picker: name search over every warm locale, a faction
    filter, the icon grid, and Enter to take a search's single match. Board-free;
-   the consumer decides what a pick means. */
+   the consumer decides what a pick means. A locked hero is never picked. */
 
 import { computed, onMounted, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
-import type { CharacterType } from '@/lib/types/character'
+import type { CharacterType, LockedHeroes } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 
-const { characters, pinned = [] } = defineProps<{
+const {
+  characters,
+  pinned = [],
+  locked,
+} = defineProps<{
   // The pickable pool, in display order.
   characters: readonly CharacterType[]
   // Listed in their own row above the pool while no filter is active.
   pinned?: readonly CharacterType[]
   // What Enter does once the search has narrowed to one hero.
   enterHint: string
+  locked?: LockedHeroes
 }>()
 
 const emit = defineEmits<{
@@ -30,6 +35,12 @@ defineSlots<{
 }>()
 
 const i18n = useI18nStore()
+
+const lockedNote = (character: CharacterType): string | undefined =>
+  locked?.ids.has(character.id) ? locked.note : undefined
+const pick = (character: CharacterType): void => {
+  if (!lockedNote(character)) emit('pick', character)
+}
 
 const factionFilter = ref('')
 const factionOptions = computed(() => [...new Set(characters.map((c) => c.faction))].sort())
@@ -67,7 +78,9 @@ onMounted(() => searchInput.value?.focus({ preventScroll: true }))
 
 // Keep in sync with handleEnter's guard: a hint for a dead shortcut misleads.
 const enterTarget = computed(() =>
-  searchQuery.value.trim() !== '' && filteredCharacters.value.length === 1
+  searchQuery.value.trim() !== '' &&
+  filteredCharacters.value.length === 1 &&
+  !lockedNote(filteredCharacters.value[0]!)
     ? filteredCharacters.value[0]!
     : null,
 )
@@ -106,9 +119,14 @@ function handleEnter(event: KeyboardEvent) {
       v-for="character in pinnedRow"
       :key="character.id"
       class="character-item"
-      @click="emit('pick', character)"
+      @click="pick(character)"
     >
-      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true">
+      <CharacterIcon
+        :character
+        :is-draggable="false"
+        :show-simple-tooltip="true"
+        :locked-note="lockedNote(character)"
+      >
         <template v-if="$slots.badge" #badge>
           <slot name="badge" :character />
         </template>
@@ -121,9 +139,14 @@ function handleEnter(event: KeyboardEvent) {
       :key="character.id"
       class="character-item"
       :class="{ 'enter-target': enterTarget === character }"
-      @click="emit('pick', character)"
+      @click="pick(character)"
     >
-      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true">
+      <CharacterIcon
+        :character
+        :is-draggable="false"
+        :show-simple-tooltip="true"
+        :locked-note="lockedNote(character)"
+      >
         <template v-if="$slots.badge" #badge>
           <slot name="badge" :character />
         </template>

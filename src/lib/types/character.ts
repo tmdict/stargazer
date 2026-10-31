@@ -19,3 +19,10 @@ export interface CharacterType {
   sourceGridId?: number // Board the drag started on (for cross-board moves/swaps)
   team?: Team // Team assignment for placement
 }
+
+// Heroes a picker shows greyed and never picks, and the line hovering or
+// tapping one shows under its name.
+export interface LockedHeroes {
+  ids: ReadonlySet<number>
+  note: string
+}

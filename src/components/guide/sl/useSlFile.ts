@@ -1,11 +1,15 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import { decidedGames, unratedHeroes } from '@/lib/pvp/sl/data/games'
 import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
+import type { LockedHeroes } from '@/lib/types/character'
 import { reloadOntoCurrentBuild } from '@/router/routes'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 
 interface SlHeading {
   season: number
@@ -20,11 +24,15 @@ interface SlHeading {
 /* The Supreme League data file for a page that draws from it, read after
  * mount, as the pages are pre-rendered with their heading alone. The file
  * stays plain, never reactive, so the decoded data stays out of anything the
- * console can reach. */
+ * console can reach. `locked` holds the heroes the file cannot rate yet, which
+ * the pages' pickers keep off teams; it is empty until the file loads. */
 export function useSlFile() {
   const route = useRoute()
+  const gameData = useGameDataStore()
+  const i18n = useI18nStore()
   let data: SlData | null = null
   const heading = ref<SlHeading | null>(null)
+  const unrated = ref<ReadonlySet<number>>(new Set())
   const failed = ref(false)
   const mounted = ref(false)
 
@@ -55,7 +63,17 @@ export function useSlFile() {
       sample: data.sample,
       before: data.before ? { season: data.before.season, ...data.before.sample } : null,
     }
+    unrated.value = unratedHeroes(
+      decidedGames(data),
+      data.season,
+      gameData.characters.filter((c) => !c.placeholder),
+    )
   })
 
-  return { file: (): SlData | null => data, heading, failed, mounted }
+  const locked = computed<LockedHeroes>(() => ({
+    ids: unrated.value,
+    note: i18n.t('app.sl-unrated'),
+  }))
+
+  return { file: (): SlData | null => data, heading, locked, failed, mounted }
 }

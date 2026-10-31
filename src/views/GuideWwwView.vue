@@ -52,7 +52,7 @@ setupWwwContentMeta(computed(() => i18n.currentLocale))
 const gameData = useGameDataStore()
 gameData.initializeData()
 const { status: engineStatus, predict } = useSlEngine()
-const { file: slFile, heading, failed, mounted } = useSlFile()
+const { file: slFile, heading, locked, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
 const {
@@ -275,7 +275,7 @@ const predictWinner = async (): Promise<void> => {
     </div>
 
     <BottomSheet v-if="mounted" v-model:expanded="sheetExpanded" :desktop-rail="false">
-      <WwwHeroGrid :characters="gridHeroes" :taken @pick="pickHero" />
+      <WwwHeroGrid :characters="gridHeroes" :taken :locked @pick="pickHero" />
     </BottomSheet>
 
     <Teleport to="body">
@@ -283,6 +283,7 @@ const predictWinner = async (): Promise<void> => {
         <CharacterSelectionPalette
           :characters="pickerHeroes"
           :enter-hint="i18n.t('app.place-hero')"
+          :locked
           @pick="pickFromPicker"
         />
       </SelectionPopup>
