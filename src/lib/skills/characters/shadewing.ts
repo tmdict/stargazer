@@ -10,7 +10,7 @@ registerSkill(
   createTileHighlightSkill({
     id: 'shadewing',
     characterId: 96,
-    tileColor: SKILL_COLORS.crimson,
+    tileColor: SKILL_COLORS.green,
     calculateTarget: findUnitInFront,
   }),
 )
