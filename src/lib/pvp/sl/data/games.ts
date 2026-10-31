@@ -41,3 +41,14 @@ export function decidedGames(data: SlData): Game[] {
   }
   return games
 }
+
+// Heroes out in the file's season or later that no decided game fields, so the
+// model has no number of its own for them.
+export function unratedHeroes(
+  games: readonly Game[],
+  season: number,
+  heroes: readonly { id: number; season: number }[],
+): Set<number> {
+  const fielded = new Set(games.flatMap((g) => [...g.a.heroes, ...g.b.heroes]))
+  return new Set(heroes.filter((h) => h.season >= season && !fielded.has(h.id)).map((h) => h.id))
+}

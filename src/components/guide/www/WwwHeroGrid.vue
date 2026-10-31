@@ -2,7 +2,7 @@
 /* The hero grid both teams pick from, with the Arena picker's search and
    faction and class filters. A hero already on the team being filled is
    dimmed, and picking it again takes it off that team; the other team may
-   still field it. */
+   still field it. A locked hero is never picked. */
 
 import { computed } from 'vue'
 
@@ -12,13 +12,14 @@ import CharacterIcon from '@/components/CharacterIcon.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import PickerSearchRow from '@/components/ui/PickerSearchRow.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
-import type { CharacterType } from '@/lib/types/character'
+import type { CharacterType, LockedHeroes } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 
-const { characters, taken } = defineProps<{
+const { characters, taken, locked } = defineProps<{
   characters: readonly CharacterType[]
   // The heroes on the team being filled.
   taken: readonly number[]
+  locked: LockedHeroes
 }>()
 
 const emit = defineEmits<{ pick: [character: CharacterType] }>()
@@ -31,7 +32,7 @@ const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(
 
 const pickBySlug = (slug: string): void => {
   const character = characters.find((c) => c.name === slug)
-  if (character) emit('pick', character)
+  if (character && !locked.ids.has(character.id)) emit('pick', character)
 }
 </script>
 
@@ -54,6 +55,7 @@ const pickBySlug = (slug: string): void => {
         :key="character.id"
         :character
         :dimmed="taken.includes(character.id)"
+        :locked-note="locked.ids.has(character.id) ? locked.note : undefined"
         hide-tooltip
         inspectable
         show-outfit

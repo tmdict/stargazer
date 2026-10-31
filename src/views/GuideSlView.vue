@@ -65,7 +65,7 @@ const { status: engineStatus, generate: generateSet } = useSlEngine()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 
-const { file: slFile, heading, failed, mounted } = useSlFile()
+const { file: slFile, heading, locked, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
 const sourceLevels = (id: number): AttrRecord | undefined =>
@@ -116,7 +116,7 @@ const resultEl = useTemplateRef<HTMLElement>('result')
 const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
   Object.entries(levels).flatMap(([key, record]) => {
     const character = gameData.getCharacterById(Number(key))
-    return character
+    return character && !locked.value.ids.has(character.id)
       ? [
           {
             id: character.id,
@@ -251,6 +251,7 @@ const save = (): void => {
         :levels="copy"
         :source-key="rosters.activeId"
         :armed-confirm
+        :locked
         hide-mechanics
         large-dock
         @edit="edit"

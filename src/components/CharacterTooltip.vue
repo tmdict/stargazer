@@ -19,6 +19,8 @@ const { character, variant = 'detailed' } = defineProps<{
   targetElement: HTMLElement
   variant?: 'simple' | 'detailed'
   hint?: string
+  // A line under the name of the simple tooltip.
+  note?: string
 }>()
 
 const gameDataStore = useGameDataStore()
@@ -54,6 +56,7 @@ const rows = computed(() => [
         <!-- Placeholders have no stats; name-only regardless of variant. -->
         <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">
           {{ formattedName }}
+          <div v-if="note" class="simple-tooltip-note">{{ note }}</div>
         </div>
         <TooltipCard v-else :name="formattedName" :rows :hint />
       </template>
@@ -66,6 +69,14 @@ const rows = computed(() => [
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
+}
+
+.simple-tooltip-note {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: normal;
+  color: var(--tooltip-muted);
 }
 
 :deep(.energy-icon) {

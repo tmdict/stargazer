@@ -13,7 +13,8 @@
    a button or a drag stroke has made its changes, so the host reports a
    failed write once per action. Clear arms the host's two-step confirm, which
    it may share with a button of its own: only one of them is armed at a
-   time. */
+   time. A locked hero counts as not owned whatever `levels` holds, and no
+   tap, drag or dock action adds it. */
 
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -39,7 +40,7 @@ import {
   UPGRADE_ATTRS,
   type AttrRecord,
 } from '@/lib/characters/attributes'
-import type { CharacterType } from '@/lib/types/character'
+import type { CharacterType, LockedHeroes } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
@@ -52,6 +53,7 @@ const props = defineProps<{
   // For a host whose dock is the larger one (--dock-scale 1.4): its rows
   // stack at the widths that size needs.
   largeDock?: boolean
+  locked?: LockedHeroes
 }>()
 
 const emit = defineEmits<{
@@ -71,7 +73,9 @@ const {
   inspectChips,
 } = useCharacterFilters(computed(() => props.heroes))
 
-const levelsOf = (character: CharacterType): AttrRecord | undefined => props.levels[character.id]
+const isLocked = (character: CharacterType): boolean => !!props.locked?.ids.has(character.id)
+const levelsOf = (character: CharacterType): AttrRecord | undefined =>
+  isLocked(character) ? undefined : props.levels[character.id]
 
 const editHeroes = (changes: Record<string, AttrRecord | null>): void => {
   emit('edit', changes)
@@ -92,7 +96,9 @@ const shownLevels = computed(() =>
     return levels ? [{ id: c.id, levels }] : []
   }),
 )
-const shownUnowned = computed(() => filteredCharacters.value.filter((c) => !levelsOf(c)))
+const shownUnowned = computed(() =>
+  filteredCharacters.value.filter((c) => !levelsOf(c) && !isLocked(c)),
+)
 
 const addShown = (): void =>
   editHeroes(Object.fromEntries(shownUnowned.value.map((c) => [c.id, {}])))
@@ -232,7 +238,7 @@ let stroke: Stroke | null = null
 
 const onPress = (character: CharacterType, event: MouseEvent): void => {
   stroke = null
-  if (event.button !== 0) return
+  if (event.button !== 0 || isLocked(character)) return
   const owned = !!levelsOf(character)
   // Outside select mode a pill press steps a level.
   if (selecting.value ? !owned : (event.target as Element).closest('.pill-slot')) return
@@ -251,7 +257,7 @@ const paint = (current: Stroke, heroes: readonly CharacterType[]): void => {
     ticked.value = next
     return
   }
-  const changing = heroes.filter((c) => !!levelsOf(c) !== current.on)
+  const changing = heroes.filter((c) => !isLocked(c) && !!levelsOf(c) !== current.on)
   if (!changing.length) return
   emit('edit', Object.fromEntries(changing.map(({ id }) => [id, current.on ? {} : null])))
   current.edited = true
@@ -452,6 +458,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
         :inspect-chips
         :tickable="selecting && !!levelsOf(character)"
         :ticked="ticked.has(character.id)"
+        :locked-note="isLocked(character) ? locked?.note : undefined"
         @character-click="onPortrait"
         @mousedown="onPress(character, $event)"
         @mouseenter="onCross(character, $event)"
@@ -622,6 +629,10 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
 .roster-editor.selecting :deep(.character-display.dimmed) {
   cursor: default;
   transform: none;
+}
+
+.roster-editor :deep(.character-display.locked) {
+  cursor: not-allowed;
 }
 
 .roster-hint {
