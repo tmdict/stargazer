@@ -16,6 +16,10 @@ interface GridStyleConfig {
   highlight3?: number[]
   // Keyed by hero slug; portraits resolve from the shared character-image map.
   character?: Record<string, number>
+  // Tiles whose portrait is dimmed (units a skill passes over) and tiles whose
+  // border is lit (units it takes).
+  dimmed?: number[]
+  outlined?: number[]
   imaginaryHexes?: Array<{
     relativeToHex: number
     direction: 1 | 2 | 3 | 4 | 5 | 6 // Clockwise from top-right, starting at 1
@@ -209,6 +213,7 @@ const imaginaryHexes = computed(() => {
           height="40"
           preserveAspectRatio="xMidYMid meet"
           :clip-path="`url(#hex-clip-${tile.hex.getId()})`"
+          :opacity="gridStyle.dimmed?.includes(tile.hex.getId()) ? 0.35 : undefined"
         />
         <!-- Numeric labels (on top of character) -->
         <text
@@ -229,6 +234,16 @@ const imaginaryHexes = computed(() => {
           {{ gridStyle.numericLabel[tile.hex.getId()] }}
         </text>
       </g>
+
+      <!-- Lit borders, drawn after every tile so no neighbour's edge covers them -->
+      <polygon
+        v-for="hexId in gridStyle.outlined ?? []"
+        :key="`outline-${hexId}`"
+        :points="getHexPolygon(snippetGrid.getHexById(hexId))"
+        fill="none"
+        stroke="rgb(255, 215, 0)"
+        stroke-width="2"
+      />
 
       <!-- Imaginary hex tiles -->
       <template v-for="(hexData, index) in imaginaryHexes" :key="`imaginary-${index}`">

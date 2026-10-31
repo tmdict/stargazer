@@ -1,13 +1,9 @@
 export const gridStyles = {
   allyTarget: {
     numericLabel: {
-      1: 1,
-      2: 2,
-      3: 3,
       4: 4,
       5: 5,
       6: 6,
-      7: 7,
       8: 8,
       9: 9,
       10: 10,
@@ -27,10 +23,14 @@ export const gridStyles = {
       44: 44,
       45: 45,
     },
-    highlight: [1],
-    highlight2: [2, 3, 7],
+    dimmed: [2, 3, 7],
+    outlined: [1],
     character: {
       evie: 16,
+      chippy: 1,
+      hammie: 2,
+      valen: 3,
+      mirael: 7,
     },
   },
   enemyTarget1: {

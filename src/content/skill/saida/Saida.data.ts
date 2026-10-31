@@ -26,16 +26,14 @@ export const gridStyles = {
     },
   },
   example: {
-    numericLabel: {
-      16: 1,
-      12: 2,
-    },
+    dimmed: [13, 4],
+    outlined: [16, 12],
     character: {
       saida: 9,
-      contess: 16,
-      'lily-may': 12,
-      cryonaia: 13,
-      harak: 4,
+      chippy: 16,
+      hammie: 12,
+      valen: 13,
+      mirael: 4,
     },
   },
 }
