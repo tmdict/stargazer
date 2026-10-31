@@ -20,7 +20,7 @@ The selection lives in memory only. A tag or energy link replaces it after mount
 
 ## Season summaries
 
-A season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal generated with the season's report and never edited here. While a season is played its summary is copied again with each new report and says so (`live`), and once it ends it stays as it is. Season 7's is the exception: it lists the teams on its report's counter ladder and is kept by hand, since its report is not built again. Nothing derives these numbers, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first.
+A season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal generated with the season's report and never edited here. While a season is played its summary is copied again with each new report and says so (`live`), and once it ends it stays as it is. Nothing derives these numbers, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first.
 
 A summary lists the languages its report is written in (`languages`, English first) and carries each team's label in each of them. In an app locale the report is not written in (`reportReadsIn`), a team is named by its heroes in that locale (`pvpTeamName`), so a season needs nothing per app locale beyond the hero names the app already has. Report links ask for the site language (`pvpReportHref`), and a report written without it opens in English.
 
