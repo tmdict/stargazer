@@ -7,9 +7,9 @@
  */
 export const SKILL_COLORS = {
   red: 'var(--skill-red)', // galahad, hepler, satrana, zandrok
-  crimson: 'var(--skill-crimson)', // natsu, talene
+  crimson: 'var(--skill-crimson)', // natsu, shadewing, talene
   rust: 'var(--skill-rust)', // elijah-lailah (one faction between)
-  amber: 'var(--skill-amber)', // aliceth, dunlingr (spellbind)
+  amber: 'var(--skill-amber)', // aliceth, dunlingr (spellbind), taichi-agumon
   gold: 'var(--skill-gold)', // natsu, phantimal (spirit marks)
   green: 'var(--skill-green)', // bonnie, callan, daimon, isabella, nara, niru, silvina
   teal: 'var(--skill-teal)', // faramor, ravion, thador
@@ -19,6 +19,6 @@ export const SKILL_COLORS = {
   lavender: 'var(--skill-lavender)', // frieren
   purple: 'var(--skill-purple)', // gunnar, pandora, reinier, vala
   lilac: 'var(--skill-lilac)', // dunlingr (curelock)
-  orchid: 'var(--skill-orchid)', // kulu (breakable tiles)
+  orchid: 'var(--skill-orchid)', // kulu (breakable tiles), mehira
   slate: 'var(--skill-slate)', // kulu (demolition zone)
 } as const

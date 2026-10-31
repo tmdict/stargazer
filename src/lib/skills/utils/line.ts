@@ -49,6 +49,8 @@ export function laneSpan(hexes: Hex[], s: number): [Hex, Hex] | null {
 
 interface HexEdge {
   hex: Hex
+  // The neighbor across the edge, off the board or not.
+  beyond: Hex
   fromCorner: number
   toCorner: number
 }
@@ -66,12 +68,23 @@ function outlineEdges(zone: Hex[]): HexEdge[] {
   const edges: HexEdge[] = []
   for (const hex of zone) {
     for (let direction = 0; direction < 6; direction++) {
-      if (!inZone.has(hex.neighbor(direction).toString())) {
-        edges.push({ hex, fromCorner: (direction + 4) % 6, toCorner: (direction + 5) % 6 })
+      const beyond = hex.neighbor(direction)
+      if (!inZone.has(beyond.toString())) {
+        edges.push({ hex, beyond, fromCorner: (direction + 4) % 6, toCorner: (direction + 5) % 6 })
       }
     }
   }
   return edges
+}
+
+function edgeLines(edges: HexEdge[], color: string): SkillLine[] {
+  return edges.map(({ hex, fromCorner, toCorner }) => ({
+    fromHexId: hex.getId(),
+    toHexId: hex.getId(),
+    fromCorner,
+    toCorner,
+    color,
+  }))
 }
 
 /**
@@ -89,13 +102,17 @@ export function zoneOutline(
     .getAllTiles()
     .map((tile) => tile.hex)
     .filter((hex) => center.distance(hex) <= range)
-  return outlineEdges(zone).map(({ hex, fromCorner, toCorner }) => ({
-    fromHexId: hex.getId(),
-    toHexId: hex.getId(),
-    fromCorner,
-    toCorner,
-    color,
-  }))
+  return edgeLines(outlineEdges(zone), color)
+}
+
+/**
+ * The edges between a region of on-board tiles and the rest of the board, as
+ * same-hex corner lines: the region's outline without the stretches along the
+ * board's rim.
+ */
+export function zoneBoundary(grid: Grid, zone: Hex[], color: string): SkillLine[] {
+  const inner = outlineEdges(zone).filter(({ beyond }) => grid.getTileOrUndefined(beyond))
+  return edgeLines(inner, color)
 }
 
 export interface LaneBoundaryClip {
