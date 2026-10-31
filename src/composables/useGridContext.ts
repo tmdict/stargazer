@@ -55,13 +55,14 @@ import {
 } from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
+import { decomposeUnitId } from '@/lib/characters/synergy'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
 import { artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
-import { SkillManager } from '@/lib/skills/skill'
+import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
 import { Team } from '@/lib/types/team'
@@ -95,6 +96,8 @@ export interface GridContextGlobals {
   // Team-view crop shared across boards so they stay the same size; null means
   // each board crops to its own ally extent (the single-board Arena).
   sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
+  // The units and artifacts whose drawings the Skills dropdown has turned off.
+  hiddenSkills: Ref<ReadonlySet<string>>
 }
 
 // The drop chain (routeDrop -> handleDrop) reads only the drag-source
@@ -130,6 +133,8 @@ export interface GridContext {
   skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
   skillLines: ReturnType<SkillManager['getSkillLines']>
   skillBadges: ReturnType<SkillManager['getSkillBadges']>
+  // Every unit with a skill and every artifact on the board, hidden or not.
+  skillRows: SkillRow[]
   // Page-wide values surfaced on the board for one-stop component access.
   hexScale: number
   teamView: boolean
@@ -182,7 +187,7 @@ export function createGridContext(
   globals: GridContextGlobals,
 ): GridContext {
   const gameDataStore = useGameDataStore()
-  const { hexSize, teamView, inverted, perspective, sharedCrop } = globals
+  const { hexSize, teamView, inverted, perspective, sharedCrop, hiddenSkills } = globals
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
@@ -595,10 +600,31 @@ export function createGridContext(
       artifactId === null ? undefined : gameDataStore.getArtifactById(artifactId)?.name
     // Derived like the closest-target maps: reading the slots and the grid's
     // tiles is what keeps the arrows current across placements and slot changes.
-    const artifactArrows = computed<ArtifactArrow[]>(() => [
+    const allArtifactArrows = computed<ArtifactArrow[]>(() => [
       ...artifactTargetArrows(grid, Team.ALLY, slotArtifactName(artifacts.ally.value)),
       ...artifactTargetArrows(grid, Team.ENEMY, slotArtifactName(artifacts.enemy.value)),
     ])
+    const artifactRows = computed<SkillRow[]>(() =>
+      [Team.ALLY, Team.ENEMY].flatMap((team) => {
+        const id = team === Team.ALLY ? artifacts.ally.value : artifacts.enemy.value
+        if (id === null) return []
+        return [
+          {
+            key: artifactSkillKey(id, team),
+            team,
+            kind: 'artifact' as const,
+            id,
+            drawing: allArtifactArrows.value.some((arrow) => arrow.team === team),
+          },
+        ]
+      }),
+    )
+    const artifactArrows = computed(() => {
+      const hiddenTeams = new Set(
+        artifactRows.value.filter((row) => hiddenSkills.value.has(row.key)).map((row) => row.team),
+      )
+      return allArtifactArrows.value.filter((arrow) => !hiddenTeams.has(arrow.team))
+    })
 
     const teamViewActive = computed(() => teamView.value)
     const invertedActive = computed(() => inverted.value)
@@ -608,23 +634,36 @@ export function createGridContext(
     const imageModifiers = computed(() => skillManager.getImageModifiersByCharacterAndTeam())
     const tileColorModifiers = computed(() => {
       skillManager.getTargetVersion()
-      return skillManager.getTileColorModifiers()
+      return skillManager.getTileColorModifiers(hiddenSkills.value)
     })
     const tileFillModifiers = computed(() => {
       skillManager.getTargetVersion()
-      return skillManager.getTileFillModifiers()
+      return skillManager.getTileFillModifiers(hiddenSkills.value)
     })
     const skillTargets = computed(() => {
       skillManager.getTargetVersion()
-      return skillManager.getAllSkillTargets()
+      return skillManager.getAllSkillTargets(hiddenSkills.value)
     })
     const skillLines = computed(() => {
       skillManager.getTargetVersion()
-      return skillManager.getSkillLines()
+      return skillManager.getSkillLines(hiddenSkills.value)
     })
     const skillBadges = computed(() => {
       skillManager.getTargetVersion()
-      return skillManager.getSkillBadges()
+      return skillManager.getSkillBadges(hiddenSkills.value)
+    })
+    const skillRows = computed<SkillRow[]>(() => {
+      skillManager.getTargetVersion()
+      return [
+        ...skillManager.getSkillInstances().map(({ characterId, team, drawing }) => ({
+          key: unitSkillKey(characterId, team),
+          team,
+          kind: 'unit' as const,
+          id: decomposeUnitId(characterId).localId,
+          drawing,
+        })),
+        ...artifactRows.value,
+      ]
     })
     const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
       imageModifiers.value.get(`${characterId}-${team}`)
@@ -690,6 +729,7 @@ export function createGridContext(
       skillTargets,
       skillLines,
       skillBadges,
+      skillRows,
       getImageModifierForCharacter,
       getTileColorModifier,
       getTileFillModifier,

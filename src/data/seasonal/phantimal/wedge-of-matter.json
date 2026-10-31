@@ -6,5 +6,6 @@
   "damage": "magic",
   "faction": "celestial",
   "qualifyingFactions": ["hypogean", "celestial"],
-  "tags": ["debuff"]
+  "targeting": true,
+  "tags": ["debuff", "haste"]
 }

@@ -6,5 +6,6 @@
     "atk": 16.2,
     "hp": 24.3,
     "def-penetration": 11.2
-  }
+  },
+  "tags": ["haste"]
 }

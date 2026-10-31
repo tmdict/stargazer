@@ -84,7 +84,7 @@ Phantimal and artifact data files, the six pre-season artifacts included, can ca
   "name": "hurricane",
   "season": 8,
   "stats": { "hp": 23.9, "def": 44.9, "ranged-def": 18.2 },
-  "tags": ["temp-buff"]
+  "tags": ["haste", "temp-buff"]
 }
 ```
 

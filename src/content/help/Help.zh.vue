@@ -76,7 +76,9 @@ const SKILL = {
       <li>
         <HelpBasicsPicture kind="target" />
         <h3>技能目标</h3>
-        <p>打开<b>技能</b>，箭头会显示每个英雄的攻击目标，技能范围也会标在地图上。</p>
+        <p>
+          打开<b>技能</b>，箭头会显示每个英雄的攻击目标，技能范围也会标在地图上。在它的菜单里可以单独关闭某个英雄或神器的显示，也可以关闭友方或敌方全部的显示。
+        </p>
       </li>
       <li>
         <HelpBasicsPicture kind="skills" :skill="SKILL" />

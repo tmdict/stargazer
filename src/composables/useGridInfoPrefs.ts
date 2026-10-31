@@ -24,6 +24,7 @@ export interface GridInfoPrefs {
   upgrades: boolean
   targeting: boolean
   coordinates: boolean
+  heroSkin: boolean
 }
 
 export type GridInfoKey = keyof GridInfoPrefs
@@ -37,6 +38,7 @@ export interface GridInfoView {
   heroCard: boolean
   upgrades: boolean
   targeting: boolean
+  heroSkin: boolean
 }
 
 const DEFAULTS: GridInfoPrefs = {
@@ -47,6 +49,7 @@ const DEFAULTS: GridInfoPrefs = {
   upgrades: false,
   targeting: false,
   coordinates: false,
+  heroSkin: false,
 }
 
 const PREF_KEYS = Object.keys(DEFAULTS) as GridInfoKey[]
@@ -69,6 +72,7 @@ export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
     heroCard: effective('heroCard'),
     upgrades: effective('upgrades'),
     targeting: effective('targeting'),
+    heroSkin: effective('heroSkin'),
   }
 }
 
@@ -80,6 +84,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
   heroCard: false,
   upgrades: false,
   targeting: false,
+  heroSkin: false,
 })
 
 // The stored slice merged over the defaults (booleans only, so a wrong-typed

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
+import GridSkillsToggle from '@/components/grid/GridSkillsToggle.vue'
 import ClearButton, { type ClearSide } from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -17,7 +18,7 @@ const grids = useGrids()
 const { handleClearAll, handleClearSide, clearTargetHex, clearLiftedHex } = useSelectionState()
 
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
-const showSkills = defineModel<boolean>('showSkills')
+const showSkills = defineModel<boolean>('showSkills', { required: true })
 const teamView = defineModel<boolean>('teamView')
 // Boards-layout toggle, bound only by the Teams page (gated by showWrapToggle).
 const wrap = defineModel<boolean>('wrap')
@@ -78,11 +79,11 @@ const clearSides = computed((): ClearSide[] =>
 <template>
   <div class="grid-controls">
     <!-- Row 1: grid display toggles (plus the page's own, e.g. the mode picker) -->
-    <div class="controls-row">
+    <div class="controls-row controls-toggles">
       <slot name="toggles-start" />
       <ToggleChip v-if="showWrapToggle" v-model="wrap" :label="i18n.t('app.wrap')" />
       <GridInfoToggle v-if="!hideGridInfo" />
-      <ToggleChip v-model="showSkills" :label="i18n.t('app.skills')" />
+      <GridSkillsToggle v-model="showSkills" />
       <ToggleChip v-if="showSynToggle" v-model="synergyView" :label="i18n.t('app.syn')" />
       <ToggleChip v-model="flatView" :label="i18n.t('app.flat')" />
       <ToggleChip v-model="grids.inverted" :label="i18n.t('app.invert')" />
@@ -129,28 +130,16 @@ const clearSides = computed((): ClearSide[] =>
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 @media (min-width: 769px) and (max-width: 1599px) {
-  .controls-row {
-    gap: var(--spacing-md);
-  }
-}
-
-/* Touch tablets: iPadOS renders the chips' native checkboxes and text wider
-   than desktop browsers, enough to push the last chip onto a second line in
-   the two-column layout's board column. */
-@media (pointer: coarse) and (min-width: 1220px) {
   .controls-row {
     gap: var(--spacing-sm);
   }
 }
 
 @media (max-width: 768px) {
-  .grid-controls {
-    gap: var(--spacing-md);
-  }
   .controls-row {
     gap: 6px;
   }
@@ -164,7 +153,13 @@ const clearSides = computed((): ClearSide[] =>
     gap: 5px;
   }
   .controls-row.controls-actions {
-    gap: 16px;
+    gap: 7px;
+  }
+}
+
+@media (max-width: 374px) {
+  .controls-toggles {
+    gap: 3px;
   }
 }
 </style>

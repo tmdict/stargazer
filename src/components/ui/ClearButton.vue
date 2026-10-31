@@ -77,7 +77,7 @@ const onTrayFocusOut = (e: FocusEvent): void => {
     <button
       ref="buttonRef"
       @click="handleClick"
-      class="control-btn danger clear-all-btn"
+      class="control-btn danger"
       :class="{ 'confirm-armed': armed !== null }"
       :title="i18n.t(armed !== null ? 'app.confirm' : 'app.clear')"
     >
@@ -114,16 +114,6 @@ const onTrayFocusOut = (e: FocusEvent): void => {
 .clear-control {
   position: relative;
   display: inline-flex;
-}
-
-.clear-all-btn {
-  margin: 0 5px;
-}
-
-@media (max-width: 768px) {
-  .clear-all-btn {
-    margin: 0;
-  }
 }
 
 .side-tray {

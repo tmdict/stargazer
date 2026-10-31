@@ -2,16 +2,25 @@ import { nextTick, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { clampX, VIEWPORT_MARGIN } from '@/utils/viewport'
 
+type PanelAlign = 'center' | 'left' | 'right'
+
+const alignedLeft = (trigger: DOMRect, width: number, align: PanelAlign): number => {
+  if (align === 'left') return trigger.left
+  if (align === 'right') return trigger.right - width
+  return trigger.left + trigger.width / 2 - width / 2
+}
+
 /* Horizontal nudge for a dropdown panel centred under its trigger (or, with
- * `align: 'left'`, starting at its left edge): while `active`, the returned
- * shift (px, bind as `--panel-shift`) keeps the panel inside the viewport when
- * the trigger sits near an edge. It resets on close, or a stale shift would
- * flash for one frame on the next open if the trigger moved while closed. */
+ * `align: 'left'` or `'right'`, lined up with that edge of it): while `active`,
+ * the returned shift (px, bind as `--panel-shift`) keeps the panel inside the
+ * viewport when the trigger sits near an edge. It resets on close, or a stale
+ * shift would flash for one frame on the next open if the trigger moved while
+ * closed. */
 export function usePanelClamp(
   triggerRef: Ref<HTMLElement | undefined>,
   panelRef: Ref<HTMLElement | undefined>,
   active: () => boolean,
-  align: () => 'center' | 'left' = () => 'center',
+  align: () => PanelAlign = () => 'center',
 ): Ref<number> {
   const shift = ref(0)
 
@@ -19,8 +28,7 @@ export function usePanelClamp(
     const panel = panelRef.value
     const trigger = triggerRef.value
     if (!panel || !trigger) return
-    const rect = trigger.getBoundingClientRect()
-    const left = align() === 'left' ? rect.left : rect.left + rect.width / 2 - panel.offsetWidth / 2
+    const left = alignedLeft(trigger.getBoundingClientRect(), panel.offsetWidth, align())
     shift.value = clampX(left, panel.offsetWidth, VIEWPORT_MARGIN) - left
   }
 

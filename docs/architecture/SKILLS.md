@@ -69,6 +69,12 @@ A skill shows badges the way it draws lines. The `badges` that `withEffects`' `c
 
 What identifies a unit shows whatever the Skills toggle says: the picture a skill draws a unit with (a companion, or Elijah alone) and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
 
+## Hiding one unit
+
+The Skills chip's list (`GridSkillsToggle.vue`) turns off what one unit or artifact draws, and shows a row only while that unit draws something. Each team's own row switches every unit listed under it, turning them all on unless all are on already. The hidden keys are one set in the `grids` store, shared by every board on the page, and each board's computeds ask `SkillManager` for what is left, so the renderers need no check of their own. A hero and its synergy copy share a key, and a key leaves the set when its unit leaves the boards.
+
+A hidden unit's paint comes off a copy of the refcounts, so a color another skill paints on the same tile stays. That needs to know who painted what, so every tile paint goes through `paintTiles`. The Debug tab reads the engine directly and still shows hidden units. The set is never stored or serialized, so a reload or a link shows every drawing, while Copy and Download capture the board as it stands.
+
 ## Lookups
 
 A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.

@@ -20,7 +20,6 @@ import {
   getCharacter,
   getCharacterTeam,
   isBaseHeroId,
-  isCompanionUnitId,
   toBaseHeroId,
 } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
@@ -39,6 +38,7 @@ interface Props {
   characters: readonly CharacterType[]
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
   showHover: boolean
+  showSkin: boolean
   showSkills: boolean
   isMapEditorMode: boolean
   readonly?: boolean
@@ -157,6 +157,14 @@ const getCharacterName = (characterId: number, hexId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
+// Looked up by the drawn picture, because a skill's picture has skins of its own.
+const getUnitImage = (characterId: number, hexId: number): string => {
+  const name = getCharacterName(characterId, hexId)
+  return (
+    (props.showSkin && gameDataStore.getOutfitImage(name)) || gameDataStore.getCharacterImage(name)
+  )
+}
+
 // Phantimals reuse the character wrapper's positioning, drag, lift and
 // perspective; only image and colour differ.
 
@@ -252,9 +260,8 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
     sourceHexId: hexId,
     sourceGridId: ctx.id,
   }
-  const characterName = getCharacterName(characterId, hexId)
 
-  startDrag(event, characterWithSource, characterId, gameDataStore.getCharacterImage(characterName))
+  startDrag(event, characterWithSource, characterId, getUnitImage(characterId, hexId))
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -418,8 +425,7 @@ const liftedMode = computed(() =>
       @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >
-      <div class="character-content" :class="{ companion: isCompanionUnitId(characterId) }">
-        <div class="character-background" :class="{ phantimal: inPhantimalBand(characterId) }" />
+      <div class="character-content">
         <!-- draggable=false keeps the wrapper div as the drag source. Images are
              draggable by default, and a swap can replace this node mid-drag
              (character↔phantimal flips the v-if branch). Dragend fired on a
@@ -427,7 +433,7 @@ const liftedMode = computed(() =>
              leaving the drag ghost stuck. -->
         <span
           v-if="isRetiredPhantimal(characterId)"
-          class="character-image retired-unit"
+          class="character-image phantimal retired-unit"
           :style="{ fontSize: `${characterDimensions.size * 0.4}px` }"
           :title="i18n.t('app.retired')"
         >
@@ -437,12 +443,12 @@ const liftedMode = computed(() =>
           v-else-if="inPhantimalBand(characterId)"
           :src="phantimalUrl(characterId)"
           :alt="phantimalName(characterId)"
-          class="character-image"
+          class="character-image phantimal"
           draggable="false"
         />
         <img
           v-else
-          :src="gameDataStore.getCharacterImage(getCharacterName(characterId, hexId))"
+          :src="getUnitImage(characterId, hexId)"
           :alt="getCharacterName(characterId, hexId)"
           class="character-image"
           draggable="false"
@@ -701,20 +707,6 @@ const liftedMode = computed(() =>
   border-bottom-color: var(--color-primary);
 }
 
-.character-background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: var(--character-border-width, 3px) solid var(--unit-disc);
-  background-color: var(--unit-disc);
-}
-
-.character-background.phantimal {
-  border-color: var(--unit-disc-phantimal);
-  background-color: var(--unit-disc-phantimal);
-}
-
 .retired-unit {
   display: flex;
   align-items: center;
@@ -724,7 +716,10 @@ const liftedMode = computed(() =>
   user-select: none;
 }
 
+/* The disc is a shadow on this box because image export rounds separate boxes to whole
+   pixels independently, which pushes stacked circles off-centre. */
 .character-image {
+  --disc: var(--unit-disc);
   position: absolute;
   top: var(--character-border-width, 3px);
   left: var(--character-border-width, 3px);
@@ -733,5 +728,11 @@ const liftedMode = computed(() =>
   border-radius: 50%;
   object-fit: cover;
   border: var(--character-border-width, 3px) solid var(--unit-ring);
+  background-color: var(--disc);
+  box-shadow: 0 0 0 var(--character-border-width, 3px) var(--disc);
+}
+
+.character-image.phantimal {
+  --disc: var(--unit-disc-phantimal);
 }
 </style>
