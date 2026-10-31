@@ -24,6 +24,13 @@ export const gridStyles = {
     character: {
       saida: 9,
     },
+    imaginaryHexes: [
+      {
+        relativeToHex: 1,
+        direction: 5 as const,
+        label: 18,
+      },
+    ],
   },
   example: {
     dimmed: [13, 4],

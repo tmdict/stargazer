@@ -25,6 +25,13 @@ export const gridStyles = {
     character: {
       aliceth: 9,
     },
+    imaginaryHexes: [
+      {
+        relativeToHex: 1,
+        direction: 5 as const,
+        label: 18,
+      },
+    ],
   },
   rowScan2: {
     numericLabel: {
