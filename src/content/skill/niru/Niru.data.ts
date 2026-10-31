@@ -19,7 +19,6 @@ export const gridStyles = {
       20: 15,
       23: 17,
     },
-    highlight: [9],
     highlight2: [4, 6, 7, 12, 13, 16],
     highlight3: [1, 2, 3, 5, 8, 10, 15, 17, 19, 20, 23],
     character: {

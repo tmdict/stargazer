@@ -2,12 +2,8 @@ export const gridStyles = {
   main: {
     numericLabel: {
       1: 1,
-      2: 2,
-      3: 3,
-      4: 4,
       5: 5,
       6: 6,
-      7: 7,
       8: 8,
       9: 9,
       10: 10,
@@ -27,10 +23,14 @@ export const gridStyles = {
       44: 44,
       45: 45,
     },
-    highlight: [2, 3],
-    highlight2: [4, 7],
+    dimmed: [4, 7],
+    outlined: [2, 3],
     character: {
       ravion: 16,
+      chippy: 2,
+      hammie: 3,
+      valen: 4,
+      mirael: 7,
     },
   },
 }

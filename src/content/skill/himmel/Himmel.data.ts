@@ -8,8 +8,6 @@ export const gridStyles = {
       13: 4,
       16: 6,
     },
-    highlight: [9],
-    highlight2: [4, 6, 7, 12, 13, 16],
     character: {
       himmel: 9,
     },

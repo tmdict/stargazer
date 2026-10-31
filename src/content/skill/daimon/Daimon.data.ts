@@ -5,8 +5,6 @@ export const gridStyles = {
       6: 3,
       7: 2,
     },
-    highlight: [9],
-    highlight2: [4, 6, 7],
     character: {
       daimon: 9,
     },
