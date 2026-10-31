@@ -14,8 +14,8 @@ import {
 
 export enum TargetingMethod {
   FURTHEST,
-  REARMOST, // Scans hex IDs based on team: ally scans 45→1, enemy scans 1→45
-  FRONTMOST, // Scans hex IDs based on team: ally scans 1→45, enemy scans 45→1
+  REARMOST, // The targeted team's back: the lowest hex id for allies, the highest for enemies
+  FRONTMOST, // The targeted team's front: the highest hex id for allies, the lowest for enemies
 }
 
 export interface TargetingOptions {
