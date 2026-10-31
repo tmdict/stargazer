@@ -45,7 +45,7 @@ The hero list, skill pages and search pick the character up from those files.
 
 ### Adding an arena map
 
-Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are in `src/data/maps.json`, which the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` read ([Teams](./architecture/TEAMS.md)).
+Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. A map with a tile on each side that buffs the unit standing on it lists them in `buffTiles` beside `grid`, the ally tile first, and the loader refuses one that is not an ally or enemy tile. The game moves buff tiles every few months, and the list moves with them. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are in `src/data/maps.json`, which the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` read ([Teams](./architecture/TEAMS.md)).
 
 ### Adding a skill
 
