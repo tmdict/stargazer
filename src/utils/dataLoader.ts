@@ -8,7 +8,6 @@ import type { LocaleData, LocaleDictionary, SkillLocale } from '@/lib/types/i18n
 import type { PhantimalType } from '@/lib/types/phantimal'
 import type {
   CharmData,
-  CharmTags,
   SkillArtifacts,
   SkillCharms,
   SkillKeywords,
@@ -171,38 +170,13 @@ export function loadPhantimals(): PhantimalType[] {
   return phantimalsCache
 }
 
-let charmsCache: CharmData | null = null
-let heroCharmCache: Map<string, string> | null = null
-
-/** Seasonal charm registry: charm id → the heroes sharing it. After
- * seasonal removal the unmatched glob compiles to an empty module map, so this
- * degrades to {}. */
-function loadCharms(): CharmData {
-  if (charmsCache) return charmsCache
-  const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/charms.json', {
-    eager: true,
-    import: 'default',
-  })
-  charmsCache = Object.values(modules)[0] ?? {}
-  return charmsCache
-}
-
-/** Hand-written charm tags; {} when the season's charms are untagged or
- * retired. */
-function loadCharmTags(): CharmTags {
-  const modules = import.meta.glob<CharmTags>('@/data/seasonal/charm/tags.json', {
-    eager: true,
-    import: 'default',
-  })
-  return Object.values(modules)[0] ?? {}
-}
+let heroCharmCache: Map<string, CharmData> | null = null
 
 // A charm's tags join each sharing hero's own, pinned to the tiers that carry
 // them, so every tag consumer (filters, guide, skill chips) sees them as
 // ordinary hero tags.
 function withCharmTags(character: CharacterType): CharacterType {
-  const charm = getCharmForHero(character.name)
-  const charmTags = charm ? loadCharmTags()[charm.id] : undefined
+  const charmTags = getCharmForHero(character.name)?.tags
   if (!charmTags) return character
   const tags: Record<string, readonly TagAttachment[]> = { ...character.tags }
   for (const [tag, { tiers, mods }] of Object.entries(charmTags)) {
@@ -213,17 +187,19 @@ function withCharmTags(character: CharacterType): CharacterType {
 }
 
 /** The charm a hero shares, with the full sharer list; null when the hero has
- * none (or charms are retired). */
-export function getCharmForHero(slug: string): { id: string; heroes: string[] } | null {
+ * none (or charms are retired, which leaves the glob matching no file). */
+export function getCharmForHero(slug: string): CharmData | null {
   if (!heroCharmCache) {
     heroCharmCache = new Map()
-    for (const [charmId, { heroes }] of Object.entries(loadCharms())) {
-      for (const hero of heroes) heroCharmCache.set(hero, charmId)
+    const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
+      eager: true,
+      import: 'default',
+    })
+    for (const charm of Object.values(modules)) {
+      for (const hero of charm.heroes) heroCharmCache.set(hero, charm)
     }
   }
-  const charmId = heroCharmCache.get(slug)
-  if (!charmId) return null
-  return { id: charmId, heroes: loadCharms()[charmId]!.heroes }
+  return heroCharmCache.get(slug) ?? null
 }
 
 function loadIcons(): Record<string, string> {

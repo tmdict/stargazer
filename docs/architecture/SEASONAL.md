@@ -18,19 +18,19 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
   by hand ─────────────▶  tags, targeting, skill code ─┘
 ```
 
-| Content                             | Files                                                                            | Written by   |
-| ----------------------------------- | -------------------------------------------------------------------------------- | ------------ |
-| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                        | data export  |
-| Phantimal names                     | `src/locales/seasonal/phantimal/`                                                | data export  |
-| Phantimal skill text                | `src/pack/text/skill/<code>/_phantimals.json`                                    | data export  |
-| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)        | data export  |
-| Artifact names                      | `src/locales/seasonal/artifact/`                                                 | data export  |
-| Artifact effect text                | `src/pack/text/skill/<code>/_artifacts.json`, pre-season included                | data export  |
-| Charms                              | `src/data/seasonal/charm/charms.json`, `src/pack/text/skill/<code>/_charms.json` | data export  |
-| Charm tags                          | `src/data/seasonal/charm/tags.json`                                              | hand         |
-| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                  | hand         |
-| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`             | hand         |
-| Icons                               | `src/pack/images/seasonal/{artifact,phantimal}/<slug>.png`                       | image export |
+| Content                             | Files                                                                          | Written by   |
+| ----------------------------------- | ------------------------------------------------------------------------------ | ------------ |
+| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                      | data export  |
+| Phantimal names                     | `src/locales/seasonal/phantimal/`                                              | data export  |
+| Phantimal skill text                | `src/pack/text/skill/<code>/_phantimals.json`                                  | data export  |
+| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)      | data export  |
+| Artifact names                      | `src/locales/seasonal/artifact/`                                               | data export  |
+| Artifact effect text                | `src/pack/text/skill/<code>/_artifacts.json`, pre-season included              | data export  |
+| Charm id, season, heroes            | `src/data/seasonal/charm/<id>.json`, `src/pack/text/skill/<code>/_charms.json` | data export  |
+| Charm tags                          | `tags` in each charm data file                                                 | hand         |
+| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                | hand         |
+| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`           | hand         |
+| Icons                               | `src/pack/images/seasonal/{artifact,phantimal}/<slug>.png`                     | image export |
 
 The data export writes the structural files from the feed at a season's start, with each id, season, stat, range, damage type and faction as the feed gives it: an artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts from the feed alone), and the previous season's files are removed.
 
@@ -92,13 +92,28 @@ Phantimal and artifact data files, the six pre-season artifacts included, can ca
 
 A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. `_charms.json` sits in each language's skill text folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
 
-Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and gives each tag of a charm every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
+Each charm has a data file, `src/data/seasonal/charm/<id>.json`, where the data export writes its id, season and the heroes sharing it. Charms can carry tags, written by hand in the same file: each tag gives every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
 
 ```json
-{ "s8-10": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } } }
+{
+  "id": "s8-10",
+  "season": 8,
+  "heroes": [
+    "contess",
+    "damian",
+    "evie",
+    "hewynn",
+    "ludovic",
+    "mikola",
+    "rolan",
+    "solise",
+    "velara"
+  ],
+  "tags": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } }
+}
 ```
 
-`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. A charm's effects change with the season, so the data export stops when the file names a charm the feed lacks, and deletes it with the text when the season retires.
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. The data export keeps a charm file's hand-written fields within the season. A charm's effects change with the season, so the export removes the file of a charm the feed lacks, stops instead when that file holds fields written by hand, and deletes every charm file with the text when the season retires.
 
 ## Season cutover
 

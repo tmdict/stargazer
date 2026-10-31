@@ -1,0 +1,11 @@
+{
+  "id": "s8-4",
+  "season": 8,
+  "heroes": ["bonnie", "satrana", "shadewing"],
+  "tags": {
+    "debuff": {
+      "tiers": [3, 4],
+      "mods": ["eryndor", "single"]
+    }
+  }
+}
