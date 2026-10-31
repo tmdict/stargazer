@@ -22,6 +22,14 @@ export function slPreview(): Plugin {
     resolveId: (id) => (id === ID ? RESOLVED : undefined),
     async load(id) {
       if (id !== RESOLVED) return
+      // Without the seed the file cannot be read: a build stops, and the dev
+      // server runs with no preview on the guide index.
+      if (!config.env.VITE_SL_SEED) {
+        const message = 'VITE_SL_SEED is not set, so the Supreme League data file cannot be read'
+        if (config.command === 'build') this.error(message)
+        config.logger.warn(`sl-preview: ${message}; the guide index shows no preview`)
+        return 'export default null'
+      }
       const file = join(config.root, 'src/content/pvp/sl/sl.bin')
       this.addWatchFile(file)
       const { module, dependencies } = await runnerImport<{
@@ -29,6 +37,9 @@ export function slPreview(): Plugin {
       }>(join(config.root, 'src/lib/pvp/sl/generator/defaultSet.ts'), {
         configFile: false,
         root: config.root,
+        // The runner reads no settings files, so a seed set in .env.local alone
+        // is handed to it.
+        define: { 'import.meta.env.VITE_SL_SEED': JSON.stringify(config.env.VITE_SL_SEED) },
         resolve: { alias: config.resolve.alias },
         logLevel: 'error',
       })
