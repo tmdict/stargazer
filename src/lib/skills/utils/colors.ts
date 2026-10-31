@@ -17,7 +17,7 @@ export const SKILL_COLORS = {
   sky: 'var(--skill-sky)', // elijah-lailah
   steel: 'var(--skill-steel)', // alna
   lavender: 'var(--skill-lavender)', // frieren
-  purple: 'var(--skill-purple)', // gunnar, pandora, reinier, vala
+  purple: 'var(--skill-purple)', // gunnar, pandora, reinier, saida, vala
   lilac: 'var(--skill-lilac)', // dunlingr (curelock)
   orchid: 'var(--skill-orchid)', // kulu (breakable tiles), mehira
   slate: 'var(--skill-slate)', // kulu (demolition zone)

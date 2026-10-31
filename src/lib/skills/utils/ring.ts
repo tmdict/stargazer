@@ -180,11 +180,18 @@ export interface RowScanOptions {
   filter?: (characterId: number) => boolean
 }
 
+export interface ScannedUnit {
+  hexId: number
+  characterId: number
+  distance: number
+  diagonal: number
+}
+
 /**
- * Scan for a unit on `options.team` by expanding distance rings from the caster.
- * Within a ring, candidates are ordered by diagonal row (q - r), then by hex id
- * within a row; rowDirection and withinRowDirection independently choose which end
- * of that team's front-to-back axis comes first. Returns the first candidate, or null.
+ * Every unit on `options.team` in the order a scan by expanding distance rings
+ * from the caster reaches them. Within a ring, units are ordered by diagonal row
+ * (q - r), then by hex id within a row; rowDirection and withinRowDirection
+ * independently choose which end of that team's front-to-back axis comes first.
  *
  * Scan key: (distance asc, diagonal by rowDirection, hex id by withinRowDirection),
  * both the diagonal and hex-id directions flipped when scanning the enemy team.
@@ -194,7 +201,7 @@ export interface RowScanOptions {
  * still ranks first); only a mixed pair (e.g. rear rows but the front of each
  * row) needs the diagonal ordering to be explicit.
  */
-export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTargetInfo | null {
+export function rowScanOrder(ctx: SkillContext, options: RowScanOptions): ScannedUnit[] {
   const { grid, hexId, characterId } = ctx
   const center = grid.getHexById(hexId)
 
@@ -212,25 +219,30 @@ export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTarget
       }
     })
     .filter((c) => options.maxDistance === undefined || c.distance <= options.maxDistance)
-  if (ranked.length === 0) return null
 
   const withinRowDirection = options.withinRowDirection ?? options.rowDirection
   const allyTeam = options.team === Team.ALLY
   const rowAscending = allyTeam === (options.rowDirection === ScanDirection.REARMOST)
   const idAscending = allyTeam === (withinRowDirection === ScanDirection.REARMOST)
-  ranked.sort((a, b) => {
+  return ranked.sort((a, b) => {
     if (a.distance !== b.distance) return a.distance - b.distance
     if (a.diagonal !== b.diagonal)
       return rowAscending ? a.diagonal - b.diagonal : b.diagonal - a.diagonal
     return idAscending ? a.hexId - b.hexId : b.hexId - a.hexId
   })
+}
 
-  const target = ranked[0]!
+/** The first unit `rowScanOrder` reaches, or null. */
+export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTargetInfo | null {
+  const ranked = rowScanOrder(ctx, options)
+  const target = ranked[0]
+  if (!target) return null
+
   return {
     targetHexId: target.hexId,
     targetCharacterId: target.characterId,
     metadata: {
-      sourceHexId: hexId,
+      sourceHexId: ctx.hexId,
       distance: target.distance,
       isRowScanTarget: true,
       examinedTiles: ranked.map((c) => c.hexId),
