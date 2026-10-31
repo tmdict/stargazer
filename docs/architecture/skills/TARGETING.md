@@ -20,12 +20,12 @@ Two adjacent-tile picks look easy to merge but differ on purpose. `findAdjacentP
 
 The only row that matters on this board is the diagonal row, `q - r` (`Hex.getDiagonal`). Hex ids increase along a row from a team's back to its front. `ScanDirection` names one end of the scanned team's axis (`FRONTMOST` or `REARMOST`), and each helper resolves it per team.
 
-`rowScan` sorts candidates by distance from the caster, then by diagonal row in `rowDirection`, then by hex id in `withinRowDirection`. The within-row direction defaults to the row direction. When the two agree, the order inside each distance ring is a plain id sort, because ids follow the rows. Only a mixed pair needs the explicit row tier. `maxDistance: 1` limits the scan to the six neighbours, and `filter` keeps candidates whose id passes a predicate.
+`rowScanOrder` lists the candidates in the order a scan reaches them: by distance from the caster, then by diagonal row in `rowDirection`, then by hex id in `withinRowDirection`. `rowScan` takes the first, and a skill that picks several takes as many as it needs from the list (Saida's first two). The within-row direction defaults to the row direction. When the two agree, the order inside each distance ring is a plain id sort, because ids follow the rows. Only a mixed pair needs the explicit row tier. `maxDistance: 1` limits the scan to the six neighbours, and `filter` keeps candidates whose id passes a predicate.
 
 |                   | within: `REARMOST` (lower id) | within: `FRONTMOST` (higher id) |
 | ----------------- | ----------------------------- | ------------------------------- |
 | rows: `REARMOST`  | Faramor, Cassadee, Galahad    | Himmel, Niru                    |
-| rows: `FRONTMOST` | (valid, unused)               | Aliceth fallback, Hepler        |
+| rows: `FRONTMOST` | Saida                         | Aliceth fallback, Hepler        |
 
 `searchByRow` (Aliceth, Alna) looks only at the caster's own diagonal row, closest first, with ties going to the searched team's frontmost unit. Aliceth falls back to `rowScan` with `FRONTMOST` rows. Her own row is always empty when the fallback runs, so the fallback needs no exclusion.
 
@@ -41,7 +41,7 @@ The shared helpers cover orderings that run one way along a team's axis. A rule 
 
 ## Drawing the result
 
-`createTargetingSkill` runs the pick on activate and on every update, stores a hit with `setSkillTarget`, and clears a miss. With `arrowType` set, the factory draws one arrow from caster to target, and a hit needs a concrete `targetHexId`. With it omitted, the skill fills `metadata.arrows` itself (Ravion's two rearmost allies, Aliceth's ally and enemy). `createTileHighlightSkill` paints the target tile instead and unpaints the previous target before repainting. The `is*Target` flags and `examinedTiles` in the metadata serve only the debug panel.
+`createTargetingSkill` runs the pick on activate and on every update, stores a hit with `setSkillTarget`, and clears a miss. With `arrowType` set, the factory draws one arrow from caster to target, and a hit needs a concrete `targetHexId`. With it omitted, the skill fills `metadata.arrows` itself (Ravion's two rearmost allies, Saida's two nearest, Aliceth's ally and enemy). `createTileHighlightSkill` paints the target tile instead and unpaints the previous target before repainting. The `is*Target` flags and `examinedTiles` in the metadata serve only the debug panel.
 
 ## Related documentation
 
