@@ -32,6 +32,8 @@ export interface ArtifactArrow {
 const ARTIFACT_TARGETING = new Map<string, ArtifactTargeting>([
   // Enlightening: buffs the rearmost ally.
   ['enlightening', (grid, team) => [rearmostUnit(grid, team)]],
+  // Ironwall: blesses the frontmost ally.
+  ['ironwall', (grid, team) => [frontmostUnit(grid, team)]],
 
   /* Seasonal entries go below under a season comment, deleted (with the
    * season's cases in tests/unit/skills/artifact.test.ts) along with the

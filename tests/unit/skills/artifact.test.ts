@@ -28,6 +28,11 @@ describe('artifact targeting', () => {
     expect(targetHexIds(grid, Team.ENEMY, 'enlightening')).toEqual([40])
   })
 
+  it('ironwall points at the frontmost unit of its slot team', () => {
+    expect(targetHexIds(grid, Team.ALLY, 'ironwall')).toEqual([20])
+    expect(targetHexIds(grid, Team.ENEMY, 'ironwall')).toEqual([30])
+  })
+
   it('counts a phantimal as a unit', () => {
     placeOnTile(grid, 2, toPhantimalId(1), Team.ALLY)
     expect(targetHexIds(grid, Team.ALLY, 'enlightening')).toEqual([2])
