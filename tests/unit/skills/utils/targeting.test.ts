@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
-import { findAdjacentPriorityTarget, findUnitBehind } from '@/lib/skills/utils/targeting'
+import {
+  findAdjacentPriorityTarget,
+  findUnitBehind,
+  findUnitInFront,
+} from '@/lib/skills/utils/targeting'
 import { Team } from '@/lib/types/team'
 import { makeSkillContext, placeOnTile } from '../../fixtures/skills'
 
@@ -49,6 +53,25 @@ describe('findUnitBehind', () => {
       if (tile) placeOnTile(board, tile.hex.getId(), 100 + direction, team)
     }
     expect(findUnitBehind(makeSkillContext(board, hexId, team, CASTER))).toBeNull()
+  })
+})
+
+describe('findUnitInFront', () => {
+  it('targets a same-team unit on the tile directly in front', () => {
+    const board = new Grid()
+    placeOnTile(board, 23, CASTER, Team.ALLY)
+    placeOnTile(board, 30, 100, Team.ALLY)
+    expect(findUnitInFront(makeSkillContext(board, 23, Team.ALLY, CASTER))).toEqual({
+      targetHexId: 30,
+      targetCharacterId: 100,
+    })
+  })
+
+  it('looks the other way for an enemy', () => {
+    const board = new Grid()
+    placeOnTile(board, 23, CASTER, Team.ENEMY)
+    placeOnTile(board, 16, 200, Team.ENEMY)
+    expect(findUnitInFront(makeSkillContext(board, 23, Team.ENEMY, CASTER))?.targetHexId).toBe(16)
   })
 })
 

@@ -14,7 +14,7 @@ Every sort key runs down to hex id, so a tie always has a written rule. The furt
 
 A team's candidates are every occupied tile of that team, companions, phantimals and placeholders included. A helper that targets the caster's own team drops the caster by id.
 
-Two adjacent-tile picks look easy to merge but differ on purpose. `findAdjacentPriorityTarget` (Daimon, phantimal Spirit Marks) tries up to three neighbours toward the team's back or front: straight behind or ahead, then the side neighbour in the caster's row, then the other diagonal. Neighbours off the board drop out of the chain. `findUnitBehind` (Gunnar, Hugin, Thador) checks only the tile straight behind and ignores the diagonals even when they exist.
+Two adjacent-tile picks look easy to merge but differ on purpose. `findAdjacentPriorityTarget` (Daimon, phantimal Spirit Marks) tries up to three neighbours toward the team's back or front: straight behind or ahead, then the side neighbour in the caster's row, then the other diagonal. Neighbours off the board drop out of the chain. `findUnitBehind` (Gunnar, Hugin, Thador) checks only the tile straight behind and ignores the diagonals even when they exist, and `findUnitInFront` (Shadewing) does the same with the tile straight ahead.
 
 ## Row scans
 

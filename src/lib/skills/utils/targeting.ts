@@ -70,19 +70,25 @@ export function getCandidates(
   return candidates
 }
 
-/**
- * The tile directly behind a unit: the bottom-left neighbour for allies
- * (whose back is the high-r board edge), top-right for enemies, the same
- * straight-behind convention findAdjacentPriorityTarget leads with. Undefined
- * when that tile is off the board, even if the other back-row diagonal exists.
- */
-function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
-  const center = grid.getHexById(hexId)
-  const behind = center.neighbor(team === Team.ALLY ? 3 : 0)
-  return grid.getTileOrUndefined(behind)?.hex.getId()
-}
-
 export type TargetDirection = 'behind' | 'front'
+
+/**
+ * The tile straight behind a unit, or straight ahead of it: the bottom-left
+ * neighbour behind an ally (whose back is the high-r board edge) and the
+ * top-right one ahead of it, the reverse for an enemy, the same straight
+ * convention findAdjacentPriorityTarget leads with. Undefined when that tile is
+ * off the board, even if a diagonal on that side exists.
+ */
+function straightHexId(
+  grid: Grid,
+  hexId: number,
+  team: Team,
+  direction: TargetDirection,
+): number | undefined {
+  const towardHighR = (team === Team.ALLY) === (direction === 'behind')
+  const neighbour = grid.getHexById(hexId).neighbor(towardHighR ? 3 : 0)
+  return grid.getTileOrUndefined(neighbour)?.hex.getId()
+}
 
 /**
  * Adjacent-tile priority target (Daimon, phantimal Spirit Marks). Candidates
@@ -128,16 +134,25 @@ export function findAdjacentPriorityTarget(
   return null
 }
 
+function findUnitStraight(ctx: SkillContext, direction: TargetDirection): SkillTargetInfo | null {
+  const hexId = straightHexId(ctx.grid, ctx.hexId, ctx.team, direction)
+  if (hexId === undefined) return null
+  const tile = ctx.grid.getTileById(hexId)
+  if (tile.characterId !== undefined && tile.team === ctx.team) {
+    return { targetHexId: hexId, targetCharacterId: tile.characterId }
+  }
+  return null
+}
+
 /**
  * Target the same-team unit standing on the tile directly behind the caster,
  * or null when that tile is empty, off the board, or holds the other team.
  */
 export function findUnitBehind(ctx: SkillContext): SkillTargetInfo | null {
-  const behindId = directlyBehindHexId(ctx.grid, ctx.hexId, ctx.team)
-  if (behindId === undefined) return null
-  const tile = ctx.grid.getTileById(behindId)
-  if (tile.characterId !== undefined && tile.team === ctx.team) {
-    return { targetHexId: behindId, targetCharacterId: tile.characterId }
-  }
-  return null
+  return findUnitStraight(ctx, 'behind')
+}
+
+/** The same as findUnitBehind, on the tile directly in front of the caster. */
+export function findUnitInFront(ctx: SkillContext): SkillTargetInfo | null {
+  return findUnitStraight(ctx, 'front')
 }
