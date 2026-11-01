@@ -6,5 +6,13 @@
   "damage": "magic",
   "faction": "graveborn",
   "targeting": true,
-  "tags": ["debuff", "temp-buff"]
+  "tags": ["debuff", "temp-buff"],
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "melee" },
+      "weight": "aim",
+      "note": "Plague Creeper's Spirit Mark shields the allied hero in front of it and adds melee damage, best a melee hero."
+    }
+  ]
 }

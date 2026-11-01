@@ -5,5 +5,13 @@
   "stats": {
     "haste": 6,
     "vitality": 9
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "tank" },
+      "weight": "aim",
+      "note": "Ironwall blesses the frontmost ally with DEF, Energy on hit and a shield, best a tank."
+    }
+  ]
 }

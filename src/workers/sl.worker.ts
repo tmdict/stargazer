@@ -1,9 +1,12 @@
 /* Supreme League worker: reads the data file, learns the prediction model
- * once, and answers the generator and Who Would Win?, so neither the search
- * nor a prediction holds up the page. */
+ * once, and answers the generator, its engine's formations and Who Would
+ * Win?, so neither the search, the placing nor a prediction holds up the
+ * page. */
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
+import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { learnSeason } from '@/lib/pvp/sl/model/models'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
@@ -11,12 +14,14 @@ import { artifactSurvives } from '@/lib/seasonal'
 
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: number[] }
+  | { type: 'place'; id: number; set: SlChoice }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
 export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
+  | { type: 'placed'; id: number; units: (SlUnit[] | null)[] }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
 
@@ -42,6 +47,8 @@ scope.addEventListener('message', async (event) => {
     if (msg.type === 'generate') {
       const set = chooseSlSet(data, learned, msg.picks, counts, msg.boards)
       scope.postMessage({ type: 'generated', id: msg.id, set })
+    } else if (msg.type === 'place') {
+      scope.postMessage({ type: 'placed', id: msg.id, units: suggestedUnits(data, msg.set) })
     } else {
       const panel = wwwPanel(data, learned, msg.teams, counts)
       scope.postMessage({ type: 'predicted', id: msg.id, panel })

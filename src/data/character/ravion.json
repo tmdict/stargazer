@@ -19,5 +19,13 @@
       { "ex": 3, "mods": ["orion", "perseus", "single"] },
       { "awakening": 1, "mods": ["opening", "orion", "perseus", "single"] }
     ]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "damage" },
+      "weight": "aim",
+      "note": "Ravion's Objectives go to the two rearmost allies, best two damage dealers."
+    }
+  ]
 }

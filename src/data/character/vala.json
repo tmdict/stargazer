@@ -15,5 +15,13 @@
     ],
     "energy-denial": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "enemy",
+      "goal": { "avoid": "ultimate" },
+      "weight": "threat",
+      "note": "An enemy Vala marks our unit farthest from her and takes its Energy with each hit, so that unit is best not the hero whose ultimate matters most."
+    }
+  ]
 }

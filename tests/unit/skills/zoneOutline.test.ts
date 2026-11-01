@@ -59,6 +59,19 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
     }
   })
 
+  it('keeps the tiles within 2 as its zone until removed', () => {
+    placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
+    callan().onActivate(ctx(INTERIOR_HEX))
+    const center = grid.getHexById(INTERIOR_HEX)
+    const marked = skillManager.getMarkedTiles(CALLAN, Team.ALLY)
+    expect(marked).toHaveLength(19)
+    for (const hexId of marked)
+      expect(center.distance(grid.getHexById(hexId))).toBeLessThanOrEqual(2)
+
+    callan().onDeactivate(ctx(INTERIOR_HEX))
+    expect(skillManager.getMarkedTiles(CALLAN, Team.ALLY)).toEqual([])
+  })
+
   it('moves the outline with the caster on update', () => {
     placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
     callan().onActivate(ctx(INTERIOR_HEX))

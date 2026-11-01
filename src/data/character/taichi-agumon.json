@@ -12,5 +12,13 @@
     "energy-battery": [{ "awakening": 1 }],
     "execute": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1, "mods": ["aoe", "opening", "orion", "perseus"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "taichi" },
+      "weight": "aim",
+      "note": "Every ally in a row behind Taichi & Agumon gains ATK, so as many of his list as can be stand there."
+    }
+  ]
 }

@@ -12,5 +12,13 @@
     "cheat-death": [{ "ex": 1, "mods": ["ally"] }],
     "debuff": [{ "skill2": 1, "mods": ["eryndor", "single"] }],
     "special-target": [{ "ex": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "save" },
+      "weight": "aim",
+      "note": "Hepler protects his frontmost neighbour from one fatal blow, best the hero most worth saving."
+    }
+  ]
 }

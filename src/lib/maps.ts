@@ -79,11 +79,16 @@ function loadArenas(): Record<string, ArenaJson> {
   return arenas
 }
 
+const ARENAS = loadArenas()
+
 // Keyed by filename under src/data/arena/; the key is what `m` sections and
 // TEAM_MODES default lists reference.
 export const MAPS: Record<string, MapConfig> = Object.fromEntries(
-  Object.entries(loadArenas()).map(([key, json]) => [key, parseMapConfig(json)]),
+  Object.entries(ARENAS).map(([key, json]) => [key, parseMapConfig(json)]),
 )
+
+// A map's buff tiles, ally tile first; none for a map without them.
+export const buffTiles = (mapKey: string): readonly number[] => ARENAS[mapKey]?.buffTiles ?? []
 
 // The map a board stands on when nothing names one: fresh contexts, mode
 // default lists, and boards restored without a resolvable key.

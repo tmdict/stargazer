@@ -15,5 +15,13 @@
     ],
     "debuff": [{ "awakening": 1, "mods": ["aoe", "eryndor"] }],
     "special-target": [{ "skill3": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "damage" },
+      "weight": "aim",
+      "note": "Cassadee blesses the nearest ally, the one behind her first, and adds magic damage to that ally's normal attacks, best a damage dealer."
+    }
+  ]
 }

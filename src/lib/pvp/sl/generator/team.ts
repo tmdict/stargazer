@@ -2,7 +2,8 @@
  * draws its boards from it and Save as team stores it, so a saved set opens on
  * the Teams page as the page drew it. Each board stands on its map's layout
  * from the data file, so a set from a retired map still draws and loads. Only
- * the ally side is filled, with the selection's levels.
+ * the ally side is filled, with the selection's levels, in the recorded
+ * placement or in the engine's formation (suggested.ts) where one is given.
  * A file from another season than Stargazer's (the gap after a cutover) has
  * its seasonal artifacts and phantimals left out, since their ids name the new
  * season's content. */
@@ -18,7 +19,7 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlData, SlMap } from '../data/types'
+import type { SlData, SlMap, SlUnit } from '../data/types'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 
 // The season a chosen team comes from: this season's, or the season before's.
@@ -36,7 +37,12 @@ const mapConfig = ({ key, grid }: SlMap): MapConfig => ({
   ],
 })
 
-export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]): string {
+export function slTeamData(
+  data: SlData,
+  set: SlChoice,
+  picks: readonly SlPick[],
+  suggested?: readonly (SlUnit[] | null)[],
+): string {
   const retired = isRetiredSeason(data.season)
   const levels = new Map(
     picks.map((pick): [number, AttrRecord] => [
@@ -44,10 +50,14 @@ export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]
       { [ATTR_PARAGON]: pick.paragon, [ATTR_REFINEMENT]: pick.refinement },
     ]),
   )
-  const boards = set.teams.map((choice): BoardInput => {
-    const season = choiceSeason(data, choice)
-    const team = season.teams[choice.team]!
-    const { c, s } = team.placements[choice.placement]!
+  const boards = set.teams.map((choice, index): BoardInput => {
+    const team = choiceSeason(data, choice).teams[choice.team]!
+    const recorded = (): SlUnit[] => {
+      const { c, s } = team.placements[choice.placement]!
+      return retired
+        ? c
+        : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
+    }
     const map = data.maps[team.map]!
     const grid = new Grid(FULL_GRID, mapConfig(map))
     const place = (hexId: number, unitId: number): void => {
@@ -56,8 +66,7 @@ export function slTeamData(data: SlData, set: SlChoice, picks: readonly SlPick[]
       tile.team = Team.ALLY
       tile.state = State.OCCUPIED_ALLY
     }
-    for (const [hexId, unitId] of c) place(hexId, unitId)
-    if (!retired) for (const [hexId, local] of s) place(hexId, toPhantimalId(local))
+    for (const [hexId, unitId] of suggested?.[index] ?? recorded()) place(hexId, unitId)
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),

@@ -1,3 +1,5 @@
+import type { Rule } from './rule'
+
 // Slot order matches in-game order and is also the render order in SkillSections.
 export const SLOT_ORDER = ['ultimate', 'skill2', 'skill3', 'mastery', 'ex', 'awakening'] as const
 
@@ -128,6 +130,7 @@ export interface CharmData {
   season: number
   heroes: string[]
   tags?: CharmTags
+  rules?: readonly Rule[]
 }
 
 // A charm's hand-written tags: tag → every tier (1-4) whose text carries the

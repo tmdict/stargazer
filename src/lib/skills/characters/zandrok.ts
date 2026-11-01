@@ -9,8 +9,8 @@ const ZANDROK = 88
 const SKILL_COLOR = SKILL_COLORS.red
 
 // At battle start, illusions of Zandrok charge in a 5-tile-wide wedge along his
-// s-axis lane. The visual is the band's two boundary lines: the lanes s = s_z +/- 2
-// (5 lanes total), each drawn along its outer edge.
+// s-axis lane: the lanes s = s_z +/- 2 (5 lanes total). The visual is the band's
+// two boundary lines, each drawn along its outer edge.
 const WEDGE_HALF_WIDTH = 2
 // Outer corner of a constant-s lane (pointy-top corner indices, see
 // Layout.hexCornerOffset): corner 3 (upper-left) faces +s, corner 0 (lower-right) -s.
@@ -31,7 +31,7 @@ function laneEdge(hexes: Hex[], s: number, corner: number): SkillLine | null {
   }
 }
 
-export function wedgeLines(ctx: SkillContext): SkillLine[] {
+function wedgeLines(ctx: SkillContext): SkillLine[] {
   const hexes = ctx.grid.getAllTiles().map((tile) => tile.hex)
   const s = ctx.grid.getHexById(ctx.hexId).s
   // Clamp the band's outer lanes to the grid's s-range, so a wedge that runs off an
@@ -45,10 +45,18 @@ export function wedgeLines(ctx: SkillContext): SkillLine[] {
   ].filter((line): line is SkillLine => line !== null)
 }
 
+function wedgeZone(ctx: SkillContext): number[] {
+  const s = ctx.grid.getHexById(ctx.hexId).s
+  return ctx.grid
+    .getAllTiles()
+    .filter((tile) => Math.abs(tile.hex.s - s) <= WEDGE_HALF_WIDTH)
+    .map((tile) => tile.hex.getId())
+}
+
 registerSkill(
   createEffectsSkill({
     id: 'zandrok',
     characterId: ZANDROK,
-    calculate: (ctx) => ({ lines: wedgeLines(ctx) }),
+    calculate: (ctx) => ({ lines: wedgeLines(ctx), zone: wedgeZone(ctx) }),
   }),
 )

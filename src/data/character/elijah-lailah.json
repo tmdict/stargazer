@@ -16,5 +16,13 @@
     ],
     "temp-buff": [{ "ultimate": 1, "mods": ["global", "orion", "perseus"] }],
     "tile-effect": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "exactly": 2, "sameFaction": true },
+      "weight": "aim",
+      "note": "Two allies of one faction stand in a straight line between the twins, sharing the Stellar Bond and its bonus for one faction."
+    }
+  ]
 }

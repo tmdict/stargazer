@@ -18,5 +18,13 @@
     "invincibility": [{ "ex": 4 }],
     "temp-buff": [{ "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] }],
     "tile-effect": [{ "ultimate": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "gunnar" },
+      "weight": "aim",
+      "note": "Gunnar's Doomfield goes to the ally behind him, the teammate his list ranks first."
+    }
+  ]
 }

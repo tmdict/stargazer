@@ -1,5 +1,14 @@
 {
   "id": "s8-11",
   "season": 8,
-  "heroes": ["gunnar", "hugin", "niru", "pandora", "reinier"]
+  "heroes": ["gunnar", "hugin", "niru", "pandora", "reinier"],
+  "rules": [
+    {
+      "team": "ally",
+      "tile": "behind",
+      "goal": { "target": "ranged" },
+      "weight": "charm",
+      "note": "Raises the ranged damage of the ally 1 tile behind its holder."
+    }
+  ]
 }

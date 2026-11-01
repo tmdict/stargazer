@@ -21,5 +21,19 @@
       { "awakening": 1, "mods": ["orion", "perseus", "single"] }
     ],
     "ult-denial": [{ "ultimate": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": "most",
+      "weight": "aim",
+      "note": "Evie lands where the most enemy tiles are around her mirror tile."
+    },
+    {
+      "team": "enemy",
+      "goal": { "atMost": 1 },
+      "weight": "spread",
+      "note": "Keep our units apart where an enemy Evie lands."
+    }
+  ]
 }

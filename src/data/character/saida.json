@@ -13,5 +13,13 @@
     "debuff": [{ "ex": 1, "mods": ["single"] }],
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
     "energy-denial": [{ "ultimate": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "save" },
+      "weight": "saida",
+      "note": "Saida's two Drain Seeds shield the two allies nearest her, best the two most worth saving."
+    }
+  ]
 }

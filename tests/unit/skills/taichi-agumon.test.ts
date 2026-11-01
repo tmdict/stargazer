@@ -63,6 +63,15 @@ describe('taichi-agumon behind line', () => {
     expect(lines).toHaveLength(13)
   })
 
+  it('keeps every tile behind as its zone', () => {
+    draw(23, Team.ALLY)
+    const behind = grid
+      .getAllTiles()
+      .filter((tile) => tile.hex.getDiagonal() < 0)
+      .map((tile) => tile.hex.getId())
+    expect(skillManager.getMarkedTiles(TAICHI_AGUMON, Team.ALLY).sort()).toEqual(behind.sort())
+  })
+
   it('draws nothing from the rearmost row', () => {
     // Cell 1 is on the ally's back row (diagonal -7), so no ally can be behind.
     expect(draw(1, Team.ALLY)).toEqual([])

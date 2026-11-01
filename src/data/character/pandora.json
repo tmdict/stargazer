@@ -22,5 +22,13 @@
     "special-target": [{ "skill2": 1 }],
     "summon": [{ "ex": 1 }],
     "temp-buff": [{ "skill2": 1, "mods": ["orion", "perseus", "single"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "ultimate" },
+      "weight": "aim",
+      "note": "Pandora's box takes the rearmost ally, who comes out with 1000 Energy, best the hero whose ultimate matters most."
+    }
+  ]
 }

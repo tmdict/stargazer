@@ -119,12 +119,19 @@ export function spiralSearchFromTile(
  * Search for characters on `targetTeam` in the same diagonal row as the caster.
  * Prioritizes by closest distance, then a target-relative tie-break (the frame
  * rowScan and distance.ts use): the searched team's frontmost unit wins, higher
- * hex ID for ally, lower for enemy.
+ * hex ID for ally, lower for enemy. `filter` keeps only the candidates whose
+ * characterId passes it, as in RowScanOptions.
  */
-export function searchByRow(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
+export function searchByRow(
+  context: SkillContext,
+  targetTeam: Team,
+  filter?: (characterId: number) => boolean,
+): SkillTargetInfo | null {
   const { grid, hexId, characterId } = context
 
-  const candidates = getCandidates(grid, targetTeam, characterId)
+  const candidates = getCandidates(grid, targetTeam, characterId).filter(
+    (c) => !filter || filter(c.characterId),
+  )
   if (candidates.length === 0) return null
 
   // Filter to only those in the same diagonal row

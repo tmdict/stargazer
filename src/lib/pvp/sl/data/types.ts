@@ -1,6 +1,8 @@
 /* The Supreme League data file, as codec.ts reads it. The format and a
  * complete example are in docs/architecture/GUIDE.md ("The data file"). */
 
+import type { PlacementData } from '@/lib/placement/types'
+
 export type SlResult = 'w' | 'l' | 't'
 
 // [team, result, gap, artifact]: the team's index, a win, a loss or a tie, the
@@ -111,6 +113,8 @@ export interface SlData extends SlSeason<SlTeam, SlGame> {
   prices: SlPrices
   // Every hero id in the order of their English names, for ties.
   order: number[]
+  // What the placement engine is tuned with, for the engine's formations.
+  placement: PlacementData
   before?: SlBefore
   beforeUnder?: number
 }

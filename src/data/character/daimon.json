@@ -16,5 +16,13 @@
     "special-target": [{ "skill3": 1 }],
     "summon": [{ "ultimate": 1 }],
     "temp-buff": [{ "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "daimon" },
+      "weight": "aim",
+      "note": "Daimon's bond goes to the ally behind him, the teammate his list ranks first."
+    }
+  ]
 }

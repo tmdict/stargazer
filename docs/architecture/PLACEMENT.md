@@ -1,0 +1,49 @@
+# Placement
+
+The placement engine (`src/lib/placement/`) works out where a team stands on one map: five heroes, the phantimal and the artifact, on the map's ally tiles. It scores a placement by what each unit's skill does from where it stands when the battle starts, read from the same skill code the boards draw, and by how the heroes stand in recorded formations. The PvP team generator draws a set in its formations when the page's switch says so ([Guide](./GUIDE.md#pvp-team-generator)). Its test measures it against recorded formations (below).
+
+Two things make it hard. A team has too many placements to score them all on a page: five heroes on 13 tiles are 154,440 placements, and a phantimal makes eight times as many. And most goals leave many placements as good as each other, so the engine has to say how sure it is as well as pick one.
+
+## What it takes
+
+`placeTeam(team, mapKey, data, lookups)` (`engine.ts`) returns the placement it picks, its score, how many placements were about as good and the tiles each hero stands on among them. Three inputs come from outside the engine:
+
+| Input     | From                                                                                                                                                    | Holds                                                                                                                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules     | `rules` in each hero's, phantimal's, artifact's and charm's data file (`src/lib/types/rule.ts`)                                                         | What the engine wants from one effect: who it should land on, or what it should reach. A unit can have one rule for its own team and one against the other.                                   |
+| `data`    | `placement` in the Supreme League data file ([Guide](./GUIDE.md#the-data-file)), written by the external report generator (`PlacementData`, `types.ts`) | The lists the rules name, the heroes who lean to the front or the back, rules found in recorded formations, the weights, and how often each enemy hero with a rule against us is on each map. |
+| `lookups` | `PLACEMENT_LOOKUPS` (`lookups.ts`), over the data files                                                                                                 | Each unit's faction, class and rules, each hero's charm and each artifact's rules.                                                                                                            |
+
+The engine imports from `src/lib` alone, and its lookups from the data loader, so its tests run it without a page. It reads each map's tiles and buff tiles from the map files (`src/lib/maps.ts`), never from `data`.
+
+## The board
+
+`PlacementBoard` (`board.ts`) holds one team on one map in a `Grid` with its own `SkillManager`. It places each unit once with `executePlaceCharacter`, so each skill spawns its companions, and from then on lifts the units that move and puts them down with the low-level `performPlace`, every skill updated once after the move, as a board does after a drag. The units are the heroes in the team's order, then the phantimal and the companions skills spawned, so a companion with a tile of its own, such as Lailah, is placed like a hero.
+
+## Scoring
+
+`PlacementScorer` (`score.ts`) scores the board as it stands. Each rule reads where its effect lands from the unit's skill: the skill's target and arrows, and the tiles it marks (`getMarkedTiles`, [Skills](./SKILLS.md)). A charm's rule reads the ally behind or in front of its holder, and an artifact's the artifact's arrows. A companion counts as its hero and a phantimal's companion as its phantimal, and the effect's holder never counts for itself.
+
+| Goal                     | Met                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `target`                 | The effect lands on the team's first hero on the list. An effect on two wants the first two, half each. A team with none of the list's heroes falls back on the `damage` list.             |
+| `include`                | A share for each of the team's listed heroes the effect reaches. An effect on one unit needs only one of them.                                                                             |
+| `avoid`                  | The effect misses the team's first hero on the list.                                                                                                                                       |
+| `atMost`, `exactly`      | The count of units on the marked tiles, and with `sameFaction` one faction among them.                                                                                                     |
+| `most`, `{most:'walls'}` | The enemy tiles, or the walls on the enemy's side, among the marked tiles, as a share of the most the holder can mark from any of its tiles on that map, worked out on a board of its own. |
+
+A placement's score has three parts, compared in this order. `broken` counts the rules from recorded formations marked `always` that it breaks. `goals` adds each rule's weight times how much of its goal is met, and the buff weight for each hero on the map's ally buff tile. `total` adds to the goals the light preferences, times the `lean` weight: how far toward the side it leans each hero stands, and each `usually` rule that holds. A season whose buff tiles stood elsewhere scores none (`buffTiles: false`).
+
+A rule against us is read with its enemy unit alone on the enemy's side, tried on each enemy tile in turn, every tile as likely, so a skill that reads its own teammates, such as Reinier's, finds none. Its points are its weight times the share of those tiles where its goal is met, times how often the unit is on the map (`threats()`). They choose only among placements equally good on the team's own score, since a team's own goals come first and trying each enemy unit on every enemy tile costs several times as much as the rest of a score.
+
+## Search and choice
+
+The search climbs from 16 placements drawn at random, seeded from the map and the team so a rebuild gives the same placement. Each climb takes the best step until none improves, a step being one unit moved to a free tile or two units trading tiles, and then the best move of two units together, each to a free tile or to the other's, since some goals need two units to move at once: Saida's two seeds, or two allies of one faction between Elijah and Lailah. Scores are kept by placement, so a placement two climbs reach is scored once.
+
+Equally good placements are those with the best placement's `broken` and `goals` within the `margin` weight of the best. They are found by spreading step by step from the ones the climbs scored, until the count reaches 1,000, which the result reports as not complete. A better placement found on the way becomes the best and the spread starts again. The pick is the one with the highest total and threat points among them, then the lowest tiles in the units' order, and each hero keeps the tiles it stands on in any of them. `full: true` scores every placement instead, which the tests compare the search with.
+
+## Tests
+
+The unit tests (`tests/unit/placement/`) place real heroes on `arena2` with `PLACEMENT_LOOKUPS`: each goal word against a placement worked out by hand, a rule against us scaled by its pick rate, an `always` rule broken, and the search against `full`.
+
+`tests/placement/engine.test.ts` measures the engine on your machine. It is left out unless `PLACEMENT_EXPORT` names one or more saved-teams exports, joined as a `PATH` is, takes what the engine is tuned with from the Supreme League data file, read with the `VITE_SL_SEED` setting, and needs `PLACEMENT_OUT`, a folder outside the repository, since an export names players. It places every Supreme League set-up recorded, each player's counted once per map and placement, and sets the player's beside the engine's: the share of heroes on the player's tile and in the player's band of depth, how often the player's tile is among those the hero keeps and the player's placement among the equally good, each goal and formation rule met by players and by the engine, and the time a team takes. A season other than the one Stargazer holds phantimals for is placed without its phantimal and seasonal artifact, scores no buff tile, and counts how often each enemy hero is on a map from its own boards. `PLACEMENT_FULL` also places that many of the most used teams by trying every placement, to check the search. `PLACEMENT_TUNE` names weights, joined by commas: each is tried at a share of its value, from none to all, on the set-ups where a rule using it applies, and the run suggests the value that puts the most heroes on the player's tile in the season Stargazer holds phantimals for, the other seasons printed beside it as a check. It writes the measures and a review page, the engine's placement beside the players' two most common for the 30 most used teams, to `PLACEMENT_OUT`.

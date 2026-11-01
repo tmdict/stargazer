@@ -78,6 +78,32 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
       t.placements.length > 0,
   )
 
+const isNumberRecord = (value: unknown): boolean =>
+  isObject(value) && Object.values(value).every((n) => typeof n === 'number')
+
+// A list's entry is a hero id or another list's name.
+const isListEntry = (value: unknown): boolean =>
+  Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
+
+const isPlacementData = (value: unknown): boolean =>
+  isObject(value) &&
+  isObject(value.lists) &&
+  Object.values(value.lists).every((list) => Array.isArray(list) && list.every(isListEntry)) &&
+  isObject(value.leans) &&
+  isNumbers(value.leans.front) &&
+  isNumbers(value.leans.back) &&
+  Array.isArray(value.formationRules) &&
+  value.formationRules.every(
+    (rule: unknown) =>
+      isObject(rule) &&
+      isNumbers(rule.heroes) &&
+      typeof rule.relation === 'string' &&
+      (rule.holds === 'always' || rule.holds === 'usually'),
+  ) &&
+  isNumberRecord(value.weights) &&
+  isObject(value.pickRates) &&
+  Object.values(value.pickRates).every(isNumberRecord)
+
 const isMap = (value: unknown): boolean => {
   if (!isObject(value) || typeof value.key !== 'string' || !isObject(value.grid)) return false
   const { grid } = value
@@ -107,6 +133,7 @@ function isSlData(value: unknown): value is SlData {
     isObject(prices.paragon) &&
     Object.values(prices.paragon).every((list) => isNumbers(list, attrMax(ATTR_PARAGON) + 1)) &&
     isNumbers(value.order) &&
+    isPlacementData(value.placement) &&
     (before === undefined ||
       (isSeason(before, 'like') &&
         typeof (before as Record<string, unknown>).season === 'number' &&

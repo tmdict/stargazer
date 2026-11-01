@@ -17,5 +17,12 @@
     ],
     "haste": [{ "skill2": 1, "mods": ["aoe"] }],
     "temp-buff": [{ "skill2": 1, "mods": ["aoe", "orion", "perseus"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": "none",
+      "note": "Mehira's illusion appears on her mirror tile, so it lands near the enemy's back line when she stands at our back, where the back lean puts her."
+    }
+  ]
 }

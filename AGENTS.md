@@ -64,6 +64,7 @@ System docs:
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, PvP team generator, Who Would Win?
+- [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring, search and its measuring test
 - [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, hosting
 
 ## BUILD COMMANDS

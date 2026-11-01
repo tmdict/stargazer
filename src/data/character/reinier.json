@@ -19,5 +19,13 @@
     ],
     "energy-battery": [{ "skill3": 4 }],
     "tile-effect": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "enemy",
+      "goal": { "avoid": "damage" },
+      "weight": "threat",
+      "note": "An enemy Reinier swaps one of ours on a tile symmetrical to his neighbour's, so that unit is best not a damage dealer."
+    }
+  ]
 }

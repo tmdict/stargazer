@@ -14,5 +14,13 @@
       { "ultimate": 1, "mods": ["shadewing"] },
       { "skill2": 1, "mods": ["shadewing"] }
     ]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "tank" },
+      "weight": "shadewing",
+      "note": "Shadewing drains the ally in front of him, best a tank, whose HP makes his shield bigger."
+    }
+  ]
 }

@@ -14,5 +14,13 @@
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 2, "mods": ["single"] }],
     "ult": [{ "ex": 1, "mods": ["opening"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "save" },
+      "weight": "aim",
+      "note": "Niru's spell goes to the nearest ally, the one behind him first, best the hero most worth saving."
+    }
+  ]
 }

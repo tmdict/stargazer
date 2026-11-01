@@ -13,5 +13,19 @@
     "haste": [{ "skill2": 1, "mods": ["aoe", "opening"] }],
     "temp-buff": [{ "skill2": 1, "mods": ["aoe", "opening", "orion", "perseus"] }],
     "tile-effect": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "zandrok" },
+      "weight": "aim",
+      "note": "Zandrok's illusions charge forward in a band 5 tiles wide and inspire every ally they pass, so as many of our heroes as can be stand in it."
+    },
+    {
+      "team": "ally",
+      "goal": { "most": "walls" },
+      "weight": "aim",
+      "note": "Zandrok's illusions destroy every obstacle in their band, so it crosses as many walls on the enemy's side as can be."
+    }
+  ]
 }

@@ -16,5 +16,13 @@
     "haste": [{ "ultimate": 1, "mods": ["single"] }],
     "special-target": [{ "ultimate": 1 }],
     "temp-buff": [{ "ultimate": 1, "mods": ["orion", "perseus", "single"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "tank" },
+      "weight": "aim",
+      "note": "Isabella's companion is the frontmost ally and is replaced when defeated, best a tank who lasts."
+    }
+  ]
 }

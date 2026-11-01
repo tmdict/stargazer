@@ -15,5 +15,13 @@
     ],
     "energy-denial": [{ "ultimate": 1 }],
     "special-target": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "enemy",
+      "goal": { "avoid": "damage" },
+      "weight": "threat",
+      "note": "An enemy Silvina strikes the nearest of ours on a tile symmetrical to hers, so that unit is best not a damage dealer."
+    }
+  ]
 }

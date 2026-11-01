@@ -1,3 +1,4 @@
+import type { Rule } from './rule'
 import type { CharacterTags } from './skill'
 import { Team } from './team'
 
@@ -12,6 +13,7 @@ export interface CharacterType {
   range: number
   season: number
   tags: CharacterTags
+  rules?: readonly Rule[]
   // Faction placeholder stand-in (see lib/characters/placeholder.ts): faction
   // is real, class and damage are 'none'. Absent on real heroes.
   placeholder?: true

@@ -13,5 +13,13 @@
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "skill3": 1 }],
     "temp-buff": [{ "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "damage" },
+      "weight": "aim",
+      "note": "Faramor blesses an adjacent allied hero, those behind him first, sharing his ATK bonus, best a damage dealer."
+    }
+  ]
 }

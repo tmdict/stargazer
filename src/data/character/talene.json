@@ -14,5 +14,13 @@
       { "ex": 4, "mods": ["ally"] }
     ],
     "special-target": [{ "ex": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "talene" },
+      "weight": "aim",
+      "note": "Talene's Pyre of Renewal goes to the frontmost ally other than her and burns the enemies next to them, best a tank or a melee hero."
+    }
+  ]
 }

@@ -9,7 +9,8 @@
  *     with previous-target cleanup on update
  *
  * createEffectsSkill covers skills whose whole behavior is drawing tile paints,
- * lines and unit badges (withEffects over an otherwise empty lifecycle).
+ * lines and unit badges, and naming the zone they act on (withEffects over an
+ * otherwise empty lifecycle).
  *
  * createCompanionSkill owns the companion lifecycle instead: spawning N
  * companions on random free tiles, raising team capacity, linking them to
@@ -142,16 +143,19 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
 }
 
 // What a skill draws for the current grid state. A channel left out is not
-// written, so two decorators on one skill never overwrite each other.
+// written, so two decorators on one skill never overwrite each other. `zone`
+// holds the tiles a skill acts on that it outlines rather than paints, which
+// nothing draws (see SkillManager.getMarkedTiles).
 interface SkillEffects {
   tiles?: TilePaint[]
   lines?: SkillLine[]
   badges?: SkillBadge[]
+  zone?: number[]
 }
 
 /**
- * Decorates a skill with the tile paints, lines and unit badges `calculate`
- * returns. They are written after the base skill's own hooks on activate and
+ * Decorates a skill with the tile paints, lines, unit badges and zone
+ * `calculate` returns. They are written after the base skill's own hooks on activate and
  * update and cleared before its deactivate, so a skill that owns other behavior
  * (a target, companions) can draw too, since the registry allows one skill per
  * character. Effects from one computation are returned together, so it runs once.
@@ -161,11 +165,12 @@ export function withEffects(
   calculate: (context: SkillContext) => SkillEffects,
 ): Skill {
   const draw = (ctx: SkillContext): void => {
-    const { tiles, lines, badges } = calculate(ctx)
+    const { tiles, lines, badges, zone } = calculate(ctx)
     const { skillManager, characterId, team } = ctx
     if (tiles) skillManager.paintTiles(characterId, team, tiles)
     if (lines) skillManager.setSkillLines(characterId, team, lines)
     if (badges) skillManager.setSkillBadges(characterId, team, badges)
+    if (zone) skillManager.setSkillZone(characterId, team, zone)
   }
   return {
     ...base,
@@ -184,6 +189,7 @@ export function withEffects(
       skillManager.clearPaintedTiles(characterId, team)
       skillManager.clearSkillLines(characterId, team)
       skillManager.clearSkillBadges(characterId, team)
+      skillManager.clearSkillZone(characterId, team)
       base.onDeactivate(ctx)
     },
   }

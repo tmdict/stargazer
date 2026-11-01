@@ -6,5 +6,13 @@
     "atk-spd": 7.2,
     "hp": 11.4
   },
-  "tags": ["temp-buff"]
+  "tags": ["temp-buff"],
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "damage" },
+      "weight": "aim",
+      "note": "Enlightening speeds up the rearmost allied hero's attacks, best a damage dealer."
+    }
+  ]
 }

@@ -75,6 +75,16 @@ describe('zandrok wedge boundary lines', () => {
     )
   })
 
+  it('keeps the five lanes of the band as its zone', () => {
+    placeOnTile(grid, 26, ZANDROK, Team.ALLY)
+    getCharacterSkill(ZANDROK)!.onActivate(buildContext(26))
+    const band = grid
+      .getAllTiles()
+      .filter((tile) => tile.hex.s >= -3 && tile.hex.s <= 1)
+      .map((tile) => tile.hex.getId())
+    expect(skillManager.getMarkedTiles(ZANDROK, Team.ALLY).sort()).toEqual(band.sort())
+  })
+
   it('clamps an off-grid edge lane to the grid boundary', () => {
     // Cell 5 = (-4,2,2), s = 2: the band [0, 4] runs past the top edge (grid max s = 3),
     // so the high edge clamps to the s=3 boundary lane rather than vanishing.

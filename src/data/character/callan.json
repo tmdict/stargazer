@@ -10,5 +10,13 @@
   "season": 3,
   "tags": {
     "tile-effect": [{ "ultimate": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "save" },
+      "weight": "aim",
+      "note": "Callan's shield takes half the damage dealt to allies within 2 tiles of him, so as many of the heroes most worth saving as can be stand there."
+    }
+  ]
 }

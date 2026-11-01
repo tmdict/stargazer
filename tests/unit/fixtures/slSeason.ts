@@ -28,6 +28,13 @@ export function madeUpData(teams: MadeUpTeam[], games: SlGame[]): SlData {
     flex: { heroes: 2, options: 2 },
     prices: { paragon: { f: [0, 10, 20, 30, 40] }, refinement: [0, 5, 10, 15, 20] },
     order: [...new Set(teams.flatMap((t) => t.heroes))].sort((a, b) => a - b),
+    placement: {
+      lists: {},
+      leans: { front: [], back: [] },
+      formationRules: [],
+      weights: {},
+      pickRates: {},
+    },
     games,
     teams: teams.map((t, i) => {
       const own = games.flatMap(([team], k) => (team === i ? [k] : []))

@@ -7,5 +7,13 @@
   "faction": "celestial",
   "qualifyingFactions": ["hypogean", "celestial"],
   "targeting": true,
-  "tags": ["debuff", "haste"]
+  "tags": ["debuff", "haste"],
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "melee" },
+      "weight": "aim",
+      "note": "The Wedges' Spirit Marks go to the allied hero in front of the Wedge of Matter and the one behind the Wedge of Power, both helping against enemies within 2 tiles, best two melee heroes."
+    }
+  ]
 }

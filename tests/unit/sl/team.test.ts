@@ -2,14 +2,19 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
+import { lineupQualifies } from '@/lib/characters/phantimalFaction'
+import { deploymentTiles } from '@/lib/maps'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import type { SlData } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
-import { slTeamData } from '@/lib/pvp/sl/generator/team'
+import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
+import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { learnSeason } from '@/lib/pvp/sl/model/models'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
-import { loadCharacters } from '@/utils/dataLoader'
+import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 // The page fetches the file the build emits, so the test serves it the same bytes.
@@ -99,5 +104,49 @@ describe('a set saved as a team', () => {
     expect(state.boards.map((board) => board.c)).toEqual(
       decoded(data.season).boards.map((board) => board.c),
     )
+  })
+})
+
+describe("the engine's formations", () => {
+  const units = suggestedUnits(data, set)
+
+  it('stand each team on its map with the phantimal its heroes summon', () => {
+    set.teams.forEach((choice, i) => {
+      const placed = units[i]!
+      const map = data.maps[choiceSeason(data, choice).teams[choice.team]!.map]!.key
+      const tiles = placed.map(([tile]) => tile)
+      expect(new Set(tiles).size).toBe(tiles.length)
+      expect(tiles.every((tile) => deploymentTiles(map, Team.ALLY).has(tile))).toBe(true)
+      const ids = placed.map(([, id]) => id)
+      expect(choice.heroes.every((id) => ids.includes(id))).toBe(true)
+      const summoned = loadPhantimals().filter((p) =>
+        lineupQualifies(p, choice.heroes, (id) => faction.get(id)),
+      )
+      expect(ids.filter(isPhantimalId)).toEqual(summoned.map((p) => toPhantimalId(p.id)))
+    })
+  })
+
+  it('read no recorded placement', () => {
+    const unplaced = <T extends { placements: unknown[] }>(teams: T[]) =>
+      teams.map((team) => ({ ...team, placements: [] }))
+    const without: SlData = {
+      ...data,
+      teams: unplaced(data.teams),
+      before: data.before && { ...data.before, teams: unplaced(data.before.teams) },
+    }
+    expect(suggestedUnits(without, set)).toEqual(units)
+  })
+
+  it('are what the saved set holds', () => {
+    const state = decodeMultiGridStateFromUrl(slTeamData(data, set, picks, units))!
+    state.boards.forEach((board, i) => {
+      const saved = [
+        ...(board.c ?? []),
+        ...(board.s ?? []).map(([tile, local]) => [tile, toPhantimalId(local), Team.ALLY]),
+      ]
+      expect(saved.sort(byTile)).toEqual(
+        units[i]!.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
+      )
+    })
   })
 })

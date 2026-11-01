@@ -7,5 +7,13 @@
     "hp": 24.3,
     "def-penetration": 11.2
   },
-  "tags": ["haste"]
+  "tags": ["haste"],
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "haste" },
+      "weight": "aim",
+      "note": "Coreforge's sigil goes under the rearmost ally and gives Haste, best the hero who gains most from Haste."
+    }
+  ]
 }

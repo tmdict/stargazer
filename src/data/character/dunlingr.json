@@ -19,5 +19,13 @@
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1, "mods": ["global", "orion", "perseus"] }],
     "ult-denial": [{ "ultimate": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "dunlingr" },
+      "weight": "aim",
+      "note": "The ally farthest from Dunlingr, whom his order spares, is the teammate his list ranks first."
+    }
+  ]
 }

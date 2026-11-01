@@ -1,5 +1,14 @@
 {
   "id": "s8-12",
   "season": 8,
-  "heroes": ["fay", "isabella", "koko", "lorsan", "rowan"]
+  "heroes": ["fay", "isabella", "koko", "lorsan", "rowan"],
+  "rules": [
+    {
+      "team": "ally",
+      "tile": "front",
+      "goal": { "target": "melee" },
+      "weight": "charm",
+      "note": "Raises the melee damage of the ally 1 tile in front of its holder and cuts the ranged damage it takes."
+    }
+  ]
 }

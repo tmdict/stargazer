@@ -6,6 +6,7 @@
 
 import { onMounted, readonly, ref } from 'vue'
 
+import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
@@ -15,7 +16,7 @@ type SlEngineStatus = 'loading' | 'ready' | 'failed'
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
 let nextId = 0
-type Answer = Extract<SlResponse, { type: 'generated' | 'predicted' }>
+type Answer = Extract<SlResponse, { type: 'generated' | 'placed' | 'predicted' }>
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
 const fail = (): void => {
@@ -62,11 +63,18 @@ export function useSlEngine() {
     return answer.set
   }
 
+  // The engine's formation for each board of a set, null where it has none.
+  const place = async (set: SlChoice): Promise<(SlUnit[] | null)[]> => {
+    const answer = await ask((id) => ({ type: 'place', id, set }))
+    if (answer.type !== 'placed') throw new Error('The worker answered another request')
+    return answer.units
+  }
+
   const predict = async (teams: Pair<WwwTeam>): Promise<WwwPanel> => {
     const answer = await ask((id) => ({ type: 'predict', id, teams }))
     if (answer.type !== 'predicted') throw new Error('The worker answered another request')
     return answer.panel
   }
 
-  return { status: readonly(status), generate, predict }
+  return { status: readonly(status), generate, place, predict }
 }

@@ -1,3 +1,4 @@
+import type { Rule } from './rule'
 import { Team } from './team'
 
 export type ArtifactStatKey =
@@ -33,5 +34,6 @@ export interface ArtifactType {
   season: number
   stats: ArtifactStats
   tags?: readonly string[] // hero tag ids found anywhere in its effect text; absent = none
+  rules?: readonly Rule[]
   team?: Team // Team assignment for placement
 }

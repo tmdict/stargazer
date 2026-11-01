@@ -87,21 +87,17 @@ function edgeLines(edges: HexEdge[], color: string): SkillLine[] {
   }))
 }
 
-/**
- * Outer boundary of the on-board tiles within `range` of a center, as same-hex
- * corner lines (see SkillLine).
- */
-export function zoneOutline(
-  grid: Grid,
-  centerHexId: number,
-  range: number,
-  color: string,
-): SkillLine[] {
+/** The on-board tiles within `range` of a center. */
+export function tilesWithin(grid: Grid, centerHexId: number, range: number): Hex[] {
   const center = grid.getHexById(centerHexId)
-  const zone = grid
+  return grid
     .getAllTiles()
     .map((tile) => tile.hex)
     .filter((hex) => center.distance(hex) <= range)
+}
+
+/** Outer boundary of a region of tiles, as same-hex corner lines (see SkillLine). */
+export function zoneOutline(zone: Hex[], color: string): SkillLine[] {
   return edgeLines(outlineEdges(zone), color)
 }
 

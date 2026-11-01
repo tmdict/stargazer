@@ -7,8 +7,9 @@
    are. The picker edits a copy of the active roster, so trying a hero out
    never changes the roster, and picking or importing another roster takes a
    fresh copy. The set is chosen only on Generate and stays as it is while the
-   selection or the type changes, and Save as team opens the saved set on the
-   Teams page. The page is pre-rendered with its heading alone: the picker and
+   selection or the type changes. The formation switch draws it as recorded or
+   in the engine's formations, worked out in the worker the first time they
+   are shown, and Save as team opens the set on the Teams page as drawn. The page is pre-rendered with its heading alone: the picker and
    the set follow the visitor's rosters, which the browser holds, so they are
    drawn after mount. */
 
@@ -18,7 +19,7 @@ import { useRouter } from 'vue-router'
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar from '@/components/guide/sl/SlBar.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
+import SlResult, { type SlFormation, type SlShown } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { slPercent } from '@/components/guide/sl/useSlNames'
@@ -35,7 +36,7 @@ import {
 import type { SlData } from '@/lib/pvp/sl/data/types'
 import { slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
-import type { SlPick } from '@/lib/pvp/sl/generator/types'
+import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { DEFAULT_VARIANT, MAX_SAVED_TEAMS, variantMaps, type TeamModeKey } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
@@ -56,7 +57,7 @@ const rosters = useRosters()
 const library = useTeamLibrary()
 const router = useRouter()
 const { error, success, show } = useToast()
-const { status: engineStatus, generate: generateSet } = useSlEngine()
+const { status: engineStatus, generate: generateSet, place: placeSet } = useSlEngine()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 
@@ -107,6 +108,26 @@ const shown = ref<SlShown | null>(null)
 // How many teams the last Generate could not make; 0 when it made them.
 const noSet = ref(0)
 const busy = ref(false)
+const formation = ref<SlFormation>('recorded')
+const placing = ref(false)
+// The shown set as each formation draws it, the engine's once asked for. Kept
+// plain, as the file is.
+interface Drawn {
+  set: SlChoice
+  picks: SlPick[]
+  recorded: string
+  suggested: Promise<string> | null
+}
+let drawn: Drawn | null = null
+
+const drawnOf = (file: SlData, set: SlChoice, picks: SlPick[]): Drawn => ({
+  set,
+  picks,
+  recorded: slTeamData(file, set, picks),
+  suggested: null,
+})
+const suggestedOf = (file: SlData, of: Drawn): Promise<string> =>
+  (of.suggested ??= placeSet(of.set).then((units) => slTeamData(file, of.set, of.picks, units)))
 const resultEl = useTemplateRef<HTMLElement>('result')
 
 const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
@@ -133,6 +154,13 @@ const generate = async (): Promise<void> => {
     const chosenFor = type.value
     const boards = boardsOf(file, chosenFor)
     const set = await generateSet(picks, boards)
+    const next = set && drawnOf(file, set, picks)
+    // The switch can change while the engine works, so it is read again after.
+    if (next && formation.value === 'suggested') await suggestedOf(file, next)
+    const data =
+      next && (formation.value === 'suggested' ? await suggestedOf(file, next) : next.recorded)
+    drawn = next
+    placing.value = false
     shown.value = set && {
       type: chosenFor,
       chance: set.chance,
@@ -151,7 +179,7 @@ const generate = async (): Promise<void> => {
           chance: t.chance,
         }
       }),
-      data: slTeamData(file, set, picks),
+      data: data!,
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false
@@ -159,12 +187,38 @@ const generate = async (): Promise<void> => {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker or here.
     shown.value = null
+    drawn = null
     failed.value = true
   } finally {
     busy.value = false
   }
   await nextTick()
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// The boards follow the switch once the engine's formations are ready, unless
+// the switch or the set has changed since.
+const pickFormation = async (next: SlFormation): Promise<void> => {
+  formation.value = next
+  const file = slFile()
+  const current = drawn
+  if (!file || !current) return
+  placing.value = next === 'suggested'
+  let data = current.recorded
+  if (next === 'suggested') {
+    try {
+      data = await suggestedOf(file, current)
+    } catch {
+      current.suggested = null
+      failed.value = true
+      data = current.recorded
+      next = 'recorded'
+    }
+    if (drawn !== current || formation.value !== 'suggested') return
+    formation.value = next
+    placing.value = false
+  }
+  if (shown.value) shown.value = { ...shown.value, data }
 }
 
 // Save as team replaces the Teams page's boards of the set's mode, so boards
@@ -239,7 +293,15 @@ const save = (): void => {
     </p>
 
     <div v-if="mounted" ref="result" class="sl-result-slot">
-      <SlResult v-if="shown" :shown :save-armed @save="save" />
+      <SlResult
+        v-if="shown"
+        :shown
+        :save-armed
+        :formation
+        :placing
+        @save="save"
+        @formation="pickFormation"
+      />
       <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set', { count: noSet }) }}</p>
     </div>
 

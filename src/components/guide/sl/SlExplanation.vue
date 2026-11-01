@@ -68,6 +68,14 @@ const outcomes = computed(() =>
         </tbody>
       </table>
     </div>
+    <p>
+      {{
+        i18n.t('app.sl-explain-formation', {
+          recorded: i18n.t('app.sl-formation-recorded'),
+          suggested: i18n.t('app.sl-formation-suggested'),
+        })
+      }}
+    </p>
 
     <h2>{{ i18n.t('app.sl-explain-steps-head') }}</h2>
     <p>{{ i18n.t('app.sl-explain-steps-lead') }}</p>

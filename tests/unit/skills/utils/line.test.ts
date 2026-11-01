@@ -24,7 +24,7 @@ describe('hexesBetween', () => {
 
 describe('zoneOutline', () => {
   it('outlines a single hex with all six edges, corners clockwise per direction', () => {
-    const lines = zoneOutline(new Grid(), 23, 0, 'red')
+    const lines = zoneOutline([new Grid().getHexById(23)], 'red')
     expect(lines.map((line) => [line.fromCorner, line.toCorner])).toEqual([
       [4, 5],
       [5, 0],

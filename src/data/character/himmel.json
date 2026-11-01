@@ -10,5 +10,13 @@
   "season": 6,
   "tags": {
     "tile-effect": [{ "skill3": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "exactly": 3 },
+      "weight": "aim",
+      "note": "A mage, a tank and a support next to Himmel form his Hero Party."
+    }
+  ]
 }

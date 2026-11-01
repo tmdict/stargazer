@@ -13,5 +13,19 @@
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
     "execute": [{ "skill3": 1 }],
     "special-target": [{ "skill2": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "aliceth" },
+      "weight": "aim",
+      "note": "Brightfeather goes to the nearest ally on Aliceth's row, the teammate her list ranks first."
+    },
+    {
+      "team": "enemy",
+      "goal": { "target": "tank" },
+      "weight": "aliceth-mark",
+      "note": "An enemy Aliceth marks our unit farthest from her, best a tank."
+    }
+  ]
 }

@@ -12,5 +12,13 @@
     "debuff": [{ "ultimate": 1, "mods": ["aoe", "eryndor"] }],
     "special-target": [{ "ex": 1 }],
     "summon": [{ "ultimate": 1 }, { "ex": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "galahad" },
+      "weight": "aim",
+      "note": "Galahad marks the nearest ally, the one behind her first, and later summons a shadow copy of them with all their skills, best a damage dealer or a support hero."
+    }
+  ]
 }

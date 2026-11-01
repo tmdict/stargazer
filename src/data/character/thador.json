@@ -14,5 +14,13 @@
       { "ex": 1, "mods": ["eryndor", "global"] }
     ],
     "energy-battery": [{ "ex": 3 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "ultimate" },
+      "weight": "aim",
+      "note": "Thador's lieutenant, the ally behind him, is the hero whose ultimate matters most."
+    }
+  ]
 }

@@ -16,5 +16,13 @@
       { "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] }
     ],
     "tile-effect": [{ "skill3": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "hugin" },
+      "weight": "aim",
+      "note": "Hugin's sigil buffs the ally behind him, the teammate his list ranks first."
+    }
+  ]
 }

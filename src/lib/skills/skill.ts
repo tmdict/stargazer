@@ -162,6 +162,9 @@ export class SkillManager {
   private skillLines: Map<string, SkillLine[]> = new Map()
   // Unit badges each skill instance shows (rendered by GridCharacters)
   private skillBadges: Map<string, SkillBadge[]> = new Map()
+  // Tiles each skill instance acts on and outlines rather than paints. Nothing
+  // draws them, so they bump no version.
+  private skillZones: Map<string, number[]> = new Map()
   // Bumped on every mutation the UI must see; the board's computeds read it
   // to re-derive from this non-reactive class.
   private targetVersion = 0
@@ -256,6 +259,7 @@ export class SkillManager {
     this.skillPaintedTiles.clear()
     this.skillLines.clear()
     this.skillBadges.clear()
+    this.skillZones.clear()
     this.targetVersion++
   }
 
@@ -416,6 +420,21 @@ export class SkillManager {
       }
     }
     return [...unique.values()]
+  }
+
+  setSkillZone(characterId: number, team: Team, hexIds: number[]): void {
+    this.skillZones.set(this.getSkillKey(characterId, team), hexIds)
+  }
+
+  clearSkillZone(characterId: number, team: Team): void {
+    this.skillZones.delete(this.getSkillKey(characterId, team))
+  }
+
+  // The tiles a skill instance acts on: those it paints and its zone, each once.
+  getMarkedTiles(characterId: number, team: Team): number[] {
+    const key = this.getSkillKey(characterId, team)
+    const painted = (this.skillPaintedTiles.get(key) ?? []).map((tile) => tile.hexId)
+    return [...new Set([...painted, ...(this.skillZones.get(key) ?? [])])]
   }
 
   // Skill targeting methods

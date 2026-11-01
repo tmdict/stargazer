@@ -12,5 +12,13 @@
     "debuff": [{ "skill3": 1, "mods": ["eryndor", "single"] }],
     "dot": [{ "skill3": 1, "mods": ["shadewing"] }],
     "tile-effect": [{ "skill3": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "include": "damage" },
+      "weight": "aim",
+      "note": "Satrana gives Sparks to allies within 2 tiles of her, which ignite the enemies they hit, so as many damage dealers as can be stand there."
+    }
+  ]
 }

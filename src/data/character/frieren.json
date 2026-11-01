@@ -12,5 +12,13 @@
     "airborne": [{ "awakening": 1, "mods": ["kazim"] }],
     "debuff": [{ "skill3": 1, "mods": ["aoe", "eryndor"] }],
     "special-target": [{ "ex": 1 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "target": "tank" },
+      "weight": "aim",
+      "note": "Frieren's defensive magic covers the frontmost ally, best a tank."
+    }
+  ]
 }

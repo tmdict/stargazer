@@ -1,0 +1,295 @@
+import { PlacementBoard } from './board'
+import {
+  PlacementScorer,
+  type FormationCheck,
+  type GoalCheck,
+  type PlacementScore,
+  type SkippedRule,
+} from './score'
+import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
+
+// Scores closer than this are equal, so sums of the same weights in another
+// order compare equal.
+const EPS = 1e-9
+// The local search climbs from this many placements drawn at random.
+const STARTS = 16
+// The count of equally good placements stops here.
+const EQUAL_CAP = 1000
+
+export interface PlacementOptions {
+  // Whether the map's buff tiles score, false for a season whose buff tiles
+  // stood elsewhere.
+  buffTiles?: boolean
+  // Score every placement instead of searching from a few.
+  full?: boolean
+}
+
+export interface PlacementResult {
+  // The team's units, heroes first, and the tile each stands on in the pick.
+  units: number[]
+  positions: number[]
+  score: PlacementScore
+  // The best score found, which the pick is within the margin of.
+  best: PlacementScore
+  // The pick's points for the enemy units' rules it blunts.
+  threats: number
+  goals: GoalCheck[]
+  formation: FormationCheck[]
+  // Placements with the pick's broken rules and goals within the margin of the
+  // best, and whether the count reached them all rather than stopping at its cap.
+  equallyGood: number
+  complete: boolean
+  // For each hero, in the team's order, the tiles it stands on among them.
+  kept: number[][]
+  skipped: SkippedRule[]
+  evaluations: number
+}
+
+// Negative when `a` is the better score: fewer broken rules, then higher goals,
+// then a higher total.
+function compare(a: PlacementScore, b: PlacementScore): number {
+  if (a.broken !== b.broken) return a.broken - b.broken
+  if (Math.abs(a.goals - b.goals) > EPS) return b.goals - a.goals
+  if (Math.abs(a.total - b.total) > EPS) return b.total - a.total
+  return 0
+}
+
+// A generator of numbers in [0, 1) seeded from a string, so one team on one map
+// always searches from the same starts.
+function seeded(text: string): () => number {
+  let seed = 2166136261
+  for (let i = 0; i < text.length; i++) seed = Math.imul(seed ^ text.charCodeAt(i), 16777619)
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), seed | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const keyOf = (positions: readonly number[]): string => positions.join(',')
+const positionsOf = (key: string): number[] => key.split(',').map(Number)
+
+class Search {
+  readonly scores = new Map<string, PlacementScore>()
+
+  constructor(
+    private readonly board: PlacementBoard,
+    private readonly scorer: PlacementScorer,
+  ) {}
+
+  evaluate(positions: readonly number[]): PlacementScore {
+    const key = keyOf(positions)
+    let score = this.scores.get(key)
+    if (!score) {
+      this.board.place(positions)
+      score = this.scorer.score()
+      this.scores.set(key, score)
+    }
+    return score
+  }
+
+  // Every placement one step away: a unit moved to a free tile, or two units
+  // trading tiles.
+  *neighbours(positions: readonly number[]): Generator<number[]> {
+    const used = new Set(positions)
+    const free = this.board.tiles.filter((hexId) => !used.has(hexId))
+    for (let i = 0; i < positions.length; i++) {
+      for (const hexId of free) {
+        const next = [...positions]
+        next[i] = hexId
+        yield next
+      }
+      for (let j = i + 1; j < positions.length; j++) {
+        const next = [...positions]
+        next[i] = positions[j]!
+        next[j] = positions[i]!
+        yield next
+      }
+    }
+  }
+
+  // Every placement where two units move together, each to a free tile or to
+  // the other's tile.
+  *pairs(positions: readonly number[]): Generator<number[]> {
+    const used = new Set(positions)
+    const free = this.board.tiles.filter((hexId) => !used.has(hexId))
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const options = [...free, positions[i]!, positions[j]!]
+        for (const a of options) {
+          for (const b of options) {
+            if (a === b) continue
+            const next = [...positions]
+            next[i] = a
+            next[j] = b
+            yield next
+          }
+        }
+      }
+    }
+  }
+
+  // Takes the best step until none improves, then the best move of two units
+  // together, since some goals need two units to move at once.
+  climb(start: number[]): void {
+    let current = start
+    let score = this.evaluate(current)
+    for (;;) {
+      let step: number[] | undefined
+      for (const next of this.neighbours(current)) {
+        const nextScore = this.evaluate(next)
+        if (compare(nextScore, score) < 0) {
+          step = next
+          score = nextScore
+        }
+      }
+      if (!step) {
+        for (const next of this.pairs(current)) {
+          const nextScore = this.evaluate(next)
+          if (compare(nextScore, score) < 0) {
+            step = next
+            score = nextScore
+          }
+        }
+      }
+      if (!step) return
+      current = step
+    }
+  }
+
+  best(): PlacementScore {
+    let best: PlacementScore | undefined
+    for (const score of this.scores.values()) if (!best || compare(score, best) < 0) best = score
+    return best!
+  }
+
+  // The placements within the margin of the best: those already scored, and
+  // with `spread` those found step by step from them. A better placement found
+  // on the way becomes the best and the spread starts again from it.
+  equallyGood(margin: number, spread: boolean): { keys: string[]; complete: boolean } {
+    for (;;) {
+      const best = this.best()
+      const within = (score: PlacementScore) =>
+        score.broken === best.broken && score.goals >= best.goals - margin - EPS
+      const found = new Set(
+        [...this.scores].filter(([, score]) => within(score)).map(([key]) => key),
+      )
+      if (!spread) return { keys: [...found], complete: true }
+      const queue = [...found]
+      let complete = true
+      for (let next = 0; next < queue.length; next++) {
+        if (found.size >= EQUAL_CAP) {
+          complete = false
+          break
+        }
+        for (const positions of this.neighbours(positionsOf(queue[next]!))) {
+          const key = keyOf(positions)
+          if (found.has(key) || !within(this.evaluate(positions))) continue
+          found.add(key)
+          queue.push(key)
+        }
+      }
+      if (compare(this.best(), best) === 0) return { keys: [...found], complete }
+    }
+  }
+}
+
+// Every way to put the units on distinct tiles, the first unit's tile changing
+// slowest.
+function* everyPlacement(tiles: number[], count: number): Generator<number[]> {
+  const positions: number[] = []
+  const used = new Set<number>()
+  function* fill(): Generator<number[]> {
+    if (positions.length === count) {
+      yield [...positions]
+      return
+    }
+    for (const hexId of tiles) {
+      if (used.has(hexId)) continue
+      used.add(hexId)
+      positions.push(hexId)
+      yield* fill()
+      positions.pop()
+      used.delete(hexId)
+    }
+  }
+  yield* fill()
+}
+
+/**
+ * Places a team on a map's ally tiles: scores placements by the rules of its
+ * units, its artifact and its charms, the map's buff tile, the rules found in
+ * the formations and where its heroes lean, and the rules of the enemy units it
+ * could face there, and returns the best, with how many were about as good and
+ * which tiles each hero kept among them. A rebuild gives the same placement.
+ */
+export function placeTeam(
+  team: PlacementTeam,
+  mapKey: string,
+  data: PlacementData,
+  lookups: PlacementLookups,
+  options: PlacementOptions = {},
+): PlacementResult {
+  const board = new PlacementBoard(team, mapKey, lookups)
+  const scorer = new PlacementScorer(board, team, data, { buffTiles: options.buffTiles ?? true })
+  const skipped = [...scorer.skipped]
+  const margin = data.weights.margin
+  if (margin === undefined) skipped.push({ owner: 'margin', reason: 'no weight' })
+  const search = new Search(board, scorer)
+
+  if (options.full) {
+    for (const positions of everyPlacement(board.tiles, board.units.length)) {
+      search.evaluate(positions)
+    }
+  } else {
+    const random = seeded(`${mapKey}|${board.units.join(',')}|${team.artifact ?? ''}`)
+    for (let start = 0; start < STARTS; start++) {
+      const tiles = [...board.tiles]
+      for (let i = tiles.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1))
+        ;[tiles[i], tiles[j]] = [tiles[j]!, tiles[i]!]
+      }
+      search.climb(tiles.slice(0, board.units.length))
+    }
+  }
+  const { keys, complete } = search.equallyGood(margin ?? 0, !options.full)
+
+  // The highest total among them, the enemy units' rules counted, then the
+  // lowest tiles in the units' order. The enemy units' rules are read only
+  // here, since each is tried on every enemy tile and a team's own goals come
+  // first.
+  const byTiles = (a: number[], b: number[]) => {
+    const i = a.findIndex((hexId, k) => hexId !== b[k])
+    return i < 0 ? 0 : a[i]! - b[i]!
+  }
+  const pick = keys
+    .map((key) => {
+      const positions = positionsOf(key)
+      board.place(positions)
+      return { positions, total: search.scores.get(key)!.total + scorer.threats() }
+    })
+    .sort(
+      (a, b) =>
+        (Math.abs(a.total - b.total) > EPS ? b.total - a.total : 0) ||
+        byTiles(a.positions, b.positions),
+    )[0]!
+  board.place(pick.positions)
+  const kept = team.heroes.map((_, i) =>
+    [...new Set(keys.map((key) => positionsOf(key)[i]!))].sort((a, b) => a - b),
+  )
+  return {
+    units: board.units,
+    positions: pick.positions,
+    score: scorer.score(),
+    best: search.best(),
+    threats: scorer.threats(),
+    goals: scorer.goals(),
+    formation: scorer.formation(),
+    equallyGood: keys.length,
+    complete,
+    kept,
+    skipped,
+    evaluations: search.scores.size,
+  }
+}
