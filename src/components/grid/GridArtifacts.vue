@@ -309,7 +309,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       <polygon
         v-if="showAllyCell"
         class="artifact-cell"
-        fill="transparent"
         :class="{
           clickable: allyCellClickable,
           droppable: allyDroppable,
@@ -324,7 +323,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       <polygon
         v-if="showEnemyCell"
         class="artifact-cell"
-        fill="transparent"
         :class="{
           clickable: enemyCellClickable,
           droppable: enemyDroppable,
@@ -441,8 +439,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 }
 
 .artifact-cell {
-  /* Paired with a transparent `fill` attribute in the template: PNG export drops
-     scoped CSS, so without it the polygon falls back to SVG's default black fill. */
   fill: rgba(255, 255, 255, 0.06);
 }
 

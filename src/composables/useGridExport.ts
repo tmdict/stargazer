@@ -15,18 +15,22 @@ function isWebKit(): boolean {
 
 const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => (await fetch(dataUrl)).blob()
 
+type StyleValues = Record<string, string>
+type CaptureElement = HTMLElement | SVGElement
+
 // Export-only style overrides: html-to-image styles its clone from each node's
 // computed style, so overrides are set inline (always reflected by
 // getComputedStyle); the returned restore puts the previous inline values back.
 function overrideForCapture(
   root: HTMLElement,
   selector: string,
-  overrides: Record<string, string>,
+  overrides: StyleValues | ((el: CaptureElement) => StyleValues),
 ): () => void {
-  const restores = Array.from(root.querySelectorAll<HTMLElement>(selector)).map((el) => {
-    const style = el.style as CSSStyleDeclaration & Record<string, string>
-    const prev: Record<string, string> = {}
-    for (const [key, value] of Object.entries(overrides)) {
+  const restores = Array.from(root.querySelectorAll<CaptureElement>(selector)).map((el) => {
+    const style = el.style as CSSStyleDeclaration & StyleValues
+    const prev: StyleValues = {}
+    const values = typeof overrides === 'function' ? overrides(el) : overrides
+    for (const [key, value] of Object.entries(values)) {
       prev[key] = style[key]
       style[key] = value
     }
@@ -47,6 +51,39 @@ interface ExportOptions {
 // Power panel) is dropped from every image export.
 const excludeMarkedChrome = (node: HTMLElement): boolean =>
   !node.classList?.contains('capture-exclude')
+
+// html-to-image clones an <svg> whole and styles only its root, and the clone
+// draws without the page's stylesheets, so a shape keeps only what it carries
+// itself. These are the properties the stylesheets set that change a drawing.
+const SVG_PAINT = ['display', 'fill', 'opacity', 'stroke'] as const
+
+// The library's filter stops at an <svg>, so a marked shape stays in the clone.
+// Left out here, it keeps its transparent attributes.
+const SVG_SHAPES = 'svg *:not(.capture-exclude, .capture-exclude *)'
+
+// A value already inline survives the clone, and a render during the capture may
+// rewrite it, so only the rest is copied.
+const stylesheetPaint = (shape: CaptureElement): StyleValues => {
+  const computed = getComputedStyle(shape)
+  return Object.fromEntries(
+    SVG_PAINT.filter((prop) => !shape.style[prop]).map((prop) => [prop, computed[prop]]),
+  )
+}
+
+// WebKit writes a clone's radii and corner shapes as one `corner` shorthand that
+// it cannot read back, which squares every rounded box. Without the shapes, which
+// the site does not use, the radii stay in their own properties.
+const copiedStyleProperties = (): string[] =>
+  Array.from(getComputedStyle(document.documentElement)).filter(
+    (name) => !name.startsWith('corner-'),
+  )
+
+// WebKit misplaces a spread shadow when the clone is scaled up, leaving a dark
+// chunk beside each portrait. An outline draws the same disc.
+const PORTRAIT_DISC_OUTLINE = {
+  boxShadow: 'none',
+  outline: 'var(--character-border-width, 3px) solid var(--disc)',
+}
 
 // Room kept around the drawn content when a capture is trimmed, in CSS pixels on
 // a full-size board; it scales with the board, so every screen saves the same.
@@ -81,13 +118,19 @@ export function useGridExport() {
       throw new Error(`Capture target not found: ${selector}`)
     }
 
-    // Hide the 5 v 5 active-board ring / hover tint; transition: none keeps it
-    // instant so the border isn't captured mid-fade.
-    const restoreBoards = overrideForCapture(containerElement, '.grid-board', {
-      transition: 'none',
-      borderColor: 'transparent',
-      background: 'transparent',
-    })
+    const restores = [
+      // Hide the 5 v 5 active-board ring / hover tint; transition: none keeps it
+      // instant so the border isn't captured mid-fade.
+      overrideForCapture(containerElement, '.grid-board', {
+        transition: 'none',
+        borderColor: 'transparent',
+        background: 'transparent',
+      }),
+      overrideForCapture(containerElement, SVG_SHAPES, stylesheetPaint),
+      ...(isWebKit()
+        ? [overrideForCapture(containerElement, '.character-image', PORTRAIT_DISC_OUTLINE)]
+        : []),
+    ]
 
     const box = containerElement.getBoundingClientRect()
     const pixelRatio = Math.min(
@@ -99,6 +142,7 @@ export function useGridExport() {
       pixelRatio,
       backgroundColor: 'transparent',
       filter: excludeMarkedChrome,
+      includeStyleProperties: copiedStyleProperties(),
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images
@@ -116,7 +160,7 @@ export function useGridExport() {
         Math.round(cssPixels * gridStore.getHexScale() * pixelRatio)
       return await cropToDrawn(dataUrl, toImagePixels(CROP_MARGIN), toImagePixels(ROW_GAP))
     } finally {
-      restoreBoards()
+      restores.forEach((restore) => restore())
     }
   }
 

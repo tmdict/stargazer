@@ -525,7 +525,7 @@ onUnmounted(() => {
         <g
           v-for="hex in hexes"
           :key="`event-${hex.getId()}`"
-          class="grid-event-layer"
+          class="grid-event-layer capture-exclude"
           :class="getHexDropClass(hex)"
         >
           <polygon
