@@ -10,7 +10,9 @@
  * is on a map is counted from its boards. PLACEMENT_FULL is how many of
  * the most used teams are also placed by trying every placement, to check the
  * search. PLACEMENT_TUNE names weights, joined by commas, for which the run
- * suggests a value from the players' formations. Left out when
+ * suggests a value from the players' formations. PLACEMENT_UNITS names
+ * heroes, phantimals or artifacts by their data file's name, joined by commas,
+ * and only the set-ups that hold one are placed. Left out when
  * PLACEMENT_EXPORT is not set. */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -53,6 +55,7 @@ const REVIEWED = 30
 const FULL_LIMIT = 700_000
 const TUNE = process.env.PLACEMENT_TUNE?.split(',').filter(Boolean) ?? []
 const TUNE_SHARES = [0, 0.1, 0.25, 0.5, 1]
+const UNITS = process.env.PLACEMENT_UNITS?.split(',').filter(Boolean) ?? []
 
 const LIVE = Math.max(...loadPhantimals().map((phantimal) => phantimal.season))
 
@@ -186,6 +189,13 @@ function setupsOf(file: string): Setup[] {
   }
   return [...found.values()]
 }
+
+// A rule for a unit's own team moves only the teams that hold the unit, so a
+// run after changing one need place no other.
+const holdsUnit = ({ team }: Setup) =>
+  team.heroes.some((id) => UNITS.includes(heroById.get(id)?.name ?? '')) ||
+  (team.phantimal !== undefined && UNITS.includes(phantimalOf(team.phantimal)?.name ?? '')) ||
+  (team.artifact !== undefined && UNITS.includes(artifactById.get(team.artifact)?.name ?? ''))
 
 const teamKey = ({ team, map, live }: Pick<Setup, 'team' | 'map' | 'live'>) =>
   `${map}|${team.heroes.join(',')}|${team.phantimal ?? ''}|${team.artifact ?? ''}|${live}`
@@ -351,7 +361,8 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       await decodeSlData(readFileSync(new URL('../../src/content/pvp/sl/sl.bin', import.meta.url)))
     ).placement
     const margin = liveData.weights.margin ?? 0
-    const setups = EXPORTS.flatMap(setupsOf)
+    const recorded = EXPORTS.flatMap(setupsOf)
+    const setups = UNITS.length ? recorded.filter(holdsUnit) : recorded
     expect(setups.length, 'set-ups read from the exports').toBeGreaterThan(0)
     // The live season's pick rates come with the data, another season's from its
     // own boards.
@@ -382,6 +393,22 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
     const log = (line = '') => lines.push(line)
     const skipped = new Set<string>()
     const placed: { setup: Setup; player: Scored }[] = []
+
+    if (UNITS.length) {
+      const units = [...heroById.values(), ...loadPhantimals(), ...artifactById.values()]
+      for (const name of UNITS) {
+        const named = units.filter((unit) => unit.name === name)
+        if (!named.length)
+          throw new Error(`PLACEMENT_UNITS: no hero, phantimal or artifact ${name}`)
+        if (named.some((unit) => unit.rules?.some((rule) => rule.team === 'enemy'))) {
+          log(`${name} has a rule against us, which moves teams without it too`)
+        }
+      }
+      log(
+        `Placing the ${setups.length} of ${recorded.length} set-ups that hold ${UNITS.join(', ')}`,
+      )
+      log()
+    }
 
     for (const season of [...new Set(setups.map((s) => s.season))].sort((a, b) => b - a)) {
       const ofSeason = setups.filter((setup) => setup.season === season)
