@@ -61,7 +61,7 @@ import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
-import { artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
+import { artifactCanDraw, artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
 import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
@@ -607,16 +607,8 @@ export function createGridContext(
     const artifactRows = computed<SkillRow[]>(() =>
       [Team.ALLY, Team.ENEMY].flatMap((team) => {
         const id = team === Team.ALLY ? artifacts.ally.value : artifacts.enemy.value
-        if (id === null) return []
-        return [
-          {
-            key: artifactSkillKey(id, team),
-            team,
-            kind: 'artifact' as const,
-            id,
-            drawing: allArtifactArrows.value.some((arrow) => arrow.team === team),
-          },
-        ]
+        if (id === null || !artifactCanDraw(slotArtifactName(id))) return []
+        return [{ key: artifactSkillKey(id, team), team, kind: 'artifact' as const, id }]
       }),
     )
     const artifactArrows = computed(() => {
@@ -652,19 +644,15 @@ export function createGridContext(
       skillManager.getTargetVersion()
       return skillManager.getSkillBadges(hiddenSkills.value)
     })
-    const skillRows = computed<SkillRow[]>(() => {
-      skillManager.getTargetVersion()
-      return [
-        ...skillManager.getSkillInstances().map(({ characterId, team, drawing }) => ({
-          key: unitSkillKey(characterId, team),
-          team,
-          kind: 'unit' as const,
-          id: decomposeUnitId(characterId).localId,
-          drawing,
-        })),
-        ...artifactRows.value,
-      ]
-    })
+    const skillRows = computed<SkillRow[]>(() => [
+      ...skillManager.getUnitsAbleToDraw().map(({ characterId, team }) => ({
+        key: unitSkillKey(characterId, team),
+        team,
+        kind: 'unit' as const,
+        id: decomposeUnitId(characterId).localId,
+      })),
+      ...artifactRows.value,
+    ])
     const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
       imageModifiers.value.get(`${characterId}-${team}`)
     const getTileColorModifier = (hexId: number): string[] | undefined =>

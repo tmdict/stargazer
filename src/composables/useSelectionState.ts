@@ -1,10 +1,11 @@
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { getCharacter } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 // Mobile: the team whose artifact slot a tapped on-grid artifact cell targets, so
 // the seasonal sheet's pick lands on that cell's side instead of the default fill.
@@ -73,6 +74,15 @@ export function useSelectionState() {
   // Click-to-add fills the ally side first, then the enemy side.
   const fillOrder: Team[] = [Team.ALLY, Team.ENEMY]
 
+  // The targeted tile with its board and side, which decide what a pick can do.
+  const targetTile = computed(() => {
+    const hexId = targetHexId.value
+    const ctx = targetGridId.value === null ? undefined : grids.getContext(targetGridId.value)
+    if (hexId === null || !ctx) return null
+    const team = getTeamFromTileState(ctx.grid.getTileById(hexId).state)
+    return team === null ? null : { ctx, hexId, team }
+  })
+
   const setArtifactTarget = (team: Team, gridId: number) => {
     targetArtifactTeam.value = team
     targetArtifactGridId.value = gridId
@@ -127,6 +137,7 @@ export function useSelectionState() {
     fillOrder,
     targetHexId,
     targetGridId,
+    targetTile,
     liftedHexId,
     liftedGridId,
     tabRequest,

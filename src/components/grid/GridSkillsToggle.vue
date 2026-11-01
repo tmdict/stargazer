@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /* The Skills control: the chip switches everything skills draw on the boards,
    and its list turns one unit's or artifact's drawings off, or a whole team's
-   from the team's own row. A row shows only while that unit draws something, so
-   every row has an effect. As on Grid Info, rows keep their ticks while the chip
-   is off, and ticking one turns it back on. */
+   from the team's own row. A unit that can draw has a row from the moment it is
+   placed, so it can be turned off before it draws anything. As on Grid Info, rows
+   keep their ticks while the chip is off, and ticking one turns it back on. */
 
 import { computed } from 'vue'
 
@@ -45,7 +45,7 @@ const rowLabel = (row: SkillRow): string =>
     : unitName(row.id)
 
 const shownRows = computed(() =>
-  grids.skillRows.filter((row) => row.drawing && (row.team === Team.ALLY || !grids.teamView)),
+  grids.skillRows.filter((row) => row.team === Team.ALLY || !grids.teamView),
 )
 
 const rowsOf = (team: Team): SkillRow[] =>

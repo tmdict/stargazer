@@ -1,4 +1,5 @@
 import { findCharacterHex } from '../characters/character'
+import { isPhantimalId } from '../characters/phantimal'
 import { decomposeUnitId } from '../characters/synergy'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
@@ -86,13 +87,6 @@ export interface SkillTargetInfo {
   }
 }
 
-// A placed unit's skill, and whether it has anything on the board right now.
-interface SkillInstance {
-  characterId: number
-  team: Team
-  drawing: boolean
-}
-
 // A unit or artifact the Skills dropdown can hide, under its key in the board's
 // hidden set. `id` is the unit's base id or the artifact's id.
 export interface SkillRow {
@@ -100,7 +94,6 @@ export interface SkillRow {
   team: Team
   kind: 'unit' | 'artifact'
   id: number
-  drawing: boolean
 }
 
 // A synergy copy shares its base hero's key, so one row covers both.
@@ -459,18 +452,14 @@ export class SkillManager {
     return new Map([...this.skillTargets].filter(([key]) => !this.isHidden(key, hidden)))
   }
 
-  // Arrows count only with an arrow color: a tile highlight stores a target too.
-  getSkillInstances(): SkillInstance[] {
-    return Object.entries(this.activeSkills).map(([key, { characterId, team }]) => ({
-      characterId,
-      team,
-      drawing:
-        !!this.skillPaintedTiles.get(key)?.length ||
-        this.skillLines.has(key) ||
-        this.skillBadges.has(key) ||
-        (!!getCharacterSkill(characterId)?.targetingColorModifier &&
-          !!this.skillTargets.get(key)?.metadata?.arrows?.length),
-    }))
+  // Placed units with something the Skills dropdown can switch, drawn yet or not.
+  // A phantimal's whole drawing waits on its data's targeting flag.
+  getUnitsAbleToDraw(): { characterId: number; team: Team }[] {
+    return Object.values(this.activeSkills).filter(
+      ({ characterId }) =>
+        !getCharacterSkill(characterId)?.drawsNothing &&
+        (!isPhantimalId(characterId) || this.lookups.seasonalTargeting(characterId)),
+    )
   }
 
   getTargetVersion(): number {

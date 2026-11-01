@@ -174,6 +174,7 @@ export function withEffects(
   }
   return {
     ...base,
+    drawsNothing: false,
     onActivate(ctx) {
       base.onActivate(ctx)
       draw(ctx)
@@ -249,6 +250,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
     imageModifier,
     companionImageModifier,
     companionRange,
+    drawsNothing: true,
 
     onActivate(ctx: SkillContext): void {
       const { grid, team, skillManager, characterId } = ctx

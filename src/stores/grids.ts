@@ -136,12 +136,10 @@ export const useGrids = defineStore('grids', () => {
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
 
   // A key is unique across boards but for a hero and its synergy copy, which
-  // share a row that draws if either does.
+  // share a row.
   const skillRows = computed<SkillRow[]>(() => {
     const rows = new Map<string, SkillRow>()
-    for (const row of contexts.value.flatMap((ctx) => ctx.skillRows)) {
-      if (row.drawing || !rows.has(row.key)) rows.set(row.key, row)
-    }
+    for (const row of contexts.value.flatMap((ctx) => ctx.skillRows)) rows.set(row.key, row)
     return [...rows.values()]
   })
 

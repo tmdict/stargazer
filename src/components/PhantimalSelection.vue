@@ -17,10 +17,8 @@ import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalDisplayName } from '@/utils/nameFormatting'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
   phantimals: readonly PhantimalType[]
@@ -29,9 +27,8 @@ const { phantimals, isDraggable = false } = defineProps<{
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
-const grids = useGrids()
 const { traitRow, rangeRow } = useUnitTooltipRows()
-const { fillOrder, targetHexId, targetGridId, clearTargetHex, characterStore } = useSelectionState()
+const { fillOrder, targetHexId, targetTile, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
 
 const sorted = computed(() => [...phantimals].sort((a, b) => a.id - b.id))
@@ -74,16 +71,22 @@ const removableHex = (phantimal: PhantimalType): number | null => {
   return null
 }
 
+// A targeted tile takes a phantimal in place of the side's own, or moves it
+// there, so only the side's faction count can refuse it.
+const isDimmed = (phantimal: PhantimalType): boolean => {
+  const tile = targetTile.value
+  return tile
+    ? !tile.ctx.phantimalCanJoinTeam(toPhantimalId(phantimal.id), tile.team)
+    : removableHex(phantimal) !== null
+}
+
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
   // Mobile: a tapped tile targets a specific cell on its board. Place there using
   // its team, on that board (not whichever board is active).
-  if (targetHexId.value !== null && targetGridId.value !== null) {
-    const ctx = grids.getContext(targetGridId.value)
-    if (ctx) {
-      const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
-      if (team !== null) ctx.placePhantimal(targetHexId.value, id, team)
-    }
+  if (targetHexId.value !== null) {
+    const tile = targetTile.value
+    if (tile) tile.ctx.placePhantimal(tile.hexId, id, tile.team)
     clearTargetHex()
     return
   }
@@ -181,7 +184,7 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
           class="phantimal"
-          :class="{ draggable: isDraggable, 'greyed-out': removableHex(phantimal) !== null }"
+          :class="{ draggable: isDraggable, 'greyed-out': isDimmed(phantimal) }"
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
           @dragend="handleDragEnd"

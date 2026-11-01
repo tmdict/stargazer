@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { executeMoveCharacter } from '@/lib/characters/move'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { Grid } from '@/lib/grid'
 import { SkillManager, unitSkillKey } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { ALLY_A, ENEMY_A, GUNNAR, KULU } from '../fixtures/characters'
+import { ALLY_A, GUNNAR, KULU, PHRAESTO } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 import { NO_LOOKUPS, placeOnTile } from '../fixtures/skills'
 
 const SILVINA = 39
+const WEDGE_OF_MATTER = toPhantimalId(5)
 
 describe('skill', () => {
   let skillManager: SkillManager
@@ -109,12 +111,28 @@ describe('skill', () => {
         expect(skillManager.getTileColorModifiers(hidden).has(19)).toBe(false)
       })
 
-      it('counts a skill as drawing only while it has something on the board', () => {
+      it('lists a unit able to draw before it draws, and never one that only spawns', () => {
         executePlaceCharacter(grid, skillManager, 2, SILVINA, Team.ALLY)
-        expect(skillManager.getSkillInstances()[0]?.drawing).toBe(false)
+        executePlaceCharacter(grid, skillManager, 3, PHRAESTO, Team.ALLY)
 
-        executePlaceCharacter(grid, skillManager, 40, ENEMY_A, Team.ENEMY)
-        expect(skillManager.getSkillInstances()[0]?.drawing).toBe(true)
+        expect(skillManager.getAllSkillTargets().size).toBe(0)
+        expect(skillManager.getUnitsAbleToDraw()).toMatchObject([{ characterId: SILVINA }])
+      })
+
+      it('lists a phantimal that also spawns only while its targeting flag is on', () => {
+        const listed = (seasonalTargeting: boolean): number[] => {
+          const manager = new SkillManager({
+            ...NO_LOOKUPS,
+            seasonalTargeting: () => seasonalTargeting,
+          })
+          const board = new Grid()
+          board.skillManager = manager
+          executePlaceCharacter(board, manager, 16, WEDGE_OF_MATTER, Team.ALLY)
+          return manager.getUnitsAbleToDraw().map((unit) => unit.characterId)
+        }
+
+        expect(listed(true)).toEqual([WEDGE_OF_MATTER])
+        expect(listed(false)).toEqual([])
       })
     })
 

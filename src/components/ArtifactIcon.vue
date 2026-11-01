@@ -14,7 +14,7 @@ const i18n = useI18nStore()
 
 defineProps<{
   artifact: ArtifactType
-  isPlaced?: boolean
+  dimmed?: boolean
   showSimpleTooltip?: boolean
   // Right-click or hold opens the artifact's details, as on the board (the
   // Seasonal tab).
@@ -46,7 +46,7 @@ const {
     <div
       ref="artifactElement"
       class="artifact"
-      :class="{ 'greyed-out': isPlaced, inspectable }"
+      :class="{ 'greyed-out': dimmed, inspectable }"
       @click="emit('artifactClick', artifact)"
       @pointerdown="inspectable && startHold($event, artifact)"
       @contextmenu="inspectable && onContextMenu($event, artifact)"

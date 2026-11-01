@@ -61,6 +61,10 @@ const ARTIFACT_TARGETING = new Map<string, ArtifactTargeting>([
   ['coreforge', (grid, team) => [rearmostUnit(grid, team)]],
 ])
 
+export function artifactCanDraw(artifactName: string | undefined): boolean {
+  return artifactName !== undefined && ARTIFACT_TARGETING.has(artifactName)
+}
+
 export function artifactTargetArrows(
   grid: Grid,
   team: Team,

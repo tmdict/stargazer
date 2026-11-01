@@ -667,20 +667,39 @@ describe('useGrids hidden skills', () => {
     expect(b.getTileColorModifier(19)).toBeDefined()
   })
 
-  it('hides one side of a board artifact and lists it while it draws', () => {
+  it('adds a unit able to draw the moment it is placed, with nothing drawn', () => {
+    const { grids, a } = setupBoards(1)
+    expect(grids.skillRows).toEqual([])
+
+    a.place(2, SILVINA, Team.ALLY)
+
+    expect(a.skillTargets.size).toBe(0)
+    expect(grids.skillRows.map((row) => row.key)).toEqual([unitSkillKey(SILVINA, Team.ALLY)])
+  })
+
+  it('hides one side of a board artifact and lists it before it draws', () => {
     useGameDataStore().initializeContentData()
     const { grids, a } = setupBoards(1)
     a.setArtifact(Team.ALLY, ENLIGHTENING)
     a.setArtifact(Team.ENEMY, ENLIGHTENING)
     const key = artifactSkillKey(ENLIGHTENING, Team.ALLY)
-    expect(grids.skillRows.find((row) => row.key === key)?.drawing).toBe(false)
+    expect(a.artifactArrows).toEqual([])
+    expect(grids.skillRows.map((row) => row.key)).toContain(key)
 
     a.place(1, ALLY_A, Team.ALLY)
     a.place(40, ENEMY_A, Team.ENEMY)
-    expect(grids.skillRows.find((row) => row.key === key)?.drawing).toBe(true)
-
     grids.setSkillsHidden([key], true)
     expect(a.artifactArrows.map((arrow) => arrow.team)).toEqual([Team.ENEMY])
+  })
+
+  it('gives an artifact with no targeting rule no row', () => {
+    const gameData = useGameDataStore()
+    gameData.initializeContentData()
+    const { grids, a } = setupBoards(1)
+
+    a.setArtifact(Team.ALLY, gameData.artifacts.find(({ name }) => name === 'awakening')!.id)
+
+    expect(grids.skillRows).toEqual([])
   })
 })
 

@@ -18,7 +18,6 @@ import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const {
   characters,
@@ -32,7 +31,7 @@ const {
   scrollable?: boolean
 }>()
 
-const { fillOrder, targetHexId, targetGridId, clearTargetHex, requestTab } = useSelectionState()
+const { fillOrder, targetHexId, targetTile, clearTargetHex, requestTab } = useSelectionState()
 const grids = useGrids()
 const i18n = useI18nStore()
 const toast = useToast()
@@ -59,8 +58,6 @@ const placedTeam = (characterId: number): Team | null => {
   return null
 }
 
-const isCharacterPlaced = (characterId: number): boolean => placedTeam(characterId) !== null
-
 // While Syn is armed and the placed hero's own team still has a free assist
 // slot, the next click places the duplicate, so the grey-out lifts to match.
 const synergyCopyAvailable = (characterId: number): boolean => {
@@ -74,15 +71,24 @@ const synergyCopyAvailable = (characterId: number): boolean => {
   )
 }
 
+// A click on a dimmed hero removes it, or does nothing on a targeted tile, which
+// only places. A hero on the other side can still fill that tile.
+const isDimmed = (character: CharacterType): boolean => {
+  const tile = targetTile.value
+  if (tile) return grids.resolvePick(tile.ctx, character.id, tile.team, tile.hexId) === null
+  return (
+    !character.placeholder &&
+    placedTeam(character.id) !== null &&
+    !synergyCopyAvailable(character.id)
+  )
+}
+
 const handleCharacterClick = (character: CharacterType) => {
   // Mobile: a tapped tile targets a specific cell on its board. Place the hero
   // there using that tile's team, on that board (not whichever board is active).
-  if (targetHexId.value !== null && targetGridId.value !== null) {
-    const ctx = grids.getContext(targetGridId.value)
-    if (ctx) {
-      const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
-      if (team) grids.placePick(ctx, character.id, team, targetHexId.value)
-    }
+  if (targetHexId.value !== null) {
+    const tile = targetTile.value
+    if (tile) grids.placePick(tile.ctx, character.id, tile.team, tile.hexId)
     clearTargetHex()
     return
   }
@@ -114,12 +120,10 @@ const handleResultSelect = (slug: string) => {
     toast.show(i18n.t('app.no-available-heroes'), 'info')
     return
   }
-  if (
-    targetHexId.value === null &&
-    isCharacterPlaced(character.id) &&
-    !synergyCopyAvailable(character.id)
-  ) {
-    toast.show(i18n.t('app.search-already-placed'), 'info')
+  if (isDimmed(character)) {
+    const message = targetTile.value ? 'app.search-cannot-place' : 'app.search-already-placed'
+    toast.show(i18n.t(message), 'info')
+    clearTargetHex()
     return
   }
   handleCharacterClick(character)
@@ -156,11 +160,7 @@ const handleResultSelect = (slug: string) => {
         :key="character.id"
         :character
         :is-draggable
-        :dimmed="
-          !character.placeholder &&
-          isCharacterPlaced(character.id) &&
-          !synergyCopyAvailable(character.id)
-        "
+        :dimmed="isDimmed(character)"
         :show-energy="energyPicked"
         inspectable
         :inspect-chips
