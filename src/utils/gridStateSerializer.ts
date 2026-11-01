@@ -34,7 +34,7 @@ export interface DisplayFlags {
 }
 
 export function serializeGridState(
-  allTiles: GridTile[],
+  allTiles: readonly GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
@@ -176,7 +176,7 @@ export interface MultiGridState {
 }
 
 export interface BoardInput {
-  tiles: GridTile[]
+  tiles: readonly GridTile[]
   allyArtifact: number | null
   enemyArtifact: number | null
   map: string

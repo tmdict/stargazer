@@ -123,9 +123,15 @@ export class PlacementScorer {
   readonly skipped: SkippedRule[] = []
   private readonly effects: Effect[] = []
   private readonly threatEffects: Effect[] = []
+  // threatEffects' indexes, the heaviest rule first, each with the most the
+  // rules after it can add.
+  private readonly heaviest: { index: number; rest: number }[] = []
+  // The most threats() can give, every enemy rule's goal met.
+  readonly threatCeiling: number
   private readonly mustHold: FormationRule[]
   private readonly usually: FormationRule[]
   private readonly lists = new Map<string, number[] | undefined>()
+  private readonly rankings = new Map<string, number[]>()
   private readonly enemyTiles: Set<number>
   // Ascending, the tiles an enemy unit is tried on.
   private readonly enemyOrder: number[]
@@ -225,6 +231,16 @@ export class PlacementScorer {
         },
       ])
     }
+
+    const order = [...this.threatEffects.keys()].sort(
+      (a, b) => this.threatEffects[b]!.weight - this.threatEffects[a]!.weight,
+    )
+    let rest = 0
+    for (let k = order.length - 1; k >= 0; k--) {
+      this.heaviest[k] = { index: order[k]!, rest }
+      rest += Math.max(0, this.threatEffects[order[k]!]!.weight)
+    }
+    this.threatCeiling = rest
   }
 
   // The board's score as it stands.
@@ -241,9 +257,24 @@ export class PlacementScorer {
   // The points for the enemy units' rules the board blunts, each scaled by how
   // often its unit is on the map.
   threats(): number {
-    let points = 0
-    for (const effect of this.threatEffects) points += effect.weight * (this.meet(effect) ?? 0)
-    return points
+    return this.threatsReaching(-Infinity)!
+  }
+
+  // threats(), or null once the board cannot reach `needed`: the heaviest rules
+  // are read first and the rest counted at their most. The points are added in
+  // the rules' own order, so the sum is the same whichever order they were read in.
+  threatsReaching(needed: number): number | null {
+    const points = new Array<number>(this.threatEffects.length).fill(0)
+    let read = 0
+    for (const { index, rest } of this.heaviest) {
+      const effect = this.threatEffects[index]!
+      points[index] = effect.weight * (this.meet(effect) ?? 0)
+      read += points[index]!
+      if (read + rest < needed) return null
+    }
+    let sum = 0
+    for (const value of points) sum += value
+    return sum
   }
 
   // Every rule's check, the enemy units' last.
@@ -348,9 +379,15 @@ export class PlacementScorer {
   // The team's heroes, the effect's holder left out, in the order of the rule's
   // list, or of the fallback list when the team has none of its own list's.
   private ranked(name: string, holder: number | undefined): number[] {
-    const others = this.heroes.filter((hero) => hero !== holder)
-    const order = this.list(name)!.filter((hero) => others.includes(hero))
-    return order.length ? order : this.list(FALLBACK_LIST)!.filter((hero) => others.includes(hero))
+    const key = `${name}|${holder}`
+    let order = this.rankings.get(key)
+    if (!order) {
+      const others = this.heroes.filter((hero) => hero !== holder)
+      order = this.list(name)!.filter((hero) => others.includes(hero))
+      if (!order.length) order = this.list(FALLBACK_LIST)!.filter((hero) => others.includes(hero))
+      this.rankings.set(key, order)
+    }
+    return order
   }
 
   // The share met, averaged over the ways the effect can stand where it applies.

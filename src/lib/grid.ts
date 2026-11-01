@@ -23,9 +23,12 @@ export interface GridTile {
 
 export class Grid {
   private storage: Map<string, GridTile>
-  // Parallel ID index for O(1) getHexById. Hexes are immutable after construction,
-  // so this never needs invalidation.
+  // Parallel ID indexes for O(1) getHexById and getTileById, and the tiles in
+  // storage order for getAllTiles. Tiles are created only in the constructor, so
+  // these never need invalidation.
   private hexById: Map<number, Hex> = new Map()
+  private tileById: Map<number, GridTile> = new Map()
+  private tiles: GridTile[] = []
 
   maxTeamSizes: Map<Team, number> = new Map([
     [Team.ALLY, BASE_TEAM_SIZE],
@@ -43,8 +46,11 @@ export class Grid {
   constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
     this.storage = new Map()
     presetHexes(layout).forEach((hex) => {
-      this.storage.set(Grid.key(hex), { hex, state: State.DEFAULT })
+      const tile: GridTile = { hex, state: State.DEFAULT }
+      this.storage.set(Grid.key(hex), tile)
       this.hexById.set(hex.getId(), hex)
+      this.tileById.set(hex.getId(), tile)
+      this.tiles.push(tile)
     })
     map.grid.forEach((mapState) => {
       mapState.hex.forEach((hexId) => {
@@ -59,7 +65,7 @@ export class Grid {
   }
 
   keys(): Hex[] {
-    return Array.from(this.storage.values()).map((entry) => entry.hex)
+    return this.tiles.map((entry) => entry.hex)
   }
 
   getHexById(id: number): Hex {
@@ -86,12 +92,14 @@ export class Grid {
   }
 
   getTileById(hexId: number): GridTile {
-    const hex = this.getHexById(hexId)
-    return this.getTile(hex)
+    const tile = this.tileById.get(hexId)
+    if (!tile) throw new Error(`Hex with ID ${hexId} not found`)
+    return tile
   }
 
-  getAllTiles(): GridTile[] {
-    return Array.from(this.storage.values())
+  // The same array on every call, so callers must not change it.
+  getAllTiles(): readonly GridTile[] {
+    return this.tiles
   }
 
   setState(hex: Hex, state: State): void {

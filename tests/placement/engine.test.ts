@@ -56,6 +56,7 @@ const FULL_LIMIT = 700_000
 const TUNE = process.env.PLACEMENT_TUNE?.split(',').filter(Boolean) ?? []
 const TUNE_SHARES = [0, 0.1, 0.25, 0.5, 1]
 const UNITS = process.env.PLACEMENT_UNITS?.split(',').filter(Boolean) ?? []
+const COMPARE = process.env.PLACEMENT_COMPARE
 
 const LIVE = Math.max(...loadPhantimals().map((phantimal) => phantimal.season))
 
@@ -679,8 +680,42 @@ ul{margin:6px 0 0;padding-left:18px;font-size:12px}li.met b{color:var(--met)}li.
 pre{white-space:pre-wrap;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto}
 </style></head><body><h1>Placement review</h1><p>The engine's formation for the ${top.length} most used teams of Season ${LIVE}, beside the players' most common formations for the same team on the same map. Hover a name for the whole of it.</p><pre>${esc(lines.join('\n'))}</pre>${sections.join('')}</body></html>
 `
+    // Each team's pick and what the search found, so two runs of the engine can
+    // be compared team by team.
+    const picks = [...results]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([key, { result }]) => ({
+        key,
+        positions: result.positions,
+        score: result.score,
+        best: result.best,
+        threats: result.threats,
+        equallyGood: result.equallyGood,
+        complete: result.complete,
+        kept: result.kept,
+      }))
+    if (COMPARE) {
+      type Pick = (typeof picks)[number]
+      const earlier = new Map(
+        (JSON.parse(readFileSync(COMPARE, 'utf8')) as Pick[]).map((pick) => [pick.key, pick]),
+      )
+      const both = picks.filter((pick) => earlier.has(pick.key))
+      const moved = both.flatMap((pick) => {
+        const before = earlier.get(pick.key)!
+        const fields = (Object.keys(pick) as (keyof Pick)[]).filter(
+          (field) => JSON.stringify(pick[field]) !== JSON.stringify(before[field]),
+        )
+        return fields.length ? [`${pick.key}: ${fields.join(', ')}`] : []
+      })
+      log()
+      log(
+        `Against ${COMPARE}: ${both.length - moved.length} of the ${both.length} teams both runs placed come out the same`,
+      )
+      for (const line of moved.slice(0, 10)) log(`  ${line}`)
+    }
     mkdirSync(OUT, { recursive: true })
     writeFileSync(join(OUT, 'measures.txt'), `${lines.join('\n')}\n`)
+    writeFileSync(join(OUT, 'picks.json'), `${JSON.stringify(picks)}\n`)
     writeFileSync(join(OUT, 'review.html'), page)
     console.log(lines.join('\n'))
   }, 3_600_000)

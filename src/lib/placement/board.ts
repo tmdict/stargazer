@@ -66,7 +66,8 @@ export class PlacementBoard {
   // of `units`). The units that move are all lifted before any is put down, so
   // two can trade tiles.
   place(positions: readonly number[]): void {
-    const moving = this.units.flatMap((_, i) => (positions[i] === this.at[i] ? [] : [i]))
+    const moving: number[] = []
+    for (let i = 0; i < this.units.length; i++) if (positions[i] !== this.at[i]) moving.push(i)
     if (!moving.length) return
     for (const i of moving) performRemove(this.grid, this.at[i]!)
     for (const i of moving) {

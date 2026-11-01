@@ -1,4 +1,3 @@
-import { getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
@@ -19,13 +18,11 @@ export interface TargetCandidate {
 export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
-  const tilesWithCharacters = getTilesWithCharacters(grid)
-
-  for (const tile of tilesWithCharacters) {
-    if (tile.team === team) {
+  for (const tile of grid.getAllTiles()) {
+    if (tile.characterId !== undefined && tile.team === team) {
       characters.push({
         hexId: tile.hex.getId(),
-        characterId: tile.characterId!,
+        characterId: tile.characterId,
         distances: new Map(),
       })
     }
@@ -113,19 +110,13 @@ export function findAdjacentPriorityTarget(
     ? [3, 4, 2] // bottom-left, left, bottom-right
     : [0, 1, 5] // top-right, right, top-left
 
-  const candidateMap = new Map(
-    getCandidates(grid, team, characterId)
-      .filter((c) => isCandidate(c.characterId))
-      .map((c) => [c.hexId, c]),
-  )
-
   for (const dir of priorityDirections) {
     const tile = grid.getTileOrUndefined(centerHex.neighbor(dir))
-    const candidate = tile && candidateMap.get(tile.hex.getId())
-    if (candidate) {
+    const unit = tile?.characterId
+    if (unit !== undefined && tile!.team === team && unit !== characterId && isCandidate(unit)) {
       return {
-        targetHexId: candidate.hexId,
-        targetCharacterId: candidate.characterId,
+        targetHexId: tile!.hex.getId(),
+        targetCharacterId: unit,
         metadata: { sourceHexId: hexId, distance: 1 },
       }
     }

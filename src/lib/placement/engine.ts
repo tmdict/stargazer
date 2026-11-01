@@ -261,29 +261,41 @@ export function placeTeam(
   // The highest total among them, the enemy units' rules counted, then the
   // lowest tiles in the units' order. The enemy units' rules are read only
   // here, since each is tried on every enemy tile and a team's own goals come
-  // first.
+  // first. They add at most their ceiling, so once a placement's own total
+  // falls that far below the best so far, it and every lower one are passed by,
+  // and a placement's rules stop being read once the rest cannot lift it to the
+  // best.
   const byTiles = (a: number[], b: number[]) => {
     const i = a.findIndex((hexId, k) => hexId !== b[k])
     return i < 0 ? 0 : a[i]! - b[i]!
   }
-  const pick = keys
-    .map((key) => {
-      const positions = positionsOf(key)
-      board.place(positions)
-      return { positions, total: search.scores.get(key)!.total + scorer.threats() }
-    })
-    .sort(
-      (a, b) =>
-        (Math.abs(a.total - b.total) > EPS ? b.total - a.total : 0) ||
-        byTiles(a.positions, b.positions),
-    )[0]!
-  board.place(pick.positions)
+  const ceiling = scorer.threatCeiling
+  const byTotal = keys
+    .map((key) => ({ positions: positionsOf(key), total: search.scores.get(key)!.total }))
+    .sort((a, b) => b.total - a.total)
+  let pick: { positions: number[]; total: number } | undefined
+  for (const { positions, total: own } of byTotal) {
+    if (pick && own + ceiling < pick.total - EPS) break
+    board.place(positions)
+    const threats = scorer.threatsReaching(pick ? pick.total - EPS - own : -Infinity)
+    if (threats === null) continue
+    const total = own + threats
+    if (
+      !pick ||
+      (Math.abs(total - pick.total) > EPS
+        ? total > pick.total
+        : byTiles(positions, pick.positions) < 0)
+    ) {
+      pick = { positions, total }
+    }
+  }
+  board.place(pick!.positions)
   const kept = team.heroes.map((_, i) =>
     [...new Set(keys.map((key) => positionsOf(key)[i]!))].sort((a, b) => a - b),
   )
   return {
     units: board.units,
-    positions: pick.positions,
+    positions: pick!.positions,
     score: scorer.score(),
     best: search.best(),
     threats: scorer.threats(),

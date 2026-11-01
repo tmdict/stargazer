@@ -57,7 +57,7 @@ export function getTilesWithCharacters(grid: Grid): GridTile[] {
 }
 
 export function getTilesWithCharactersByTeam(grid: Grid, team: Team): GridTile[] {
-  return getTilesWithCharacters(grid).filter((tile) => tile.team === team)
+  return grid.getAllTiles().filter((tile) => tileHasCharacter(tile) && tile.team === team)
 }
 
 // A base hero, as opposed to a skill-spawned companion, a seasonal phantimal, or
@@ -109,7 +109,7 @@ export function setMaxTeamSize(grid: Grid, team: Team, size: number): boolean {
 }
 
 export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
-  return getTilesWithCharactersByTeam(grid, team).some((tile) => tile.characterId === characterId)
+  return findCharacterHex(grid, characterId, team) !== null
 }
 
 export function getAvailableTeamSize(grid: Grid, team: Team): number {
@@ -117,9 +117,17 @@ export function getAvailableTeamSize(grid: Grid, team: Team): number {
   // but don't hold a team slot (the synergy hero is the friend-assist "+1";
   // companions it spawns count like any other, balanced by their skill's
   // capacity bump).
-  const occupied = getTilesWithCharactersByTeam(grid, team).filter(
-    (tile) => !inPhantimalBand(tile.characterId!) && !isSynergyHeroId(tile.characterId!),
-  ).length
+  let occupied = 0
+  for (const { characterId, team: side } of grid.getAllTiles()) {
+    if (
+      characterId !== undefined &&
+      side === team &&
+      !inPhantimalBand(characterId) &&
+      !isSynergyHeroId(characterId)
+    ) {
+      occupied++
+    }
+  }
   return getMaxTeamSize(grid, team) - occupied
 }
 
