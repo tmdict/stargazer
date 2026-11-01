@@ -11,8 +11,11 @@ import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 // Scores closer than this are equal, so sums of the same weights in another
 // order compare equal.
 const EPS = 1e-9
-// The local search climbs from this many placements drawn at random.
-const STARTS = 16
+// The local search climbs from this many placements drawn at random. A goal
+// that three units must move together to meet, such as two heroes of one
+// faction between the twins, is reached only from a start near it: 16
+// starts left it unmet for about one Season 8 team in ten that could meet it.
+const STARTS = 32
 // The count of equally good placements stops here.
 const EQUAL_CAP = 1000
 

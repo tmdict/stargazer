@@ -12,8 +12,10 @@ export type RuleGoal =
   | { avoid: string }
   | { include: string }
   | { atMost: number }
-  // sameFaction: the units counted also share one faction.
-  | { exactly: number; sameFaction?: true }
+  // sameFaction: the units counted also share one faction. nonHero: the share of
+  // the goal met when a unit other than the team's heroes, such as a phantimal,
+  // is among them, all of it when unset.
+  | { exactly: number; sameFaction?: true; nonHero?: number }
   // A bare most counts the enemy tiles among the tiles the effect marks, and
   // walls the walls on the enemy's side among them.
   | 'most'

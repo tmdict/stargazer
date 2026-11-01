@@ -387,10 +387,14 @@ export class PlacementScorer {
     }
     if ('atMost' in goal) return unitsOn(marked).size <= goal.atMost ? 1 : 0
     if ('exactly' in goal) {
-      const on = unitsOn(marked)
-      if (on.size !== goal.exactly) return 0
-      if (!goal.sameFaction) return 1
-      return new Set([...on].map((unit) => this.board.lookups.factionOf(unit))).size === 1 ? 1 : 0
+      const on = [...unitsOn(marked)]
+      if (on.length !== goal.exactly) return 0
+      if (
+        goal.sameFaction &&
+        new Set(on.map((unit) => this.board.lookups.factionOf(unit))).size !== 1
+      )
+        return 0
+      return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
     }
 
     const order = this.ranked(goalList(goal)!, self)

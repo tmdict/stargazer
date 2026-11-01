@@ -373,7 +373,9 @@ const SKILL = {
           <li>
             <span>
               Choose <b>SL</b> for the Supreme League maps, <b>5v5</b> to use map 1 for all five, or
-              <b>3v3</b> to use it for all three. Then press <b>Generate</b>.
+              <b>3v3</b> to use it for all three. Choose <b>Recorded</b> to see each team as players
+              placed it in recorded games, or <b>Generated</b> to have each hero's tile worked out
+              for you. Then press <b>Generate</b>.
             </span>
           </li>
           <li>

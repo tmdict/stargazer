@@ -28,12 +28,17 @@ const MOST_KINDS = new Set(['walls'])
 function goalProblem(goal: unknown): string | null {
   if (goal === 'most' || goal === 'none') return null
   if (typeof goal !== 'object' || goal === null) return `the goal ${JSON.stringify(goal)}`
-  const { sameFaction, ...words } = goal as Record<string, unknown>
+  const { sameFaction, nonHero, ...words } = goal as Record<string, unknown>
   const entries = Object.entries(words)
   if (entries.length !== 1) return 'a goal of more than one word'
   const [word, value] = entries[0]!
   if (sameFaction !== undefined && (word !== 'exactly' || sameFaction !== true))
     return 'sameFaction off an exactly goal'
+  if (
+    nonHero !== undefined &&
+    (word !== 'exactly' || typeof nonHero !== 'number' || !(nonHero >= 0 && nonHero < 1))
+  )
+    return 'nonHero off an exactly goal, or not a share below 1'
   if (LIST_GOALS.has(word))
     return typeof value === 'string' && value !== '' ? null : `${word} names no list`
   if (COUNT_GOALS.has(word))

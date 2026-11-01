@@ -13,9 +13,6 @@ export interface SlShownTeam extends Pick<
   group: Pick<SlFamily, 'name' | 'core'> | null
 }
 
-// Where the boards' heroes stand: as recorded, or in the engine's formation.
-export type SlFormation = 'recorded' | 'suggested'
-
 export interface SlShown {
   // The type the set was chosen for.
   type: SlSetType
@@ -34,8 +31,8 @@ export interface SlShown {
 
 <script setup lang="ts">
 /* The chosen set: its chance to win the match with a tooltip and a line on
-   what it is measured against, the formation switch, the explanation, Save as
-   team, and one column per board. */
+   what it is measured against, the explanation, Save as team, and one column
+   per board. */
 
 import { computed, ref } from 'vue'
 
@@ -44,7 +41,6 @@ import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
-import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { slSetMode } from '@/lib/pvp/sl/generator/setType'
@@ -53,26 +49,12 @@ import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slMood, slPercent } from './useSlNames'
 
-// placing: the engine's formations are being worked out.
-const { shown, saveArmed, formation, placing } = defineProps<{
-  shown: SlShown
-  saveArmed: boolean
-  formation: SlFormation
-  placing: boolean
-}>()
+const { shown, saveArmed } = defineProps<{ shown: SlShown; saveArmed: boolean }>()
 
-const emit = defineEmits<{ save: []; formation: [formation: SlFormation] }>()
+const emit = defineEmits<{ save: [] }>()
 
 const i18n = useI18nStore()
 const boards = computed(() => teamPreviewBoards(shown.data) ?? [])
-const formations = computed(() =>
-  (
-    [
-      ['recorded', i18n.t('app.sl-formation-recorded')],
-      ['suggested', i18n.t('app.sl-formation-suggested')],
-    ] as const
-  ).map(([key, label]) => ({ key, label, selected: key === formation })),
-)
 const explaining = ref(false)
 
 const {
@@ -110,12 +92,6 @@ const {
         <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
       </span>
       <span class="sl-actions">
-        <SegmentedPicker
-          :segments="formations"
-          :aria-label="i18n.t('app.sl-formation')"
-          :aria-busy="placing"
-          @select="emit('formation', $event)"
-        />
         <button type="button" class="solid-btn sl-action outline" @click="explaining = true">
           <IconHelpSmall :size="14" />
           {{ i18n.t('app.sl-explain') }}
@@ -134,7 +110,7 @@ const {
         </button>
       </span>
     </div>
-    <div class="sl-maps" :class="{ placing }">
+    <div class="sl-maps">
       <SlMapColumn v-for="(team, index) in shown.teams" :key="index" :team :board="boards[index]" />
     </div>
 
@@ -224,10 +200,6 @@ const {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   padding: 24px 16px;
-}
-
-.sl-maps.placing {
-  opacity: 0.6;
 }
 
 @container (min-width: 1171px) {

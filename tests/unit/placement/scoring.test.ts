@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { toPhantimalId } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
@@ -17,6 +19,11 @@ const TAICHI = 123
 const GUNNAR = 106
 const GWYNETH = 115
 const ALICETH = 91
+const TWINS = 68
+const ROLAN = 121
+const LILY_MAY = 54
+const MEHIRA = 94
+const WEDGE_OF_MATTER = toPhantimalId(5)
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
 const MAP = 'arena2'
@@ -29,6 +36,7 @@ const DATA: PlacementData = {
     taichi: [{ list: 'temp-buff' }, { list: 'damage' }],
     gunnar: [GWYNETH],
     tank: [ALNA],
+    melee: [ALNA],
   },
   leans: { front: [], back: [] },
   formationRules: [],
@@ -101,6 +109,28 @@ describe('placement scoring', () => {
     expect(scorer.score()).toEqual(scoredAt(back).score())
     const front = { [ALNA]: 13, [SYLPHIRA]: 5, [ORION]: 6, [PERSEUS]: 8, [DIONEL]: 1 }
     expect(metOf(scoredAt(front, data), ALICETH)).toBe(0)
+  })
+
+  // Elijah on tile 1 and Lailah on 10 have tiles 4 and 7 between them. The
+  // Wedge of Matter is of Rolan and Sylphira's faction, yet stands where a hero
+  // would gain more from the bond.
+  it('meets the twins goal with two heroes of one faction between them, and a tenth of it with a phantimal', () => {
+    const team = { heroes: [LILY_MAY, TWINS, MEHIRA, SYLPHIRA, ROLAN], phantimal: WEDGE_OF_MATTER }
+    const twinsMet = (between: [number, number]) => {
+      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(board, team, DATA, { buffTiles: true })
+      const fixed = new Map([
+        [TWINS, 1],
+        [TWINS + COMPANION_ID_OFFSET, 10],
+        [between[0], 4],
+        [between[1], 7],
+      ])
+      const free = board.tiles.filter((tile) => ![...fixed.values()].includes(tile))
+      board.place(board.units.map((unit) => fixed.get(unit) ?? free.shift()!))
+      return metOf(scorer, TWINS)
+    }
+    expect(twinsMet([SYLPHIRA, ROLAN])).toBe(1)
+    expect(twinsMet([ROLAN, WEDGE_OF_MATTER])).toBe(0.1)
   })
 })
 

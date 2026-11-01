@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
+import SlFormationPicker from '@/components/guide/sl/SlFormationPicker.vue'
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
 import SlTypePicker from '@/components/guide/sl/SlTypePicker.vue'
@@ -53,8 +54,9 @@ const characterId = (slug: string): number =>
           <UpgradeDockLabel>{{ label('sl-roster') }}</UpgradeDockLabel>
           <DropdownSelect :label="ROSTER_NAME" lit />
         </div>
-        <div class="help-mock-bar">
+        <div class="help-mock-bar help-sl-choices">
           <SlTypePicker type="sl" />
+          <SlFormationPicker formation="recorded" />
           <span class="solid-btn help-sl-action">{{ label('sl-generate') }}</span>
         </div>
         <div class="help-heroes">
@@ -99,6 +101,10 @@ const characterId = (slug: string): number =>
 </template>
 
 <style scoped>
+.help-sl-choices {
+  flex-wrap: wrap;
+}
+
 .help-sl-board {
   display: block;
   width: 190px;

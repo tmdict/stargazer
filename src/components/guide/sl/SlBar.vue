@@ -1,7 +1,9 @@
 <script setup lang="ts">
-/* The generator's roster bar, with the type of set to generate. Picking or
-   importing a roster makes it the active one, which the page copies. */
+/* The generator's roster bar, with the type of set to generate and the
+   formation its boards are drawn in. Picking or importing a roster makes it the
+   active one, which the page copies. */
 
+import SlFormationPicker, { type SlFormation } from './SlFormationPicker.vue'
 import SlTypePicker from './SlTypePicker.vue'
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
@@ -15,6 +17,7 @@ const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; wa
 const emit = defineEmits<{ generate: [] }>()
 
 const type = defineModel<SlSetType>('type', { required: true })
+const formation = defineModel<SlFormation>('formation', { required: true })
 
 const i18n = useI18nStore()
 </script>
@@ -26,6 +29,7 @@ const i18n = useI18nStore()
     <span class="sl-bar-actions">
       <RosterTransferActions />
       <SlTypePicker :type @select="type = $event" />
+      <SlFormationPicker :formation @select="formation = $event" />
       <button
         type="button"
         class="solid-btn sl-action"
