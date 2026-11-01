@@ -4,7 +4,8 @@
  * Each recorded board is rebuilt on Stargazer's grid and its skills, artifacts
  * and charms run as the site runs them. The report says who each effect landed
  * on, and drafts each list the rules name from the teammates players gave the
- * effect to. Left out when PLACEMENT_EXPORT is not set. */
+ * effect to. landings.json beside it holds each recorded side's landings by
+ * record and map. Left out when PLACEMENT_EXPORT is not set. */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -300,10 +301,16 @@ function rulesOf(name: string): readonly Rule[] {
 describe.skipIf(!EXPORT)('placement review', () => {
   it('reports who each effect landed on and drafts the lists', () => {
     if (!OUT) throw new Error('PLACEMENT_OUT names the folder the report goes to')
-    const exported = JSON.parse(readFileSync(EXPORT!, 'utf8')) as { teams: { data: string }[] }
-    const sides = exported.teams.flatMap((record) =>
-      (decodeMultiGridStateFromUrl(record.data)?.boards ?? []).flatMap(sidesOf),
+    const exported = JSON.parse(readFileSync(EXPORT!, 'utf8')) as {
+      teams: { name: string; data: string }[]
+    }
+    const boards = exported.teams.flatMap((record) =>
+      (decodeMultiGridStateFromUrl(record.data)?.boards ?? []).map((board, i) => {
+        const [ally, enemy] = sidesOf(board)
+        return { record: record.name, map: i + 1, arena: resolveBoardMap(board), ally, enemy }
+      }),
     )
+    const sides = boards.flatMap(({ ally, enemy }) => [ally!, enemy!])
 
     const tallies = new Map<string, Tally>()
     const use = new Map<string, number>()
@@ -381,5 +388,6 @@ describe.skipIf(!EXPORT)('placement review', () => {
     expect(sides.length, 'boards read from the export').toBeGreaterThan(0)
     mkdirSync(OUT, { recursive: true })
     writeFileSync(join(OUT, 'review.json'), `${JSON.stringify(report, null, 1)}\n`)
+    writeFileSync(join(OUT, 'landings.json'), `${JSON.stringify(boards)}\n`)
   })
 })
