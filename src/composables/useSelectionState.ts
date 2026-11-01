@@ -74,7 +74,6 @@ export function useSelectionState() {
   // Click-to-add fills the ally side first, then the enemy side.
   const fillOrder: Team[] = [Team.ALLY, Team.ENEMY]
 
-  // The targeted tile with its board and side, which decide what a pick can do.
   const targetTile = computed(() => {
     const hexId = targetHexId.value
     const ctx = targetGridId.value === null ? undefined : grids.getContext(targetGridId.value)

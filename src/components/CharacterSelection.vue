@@ -71,8 +71,7 @@ const synergyCopyAvailable = (characterId: number): boolean => {
   )
 }
 
-// A click on a dimmed hero removes it, or does nothing on a targeted tile, which
-// only places. A hero on the other side can still fill that tile.
+// A targeted tile only places, so there a hero dims for that tile's side alone.
 const isDimmed = (character: CharacterType): boolean => {
   const tile = targetTile.value
   if (tile) return grids.resolvePick(tile.ctx, character.id, tile.team, tile.hexId) === null

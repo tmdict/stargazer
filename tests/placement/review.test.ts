@@ -23,8 +23,9 @@ import { executePlaceCharacter } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { availableState, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
+import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
-import { getCharacterSkill, SkillManager, type SkillLookups } from '@/lib/skills/skill'
+import { getCharacterSkill, SkillManager } from '@/lib/skills/skill'
 import { findUnitBehind, findUnitInFront } from '@/lib/skills/utils/targeting'
 import { FULL_GRID } from '@/lib/types/grid'
 import type { Rule } from '@/lib/types/rule'
@@ -49,13 +50,6 @@ const charms = new Map<string, CharmData>(
 )
 
 const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
-
-const LOOKUPS: SkillLookups = {
-  factionOf: (id) =>
-    inPhantimalBand(id) ? phantimalOf(id)?.faction : heroById.get(toBaseHeroId(id))?.faction,
-  classOf: (id) => (inPhantimalBand(id) ? undefined : heroById.get(toBaseHeroId(id))?.class),
-  seasonalTargeting: (id) => inPhantimalBand(id) && phantimalOf(id)?.targeting === true,
-}
 
 // A unit as the rules name it: a hero (a companion as its hero) or a phantimal
 // (its companion as the phantimal).
@@ -85,7 +79,7 @@ function restoreBand(grid: Grid, entries: number[][], toUnitId: (local: number) 
 
 function rebuild(board: BoardState): Grid {
   const grid = new Grid(FULL_GRID, getMapByKey(resolveBoardMap(board)))
-  grid.skillManager = new SkillManager(LOOKUPS)
+  grid.skillManager = new SkillManager(PLACEMENT_LOOKUPS)
   for (const [hexId, state] of board.t ?? []) {
     grid.setState(grid.getHexById(hexId!), availableState(state!))
   }
@@ -141,7 +135,7 @@ function sidesOf(board: BoardState): Side[] {
       if (tile.characterId === undefined) continue
       const mine = tile.team === team
       counts[mine ? 'ally' : 'enemy']++
-      if (mine) factions.add(LOOKUPS.factionOf(tile.characterId))
+      if (mine) factions.add(PLACEMENT_LOOKUPS.factionOf(tile.characterId))
     }
     const own = [...deploymentTiles(map, team)].filter((hexId) => hexId !== holder?.hexId)
     const units = grid
@@ -185,7 +179,14 @@ function sidesOf(board: BoardState): Side[] {
       const charm = isHero ? getCharmForHero(name) : null
       for (const rule of charm?.rules ?? []) {
         if (!rule.tile) continue
-        const ctx = { grid, hexId, team, characterId: id, skillManager: manager, lookups: LOOKUPS }
+        const ctx = {
+          grid,
+          hexId,
+          team,
+          characterId: id,
+          skillManager: manager,
+          lookups: PLACEMENT_LOOKUPS,
+        }
         const found = rule.tile === 'behind' ? findUnitBehind(ctx) : findUnitInFront(ctx)
         side.landings.push(
           landing(

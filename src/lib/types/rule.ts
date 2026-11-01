@@ -5,7 +5,7 @@
 export type RuleTeam = 'ally' | 'enemy'
 
 // The place a charm acts on, for a unit no skill places.
-export type RuleTile = 'behind' | 'front'
+type RuleTile = 'behind' | 'front'
 
 export type RuleGoal =
   | { target: string }

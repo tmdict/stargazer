@@ -62,6 +62,10 @@ export class PlacementBoard {
     return this.at
   }
 
+  tileOf(unit: number): number {
+    return this.at[this.units.indexOf(unit)]!
+  }
+
   // Puts each unit on its tile in `positions` (distinct ally tiles, in the order
   // of `units`). The units that move are all lifted before any is put down, so
   // two can trade tiles.

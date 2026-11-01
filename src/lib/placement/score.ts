@@ -74,7 +74,6 @@ interface Effect {
 const identity = (unitId: number): number =>
   inPhantimalBand(unitId) ? phantimalOwnerId(unitId) : toBaseHeroId(unitId)
 
-// Where a unit's skill lands and the tiles it marks, as the board stands.
 function reachOf(manager: SkillManager, unit: number, team: Team): Reach {
   const target = manager.getSkillTarget(unit, team)
   const landed = target?.metadata?.arrows?.map((arrow) => arrow.toHexId) ?? []
@@ -102,16 +101,12 @@ function expandList(
   return heroes
 }
 
-const goalList = (goal: RuleGoal): string | undefined =>
-  typeof goal === 'object'
-    ? 'target' in goal
-      ? goal.target
-      : 'include' in goal
-        ? goal.include
-        : 'avoid' in goal
-          ? goal.avoid
-          : undefined
-    : undefined
+function goalList(goal: RuleGoal): string | undefined {
+  if (typeof goal !== 'object') return undefined
+  if ('target' in goal) return goal.target
+  if ('include' in goal) return goal.include
+  return 'avoid' in goal ? goal.avoid : undefined
+}
 
 /**
  * Scores the board a team stands on: its own rules, the rules of the enemy units
@@ -243,7 +238,6 @@ export class PlacementScorer {
     this.threatCeiling = rest
   }
 
-  // The board's score as it stands.
   score(): PlacementScore {
     let goals = this.weights.buff * this.onBuffTiles()
     for (const effect of this.effects) goals += effect.weight * (this.meet(effect) ?? 0)
@@ -277,7 +271,6 @@ export class PlacementScorer {
     return sum
   }
 
-  // Every rule's check, the enemy units' last.
   goals(): GoalCheck[] {
     return [...this.effects, ...this.threatEffects].map((effect) => ({
       source: effect.source,
@@ -368,7 +361,7 @@ export class PlacementScorer {
   private contextOf(board: PlacementBoard, unit: number): SkillContext {
     return {
       grid: board.grid,
-      hexId: board.positions[board.units.indexOf(unit)]!,
+      hexId: board.tileOf(unit),
       team: Team.ALLY,
       characterId: unit,
       skillManager: board.manager,
@@ -376,8 +369,6 @@ export class PlacementScorer {
     }
   }
 
-  // The team's heroes, the effect's holder left out, in the order of the rule's
-  // list, or of the fallback list when the team has none of its own list's.
   private ranked(name: string, holder: number | undefined): number[] {
     const key = `${name}|${holder}`
     let order = this.rankings.get(key)
@@ -451,7 +442,7 @@ export class PlacementScorer {
 
   private held(rule: FormationRule): boolean {
     const { board } = this
-    const tileOf = (hero: number) => board.positions[board.units.indexOf(hero)]!
+    const tileOf = (hero: number) => board.tileOf(hero)
     const [a, b] = rule.heroes as [number, number]
     const tiles = this.heroes.map(tileOf).sort((x, y) => y - x)
     const isHero = (unit: number) => this.heroes.includes(unit)
@@ -487,8 +478,7 @@ export class PlacementScorer {
   }
 
   private leaning(): number {
-    const depthOf = (hero: number) =>
-      this.depth.get(this.board.positions[this.board.units.indexOf(hero)]!)!
+    const depthOf = (hero: number) => this.depth.get(this.board.tileOf(hero))!
     let lean = 0
     for (const hero of this.front) lean += depthOf(hero)
     for (const hero of this.back) lean += 1 - depthOf(hero)

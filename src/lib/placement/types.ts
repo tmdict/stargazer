@@ -8,7 +8,7 @@ export type ListEntry = number | { list: string }
 // How two heroes, or one hero and the rest, stand, among the five heroes alone.
 // Front and back go by tile number, the higher number in front, as frontmost
 // and rearmost targeting goes.
-export type Relation =
+type Relation =
   | 'frontmost'
   | 'twoFrontmost'
   | 'rearmost'

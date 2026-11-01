@@ -112,11 +112,15 @@ export function findAdjacentPriorityTarget(
 
   for (const dir of priorityDirections) {
     const tile = grid.getTileOrUndefined(centerHex.neighbor(dir))
-    const unit = tile?.characterId
-    if (unit !== undefined && tile!.team === team && unit !== characterId && isCandidate(unit)) {
+    if (
+      tile?.characterId !== undefined &&
+      tile.team === team &&
+      tile.characterId !== characterId &&
+      isCandidate(tile.characterId)
+    ) {
       return {
-        targetHexId: tile!.hex.getId(),
-        targetCharacterId: unit,
+        targetHexId: tile.hex.getId(),
+        targetCharacterId: tile.characterId,
         metadata: { sourceHexId: hexId, distance: 1 },
       }
     }

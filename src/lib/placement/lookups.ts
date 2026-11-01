@@ -5,10 +5,10 @@ import { inPhantimalBand, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import type { PlacementLookups } from './types'
 
-export const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
-export const artifactById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact]))
+const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
+const artifactById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact]))
 const phantimals = new Map(loadPhantimals().map((phantimal) => [phantimal.id, phantimal]))
-export const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
+const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
 
 export const PLACEMENT_LOOKUPS: PlacementLookups = {
   factionOf: (id) =>

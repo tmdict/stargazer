@@ -14,8 +14,7 @@ export interface SkillBase<Context = unknown> {
   companionImageModifier?: string
   targetingColorModifier?: string
   companionRange?: number
-  // A skill that only spawns companions: nothing of it can be switched off on a
-  // board, so the Skills dropdown gives it no row.
+  // A skill that only spawns companions, which the Skills dropdown leaves out.
   drawsNothing?: boolean
   onActivate: (context: Context) => void
   onDeactivate: (context: Context) => void

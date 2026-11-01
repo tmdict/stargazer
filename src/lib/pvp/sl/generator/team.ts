@@ -52,12 +52,10 @@ export function slTeamData(
   )
   const boards = set.teams.map((choice, index): BoardInput => {
     const team = choiceSeason(data, choice).teams[choice.team]!
-    const recorded = (): SlUnit[] => {
-      const { c, s } = team.placements[choice.placement]!
-      return retired
-        ? c
-        : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
-    }
+    const { c, s } = team.placements[choice.placement]!
+    const recorded = retired
+      ? c
+      : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
     const map = data.maps[team.map]!
     const grid = new Grid(FULL_GRID, mapConfig(map))
     const place = (hexId: number, unitId: number): void => {
@@ -66,7 +64,7 @@ export function slTeamData(
       tile.team = Team.ALLY
       tile.state = State.OCCUPIED_ALLY
     }
-    for (const [hexId, unitId] of suggested?.[index] ?? recorded()) place(hexId, unitId)
+    for (const [hexId, unitId] of suggested?.[index] ?? recorded) place(hexId, unitId)
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),

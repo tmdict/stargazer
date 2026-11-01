@@ -3,14 +3,14 @@
  * PATH is, and PLACEMENT_OUT the folder, outside the repository, its measures
  * and review page go to, since an export names players. What the engine is
  * tuned with comes from the Supreme League data file, read with the
- * VITE_SL_SEED setting. Each Supreme League set-up is placed by the engine and set beside
- * the player's own. A season other than the one Stargazer holds phantimals for
- * is placed without its phantimal and seasonal artifact, and scores no buff
- * tile, since the map files hold this season's, and how often each enemy hero
- * is on a map is counted from its boards. PLACEMENT_FULL is how many of
- * the most used teams are also placed by trying every placement, to check the
- * search. PLACEMENT_TUNE names weights, joined by commas, for which the run
- * suggests a value from the players' formations. PLACEMENT_UNITS names
+ * VITE_SL_SEED setting. Each Supreme League set-up is placed by the engine and
+ * set beside the player's own. A season other than the one Stargazer holds
+ * phantimals for is placed without its phantimal and seasonal artifact, and
+ * scores no buff tile, since the map files hold this season's, and how often
+ * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is how
+ * many of the most used teams are also placed by trying every placement, to
+ * check the search. PLACEMENT_TUNE names weights, joined by commas, for which
+ * the run suggests a value from the players' formations. PLACEMENT_UNITS names
  * heroes, phantimals or artifacts by their data file's name, joined by commas,
  * and only the set-ups that hold one are placed. Left out when
  * PLACEMENT_EXPORT is not set. */
@@ -20,13 +20,18 @@ import { delimiter, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
-import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
+import {
+  inPhantimalBand,
+  isPhantimalId,
+  toLocalPhantimalId,
+  toPhantimalId,
+} from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
 import { buffTiles, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
-import { artifactById, heroById, phantimalOf, PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
+import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import {
   PlacementScorer,
   type FormationCheck,
@@ -40,7 +45,9 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import {
   loadArtifactLocales,
+  loadArtifacts,
   loadCharacterLocales,
+  loadCharacters,
   loadPhantimalLocales,
   loadPhantimals,
 } from '@/utils/dataLoader'
@@ -59,6 +66,11 @@ const UNITS = process.env.PLACEMENT_UNITS?.split(',').filter(Boolean) ?? []
 const COMPARE = process.env.PLACEMENT_COMPARE
 
 const LIVE = Math.max(...loadPhantimals().map((phantimal) => phantimal.season))
+
+const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
+const artifactById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact]))
+const phantimals = new Map(loadPhantimals().map((phantimal) => [phantimal.id, phantimal]))
+const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
 
 const heroLocales = loadCharacterLocales()
 const phantimalLocales = loadPhantimalLocales()

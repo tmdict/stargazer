@@ -81,7 +81,6 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
 const isNumberRecord = (value: unknown): boolean =>
   isObject(value) && Object.values(value).every((n) => typeof n === 'number')
 
-// A list's entry is a hero id or another list's name.
 const isListEntry = (value: unknown): boolean =>
   Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
 

@@ -138,7 +138,7 @@ const generate = async (): Promise<void> => {
     const placed = formation.value === 'suggested'
     const boards = boardsOf(file, chosenFor)
     const set = await generateSet(picks, boards)
-    const data = set && slTeamData(file, set, picks, placed ? await placeSet(set) : undefined)
+    const suggested = set && placed ? await placeSet(set) : undefined
     shown.value = set && {
       type: chosenFor,
       chance: set.chance,
@@ -157,7 +157,7 @@ const generate = async (): Promise<void> => {
           chance: t.chance,
         }
       }),
-      data: data!,
+      data: slTeamData(file, set, picks, suggested),
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false

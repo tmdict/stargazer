@@ -97,7 +97,6 @@ export class Grid {
     return tile
   }
 
-  // The same array on every call, so callers must not change it.
   getAllTiles(): readonly GridTile[] {
     return this.tiles
   }
