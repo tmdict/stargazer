@@ -1,7 +1,11 @@
-import { effectScope, type EffectScope } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useImportEngine, type EngineShot, type Intake } from '@/composables/useImportEngine'
+import {
+  useImportEngine,
+  type EngineShot,
+  type ImportEngine,
+  type Intake,
+} from '@/composables/useImportEngine'
 import { FRAME_NAMES } from '@/lib/import/card/frames'
 import type { ImportKind, ReferencePart } from '@/lib/import/kinds'
 import type { ScreenshotReading } from '@/lib/import/screens/match/types'
@@ -20,10 +24,10 @@ vi.mock('@/utils/dataLoader', () => ({
 
 beforeEach(stubImportBrowser)
 
-let scope: EffectScope | null = null
+let opened: ImportEngine | null = null
 afterEach(() => {
-  scope?.stop()
-  scope = null
+  opened?.release()
+  opened = null
   vi.unstubAllGlobals()
 })
 
@@ -31,23 +35,18 @@ const reading = {} as ScreenshotReading
 const rosterReading = { grid: null, slots: [] } as RosterReading
 
 let ids = 0
-// An import holding the engine for its shots, as its modal does while mounted.
-// `add` adds files as the sorter places them, else as the import's first kind;
-// `opening.open` stands for the import's modal staying open.
-const holdEngine = (kinds: readonly ImportKind[] = ['result', 'formation', 'replay']) => {
+// An import using the engine for its shots, as its modal does while open. `add`
+// adds files as the sorter places them, else as the import's first kind.
+const openImport = (kinds: readonly ImportKind[] = ['result', 'formation', 'replay']) => {
   const shots: EngineShot[] = []
   const applied: string[] = []
-  const opening = { open: true }
-  scope ??= effectScope()
-  const engine = scope.run(() =>
-    useImportEngine({ kinds, shots: () => shots, apply: (id) => applied.push(id) }),
-  )!
+  const engine = useImportEngine({ kinds, shots: () => shots, apply: (id) => applied.push(id) })
+  opened = engine
   const add = (
     files: File[],
     place: Intake<ImportKind, EngineShot>['place'] = (sorted) => ({ kind: sorted ?? kinds[0]! }),
   ) =>
     engine.addFiles(files, {
-      current: () => opening.open,
       replay: () => false,
       place,
       add: (added, kind) => {
@@ -63,7 +62,7 @@ const holdEngine = (kinds: readonly ImportKind[] = ['result', 'formation', 'repl
         return shot
       },
     })
-  return { engine, shots, applied, opening, add }
+  return { engine, shots, applied, add }
 }
 
 // The given parts fetched and handed to a reader, the newest by default, which
@@ -85,7 +84,7 @@ const answerReady = (worker: FakeWorker, parts: readonly ReferencePart[] = ['her
 
 describe('import engine', () => {
   it('gives a reader the waiting shots one at a time once the references are in', async () => {
-    const { shots, applied, add } = holdEngine()
+    const { shots, applied, add } = openImport()
     await add([file('a.png')])
     const worker = await partsPosted()
     expect(worker.reads()).toEqual([])
@@ -102,7 +101,7 @@ describe('import engine', () => {
   })
 
   it('fails the unread shots when the references fail, and reads them once a fresh reader holds the parts kept', async () => {
-    const { engine, shots, add } = holdEngine()
+    const { engine, shots, add } = openImport()
     await add([file('a.png'), file('b.png')])
     const first = await partsPosted()
     for (const reader of readers()) {
@@ -122,7 +121,7 @@ describe('import engine', () => {
   })
 
   it('places each file as its import says, skips one added again, and counts what it turns away', async () => {
-    const { engine, shots, add } = holdEngine()
+    const { engine, shots, add } = openImport()
     const refuseRosters: Intake<ImportKind, EngineShot>['place'] = (sorted) =>
       sorted === 'roster' ? { refused: 'roster' } : { kind: 'result' }
     FakeWorker.sortAs = 'roster'
@@ -147,14 +146,14 @@ describe('import engine', () => {
   })
 
   it('counts the files still being added, and adds none once the opening ends', async () => {
-    const { engine, shots, opening, add } = holdEngine()
+    const { engine, shots, add } = openImport()
     let decoded: () => void = () => {}
     vi.mocked(createImageBitmap).mockImplementationOnce(
       () => new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
     )
     const adding = add([file('a.png'), file('b.png')])
     expect(engine.progress.value).toEqual({ read: 0, total: 2 })
-    opening.open = false
+    engine.release()
     decoded()
     expect(await adding).toEqual({ added: 0, refused: {} })
     expect(shots).toEqual([])
@@ -162,7 +161,7 @@ describe('import engine', () => {
   })
 
   it('never reads a shot its import let go of', async () => {
-    const { engine, shots, applied, add } = holdEngine()
+    const { engine, shots, applied, add } = openImport()
     await add([file('a.png'), file('b.png'), file('c.png')])
     const worker = await partsPosted()
     answerReady(worker)
@@ -176,25 +175,26 @@ describe('import engine', () => {
     expect(worker.reads()).toEqual([a!.id, c!.id])
   })
 
-  it('leaves nothing of a page visit for the next', async () => {
-    const first = holdEngine()
+  it('leaves nothing of a closed import for the next opening', async () => {
+    const first = openImport()
     await first.add([file('a.png')])
     const worker = await partsPosted()
     answerReady(worker)
-    // The page is left with a in the worker and `late` still decoding.
+    // Closed with a in the worker and `late` still decoding.
     let decoded: () => void = () => {}
     vi.mocked(createImageBitmap).mockImplementationOnce(
       () => new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
     )
     const adding = first.add([file('late.png')])
-    scope!.stop()
-    scope = null
-    expect(worker.terminated).toBe(true)
-    expect(first.engine.referenceStatus.value).toBe('idle')
+    first.engine.release()
     decoded()
     await adding
+    expect(FakeWorker.started.every((w) => w.terminated)).toBe(true)
+    // A stopped worker's last message marks nothing held.
+    answerReady(worker)
+    expect(first.engine.referenceStatus.value).toBe('idle')
 
-    const next = holdEngine()
+    const next = openImport()
     await next.add([file('next.png')])
     const second = await partsPosted()
     answerReady(second)
@@ -202,32 +202,31 @@ describe('import engine', () => {
     expect(second.reads()).toEqual([next.shots[0]!.id])
   })
 
-  it('keeps no references fetched for a page left while they loaded', async () => {
+  it('keeps no references fetched for an import closed while they loaded', async () => {
     const respond = vi.mocked(fetch).getMockImplementation()!
-    let release: () => void = () => {}
-    const held = new Promise<void>((resolve) => (release = resolve))
+    let arrive: () => void = () => {}
+    const held = new Promise<void>((resolve) => (arrive = resolve))
     vi.mocked(fetch).mockImplementation(async (...args) => {
       await held
       return respond(...args)
     })
-    const first = holdEngine(['roster'])
+    const first = openImport(['roster'])
     const loading = first.engine.ensureReferences()
-    scope!.stop()
-    scope = null
-    release()
+    first.engine.release()
+    arrive()
     await loading
 
-    // The next visit's reader gets the hero part its own fetch brought, once.
+    // The next opening's reader gets the hero part its own fetch brought, once.
     vi.mocked(fetch).mockImplementation(respond)
-    const next = holdEngine(['roster'])
+    const next = openImport(['roster'])
     await next.engine.ensureReferences()
     const reader = readers().at(-1)!
     expect(reader.received.filter((m) => m.type === 'heroes')).toHaveLength(1)
   })
 
   it('reads a roster with the hero part alone, and a match screen once both parts are in', async () => {
-    const match = holdEngine()
-    const rosters = holdEngine(['roster'])
+    const match = openImport()
+    const rosters = openImport(['roster'])
     await rosters.add([file('roster.png')])
     const worker = await partsPosted(['heroes'])
     expect(worker.received.some((m) => m.type === 'match')).toBe(false)
@@ -249,7 +248,7 @@ describe('import engine', () => {
 
   it('starts a reader for each waiting shot up to the pool, each with its own references', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
-    const { add } = holdEngine()
+    const { add } = openImport()
     await add([file('1.png'), file('2.png')])
     expect(readers()).toHaveLength(2)
     await add([3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
@@ -273,13 +272,13 @@ describe('import engine', () => {
   ])('reads with $pool at most on $device', async ({ memory, touch, pool }) => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8, deviceMemory: memory })
     vi.stubGlobal('matchMedia', () => ({ matches: touch }))
-    const { add } = holdEngine(['roster'])
+    const { add } = openImport(['roster'])
     await add([1, 2, 3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
     expect(readers()).toHaveLength(pool)
   })
 
   it('fails a shot whose file does not decode or is too narrow, and queues the rest', async () => {
-    const { shots, add } = holdEngine()
+    const { shots, add } = openImport()
     vi.mocked(createImageBitmap)
       .mockRejectedValueOnce(new Error('not an image'))
       .mockResolvedValueOnce({ ...bitmap, width: 10 } as ImageBitmap)
@@ -293,7 +292,7 @@ describe('import engine', () => {
 
   it('drops a reader it has no memory to copy the references for, and starts no other', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
-    const { engine, shots, add } = holdEngine(['roster'])
+    const { engine, shots, add } = openImport(['roster'])
     await add([file('1.png')])
     const first = await partsPosted(['heroes'])
     answerReady(first, ['heroes'])
@@ -310,7 +309,7 @@ describe('import engine', () => {
 
   it('drops a reader whose tables fail while another holds them, and grows the pool no further', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 3 })
-    const { engine, shots, add } = holdEngine(['roster'])
+    const { engine, shots, add } = openImport(['roster'])
     await add([1, 2, 3, 4].map((n) => file(`${n}.png`)))
     const [first, second] = readers() as [FakeWorker, FakeWorker]
     answerReady(await partsPosted(['heroes'], () => first), ['heroes'])

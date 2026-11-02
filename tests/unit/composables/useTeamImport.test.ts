@@ -308,6 +308,15 @@ describe('clearing an import', () => {
     expect(api.names.left).toBe('unii')
     expect(api.names.right).toBe('')
   })
+
+  it('stops every worker, so a closed import holds their memory no longer', async () => {
+    stubImportBrowser()
+    const api = hold()
+    await api.addFiles([file('a.png')], 'result')
+    expect(FakeWorker.started.length).toBeGreaterThan(1)
+    api.clearImport()
+    await vi.waitFor(() => expect(FakeWorker.started.every((w) => w.terminated)).toBe(true))
+  })
 })
 
 describe('adding screenshots', () => {

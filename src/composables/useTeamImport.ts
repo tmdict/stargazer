@@ -2,8 +2,8 @@
  * and replay frames for the tiles, the review state per screenshot, and the
  * plan they make. The import engine (useImportEngine) decodes and reads the
  * screenshots. Module-level state like useSelectionState: the shots belong to
- * one opening of the modal (clearImport), and the modal holds the engine for
- * the page visit, the shots dropped with it when the page is left. */
+ * one opening of the modal, and closing it (clearImport) drops them and
+ * releases the engine. */
 
 import {
   computed,
@@ -106,9 +106,6 @@ const names = reactive<RecordNames>(defaultNames())
 const swapSides = ref(false)
 let nextId = 1
 let namesLoaded = false
-// Shots belong to one opening of the modal; clearImport ends it, and an
-// addFiles still sorting or decoding for that opening stops adding.
-let opening = 0
 
 const restoreNames = (): void => {
   Object.assign(names, defaultNames())
@@ -212,21 +209,17 @@ export function useTeamImport(
   loadNames()
   const engine = useImportEngine(session)
 
-  /* End an opening of the modal: drop every shot with its review edits and
-   * waiting read, the match's side choice and any unsaved name edits, so the
-   * next opening starts fresh. The engine and the learned faces stay for the
-   * page visit. */
+  /* End an opening of the modal: release the engine and drop every shot with
+   * its review edits, the match's side choice and any unsaved name edits, so
+   * the next opening starts fresh. */
   const clearImport = (): void => {
-    opening++
-    for (const shot of shots.value) {
-      engine.dropShot(shot.id)
-      URL.revokeObjectURL(shot.thumb)
-    }
+    engine.release()
+    for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
     shots.value = []
     swapSides.value = false
     restoreNames()
   }
-  // Leaving the page unmounts the modal, and its shots go with the engine.
+  // Leaving the page with the modal open ends the opening too.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount
@@ -261,10 +254,8 @@ export function useTeamImport(
     files: File[],
     kind: ShotKind | 'sort',
     onAdd?: (id: string) => void,
-  ): Promise<IntakeResult> => {
-    const mine = opening
-    return engine.addFiles(files, {
-      current: () => mine === opening,
+  ): Promise<IntakeResult> =>
+    engine.addFiles(files, {
       replay: () => kind === 'sort' && replayOpen.value,
       place: (sorted): Placement<ShotKind> => {
         if (sorted === 'roster' || sorted === 'matchup') return { refused: sorted }
@@ -300,7 +291,6 @@ export function useTeamImport(
         return shot
       },
     })
-  }
 
   const removeShot = (id: string): void => {
     const shot = findShot(id)

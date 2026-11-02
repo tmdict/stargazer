@@ -2,9 +2,8 @@
  * knockout matchup list, the review's corrections beside each reading, and the
  * games they make (lib/pvp/sl/www/wwwImport). The import engine
  * (useImportEngine) decodes and reads the screenshots. Module-level state like
- * useRosterImport: the shots belong to one opening of the modal (clearImport),
- * and the modal holds the engine for the page visit, the shots dropped with it
- * when the page is left. */
+ * useRosterImport: the shots belong to one opening of the modal, and closing it
+ * (clearImport) drops them and releases the engine. */
 
 import {
   computed,
@@ -70,9 +69,6 @@ export interface ShotRef {
 
 const shots = ref<WwwImportShot[]>([])
 let nextId = 1
-// Shots belong to one opening of the modal; clearImport ends it, and an
-// addFiles still sorting or decoding for that opening stops adding.
-let opening = 0
 // A team whose cards were read is outlined in yellow; one whose cards are out
 // of view, in grey and dashed, so a game counted as cut off can be found.
 const READ_COLOUR = '#ffd54a'
@@ -174,26 +170,20 @@ export function useWwwImport(): {
 } {
   const engine = useImportEngine(session)
 
-  /* End an opening of the modal: drop every shot with its review edits and
-   * waiting read, so the next opening starts fresh. The engine and the learned
-   * faces stay for the page visit. */
+  /* End an opening of the modal: release the engine and drop every shot with
+   * its review edits, so the next opening starts fresh. */
   const clearImport = (): void => {
-    opening++
-    for (const shot of shots.value) {
-      engine.dropShot(shot.id)
-      dropUrls(shot)
-    }
+    engine.release()
+    shots.value.forEach(dropUrls)
     shots.value = []
   }
-  // Leaving the page unmounts the modal, and its shots go with the engine.
+  // Leaving the page with the modal open ends the opening too.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
   // One the sorter finds to be another import's is refused and counted by
   // kind; one it cannot place is read as a matchup list.
-  const addFiles = (files: File[]): Promise<IntakeResult> => {
-    const mine = opening
-    return engine.addFiles(files, {
-      current: () => mine === opening,
+  const addFiles = (files: File[]): Promise<IntakeResult> =>
+    engine.addFiles(files, {
       replay: () => true,
       place: (sorted) =>
         sorted && sorted !== 'matchup' ? { refused: sorted } : { kind: 'matchup' as const },
@@ -218,7 +208,6 @@ export function useWwwImport(): {
         return shot
       },
     })
-  }
 
   const removeShot = (id: string): void => {
     const shot = findShot(id)

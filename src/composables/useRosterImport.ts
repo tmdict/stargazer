@@ -2,9 +2,8 @@
  * review's corrections beside each reading, and the roster they make
  * (lib/rosterImport). The import engine (useImportEngine) decodes and reads
  * the screenshots, several at once. Module-level state like useTeamImport: the
- * shots belong to one opening of the modal (clearImport), and the modal holds
- * the engine for the page visit, the shots dropped with it when the page is
- * left. */
+ * shots belong to one opening of the modal, and closing it (clearImport) drops
+ * them and releases the engine. */
 
 import { computed, getCurrentScope, onScopeDispose, reactive, ref, type ComputedRef } from 'vue'
 
@@ -50,9 +49,6 @@ export interface CardRef {
 
 const shots = ref<RosterImportShot[]>([])
 let nextId = 1
-// Shots belong to one opening of the modal; clearImport ends it, and an
-// addFiles still sorting or decoding for that opening stops adding.
-let opening = 0
 // The cards read are outlined in yellow; a slot cut by the scroll or covered,
 // and an empty one, in grey and dashed, so a card counted as cut off can be
 // found on the screenshot.
@@ -146,26 +142,20 @@ export function useRosterImport(): {
 } {
   const engine = useImportEngine(session)
 
-  /* End an opening of the modal: drop every shot with its review edits and
-   * waiting read, so the next opening starts fresh. The engine and the learned
-   * faces stay for the page visit. */
+  /* End an opening of the modal: release the engine and drop every shot with
+   * its review edits, so the next opening starts fresh. */
   const clearImport = (): void => {
-    opening++
-    for (const shot of shots.value) {
-      engine.dropShot(shot.id)
-      dropUrls(shot)
-    }
+    engine.release()
+    shots.value.forEach(dropUrls)
     shots.value = []
   }
-  // Leaving the page unmounts the modal, and its shots go with the engine.
+  // Leaving the page with the modal open ends the opening too.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
   // One the sorter finds to be another import's is refused and counted by
   // kind; one it cannot place is read as a roster.
-  const addFiles = (files: File[]): Promise<IntakeResult> => {
-    const mine = opening
-    return engine.addFiles(files, {
-      current: () => mine === opening,
+  const addFiles = (files: File[]): Promise<IntakeResult> =>
+    engine.addFiles(files, {
       replay: () => true,
       place: (sorted) =>
         sorted && sorted !== 'roster' ? { refused: sorted } : { kind: 'roster' as const },
@@ -187,7 +177,6 @@ export function useRosterImport(): {
         return shot
       },
     })
-  }
 
   const removeShot = (id: string): void => {
     const shot = findShot(id)

@@ -1,27 +1,17 @@
 /* The screenshot import's engine, under every import: decoding, the workers
  * that read screenshots and one more that sorts them, the reference images
  * they need, and the faces learned from corrections.
- * Module-level state for one page visit: each import composable holds the
- * engine while the component that uses it is mounted, and the engine is
- * disposed when none holds it, so leaving the page drops the workers and
- * their references; the learned faces stay in storage. Decoded screenshots
- * wait here and go to a reading worker one at a time each, so closing an
- * import drops the reads it still has waiting. Every import adds its files
+ * Module-level state for one opening of an import: closing it (`release`)
+ * stops the workers and drops their references, and the next opening starts
+ * them again; the learned faces stay in storage. Decoded screenshots wait here
+ * and go to a reading worker one at a time each. Every import adds its files
  * through `addFiles`, which sorts each before the import places it. The
  * references come in two parts (lib/import/kinds), each fetched once per
- * visit, and every reading worker holds its own copy of each. Images never
+ * opening, and every reading worker holds its own copy of each. Images never
  * leave the device: the references are fetched, the screenshots are drawn to
  * a canvas and handed to the workers as pixels. */
 
-import {
-  computed,
-  getCurrentScope,
-  onScopeDispose,
-  ref,
-  shallowRef,
-  type ComputedRef,
-  type Ref,
-} from 'vue'
+import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue'
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages, ownerImages } from '@/lib/characters/companion'
@@ -93,8 +83,6 @@ export interface ShotSession {
 export type Placement<K extends ImportKind> = { kind: K } | { refused: ImportKind }
 
 export interface Intake<K extends ImportKind, S extends EngineShot> {
-  // False once the opening of the import that added the files has ended.
-  current: () => boolean
   // Whether the sorter may tell a replay frame, asked for each file.
   replay: () => boolean
   place: (sorted: ImportKind | null) => Placement<K>
@@ -120,15 +108,13 @@ const DECODE_WIDTHS: Record<ImportKind, { min: number; max: number }> = {
 const PARTS: readonly ReferencePart[] = ['heroes', 'match']
 
 const sessions = new Set<ShotSession>()
-// The components holding the engine; the last to let go disposes it.
-let holders = 0
 // A part is ready once a reading worker holds it.
 const partStatus: Record<ReferencePart, Ref<ReferenceStatus>> = {
   heroes: ref('idle'),
   match: ref('idle'),
 }
-// Each part's images once fetched, kept for the visit so a worker started
-// later gets its own copy (the learned faces travel with the hero part).
+// Each part's images once fetched, kept while the import is open so a worker
+// started later gets its own copy (the learned faces travel with the hero part).
 const loaded: {
   heroes: Omit<HeroReferences, 'learned'> | null
   match: MatchReferences | null
@@ -144,21 +130,21 @@ interface Reader {
   reading: string | null
 }
 const readers: Reader[] = []
-// A reader failed this visit. The pool then stops growing: a device short of
-// memory would fail every new reader the same way, each after copying the
+// A reader failed in this opening. The pool then stops growing: a device short
+// of memory would fail every new reader the same way, each after copying the
 // references.
 let readerFailed = false
 // One more worker of the same kind sorts the screenshots added, so each is
 // sorted at once even while the readers are busy. It is ready once it holds
 // the arena that tells a replay frame.
 let sorter: Promise<Worker> | null = null
-// The arena picture, fetched once and copied to each worker.
+// The arena picture, fetched once per opening and copied to each worker.
 let arena: Promise<RgbaImage> | null = null
 const sorting = new Map<string, (kind: ImportKind | null) => void>()
 let nextSortId = 1
-// A page visit. Work still in flight from an earlier one (a decode, a
-// reference fetch) checks this before touching the current state.
-let visit = 0
+// The current opening of an import. Work still in flight from an earlier one
+// (a decode, a reference fetch) checks this before touching the current state.
+let opening = 0
 // Decoded shots waiting for a reading worker, oldest first. A shot failed by
 // the references stays queued for the retry the next load makes.
 const queue: { id: string; image: RgbaImage; kind: ImportKind }[] = []
@@ -424,6 +410,9 @@ const dispatch = (): void => {
 }
 
 const onMessage = (reader: Reader, msg: ImportResponse): void => {
+  // A stopped worker's last message can still arrive, and its `ready` would
+  // mark a part held that no reader holds.
+  if (!readers.includes(reader)) return
   if (msg.type === 'ready') {
     reader.parts.add(msg.part)
     partStatus[msg.part].value = 'ready'
@@ -555,25 +544,25 @@ async function ensurePart(part: ReferencePart): Promise<void> {
   const status = partStatus[part]
   if (status.value === 'ready' || status.value === 'loading') return
   status.value = 'loading'
-  const mine = visit
+  const mine = opening
   try {
     if (readers.length === 0) startReader()
     // Fetched before every reader failed: the reader just started has its copy.
     if (loaded[part]) return
-    // Kept only for the visit that asked: a page left meanwhile has dropped
-    // its readers, and the next visit fetches its own.
+    // Kept only for the opening that asked: an import closed meanwhile has
+    // dropped its readers, and the next opening fetches its own.
     if (part === 'heroes') {
       const heroes = await loadHeroPart()
-      if (mine !== visit) return
+      if (mine !== opening) return
       loaded.heroes = heroes
     } else {
       const match = await loadMatchPart()
-      if (mine !== visit) return
+      if (mine !== opening) return
       loaded.match = match
     }
     for (const reader of [...readers]) postPart(reader, part)
   } catch (error) {
-    if (mine !== visit) return
+    if (mine !== opening) return
     // Left in the console: the modal only says the references failed, and
     // the failing URL is what a bug report needs.
     console.error('Screenshot import references failed to load', error)
@@ -636,16 +625,17 @@ const learnFace = (characterId: number | null, descriptor: Float32Array): void =
 
 const forgetLearned = (): void => saveLearned([])
 
-/* Drop the workers, their references and every waiting read: the last holder
- * left the page. */
-const dispose = (): void => {
-  visit++
+/* Stop the workers and drop their references and every waiting read, so a
+ * closed import holds none of that memory. */
+const release = (): void => {
+  opening++
   for (const reader of readers) reader.worker.terminate()
   readers.length = 0
   readerFailed = false
   queue.length = 0
   loaded.heroes = null
   loaded.match = null
+  arena = null
   void sorter?.then((w) => w.terminate())
   sorter = null
   for (const done of sorting.values()) done(null)
@@ -674,24 +664,17 @@ export interface ImportEngine {
     intake: Intake<K, S>,
   ) => Promise<IntakeResult>
   dropShot: (id: string) => void
+  release: () => void
   learnFace: (characterId: number | null, descriptor: Float32Array) => void
   forgetLearned: () => void
 }
 
 const learnedCount = computed(() => learned.value.length)
 
-/* The engine for an import's session of shots. Called in a component's setup,
- * it holds the engine until the component unmounts. */
+// The engine for an import's session of shots.
 export function useImportEngine(session: ShotSession): ImportEngine {
   loadLearned()
   sessions.add(session)
-  if (getCurrentScope()) {
-    holders++
-    onScopeDispose(() => {
-      holders--
-      if (holders === 0) dispose()
-    })
-  }
   const parts = [...new Set(session.kinds.flatMap(partsOf))]
   const ensureReferences = async (): Promise<void> => {
     await Promise.all(parts.map(ensurePart))
@@ -700,15 +683,15 @@ export function useImportEngine(session: ShotSession): ImportEngine {
 
   /* Each file is sorted, then placed by the import: read as the kind it
    * gives, or turned away. A file already among the shots is skipped. One at
-   * a time, so the shots keep the files' order. Adding stops when the import's
-   * opening ends or the page is left. */
+   * a time, so the shots keep the files' order. Adding stops when the import
+   * closes. */
   const addFiles = async <K extends ImportKind, S extends EngineShot>(
     files: File[],
-    { current, replay, place, add }: Intake<K, S>,
+    { replay, place, add }: Intake<K, S>,
   ): Promise<IntakeResult> => {
     void ensureReferences()
-    const mine = visit
-    const open = (): boolean => mine === visit && current()
+    const mine = opening
+    const open = (): boolean => mine === opening
     const result: IntakeResult = { added: 0, refused: {} }
     adding.value += files.length
     let settled = 0
@@ -758,6 +741,7 @@ export function useImportEngine(session: ShotSession): ImportEngine {
     ensureReferences,
     addFiles,
     dropShot,
+    release,
     learnFace,
     forgetLearned,
   }

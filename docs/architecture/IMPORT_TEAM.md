@@ -59,7 +59,7 @@ Each field of a reading comes from its own visual signal. The readers therefore 
 
 `cellState` and `reviewStates` derive each cell's state once, so the review grid and each card's "to review" count agree. Confirming or picking a hero settles identity separately from the paragon level, and `artifactState` treats each side's artifact the same way.
 
-Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`). The engine, its references and the learned faces stay for the page visit ([Screenshot Import](./IMPORT.md#the-engine)).
+Each opening of the modal is a new import. Closing it, by Save as New or otherwise, drops the shots with their review edits, the side choice and any unsaved name edits (`clearImport`). It also releases the engine, its workers and references, while the learned faces stay ([Screenshot Import](./IMPORT.md#the-engine)).
 
 ### Sides
 
