@@ -3,8 +3,7 @@
  * priority-front) tile, the same adjacent-tile priority Daimon uses. The mark
  * paints both tile channels (fill + border) in a yellow reserved for seasonal
  * marks, so they read apart from hero highlights. A mark paints only while the
- * phantimal's data file sets `"targeting": true`, so it can be written ahead of
- * its in-game unlock.
+ * phantimal's data file sets `"targeting": true`.
  *
  * The registry holds one skill per id, so a phantimal that already has a skill
  * (a companion) can't also take createSpiritMarkSkill. It draws its mark with

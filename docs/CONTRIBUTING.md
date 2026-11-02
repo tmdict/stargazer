@@ -71,7 +71,7 @@ A season ships in three phases ([Seasonal Content](./architecture/SEASONAL.md#se
 
 When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the `tags` in each charm's, phantimal's and artifact's data file. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
 
-Before the season's first event, give its phantimals, seasonal artifacts and charms their placement rules ([Placement](./architecture/PLACEMENT.md#changing-a-rule)). Add an artifact rule whenever its mechanic is known. Set a phantimal's `"targeting": true` once its Spirit Mark is live in the game.
+Before the season's first event, give its phantimals, seasonal artifacts and charms their placement rules ([Placement](./architecture/PLACEMENT.md#changing-a-rule)). Add an artifact rule whenever its mechanic is known. Set each phantimal's `"targeting": true` once its Spirit Mark is written, since a mark shows on boards and counts in placement only while it is on.
 
 ### Styles
 

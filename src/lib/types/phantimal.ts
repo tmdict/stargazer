@@ -11,7 +11,7 @@ export interface PhantimalType {
   damage: string // 'physical' | 'magic' → game.<damage> label + damage-<damage> icon
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
   qualifyingFactions?: readonly string[] // factions counted toward the team requirement; default [faction]
-  targeting?: boolean // seasonal skill targeting (Spirit Mark) is live in-game; absent = off
+  targeting?: boolean // draws the seasonal skill targeting (Spirit Mark); absent = off
   tags?: readonly string[] // hero tag ids found anywhere in its skill text; absent = none
   rules?: readonly Rule[]
 }

@@ -1,7 +1,7 @@
 /**
  * Seasonal phantimal skills. `spiritMarks` lists the season's Spirit Marks
  * (utils/spiritMark.ts), which paint only while the phantimal's data file sets
- * `"targeting": true`, so a mark can be written ahead of its in-game unlock.
+ * `"targeting": true`.
  *
  * Every registration's id is `phantimal-<slug>` of the phantimal its id holds;
  * a data-contract test fails when the slug no longer matches, which catches
