@@ -28,7 +28,7 @@ const regionAt = (region: Region, x: number, y: number): Rect => ({
 
 // ---------- the strip ----------
 
-export interface StripReading {
+interface StripReading {
   // 0-based circle the ring is on.
   mapIndex: number
   mapResults: (Team | null)[]
@@ -212,7 +212,7 @@ export interface TabPair {
 
 // A pair as found in a shot, with the tabs' shared left edge and width,
 // which frame the panel (panel.ts).
-export interface FoundTabs extends TabPair {
+interface FoundTabs extends TabPair {
   left: number
   width: number
 }

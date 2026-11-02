@@ -54,7 +54,7 @@ import { serializeGridState } from '@/utils/gridStateSerializer'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { useRosters } from './rosters'
 
-export type HexSizeMode = 'breakpoint' | 'fixed-medium'
+type HexSizeMode = 'breakpoint' | 'fixed-medium'
 
 // Largest supported board configuration (5 v 5). setGridCount clamps to it so a
 // crafted share URL can't build an arbitrary number of boards.

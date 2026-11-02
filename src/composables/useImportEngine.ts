@@ -55,7 +55,7 @@ export type ShotStatus = 'waiting' | 'reading' | 'ready' | 'failed'
 // on it.
 export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 'read'
 
-export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
+type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
 // What the engine needs of an import's screenshot: it moves the shot through
 // waiting, reading, ready and failed. A file of the same name and size is the

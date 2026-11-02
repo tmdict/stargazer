@@ -79,14 +79,14 @@ const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
 // the hex polygon corners, so no sprite-clearance allowance is needed here.
 const CROP_SIDE_PAD_MULTIPLIER = 0.4
 
-export interface ViewBoxBounds {
+interface ViewBoxBounds {
   x: number
   y: number
   width: number
   height: number
 }
 
-export interface GridContextGlobals {
+interface GridContextGlobals {
   hexSize: Ref<Point>
   teamView: Ref<boolean>
   inverted: Ref<boolean>
