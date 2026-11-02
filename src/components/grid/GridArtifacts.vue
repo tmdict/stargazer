@@ -78,16 +78,9 @@ const enemyCenter = computed(() => cellCenter(enemyCellHex.value))
 const allyCellPoints = computed(() => cellPoints(allyCellHex.value))
 const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
 
-// The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
+// The host-cell SVG shares the full grid box and coordinate space with GridTiles,
 // so it compresses with the perspective wrapper exactly like the real hexes.
 const gridPixelSize = computed(() => BOARD_SIZE * ctx.hexScale)
-// Match the tile stroke (GridTiles' BASE_STROKE_WIDTH) so a covering tile border
-// fully hides the dash on a shared edge.
-const cellStrokeWidth = computed(() => Math.max(1, 2 * ctx.hexScale))
-const cellDashArray = computed(() => {
-  const scale = ctx.hexScale
-  return `${6 * scale},${4 * scale}`
-})
 
 // Artifact icon geometry (at 40px hex radius). Icons are full-bleed square art
 // that fills the circle; only the container scales with the breakpoint.
@@ -158,22 +151,21 @@ const allySlotInFront = computed(() => !ctx.inverted)
 const enemySlotInFront = computed(() => ctx.inverted)
 const enemySlotVisible = computed(() => !ctx.teamView)
 
-// The empty dashed cell is an "add artifact here" affordance, shown only on the
-// interactive grid; a filled cell always frames its artifact.
+// An empty cell is an "add artifact here" target, shown only on the interactive
+// grid.
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
-const showAllyCell = computed(() => !!allyArtifact.value || showPlaceholders.value)
-const showEnemyCell = computed(
-  () => enemySlotVisible.value && (!!enemyArtifact.value || showPlaceholders.value),
-)
+const showEnemyCell = computed(() => enemySlotVisible.value && showPlaceholders.value)
 
 // An empty host cell opens the artifact picker; a filled cell's icon handles
 // removal (handleArtifactClick), mirroring the mouse character flow (empty hex
 // → picker, placed hero → remove). Unlike heroes, artifacts have no tap-lift:
 // a touch tap on a filled cell also removes, so touch can add and delete
 // artifacts but only a mouse drag repositions one (an intended scope cut).
-const allyCellClickable = computed(() => showPlaceholders.value && !allyArtifact.value)
+const allyCellClickable = computed(
+  () => showPlaceholders.value && !allyArtifact.value && !allyRetired.value,
+)
 const enemyCellClickable = computed(
-  () => showPlaceholders.value && enemySlotVisible.value && !enemyArtifact.value,
+  () => showEnemyCell.value && !enemyArtifact.value && !enemyRetired.value,
 )
 
 const showPopup = ref(false)
@@ -269,45 +261,15 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 <template>
   <div class="grid-artifacts">
-    <!-- Dashed border as a full hexagon beneath the tiles (z-index: -1): each
-         rendered neighbor's solid border covers the shared edge, and the dash shows
-         wherever no tile is drawn beside it (e.g. team view hides the neighbor). The
-         fill/click layer below stays above the tiles; it's the off-grid host cell and
-         never overlaps one. -->
-    <svg
-      v-if="showAllyCell || showEnemyCell"
-      class="artifact-cell-border-layer"
-      :width="gridPixelSize"
-      :height="gridPixelSize"
-    >
-      <polygon
-        v-if="showAllyCell"
-        class="artifact-cell-border"
-        fill="none"
-        :points="allyCellPoints"
-        :stroke-width="cellStrokeWidth"
-        :stroke-dasharray="cellDashArray"
-      />
-      <polygon
-        v-if="showEnemyCell"
-        class="artifact-cell-border"
-        fill="none"
-        :points="enemyCellPoints"
-        :stroke-width="cellStrokeWidth"
-        :stroke-dasharray="cellDashArray"
-      />
-    </svg>
-
     <!-- Host-cell fill + click target. Same coordinate space as GridTiles. -->
     <svg
-      v-if="showAllyCell || showEnemyCell"
+      v-if="showPlaceholders"
       ref="cellLayerRef"
       class="artifact-cell-layer"
       :width="gridPixelSize"
       :height="gridPixelSize"
     >
       <polygon
-        v-if="showAllyCell"
         class="artifact-cell"
         :class="{
           clickable: allyCellClickable,
@@ -424,8 +386,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   overflow-x: clip;
 }
 
-.artifact-cell-layer,
-.artifact-cell-border-layer {
+.artifact-cell-layer {
   position: absolute;
   top: 0;
   left: 0;
@@ -433,27 +394,19 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   overflow: visible;
 }
 
-/* .grid-map sets isolation: isolate so this z-index can't escape the board. */
-.artifact-cell-border-layer {
-  z-index: -1;
-}
-
 .artifact-cell {
-  fill: rgba(255, 255, 255, 0.06);
-}
-
-.artifact-cell-border {
-  stroke: var(--tile-stroke-strong);
+  fill: none;
 }
 
 .artifact-cell.clickable {
+  fill: var(--tile-artifact-fill);
   pointer-events: auto;
   cursor: pointer;
   transition: fill 0.15s ease;
 }
 
 .artifact-cell.clickable:hover {
-  fill: rgba(255, 255, 255, 0.16);
+  fill: var(--tile-artifact-fill-hover);
 }
 
 .artifact-cell.droppable {

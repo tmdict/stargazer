@@ -304,8 +304,8 @@ defineExpose({
   justify-content: center;
   align-items: center;
   position: relative;
-  /* Own stacking context so the artifact cell border (z-index: -1) sits beneath the
-     tiles but can't fall behind the page/card. */
+  /* Own stacking context, so the raised layers inside a board can't cover the page
+     around it. */
   isolation: isolate;
 }
 </style>
