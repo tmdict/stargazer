@@ -234,7 +234,6 @@ export const pixelDistance = (dx: number, dy: number): number => Math.sqrt(dx * 
 // fits any frame.
 const NCC_MIN_COVERAGE = 0.25
 
-// A template's opaque pixels at one sampling step.
 interface OpaqueSamples {
   xs: Int32Array
   ys: Int32Array

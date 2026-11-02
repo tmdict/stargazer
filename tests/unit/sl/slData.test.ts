@@ -118,7 +118,6 @@ function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
 }
 
 describe('the shipped Supreme League data', () => {
-  // A rotation must not hold up a deploy, so the maps are the file's own.
   it('names only heroes Stargazer knows, and companions their heroes spawn', () => {
     expect(data.order.filter((id) => !heroes.has(id))).toEqual([])
     const strays: SlUnit[] = []

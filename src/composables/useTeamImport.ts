@@ -209,9 +209,6 @@ export function useTeamImport(
   loadNames()
   const engine = useImportEngine(session)
 
-  /* End an opening of the modal: release the engine and drop every shot with
-   * its review edits, the match's side choice and any unsaved name edits, so
-   * the next opening starts fresh. */
   const clearImport = (): void => {
     engine.release()
     for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
@@ -219,7 +216,6 @@ export function useTeamImport(
     swapSides.value = false
     restoreNames()
   }
-  // Leaving the page with the modal open ends the opening too.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
   const boardCount = (): number => TEAM_MODES[mode()].boardCount

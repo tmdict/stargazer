@@ -110,7 +110,6 @@ export class PlacementScorer {
   // threatEffects' indexes, the heaviest rule first, each with the most the
   // rules after it can add.
   private readonly heaviest: { index: number; rest: number }[] = []
-  // The most threats() can give, every enemy rule's goal met.
   readonly threatCeiling: number
   private readonly mustHold: FormationRule[]
   private readonly usually: FormationRule[]
@@ -383,7 +382,6 @@ export class PlacementScorer {
     const { rule, holder } = effect
     const { goal } = rule
     const self = holder === undefined ? undefined : ruleUnit(holder)
-    // `asRuleUnit` false keeps a companion as a unit of its own.
     const unitsOn = (hexIds: number[], asRuleUnit = true): Set<number> => {
       const units = new Set<number>()
       for (const hexId of hexIds) {

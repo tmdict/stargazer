@@ -87,7 +87,7 @@ export interface SlEvidence {
   oneOffs: boolean
 }
 
-export interface SlMap {
+interface SlMap {
   key: string
   grid: { ally: number[]; enemy: number[]; blocked: number[]; breakable: number[] }
 }

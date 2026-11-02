@@ -304,8 +304,6 @@ defineExpose({
   justify-content: center;
   align-items: center;
   position: relative;
-  /* Own stacking context, so the raised layers inside a board can't cover the page
-     around it. */
   isolation: isolate;
 }
 </style>

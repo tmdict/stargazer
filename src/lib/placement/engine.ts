@@ -7,8 +7,8 @@ import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 const EPS = 1e-9
 // The local search climbs from this many placements drawn at random. A goal
 // that three units must move together to meet, such as two heroes of one
-// faction between the twins, is reached only from a start near it: 16
-// starts left it unmet for about one Season 8 team in ten that could meet it.
+// faction between the twins, is reached only from a start near it, and 16
+// starts miss it for about one Season 8 team in ten that could meet it.
 const STARTS = 32
 const EQUAL_CAP = 1000
 

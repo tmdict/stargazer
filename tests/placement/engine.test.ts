@@ -258,7 +258,6 @@ const scoreSetup = (setup: Setup, data: PlacementData) =>
       : board.units.map((unit) => setup.tiles.get(unit)!),
   )
 
-// The engine's placement of a set-up's team, and its pick scored.
 interface Placed {
   result: PlacementResult
   pick: Scored

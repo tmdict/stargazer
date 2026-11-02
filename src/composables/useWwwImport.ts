@@ -170,14 +170,11 @@ export function useWwwImport(): {
 } {
   const engine = useImportEngine(session)
 
-  /* End an opening of the modal: release the engine and drop every shot with
-   * its review edits, so the next opening starts fresh. */
   const clearImport = (): void => {
     engine.release()
     shots.value.forEach(dropUrls)
     shots.value = []
   }
-  // Leaving the page with the modal open ends the opening too.
   if (getCurrentScope()) onScopeDispose(clearImport)
 
   // One the sorter finds to be another import's is refused and counted by

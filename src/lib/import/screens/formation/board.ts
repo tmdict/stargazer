@@ -100,7 +100,6 @@ interface LineMap {
   w: number
   h: number
   r: Float32Array
-  // Each inner pixel's best of itself and its four neighbours.
   near: Float32Array
 }
 

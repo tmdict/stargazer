@@ -26,8 +26,6 @@ export function skillReach(manager: SkillManager, unit: number, team: Team): Rea
   return { landed, marked: manager.getMarkedTiles(unit, team) }
 }
 
-// A charm acts on the ally on the tile its rule names, behind or in front of
-// the hero holding it.
 export function charmReach(holder: SkillContext, tile: NonNullable<Rule['tile']>): Reach {
   const found = (tile === 'behind' ? findUnitBehind : findUnitInFront)(holder)?.targetHexId
   return { landed: found == null ? [] : [found], marked: [] }

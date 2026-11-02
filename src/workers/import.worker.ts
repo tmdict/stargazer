@@ -4,8 +4,8 @@
  * hands over RGBA buffers, so the same code runs under vitest and in offline
  * checks. The references arrive in two parts, each once per worker (lib/import/
  * kinds): the hero part every kind needs, and the match part the match screens
- * add. A page visit runs one or more readers, and one more worker that holds
- * only the arena and sorts the screenshots added. */
+ * add. An opening of an import runs one or more readers, and one more worker
+ * that holds only the arena and sorts the screenshots added. */
 
 import { prepareFrameRefs } from '@/lib/import/card/frames'
 import type { HeroTable, LearnedIcon, PortraitRef } from '@/lib/import/card/types'

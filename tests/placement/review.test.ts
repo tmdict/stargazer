@@ -50,7 +50,6 @@ const charms = new Map<string, CharmData>(
 
 const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
 
-// A unit by the name of the unit the rules count it as.
 const unitName = (id: number): string => {
   const unit = ruleUnit(id)
   return inPhantimalBand(unit)
