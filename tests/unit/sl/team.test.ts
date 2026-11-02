@@ -22,8 +22,7 @@ import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 // The page fetches the file the build emits, so the test serves it the same bytes.
 vi.stubGlobal(
   'fetch',
-  async () =>
-    new Response(readFileSync(new URL('../../../src/content/pvp/sl/sl.bin', import.meta.url))),
+  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/sl.bin', import.meta.url))),
 )
 const shipped = await loadSlData()
 vi.unstubAllGlobals()
@@ -31,7 +30,7 @@ vi.unstubAllGlobals()
 // rotation the shipped file is on.
 const fileOn = (keys: readonly string[]): SlData => ({
   ...shipped,
-  maps: shipped.maps.map((map, i) => ({ ...map, key: keys[i]! })),
+  maps: [...keys],
 })
 const data = fileOn(TEAM_VARIANTS.sl.maps)
 const learned = learnSeason(data)
@@ -72,7 +71,7 @@ const expectSaved = (
     const choice = chosen.teams[i]!
     const team = (choice.source === 0 ? data : data.before!).teams[choice.team]!
     const placement = team.placements[choice.placement]!
-    expect(board.m).toBe(data.maps[team.map]!.key)
+    expect(board.m).toBe(data.maps[team.map])
     expect([...(board.c ?? [])].sort(byTile)).toEqual(
       placement.c.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
     )

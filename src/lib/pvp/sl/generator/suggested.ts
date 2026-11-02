@@ -44,7 +44,7 @@ export function suggestedUnits(
       key,
       // A map with no games yet is expected to draw the enemy heroes of the map
       // whose teams it takes.
-      { ...data.placement, pickRates: { [key]: pickRates[data.maps[source]!.key] ?? {} } },
+      { ...data.placement, pickRates: { [key]: pickRates[data.maps[source]!] ?? {} } },
       PLACEMENT_LOOKUPS,
     )
     return units.map((unit, i): SlUnit => [positions[i]!, unit])

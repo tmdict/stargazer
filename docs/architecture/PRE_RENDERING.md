@@ -66,7 +66,7 @@ A deploy purges the previous build's hashed chunks, so a stale tab's next lazy r
 
 ## PvP reports
 
-The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page from an external report generator with its own styles and scripts. It sits outside Vue routing and the route list, and reaches the sitemap only because the sitemap scans the built HTML. The generator's own folder, `src/content/pvp/sl/`, holds its data file and no template, and the plugin takes only folders named `s<N>`. The plugin runs only in the client production build, so a report URL does not resolve in the dev server.
+The `guideReports` plugin (`scripts/guideReports.ts`) turns each season's report template from the data pack into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page from an external report generator with its own styles and scripts. It sits outside Vue routing and the route list, and reaches the sitemap only because the sitemap scans the built HTML. The plugin runs only in the client production build, so a report URL does not resolve in the dev server.
 
 The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies.
 

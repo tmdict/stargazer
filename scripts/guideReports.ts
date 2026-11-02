@@ -1,4 +1,4 @@
-// Hydrates the PvP report templates in src/content/pvp with this client
+// Hydrates the PvP report templates in the data pack with this client
 // build's shared hero and pre-season artifact URLs. Seasonal icons are
 // embedded in the template.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -15,7 +15,7 @@ export function guideReports(): Plugin {
       config = resolved
     },
     generateBundle(_options, bundle) {
-      const directory = join(config.root, 'src/content/pvp')
+      const directory = join(config.root, 'src/pack/pvp')
       if (!existsSync(directory)) return
       const seasons = readdirSync(directory, { withFileTypes: true })
         .filter((entry) => entry.isDirectory() && /^s\d+$/.test(entry.name))

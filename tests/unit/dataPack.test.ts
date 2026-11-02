@@ -82,6 +82,8 @@ describe('build checks', () => {
     for (const { code } of SKILL_LOCALES) put(`pack/text/skill/${code}/odie.json`)
     put('pack/text/skill/numbers.json', '{ "odie": {} }')
     put('pack/screenshot-import/hero-icons.json', '{ "icons": [1] }')
+    put('pack/pvp/sl.bin', 'x')
+    put('pack/pvp/sl.key', 'x')
     put('pack/text/skill/en/_artifacts.json', '{ "starshard": { "name": "", "levels": [] } }')
   })
 
@@ -99,6 +101,13 @@ describe('build checks', () => {
       'frosthelm has no text in the pack',
       'beetle has no text in the pack',
       'the board picture turret is not in the pack',
+    ])
+  })
+
+  it('stop on a summary with no report', () => {
+    put('pack/pvp/s9/summary.json', '{}')
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
+      'the s9 summary has no report in the pack',
     ])
   })
 

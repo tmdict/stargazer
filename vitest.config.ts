@@ -1,15 +1,19 @@
+import { statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import vue from '@vitejs/plugin-vue'
-import { loadEnv } from 'vite'
 import { configDefaults, defineConfig } from 'vitest/config'
 
-// These two read the shipped Supreme League data file, which needs the
-// VITE_SL_SEED setting. A copy without it leaves them out and says so.
-const SL_DATA_TESTS = ['tests/unit/sl/slData.test.ts', 'tests/unit/sl/team.test.ts']
-const slSeeded = Boolean(
-  loadEnv('test', fileURLToPath(new URL('.', import.meta.url)), 'VITE_SL_SEED').VITE_SL_SEED,
-)
-if (!slSeeded) console.log(`VITE_SL_SEED is not set, so ${SL_DATA_TESTS.join(' and ')} are skipped`)
+// These read the PvP data, which comes with the data pack. A copy without it
+// leaves them out and says so.
+const PVP_DATA_TESTS = [
+  'tests/integration/guideReports.test.ts',
+  'tests/unit/content/pvpSeasons.test.ts',
+  'tests/unit/sl/slData.test.ts',
+  'tests/unit/sl/team.test.ts',
+]
+const slKey = statSync(new URL('./src/pack/pvp/sl.key', import.meta.url), { throwIfNoEntry: false })
+const pvpPacked = Boolean(slKey?.size)
+if (!pvpPacked) console.log(`No data pack, so ${PVP_DATA_TESTS.join(', ')} are skipped`)
 
 export default defineConfig({
   plugins: [vue()],
@@ -22,7 +26,7 @@ export default defineConfig({
     // The tests over real data and screenshots take seconds, and several times
     // that on a busy machine, so the default of 5 s fails them for load alone.
     testTimeout: 30_000,
-    exclude: slSeeded ? configDefaults.exclude : [...configDefaults.exclude, ...SL_DATA_TESTS],
+    exclude: pvpPacked ? configDefaults.exclude : [...configDefaults.exclude, ...PVP_DATA_TESTS],
   },
   resolve: {
     alias: {

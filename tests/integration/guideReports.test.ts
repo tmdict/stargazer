@@ -26,7 +26,7 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
       'src/utils',
       'src/pack/images/character',
       'src/pack/images/artifact',
-      'src/content/pvp/s7',
+      'src/pack/pvp/s7',
     ]) {
       mkdirSync(join(dir, path), { recursive: true })
     }
@@ -45,7 +45,7 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
       console.log(characterImages, artifactImages, matcher)
     `,
     )
-    const templateFile = join(dir, 'src/content/pvp/s7/index.template.html')
+    const templateFile = join(dir, 'src/pack/pvp/s7/index.template.html')
     const template =
       '<h1>Anonymous report</h1><svg><image href="{{asset:character/evie}}"/><image href="{{asset:artifact/starshard}}"/></svg><script>window.report = 1</script>'
     writeFileSync(templateFile, template)

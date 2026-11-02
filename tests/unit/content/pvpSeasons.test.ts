@@ -5,9 +5,9 @@ import { loadCharacters } from '@/utils/dataLoader'
 
 const heroNames = new Set(loadCharacters().map((character) => character.name))
 
-// A summary is generated with a season's report and copied here, so its heroes
-// are checked against the hero list, and every team is named in each language
-// the report is written in.
+// A summary is generated with a season's report and comes with the data pack,
+// so its heroes are checked against the hero list, and every team is named in
+// each language the report is written in.
 it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
   'season %i summary names known heroes and each team in its languages',
   (_season, summary) => {

@@ -22,7 +22,7 @@ export interface SlDefaultSet {
   })[]
 }
 
-export async function defaultSlSet(bytes: Uint8Array): Promise<SlDefaultSet | null> {
+export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDefaultSet | null> {
   const file = await decodeSlData(bytes)
   // The top levels, where the recorded opponents are counted, so the set is
   // the records' own best.

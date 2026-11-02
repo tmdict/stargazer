@@ -87,11 +87,6 @@ export interface SlEvidence {
   oneOffs: boolean
 }
 
-interface SlMap {
-  key: string
-  grid: { ally: number[]; enemy: number[]; blocked: number[]; breakable: number[] }
-}
-
 export interface SlPrices {
   paragon: Record<string, number[]>
   refinement: number[]
@@ -103,7 +98,7 @@ export interface SlData extends SlSeason<SlTeam, SlGame> {
   season: number
   // YYYY-MM-DD
   exportedAt: string
-  maps: SlMap[]
+  maps: string[]
   prior: number
   alpha: number
   // The strict rule first, then the relaxed one.

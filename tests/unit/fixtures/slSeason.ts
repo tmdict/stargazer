@@ -18,10 +18,7 @@ export function madeUpData(teams: MadeUpTeam[], games: SlGame[]): SlData {
     season: 8,
     exportedAt: '2026-10-01',
     sample: { matches: games.length / 2, games: games.length / 2, players: 1 },
-    maps: Array.from({ length: 5 }, (_, i) => ({
-      key: `map-${i}`,
-      grid: { ally: [], enemy: [], blocked: [], breakable: [] },
-    })),
+    maps: Array.from({ length: 5 }, (_, i) => `map-${i}`),
     prior: 2,
     alpha: 0.5,
     evidence: [{ groupGames: 0, players: 0, games: 1, oneOffs: true }],

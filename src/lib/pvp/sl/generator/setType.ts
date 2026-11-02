@@ -27,7 +27,7 @@ export interface SlBoard {
 // the first map missing from the file with the first map gone from the list.
 export function slBoards(data: SlData, type: SlSetType): SlBoard[] {
   const keys = type === 'sl' ? TEAM_VARIANTS.sl.maps : variantMaps(type, DEFAULT_VARIANT)
-  const held = data.maps.map((map) => map.key)
+  const held = data.maps
   const replaced = held.flatMap((key, i) => (keys.includes(key) ? [] : [i]))
   return keys.map((key) => {
     const own = held.indexOf(key)

@@ -1,35 +1,31 @@
-/* Reads the Supreme League data file (src/content/pvp/sl/sl.bin).
- * The file is the JSON compressed with raw deflate, each byte then combined
- * with a repeatable keystream (mulberry32 from the VITE_SL_SEED setting), so it
- * is noise in the browser's network panel. The writer holds the same seed, and
- * the repository none. It deters a casual look, nothing more: Vite writes the
- * setting into this script, which every visitor downloads. The decoded data is
- * held here and handed to the page as a plain object, never put in a store or
- * on window. */
+/* Reads the Supreme League data file (pvp/sl.bin in the data pack).
+ * The file is the JSON compressed with raw deflate, then encrypted with AES-GCM,
+ * so it is noise in the browser's network panel. The key comes from pvp/sl.key,
+ * new with each export, and the repository holds neither. It deters a casual
+ * look, nothing more: Vite writes sl.key into this script, which every visitor
+ * downloads. The decoded data is held here and handed to the page as a plain
+ * object, never put in a store or on window. */
 
-import slFileUrl from '@/content/pvp/sl/sl.bin?url'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { TEAM_MODES } from '@/lib/teams/modes'
+import slFileUrl from '@/pack/pvp/sl.bin?url'
+import slKey from '@/pack/pvp/sl.key?raw'
 import type { SlData } from './types'
 
-function seed(): number {
-  const setting = import.meta.env.VITE_SL_SEED
-  const value = Number(setting)
-  if (!setting || !Number.isInteger(value)) throw new Error('VITE_SL_SEED is not set to a number')
-  return value >>> 0
-}
+// The writer combines sl.key with the same text, so what the script stores is
+// not itself the key.
+const KEY_MIX = 'stargazer-sl'
 
-// XOR with the keystream, which undoes itself.
-function unscramble(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-  const out = new Uint8Array(bytes.length)
-  let s = seed()
-  for (let i = 0; i < bytes.length; i++) {
-    s = (s + 0x6d2b79f5) >>> 0
-    let t = Math.imul(s ^ (s >>> 15), 1 | s)
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t)
-    out[i] = bytes[i]! ^ ((t ^ (t >>> 14)) & 0xff)
-  }
-  return out
+async function decrypt(file: Uint8Array<ArrayBuffer>): Promise<ArrayBuffer> {
+  const material = new TextEncoder().encode(`${slKey.trim()}${KEY_MIX}`)
+  const digest = await crypto.subtle.digest('SHA-256', material)
+  const key = await crypto.subtle.importKey('raw', digest, 'AES-GCM', false, ['decrypt'])
+  // The file opens with the cipher's 12-byte starting value.
+  return crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: file.subarray(0, 12) },
+    key,
+    file.subarray(12),
+  )
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -103,12 +99,6 @@ const isPlacementData = (value: unknown): boolean =>
   isObject(value.pickRates) &&
   Object.values(value.pickRates).every(isNumberRecord)
 
-const isMap = (value: unknown): boolean => {
-  if (!isObject(value) || typeof value.key !== 'string' || !isObject(value.grid)) return false
-  const { grid } = value
-  return ['ally', 'enemy', 'blocked', 'breakable'].every((zone) => isNumbers(grid[zone]))
-}
-
 /* The shape the model, the generator and the pages rely on: a file of another
  * shape (one written for other code, or a page the host served in its place)
  * is refused whole. The levels' prices must cover every level Stargazer
@@ -121,7 +111,7 @@ function isSlData(value: unknown): value is SlData {
     typeof value.exportedAt === 'string' &&
     Array.isArray(value.maps) &&
     value.maps.length === TEAM_MODES['5v5'].boardCount &&
-    value.maps.every(isMap) &&
+    value.maps.every((key) => typeof key === 'string') &&
     typeof value.prior === 'number' &&
     typeof value.alpha === 'number' &&
     Array.isArray(value.evidence) &&
@@ -140,8 +130,8 @@ function isSlData(value: unknown): value is SlData {
   )
 }
 
-export async function decodeSlData(bytes: Uint8Array): Promise<SlData> {
-  const stream = new Blob([unscramble(bytes)])
+export async function decodeSlData(bytes: Uint8Array<ArrayBuffer>): Promise<SlData> {
+  const stream = new Blob([await decrypt(bytes)])
     .stream()
     .pipeThrough(new DecompressionStream('deflate-raw'))
   const data: unknown = JSON.parse(await new Response(stream).text())

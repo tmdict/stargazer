@@ -2,9 +2,8 @@
  * machine. PLACEMENT_EXPORT names one or more saved-teams exports, joined as a
  * PATH is, and PLACEMENT_OUT the folder, outside the repository, its measures
  * and review page go to, since an export names players. What the engine is
- * tuned with comes from the Supreme League data file, read with the
- * VITE_SL_SEED setting. Each Supreme League set-up is placed by the engine and
- * set beside the player's own. A season other than the one Stargazer holds
+ * tuned with comes from the Supreme League data file. Each Supreme League
+ * set-up is placed by the engine and set beside the player's own. A season other than the one Stargazer holds
  * phantimals for is placed without its phantimal and seasonal artifact, and
  * scores no buff tile, since the map files hold this season's, and how often
  * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is how
@@ -403,7 +402,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
   it('places every recorded set-up and measures it against the player', async () => {
     if (!OUT) throw new Error('PLACEMENT_OUT names the folder the measures go to')
     const liveData = (
-      await decodeSlData(readFileSync(new URL('../../src/content/pvp/sl/sl.bin', import.meta.url)))
+      await decodeSlData(readFileSync(new URL('../../src/pack/pvp/sl.bin', import.meta.url)))
     ).placement
     const margin = liveData.weights.margin ?? 0
     const recorded = EXPORTS.flatMap(setupsOf)

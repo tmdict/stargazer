@@ -1,8 +1,10 @@
 import type { PvpSeasonSummary } from '@/lib/types/pvp'
 
-import { S7 } from './s7/summary'
-import { S8 } from './s8/summary'
-
-/* Seasons, newest first. A new season is a new `s<N>/summary.ts` beside its
- * report template, added at the front. */
-export const PVP_SEASONS: readonly PvpSeasonSummary[] = [S8, S7]
+/* Seasons, newest first. Each summary comes with the data pack, beside its
+ * report's template. */
+export const PVP_SEASONS: readonly PvpSeasonSummary[] = Object.values(
+  import.meta.glob<PvpSeasonSummary>('@/pack/pvp/s*/summary.json', {
+    eager: true,
+    import: 'default',
+  }),
+).sort((a, b) => b.season - a.season)

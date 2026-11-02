@@ -1,10 +1,5 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  /** The seed of the Supreme League data file's keystream (src/lib/pvp/sl/data/codec.ts). */
-  readonly VITE_SL_SEED?: string
-}
-
 /** The PvP team generator's set before a roster is picked (scripts/slPreview.ts). */
 declare module 'virtual:sl-preview' {
   const set: import('@/lib/pvp/sl/generator/defaultSet').SlDefaultSet | null

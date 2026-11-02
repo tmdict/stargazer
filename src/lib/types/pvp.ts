@@ -1,8 +1,8 @@
 /* A season's PvP summary: what the guide index shows for that season's
  * report, its title and its team groups. Generated with the season's report
- * and copied here beside its template, again with each export while the
- * season is played: a copy of the report's figures, not something the app
- * derives. */
+ * and kept beside its template in the data pack, renewed with each export
+ * while the season is played: a copy of the report's figures, not something the
+ * app derives. */
 
 import type { AppLocale } from './i18n'
 

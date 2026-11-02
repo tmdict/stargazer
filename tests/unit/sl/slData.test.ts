@@ -16,8 +16,7 @@ import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoade
 // bytes.
 vi.stubGlobal(
   'fetch',
-  async () =>
-    new Response(readFileSync(new URL('../../../src/content/pvp/sl/sl.bin', import.meta.url))),
+  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/sl.bin', import.meta.url))),
 )
 const data = await loadSlData()
 vi.unstubAllGlobals()
