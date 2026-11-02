@@ -1,7 +1,8 @@
 /* The arena map registry. teams/wire.ts reads map ids from here for the
-   binary link codec, so this file loads only the arena JSON and stays free of
+   binary link codec, so this file loads only the map JSON and stays free of
    dataLoader and Vue. */
 
+import variantMapLists from '@/data/maps.json'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -125,15 +126,20 @@ const tileKey = (hexId: number, state: State): string => `${hexId}:${availableSt
 
 const layoutKey = (tileKeys: string[]): string => tileKeys.sort().join(' ')
 
-const LAYOUTS = Object.entries(MAPS).map(([key, config]) => ({
-  key,
-  layout: layoutKey(config.grid.flatMap(({ type, hex }) => hex.map((id) => tileKey(id, type)))),
-}))
+const onTeamList = new Set(Object.values(variantMapLists).flat())
+
+const LAYOUTS = Object.entries(MAPS)
+  .map(([key, config]) => ({
+    key,
+    layout: layoutKey(config.grid.flatMap(({ type, hex }) => hex.map((id) => tileKey(id, type)))),
+  }))
+  .sort((a, b) => Number(onTeamList.has(b.key)) - Number(onTeamList.has(a.key)))
 
 // The preset whose layout the serialized `[hexId, state]` tiles (non-default
 // only, as the serializer emits them) reproduce exactly, if any. Presets that
 // share a layout (a season's preset reusing a permanent arena) are the same
-// board, and the first registered stands for both.
+// board, and the one on a team type's map list stands for both, since the
+// Arena's slot and links carry no map key and its quick-select names that one.
 export const findMapByTiles = (tiles: readonly number[][]): string | undefined => {
   const layout = layoutKey(
     tiles.flatMap(([hexId, state]) =>

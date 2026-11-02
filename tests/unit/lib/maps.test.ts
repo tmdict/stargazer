@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { findMapByTiles, MAPS } from '@/lib/maps'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 
 // A preset as the serializer would emit it: [hexId, state] for every
@@ -17,6 +18,12 @@ describe('findMapByTiles', () => {
       const found = findMapByTiles(tilesOf(key).reverse())
       expect(found).toBeDefined()
       expect(layoutOf(found!)).toEqual(layoutOf(key))
+    }
+  })
+
+  it("names the map on a team type's list when presets share a layout", () => {
+    for (const key of Object.values(TEAM_VARIANTS).flatMap((variant) => variant.maps)) {
+      expect(findMapByTiles(tilesOf(key))).toBe(key)
     }
   })
 
