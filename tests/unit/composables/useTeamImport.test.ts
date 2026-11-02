@@ -309,7 +309,7 @@ describe('clearing an import', () => {
     expect(api.names.right).toBe('')
   })
 
-  it('stops every worker, so a closed import holds their memory no longer', async () => {
+  it('stops every worker', async () => {
     stubImportBrowser()
     const api = hold()
     await api.addFiles([file('a.png')], 'result')
