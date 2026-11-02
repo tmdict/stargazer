@@ -57,6 +57,7 @@ export const stubImportBrowser = (): void => {
   FakeWorker.sortAs = null
   vi.stubGlobal('Worker', FakeWorker)
   vi.stubGlobal('document', { createElement: () => canvas })
+  vi.stubGlobal('matchMedia', () => ({ matches: false }))
   vi.stubGlobal(
     'createImageBitmap',
     vi.fn(async () => bitmap),

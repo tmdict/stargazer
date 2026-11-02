@@ -30,6 +30,13 @@ describe('cropResize', () => {
     expect(out.width).toBe(2)
     expect([...out.data.slice(12, 15)]).toEqual([9, 8, 7])
   })
+
+  it('reads a target pixel wholly outside the source as opaque black', () => {
+    const img = createImage(2, 1)
+    paint(img, 1, 0, [9, 8, 7])
+    const out = cropResize(img, { x: 1, y: 0, w: 2, h: 1 }, 2, 1)
+    expect([...out.data]).toEqual([9, 8, 7, 255, 0, 0, 0, 255])
+  })
 })
 
 describe('resample', () => {
@@ -81,5 +88,20 @@ describe('maskedNcc', () => {
     for (let y = 0; y < 40; y++) for (let x = 0; x < 40; x++) paint(flat, x, y, [200, 140, 60])
     expect(maskedNcc(flat, template, 10, 10, 1)).toBe(0)
     expect(maskedNcc(flat, template, 36, 36, 1)).toBe(-1)
+  })
+
+  it('scores a template by the step asked for, whichever step it was matched at before', () => {
+    const shot = createImage(12, 12)
+    const template = createImage(12, 12)
+    for (let y = 0; y < 12; y++) {
+      for (let x = 0; x < 12; x++) {
+        paint(template, x, y, [(x * 20) % 255, (y * 30) % 255, ((x + y) * 13) % 255])
+        paint(shot, x, y, [(x * x * 7) % 255, (y * 40) % 255, (x * y * 5) % 255])
+      }
+    }
+    const atTwo = maskedNcc(shot, template, 0, 0, 2)
+    const atThree = maskedNcc(shot, template, 0, 0, 3)
+    expect(atThree).not.toBe(atTwo)
+    expect(atThree).toBe(maskedNcc(shot, { ...template }, 0, 0, 3))
   })
 })

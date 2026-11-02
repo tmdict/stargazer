@@ -42,7 +42,7 @@ Each import accepts only its own screens, on every way in. The sorter turns a sc
 - Seasonal artifacts are matched against the icons the app ships, so a new season's artifacts read once the data pack holds their icons ([Seasonal Content](./SEASONAL.md)). Until then, and for a past season's, the reader marks them unsure, and the matchup import leaves them empty.
 - The replay camera and arena were measured on one match. A Supreme League map change needs frames of the new maps checked, and a new arena picture when the fight's surroundings change.
 - A new hero reads once its portrait is in the app, and an outfit once the data pack holds its picture. A face neither covers stays unsure until a correction teaches it.
-- A roster reads in fewer workers on a device with little reported memory or few cores, so it takes longer there. Phones have not been timed.
+- An import reads in fewer workers on a device with little reported memory, few cores or a touch screen, so it takes longer there. Phones have not been timed.
 
 ## Privacy
 

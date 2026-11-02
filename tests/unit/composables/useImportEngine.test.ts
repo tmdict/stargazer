@@ -250,7 +250,9 @@ describe('import engine', () => {
   it('starts a reader for each waiting shot up to the pool, each with its own references', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
     const { add } = holdEngine()
-    await add([1, 2, 3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
+    await add([file('1.png'), file('2.png')])
+    expect(readers()).toHaveLength(2)
+    await add([3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
     expect(readers()).toHaveLength(5)
     for (const reader of readers()) answerReady(await partsPosted(undefined, () => reader))
     expect(readers().map((w) => w.reads().length)).toEqual([1, 1, 1, 1, 1])
@@ -263,8 +265,8 @@ describe('import engine', () => {
 
   it.each([
     { device: 'little memory', memory: 2, touch: false, pool: 1 },
-    { device: 'a computer with middling memory', memory: 6, touch: false, pool: 3 },
-    { device: 'a touch screen with middling memory', memory: 6, touch: true, pool: 2 },
+    { device: 'a computer with middling memory', memory: 4, touch: false, pool: 3 },
+    { device: 'a touch screen with middling memory', memory: 4, touch: true, pool: 2 },
     { device: 'a touch screen with plenty of memory', memory: 8, touch: true, pool: 3 },
     { device: 'a touch screen reporting no memory', memory: undefined, touch: true, pool: 2 },
     { device: 'a computer reporting no memory', memory: undefined, touch: false, pool: 5 },
@@ -274,6 +276,36 @@ describe('import engine', () => {
     const { add } = holdEngine(['roster'])
     await add([1, 2, 3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
     expect(readers()).toHaveLength(pool)
+  })
+
+  it('fails a shot whose file does not decode or is too narrow, and queues the rest', async () => {
+    const { shots, add } = holdEngine()
+    vi.mocked(createImageBitmap)
+      .mockRejectedValueOnce(new Error('not an image'))
+      .mockResolvedValueOnce({ ...bitmap, width: 10 } as ImageBitmap)
+    await add([file('broken.png'), file('narrow.png'), file('fine.png')])
+    expect(shots.map((s) => [s.status, s.error])).toEqual([
+      ['failed', 'unsupported'],
+      ['failed', 'too-small'],
+      ['waiting', null],
+    ])
+  })
+
+  it('drops a reader it has no memory to copy the references for, and starts no other', async () => {
+    vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
+    const { engine, shots, add } = holdEngine(['roster'])
+    await add([file('1.png')])
+    const first = await partsPosted(['heroes'])
+    answerReady(first, ['heroes'])
+    vi.spyOn(Uint8ClampedArray.prototype, 'slice').mockImplementationOnce(() => {
+      throw new RangeError('Array buffer allocation failed')
+    })
+    await add([file('2.png')])
+    expect(readers().filter((w) => !w.terminated)).toEqual([first])
+    expect(engine.referenceStatus.value).toBe('ready')
+
+    first.reply({ type: 'reading', id: shots[0]!.id, reading: rosterReading })
+    expect(first.reads()).toEqual([shots[0]!.id, shots[1]!.id])
   })
 
   it('drops a reader whose tables fail while another holds them, and grows the pool no further', async () => {

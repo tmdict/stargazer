@@ -173,14 +173,16 @@ const findShot = (id: string): { shot: EngineShot; session: ShotSession } | null
 
 const unread = (shot: EngineShot): boolean => shot.status === 'waiting' || shot.status === 'reading'
 
+const failShot = (shot: EngineShot, error: ShotError): void => {
+  shot.status = 'failed'
+  shot.error = error
+}
+
 // Fail the shots not yet read, those that need `part` when one is given.
 const failUnreadShots = (error: ShotError, part?: ReferencePart): void => {
   for (const session of sessions) {
     for (const shot of session.shots()) {
-      if (unread(shot) && (!part || partsOf(shot.kind).includes(part))) {
-        shot.status = 'failed'
-        shot.error = error
-      }
+      if (unread(shot) && (!part || partsOf(shot.kind).includes(part))) failShot(shot, error)
     }
   }
 }
@@ -204,8 +206,10 @@ const drawToImage = (source: ImageBitmap, width: number, height: number): RgbaIm
   return { width, height, data: data.data }
 }
 
-const drawToWidth = (bitmap: ImageBitmap, width: number): RgbaImage =>
-  drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
+const drawUpToWidth = (bitmap: ImageBitmap, maxWidth: number): RgbaImage => {
+  const width = Math.min(bitmap.width, maxWidth)
+  return drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
+}
 
 const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> => {
   const response = await fetch(url)
@@ -355,41 +359,45 @@ async function loadMatchPart(): Promise<MatchReferences> {
   return { artifacts, units, board, arena: await loadArena().then(copyImage, () => null) }
 }
 
-// A reader's own copy of a fetched part, its pixels handed over with it.
+// A reader's own copy of a fetched part, its pixels handed over with it. A device
+// short of memory can fail on the copy as it would building the reader's tables.
 const postPart = (reader: Reader, part: ReferencePart): void => {
-  if (part === 'heroes' && loaded.heroes) {
-    const frames = loaded.heroes.frames.map(copyImage)
-    const portraits = loaded.heroes.portraits.map((p) => ({ ...p, image: copyImage(p.image) }))
-    const message: ImportRequest = { type: 'heroes', frames, portraits, learned: learned.value }
-    reader.worker.postMessage(message, [
-      ...frames.map((f) => f.data.buffer),
-      ...portraits.map((p) => p.image.data.buffer),
-    ])
-  }
-  if (part === 'match' && loaded.match) {
-    const artifacts = loaded.match.artifacts.map((a) => ({ ...a, image: copyImage(a.image) }))
-    const units = loaded.match.units.map((u) => ({ ...u, image: copyImage(u.image) }))
-    const board = loaded.match.board.map((b) => ({ ...b, image: copyImage(b.image) }))
-    const arena = loaded.match.arena && copyImage(loaded.match.arena)
-    const message: ImportRequest = { type: 'match', artifacts, units, board, arena }
-    reader.worker.postMessage(message, [
-      ...artifacts.map((a) => a.image.data.buffer),
-      ...units.map((u) => u.image.data.buffer),
-      ...board.map((b) => b.image.data.buffer),
-      ...(arena ? [arena.data.buffer] : []),
-    ])
+  try {
+    if (part === 'heroes' && loaded.heroes) {
+      const frames = loaded.heroes.frames.map(copyImage)
+      const portraits = loaded.heroes.portraits.map((p) => ({ ...p, image: copyImage(p.image) }))
+      const message: ImportRequest = { type: 'heroes', frames, portraits, learned: learned.value }
+      reader.worker.postMessage(message, [
+        ...frames.map((f) => f.data.buffer),
+        ...portraits.map((p) => p.image.data.buffer),
+      ])
+    }
+    if (part === 'match' && loaded.match) {
+      const artifacts = loaded.match.artifacts.map((a) => ({ ...a, image: copyImage(a.image) }))
+      const units = loaded.match.units.map((u) => ({ ...u, image: copyImage(u.image) }))
+      const board = loaded.match.board.map((b) => ({ ...b, image: copyImage(b.image) }))
+      const arena = loaded.match.arena && copyImage(loaded.match.arena)
+      const message: ImportRequest = { type: 'match', artifacts, units, board, arena }
+      reader.worker.postMessage(message, [
+        ...artifacts.map((a) => a.image.data.buffer),
+        ...units.map((u) => u.image.data.buffer),
+        ...board.map((b) => b.image.data.buffer),
+        ...(arena ? [arena.data.buffer] : []),
+      ])
+    }
+  } catch (error) {
+    console.error('Screenshot import references failed', error)
+    dropReader(reader, 'references')
   }
 }
 
 // How many workers an import reads with, each holding its own copy of the
-// references: at most one fewer than the device's cores, five on a computer and
-// three on a touch screen with 8 GB or more, three and two below that, and one
-// under 4 GB. Safari and Firefox report no memory, so a touch screen that does
+// references. Safari and Firefox report no memory, so a touch screen that does
 // not, most likely a phone, counts as having little and a computer as plenty.
 const poolSize = (): number => {
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
   if (memory !== undefined && memory < 4) return 1
-  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+  const touch = matchMedia('(pointer: coarse)').matches
   const plenty = memory === undefined ? !touch : memory >= 8
   const limit = touch ? (plenty ? 3 : 2) : plenty ? 5 : 3
   return Math.max(1, Math.min(limit, (navigator.hardwareConcurrency || 2) - 1))
@@ -412,7 +420,7 @@ const dispatch = (): void => {
   if (readers.length === 0 || readerFailed) return
   const busy = readers.filter((r) => r.reading !== null).length
   const wanted = Math.min(poolSize(), busy + queue.length)
-  while (readers.length < wanted) startReader()
+  while (readers.length < wanted && !readerFailed) startReader()
 }
 
 const onMessage = (reader: Reader, msg: ImportResponse): void => {
@@ -441,8 +449,7 @@ const onMessage = (reader: Reader, msg: ImportResponse): void => {
     const found = findShot(msg.id)
     if (found) {
       console.error(`Screenshot import could not read ${found.shot.name}`, msg.message)
-      found.shot.status = 'failed'
-      found.shot.error = 'read'
+      failShot(found.shot, 'read')
     }
     dispatch()
     return
@@ -492,7 +499,7 @@ const startSorter = async (): Promise<Worker> => {
    the caller's default stands. A replay frame is only told when `replay`
    allows one. */
 const sortShot = async (bitmap: ImageBitmap, replay: boolean): Promise<ImportKind | null> => {
-  const image = drawToWidth(bitmap, Math.min(bitmap.width, SORT_WIDTH))
+  const image = drawUpToWidth(bitmap, SORT_WIDTH)
   const started = (sorter ??= startSorter())
   const target = await started
   // The sorter failed while starting, and its error answered the sorts it had.
@@ -532,10 +539,7 @@ function dropReader(reader: Reader, error: ShotError): void {
   reader.worker.terminate()
   readerFailed = true
   const lost = reader.reading === null ? null : findShot(reader.reading)
-  if (lost) {
-    lost.shot.status = 'failed'
-    lost.shot.error = 'worker'
-  }
+  if (lost) failShot(lost.shot, 'worker')
   if (readers.length > 0) {
     dispatch()
     return
@@ -567,7 +571,7 @@ async function ensurePart(part: ReferencePart): Promise<void> {
       if (mine !== visit) return
       loaded.match = match
     }
-    for (const reader of readers) postPart(reader, part)
+    for (const reader of [...readers]) postPart(reader, part)
   } catch (error) {
     if (mine !== visit) return
     // Left in the console: the modal only says the references failed, and
@@ -591,23 +595,19 @@ const decodeFile = async (file: Blob): Promise<ImageBitmap | null> => {
 // Queue a shot from its decoded file, null when the file did not decode. With a
 // part it needs failed the shot fails too, but its pixels stay queued for the
 // retry the next added shot makes.
-const readShot = (shot: EngineShot, bitmap: ImageBitmap | null): void => {
+const queueShot = (shot: EngineShot, bitmap: ImageBitmap | null): void => {
+  const { min, max } = DECODE_WIDTHS[shot.kind]
+  if (!bitmap) return failShot(shot, 'unsupported')
+  if (bitmap.width < min) return failShot(shot, 'too-small')
   try {
-    if (!bitmap) throw new Error('not an image')
-    const { min, max } = DECODE_WIDTHS[shot.kind]
-    if (bitmap.width < min) throw new Error('too small')
-    const image = drawToWidth(bitmap, Math.min(bitmap.width, max))
-    queue.push({ id: shot.id, image, kind: shot.kind })
-    if (partsOf(shot.kind).some((p) => partStatus[p].value === 'failed')) {
-      shot.status = 'failed'
-      shot.error = 'references'
-    }
-    dispatch()
-  } catch (error) {
-    shot.status = 'failed'
-    shot.error =
-      error instanceof Error && error.message === 'too small' ? 'too-small' : 'unsupported'
+    queue.push({ id: shot.id, image: drawUpToWidth(bitmap, max), kind: shot.kind })
+  } catch {
+    return failShot(shot, 'unsupported')
   }
+  if (partsOf(shot.kind).some((p) => partStatus[p].value === 'failed')) {
+    failShot(shot, 'references')
+  }
+  dispatch()
 }
 
 // A shot the import let go of: its waiting read is dropped, and a reading
@@ -735,7 +735,7 @@ export function useImportEngine(session: ShotSession): ImportEngine {
             continue
           }
           result.added++
-          readShot(add(file, placed.kind), bitmap)
+          queueShot(add(file, placed.kind), bitmap)
         } finally {
           bitmap?.close()
         }

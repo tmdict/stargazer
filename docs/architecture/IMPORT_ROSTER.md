@@ -19,7 +19,7 @@ A whole roster takes several screenshots, taken any way as long as each hero sho
 └───────────────────┬──┬───┘
               files │  ▲
                     ▼  │  readings
-┌─ useImportEngine ─┴──┴───┐            ┌─ import.worker ×1–3 ─────┐
+┌─ useImportEngine ─┴──┴───┐            ┌─ import.worker ×1–5 ─────┐
 │ decoding, read queue     │───────────▶│ readRoster               │
 │ the hero references      │   images   │ hero table, frames       │
 │ learned icons            │◀───────────│                          │
