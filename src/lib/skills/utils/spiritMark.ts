@@ -1,14 +1,25 @@
 /**
- * Spirit Mark: a phantimal marks the hero on its priority-behind (or
- * priority-front) tile, the same adjacent-tile priority Daimon uses. The mark
+ * Spirit Mark: a phantimal marks the unit on its priority-behind (or
+ * priority-front) tile, the same adjacent-tile priority Daimon uses, and a
+ * companion it spawned can carry a mark measured from its own tile. The mark
  * paints both tile channels (fill + border) in a yellow reserved for seasonal
  * marks, so they read apart from hero highlights. A mark paints only while the
  * phantimal's data file sets `"targeting": true`.
  *
- * The registry holds one skill per id, so a phantimal that already has a skill
- * (a companion) can't also take createSpiritMarkSkill. It draws its mark with
- * spiritMarkTiles inside whenSeasonalTargeting, in a withEffects over that skill.
+ * Every phantimal's marks follow one rule. They go out one at a time, the
+ * phantimal's first and then its companions', each to the first unit in its
+ * chain that can take one: a hero or a hero's companion, never a phantimal or a
+ * phantimal's companion. A unit holds one mark, so a marked unit is passed over
+ * by the marks after it. A mark whose chain has no such unit is not drawn.
+ *
+ * A team fields one phantimal, so one spiritMarkTiles call gives out all of a
+ * team's marks. The registry holds one skill per id, so a phantimal that already
+ * has a skill (a companion) can't also take createSpiritMarkSkill. It draws its
+ * marks with spiritMarkTiles inside whenSeasonalTargeting, in a withEffects over
+ * that skill.
  */
+import { findCharacterHex } from '../../characters/character'
+import { getCompanions } from '../../characters/companion'
 import { inPhantimalBand, toPhantimalId } from '../../characters/phantimal'
 import type { Skill, SkillContext, TilePaint } from '../skill'
 import { createEffectsSkill } from './builders'
@@ -17,18 +28,33 @@ import { findAdjacentPriorityTarget, type TargetDirection } from './targeting'
 
 const SPIRIT_MARK_COLOR = SKILL_COLORS.gold
 
-// A mark goes to a hero: a tile holding another phantimal or a phantimal's
-// companion is skipped for the next tile in the chain.
-const isMarkable = (characterId: number): boolean => !inPhantimalBand(characterId)
-
-// One target computation feeds both paint channels.
-export function spiritMarkTiles(ctx: SkillContext, direction: TargetDirection): TilePaint[] {
-  const info = findAdjacentPriorityTarget(ctx, direction, isMarkable)
-  if (!info?.targetHexId) return []
-  return [
-    { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR },
-    { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, fill: true },
-  ]
+export function spiritMarkTiles(
+  ctx: SkillContext,
+  direction: TargetDirection,
+  companionDirection: TargetDirection = direction,
+): TilePaint[] {
+  const marked = new Set<number>()
+  const mark = (from: SkillContext, chain: TargetDirection): TilePaint[] => {
+    const info = findAdjacentPriorityTarget(
+      from,
+      chain,
+      (unitId) => !inPhantimalBand(unitId) && !marked.has(unitId),
+    )
+    if (!info?.targetHexId) return []
+    marked.add(info.targetCharacterId!)
+    return [
+      { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR },
+      { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, fill: true },
+    ]
+  }
+  const tiles = mark(ctx, direction)
+  for (const companionId of getCompanions(ctx.grid, ctx.characterId, ctx.team)) {
+    const hexId = findCharacterHex(ctx.grid, companionId, ctx.team)
+    if (hexId !== null) {
+      tiles.push(...mark({ ...ctx, hexId, characterId: companionId }, companionDirection))
+    }
+  }
+  return tiles
 }
 
 export const whenSeasonalTargeting =

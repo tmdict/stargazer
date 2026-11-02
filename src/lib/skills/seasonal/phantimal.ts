@@ -13,11 +13,8 @@
  * skills. The ./seasonal/*.ts glob in skill.ts is inert once this directory is
  * empty.
  */
-import { findCharacterHex } from '../../characters/character'
-import { getCompanions } from '../../characters/companion'
 import { toPhantimalId } from '../../characters/phantimal'
 import { registerSkill } from '../registry'
-import type { SkillContext, TilePaint } from '../skill'
 import { createCompanionSkill, withEffects } from '../utils/builders'
 import { createSpiritMarkSkill, spiritMarkTiles, whenSeasonalTargeting } from '../utils/spiritMark'
 import type { TargetDirection } from '../utils/targeting'
@@ -36,18 +33,7 @@ for (const { localId, name, direction } of spiritMarks) {
 // Each wedge marks a hero of its own: Wedge of Matter the one in front of it,
 // Wedge of Power the one behind its own tile, so that mark follows the
 // companion wherever it stands.
-function wedgeMarkTiles(ctx: SkillContext): TilePaint[] {
-  const tiles = spiritMarkTiles(ctx, 'front')
-  for (const companionId of getCompanions(ctx.grid, ctx.characterId, ctx.team)) {
-    const hexId = findCharacterHex(ctx.grid, companionId, ctx.team)
-    if (hexId !== null) {
-      tiles.push(...spiritMarkTiles({ ...ctx, hexId, characterId: companionId }, 'behind'))
-    }
-  }
-  return tiles
-}
-
-const wedgeMarks = whenSeasonalTargeting(wedgeMarkTiles)
+const wedgeMarks = whenSeasonalTargeting((ctx) => spiritMarkTiles(ctx, 'front', 'behind'))
 
 // Wedge of Matter enters with Wedge of Power on a random free tile of its
 // team; removing either removes both. Neither wedge holds a team slot, and

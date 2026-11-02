@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { addCompanionLink } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter } from '@/lib/characters/place'
-import { Grid } from '@/lib/grid'
+import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import {
   getCharacterSkill,
   registerSkill,
@@ -11,7 +12,7 @@ import {
   type SkillContext,
   type SkillLookups,
 } from '@/lib/skills/skill'
-import { createSpiritMarkSkill } from '@/lib/skills/utils/spiritMark'
+import { createSpiritMarkSkill, spiritMarkTiles } from '@/lib/skills/utils/spiritMark'
 import { Team } from '@/lib/types/team'
 import { NO_LOOKUPS, placeOnTile, removeFromTile } from '../../fixtures/skills'
 
@@ -76,6 +77,39 @@ describe('phantimal Spirit Mark skills', () => {
     getCharacterSkill(FRONT_MARK)!.onActivate(ctx(4, FRONT_MARK))
     expect(skillManager.getTileFillModifier(9)).toBeUndefined()
     expect(skillManager.getTileFillModifier(6)).toBeDefined()
+  })
+
+  it("marks a hero's companion", () => {
+    placeOnTile(grid, 4, FRONT_MARK, Team.ALLY)
+    placeOnTile(grid, 9, COMPANION_ID_OFFSET + 100, Team.ALLY)
+
+    getCharacterSkill(FRONT_MARK)!.onActivate(ctx(4, FRONT_MARK))
+    expect(skillManager.getTileFillModifier(9)).toBeDefined()
+  })
+
+  describe('with a companion that marks too', () => {
+    const COMPANION = FRONT_MARK + COMPANION_ID_OFFSET
+
+    // Hex 4 marks forward over 9 > 6 > 7 and hex 16 backward over 9 > 13 > 12,
+    // so both reach hex 9 first.
+    const markedTiles = (): number[] => {
+      placeOnTile(grid, 4, FRONT_MARK, Team.ALLY)
+      placeOnTile(grid, 16, COMPANION, Team.ALLY)
+      addCompanionLink(grid, FRONT_MARK, COMPANION, Team.ALLY)
+      const tiles = spiritMarkTiles(ctx(4, FRONT_MARK), 'front', 'behind')
+      return [...new Set(tiles.map(({ hexId }) => hexId))]
+    }
+
+    it('gives a hero both reach to the phantimal and the companion the next hero in its chain', () => {
+      placeOnTile(grid, 9, 100, Team.ALLY)
+      placeOnTile(grid, 13, 101, Team.ALLY)
+      expect(markedTiles()).toEqual([9, 13])
+    })
+
+    it('draws no second mark when the only hero in its chain holds one', () => {
+      placeOnTile(grid, 9, 100, Team.ALLY)
+      expect(markedTiles()).toEqual([9])
+    })
   })
 
   it('moves the mark on update when the marked unit moves', () => {

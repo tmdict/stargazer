@@ -66,7 +66,16 @@ A companion spawns on a random free tile of its team, and if there is none, plac
 
 ### Spirit Marks and the targeting switch
 
-A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. A mark paints only while the phantimal's data file sets `"targeting": true`, and stays hidden otherwise, even with the Skills toggle on. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withEffects` over the companion skill. A mark goes to a hero, so another phantimal or phantimal companion on the chosen tile is passed over for the next tile in the chain. A companion can carry its own mark, measured from its own tile and painted by its owner's skill (Wedge of Power marks the hero behind it).
+A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. A mark paints only while the phantimal's data file sets `"targeting": true`, and stays hidden otherwise, even with the Skills toggle on. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withEffects` over the companion skill. A companion can carry its own mark, measured from its own tile and painted by its owner's skill (Wedge of Power marks the hero behind it).
+
+Every phantimal's marks follow one rule (`spiritMarkTiles`, `src/lib/skills/utils/spiritMark.ts`):
+
+- Marks go out one at a time, the phantimal's first and then its companions'.
+- A mark goes to a hero or a hero's companion, such as Phraesto's shadow or Zanie's turrets, and never to a phantimal or a phantimal's companion.
+- A unit holds one mark, so a later mark passes over a marked unit, and the tile it stands on, as if it were not there.
+- A mark tries the tiles of its chain in order and takes the first unit it can. If none is left, it is not drawn.
+
+So when Wedge of Matter and Wedge of Power both reach one hero, Wedge of Matter keeps that hero and Wedge of Power takes the next hero in its own chain. A team fields one phantimal, so one call gives out all of a team's marks.
 
 Links store phantimals in each board's `s` section by local id, with companions as `N × 10000 + L` (bit layout in [URL Serialization](./URL_SERIALIZATION.md)). An id with no data renders on the grid as a removable "?".
 
