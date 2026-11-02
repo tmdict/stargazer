@@ -6,6 +6,7 @@
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
+import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { learnSeason } from '@/lib/pvp/sl/model/models'
@@ -14,7 +15,7 @@ import { artifactSurvives } from '@/lib/seasonal'
 
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: number[] }
-  | { type: 'place'; id: number; set: SlChoice }
+  | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[]; everyBoard: boolean }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
 export type SlResponse =
@@ -48,7 +49,8 @@ scope.addEventListener('message', async (event) => {
       const set = chooseSlSet(data, learned, msg.picks, counts, msg.boards)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'place') {
-      scope.postMessage({ type: 'placed', id: msg.id, units: suggestedUnits(data, msg.set) })
+      const units = suggestedUnits(data, msg.set, msg.boards, msg.everyBoard)
+      scope.postMessage({ type: 'placed', id: msg.id, units })
     } else {
       const panel = wwwPanel(data, learned, msg.teams, counts)
       scope.postMessage({ type: 'predicted', id: msg.id, panel })

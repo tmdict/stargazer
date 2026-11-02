@@ -23,6 +23,8 @@ const data = await loadSlData()
 vi.unstubAllGlobals()
 const seasons = [data, ...(data.before ? [data.before] : [])]
 const learned = learnSeason(data)
+const everyMap = data.maps.map((_, i) => i)
+const choose = (picks: SlPick[]) => chooseSlSet(data, learned, picks, () => true, everyMap)
 const heroes = new Map(
   loadCharacters()
     .filter((c) => !c.placeholder)
@@ -64,7 +66,7 @@ function fills(
 }
 
 // The generator's rules for the set it chose for `picks`.
-function holds(picks: SlPick[], chosen = chooseSlSet(data, learned, picks)): SlChoice {
+function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
   expect(chosen).not.toBeNull()
   const set = chosen!
   expect(set.teams).toHaveLength(data.maps.length)
@@ -178,7 +180,7 @@ describe('the shipped Supreme League data', () => {
 describe('chooseSlSet on the shipped data', () => {
   it('makes a set of every recorded hero at the top levels', () => {
     const picks = named.map((id) => pick(id))
-    const set = chooseSlSet(data, learned, picks)
+    const set = choose(picks)
     expect(set).not.toBeNull()
     holds(picks, set)
   })
@@ -201,7 +203,7 @@ describe('chooseSlSet on the shipped data', () => {
   })
 
   it('makes no set from no heroes', () => {
-    expect(chooseSlSet(data, learned, [])).toBeNull()
+    expect(choose([])).toBeNull()
   })
 })
 
@@ -290,7 +292,7 @@ describe('chooseSlSet on 626 seeded selections', () => {
       const answers = new Map<number, SlChoice | null>()
       selections.forEach((s, i) => {
         if (s.kind !== kind) return
-        const set = chooseSlSet(data, learned, s.picks)
+        const set = choose(s.picks)
         answers.set(i, set)
         expect(!!set, `selection ${i}: a set exactly when its teams fill every map`).toBe(
           fills(new Set(s.picks.map((p) => p.id))),

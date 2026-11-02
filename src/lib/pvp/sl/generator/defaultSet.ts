@@ -8,14 +8,16 @@ import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
 import { learnSeason } from '../model/models'
 import { chooseSlSet } from './chooser'
-import { choiceSeason, slTeamData } from './team'
+import { slBoards } from './setType'
+import { suggestedUnits } from './suggested'
+import { slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
 
 export interface SlDefaultSet {
   // The set as one encoded 5v5 team, as Save as team stores it.
   data: string
   teams: (Pick<SlChoiceTeam, 'core' | 'flex' | 'pairs'> & {
-    // Index into the data file's maps.
+    // The map's place in the Supreme League list.
     map: number
   })[]
 }
@@ -32,12 +34,19 @@ export async function defaultSlSet(bytes: Uint8Array): Promise<SlDefaultSet | nu
       paragon: TOP_LEVELS[ATTR_PARAGON]!,
       refinement: TOP_LEVELS[ATTR_REFINEMENT]!,
     }))
-  const set = chooseSlSet(file, learnSeason(file), picks, (id) => artifactSurvives(file.season, id))
+  const boards = slBoards(file, 'sl')
+  const set = chooseSlSet(
+    file,
+    learnSeason(file),
+    picks,
+    (id) => artifactSurvives(file.season, id),
+    boards.map((board) => board.source),
+  )
   if (!set) return null
   return {
-    data: slTeamData(file, set, picks),
-    teams: set.teams.map((t) => ({
-      map: choiceSeason(file, t).teams[t.team]!.map,
+    data: slTeamData(file, set, picks, boards, suggestedUnits(file, set, boards, false)),
+    teams: set.teams.map((t, index) => ({
+      map: boards[index]!.map,
       core: t.core,
       flex: t.flex,
       pairs: t.pairs,

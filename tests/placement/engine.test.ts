@@ -225,6 +225,10 @@ interface Scored {
   skipped: SkippedRule[]
 }
 
+// The map files hold the live season's buff tiles, so no other season scores one.
+const dataFor = (setup: Setup, data: PlacementData): PlacementData =>
+  setup.live ? data : { ...data, weights: { ...data.weights, buff: 0 } }
+
 // The set-up's team on the tiles `positionsOf` gives, in the board's units'
 // order, scored as the engine scores it, or null where it gives none.
 function scoreAt(
@@ -235,7 +239,7 @@ function scoreAt(
   const board = new PlacementBoard(setup.team, setup.map, PLACEMENT_LOOKUPS)
   const positions = positionsOf(board)
   if (!positions) return null
-  const scorer = new PlacementScorer(board, setup.team, data, { buffTiles: setup.live })
+  const scorer = new PlacementScorer(board, setup.team, dataFor(setup, data))
   board.place(positions)
   return {
     positions,
@@ -262,9 +266,7 @@ interface Placed {
 
 function placeSetup(setup: Setup, data: PlacementData): Placed & { ms: number } {
   const start = performance.now()
-  const result = placeTeam(setup.team, setup.map, data, PLACEMENT_LOOKUPS, {
-    buffTiles: setup.live,
-  })
+  const result = placeTeam(setup.team, setup.map, dataFor(setup, data), PLACEMENT_LOOKUPS)
   const ms = performance.now() - start
   return { result, pick: scoreAt(setup, data, () => result.positions)!, ms }
 }
@@ -649,10 +651,8 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       for (const { setup } of sample) {
         const { result } = engineOf(setup)
         const start = performance.now()
-        const full = placeTeam(setup.team, setup.map, dataOf(setup), PLACEMENT_LOOKUPS, {
-          buffTiles: setup.live,
-          full: true,
-        })
+        const data = dataFor(setup, dataOf(setup))
+        const full = placeTeam(setup.team, setup.map, data, PLACEMENT_LOOKUPS, { full: true })
         times.push(performance.now() - start)
         if (
           full.best.broken === result.best.broken &&

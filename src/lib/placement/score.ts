@@ -131,16 +131,13 @@ export class PlacementScorer {
     private readonly board: PlacementBoard,
     team: PlacementTeam,
     private readonly data: PlacementData,
-    options: { buffTiles: boolean },
   ) {
     const { grid, mapKey, lookups } = board
     this.heroes = team.heroes
     this.enemyTiles = deploymentTiles(mapKey, Team.ENEMY)
     this.enemyOrder = [...this.enemyTiles].sort((a, b) => a - b)
     const allyTiles = new Set(board.tiles)
-    this.buffTiles = options.buffTiles
-      ? buffTiles(mapKey).filter((hexId) => allyTiles.has(hexId))
-      : []
+    this.buffTiles = buffTiles(mapKey).filter((hexId) => allyTiles.has(hexId))
     const enemyHexes = [...this.enemyTiles].map((hexId) => grid.getHexById(hexId))
     const near = new Map(
       board.tiles.map((hexId) => {

@@ -4,8 +4,8 @@ import { useRoute } from 'vue-router'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import { decidedGames, unratedHeroes } from '@/lib/pvp/sl/data/games'
 import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
+import { slBoards } from '@/lib/pvp/sl/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
-import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { LockedHeroes } from '@/lib/types/character'
 import { reloadOntoCurrentBuild } from '@/router/routes'
 import { useGameDataStore } from '@/stores/gameData'
@@ -14,8 +14,8 @@ import { useI18nStore } from '@/stores/i18n'
 interface SlHeading {
   season: number
   date: string
-  // The file's maps are not the current rotation's.
-  rotation: boolean
+  // A Supreme League map has no recorded teams yet.
+  newMaps: boolean
   retired: boolean
   sample: SlSample
   before: (SlSample & { season: number }) | null
@@ -58,7 +58,7 @@ export function useSlFile() {
     heading.value = {
       season: data.season,
       date: data.exportedAt,
-      rotation: data.maps.map((m) => m.key).join() !== TEAM_VARIANTS.sl.maps.join(),
+      newMaps: slBoards(data, 'sl').some((board) => !board.recorded),
       retired: isRetiredSeason(data.season),
       sample: data.sample,
       before: data.before ? { season: data.before.season, ...data.before.sample } : null,

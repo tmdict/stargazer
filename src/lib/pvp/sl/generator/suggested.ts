@@ -1,32 +1,35 @@
-/* The engine's formation for each team of a chosen set (lib/placement): its
+/* The engine's formation for a chosen set's boards (lib/placement): each team's
  * heroes, the artifact the set gives it and the phantimal they can summon,
- * placed on its map from their skills, reading no recorded placement. A file
- * from another season than Stargazer's is placed as slTeamData draws it,
- * without its seasonal artifacts and phantimals, and scores no buff tile,
- * since the map files hold this season's. A map Stargazer no longer holds has
- * no formation here, and its board keeps the recorded one. */
+ * placed on its board's map from their skills, reading no recorded placement.
+ * A file from another season than Stargazer's is placed as slTeamData draws it,
+ * without its seasonal artifacts and phantimals. */
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { getMapByKey } from '@/lib/maps'
 import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { loadPhantimals } from '@/utils/dataLoader'
 import type { SlData, SlUnit } from '../data/types'
-import { choiceSeason } from './team'
+import type { SlBoard } from './setType'
 import type { SlChoice } from './types'
 
 // One entry per board, in board order: every unit and its tile, as a recorded
-// placement's c and s hold them together, or null for a map with no formation.
-export function suggestedUnits(data: SlData, set: SlChoice): (SlUnit[] | null)[] {
-  const retired = isRetiredSeason(data.season)
+// placement's c and s hold them together. A board whose teams were recorded on
+// its map is left null unless `everyBoard`, and keeps the recorded formation.
+export function suggestedUnits(
+  data: SlData,
+  set: SlChoice,
+  boards: readonly SlBoard[],
+  everyBoard: boolean,
+): (SlUnit[] | null)[] {
   // Each of a season's phantimals needs three heroes of its own factions, so
   // five heroes can summon one of them at most.
-  const phantimals = retired ? [] : loadPhantimals()
-  return set.teams.map((choice) => {
-    const mapKey = data.maps[choiceSeason(data, choice).teams[choice.team]!.map]!.key
-    if (!getMapByKey(mapKey)) return null
+  const phantimals = isRetiredSeason(data.season) ? [] : loadPhantimals()
+  const { pickRates } = data.placement
+  return set.teams.map((choice, index) => {
+    const { key, source, recorded } = boards[index]!
+    if (recorded && !everyBoard) return null
     const phantimal = phantimals.find((p) =>
       lineupQualifies(p, choice.heroes, PLACEMENT_LOOKUPS.factionOf),
     )
@@ -38,10 +41,11 @@ export function suggestedUnits(data: SlData, set: SlChoice): (SlUnit[] | null)[]
         artifact:
           artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
       },
-      mapKey,
-      data.placement,
+      key,
+      // A map with no games yet is expected to draw the enemy heroes of the map
+      // whose teams it takes.
+      { ...data.placement, pickRates: { [key]: pickRates[data.maps[source]!.key] ?? {} } },
       PLACEMENT_LOOKUPS,
-      { buffTiles: !retired },
     )
     return units.map((unit, i): SlUnit => [positions[i]!, unit])
   })

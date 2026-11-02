@@ -48,7 +48,7 @@ const DATA: PlacementData = {
 function scoredAt(at: Record<number, number>, data = DATA): PlacementScorer {
   const team = { heroes: Object.keys(at).map(Number) }
   const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
-  const scorer = new PlacementScorer(board, team, data, { buffTiles: true })
+  const scorer = new PlacementScorer(board, team, data)
   board.place(board.units.map((unit) => at[unit]!))
   return scorer
 }
@@ -118,7 +118,7 @@ describe('placement scoring', () => {
   it('meets the twins goal with two heroes of one faction between them, and a tenth of it with a phantimal or a companion', () => {
     const twinsMet = (team: PlacementTeam, between: [number, number]) => {
       const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
-      const scorer = new PlacementScorer(board, team, DATA, { buffTiles: true })
+      const scorer = new PlacementScorer(board, team, DATA)
       const fixed = new Map([
         [TWINS, 1],
         [TWINS + COMPANION_ID_OFFSET, 10],
@@ -143,7 +143,7 @@ describe('placement scoring', () => {
     const team = { heroes: [ALNA, SYLPHIRA, ORION, PERSEUS, DIONEL], phantimal: WEDGE_OF_MATTER }
     const wedgesMet = (at: Record<number, number>, power: number) => {
       const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
-      const scorer = new PlacementScorer(board, team, data, { buffTiles: true })
+      const scorer = new PlacementScorer(board, team, data)
       board.place(board.units.map((unit) => at[unit] ?? (unit === WEDGE_OF_MATTER ? 1 : power)))
       return metOf(scorer, WEDGE_OF_MATTER)
     }

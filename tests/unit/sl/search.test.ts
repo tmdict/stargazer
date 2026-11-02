@@ -194,7 +194,13 @@ describe('the search', () => {
           refinement: Math.floor(next() * 5),
         }))
       const expected = tryEvery(data, learned, picks)
-      const set = chooseSlSet(data, learned, picks)
+      const set = chooseSlSet(
+        data,
+        learned,
+        picks,
+        () => true,
+        data.maps.map((_, i) => i),
+      )
       expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
     }

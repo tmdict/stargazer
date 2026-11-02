@@ -13,9 +13,6 @@ const STARTS = 32
 const EQUAL_CAP = 1000
 
 interface PlacementOptions {
-  // Whether the map's buff tiles score, false for a season whose buff tiles
-  // stood elsewhere.
-  buffTiles?: boolean
   // Score every placement instead of searching from a few.
   full?: boolean
 }
@@ -219,7 +216,7 @@ export function placeTeam(
   options: PlacementOptions = {},
 ): PlacementResult {
   const board = new PlacementBoard(team, mapKey, lookups)
-  const scorer = new PlacementScorer(board, team, data, { buffTiles: options.buffTiles ?? true })
+  const scorer = new PlacementScorer(board, team, data)
   const search = new Search(board, scorer)
 
   if (options.full) {

@@ -7,6 +7,7 @@
 import { onMounted, readonly, ref } from 'vue'
 
 import type { SlUnit } from '@/lib/pvp/sl/data/types'
+import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
@@ -63,9 +64,14 @@ export function useSlEngine() {
     return answer.set
   }
 
-  // The engine's formation for each board of a set, null where it has none.
-  const place = async (set: SlChoice): Promise<(SlUnit[] | null)[]> => {
-    const answer = await ask((id) => ({ type: 'place', id, set }))
+  // The engine's formation for each board of a set, null where a board keeps
+  // the recorded one.
+  const place = async (
+    set: SlChoice,
+    boards: SlBoard[],
+    everyBoard: boolean,
+  ): Promise<(SlUnit[] | null)[]> => {
+    const answer = await ask((id) => ({ type: 'place', id, set, boards, everyBoard }))
     if (answer.type !== 'placed') throw new Error('The worker answered another request')
     return answer.units
   }

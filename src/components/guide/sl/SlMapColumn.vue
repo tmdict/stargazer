@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* One map of the set: the board as it was recorded, its artifact on its cell,
-   then the comp's record on the map, the core heroes to keep and the swaps
+/* One map of the set: the board, its artifact on its cell, then the comp's
+   record on the map, the core heroes to keep and the swaps
    recorded in place of one hero or two. A win rate shows from eight decided
    games, green from 60% and red to 40%, as the report colours one. Its host
    sizes it: --pt for the portraits, and --sl-unit, the length of one of the

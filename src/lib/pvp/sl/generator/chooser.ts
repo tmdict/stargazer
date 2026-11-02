@@ -1,10 +1,9 @@
 /* The PvP team generator's choice: the set of recorded teams, one per
  * board and no hero twice, each with an artifact by the artifact rule, with
  * the best chance to win most of the boards, for the heroes a visitor selects
- * at their levels. A board takes the teams recorded on its map: the file's
- * maps in order give a Supreme League set, the same map on every board a set
- * for the Teams page's default maps. Each team's chance is the model's,
- * against a typical opponent at the top levels. */
+ * at their levels. A board takes the teams recorded on one of the file's maps
+ * (slBoards), and boards on one map share them. Each team's chance is the
+ * model's, against a typical opponent at the top levels. */
 
 import type { SlData, SlEvidence } from '../data/types'
 import { shortfall } from '../data/upgrades'
@@ -239,8 +238,8 @@ function choose(
   return null
 }
 
-/* The set for `picks`, or null when none can be made. `boards` holds each
- * board's map, an index into the file's maps. The season before's teams join
+/* The set for `picks`, or null when none can be made. `boards` holds the
+ * file's map each board takes its teams from. The season before's teams join
  * when the selection holds fewer than `beforeUnder` Celestial and Hypogean
  * heroes that some recorded team holds, or when this season's teams alone
  * make no set. `counts` says whether an artifact counts toward a
@@ -250,8 +249,8 @@ export function chooseSlSet(
   data: SlData,
   learned: SlLearned,
   picks: readonly SlPick[],
-  counts: (artifact: number) => boolean = () => true,
-  boards: readonly number[] = data.maps.map((_, i) => i),
+  counts: (artifact: number) => boolean,
+  boards: readonly number[],
 ): SlChoice | null {
   const picked = new Map(picks.map((pick) => [pick.id, pick]))
   const { before, beforeUnder = 0 } = data

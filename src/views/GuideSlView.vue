@@ -2,14 +2,15 @@
 /* The PvP team generator: for the heroes and levels a visitor picks, the set
    of recorded teams, one per board and no hero twice, with the best chance to
    win a match (lib/pvp/sl), chosen in the Supreme League worker (useSlEngine)
-   so the page stays responsive. The boards are the Supreme League maps, or
-   with the 5v5 or 3v3 type all on map 1, as the Teams page's default boards
-   are. The picker edits a copy of the active roster, so trying a hero out
-   never changes the roster, and picking or importing another roster takes a
-   fresh copy. The set is chosen only on Generate and stays as it is while the
+   so the page stays responsive. The boards are the current Supreme League
+   maps, or with the 5v5 or 3v3 type all on map 1, as the Teams page's default
+   boards are. The picker edits a copy of the active roster, so trying a hero
+   out never changes the roster, and picking or importing another roster takes
+   a fresh copy. The set is chosen only on Generate and stays as it is while the
    selection, the type or the formation changes. The formation says whether
    Generate draws the set as recorded or in the engine's formations, worked out
-   in the worker, and Save as team opens the set on the Teams page as drawn.
+   in the worker, and a map with no recorded teams takes the engine's either
+   way. Save as team opens the set on the Teams page as drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */
@@ -35,12 +36,11 @@ import {
   TOP_LEVELS,
   type AttrRecord,
 } from '@/lib/characters/attributes'
-import type { SlData } from '@/lib/pvp/sl/data/types'
-import { slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
+import { slBoards, slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
-import { DEFAULT_VARIANT, MAX_SAVED_TEAMS, variantMaps, type TeamModeKey } from '@/lib/teams/modes'
+import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -100,13 +100,6 @@ const armedConfirm = useArmedConfirm()
 const type = ref<SlSetType>('sl')
 const formation = ref<SlFormation>('recorded')
 
-// Supreme League keeps the file's own maps, which can be an earlier
-// rotation's. A map the file does not hold leaves its board without teams.
-const boardsOf = (file: SlData, choice: SlSetType): number[] =>
-  choice === 'sl'
-    ? file.maps.map((_, i) => i)
-    : variantMaps(choice, DEFAULT_VARIANT).map((key) => file.maps.findIndex((m) => m.key === key))
-
 const shown = ref<SlShown | null>(null)
 // How many teams the last Generate could not make; 0 when it made them.
 const noSet = ref(0)
@@ -135,29 +128,32 @@ const generate = async (): Promise<void> => {
   try {
     const picks = picksOf(copy.value)
     const chosenFor = type.value
-    const placed = formation.value === 'suggested'
-    const boards = boardsOf(file, chosenFor)
-    const set = await generateSet(picks, boards)
-    const suggested = set && placed ? await placeSet(set) : undefined
+    const everyBoard = formation.value === 'suggested'
+    const boards = slBoards(file, chosenFor)
+    const set = await generateSet(
+      picks,
+      boards.map((board) => board.source),
+    )
     shown.value = set && {
       type: chosenFor,
       chance: set.chance,
       odds: set.odds,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
-      teams: set.teams.map((t) => {
-        const season = choiceSeason(file, t)
-        const family = t.family === null ? null : season.families[t.family]!
+      teams: set.teams.map((t, index) => {
+        const board = boards[index]!
+        const family = t.family === null ? null : choiceSeason(file, t).families[t.family]!
         return {
-          map: season.teams[t.team]!.map,
+          map: board.map,
           group: family && { name: family.name, core: family.core },
-          comp: t.comp,
+          // The comp's record is from the map its teams came from.
+          comp: board.recorded ? t.comp : null,
           core: t.core,
           flex: t.flex,
           pairs: t.pairs,
           chance: t.chance,
         }
       }),
-      data: slTeamData(file, set, picks, suggested),
+      data: slTeamData(file, set, picks, boards, await placeSet(set, boards, everyBoard)),
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false
@@ -237,8 +233,8 @@ const save = (): void => {
       @close="aboutOpen = false"
     />
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.sl-previous-season') }}</p>
-    <p v-else-if="heading?.rotation" class="sl-line sl-note">
-      {{ i18n.t('app.sl-previous-rotation') }}
+    <p v-if="heading?.newMaps && type === 'sl'" class="sl-line sl-note">
+      {{ i18n.t('app.sl-new-maps') }}
     </p>
     <p v-if="failed || engineStatus === 'failed'" class="sl-line sl-note">
       {{ i18n.t('app.sl-load-failed') }}

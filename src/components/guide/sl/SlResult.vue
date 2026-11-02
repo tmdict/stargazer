@@ -8,7 +8,7 @@ export interface SlShownTeam extends Pick<
   SlChoiceTeam,
   'comp' | 'core' | 'flex' | 'pairs' | 'chance'
 > {
-  // Index into the data file's maps.
+  // The map's place in the set's type's list.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
 }
