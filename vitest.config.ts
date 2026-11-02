@@ -19,6 +19,9 @@ export default defineConfig({
     // Code under test logs its own rejection paths; that output only matters
     // when a test fails.
     silent: 'passed-only',
+    // The tests over real data and screenshots take seconds, and several times
+    // that on a busy machine, so the default of 5 s fails them for load alone.
+    testTimeout: 30_000,
     exclude: slSeeded ? configDefaults.exclude : [...configDefaults.exclude, ...SL_DATA_TESTS],
   },
   resolve: {

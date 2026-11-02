@@ -50,7 +50,13 @@ const handleSave = (name: string, heroes: Record<string, AttrRecord>): void => {
 </script>
 
 <template>
-  <button type="button" class="control-btn compact" v-bind="$attrs" @click="openModal">
+  <button
+    type="button"
+    class="control-btn compact"
+    :aria-label="i18n.t('app.roster-import-button')"
+    v-bind="$attrs"
+    @click="openModal"
+  >
     <IconImagePlus :size="13" class="btn-icon" />
     <span class="btn-text">{{ i18n.t('app.roster-import-button') }}</span>
   </button>
