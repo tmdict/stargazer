@@ -1,17 +1,17 @@
-import { toBaseHeroId } from '../characters/character'
-import { inPhantimalBand, phantimalOwnerId } from '../characters/phantimal'
+import { getCompanions } from '../characters/companion'
+import { inPhantimalBand } from '../characters/phantimal'
 import { performPlace } from '../characters/place'
 import { performRemove } from '../characters/remove'
 import type { Hex } from '../hex'
 import { buffTiles, deploymentTiles } from '../maps'
-import { artifactTargetArrows } from '../skills/artifact'
-import { getCharacterSkill, type SkillContext, type SkillManager } from '../skills/skill'
+import { getCharacterSkill, type SkillContext } from '../skills/skill'
 import { searchByRow } from '../skills/utils/ring'
-import { findUnitBehind, findUnitInFront } from '../skills/utils/targeting'
+import { findUnitBehind } from '../skills/utils/targeting'
 import type { Rule, RuleGoal, RuleTeam } from '../types/rule'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
+import { artifactReach, charmReach, ruleUnit, skillReach, type Reach } from './reach'
 import type { FormationRule, ListEntry, PlacementData, PlacementTeam } from './types'
 
 // The list a rule falls back on when the team has none of its own list's heroes.
@@ -49,11 +49,6 @@ export interface SkippedRule {
   reason: string
 }
 
-interface Reach {
-  landed: number[]
-  marked: number[]
-}
-
 interface Effect {
   source: GoalCheck['source']
   owner: number | string
@@ -67,23 +62,16 @@ interface Effect {
   // For a most goal: the most tiles the effect can count from any of the
   // holder's tiles on this map, with no other unit placed.
   best?: number
-}
-
-// The unit a rule counts: a companion as its hero, a phantimal's companion as
-// its phantimal.
-const identity = (unitId: number): number =>
-  inPhantimalBand(unitId) ? phantimalOwnerId(unitId) : toBaseHeroId(unitId)
-
-function reachOf(manager: SkillManager, unit: number, team: Team): Reach {
-  const target = manager.getSkillTarget(unit, team)
-  const landed = target?.metadata?.arrows?.map((arrow) => arrow.toHexId) ?? []
-  if (target?.targetHexId != null) landed.push(target.targetHexId)
-  return { landed, marked: manager.getMarkedTiles(unit, team) }
+  // How many heroes a target goal wants, however many the effect reaches.
+  marks: number
 }
 
 const isWall = (state: State): boolean =>
   state === State.BLOCKED || state === State.BLOCKED_BREAKABLE
 
+// A list's heroes, the lists it brings in included. `seen` holds the lists on
+// the way down, so a list two others bring in is read for each, and only a list
+// that brings itself in fails.
 function expandList(
   lists: PlacementData['lists'],
   name: string,
@@ -98,6 +86,7 @@ function expandList(
     if (!more) return undefined
     for (const hero of more) if (!heroes.includes(hero)) heroes.push(hero)
   }
+  seen.delete(name)
   return heroes
 }
 
@@ -182,7 +171,7 @@ export class PlacementScorer {
         continue
       }
       for (const rule of rules) {
-        this.addEffect('unit', unit, unit, rule, (b) => [reachOf(b.manager, unit, Team.ALLY)])
+        this.addEffect('unit', unit, unit, rule, (b) => [skillReach(b.manager, unit, Team.ALLY)])
       }
     }
     // An enemy unit stands alone on its side, so a skill that reads its own
@@ -198,7 +187,7 @@ export class PlacementScorer {
         this.enemyOrder.flatMap((hexId) => {
           if (!performPlace(grid, hexId, unit, Team.ENEMY)) return []
           manager.activateCharacterSkill(unit, hexId, Team.ENEMY, grid)
-          const found = reachOf(manager, unit, Team.ENEMY)
+          const found = skillReach(manager, unit, Team.ENEMY)
           manager.deactivateCharacterSkill(unit, hexId, Team.ENEMY, grid)
           performRemove(grid, hexId)
           return [found]
@@ -208,22 +197,15 @@ export class PlacementScorer {
     for (const hero of team.heroes) {
       const charm = lookups.charmOf(hero)
       for (const rule of charm?.rules ?? []) {
-        const find = rule.tile === 'behind' ? findUnitBehind : findUnitInFront
-        this.addEffect('charm', charm!.id, hero, rule, (b) => {
-          const found = find(this.contextOf(b, hero))?.targetHexId
-          return [{ landed: found == null ? [] : [found], marked: [] }]
-        })
+        this.addEffect('charm', charm!.id, hero, rule, (b) => [
+          charmReach(this.contextOf(b, hero), rule.tile!),
+        ])
       }
     }
     const artifact = team.artifact === undefined ? undefined : lookups.artifactOf(team.artifact)
     for (const rule of artifact?.rules ?? []) {
       this.addEffect('artifact', artifact!.name, undefined, rule, (b) => [
-        {
-          landed: artifactTargetArrows(b.grid, Team.ALLY, artifact!.name).map((arrow) =>
-            arrow.toHex.getId(),
-          ),
-          marked: [],
-        },
+        artifactReach(b.grid, Team.ALLY, artifact!.name),
       ])
     }
 
@@ -322,7 +304,13 @@ export class PlacementScorer {
       this.skipped.push({ owner, reason: `no weight ${rule.weight}` })
       return
     }
-    const effect: Effect = { source, owner, holder, rule, weight: weight * share, reach }
+    // A phantimal and each of its companions give a Spirit Mark of their own,
+    // so a mark that finds no hero leaves its share of the goal unmet.
+    const marks =
+      holder !== undefined && inPhantimalBand(holder)
+        ? 1 + getCompanions(this.board.grid, holder, Team.ALLY).size
+        : 1
+    const effect: Effect = { source, owner, holder, rule, weight: weight * share, reach, marks }
     if (rule.goal === 'most' || (typeof rule.goal === 'object' && 'most' in rule.goal)) {
       effect.best = holder === undefined ? 0 : this.bestCount(effect, holder)
     }
@@ -397,14 +385,15 @@ export class PlacementScorer {
   private meetOnce(effect: Effect, { landed, marked }: Reach): number | null {
     const { rule, holder } = effect
     const { goal } = rule
-    const self = holder === undefined ? undefined : identity(holder)
-    const unitsOn = (hexIds: number[]): Set<number> => {
+    const self = holder === undefined ? undefined : ruleUnit(holder)
+    // `asRuleUnit` false keeps a companion as a unit of its own.
+    const unitsOn = (hexIds: number[], asRuleUnit = true): Set<number> => {
       const units = new Set<number>()
       for (const hexId of hexIds) {
         const tile = this.board.grid.getTileById(hexId)
         if (tile.characterId === undefined || tile.team !== Team.ALLY) continue
-        const unit = identity(tile.characterId)
-        if (unit !== self) units.add(unit)
+        if (ruleUnit(tile.characterId) === self) continue
+        units.add(asRuleUnit ? ruleUnit(tile.characterId) : tile.characterId)
       }
       return units
     }
@@ -415,11 +404,13 @@ export class PlacementScorer {
     }
     if ('atMost' in goal) return unitsOn(marked).size <= goal.atMost ? 1 : 0
     if ('exactly' in goal) {
-      const on = [...unitsOn(marked)]
+      // A companion takes a tile of its own, so it counts as a unit other than
+      // the team's heroes, as a phantimal does.
+      const on = [...unitsOn(marked, false)]
       if (on.length !== goal.exactly) return 0
       if (
         goal.sameFaction &&
-        new Set(on.map((unit) => this.board.lookups.factionOf(unit))).size !== 1
+        new Set(on.map((unit) => this.board.lookups.factionOf(ruleUnit(unit)))).size !== 1
       )
         return 0
       return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
@@ -431,7 +422,7 @@ export class PlacementScorer {
     if ('avoid' in goal) return hit.has(order[0]!) ? 0 : 1
     if ('target' in goal) {
       // An effect that lands on two wants the list's first two, half each.
-      const count = Math.max(1, hit.size)
+      const count = Math.max(effect.marks, hit.size)
       return order.slice(0, count).filter((hero) => hit.has(hero)).length / count
     }
     // Include: a share for each listed hero among those it reaches, where a

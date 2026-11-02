@@ -49,7 +49,7 @@ Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no oth
 
 ### Adding a skill
 
-Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder ([Skills](./architecture/SKILLS.md#builders-and-composition)). If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle.
+Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder ([Skills](./architecture/SKILLS.md#builders-and-composition)). If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle. A skill whose effect acts when the battle starts also takes a placement rule in its unit's data file ([Placement](./architecture/PLACEMENT.md#changing-a-rule)).
 
 ### Adding a screenshot screen
 
@@ -71,7 +71,7 @@ A season ships in three phases ([Seasonal Content](./architecture/SEASONAL.md#se
 
 When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the `tags` in each charm's, phantimal's and artifact's data file. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
 
-Add an artifact rule whenever its mechanic is known. Set a phantimal's `"targeting": true` once its Spirit Mark is live in the game.
+Before the season's first event, give its phantimals, seasonal artifacts and charms their placement rules ([Placement](./architecture/PLACEMENT.md#changing-a-rule)). Add an artifact rule whenever its mechanic is known. Set a phantimal's `"targeting": true` once its Spirit Mark is live in the game.
 
 ### Styles
 

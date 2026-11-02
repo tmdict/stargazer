@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
+import { isCompanionUnitId } from '@/lib/characters/character'
 import { repositionCompanions } from '@/lib/characters/companion'
 import {
   inPhantimalBand,
@@ -24,9 +24,8 @@ import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { availableState, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
-import { artifactTargetArrows } from '@/lib/skills/artifact'
+import { artifactReach, charmReach, ruleUnit, skillReach, type Reach } from '@/lib/placement/reach'
 import { getCharacterSkill, SkillManager } from '@/lib/skills/skill'
-import { findUnitBehind, findUnitInFront } from '@/lib/skills/utils/targeting'
 import { FULL_GRID } from '@/lib/types/grid'
 import type { Rule } from '@/lib/types/rule'
 import type { CharmData } from '@/lib/types/skill'
@@ -51,12 +50,13 @@ const charms = new Map<string, CharmData>(
 
 const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
 
-// A unit as the rules name it: a hero (a companion as its hero) or a phantimal
-// (its companion as the phantimal).
-const unitName = (id: number): string =>
-  inPhantimalBand(id)
-    ? (phantimalOf(id)?.name ?? `phantimal ${id}`)
-    : (heroById.get(toBaseHeroId(id))?.name ?? `hero ${id}`)
+// A unit by the name of the unit the rules count it as.
+const unitName = (id: number): string => {
+  const unit = ruleUnit(id)
+  return inPhantimalBand(unit)
+    ? (phantimalOf(unit)?.name ?? `phantimal ${id}`)
+    : (heroById.get(unit)?.name ?? `hero ${id}`)
+}
 
 // The urlState restore's order: each main, then its companions onto their
 // saved tiles at once, so a spawned companion never squats on a tile a later
@@ -116,8 +116,7 @@ function sidesOf(board: BoardState): Side[] {
     owner: string,
     holder: { name: string; hexId: number } | null,
     team: Team,
-    landed: number[],
-    marked: number[] = [],
+    { landed, marked }: Reach,
   ): Landing => {
     // A unit on two tiles (the twins, a phantimal and its companion) counts once.
     const markedSet = new Set(marked.filter((hexId) => hexId !== holder?.hexId))
@@ -167,15 +166,9 @@ function sidesOf(board: BoardState): Side[] {
       if (isPhantimalId(id)) side.phantimal = name
 
       if (getCharacterSkill(id)) {
-        const target = manager.getSkillTarget(id, team)
-        const landed = target?.metadata?.arrows?.map((arrow) => arrow.toHexId) ?? []
-        if (target?.targetHexId != null) landed.push(target.targetHexId)
-        side.landings.push(
-          landing(name, { name, hexId }, team, landed, manager.getMarkedTiles(id, team)),
-        )
+        side.landings.push(landing(name, { name, hexId }, team, skillReach(manager, id, team)))
       }
 
-      // A charm's holder acts on the tile its rule names.
       const charm = isHero ? getCharmForHero(name) : null
       for (const rule of charm?.rules ?? []) {
         if (!rule.tile) continue
@@ -187,28 +180,14 @@ function sidesOf(board: BoardState): Side[] {
           skillManager: manager,
           lookups: PLACEMENT_LOOKUPS,
         }
-        const found = rule.tile === 'behind' ? findUnitBehind(ctx) : findUnitInFront(ctx)
-        side.landings.push(
-          landing(
-            charm!.id,
-            { name, hexId },
-            team,
-            found?.targetHexId != null ? [found.targetHexId] : [],
-          ),
-        )
+        side.landings.push(landing(charm!.id, { name, hexId }, team, charmReach(ctx, rule.tile)))
       }
     }
     const artifactId = board.a?.[team === Team.ALLY ? 0 : 1]
     const artifact = artifactId == null ? undefined : artifacts.get(artifactId)
     if (artifact) {
-      const arrows = artifactTargetArrows(grid, team, artifact.name)
       side.landings.push(
-        landing(
-          artifact.name,
-          null,
-          team,
-          arrows.map((arrow) => arrow.toHex.getId()),
-        ),
+        landing(artifact.name, null, team, artifactReach(grid, team, artifact.name)),
       )
     }
     return side

@@ -12,8 +12,10 @@
  * check the search. PLACEMENT_TUNE names weights, joined by commas, for which
  * the run suggests a value from the players' formations. PLACEMENT_UNITS names
  * heroes, phantimals or artifacts by their data file's name, joined by commas,
- * and only the set-ups that hold one are placed. Left out when
- * PLACEMENT_EXPORT is not set. */
+ * and only the set-ups that hold one are placed. The run also writes
+ * picks.json, each team's pick and what the search found, and
+ * PLACEMENT_COMPARE names an earlier run's picks.json to compare the picks
+ * with. Left out when PLACEMENT_EXPORT is not set. */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { delimiter, join } from 'node:path'
@@ -37,6 +39,7 @@ import {
   type FormationCheck,
   type GoalCheck,
   type PlacementScore,
+  type SkippedRule,
 } from '@/lib/placement/score'
 import type { FormationRule, PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { decodeSlData } from '@/lib/pvp/sl/data/codec'
@@ -219,15 +222,20 @@ interface Scored {
   threats: number
   goals: GoalCheck[]
   formation: FormationCheck[]
+  skipped: SkippedRule[]
 }
 
-function scoreSetup(setup: Setup, data: PlacementData): Scored | null {
+// The set-up's team on the tiles `positionsOf` gives, in the board's units'
+// order, scored as the engine scores it, or null where it gives none.
+function scoreAt(
+  setup: Setup,
+  data: PlacementData,
+  positionsOf: (board: PlacementBoard) => number[] | null,
+): Scored | null {
   const board = new PlacementBoard(setup.team, setup.map, PLACEMENT_LOOKUPS)
-  if (board.units.length !== setup.tiles.size || board.units.some((u) => !setup.tiles.has(u))) {
-    return null
-  }
+  const positions = positionsOf(board)
+  if (!positions) return null
   const scorer = new PlacementScorer(board, setup.team, data, { buffTiles: setup.live })
-  const positions = board.units.map((unit) => setup.tiles.get(unit)!)
   board.place(positions)
   return {
     positions,
@@ -235,7 +243,30 @@ function scoreSetup(setup: Setup, data: PlacementData): Scored | null {
     threats: scorer.threats(),
     goals: scorer.goals(),
     formation: scorer.formation(),
+    skipped: scorer.skipped,
   }
+}
+
+const scoreSetup = (setup: Setup, data: PlacementData) =>
+  scoreAt(setup, data, (board) =>
+    board.units.length !== setup.tiles.size || board.units.some((u) => !setup.tiles.has(u))
+      ? null
+      : board.units.map((unit) => setup.tiles.get(unit)!),
+  )
+
+// The engine's placement of a set-up's team, and its pick scored.
+interface Placed {
+  result: PlacementResult
+  pick: Scored
+}
+
+function placeSetup(setup: Setup, data: PlacementData): Placed & { ms: number } {
+  const start = performance.now()
+  const result = placeTeam(setup.team, setup.map, data, PLACEMENT_LOOKUPS, {
+    buffTiles: setup.live,
+  })
+  const ms = performance.now() - start
+  return { result, pick: scoreAt(setup, data, () => result.positions)!, ms }
 }
 
 // Four bands by distance to the nearest enemy tile, over the map's ally tiles.
@@ -387,16 +418,12 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
     )
     const dataOf = (setup: Setup) => seasonData.get(setup.season)!
 
-    const results = new Map<string, { result: PlacementResult; ms: number }>()
+    const results = new Map<string, Placed & { ms: number }>()
     const engineOf = (setup: Setup) => {
       const key = teamKey(setup)
       let entry = results.get(key)
       if (!entry) {
-        const start = performance.now()
-        const result = placeTeam(setup.team, setup.map, dataOf(setup), PLACEMENT_LOOKUPS, {
-          buffTiles: setup.live,
-        })
-        entry = { result, ms: performance.now() - start }
+        entry = placeSetup(setup, dataOf(setup))
         results.set(key, entry)
       }
       return entry
@@ -405,6 +432,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
     const lines: string[] = []
     const log = (line = '') => lines.push(line)
     const skipped = new Set<string>()
+    if (liveData.weights.margin === undefined) skipped.add('margin: no weight')
     const placed: { setup: Setup; player: Scored }[] = []
 
     if (UNITS.length) {
@@ -446,22 +474,21 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           player = null
         }
         if (!player) continue
-        const { result } = engineOf(setup)
+        const { result, pick } = engineOf(setup)
         teams.add(teamKey(setup))
-        for (const { owner, reason } of result.skipped) skipped.add(`${nameOf(owner)}: ${reason}`)
+        for (const { owner, reason } of pick.skipped) skipped.add(`${nameOf(owner)}: ${reason}`)
         scored++
         placed.push({ setup, player })
         threats.players += player.threats
-        threats.engine += result.threats
+        threats.engine += pick.threats
 
         for (const goal of player.goals)
           if (goal.met !== null) add(goals.players, goalKey(goal), goal.met)
-        for (const goal of result.goals)
+        for (const goal of pick.goals)
           if (goal.met !== null) add(goals.engine, goalKey(goal), goal.met)
         for (const check of player.formation)
           add(formation.players, ruleText(check.rule), +check.held)
-        for (const check of result.formation)
-          add(formation.engine, ruleText(check.rule), +check.held)
+        for (const check of pick.formation) add(formation.engine, ruleText(check.rule), +check.held)
 
         const band = bandsOf(setup.map)
         setup.team.heroes.forEach((hero, i) => {
@@ -512,7 +539,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       )
       log(`  tiles each hero keeps: median ${median(keptTiles)}`)
       log(
-        `  time per team: median ${median(teamResults.map(({ ms }) => ms)).toFixed(0)} ms, longest ${Math.max(...teamResults.map(({ ms }) => ms)).toFixed(0)} ms, placements scored median ${median(teamResults.map(({ result }) => result.evaluations))}`,
+        `  time per team: median ${median(teamResults.map(({ ms }) => ms)).toFixed(0)} ms, longest ${Math.max(...teamResults.map(({ ms }) => ms)).toFixed(0)} ms`,
       )
       log('  goals, how much of each players and the engine meet (set-ups where it applies):')
       for (const [key, tally] of [...goals.players].sort((a, b) => b[1].n - a[1].n)) {
@@ -548,7 +575,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       log(`Tuning ${name}, now ${value}, on the set-ups its rules apply to:`)
       const tried = TUNE_SHARES.map((share) => {
         const weights = { ...liveData.weights, [name]: share * value }
-        const placedAt = new Map<string, PlacementResult>()
+        const placedAt = new Map<string, Placed>()
         const bySeason = new Map(
           seasons.map((season) => [
             season,
@@ -558,17 +585,12 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
         for (const { setup, player } of touched) {
           const key = teamKey(setup)
           // At its own value the weight leaves the run's placement as it was.
-          let result = share === 1 ? engineOf(setup).result : placedAt.get(key)
-          if (!result) {
-            result = placeTeam(
-              setup.team,
-              setup.map,
-              { ...dataOf(setup), weights },
-              PLACEMENT_LOOKUPS,
-              { buffTiles: setup.live },
-            )
-            placedAt.set(key, result)
+          let entry = share === 1 ? engineOf(setup) : placedAt.get(key)
+          if (!entry) {
+            entry = placeSetup(setup, { ...dataOf(setup), weights })
+            placedAt.set(key, entry)
           }
+          const { result, pick } = entry
           const tally = bySeason.get(setup.season)!
           const band = bandsOf(setup.map)
           setup.team.heroes.forEach((hero) => {
@@ -581,7 +603,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           const metOf = (goals: GoalCheck[]) =>
             goals.find(({ rule, met }) => rule.weight === name && met !== null)?.met ?? 0
           tally.players += metOf(player.goals)
-          tally.engine += metOf(result.goals)
+          tally.engine += metOf(pick.goals)
           tally.n++
         }
         const line = seasons
@@ -663,7 +685,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       .sort((a, b) => b.n - a.n)
       .slice(0, REVIEWED)
     const sections = top.map(({ setup, players, n }) => {
-      const { result } = engineOf(setup)
+      const { result, pick } = engineOf(setup)
       const units = result.units
       const common = [...players.values()].sort((a, b) => b.n - a.n).slice(0, 2)
       const title = [
@@ -673,7 +695,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           ? ''
           : `, ${nameOf(artifactById.get(setup.team.artifact)!.name)}`,
       ].join('')
-      const engineCard = `<div class="card"><h3>Engine</h3>${boardSvg(setup.map, units, result.positions)}<p>${scoreLine(result.score)}, against enemy rules ${result.threats.toFixed(2)}; ${result.equallyGood}${result.complete ? '' : ' or more'} equally good</p><p class="kept">${setup.team.heroes.map((hero, i) => `${esc(nameOf(hero))} keeps ${result.kept[i]!.length}`).join(', ')}</p>${goalList(result.goals, result.formation)}</div>`
+      const engineCard = `<div class="card"><h3>Engine</h3>${boardSvg(setup.map, units, result.positions)}<p>${scoreLine(pick.score)}, against enemy rules ${pick.threats.toFixed(2)}; ${result.equallyGood}${result.complete ? '' : ' or more'} equally good</p><p class="kept">${setup.team.heroes.map((hero, i) => `${esc(nameOf(hero))} keeps ${result.kept[i]!.length}`).join(', ')}</p>${goalList(pick.goals, pick.formation)}</div>`
       const playerCards = common.map(
         ({ player, n: times }) =>
           `<div class="card"><h3>Players, ${times} of ${n} set-ups</h3>${boardSvg(setup.map, units, player.positions)}<p>${scoreLine(player.score)}, against enemy rules ${player.threats.toFixed(2)}</p>${goalList(player.goals, player.formation)}</div>`,
@@ -696,12 +718,12 @@ pre{white-space:pre-wrap;font-size:12px;background:var(--card);border:1px solid 
     // be compared team by team.
     const picks = [...results]
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([key, { result }]) => ({
+      .map(([key, { result, pick }]) => ({
         key,
         positions: result.positions,
-        score: result.score,
+        score: pick.score,
         best: result.best,
-        threats: result.threats,
+        threats: pick.threats,
         equallyGood: result.equallyGood,
         complete: result.complete,
         kept: result.kept,

@@ -1,11 +1,5 @@
 import { PlacementBoard } from './board'
-import {
-  PlacementScorer,
-  type FormationCheck,
-  type GoalCheck,
-  type PlacementScore,
-  type SkippedRule,
-} from './score'
+import { PlacementScorer, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // Scores closer than this are equal, so sums of the same weights in another
@@ -30,21 +24,14 @@ export interface PlacementResult {
   // The team's units, heroes first, and the tile each stands on in the pick.
   units: number[]
   positions: number[]
-  score: PlacementScore
   // The best score found, which the pick is within the margin of.
   best: PlacementScore
-  // The pick's points for the enemy units' rules it blunts.
-  threats: number
-  goals: GoalCheck[]
-  formation: FormationCheck[]
   // Placements with the pick's broken rules and goals within the margin of the
   // best, and whether the count reached them all rather than stopping at its cap.
   equallyGood: number
   complete: boolean
   // For each hero, in the team's order, the tiles it stands on among them.
   kept: number[][]
-  skipped: SkippedRule[]
-  evaluations: number
 }
 
 // Negative when `a` is the better score: fewer broken rules, then higher goals,
@@ -233,9 +220,6 @@ export function placeTeam(
 ): PlacementResult {
   const board = new PlacementBoard(team, mapKey, lookups)
   const scorer = new PlacementScorer(board, team, data, { buffTiles: options.buffTiles ?? true })
-  const skipped = [...scorer.skipped]
-  const margin = data.weights.margin
-  if (margin === undefined) skipped.push({ owner: 'margin', reason: 'no weight' })
   const search = new Search(board, scorer)
 
   if (options.full) {
@@ -253,7 +237,7 @@ export function placeTeam(
       search.climb(tiles.slice(0, board.units.length))
     }
   }
-  const { keys, complete } = search.equallyGood(margin ?? 0, !options.full)
+  const { keys, complete } = search.equallyGood(data.weights.margin ?? 0, !options.full)
 
   // The highest total among them, the enemy units' rules counted, then the
   // lowest tiles in the units' order. The enemy units' rules are read only
@@ -286,22 +270,15 @@ export function placeTeam(
       pick = { positions, total }
     }
   }
-  board.place(pick!.positions)
   const kept = team.heroes.map((_, i) =>
     [...new Set(keys.map((key) => positionsOf(key)[i]!))].sort((a, b) => a - b),
   )
   return {
     units: board.units,
     positions: pick!.positions,
-    score: scorer.score(),
     best: search.best(),
-    threats: scorer.threats(),
-    goals: scorer.goals(),
-    formation: scorer.formation(),
     equallyGood: keys.length,
     complete,
     kept,
-    skipped,
-    evaluations: search.scores.size,
   }
 }

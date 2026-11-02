@@ -6,7 +6,7 @@ import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer } from '@/lib/placement/score'
-import type { PlacementData } from '@/lib/placement/types'
+import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
 
 const ALNA = 100
 const SYLPHIRA = 116
@@ -23,6 +23,7 @@ const TWINS = 68
 const ROLAN = 121
 const LILY_MAY = 54
 const MEHIRA = 94
+const PHRAESTO = 50
 const WEDGE_OF_MATTER = toPhantimalId(5)
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
@@ -112,11 +113,10 @@ describe('placement scoring', () => {
   })
 
   // Elijah on tile 1 and Lailah on 10 have tiles 4 and 7 between them. The
-  // Wedge of Matter is of Rolan and Sylphira's faction, yet stands where a hero
-  // would gain more from the bond.
-  it('meets the twins goal with two heroes of one faction between them, and a tenth of it with a phantimal', () => {
-    const team = { heroes: [LILY_MAY, TWINS, MEHIRA, SYLPHIRA, ROLAN], phantimal: WEDGE_OF_MATTER }
-    const twinsMet = (between: [number, number]) => {
+  // Wedge of Matter is of Rolan and Sylphira's faction, and Phraesto's shadow
+  // of Mehira's, yet each stands where a hero would gain more from the bond.
+  it('meets the twins goal with two heroes of one faction between them, and a tenth of it with a phantimal or a companion', () => {
+    const twinsMet = (team: PlacementTeam, between: [number, number]) => {
       const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
       const scorer = new PlacementScorer(board, team, DATA, { buffTiles: true })
       const fixed = new Map([
@@ -129,8 +129,27 @@ describe('placement scoring', () => {
       board.place(board.units.map((unit) => fixed.get(unit) ?? free.shift()!))
       return metOf(scorer, TWINS)
     }
-    expect(twinsMet([SYLPHIRA, ROLAN])).toBe(1)
-    expect(twinsMet([ROLAN, WEDGE_OF_MATTER])).toBe(0.1)
+    const team = { heroes: [LILY_MAY, TWINS, MEHIRA, SYLPHIRA, ROLAN], phantimal: WEDGE_OF_MATTER }
+    expect(twinsMet(team, [SYLPHIRA, ROLAN])).toBe(1)
+    expect(twinsMet(team, [ROLAN, WEDGE_OF_MATTER])).toBe(0.1)
+    const shadowed = { heroes: [LILY_MAY, TWINS, MEHIRA, PHRAESTO, ROLAN] }
+    expect(twinsMet(shadowed, [MEHIRA, PHRAESTO + COMPANION_ID_OFFSET])).toBe(0.1)
+  })
+
+  // The Wedge of Matter on tile 1 marks the hero on tile 6, and the Wedge of
+  // Power the hero behind it: none from tile 2, the one on tile 2 from tile 4.
+  it('scores half for each Wedge whose Spirit Mark lands on one of the first two listed heroes', () => {
+    const data = { ...DATA, lists: { ...DATA.lists, melee: [ALNA, SYLPHIRA] } }
+    const team = { heroes: [ALNA, SYLPHIRA, ORION, PERSEUS, DIONEL], phantimal: WEDGE_OF_MATTER }
+    const wedgesMet = (at: Record<number, number>, power: number) => {
+      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(board, team, data, { buffTiles: true })
+      board.place(board.units.map((unit) => at[unit] ?? (unit === WEDGE_OF_MATTER ? 1 : power)))
+      return metOf(scorer, WEDGE_OF_MATTER)
+    }
+    const heroes = { [ALNA]: 6, [ORION]: 3, [PERSEUS]: 5, [DIONEL]: 7 }
+    expect(wedgesMet({ ...heroes, [SYLPHIRA]: 2 }, 4)).toBe(1)
+    expect(wedgesMet({ ...heroes, [SYLPHIRA]: 4 }, 2)).toBe(0.5)
   })
 })
 
