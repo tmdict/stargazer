@@ -100,6 +100,19 @@ interface LineMap {
   w: number
   h: number
   r: Float32Array
+  // Each inner pixel's best of itself and its four neighbours.
+  near: Float32Array
+}
+
+const toLineMap = (w: number, h: number, r: Float32Array): LineMap => {
+  const near = new Float32Array(w * h)
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x
+      near[i] = Math.max(r[i]!, r[i - 1]!, r[i + 1]!, r[i - w]!, r[i + w]!)
+    }
+  }
+  return { w, h, r, near }
 }
 
 // How far each pixel's luminance stands above the brighter of its two
@@ -133,7 +146,7 @@ function lineMap(img: RgbaImage): LineMap {
       r[y * w + x] = best
     }
   }
-  return { w, h, r }
+  return toLineMap(w, h, r)
 }
 
 // Max-pooled, so a thin line survives the coarse search.
@@ -150,7 +163,7 @@ function pool(m: LineMap, f: number): LineMap {
       r[y * w + x] = v
     }
   }
-  return { w, h, r }
+  return toLineMap(w, h, r)
 }
 
 // Mean response at the points under a scale and shift, each read as the best
@@ -161,8 +174,7 @@ function meanAt(m: LineMap, pts: readonly Point[], s: number, ox: number, oy: nu
     const x = Math.round(ox + s * p.x)
     const y = Math.round(oy + s * p.y)
     if (x < 1 || y < 1 || x >= m.w - 1 || y >= m.h - 1) continue
-    const i = y * m.w + x
-    sum += Math.max(m.r[i]!, m.r[i - 1]!, m.r[i + 1]!, m.r[i - m.w]!, m.r[i + m.w]!)
+    sum += m.near[y * m.w + x]!
   }
   return sum / pts.length
 }

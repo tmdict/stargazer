@@ -2,6 +2,7 @@
  * strip: the result screen's map strip, the formation panel's slot strip and
  * the replay's map strip. */
 
+import { pixelDistance } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
 
 // The ring is two thin lines inside its band, a few percent of the band's
@@ -18,7 +19,7 @@ export const ringGreen = (shot: RgbaImage, cx: number, cy: number, radius: numbe
   for (let y = cy - radius - 4; y <= cy + radius + 4; y++) {
     for (let x = Math.round(cx - radius - 4); x <= cx + radius + 4; x++) {
       if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      const d = Math.hypot(x - cx, y - cy) / radius
+      const d = pixelDistance(x - cx, y - cy) / radius
       if (d < 0.85 || d > 1.1) continue
       inRing++
       const p = (y * shot.width + x) * 4

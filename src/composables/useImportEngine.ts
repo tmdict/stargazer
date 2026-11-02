@@ -204,6 +204,9 @@ const drawToImage = (source: ImageBitmap, width: number, height: number): RgbaIm
   return { width, height, data: data.data }
 }
 
+const drawToWidth = (bitmap: ImageBitmap, width: number): RgbaImage =>
+  drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
+
 const fetchImage = async (url: string, maxWidth?: number): Promise<RgbaImage> => {
   const response = await fetch(url)
   if (!response.ok) throw new Error(`${url}: ${response.status}`)
@@ -378,21 +381,22 @@ const postPart = (reader: Reader, part: ReferencePart): void => {
   }
 }
 
-// How many workers a roster import reads with (one is enough for a match's
-// few screenshots): up to three, one fewer than the device's cores, and only
-// one where the device reports little memory, each holding its own copy of the
-// hero part. Safari and Firefox report no memory, so a touch screen that does
-// not, most likely a phone, reads with two at most.
+// How many workers an import reads with, each holding its own copy of the
+// references: at most one fewer than the device's cores, five on a computer and
+// three on a touch screen with 8 GB or more, three and two below that, and one
+// under 4 GB. Safari and Firefox report no memory, so a touch screen that does
+// not, most likely a phone, counts as having little and a computer as plenty.
 const poolSize = (): number => {
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
   if (memory !== undefined && memory < 4) return 1
-  const cores = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1))
   const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
-  return memory === undefined && touch ? Math.min(2, cores) : cores
+  const plenty = memory === undefined ? !touch : memory >= 8
+  const limit = touch ? (plenty ? 3 : 2) : plenty ? 5 : 3
+  return Math.max(1, Math.min(limit, (navigator.hardwareConcurrency || 2) - 1))
 }
 
-// Each free reader takes the oldest waiting shot whose parts it holds; a
-// roster shot left waiting with every reader busy starts another reader.
+// Each free reader takes the oldest waiting shot whose parts it holds; shots
+// beyond the readers free for them start more readers.
 const dispatch = (): void => {
   for (const reader of readers) {
     if (reader.reading !== null) continue
@@ -405,15 +409,10 @@ const dispatch = (): void => {
     const message: ImportRequest = { type: 'read', ...next }
     reader.worker.postMessage(message, [next.image.data.buffer])
   }
-  if (
-    readers.length > 0 &&
-    !readerFailed &&
-    readers.length < poolSize() &&
-    readers.every((r) => r.reading !== null) &&
-    queue.some((read) => read.kind === 'roster')
-  ) {
-    startReader()
-  }
+  if (readers.length === 0 || readerFailed) return
+  const busy = readers.filter((r) => r.reading !== null).length
+  const wanted = Math.min(poolSize(), busy + queue.length)
+  while (readers.length < wanted) startReader()
 }
 
 const onMessage = (reader: Reader, msg: ImportResponse): void => {
@@ -492,18 +491,8 @@ const startSorter = async (): Promise<Worker> => {
 /* Which import and kind a screenshot shows; null when it cannot be told, and
    the caller's default stands. A replay frame is only told when `replay`
    allows one. */
-const sortShot = async (file: Blob, replay: boolean): Promise<ImportKind | null> => {
-  const mine = visit
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
-  let image: RgbaImage
-  try {
-    const width = Math.min(bitmap.width, SORT_WIDTH)
-    image = drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
-  } finally {
-    bitmap.close()
-  }
-  // The page was left meanwhile: no sorter is started for it.
-  if (mine !== visit) return null
+const sortShot = async (bitmap: ImageBitmap, replay: boolean): Promise<ImportKind | null> => {
+  const image = drawToWidth(bitmap, Math.min(bitmap.width, SORT_WIDTH))
   const started = (sorter ??= startSorter())
   const target = await started
   // The sorter failed while starting, and its error answered the sorts it had.
@@ -591,25 +580,23 @@ async function ensurePart(part: ReferencePart): Promise<void> {
 
 // The shots: decoding, queueing and adding them.
 
-const decodeShot = async (file: Blob, kind: ImportKind): Promise<RgbaImage> => {
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+const decodeFile = async (file: Blob): Promise<ImageBitmap | null> => {
   try {
-    const { min, max } = DECODE_WIDTHS[kind]
-    if (bitmap.width < min) throw new Error('too small')
-    const width = Math.min(bitmap.width, max)
-    return drawToImage(bitmap, width, Math.round((bitmap.height * width) / bitmap.width))
-  } finally {
-    bitmap.close()
+    return await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch {
+    return null
   }
 }
 
-// Decode a shot and queue it. With a part it needs failed the shot fails too,
-// but its pixels stay queued for the retry the next added shot makes.
-const readShot = async (shot: EngineShot, file: Blob): Promise<void> => {
-  const mine = visit
+// Queue a shot from its decoded file, null when the file did not decode. With a
+// part it needs failed the shot fails too, but its pixels stay queued for the
+// retry the next added shot makes.
+const readShot = (shot: EngineShot, bitmap: ImageBitmap | null): void => {
   try {
-    const image = await decodeShot(file, shot.kind)
-    if (mine !== visit || !findShot(shot.id)) return
+    if (!bitmap) throw new Error('not an image')
+    const { min, max } = DECODE_WIDTHS[shot.kind]
+    if (bitmap.width < min) throw new Error('too small')
+    const image = drawToWidth(bitmap, Math.min(bitmap.width, max))
     queue.push({ id: shot.id, image, kind: shot.kind })
     if (partsOf(shot.kind).some((p) => partStatus[p].value === 'failed')) {
       shot.status = 'failed'
@@ -617,7 +604,6 @@ const readShot = async (shot: EngineShot, file: Blob): Promise<void> => {
     }
     dispatch()
   } catch (error) {
-    if (mine !== visit || !findShot(shot.id)) return
     shot.status = 'failed'
     shot.error =
       error instanceof Error && error.message === 'too small' ? 'too-small' : 'unsupported'
@@ -737,16 +723,22 @@ export function useImportEngine(session: ShotSession): ImportEngine {
           settle()
           continue
         }
-        const sorted = await sortShot(file, replay()).catch(() => null)
-        if (!open()) break
-        const placed = place(sorted)
-        settle()
-        if ('refused' in placed) {
-          result.refused[placed.refused] = (result.refused[placed.refused] ?? 0) + 1
-          continue
+        const bitmap = await decodeFile(file)
+        try {
+          if (!open()) break
+          const sorted = bitmap && (await sortShot(bitmap, replay()).catch(() => null))
+          if (!open()) break
+          const placed = place(sorted)
+          settle()
+          if ('refused' in placed) {
+            result.refused[placed.refused] = (result.refused[placed.refused] ?? 0) + 1
+            continue
+          }
+          result.added++
+          readShot(add(file, placed.kind), bitmap)
+        } finally {
+          bitmap?.close()
         }
-        result.added++
-        await readShot(add(file, placed.kind), file)
       }
     } finally {
       adding.value -= files.length - settled

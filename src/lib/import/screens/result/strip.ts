@@ -11,7 +11,7 @@
  * result, not the map's, and are not read. */
 
 import { Team } from '@/lib/types/team'
-import { hsvAt } from '../../core/image'
+import { hsvAt, pixelDistance } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
 import { STRIP, SUMMARY_BAR, TAB_REGION, TABS, type Region } from './layout'
@@ -45,7 +45,7 @@ const discCream = (shot: RgbaImage, cx: number, cy: number, radius: number): num
   for (let y = Math.round(cy - r); y <= cy + r; y++) {
     for (let x = Math.round(cx - r); x <= cx + r; x++) {
       if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      if (Math.hypot(x - cx, y - cy) > r) continue
+      if (pixelDistance(x - cx, y - cy) > r) continue
       n++
       const p = (y * shot.width + x) * 4
       if (isCream(shot.data[p]!, shot.data[p + 1]!, shot.data[p + 2]!)) cream++

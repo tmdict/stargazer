@@ -16,35 +16,41 @@ const createImage = (width: number, height: number): RgbaImage => ({
  * black, which only ever happens for a crop hanging off an edge. */
 export function cropResize(src: RgbaImage, rect: Rect, w: number, h: number): RgbaImage {
   const out = createImage(w, h)
+  const { data, width, height } = src
   const sx = rect.w / w
   const sy = rect.h / h
+  const colFrom = new Int32Array(w)
+  const colTo = new Int32Array(w)
+  for (let tx = 0; tx < w; tx++) {
+    const x0 = Math.floor(rect.x + tx * sx)
+    colFrom[tx] = Math.max(0, x0)
+    colTo[tx] = Math.min(width, Math.max(x0 + 1, Math.ceil(rect.x + (tx + 1) * sx)))
+  }
+  let o = 0
   for (let ty = 0; ty < h; ty++) {
     const y0 = Math.floor(rect.y + ty * sy)
-    const y1 = Math.max(y0 + 1, Math.ceil(rect.y + (ty + 1) * sy))
-    for (let tx = 0; tx < w; tx++) {
-      const x0 = Math.floor(rect.x + tx * sx)
-      const x1 = Math.max(x0 + 1, Math.ceil(rect.x + (tx + 1) * sx))
+    const rowFrom = Math.max(0, y0)
+    const rowTo = Math.min(height, Math.max(y0 + 1, Math.ceil(rect.y + (ty + 1) * sy)))
+    for (let tx = 0; tx < w; tx++, o += 4) {
+      const from = colFrom[tx]!
+      const to = colTo[tx]!
+      const n = Math.max(0, rowTo - rowFrom) * Math.max(0, to - from)
+      if (n === 0) {
+        out.data[o + 3] = 255
+        continue
+      }
       let r = 0
       let g = 0
       let b = 0
       let a = 0
-      let n = 0
-      for (let y = y0; y < y1; y++) {
-        if (y < 0 || y >= src.height) continue
-        for (let x = x0; x < x1; x++) {
-          if (x < 0 || x >= src.width) continue
-          const i = (y * src.width + x) * 4
-          r += src.data[i]!
-          g += src.data[i + 1]!
-          b += src.data[i + 2]!
-          a += src.data[i + 3]!
-          n++
+      for (let y = rowFrom; y < rowTo; y++) {
+        const end = (y * width + to) * 4
+        for (let i = (y * width + from) * 4; i < end; i += 4) {
+          r += data[i]!
+          g += data[i + 1]!
+          b += data[i + 2]!
+          a += data[i + 3]!
         }
-      }
-      const o = (ty * w + tx) * 4
-      if (n === 0) {
-        out.data[o + 3] = 255
-        continue
       }
       out.data[o] = r / n
       out.data[o + 1] = g / n
@@ -220,9 +226,51 @@ export function dot(a: Float32Array, b: Float32Array): number {
   return s
 }
 
+// Math.hypot guards against overflow that pixel distances cannot reach, and is
+// the slowest part of a per-pixel loop.
+export const pixelDistance = (dx: number, dy: number): number => Math.sqrt(dx * dx + dy * dy)
+
 // A template less visible than this at a crop edge is not scored: a sliver
 // fits any frame.
 const NCC_MIN_COVERAGE = 0.25
+
+// A template's opaque pixels at one sampling step.
+interface OpaqueSamples {
+  xs: Int32Array
+  ys: Int32Array
+  rgb: Uint8Array
+}
+
+// Kept per template, since a frame match tries each one at hundreds of offsets;
+// a template's pixels must not change once it has been matched.
+const opaqueSamples = new WeakMap<RgbaImage, Map<number, OpaqueSamples>>()
+
+const samplesOf = (template: RgbaImage, step: number): OpaqueSamples => {
+  let byStep = opaqueSamples.get(template)
+  if (!byStep) opaqueSamples.set(template, (byStep = new Map()))
+  const known = byStep.get(step)
+  if (known) return known
+  const { data, width, height } = template
+  const xs: number[] = []
+  const ys: number[] = []
+  const rgb: number[] = []
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4
+      if (data[i + 3]! < 200) continue
+      xs.push(x)
+      ys.push(y)
+      rgb.push(data[i]!, data[i + 1]!, data[i + 2]!)
+    }
+  }
+  const samples = {
+    xs: Int32Array.from(xs),
+    ys: Int32Array.from(ys),
+    rgb: Uint8Array.from(rgb),
+  }
+  byStep.set(step, samples)
+  return samples
+}
 
 /* Normalised cross-correlation of an RGBA template against the shot at
  * (ox, oy), over the template's opaque pixels only, sampled every `step`
@@ -237,43 +285,47 @@ export function maskedNcc(
   oy: number,
   step = 2,
 ): number {
-  let opaque = 0
+  const { xs, ys, rgb } = samplesOf(template, step)
+  const { data, width, height } = shot
   let inside = 0
   let sa = 0
-  let sb = 0
   let saa = 0
-  let sbb = 0
   let sab = 0
-  const sbc = [0, 0, 0]
-  const sbbc = [0, 0, 0]
-  for (let y = 0; y < template.height; y += step) {
-    const sy = oy + y
-    const rowInside = sy >= 0 && sy < shot.height
-    for (let x = 0; x < template.width; x += step) {
-      const ti = (y * template.width + x) * 4
-      if (template.data[ti + 3]! < 200) continue
-      opaque++
-      const sx = ox + x
-      if (!rowInside || sx < 0 || sx >= shot.width) continue
-      inside++
-      const si = (sy * shot.width + sx) * 4
-      for (let c = 0; c < 3; c++) {
-        const a = template.data[ti + c]!
-        const b = shot.data[si + c]!
-        sa += a
-        sb += b
-        saa += a * a
-        sbb += b * b
-        sab += a * b
-        sbc[c]! += b
-        sbbc[c]! += b * b
-      }
-    }
+  let sumR = 0
+  let sumG = 0
+  let sumB = 0
+  let sqR = 0
+  let sqG = 0
+  let sqB = 0
+  for (let k = 0; k < xs.length; k++) {
+    const sx = ox + xs[k]!
+    const sy = oy + ys[k]!
+    if (sx < 0 || sy < 0 || sx >= width || sy >= height) continue
+    inside++
+    const si = (sy * width + sx) * 4
+    const ar = rgb[k * 3]!
+    const ag = rgb[k * 3 + 1]!
+    const ab = rgb[k * 3 + 2]!
+    const br = data[si]!
+    const bg = data[si + 1]!
+    const bb = data[si + 2]!
+    sa += ar + ag + ab
+    saa += ar * ar + ag * ag + ab * ab
+    sab += ar * br + ag * bg + ab * bb
+    sumR += br
+    sumG += bg
+    sumB += bb
+    sqR += br * br
+    sqG += bg * bg
+    sqB += bb * bb
   }
-  if (inside === 0 || inside < opaque * NCC_MIN_COVERAGE) return -1
-  const within = sbbc.reduce((s, sq, c) => s + sq - (sbc[c]! * sbc[c]!) / inside, 0)
+  if (inside === 0 || inside < xs.length * NCC_MIN_COVERAGE) return -1
+  const within =
+    sqR - (sumR * sumR) / inside + sqG - (sumG * sumG) / inside + sqB - (sumB * sumB) / inside
   if (within < 1) return 0
   const n = inside * 3
+  const sb = sumR + sumG + sumB
+  const sbb = sqR + sqG + sqB
   const cov = sab - (sa * sb) / n
   const va = saa - (sa * sa) / n
   const vb = sbb - (sb * sb) / n

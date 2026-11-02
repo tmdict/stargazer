@@ -27,10 +27,11 @@ export function fitComb(
   const W = profile.length
   // A gutter is sampled at its best pixel within one either side; a card's middle
   // over its central fifth.
-  const gutterAt = (x: number): number => {
-    const i = Math.round(x)
-    return Math.max(profile[i - 1] ?? 0, profile[i] ?? 0, profile[i + 1] ?? 0)
+  const gutters = new Float32Array(W + 1)
+  for (let i = 0; i <= W; i++) {
+    gutters[i] = Math.max(profile[i - 1] ?? 0, profile[i] ?? 0, profile[i + 1] ?? 0)
   }
+  const gutterAt = (x: number): number => gutters[Math.round(x)]!
   // Running sums of the profile, so a card's middle is one subtraction.
   const sums = new Float64Array(W + 1)
   for (let i = 0; i < W; i++) sums[i + 1] = sums[i]! + profile[i]!

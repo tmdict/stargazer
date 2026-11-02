@@ -11,7 +11,7 @@ import { readCards } from '../../card/card'
 import { heroDescriptor, rankHeroes } from '../../card/heroes'
 import type { StarRow } from '../../card/stars'
 import type { HeroReading } from '../../card/types'
-import { cropResize, maskedNcc } from '../../core/image'
+import { cropResize, maskedNcc, pixelDistance } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
 import { readArtifact } from '../match/artifacts'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
@@ -178,7 +178,7 @@ function readTiles(
   units: readonly FoundUnit[],
 ): { tiles: number[]; unclear: number[] } {
   const covered = (x: number, y: number): boolean =>
-    units.some(({ ring }) => Math.hypot(x - ring.x, y - ring.y) <= ring.radius + 3)
+    units.some(({ ring }) => pixelDistance(x - ring.x, y - ring.y) <= ring.radius + 3)
   const medians: { id: number; median: number }[] = []
   const unclear: number[] = []
   for (const hex of BOARD_HEXES) {
@@ -240,7 +240,7 @@ function numeralShare(shot: RgbaImage, cx: number, cy: number, r: number): numbe
   for (let y = Math.round(cy - r); y <= cy + r; y++) {
     for (let x = Math.round(cx - r); x <= cx + r; x++) {
       if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
-      if (Math.hypot(x - cx, y - cy) > r) continue
+      if (pixelDistance(x - cx, y - cy) > r) continue
       n++
       const i = (y * shot.width + x) * 4
       if (shot.data[i]! > 200 && shot.data[i + 1]! > 200 && shot.data[i + 2]! > 190) white++

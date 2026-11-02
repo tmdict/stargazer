@@ -84,7 +84,7 @@ const answerReady = (worker: FakeWorker, parts: readonly ReferencePart[] = ['her
 }
 
 describe('import engine', () => {
-  it('reads the waiting shots one at a time once the references are in', async () => {
+  it('gives a reader the waiting shots one at a time once the references are in', async () => {
     const { shots, applied, add } = holdEngine()
     await add([file('a.png')])
     const worker = await partsPosted()
@@ -105,7 +105,9 @@ describe('import engine', () => {
     const { engine, shots, add } = holdEngine()
     await add([file('a.png'), file('b.png')])
     const first = await partsPosted()
-    first.reply({ type: 'error', id: null, part: 'heroes', message: 'out of memory' })
+    for (const reader of readers()) {
+      reader.reply({ type: 'error', id: null, part: 'heroes', message: 'out of memory' })
+    }
     expect(shots.map((s) => s.status)).toEqual(['failed', 'failed'])
 
     await engine.ensureReferences()
@@ -146,7 +148,6 @@ describe('import engine', () => {
 
   it('counts the files still being added, and adds none once the opening ends', async () => {
     const { engine, shots, opening, add } = holdEngine()
-    // The first file's sort waits on its decode.
     let decoded: () => void = () => {}
     vi.mocked(createImageBitmap).mockImplementationOnce(
       () => new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
@@ -182,14 +183,10 @@ describe('import engine', () => {
     answerReady(worker)
     // The page is left with a in the worker and `late` still decoding.
     let decoded: () => void = () => {}
-    vi.mocked(createImageBitmap)
-      .mockImplementationOnce(async () => bitmap as ImageBitmap)
-      .mockImplementationOnce(
-        () =>
-          new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
-      )
+    vi.mocked(createImageBitmap).mockImplementationOnce(
+      () => new Promise<ImageBitmap>((resolve) => (decoded = () => resolve(bitmap as ImageBitmap))),
+    )
     const adding = first.add([file('late.png')])
-    await vi.waitFor(() => expect(first.shots).toHaveLength(2))
     scope!.stop()
     scope = null
     expect(worker.terminated).toBe(true)
@@ -250,41 +247,42 @@ describe('import engine', () => {
     expect([rosters.applied, match.applied]).toEqual([[roster!.id], []])
   })
 
-  it('starts more readers for a roster while every one is busy, up to the pool', async () => {
+  it('starts a reader for each waiting shot up to the pool, each with its own references', async () => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
-    const { add } = holdEngine(['roster'])
-    await add([1, 2, 3, 4, 5].map((n) => file(`${n}.png`)))
-    answerReady(await partsPosted(['heroes']), ['heroes'])
-    // Each new reader gets its own copy of the hero part and reads once it holds it.
-    for (const reader of [1, 2]) {
-      const started = await partsPosted(['heroes'], () => readers()[reader])
-      answerReady(started, ['heroes'])
-    }
-    expect(readers().map((w) => w.reads().length)).toEqual([1, 1, 1])
+    const { add } = holdEngine()
+    await add([1, 2, 3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
+    expect(readers()).toHaveLength(5)
+    for (const reader of readers()) answerReady(await partsPosted(undefined, () => reader))
+    expect(readers().map((w) => w.reads().length)).toEqual([1, 1, 1, 1, 1])
     const frames = readers().map((w) => {
       const heroes = w.received.find((m) => m.type === 'heroes')
       return heroes?.type === 'heroes' ? heroes.frames[0]!.data : null
     })
-    expect(new Set(frames).size).toBe(3)
+    expect(new Set(frames).size).toBe(5)
   })
 
-  it('reads with two readers at most on a touch screen that reports no memory', async () => {
-    vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
-    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)' }))
+  it.each([
+    { device: 'little memory', memory: 2, touch: false, pool: 1 },
+    { device: 'a computer with middling memory', memory: 6, touch: false, pool: 3 },
+    { device: 'a touch screen with middling memory', memory: 6, touch: true, pool: 2 },
+    { device: 'a touch screen with plenty of memory', memory: 8, touch: true, pool: 3 },
+    { device: 'a touch screen reporting no memory', memory: undefined, touch: true, pool: 2 },
+    { device: 'a computer reporting no memory', memory: undefined, touch: false, pool: 5 },
+  ])('reads with $pool at most on $device', async ({ memory, touch, pool }) => {
+    vi.stubGlobal('navigator', { hardwareConcurrency: 8, deviceMemory: memory })
+    vi.stubGlobal('matchMedia', () => ({ matches: touch }))
     const { add } = holdEngine(['roster'])
-    await add([1, 2, 3, 4].map((n) => file(`${n}.png`)))
-    answerReady(await partsPosted(['heroes']), ['heroes'])
-    answerReady(await partsPosted(['heroes'], () => readers()[1]), ['heroes'])
-    expect(readers().map((w) => w.reads().length)).toEqual([1, 1])
+    await add([1, 2, 3, 4, 5, 6, 7].map((n) => file(`${n}.png`)))
+    expect(readers()).toHaveLength(pool)
   })
 
   it('drops a reader whose tables fail while another holds them, and grows the pool no further', async () => {
-    vi.stubGlobal('navigator', { hardwareConcurrency: 8 })
+    vi.stubGlobal('navigator', { hardwareConcurrency: 3 })
     const { engine, shots, add } = holdEngine(['roster'])
     await add([1, 2, 3, 4].map((n) => file(`${n}.png`)))
-    const first = await partsPosted(['heroes'])
-    answerReady(first, ['heroes'])
-    const second = await partsPosted(['heroes'], () => readers()[1])
+    const [first, second] = readers() as [FakeWorker, FakeWorker]
+    answerReady(await partsPosted(['heroes'], () => first), ['heroes'])
+    await partsPosted(['heroes'], () => second)
     second.reply({ type: 'error', id: null, part: 'heroes', message: 'out of memory' })
     expect(second.terminated).toBe(true)
     expect(engine.referenceStatus.value).toBe('ready')

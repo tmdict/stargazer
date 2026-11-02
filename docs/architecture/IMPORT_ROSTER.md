@@ -26,7 +26,7 @@ A whole roster takes several screenshots, taken any way as long as each hero sho
 └──────────────────────────┘  readings  └──────────────────────────┘
 ```
 
-A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. A roster takes several screenshots, so the engine starts more readers for them while every reader is busy ([Screenshot Import](./IMPORT.md#the-engine)).
+A roster import reads with the hero part of the references only (frames, portraits, costumes, learned faces), so it never waits on the match part. Its several screenshots read in parallel, as every import's do ([Screenshot Import](./IMPORT.md#the-engine)).
 
 ## The screen
 
