@@ -136,23 +136,14 @@ export const useGameDataStore = defineStore('gameData', () => {
   const hasSeasonalTargeting = (unitId: number): boolean =>
     inPhantimalBand(unitId) && getPhantimalById(phantimalOwnerId(unitId))?.targeting === true
 
-  // Resolves a grid unit's faction by ID, mapping companions and synergy copies
-  // to their base hero and phantimal-band units to their phantimal's faction.
-  const getCharacterFaction = (characterId: number): string | undefined => {
-    if (inPhantimalBand(characterId)) {
-      return getPhantimalById(phantimalOwnerId(characterId))?.faction
-    }
-    return getCharacterById(toBaseHeroId(characterId))?.faction
-  }
-
-  // Resolves a grid unit's class by ID, mapping companions and synergy copies
-  // to their base hero and phantimal-band units to their phantimal's class.
-  const getCharacterClass = (characterId: number): string | undefined => {
-    if (inPhantimalBand(characterId)) {
-      return getPhantimalById(phantimalOwnerId(characterId))?.class
-    }
-    return getCharacterById(toBaseHeroId(characterId))?.class
-  }
+  // A grid unit's faction or class by ID: companions and synergy copies answer
+  // for their base hero, and phantimal-band units for their phantimal.
+  const unitTrait = (unitId: number, trait: 'faction' | 'class'): string | undefined =>
+    inPhantimalBand(unitId)
+      ? getPhantimalById(phantimalOwnerId(unitId))?.[trait]
+      : getCharacterById(toBaseHeroId(unitId))?.[trait]
+  const getCharacterFaction = (characterId: number) => unitTrait(characterId, 'faction')
+  const getCharacterClass = (characterId: number) => unitTrait(characterId, 'class')
 
   // Safe accessors for images and icons
   const getCharacterImage = (name: string): string => {

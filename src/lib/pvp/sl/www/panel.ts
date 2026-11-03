@@ -8,13 +8,13 @@
  * warns of. */
 
 import { gamesIn, type WinLoss } from '../data/records'
-import { TEAM_HEROES } from '../data/sides'
+import { TEAM_HEROES, type Side } from '../data/sides'
 import type { SlData } from '../data/types'
 import { emptyShortfall, rivalryPoints, shortfall } from '../data/upgrades'
 import type { SlPick } from '../generator/types'
 import type { SlReader } from '../model/reader'
 import { splitChance } from '../model/reasons'
-import type { Reason, ReasonItem, Side } from '../model/types'
+import type { Reason, ReasonItem } from '../model/types'
 
 export type TeamSide = 'a' | 'b'
 

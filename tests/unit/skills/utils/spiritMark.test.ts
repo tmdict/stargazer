@@ -97,10 +97,10 @@ describe('phantimal Spirit Mark skills', () => {
       placeOnTile(grid, 16, COMPANION, Team.ALLY)
       addCompanionLink(grid, FRONT_MARK, COMPANION, Team.ALLY)
       const tiles = spiritMarkTiles(ctx(4, FRONT_MARK), 'front', 'behind')
-      return [...new Set(tiles.map(({ hexId }) => hexId))]
+      return tiles.filter(({ fill }) => !fill).map(({ hexId }) => hexId)
     }
 
-    it('gives a hero both reach to the phantimal and the companion the next hero in its chain', () => {
+    it('gives the hero both chains reach to the phantimal, and the companion the next hero in its chain', () => {
       placeOnTile(grid, 9, 100, Team.ALLY)
       placeOnTile(grid, 13, 101, Team.ALLY)
       expect(markedTiles()).toEqual([9, 13])

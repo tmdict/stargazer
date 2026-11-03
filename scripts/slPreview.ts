@@ -31,7 +31,7 @@ export function slPreview(): Plugin {
       const file = join(config.root, 'src/pack/pvp/sl.bin')
       this.addWatchFile(file)
       const { module, dependencies } = await runnerImport<{
-        defaultSlSet: (bytes: Uint8Array) => Promise<unknown>
+        defaultSlSet: (bytes: Uint8Array<ArrayBuffer>) => Promise<unknown>
       }>(join(config.root, 'src/lib/pvp/sl/generator/defaultSet.ts'), {
         configFile: false,
         root: config.root,

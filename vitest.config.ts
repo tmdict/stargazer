@@ -10,8 +10,10 @@ const PVP_DATA_TESTS = [
   'tests/unit/sl/slData.test.ts',
   'tests/unit/sl/team.test.ts',
 ]
-const slKey = statSync(new URL('./src/pack/pvp/sl.key', import.meta.url), { throwIfNoEntry: false })
-const pvpPacked = Boolean(slKey?.size)
+const keyFile = statSync(new URL('./src/pack/pvp/sl.key', import.meta.url), {
+  throwIfNoEntry: false,
+})
+const pvpPacked = Boolean(keyFile?.size)
 if (!pvpPacked) console.log(`No data pack, so ${PVP_DATA_TESTS.join(', ')} are skipped`)
 
 export default defineConfig({

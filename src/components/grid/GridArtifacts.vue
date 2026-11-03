@@ -151,8 +151,6 @@ const allySlotInFront = computed(() => !ctx.inverted)
 const enemySlotInFront = computed(() => ctx.inverted)
 const enemySlotVisible = computed(() => !ctx.teamView)
 
-// An empty cell is an "add artifact here" target, shown only on the interactive
-// grid.
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
 const showEnemyCell = computed(() => enemySlotVisible.value && showPlaceholders.value)
 
@@ -261,7 +259,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 <template>
   <div class="grid-artifacts">
-    <!-- Host-cell fill + click target. Same coordinate space as GridTiles. -->
     <svg
       v-if="showPlaceholders"
       ref="cellLayerRef"

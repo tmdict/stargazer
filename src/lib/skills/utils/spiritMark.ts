@@ -6,11 +6,10 @@
  * marks, so they read apart from hero highlights. A mark paints only while the
  * phantimal's data file sets `"targeting": true`.
  *
- * Every phantimal's marks follow one rule. They go out one at a time, the
- * phantimal's first and then its companions', each to the first unit in its
- * chain that can take one: a hero or a hero's companion, never a phantimal or a
- * phantimal's companion. A unit holds one mark, so a marked unit is passed over
- * by the marks after it. A mark whose chain has no such unit is not drawn.
+ * Marks go out one at a time, the phantimal's first and then its companions',
+ * each to the first unit in its chain that can take one: a hero or a hero's
+ * companion, never a phantimal or a phantimal's companion. A unit holds one
+ * mark, so a marked unit is passed over by the marks after it.
  *
  * A team fields one phantimal, so one spiritMarkTiles call gives out all of a
  * team's marks. The registry holds one skill per id, so a phantimal that already
@@ -40,8 +39,8 @@ export function spiritMarkTiles(
       chain,
       (unitId) => !inPhantimalBand(unitId) && !marked.has(unitId),
     )
-    if (!info?.targetHexId) return []
-    marked.add(info.targetCharacterId!)
+    if (!info?.targetHexId || info.targetCharacterId === null) return []
+    marked.add(info.targetCharacterId)
     return [
       { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR },
       { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, fill: true },

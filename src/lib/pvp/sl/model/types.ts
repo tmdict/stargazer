@@ -3,8 +3,6 @@
 
 import type { Side } from '../data/sides'
 
-export type { Side }
-
 // gap: the upgrade gap toward A in Rivalry points.
 export interface Matchup {
   a: Side
@@ -33,8 +31,7 @@ export interface Explanation {
   items: Partial<Record<Reason, ReasonItem[]>>
 }
 
-// Every answer is on the edge's scale, the log-odds of A winning; the parts
-// add up to the edge.
+// Every answer is on the edge's scale, the log-odds of A winning.
 export interface Model {
   // A side against a typical opponent of the season at the top levels, the
   // side `gap` Rivalry points from them.

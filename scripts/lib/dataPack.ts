@@ -1,6 +1,5 @@
-// The data pack: the game files the app reads (portraits, artifact art, skill
-// and effect text, cooldowns, the screenshot import's references), kept
-// outside this repo and copied into the ignored src/pack/ by npm run data.
+// The data pack: the files the app reads from outside this repo, copied into
+// the ignored src/pack/ by npm run data.
 
 import { execFileSync } from 'node:child_process'
 import {

@@ -57,7 +57,7 @@ const isPick = (value: unknown, placements: number): boolean =>
   value[1] >= 0 &&
   value[1] < placements
 
-// One season's part of the file: its teams and groups.
+// One season's part of the file.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
   isObject(value) &&
   isObject(value.sample) &&
@@ -97,8 +97,7 @@ const isModel = (value: unknown): boolean =>
   isRows(value.artifactsOnKind, 3)
 
 // The generator locks a hero with no row as one the file cannot rate yet, so
-// the rows must be exactly the heroes of the season's decided games, whose
-// teams are the ones with a decided game.
+// the rows must be exactly the heroes of the season's decided games.
 const ratesDecidedHeroes = (model: SlModel, teams: readonly SlTeam[]): boolean => {
   const played = new Set(teams.filter((t) => t.decided > 0).flatMap((t) => t.heroes))
   const rated = Object.keys(model.heroes)

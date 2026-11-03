@@ -30,9 +30,8 @@ for (const { localId, name, direction } of spiritMarks) {
   registerSkill(createSpiritMarkSkill(localId, name, direction))
 }
 
-// Each wedge marks a hero of its own: Wedge of Matter the one in front of it,
-// Wedge of Power the one behind its own tile, so that mark follows the
-// companion wherever it stands.
+// Wedge of Matter marks the unit in front of it, Wedge of Power the one behind
+// its own tile, so that mark follows the companion wherever it stands.
 const wedgeMarks = whenSeasonalTargeting((ctx) => spiritMarkTiles(ctx, 'front', 'behind'))
 
 // Wedge of Matter enters with Wedge of Power on a random free tile of its

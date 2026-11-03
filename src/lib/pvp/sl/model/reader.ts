@@ -79,9 +79,7 @@ function readModel(m: SlModel): Model {
   }
 }
 
-// What the pages read from one file, read once per file: the model, its
-// records, and the kind rule for teams the file does not hold as a recorded
-// team.
+// What the pages read from one file, built once per file.
 export interface SlReader {
   model: Model
   records: SeasonRecords

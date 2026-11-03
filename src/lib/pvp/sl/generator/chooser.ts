@@ -18,8 +18,6 @@ import type { SlChoice, SlPick } from './types'
 
 const CELESTIAL_HYPOGEAN = ['celestial', 'hypogean']
 
-const byBest = (a: Option, b: Option): number => b.best - a.best || a.rank - b.rank
-
 interface Option {
   source: number
   team: number
@@ -42,6 +40,8 @@ interface Found {
   artifacts: (number | null)[]
   chances: number[]
 }
+
+const byBest = (a: Option, b: Option): number => b.best - a.best || a.rank - b.rank
 
 function choose(
   data: SlData,
@@ -92,8 +92,6 @@ function choose(
             const kind = source === 0 ? t.family : kindOf(t.heroes)
             const claim = claimOf(source, team, kind)
             const points = gap(t.heroes)
-            // A team not yet measured keeps all its effects, so its chances
-            // are at their most.
             let share = fit.known(board, t.heroes)
             const shift = (): number => Math.log(share ?? 1)
             const cache = new Map<number | null, number>()

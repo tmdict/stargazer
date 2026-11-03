@@ -42,7 +42,7 @@ const line = (
   subject: ReasonItem['subject'],
   id: number | null,
   value: number,
-): ReasonItem => ({ side, subject, id, value: expect.closeTo(value, 12) as number })
+): ReasonItem => ({ side, subject, id, value: expect.closeTo(value, 12) })
 
 const parts = (values: Explanation['parts']): Explanation['parts'] =>
   Object.fromEntries(

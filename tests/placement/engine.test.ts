@@ -3,10 +3,11 @@
  * PATH is, and PLACEMENT_OUT the folder, outside the repository, its measures
  * and review page go to, since an export names players. What the engine is
  * tuned with comes from the Supreme League data file. Each Supreme League
- * set-up is placed by the engine and set beside the player's own. A season other than the one Stargazer holds
- * phantimals for is placed without its phantimal and seasonal artifact, and
- * scores no buff tile, since the map files hold this season's, and how often
- * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is how
+ * set-up is placed by the engine and set beside the player's own. A season
+ * other than the one Stargazer holds phantimals for is placed without its
+ * phantimal and seasonal artifact, and scores no buff tile, since the map
+ * files hold this season's, and how often each enemy hero is on a map is
+ * counted from its boards. PLACEMENT_FULL is how
  * many of the most used teams are also placed by trying every placement, to
  * check the search. PLACEMENT_TUNE names weights, joined by commas, for which
  * the run suggests a value from the players' formations. PLACEMENT_UNITS names

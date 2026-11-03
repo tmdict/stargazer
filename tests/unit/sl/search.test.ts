@@ -43,7 +43,6 @@ const randomFallback = (next: () => number, artifacts: number): number[][] =>
     ),
   )
 
-// A team's artifacts, each with a made-up count of games.
 const withGames = (next: () => number, ids: number[]): [number, number][] =>
   ids.map((id) => [id, 1 + Math.floor(next() * 5)])
 

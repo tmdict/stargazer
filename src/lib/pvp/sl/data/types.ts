@@ -61,7 +61,7 @@ export interface SlSample {
   players: number
 }
 
-export interface SlSeason<Team> {
+interface SlSeason<Team> {
   sample: SlSample
   teams: Team[]
   families: SlFamily[]
@@ -80,9 +80,9 @@ export interface SlPrices {
 }
 
 export type SlRow = [number: number, wins: number, losses: number]
-export type SlHeroRow = [number: number, wins: number, losses: number, againstField: number]
+type SlHeroRow = [number: number, wins: number, losses: number, againstField: number]
 
-// The prediction model's numbers, each keyed as the reader looks it up.
+// The prediction model's numbers.
 export interface SlModel {
   gap: number
   emptySlot: number
