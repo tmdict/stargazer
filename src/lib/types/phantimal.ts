@@ -10,6 +10,7 @@ export interface PhantimalType {
   range: number // attack range, used when the phantimal targets on the grid
   damage: string // 'physical' | 'magic' → game.<damage> label + damage-<damage> icon
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
+  class: string // class slug → game.<class> label + class-<class> icon
   qualifyingFactions?: readonly string[] // factions counted toward the team requirement; default [faction]
   targeting?: boolean // draws the seasonal skill targeting (Spirit Mark); absent = off
   tags?: readonly string[] // hero tag ids found anywhere in its skill text; absent = none

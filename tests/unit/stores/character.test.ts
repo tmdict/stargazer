@@ -76,6 +76,7 @@ describe('characterStore phantimal faction rule', () => {
     range: 20,
     damage: 'magic',
     faction: 'lightbearer',
+    class: 'mage',
   }
 
   beforeEach(() => {

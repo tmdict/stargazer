@@ -13,7 +13,8 @@ const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId
 export const PLACEMENT_LOOKUPS: PlacementLookups = {
   factionOf: (id) =>
     inPhantimalBand(id) ? phantimalOf(id)?.faction : heroById.get(toBaseHeroId(id))?.faction,
-  classOf: (id) => (inPhantimalBand(id) ? undefined : heroById.get(toBaseHeroId(id))?.class),
+  classOf: (id) =>
+    inPhantimalBand(id) ? phantimalOf(id)?.class : heroById.get(toBaseHeroId(id))?.class,
   seasonalTargeting: (id) => inPhantimalBand(id) && phantimalOf(id)?.targeting === true,
   rulesOf: (id) =>
     (inPhantimalBand(id) ? phantimalOf(id)?.rules : heroById.get(toBaseHeroId(id))?.rules) ?? [],

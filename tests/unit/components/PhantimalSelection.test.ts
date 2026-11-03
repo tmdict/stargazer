@@ -20,6 +20,7 @@ const phantimal = (id: number, name: string): PhantimalType => ({
   range: 1,
   damage: 'magic',
   faction: 'lightbearer',
+  class: 'support',
 })
 const WEDGE = phantimal(1, 'wedge')
 const OTHER = phantimal(2, 'other')

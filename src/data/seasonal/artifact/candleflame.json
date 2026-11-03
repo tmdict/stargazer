@@ -10,7 +10,9 @@
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "tank" },
+      "goal": {
+        "target": "tank"
+      },
       "weight": "aim",
       "note": "Candleflame's flame follows the frontmost ally and heals by its HP, best a tank."
     }

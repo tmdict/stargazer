@@ -11,7 +11,9 @@
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "haste" },
+      "goal": {
+        "target": "haste"
+      },
       "weight": "aim",
       "note": "Coreforge's sigil goes under the rearmost ally and gives Haste, best the hero who gains most from Haste."
     }

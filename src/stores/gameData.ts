@@ -146,9 +146,11 @@ export const useGameDataStore = defineStore('gameData', () => {
   }
 
   // Resolves a grid unit's class by ID, mapping companions and synergy copies
-  // to their base hero. Phantimal-band units carry no class.
+  // to their base hero and phantimal-band units to their phantimal's class.
   const getCharacterClass = (characterId: number): string | undefined => {
-    if (inPhantimalBand(characterId)) return undefined
+    if (inPhantimalBand(characterId)) {
+      return getPhantimalById(phantimalOwnerId(characterId))?.class
+    }
     return getCharacterById(toBaseHeroId(characterId))?.class
   }
 

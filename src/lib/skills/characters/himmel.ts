@@ -16,8 +16,8 @@ interface PartyMember {
 // row scan: diagonal rows from the team's back to front (REARMOST rows) and, within
 // a row, the higher hex id first (FRONTMOST), bounded to the six neighbours by
 // maxDistance 1. The party forms only when every class is present. Companions
-// count toward the trio by design: classOf resolves a summon to its main hero's
-// class.
+// and phantimals count toward the trio: classOf gives a summon its owner's
+// class, a hero's or a phantimal's.
 function party(ctx: SkillContext): PartyMember[] {
   const members: PartyMember[] = []
   for (const className of REQUIRED_CLASSES) {

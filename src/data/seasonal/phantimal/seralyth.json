@@ -5,12 +5,15 @@
   "range": 1,
   "damage": "physical",
   "faction": "wilder",
+  "class": "warrior",
   "targeting": true,
   "tags": ["debuff"],
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "damage" },
+      "goal": {
+        "target": "damage"
+      },
       "weight": "aim",
       "note": "Seralyth's Spirit Mark goes to the allied hero behind her and adds damage against enemies with lowered stats, best a damage dealer."
     }

@@ -151,6 +151,7 @@ const tooltipRows = computed(() => {
     : 'app.phantimal-locked'
   return [
     traitRow('faction', phantimal.faction),
+    traitRow('class', phantimal.class),
     traitRow('damage', phantimal.damage),
     rangeRow(phantimal.range),
     {

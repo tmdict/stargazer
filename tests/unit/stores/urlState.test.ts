@@ -408,6 +408,7 @@ describe('synergy restore', () => {
       range: 2,
       damage: 'physical',
       faction: 'wilder',
+      class: 'warrior',
     }
     const mockGameData = (): void => {
       const gameData = useGameDataStore()

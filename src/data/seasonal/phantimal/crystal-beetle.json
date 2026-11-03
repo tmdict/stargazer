@@ -5,12 +5,15 @@
   "range": 1,
   "damage": "physical",
   "faction": "mauler",
+  "class": "rogue",
   "targeting": true,
   "tags": ["airborne", "haste", "temp-buff"],
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "tank" },
+      "goal": {
+        "target": "tank"
+      },
       "weight": "aim",
       "note": "Crystal Beetle's Spirit Mark goes to the allied hero in front of it and cuts the damage they take, best a tank."
     }

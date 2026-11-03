@@ -5,12 +5,15 @@
   "range": 20,
   "damage": "magic",
   "faction": "lightbearer",
+  "class": "mage",
   "targeting": true,
   "tags": ["debuff"],
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "ultimate" },
+      "goal": {
+        "target": "ultimate"
+      },
       "weight": "aim",
       "note": "Gervan's Spirit Mark goes to the allied hero in front of him and speeds up their Energy, best the hero whose ultimate matters most."
     }
