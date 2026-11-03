@@ -1,9 +1,11 @@
+import { createCipheriv, createHash, randomBytes } from 'node:crypto'
 import { readFileSync } from 'node:fs'
+import { deflateRawSync } from 'node:zlib'
 import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import { decodeSlData, loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlBefore, SlData, SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
@@ -153,6 +155,33 @@ describe('the shipped Supreme League data', () => {
     }
     const rated = [...Object.keys(data.model.artifacts).map(Number), ...data.fallback.flat()]
     expect(rated.filter((id) => !artifacts.has(id))).toEqual([])
+  })
+
+  // An edited copy, sealed with the pack's key as the writer seals the file.
+  const sealed = (edit: (copy: SlData) => void): Uint8Array<ArrayBuffer> => {
+    const copy = structuredClone(data)
+    edit(copy)
+    const key = readFileSync(new URL('../../../src/pack/pvp/sl.key', import.meta.url), 'utf8')
+    const iv = randomBytes(12)
+    const cipher = createCipheriv(
+      'aes-256-gcm',
+      createHash('sha256').update(`${key.trim()}stargazer-sl`).digest(),
+      iv,
+    )
+    const body = [cipher.update(deflateRawSync(JSON.stringify(copy))), cipher.final()]
+    return new Uint8Array(Buffer.concat([iv, ...body, cipher.getAuthTag()]))
+  }
+
+  it('refuses a file whose hero rows or board picks do not match its teams', async () => {
+    await expect(decodeSlData(sealed(() => {}))).resolves.toBeTruthy()
+    const played = data.teams.find((t) => t.decided > 0)!.heroes[0]!
+    const team = data.teams[0]!
+    for (const edit of [
+      (c: SlData) => delete c.model.heroes[played],
+      (c: SlData) => (c.model.heroes[999_999] = [0, 0, 0, 0]),
+      (c: SlData) => (c.teams[0]!.pick = [[null, team.placements.length]]),
+    ])
+      await expect(decodeSlData(sealed(edit))).rejects.toThrow()
   })
 })
 
