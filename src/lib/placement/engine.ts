@@ -17,7 +17,7 @@ interface PlacementOptions {
   full?: boolean
 }
 
-export interface PlacementResult {
+interface PlacementResult {
   // The team's units, heroes first, and the tile each stands on in the pick.
   units: number[]
   positions: number[]

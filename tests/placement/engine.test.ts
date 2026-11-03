@@ -7,15 +7,15 @@
  * other than the one Stargazer holds phantimals for is placed without its
  * phantimal and seasonal artifact, and scores no buff tile, since the map
  * files hold this season's, and how often each enemy hero is on a map is
- * counted from its boards. PLACEMENT_FULL is how
- * many of the most used teams are also placed by trying every placement, to
- * check the search. PLACEMENT_TUNE names weights, joined by commas, for which
- * the run suggests a value from the players' formations. PLACEMENT_UNITS names
- * heroes, phantimals or artifacts by their data file's name, joined by commas,
- * and only the set-ups that hold one are placed. The run also writes
- * picks.json, each team's pick and what the search found, and
- * PLACEMENT_COMPARE names an earlier run's picks.json to compare the picks
- * with. Left out when PLACEMENT_EXPORT is not set. */
+ * counted from its boards. PLACEMENT_FULL is how many of the most used teams
+ * are also placed by trying every placement, to check the search.
+ * PLACEMENT_TUNE names weights, joined by commas, for which the run suggests a
+ * value from the players' formations. PLACEMENT_UNITS names heroes, phantimals
+ * or artifacts by their data file's name, joined by commas, and only the
+ * set-ups that hold one are placed. The run also writes picks.json, each
+ * team's pick and what the search found, and PLACEMENT_COMPARE names an
+ * earlier run's picks.json to compare the picks with. Left out when
+ * PLACEMENT_EXPORT is not set. */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { delimiter, join } from 'node:path'
@@ -32,15 +32,9 @@ import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
 import { buffTiles, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
-import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
+import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
-import {
-  PlacementScorer,
-  type FormationCheck,
-  type GoalCheck,
-  type PlacementScore,
-  type SkippedRule,
-} from '@/lib/placement/score'
+import { PlacementScorer, type PlacementScore } from '@/lib/placement/score'
 import type { FormationRule, PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { decodeSlData } from '@/lib/pvp/sl/data/codec'
 import { FULL_GRID } from '@/lib/types/grid'
@@ -216,13 +210,16 @@ const holdsUnit = ({ team }: Setup) =>
 const teamKey = ({ team, map, live }: Pick<Setup, 'team' | 'map' | 'live'>) =>
   `${map}|${team.heroes.join(',')}|${team.phantimal ?? ''}|${team.artifact ?? ''}|${live}`
 
+type GoalCheck = ReturnType<PlacementScorer['goals']>[number]
+type FormationCheck = ReturnType<PlacementScorer['formation']>[number]
+
 interface Scored {
   positions: number[]
   score: PlacementScore
   threats: number
   goals: GoalCheck[]
   formation: FormationCheck[]
-  skipped: SkippedRule[]
+  skipped: PlacementScorer['skipped']
 }
 
 // The map files hold the live season's buff tiles, so no other season scores one.
@@ -259,7 +256,7 @@ const scoreSetup = (setup: Setup, data: PlacementData) =>
   )
 
 interface Placed {
-  result: PlacementResult
+  result: ReturnType<typeof placeTeam>
   pick: Scored
 }
 

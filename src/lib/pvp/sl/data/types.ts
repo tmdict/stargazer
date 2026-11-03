@@ -7,7 +7,7 @@ import type { PlacementData } from '@/lib/placement/types'
 // [tile, unit id], tiles numbered from the ally side.
 export type SlUnit = [tile: number, id: number]
 
-export interface SlPlacement {
+interface SlPlacement {
   // Heroes and their companions (N * 10000 + the hero's id).
   c: SlUnit[]
   // The phantimal, then its companions (N * 10000 + the phantimal's id).
@@ -39,7 +39,7 @@ export interface SlTeam extends SlTeamBase {
 
 // A team of the season before takes this season's artifacts, the first of
 // these the set leaves free.
-export interface SlBeforeTeam extends SlTeamBase {
+interface SlBeforeTeam extends SlTeamBase {
   like: number[]
 }
 
@@ -99,7 +99,7 @@ export interface SlModel {
   artifactsOnKind: Record<string, SlRow>
 }
 
-export type SlBefore = SlSeason<SlBeforeTeam> & { season: number }
+type SlBefore = SlSeason<SlBeforeTeam> & { season: number }
 
 export interface SlData extends SlSeason<SlTeam> {
   season: number

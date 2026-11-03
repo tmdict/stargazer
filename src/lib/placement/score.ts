@@ -30,7 +30,7 @@ export interface PlacementScore {
 
 // How much of one rule's goal a placement meets, from 0 to 1, or null where the
 // team cannot meet it (no listed hero, a map with nothing to count).
-export interface GoalCheck {
+interface GoalCheck {
   source: 'unit' | 'artifact' | 'charm'
   // The unit holding the effect, the artifact's name or the charm's id.
   owner: number | string
@@ -38,13 +38,13 @@ export interface GoalCheck {
   met: number | null
 }
 
-export interface FormationCheck {
+interface FormationCheck {
   rule: FormationRule
   held: boolean
 }
 
 // A rule the engine leaves out, and why.
-export interface SkippedRule {
+interface SkippedRule {
   owner: number | string
   reason: string
 }

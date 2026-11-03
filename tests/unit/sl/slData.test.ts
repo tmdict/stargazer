@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { decodeSlData, loadSlData } from '@/lib/pvp/sl/data/codec'
-import type { SlBefore, SlData, SlUnit } from '@/lib/pvp/sl/data/types'
+import type { SlData, SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
@@ -44,7 +44,7 @@ const RARE = ['celestial', 'hypogean']
 // every map with no hero twice: the generator makes a set exactly then.
 function fills(
   picked: ReadonlySet<number>,
-  from: readonly (SlData | SlBefore)[] = seasons,
+  from: readonly (SlData | NonNullable<SlData['before']>)[] = seasons,
 ): boolean {
   const pools = data.maps.map((_, map) => {
     const pool: number[][] = []
