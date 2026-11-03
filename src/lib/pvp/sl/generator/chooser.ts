@@ -3,17 +3,22 @@
  * the best chance to win most of the boards, for the heroes a visitor selects
  * at their levels. A board takes the teams recorded on one of the file's maps
  * (slBoards), and boards on one map share them. Each team's chance is the
- * model's, against a typical opponent at the top levels. */
+ * model's, against a typical opponent at the top levels, with its odds scaled
+ * by the share of its own effects its board's map leaves it (fit.ts). */
 
 import type { SlData, SlEvidence } from '../data/types'
 import { shortfall } from '../data/upgrades'
 import { oddsInto, sigmoid, winsNeeded } from '../model/odds'
 import type { SlReader } from '../model/reader'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
+import { slFit, type SlFit } from './fit'
+import type { SlBoard } from './setType'
 import { swapsOf } from './swaps'
 import type { SlChoice, SlPick } from './types'
 
 const CELESTIAL_HYPOGEAN = ['celestial', 'hypogean']
+
+const byBest = (a: Option, b: Option): number => b.best - a.best || a.rank - b.rank
 
 interface Option {
   source: number
@@ -27,6 +32,8 @@ interface Option {
   chanceWith: (artifact: number | null) => number
   // The best chance any artifact it can end up with gives it.
   best: number
+  // Measures the team's fit once, and says whether that lowered its chances.
+  refit: () => boolean
 }
 
 interface Found {
@@ -42,7 +49,8 @@ function choose(
   sources: number[],
   picked: ReadonlyMap<number, SlPick>,
   counts: (artifact: number) => boolean,
-  boards: readonly number[],
+  boards: readonly SlBoard[],
+  fit: SlFit,
 ): SlChoice | null {
   const excluded = (id: number): boolean => !picked.has(id)
   const gap = (heroes: number[]): number =>
@@ -62,7 +70,8 @@ function choose(
   // search relies on.
   const optionsFor = (proof: SlEvidence): Option[][] => {
     const pools = new Map<number, Option[]>()
-    return boards.map((map) => {
+    return boards.map((board) => {
+      const map = board.source
       if (pools.has(map)) return pools.get(map)!
       const found: Option[] = []
       for (const source of sources) {
@@ -83,12 +92,16 @@ function choose(
             const kind = source === 0 ? t.family : kindOf(t.heroes)
             const claim = claimOf(source, team, kind)
             const points = gap(t.heroes)
+            // A team not yet measured keeps all its effects, so its chances
+            // are at their most.
+            let share = fit.known(board, t.heroes)
+            const shift = (): number => Math.log(share ?? 1)
             const cache = new Map<number | null, number>()
             const chanceWith = (artifact: number | null): number => {
               if (!cache.has(artifact)) {
                 const counted = artifact !== null && counts(artifact) ? artifact : null
                 const side = { heroes: t.heroes, kind, artifact: counted }
-                cache.set(artifact, sigmoid(model.againstTypical(side, points)))
+                cache.set(artifact, sigmoid(model.againstTypical(side, points) + shift()))
               }
               return cache.get(artifact)!
             }
@@ -98,8 +111,7 @@ function choose(
             ]
             // The other teams hold one artifact each at most.
             if (reachable.length < boards.length) reachable.push(null)
-            const best = Math.max(...reachable.map(chanceWith))
-            found.push({
+            const option: Option = {
               source,
               team,
               map,
@@ -109,12 +121,21 @@ function choose(
               kind,
               claim,
               chanceWith,
-              best,
-            })
+              best: Math.max(...reachable.map(chanceWith)),
+              refit: () => {
+                if (share !== undefined) return false
+                share = fit.measure(board, t.heroes)
+                if (share === 1) return false
+                cache.clear()
+                option.best = Math.max(...reachable.map(chanceWith))
+                return true
+              },
+            }
+            found.push(option)
           }
         }
       }
-      found.sort((a, b) => b.best - a.best || a.rank - b.rank)
+      found.sort(byBest)
       pools.set(map, found)
       return found
     })
@@ -191,7 +212,15 @@ function choose(
   const before = (a: number, b: number): boolean => position.get(a)! < position.get(b)!
 
   for (const proof of data.evidence) {
-    const set = bestSet(optionsFor(proof))
+    const pools = optionsFor(proof)
+    let set = bestSet(pools)
+    // Every chance counts the fit of a team not yet measured at its most, so
+    // once a set's teams are all measured, no other set can beat it. Placing a
+    // team is slow, so only the teams a search picks are measured.
+    while (set?.teams.map((t) => t.refit()).some(Boolean)) {
+      for (const pool of new Set(pools)) pool.sort(byBest)
+      set = bestSet(pools)
+    }
     if (!set) continue
     return {
       chance: set.chance,
@@ -234,23 +263,26 @@ function choose(
   return null
 }
 
-/* The set for `picks`, or null when none can be made. `boards` holds the
- * file's map each board takes its teams from. The season before's teams join
- * when the selection holds fewer than `beforeUnder` Celestial and Hypogean
- * heroes that some recorded team holds, or when this season's teams alone
- * make no set. `counts` says whether an artifact counts toward a
- * chance: after a season change the file's seasonal artifacts are out of the
- * game, so the set still hands them out and counts them as typical ones. */
+/* The set for `picks`, or null when none can be made, on `boards` as slBoards
+ * gives them. The season before's teams join when the selection holds fewer
+ * than `beforeUnder` Celestial and Hypogean heroes that some recorded team
+ * holds, or when this season's teams alone make no set. `counts` says whether
+ * an artifact counts toward a chance: after a season change the file's
+ * seasonal artifacts are out of the game, so the set still hands them out and
+ * counts them as typical ones. `fit` keeps the fits it measures for the next
+ * call. */
 export function chooseSlSet(
   data: SlData,
   reader: SlReader,
   picks: readonly SlPick[],
   counts: (artifact: number) => boolean,
-  boards: readonly number[],
+  boards: readonly SlBoard[],
+  fit: SlFit = slFit(data),
 ): SlChoice | null {
   const picked = new Map(picks.map((pick) => [pick.id, pick]))
   const { before, beforeUnder = 0 } = data
-  const chooseFrom = (sources: number[]) => choose(data, reader, sources, picked, counts, boards)
+  const chooseFrom = (sources: number[]) =>
+    choose(data, reader, sources, picked, counts, boards, fit)
   if (!before) return chooseFrom([0])
   const held = new Set([...data.teams, ...before.teams].flatMap((t) => t.heroes))
   const rare = picks.filter(

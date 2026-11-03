@@ -40,7 +40,7 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
     readSlFile(file),
     picks,
     (id) => artifactSurvives(file.season, id),
-    boards.map((board) => board.source),
+    boards,
   )
   if (!set) return null
   return {

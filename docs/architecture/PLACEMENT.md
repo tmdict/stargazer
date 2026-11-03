@@ -1,6 +1,6 @@
 # Placement
 
-The placement engine (`src/lib/placement/`) works out where a team stands on one map: five heroes, the phantimal and the artifact, on the map's ally tiles. It scores a placement by what each unit's skill does from where it stands when the battle starts, read from the same skill code the boards draw, and by how the heroes stand in recorded formations. The PvP team generator draws a set in its formations when the page's switch says so.
+The placement engine (`src/lib/placement/`) works out where a team stands on one map: five heroes, the phantimal and the artifact, on the map's ally tiles. It scores a placement by what each unit's skill does from where it stands when the battle starts, read from the same skill code the boards draw, and by how the heroes stand in recorded formations. The PvP team generator draws a set in its formations when the page's switch says so. On a map with no recorded games yet, it also scales a borrowed team's odds by the share of its goals' points the engine's best placement keeps there, against the map the team was recorded on (`effectPoints`, `src/lib/pvp/sl/generator/fit.ts`).
 
 Two things make it hard. A team has too many placements to score them all on a page: five heroes on 13 tiles are 154,440 placements, and a phantimal makes eight times as many. And most goals leave many placements as good as each other, so the engine has to say how sure it is as well as pick one.
 

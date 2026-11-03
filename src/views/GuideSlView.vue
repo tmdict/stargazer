@@ -130,10 +130,7 @@ const generate = async (): Promise<void> => {
     const chosenFor = type.value
     const everyBoard = formation.value === 'suggested'
     const boards = slBoards(file, chosenFor)
-    const set = await generateSet(
-      picks,
-      boards.map((board) => board.source),
-    )
+    const set = await generateSet(picks, boards)
     shown.value = set && {
       type: chosenFor,
       chance: set.chance,

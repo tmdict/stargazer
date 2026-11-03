@@ -57,7 +57,7 @@ export function useSlEngine() {
       worker.postMessage(request(id))
     })
 
-  const generate = async (picks: SlPick[], boards: number[]): Promise<SlChoice | null> => {
+  const generate = async (picks: SlPick[], boards: SlBoard[]): Promise<SlChoice | null> => {
     const answer = await ask((id) => ({ type: 'generate', id, picks, boards }))
     if (answer.type !== 'generated') throw new Error('The worker answered another request')
     return answer.set

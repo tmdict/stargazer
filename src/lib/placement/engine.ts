@@ -144,10 +144,15 @@ class Search {
     }
   }
 
+  // The best placement scored, the first scored on a tie.
+  bestKey(): string {
+    let best: [string, PlacementScore] | undefined
+    for (const entry of this.scores) if (!best || compare(entry[1], best[1]) < 0) best = entry
+    return best![0]
+  }
+
   best(): PlacementScore {
-    let best: PlacementScore | undefined
-    for (const score of this.scores.values()) if (!best || compare(score, best) < 0) best = score
-    return best!
+    return this.scores.get(this.bestKey())!
   }
 
   // The placements within the margin of the best: those already scored, and
@@ -201,24 +206,16 @@ function* everyPlacement(tiles: number[], count: number): Generator<number[]> {
   yield* fill()
 }
 
-/**
- * Places a team on a map's ally tiles: scores placements by the rules of its
- * units, its artifact and its charms, the map's buff tile, the rules found in
- * the formations and where its heroes lean, and the rules of the enemy units it
- * could face there, and returns the best, with how many were about as good and
- * which tiles each hero kept among them. A rebuild gives the same placement.
- */
-export function placeTeam(
+function searched(
   team: PlacementTeam,
   mapKey: string,
   data: PlacementData,
   lookups: PlacementLookups,
-  options: PlacementOptions = {},
-): PlacementResult {
+  options: PlacementOptions,
+): { board: PlacementBoard; scorer: PlacementScorer; search: Search } {
   const board = new PlacementBoard(team, mapKey, lookups)
   const scorer = new PlacementScorer(board, team, data)
   const search = new Search(board, scorer)
-
   if (options.full) {
     for (const positions of everyPlacement(board.tiles, board.units.length)) {
       search.evaluate(positions)
@@ -234,6 +231,24 @@ export function placeTeam(
       search.climb(tiles.slice(0, board.units.length))
     }
   }
+  return { board, scorer, search }
+}
+
+/**
+ * Places a team on a map's ally tiles: scores placements by the rules of its
+ * units, its artifact and its charms, the map's buff tile, the rules found in
+ * the formations and where its heroes lean, and the rules of the enemy units it
+ * could face there, and returns the best, with how many were about as good and
+ * which tiles each hero kept among them. A rebuild gives the same placement.
+ */
+export function placeTeam(
+  team: PlacementTeam,
+  mapKey: string,
+  data: PlacementData,
+  lookups: PlacementLookups,
+  options: PlacementOptions = {},
+): PlacementResult {
+  const { board, scorer, search } = searched(team, mapKey, data, lookups, options)
   const { keys, complete } = search.equallyGood(data.weights.margin ?? 0, !options.full)
 
   // The highest total among them, the enemy units' rules counted, then the
@@ -278,4 +293,19 @@ export function placeTeam(
     complete,
     kept,
   }
+}
+
+/**
+ * The points a team's own goals earn in the best placement the search finds on
+ * a map, the buff tile's left out.
+ */
+export function effectPoints(
+  team: PlacementTeam,
+  mapKey: string,
+  data: PlacementData,
+  lookups: PlacementLookups,
+): number {
+  const { board, scorer, search } = searched(team, mapKey, data, lookups, {})
+  board.place(positionsOf(search.bestKey()))
+  return scorer.effectPoints()
 }

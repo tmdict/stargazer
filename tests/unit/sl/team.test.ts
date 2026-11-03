@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { deploymentTiles } from '@/lib/maps'
+import { deploymentTiles, MAPS } from '@/lib/maps'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlData } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
@@ -42,13 +42,7 @@ const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((i
   refinement: 4,
 }))
 const chooseOn = (file: SlData, boards: SlBoard[], from = picks) =>
-  chooseSlSet(
-    file,
-    reader,
-    from,
-    () => true,
-    boards.map((board) => board.source),
-  )
+  chooseSlSet(file, reader, from, () => true, boards)
 const boards = slBoards(data, 'sl')
 const set = chooseOn(data, boards)!
 const byTile = (a: number[], b: number[]) => a[0]! - b[0]!
@@ -132,7 +126,8 @@ describe('a set saved as a team', () => {
 
 describe('a file behind the current maps', () => {
   const current = TEAM_VARIANTS.sl.maps
-  const behind = fileOn([...current.slice(0, 3), 'gone-a', 'gone-b'])
+  const gone = Object.keys(MAPS).filter((key) => !current.includes(key))
+  const behind = fileOn([...current.slice(0, 3), gone[0]!, gone[1]!])
   const onCurrent = slBoards(behind, 'sl')
 
   it('stands every board on a current map, and gives a new map the teams of the one it replaced', () => {
@@ -142,7 +137,7 @@ describe('a file behind the current maps', () => {
   })
 
   it('keeps a held map on its own teams wherever the file holds it', () => {
-    const shuffled = slBoards(fileOn([...current.slice(0, 3), 'gone', current[3]!]), 'sl')
+    const shuffled = slBoards(fileOn([...current.slice(0, 3), gone[0]!, current[3]!]), 'sl')
     expect(shuffled.map((board) => board.source)).toEqual([0, 1, 2, 4, 3])
     expect(shuffled.map((board) => board.recorded)).toEqual([true, true, true, true, false])
   })

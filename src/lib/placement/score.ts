@@ -217,13 +217,18 @@ export class PlacementScorer {
   }
 
   score(): PlacementScore {
-    let goals = this.weights.buff * this.onBuffTiles()
-    for (const effect of this.effects) goals += effect.weight * (this.meet(effect) ?? 0)
+    const goals = this.addEffects(this.weights.buff * this.onBuffTiles())
     let broken = 0
     for (const rule of this.mustHold) if (!this.held(rule)) broken++
     let light = this.leaning()
     for (const rule of this.usually) if (this.held(rule)) light++
     return { broken, goals, total: goals + this.weights.lean * light }
+  }
+
+  // The points the team's own goals earn as the board stands, the buff tile's
+  // left out.
+  effectPoints(): number {
+    return this.addEffects(0)
   }
 
   // The points for the enemy units' rules the board blunts, each scaled by how
@@ -260,6 +265,11 @@ export class PlacementScorer {
 
   formation(): FormationCheck[] {
     return [...this.mustHold, ...this.usually].map((rule) => ({ rule, held: this.held(rule) }))
+  }
+
+  private addEffects(points: number): number {
+    for (const effect of this.effects) points += effect.weight * (this.meet(effect) ?? 0)
+    return points
   }
 
   private weightOf(name: string): number {

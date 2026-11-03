@@ -24,7 +24,7 @@ const data = await loadSlData()
 vi.unstubAllGlobals()
 const seasons = [data, ...(data.before ? [data.before] : [])]
 const reader = readSlFile(data)
-const everyMap = data.maps.map((_, i) => i)
+const everyMap = data.maps.map((key, i) => ({ key, map: i, source: i, recorded: true }))
 const choose = (picks: SlPick[]) => chooseSlSet(data, reader, picks, () => true, everyMap)
 const heroes = new Map(
   loadCharacters()

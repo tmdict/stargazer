@@ -14,6 +14,16 @@ import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
 import type { SlChoice } from './types'
 
+// Each of a season's phantimals needs three heroes of its own factions, so
+// five heroes can summon one of them at most.
+export function summonedPhantimal(data: SlData, heroes: number[]): number | undefined {
+  if (isRetiredSeason(data.season)) return undefined
+  const phantimal = loadPhantimals().find((p) =>
+    lineupQualifies(p, heroes, PLACEMENT_LOOKUPS.factionOf),
+  )
+  return phantimal && toPhantimalId(phantimal.id)
+}
+
 // One entry per board, in board order: every unit and its tile, as a recorded
 // placement's c and s hold them together. A board whose teams were recorded on
 // its map is left null unless `everyBoard`, and keeps the recorded formation.
@@ -23,21 +33,15 @@ export function suggestedUnits(
   boards: readonly SlBoard[],
   everyBoard: boolean,
 ): (SlUnit[] | null)[] {
-  // Each of a season's phantimals needs three heroes of its own factions, so
-  // five heroes can summon one of them at most.
-  const phantimals = isRetiredSeason(data.season) ? [] : loadPhantimals()
   const { pickRates } = data.placement
   return set.teams.map((choice, index) => {
     const { key, source, recorded } = boards[index]!
     if (recorded && !everyBoard) return null
-    const phantimal = phantimals.find((p) =>
-      lineupQualifies(p, choice.heroes, PLACEMENT_LOOKUPS.factionOf),
-    )
     const { artifact } = choice
     const { units, positions } = placeTeam(
       {
         heroes: choice.heroes,
-        phantimal: phantimal && toPhantimalId(phantimal.id),
+        phantimal: summonedPhantimal(data, choice.heroes),
         artifact:
           artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
       },
