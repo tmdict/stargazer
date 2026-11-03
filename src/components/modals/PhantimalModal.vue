@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 // The name and skill text follow the skill-text language, as in the skill
-// modal; the faction chip is chrome, in the site language.
+// modal; the faction and class chips are chrome, in the site language.
 const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
 
 const text = computed(() =>
@@ -52,6 +52,7 @@ const skills = computed(() =>
     <h1 class="detail-title">{{ title }}</h1>
     <div class="meta-chips" :lang="i18n.currentLocale">
       <span class="meta-chip">{{ gameLabel(phantimal.faction, i18n.currentLocale) }}</span>
+      <span class="meta-chip">{{ gameLabel(phantimal.class, i18n.currentLocale) }}</span>
     </div>
 
     <template v-if="applied || failed">
