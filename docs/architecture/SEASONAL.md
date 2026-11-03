@@ -134,7 +134,7 @@ mechanic known ──▶ phase 3: targeting ──▶ deploy   (one phantimal at
 
 Each phase ships on its own, because a season's text arrives weeks after the flip, and an artifact's or phantimal's targeting can follow only once its mechanic is known. Phase 1 brings the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits. Until phase 2 brings the text, which artifacts, phantimals and charms may each get on a different build, their modals show a pending line (`app.skill-details-pending`). In phase 3 an artifact draws arrows from the deploy that adds its rule, and a phantimal's Spirit Mark from the one that sets its `targeting`.
 
-Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change. The steps of each phase are in [Getting Started](../CONTRIBUTING.md#a-new-season).
+Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change.
 
 The Supreme League data file keeps working across a cutover until the next season's file arrives, which comes with the next season's first report and so waits for that season's first recorded games. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals. The file's unit test checks those ids only while the seasons match, so a cutover never holds up a deploy.
 

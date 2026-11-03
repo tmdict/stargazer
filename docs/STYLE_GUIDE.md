@@ -55,5 +55,5 @@ Shorter is better. When in doubt, cut. A leaf doc (one helper family) runs 40 to
 - `docs/ARCHITECTURE.md`: the layers, how data flows through the app, and where state is stored.
 - `docs/architecture/<SYSTEM>.md`: one doc per system.
 - `docs/architecture/<system>/<TOPIC>.md`: detail a system doc defers to.
-- `docs/CONTRIBUTING.md`: setup, commands and short how-tos.
+- `docs/CONTRIBUTING.md`: setup, commands and short how-tos. GitHub also shows it on the repository's front page, where links resolve from the repository root, so its links start there (`/docs/architecture/GRID.md`).
 - The doc index lives in `AGENTS.md`. Link a flow that belongs to another doc instead of repeating it.

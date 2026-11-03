@@ -60,3 +60,7 @@ Each system has its own doc in [`docs/architecture/`](./docs/architecture/); [AG
 ## Contributing
 
 See [Getting Started](./docs/CONTRIBUTING.md) for setup and guidelines.
+
+## License
+
+Stargazer's code and the data in this repository are under the [MIT License](./LICENSE), so feel free to use them. If Stargazer helps your own project, guide or research, as a reference or for learning, we'd love a shout-out or a link back to [stargazer.tmdict.com](https://stargazer.tmdict.com). Thank you!
