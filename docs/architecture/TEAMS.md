@@ -131,7 +131,7 @@ A team of the active mode loads board for board, and a 1v1 team loads onto the a
 
 ## Screenshot import
 
-The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. The page starts a new team as New does, so the import never merges into the previous one. `grids.applyLineups` then places the plan's lineups as a one-sided load does (`placeSide`), again without a restore: on the tiles a formation screenshot or replay frame shows, else on random free ones, after moving the board to the map a formation screenshot shows. Boards and sides no screenshot shows stay empty. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
+The team screenshot import ([Screenshot Import](./IMPORT.md#the-team-import)) ends here. The page starts a new team as New does, so the import never merges into the previous one. `grids.applyLineups` then places the plan's lineups as a one-sided load does (`placeSide`), again without a restore: on the tiles a formation screenshot or replay frame shows, else on random free ones, after moving the board to the map a formation screenshot shows. Boards and sides no screenshot shows stay empty. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
 
 ## Thumbnails
 
@@ -174,9 +174,9 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy ([Guide](./GUIDE.md)).
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy.
 
-The roster screenshot import ([Roster Import](./IMPORT_ROSTER.md)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
+The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
 
 | Key                        | Holds                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -240,5 +240,4 @@ The Rosters tab exports every roster, and imports merge with the backup-file rul
 - [Grid](./GRID.md): board contexts and the multi-board store
 - [URL Serialization](./URL_SERIALIZATION.md): the link format and the canonical team form
 - [Seasonal Content](./SEASONAL.md): season stamps and what loading strips
-- [Team Import](./IMPORT_TEAM.md): reading match screenshots
-- [Roster Import](./IMPORT_ROSTER.md): reading the hero roster into a new roster
+- [Screenshot Import](./IMPORT.md): reading match screenshots into a new team and the hero roster into a new roster

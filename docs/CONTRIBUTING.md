@@ -13,7 +13,7 @@ npm run dev
 
 Then open http://localhost:5173.
 
-The game's pictures and text come from a data pack kept outside this repo ([Architecture](./ARCHITECTURE.md#the-data-pack)). Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder. The PvP reports and the team generator's data file come with the pack too. Without them the guide index lists no reports, the generator's page cannot load its data, and the tests of that data are skipped ([Guide](./architecture/GUIDE.md)).
+The game's pictures and text come from a data pack kept outside this repo. Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder. The PvP reports and the team generator's data file come with the pack too. Without them the guide index lists no reports, the generator's page cannot load its data, and the tests of that data are skipped.
 
 ## Commands
 
@@ -49,15 +49,25 @@ Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no oth
 
 ### Adding a skill
 
-Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder ([Skills](./architecture/SKILLS.md#builders-and-composition)). If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle. A skill whose effect acts when the battle starts also takes a placement rule in its unit's data file ([Placement](./architecture/PLACEMENT.md#changing-a-rule)).
+Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotates. The block comment above `registerSkill` describing the in-game behavior is the skill's only documentation. Start from a builder ([Skills](./architecture/SKILLS.md#builders-and-composition)). If none fits, register a plain object and pair every paint, line or badge it adds with a removal (`paintTiles` and `clearPaintedTiles` handle the diff). Useful references are `himmel.ts` for a tile paint using `classOf`, `elijah-lailah.ts` for a companion with decorators, and `kulu.ts` for a custom lifecycle. A skill whose effect acts when the battle starts also takes a placement rule in its unit's data file ([Changing a unit's placement rule](#changing-a-units-placement-rule)).
+
+### Adding a skill note
+
+A hero's skill note is one file per app locale, `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` ([Skill Pages](./architecture/SKILL_PAGES.md#commentary-snippets)), and its boards are `GridSnippet`s. A board that shows which units a skill takes puts a hero on every candidate, dims the ones it passes over (`dimmed`) and lights the border of the ones it takes (`outlined`). A board that shows an order numbers the tiles instead, since a number on a portrait is hard to read, and colours them by ring only when the order runs through more than one ring. A ring that runs off the board is completed with a dashed tile (`imaginaryHexes`) carrying the number that tile would have in the order. The casting hero's tile is left uncoloured unless the colour groups it with other tiles, such as Aliceth's row or Nara's mirror tile.
 
 ### Adding a screenshot screen
 
 A new screen keeps the import's layers ([Screenshot Import](./architecture/IMPORT.md#layers)): a reader under `src/lib/import/screens/` that finds its own landmark, reads its cards with the card layer and gives every field a sure flag; a kind in `src/lib/import/kinds.ts` with the reference parts it waits for, its decode widths in the engine and its reader in the worker; a case in the sorter when one import takes it beside other screens or another import must turn it away; and an import that hands the engine its session, with a plan as pure data and a review built from the shared pieces. What it marks sure must never be wrong on the labelled samples.
 
-### Changing a placement rule
+### Changing what a board allows
 
 Placement, moves, swaps and removal live in `src/lib/characters/` and run inside `executeTransaction`, so a failed step undoes the earlier ones ([Grid](./architecture/GRID.md)).
+
+### Changing a unit's placement rule
+
+A unit's placement rule is in `rules` in its data file, and its words are defined in `src/lib/types/rule.ts` ([Placement](./architecture/PLACEMENT.md)). After a change, run `npx vitest run tests/unit/rules.test.ts tests/unit/placement`. The first checks that every rule keeps the contract's fields and words and sits on a unit whose skill says where its effect lands, and the second checks each goal word, the rules against us and the search. A new goal word or field also goes in the scorer (`src/lib/placement/score.ts`), in the goal table in [Placement](./architecture/PLACEMENT.md#scoring), and in a unit test of its own.
+
+To see how a change moves real teams, run the measuring test, `tests/placement/engine.test.ts`, whose header lists its settings. A rule for a unit's own team moves only the teams that hold the unit, so a run with `PLACEMENT_UNITS` set to the unit's name (for a charm, its holders' names) is enough and much quicker. A rule against us, a weight, a goal word or the search can move every team and needs the whole run. A change that should move no team, such as a speed-up, is checked with the whole run and `PLACEMENT_COMPARE` naming the `picks.json` of a run from before it. The lists, leans and weights come in the Supreme League data file, so a change to them arrives with the next copy of it.
 
 ### A new season
 
@@ -66,12 +76,12 @@ A season ships in three phases ([Seasonal Content](./architecture/SEASONAL.md#se
 1. Run the data export for the new season. It retires the previous season's text and writes the season's artifact and phantimal data files and names, reusing the freed ids. The image export adds the season's icons, companions included, to the data pack, and the previous season's icons are removed from it by hand. A new artifact stat needs an `ArtifactStatKey` and a label in `src/locales/game/`.
 2. Pin the pack version that holds the season with `npm run data:pin`, and review the changes the export made here.
 3. Replace `src/lib/skills/seasonal/phantimal.ts` (one companion skill per phantimal that has a companion), delete the old season's `ARTIFACT_TARGETING` entries with their tests, and replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
-4. If the Supreme League map list changed, give the new preset maps the ids the old ones free and edit the `sl` list in `src/data/maps.json`. The list also changes mid-season, every couple of months, and the replay-frame reader then needs checking against frames of the new maps ([Team Import](./architecture/IMPORT_TEAM.md#replay-frames)).
+4. If the Supreme League map list changed, give the new preset maps the ids the old ones free and edit the `sl` list in `src/data/maps.json`. The list also changes mid-season, every couple of months, and the replay-frame reader then needs checking against frames of the new maps ([Screenshot Import](./architecture/IMPORT.md#replay-frames)).
 5. Run the tests and the build, commit the export's changes with `data.lock`, and deploy.
 
 When the feed carries the season's text, run the data export again, pin its pack version and deploy. Once the text is in, write the `tags` in each charm's, phantimal's and artifact's data file. A failed check means a phase 1 value is wrong, so fix the data file, not the check.
 
-Before the season's first event, give its phantimals, seasonal artifacts and charms their placement rules ([Placement](./architecture/PLACEMENT.md#changing-a-rule)). Add an artifact rule whenever its mechanic is known. Set each phantimal's `"targeting": true` once its Spirit Mark is written, since a mark shows on boards and counts in placement only while it is on.
+Before the season's first event, give its phantimals, seasonal artifacts and charms their placement rules ([Changing a unit's placement rule](#changing-a-units-placement-rule)). Add an artifact rule whenever its mechanic is known. Set each phantimal's `"targeting": true` once its Spirit Mark is written, since a mark shows on boards and counts in placement only while it is on.
 
 ### Styles
 

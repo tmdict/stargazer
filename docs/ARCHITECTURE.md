@@ -82,7 +82,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.season`                                                                 | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)           |
 | `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort`            | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                         |
 | `stargazer.rosters`, `stargazer.rosters.active`                                    | the roster library and the active roster                                | [Teams](./architecture/TEAMS.md)                         |
-| `stargazer.import.names`                                                           | the team import's record names                                          | [Team Import](./architecture/IMPORT_TEAM.md)             |
+| `stargazer.import.names`                                                           | the team import's record names                                          | [Screenshot Import](./architecture/IMPORT.md)            |
 | `stargazer.import.learned`                                                         | the screenshot imports' learned faces                                   | [Screenshot Import](./architecture/IMPORT.md)            |
 | `stargazer.skillLocale`, `stargazer.skillLocaleHintSeen`, `stargazer.recentHeroes` | skill text language, tip dismissal, recent heroes                       | [Skill Pages](./architecture/SKILL_PAGES.md)             |
 | `stargazer.tags.expanded`                                                          | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)             |
@@ -126,19 +126,3 @@ Text carries its language in the `lang` attribute, and nothing else decides how 
 ## Content and data
 
 The About popup's text is in `src/content/about/` and the Help page's in `src/content/help/`, one file per app locale (`APP_LOCALES`: en, zh and ko), each imported directly by its view. Per-hero skill notes are in `src/content/skill/<slug>/`, also one file per app locale, while skill text for all languages is in the data pack's `text/skill/<lang>/`. Game data (`src/data/`) and dictionaries (`src/locales/`) load through `src/utils/dataLoader.ts`, but for three files of single values that the modules using them import: the map lists of Supreme League and Guild Duel (`maps.json`, in `src/lib/teams/modes.ts`), the board's tile layout (`grid.json`, in `src/lib/types/grid.ts`), and the upgrade ramps with their top levels (`upgrades.json`, in `src/lib/characters/upgradeStats.ts` and `attributes.ts`). The external report generator reads these three files too, so their field names are part of its format. PvP reports produced by an external report generator come with the data pack and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).
-
-### The data pack
-
-The game's own files are kept outside this repo as the data pack, which the data export writes: hero portraits and outfits, artifact and seasonal pictures, skill and effect text, skill cooldowns and the screenshot import's references. It also holds what an external report generator writes in full: the PvP season reports, their summaries and the Supreme League data file. `npm run data` copies it into the ignored `src/pack/`, which the app imports from:
-
-- from the folder `DATA_PACK_DIR` names in `.env.local` (template: `.env.example`);
-- else, where `DATA_PACK_URL`, `DATA_PACK_TOKEN` and `DATA_PACK_PATH` are set, as on the host, by downloading the version `data.lock` pins;
-- else it writes empty stand-ins for the files the app imports directly and prints one line, and the app runs with plain portraits, no skill text and no PvP reports.
-
-The copy mirrors its source. The step also writes a bundling module (`text/skill/<code>/index.ts`) into each skill language folder present. `dev`, `test` and `prep` run it first. A build runs it as `tsx scripts/data.ts build`, which stops, naming each problem, when the pack is missing or disagrees with `src/data/` in a way that would ship a broken page, such as an artifact with no picture or skill text for a hero with no hero file. Content that is only waiting for the pack, such as a new hero's portrait or a season's text, is printed as a note.
-
-`npm run data:pin` writes the commit of the `DATA_PACK_DIR` folder into `data.lock`, and refuses while that folder has uncommitted files or unpushed commits. After pinning it prints the build's problems and notes without stopping. `data.lock` holds that one line:
-
-```
-3f9a1c07d2e84b6f9a0c1e2d3b4a5f6e7d8c9b0a
-```

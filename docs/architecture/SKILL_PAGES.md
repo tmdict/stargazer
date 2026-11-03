@@ -4,7 +4,7 @@ The `/skills` browser, skill modal and pre-rendered `/<code>/skill/<slug>` pages
 
 ## Skill text
 
-Skill text comes from the data pack, in `src/pack/text/skill/<code>/` ([Architecture](../ARCHITECTURE.md#the-data-pack)), which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
+Skill text comes from the data pack, in `src/pack/text/skill/<code>/`, which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
 
 Each `<slug>.json` stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
@@ -84,7 +84,7 @@ Tags are hand-maintained in `src/data/character/<slug>.json`; the data export on
 
 Each attachment describes one effect and pins exactly one `{ slot: level }` or `{ "charm": tier }`. Charm pins are not written in the hero file: they are joined at load time from the charm's own tags ([Seasonal Content](./SEASONAL.md#charms)). Separate effects on the same level need separate attachments. Optional `mods` are label keys or hero slugs denoting synergies. A `TagPick` matches only when one attachment carries every requested modifier, so modifiers on unrelated effects cannot combine into a match.
 
-`tagVocabulary` derives tags and modifiers from hero data; labels live in `src/locales/app/<key>.json`. A tag whose attachments all carry the same single modifier becomes one combined entry. Synergies are excluded from that rule because they describe a partner rather than the effect. Shared rules live in `src/lib/tags.ts`, independent of the data loader, for hero lists, skill chips and the [Mechanics guide](./GUIDE.md#mechanics-page).
+`tagVocabulary` derives tags and modifiers from hero data; labels live in `src/locales/app/<key>.json`. A tag whose attachments all carry the same single modifier becomes one combined entry. Synergies are excluded from that rule because they describe a partner rather than the effect. Shared rules live in `src/lib/tags.ts`, independent of the data loader, for hero lists, skill chips and the Mechanics guide.
 
 Within each tag, chips merge picks that match identical attachments, so any of the merged picks activates the chip. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text.
 
@@ -117,7 +117,7 @@ The guide index adds the card id as a fragment: the tag or `init-energy`. Unknow
 
 ## Commentary snippets
 
-Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after mount, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order. `GridSnippet` resolves portraits so snippet data files need no image imports. A board that shows which units a skill takes puts a hero on every candidate, dims the ones it passes over (`dimmed`) and lights the border of the ones it takes (`outlined`). A board that shows an order numbers the tiles instead, since a number on a portrait is hard to read, and colours them by ring only when the order runs through more than one ring. A ring that runs off the board is completed with a dashed tile (`imaginaryHexes`) carrying the number that tile would have in the order. The casting hero's tile is left uncoloured unless the colour groups it with other tiles, such as Aliceth's row or Nara's mirror tile.
+Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after mount, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order. `GridSnippet` resolves portraits so snippet data files need no image imports.
 
 ## Search
 

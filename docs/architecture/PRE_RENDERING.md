@@ -1,6 +1,6 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The PvP team generator (`/guide/pvp/generator`) and Who Would Win? (`/guide/pvp/www`, [Guide](./GUIDE.md)) bake their heading alone and draw the rest after mount. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. The PvP team generator (`/guide/pvp/generator`) and Who Would Win? (`/guide/pvp/www`) bake their heading alone and draw the rest after mount. `/teams` is client-only. Game state never enters the baked HTML.
 
 The hard rule is that the client's first render must equal the baked HTML, or the page jumps when the app replaces it. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
@@ -22,7 +22,7 @@ The hard rule is that the client's first render must equal the baked HTML, or th
 
 `npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the PvP team generator (`SL_GENERATOR_PATH`) and Who Would Win? (`WWW_PATH`) beside them ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under the data pack's `src/pack/text/skill/<code>/` becomes a page. A `SKILL_LOCALES` row with no hero files there fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the PvP team generator (`SL_GENERATOR_PATH`) and Who Would Win? (`WWW_PATH`) beside them, and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
 The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so the first render matches the baked page.
 
@@ -74,6 +74,10 @@ The plugin takes images only from the imports of `src/utils/imageAssets.ts`, whi
 
 The build fails on a placeholder naming a missing image, a placeholder left unresolved, or a `guide/pvp/s<N>/index.html` already present in `public/` or the bundle.
 
+Each report comes with a summary, which the guide index shows. The generator writes it with the report, owns its format, and documents it where it writes the file, so nothing here derives or edits its numbers. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) finds the summaries newest first, so a new season needs no entry in the code. The data step stops a build on a summary with no report beside it, while a report with no summary yet still gets its page and stays off the index. A summary carries each team's label in the languages its report is written in, and in any other app locale a team is named by its heroes (`pvpTeamName`), so a season needs nothing per app locale beyond the hero names the app already has.
+
+The guide index's card for the PvP team generator draws a default set worked out once per build (`scripts/slPreview.ts`, handed to the card as `virtual:sl-preview`), so its boards are in the baked HTML and the index loads neither the Supreme League data file nor the model.
+
 ## Hosting
 
 The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?l=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
@@ -83,5 +87,4 @@ The host serves `dist/` as static files first and applies `public/_redirects` to
 ## Related documentation
 
 - [Skill Pages](./SKILL_PAGES.md): skill locale chunks, the warm-up guard and skill page meta
-- [Guide](./GUIDE.md): guide pages and season summaries
 - [URL Serialization](./URL_SERIALIZATION.md): the `?g=` payload decoded after mount

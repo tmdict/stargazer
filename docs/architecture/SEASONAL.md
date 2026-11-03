@@ -136,6 +136,8 @@ Each phase ships on its own, because a season's text arrives weeks after the fli
 
 Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change. The steps of each phase are in [Getting Started](../CONTRIBUTING.md#a-new-season).
 
+The Supreme League data file keeps working across a cutover until the next season's file arrives. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals. The file's unit test checks those ids only while the seasons match, so a cutover never holds up a deploy.
+
 ## Related documentation
 
 - [URL Serialization](./URL_SERIALIZATION.md): the `s` section and its bit layout

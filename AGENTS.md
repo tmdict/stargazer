@@ -56,16 +56,11 @@ System docs:
 - [Skill Targeting](./docs/architecture/skills/TARGETING.md) - Targeting helpers for skills
 - [Skill Pages](./docs/architecture/SKILL_PAGES.md) - Skill pages, skill text loading, search
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library, rosters
-- [Screenshot Import](./docs/architecture/IMPORT.md) - The engine, worker, hero cards and references every screenshot import shares
-- [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match and formation screenshot import
-- [Roster Import](./docs/architecture/IMPORT_ROSTER.md) - Hero roster screenshot import
-- [Matchup Import](./docs/architecture/IMPORT_WWW.md) - Supreme League knockout list import into Who Would Win?
-- [Screenshots the Imports Read](./docs/architecture/IMPORT_SCREENSHOTS.md) - What each game screen gives, what a screenshot needs, and the limits
+- [Screenshot Import](./docs/architecture/IMPORT.md) - The team, roster and matchup imports, the engine and references they share, and their limits
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
-- [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, PvP team generator, Who Would Win?
-- [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring, search and its measuring test
-- [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, hosting
+- [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring and search
+- [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, PvP reports and summaries, hosting
 
 ## BUILD COMMANDS
 
