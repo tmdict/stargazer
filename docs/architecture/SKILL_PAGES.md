@@ -4,13 +4,13 @@ The `/skills` browser, skill modal and pre-rendered `/<code>/skill/<slug>` pages
 
 ## Skill text
 
-Skill text comes from the data pack, in `src/pack/text/skill/<code>/`, which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
+Skill text comes from the data pack, one folder per language, which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
 
-Each `<slug>.json` stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
+Each hero's file, named by its slug, stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
-Underscore files hold shared language data: `_terms.json` for panel labels, `_keywords.json` for the glossary, `_artifacts.json` for every artifact's name and effects, and `_charms.json` and `_phantimals.json` for [seasonal text](./SEASONAL.md). `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too. The artifact and phantimal windows read theirs in the language of their own globe menu, through `useModalSkillLocale` as the skill window does, so their text loads with that language's chunk.
+Files whose names start with an underscore hold shared language data: the terms file for panel labels, the glossary, every artifact's name and effects, and the [seasonal text](./SEASONAL.md) of charms and phantimals. `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too. The artifact and phantimal windows read theirs in the language of their own globe menu, through `useModalSkillLocale` as the skill window does, so their text loads with that language's chunk.
 
-In `_terms.json`, `ultimate` and `ex` prefix slot headings. The remaining fields are panel templates, with `{cooldown}`, `{initialCooldown}`, `{range}` and `{energy}` replaced by values:
+In the terms file, `ultimate` and `ex` prefix slot headings. The remaining fields are panel templates, with `{cooldown}`, `{initialCooldown}`, `{range}` and `{energy}` replaced by values:
 
 ```json
 {
@@ -30,10 +30,10 @@ Chrome names live in `src/locales/character/<slug>.json`. English and Chinese ar
 ## Loading languages
 
 ```
-  npm run data ──▶ src/pack/text/skill/<code>/*.json
+  npm run data ──▶ skill text in src/pack/
                             │
                             ▼
-              one lazy chunk per language (index.ts)
+              one lazy chunk per language
                             │
                             ▼
                      loadSkillLocale ◀── route guard, modal,
@@ -42,13 +42,13 @@ Chrome names live in `src/locales/character/<slug>.json`. English and Chinese ar
                  synchronous getters ──▶ SkillSections, search
 ```
 
-Each `index.ts`, which `npm run data` writes for every language in `SKILL_LOCALES` that the pack holds, eagerly imports its directory into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
+For every language in `SKILL_LOCALES` that the pack holds, `npm run data` writes an index file that eagerly imports the language's folder into one lazy chunk. `loadSkillLocale` shares a promise per language and drops rejected promises for retry. `SkillSections` reads synchronously and takes heroes, terms, glossary and charms from one loaded language, falling back together to English if available.
 
 `warmSkillLocale` in `src/router/routes.ts` awaits the chunk before rendering a skill route. Without it, vite-ssg's single pass would bake missing text and descriptions. It uses global `beforeResolve` because `beforeEnter` skips language switches that change only route parameters. A failed mid-session load hard-navigates to fresh HTML; an initial-load failure allows the reader's fallback or load-error message.
 
 `useModalSkillLocale` keeps the previous text during a switch, ignores outdated load results and tries English on failure. Outside skill routes, `App.vue` warms `effectiveSkillLocale` after the initial route settles.
 
-Pre-rendered skill pages preload their language chunk. The build resolves it through `dist/.vite/ssr-manifest.json`, keyed by the language's `index.ts`: filenames alone are ambiguous because a dependency can share a language prefix.
+Pre-rendered skill pages preload their language chunk. The build resolves it through `dist/.vite/ssr-manifest.json`, keyed by the language's index file: filenames alone are ambiguous because a dependency can share a language prefix.
 
 ## Text and names
 
@@ -58,7 +58,7 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Cooldowns and range
 
-The data export writes the language-independent `src/pack/text/skill/numbers.json`, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
+The data export writes one language-independent file of skill numbers, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
 
 Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The data export reports discrepancies with the feed rather than overwriting hand-maintained hero data.
 

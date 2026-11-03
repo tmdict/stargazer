@@ -18,23 +18,23 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
   by hand ─────────────▶  tags, targeting, skill code ─┘
 ```
 
-| Content                             | Files                                                                          | Written by   |
-| ----------------------------------- | ------------------------------------------------------------------------------ | ------------ |
-| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                      | data export  |
-| Phantimal names                     | `src/locales/seasonal/phantimal/`                                              | data export  |
-| Phantimal skill text                | `src/pack/text/skill/<code>/_phantimals.json`                                  | data export  |
-| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)      | data export  |
-| Artifact names                      | `src/locales/seasonal/artifact/`                                               | data export  |
-| Artifact effect text                | `src/pack/text/skill/<code>/_artifacts.json`, pre-season included              | data export  |
-| Charm id, season, heroes            | `src/data/seasonal/charm/<id>.json`, `src/pack/text/skill/<code>/_charms.json` | data export  |
-| Charm tags                          | `tags` in each charm data file                                                 | hand         |
-| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                | hand         |
-| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`           | hand         |
-| Icons                               | `src/pack/images/seasonal/{artifact,phantimal}/<slug>.png`                     | image export |
+| Content                             | Files                                                                             | Written by   |
+| ----------------------------------- | --------------------------------------------------------------------------------- | ------------ |
+| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                         | data export  |
+| Phantimal names                     | `src/locales/seasonal/phantimal/`                                                 | data export  |
+| Phantimal skill text                | data pack, one file per language                                                  | data export  |
+| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)         | data export  |
+| Artifact names                      | `src/locales/seasonal/artifact/`                                                  | data export  |
+| Artifact effect text                | data pack, one file per language, pre-season included                             | data export  |
+| Charm id, season, heroes            | `src/data/seasonal/charm/<id>.json`; text in the data pack, one file per language | data export  |
+| Charm tags                          | `tags` in each charm data file                                                    | hand         |
+| Phantimal and artifact tags         | `tags` in each phantimal and artifact data file                                   | hand         |
+| Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`              | hand         |
+| Icons                               | data pack                                                                         | image export |
 
 The data export writes the structural files from the feed at a season's start, with each id, season, stat, range, damage type, faction and class as the feed gives it: an artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts from the feed alone), and the previous season's files are removed.
 
-It also writes the season's text and icons into the data pack, and checks the hand-written files against the feed: slug sets must match in both directions, phantimal factions, ranges, damage types and classes must agree, and artifact ids, seasons and stats must equal the feed's. Any mismatch stops it. A missing feed is an error, never a wipe, and retiring a season's text is a step of its own. The app reads the pack's copy in `src/pack/` ([Architecture](../ARCHITECTURE.md)), and `npm run build` stops when a seasonal artifact or phantimal in the data files has no icon there, and lists those with no text yet.
+It also writes the season's text and icons into the data pack, and checks the hand-written files against the feed: slug sets must match in both directions, phantimal factions, ranges, damage types and classes must agree, and artifact ids, seasons and stats must equal the feed's. Any mismatch stops it. A missing feed is an error, never a wipe, and retiring a season's text is a step of its own. The app reads the pack's copy in `src/pack/`, and `npm run build` stops when a seasonal artifact or phantimal in the data files has no icon there, and lists those with no text yet.
 
 ## Reused ids
 
@@ -99,7 +99,7 @@ Phantimal and artifact data files, the six pre-season artifacts included, can ca
 
 ## Charms
 
-A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. `_charms.json` sits in each language's skill text folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
+A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. The charms' text sits in each language's skill text folder, so it loads with that language's skill text, in a file whose name starts with an underscore, which the route and hero walks skip. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
 
 Each charm has a data file, `src/data/seasonal/charm/<id>.json`, where the data export writes its id, season and the heroes sharing it. Charms can carry tags, written by hand in the same file: each tag gives every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
 
@@ -136,7 +136,7 @@ Each phase ships on its own, because a season's text arrives weeks after the fli
 
 Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change. The steps of each phase are in [Getting Started](../CONTRIBUTING.md#a-new-season).
 
-The Supreme League data file keeps working across a cutover until the next season's file arrives. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals. The file's unit test checks those ids only while the seasons match, so a cutover never holds up a deploy.
+The Supreme League data file keeps working across a cutover until the next season's file arrives, which comes with the next season's first report and so waits for that season's first recorded games. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals. The file's unit test checks those ids only while the seasons match, so a cutover never holds up a deploy.
 
 ## Related documentation
 

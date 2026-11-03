@@ -55,7 +55,7 @@ The hero table cuts every portrait over a grid of crop windows, because the in-g
 
 ## Face examples
 
-Three sources feed the hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and outfits give general coverage. The data pack's `screenshot-import/hero-icons.json` holds approved face examples for cards the portraits cannot match. Browser learning adds examples private to that browser. Ranking and confidence do not depend on which source a row came from.
+Three sources feed the hero table, assembled by `buildImportHeroTable` (`src/lib/import/references.ts`) for the worker and the offline checks alike. Portraits and outfits give general coverage. A file of approved face examples from the data pack, bundled into the site, covers cards the portraits cannot match. Browser learning adds examples private to that browser. Ranking and confidence do not depend on which source a row came from.
 
 The bundled file and browser storage (`stargazer.import.learned`) share one shape, validated by `readLearnedIcons`:
 
@@ -92,7 +92,7 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ## Reference pictures
 
-Every reference picture is built into the site from the data pack (`src/pack/`), encoded at the settings the matching was tuned on. The paragon frames sit in `screenshot-import/`, and a picture's outfits sit beside it as `<picture>-skin<N>.png` (`src/lib/characters/outfit.ts`). Portraits and phantimals load at 180 px, and artifact references are the artifacts' icons capped at 128 px. Without a pack the frames are missing, and the import says its reference images could not be loaded.
+Every reference picture, the paragon frames included, is built into the site from the data pack (`src/pack/`), encoded at the settings the matching was tuned on. A picture's outfits sit beside it under its name with an outfit number (`src/lib/characters/outfit.ts`). Portraits and phantimals load at 180 px, and artifact references are the artifacts' icons capped at 128 px. Without a pack the frames are missing, and the import says its reference images could not be loaded.
 
 ## The team import
 
@@ -110,7 +110,7 @@ Each portrait is taken for one of the units the side can field, best matches fir
 
 ### Replay frames
 
-An account that cannot save a match's formations can place a 5v5 Supreme League match's heroes from paused replay frames instead. The heroes and upgrades still come from the result screenshots, and the user places each unit on the frame's tiles. Every Supreme League map is fought in one arena under one fixed camera, so a frame differs from the reference frame only by a scale and a shift, found by matching the arena against the data pack's `screenshot-import/replay-arena.png`. The camera, the arena picture and the map strip's circles were measured on frames of one match, so they hold only while Supreme League maps are fought in that arena under that camera. A frame's picks are tiles of its map, so changing the frame's map starts them over.
+An account that cannot save a match's formations can place a 5v5 Supreme League match's heroes from paused replay frames instead. The heroes and upgrades still come from the result screenshots, and the user places each unit on the frame's tiles. Every Supreme League map is fought in one arena under one fixed camera, so a frame differs from the reference frame only by a scale and a shift, found by matching the arena against the data pack's picture of it. The camera, the arena picture and the map strip's circles were measured on frames of one match, so they hold only while Supreme League maps are fought in that arena under that camera. A frame's picks are tiles of its map, so changing the frame's map starts them over.
 
 ### Record names and save
 
