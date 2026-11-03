@@ -10,7 +10,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attribu
 import { TEAM_MODES } from '@/lib/teams/modes'
 import slFileUrl from '@/pack/pvp/sl.bin?url'
 import slKey from '@/pack/pvp/sl.key?raw'
-import type { SlData } from './types'
+import type { SlData, SlModel, SlTeam } from './types'
 
 // The writer combines sl.key with the same text, so what the script stores is
 // not itself the key.
@@ -49,11 +49,13 @@ const isOwnArtifacts = (value: unknown, artifacts: 'artifacts' | 'like'): boolea
     ? isNumbers(value)
     : Array.isArray(value) && value.every((row: unknown) => isNumbers(row, 2))
 
-const isPick = (value: unknown): boolean =>
+const isPick = (value: unknown, placements: number): boolean =>
   Array.isArray(value) &&
   value.length === 2 &&
   (value[0] === null || Number.isInteger(value[0])) &&
-  Number.isInteger(value[1])
+  Number.isInteger(value[1]) &&
+  value[1] >= 0 &&
+  value[1] < placements
 
 // One season's part of the file: its teams and groups.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
@@ -71,7 +73,9 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
       isOwnArtifacts(t[artifacts], artifacts) &&
       Array.isArray(t.placements) &&
       t.placements.length > 0 &&
-      (t.pick === undefined || (Array.isArray(t.pick) && t.pick.every(isPick))),
+      (t.pick === undefined ||
+        (Array.isArray(t.pick) &&
+          t.pick.every((pick: unknown) => isPick(pick, (t.placements as unknown[]).length)))),
   )
 
 const isNumberRecord = (value: unknown): boolean =>
@@ -91,6 +95,15 @@ const isModel = (value: unknown): boolean =>
   isRows(value.counters, 3) &&
   isRows(value.artifacts, 3) &&
   isRows(value.artifactsOnKind, 3)
+
+// The generator locks a hero with no row as one the file cannot rate yet, so
+// the rows must be exactly the heroes of the season's decided games, whose
+// teams are the ones with a decided game.
+const ratesDecidedHeroes = (model: SlModel, teams: readonly SlTeam[]): boolean => {
+  const played = new Set(teams.filter((t) => t.decided > 0).flatMap((t) => t.heroes))
+  const rated = Object.keys(model.heroes)
+  return rated.length === played.size && rated.every((id) => played.has(Number(id)))
+}
 
 const isListEntry = (value: unknown): boolean =>
   Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
@@ -137,6 +150,7 @@ function isSlData(value: unknown): value is SlData {
     isNumbers(value.order) &&
     isPlacementData(value.placement) &&
     isModel(value.model) &&
+    ratesDecidedHeroes(value.model as SlModel, value.teams as SlTeam[]) &&
     // A team outside every group falls back on the last list.
     Array.isArray(value.fallback) &&
     value.fallback.length === (value.families as unknown[]).length + 1 &&

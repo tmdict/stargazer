@@ -1,36 +1,40 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Side } from '@/lib/pvp/sl/data/sides'
-import { readModel } from '@/lib/pvp/sl/model/reader'
+import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { splitChance } from '@/lib/pvp/sl/model/reasons'
 import type { Explanation, ReasonItem } from '@/lib/pvp/sl/model/types'
-import { madeUpModel } from '../fixtures/slSeason'
+import { madeUpData, madeUpModel } from '../fixtures/slSeason'
 
 // The worked example of the file's published format, every value worked out
 // by hand there.
-const model = readModel(
-  madeUpModel({
-    gap: 0.001,
-    emptySlot: -1.5,
-    typicalHeroes: 0.4,
-    typicalArtifact: 0.02,
-    fieldAgainst: { 0: 0.03 },
-    heroes: {
-      1: [0.2, 30, 21, 0.01],
-      2: [0.1, 25, 25, 0.01],
-      3: [-0.1, 18, 22, 0.01],
-      4: [0.05, 12, 11, 0.01],
-      5: [0.05, 9, 9, 0.01],
-      6: [0.3, 40, 20, -0.02],
-      7: [0.1, 15, 14, 0],
-      8: [-0.2, 10, 19, 0],
-      9: [0.1, 12, 10, 0],
-    },
-    lineups: { '1/2/3/4/5': [0.15, 9, 4] },
-    counters: { '1:1': [0.1, 14, 9], '6:0': [-0.05, 8, 10] },
-    artifacts: { 3: [0.06, 20, 15] },
-    artifactsOnKind: { '3:0': [0.02, 11, 8] },
-  }),
+const { model, records } = readSlFile(
+  madeUpData(
+    [],
+    madeUpModel({
+      gap: 0.001,
+      emptySlot: -1.5,
+      typicalHeroes: 0.4,
+      typicalArtifact: 0.02,
+      fieldAgainst: { 0: 0.03 },
+      heroes: {
+        1: [0.2, 30, 21, 0.01],
+        2: [0.1, 25, 25, 0.01],
+        3: [-0.1, 18, 22, 0.01],
+        4: [0.05, 12, 11, 0.01],
+        5: [0.05, 9, 9, 0.01],
+        6: [0.3, 40, 20, -0.02],
+        7: [0.1, 15, 14, 0],
+        8: [-0.2, 10, 19, 0],
+        9: [0.1, 12, 10, 0],
+      },
+      lineups: { '1/2/3/4/5': [0.15, 9, 4] },
+      counters: { '1:1': [0.1, 14, 9], '6:0': [-0.05, 8, 10] },
+      artifacts: { 3: [0.06, 20, 15] },
+      artifactsOnKind: { '3:0': [0.02, 11, 8] },
+    }),
+    [],
+  ),
 )
 
 const line = (
@@ -48,6 +52,14 @@ const parts = (values: Explanation['parts']): Explanation['parts'] =>
 describe('the model the file carries', () => {
   const a: Side = { heroes: [1, 2, 3, 4, 5], kind: 0, artifact: 3 }
   const b: Side = { heroes: [6, 7, 8, 9], kind: 1, artifact: null }
+
+  it('finds each row’s record under the format’s keys', () => {
+    expect(records.hero(1)).toEqual({ wins: 30, losses: 21 })
+    expect(records.lineup([5, 4, 3, 2, 1])).toEqual({ wins: 9, losses: 4 })
+    expect(records.heroAgainst(1, 1)).toEqual({ wins: 14, losses: 9 })
+    expect(records.artifactOn(3, 0)).toEqual({ wins: 11, losses: 8 })
+    expect(records.artifact(99)).toEqual({ wins: 0, losses: 0 })
+  })
 
   it('adds up a match-up as the format’s worked example does', () => {
     const answer = model.explain({ a, b, gap: 20 })

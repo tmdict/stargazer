@@ -11,8 +11,8 @@
  *    boards in order.
  *
  * A team's artifact is always one of its own or among the first it falls back
- * to, as many as there are boards, which bounds the search (chooser.ts) and is
- * every artifact the file gives a team a board for. */
+ * to, as many as there are boards, which bounds the search (chooser.ts). The
+ * file picks a team's board for every artifact it can end up with this way. */
 
 import type { SlData } from '../data/types'
 

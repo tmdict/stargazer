@@ -4,8 +4,13 @@
  * Each recorded board is rebuilt on Stargazer's grid and its skills, artifacts
  * and charms run as the site runs them. The report says who each effect landed
  * on, and drafts each list the rules name from the teammates players gave the
- * effect to. landings.json beside it holds each recorded side's landings by
- * record and map. Left out when PLACEMENT_EXPORT is not set. */
+ * effect to. Left out when PLACEMENT_EXPORT is not set.
+ *
+ * landings.json beside the report holds each recorded board by `record`, `map`
+ * and `arena`, and for its `ally` and `enemy` sides the `heroes`, the
+ * `phantimal` and each effect's `landings`: its `owner`, the `holder` it acts
+ * from, the units it lands `on` by side, and what it `marked`. The external
+ * report generator reads it by these names. */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

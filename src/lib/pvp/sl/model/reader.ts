@@ -10,7 +10,7 @@ import type { Explanation, Matchup, Model, Reason, ReasonItem } from './types'
 // Upgrades have no detail lines.
 type ItemReason = Exclude<Reason, 'upgrades'>
 
-export function readModel(m: SlModel): Model {
+function readModel(m: SlModel): Model {
   const number = (row: readonly number[] | undefined): number => row?.[0] ?? 0
   const lineup = (heroes: readonly number[]): SlRow | undefined => m.lineups[lineupKey(heroes)]
 
