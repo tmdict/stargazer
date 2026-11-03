@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
@@ -11,6 +12,8 @@ export interface SlShownTeam extends Pick<
   // The map's place in the set's type's list.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
+  // Why each unit stands where it does, on a board the engine placed.
+  why: PlacementExplanation | null
 }
 
 export interface SlShown {
@@ -111,8 +114,17 @@ const {
       </span>
     </div>
     <div class="sl-maps">
-      <SlMapColumn v-for="(team, index) in shown.teams" :key="index" :team :board="boards[index]" />
+      <SlMapColumn
+        v-for="(team, index) in shown.teams"
+        :key="index"
+        :team
+        :board="boards[index]"
+        :why="team.why"
+      />
     </div>
+    <p v-if="shown.teams.some((team) => team.why)" class="sl-why-hint">
+      {{ i18n.t('app.placement-hint') }}
+    </p>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
     <Teleport to="body">
@@ -200,6 +212,14 @@ const {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   padding: 24px 16px;
+}
+
+.sl-why-hint {
+  margin: -8px 0 0;
+  padding: 0 16px 18px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 @container (min-width: 1171px) {

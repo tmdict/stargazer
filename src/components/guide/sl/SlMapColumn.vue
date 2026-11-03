@@ -10,22 +10,22 @@
 import { computed } from 'vue'
 
 import SlIcon from './SlIcon.vue'
+import SlMapBoard from './SlMapBoard.vue'
 import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
-import BoardThumbnail from '@/components/grid/BoardThumbnail.vue'
-import { usePreviewImages } from '@/composables/usePreviewImages'
+import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
 const { team } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'>
   board: PreviewBoard | undefined
+  why?: PlacementExplanation | null
 }>()
 
 const TONE_GAMES = 8
 
 const i18n = useI18nStore()
-const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
 
 const swaps = computed(() => [
   ...team.flex.map(({ out, options }) => ({
@@ -52,16 +52,7 @@ const record = computed(() => {
 
 <template>
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
-    <BoardThumbnail
-      v-if="board"
-      class="sl-board"
-      :map-key="board.mapKey"
-      :tiles="board.tiles"
-      :units="board.units.map(thumbnailUnit)"
-      :artifacts="{ ally: thumbnailArtifact(board.artifacts.ally) }"
-      :hex-size="18"
-      crisp
-    />
+    <SlMapBoard v-if="board" :board :why />
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
       <div class="sl-aside-in">
@@ -124,11 +115,6 @@ const record = computed(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-.sl-board {
-  width: 100%;
-  height: auto;
 }
 
 .sl-aside {

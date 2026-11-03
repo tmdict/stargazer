@@ -17,7 +17,7 @@ interface PlacementOptions {
   full?: boolean
 }
 
-interface PlacementResult {
+export interface PlacementResult {
   // The team's units, heroes first, and the tile each stands on in the pick.
   units: number[]
   positions: number[]
@@ -39,6 +39,11 @@ function compare(a: PlacementScore, b: PlacementScore): number {
   if (Math.abs(a.total - b.total) > EPS) return b.total - a.total
   return 0
 }
+
+// Whether a placement counts as good as the best: the same always rules broken,
+// and goals within the margin.
+export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
+  score.broken === best.broken && score.goals >= best.goals - margin - EPS
 
 // A generator of numbers in [0, 1) seeded from a string, so one team on one map
 // always searches from the same starts.
@@ -161,8 +166,7 @@ class Search {
   equallyGood(margin: number, spread: boolean): { keys: string[]; complete: boolean } {
     for (;;) {
       const best = this.best()
-      const within = (score: PlacementScore) =>
-        score.broken === best.broken && score.goals >= best.goals - margin - EPS
+      const within = (score: PlacementScore) => asGoodAs(score, best, margin)
       const found = new Set(
         [...this.scores].filter(([, score]) => within(score)).map(([key]) => key),
       )

@@ -7,12 +7,13 @@ import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
+import { effectVerb } from '@/lib/placement/explain'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
 import type { CharmData } from '@/lib/types/skill'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import { loadAppLocales, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { placeOnTile } from './fixtures/skills'
 
 const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
@@ -115,5 +116,30 @@ describe('placement rules', () => {
     for (const charm of Object.values(charmFiles)) {
       expect(shapeProblems(charm.rules ?? [], true), `${charm.id}'s rules`).toEqual([])
     }
+  })
+
+  // A placement card words an effect by the file its rule sits in: what it
+  // gives and what a hero receives, or what it reaches.
+  it('each have the words a placement card names their effect with, and no words outlive one', () => {
+    const owners = [
+      ...units,
+      ...Object.values(charmFiles).map((charm) => ({ name: charm.id, rules: charm.rules })),
+    ]
+    const needed = new Set<string>()
+    for (const { name, rules } of owners) {
+      for (const rule of rules ?? []) {
+        const verb = rule.team === 'ally' && rule.weight !== undefined && effectVerb(rule.goal)
+        if (!verb) continue
+        const kinds = verb === 'gives' ? ['gives', 'receives'] : ['reaches']
+        for (const key of kinds.map((kind) => `placement-${kind}-${name}`)) {
+          expect(needed.has(key), `two of ${name}'s rules are worded by ${key}`).toBe(false)
+          needed.add(key)
+        }
+      }
+    }
+    const words = Object.keys(loadAppLocales())
+    expect([...needed].filter((key) => !words.includes(key))).toEqual([])
+    const named = words.filter((key) => /^placement-(gives|receives|reaches)-/.test(key))
+    expect(named.filter((key) => !needed.has(key))).toEqual([])
   })
 })

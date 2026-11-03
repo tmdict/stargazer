@@ -3,11 +3,10 @@
  * placing nor a prediction holds up the page. */
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
-import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
+import { suggestedBoards, type SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
@@ -22,7 +21,7 @@ export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
-  | { type: 'placed'; id: number; units: (SlUnit[] | null)[] }
+  | { type: 'placed'; id: number; boards: (SuggestedBoard | null)[] }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
 
@@ -49,8 +48,8 @@ scope.addEventListener('message', async (event) => {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'place') {
-      const units = suggestedUnits(data, msg.set, msg.boards, msg.everyBoard)
-      scope.postMessage({ type: 'placed', id: msg.id, units })
+      const boards = suggestedBoards(data, msg.set, msg.boards, msg.everyBoard)
+      scope.postMessage({ type: 'placed', id: msg.id, boards })
     } else {
       const panel = wwwPanel(data, reader, msg.teams, counts)
       scope.postMessage({ type: 'predicted', id: msg.id, panel })

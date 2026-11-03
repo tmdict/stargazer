@@ -38,6 +38,13 @@ interface GoalCheck {
   met: number | null
 }
 
+// One of the team's own goals, with the units it counts as met on: the listed
+// heroes the effect reaches, or the units an exactly goal covers.
+export interface OwnGoalCheck extends GoalCheck {
+  holder: number | undefined
+  on: number[]
+}
+
 interface FormationCheck {
   rule: FormationRule
   held: boolean
@@ -263,8 +270,35 @@ export class PlacementScorer {
     }))
   }
 
+  ownGoals(): OwnGoalCheck[] {
+    return this.effects.map((effect) => {
+      const on: number[] = []
+      const [reach] = effect.reach(this.board)
+      const met = this.meetOnce(effect, reach!, on)
+      const { source, owner, holder, rule } = effect
+      return { source, owner, holder, rule, met, on }
+    })
+  }
+
   formation(): FormationCheck[] {
     return [...this.mustHold, ...this.usually].map((rule) => ({ rule, held: this.held(rule) }))
+  }
+
+  // Whether the unit counts as on the map's buff tile as the board stands.
+  onBuffTile(unit: number): boolean {
+    return (
+      this.weights.buff > 0 &&
+      !inPhantimalBand(unit) &&
+      this.buffTiles.includes(this.board.tileOf(unit))
+    )
+  }
+
+  // The side a hero leans to, when it stands in that half of the ally tiles.
+  leanHeld(hero: number): 'front' | 'back' | undefined {
+    const depth = this.depth.get(this.board.tileOf(hero))!
+    if (this.front.includes(hero) && depth > 0.5) return 'front'
+    if (this.back.includes(hero) && depth < 0.5) return 'back'
+    return undefined
   }
 
   private addEffects(points: number): number {
@@ -388,7 +422,8 @@ export class PlacementScorer {
     return count ? sum / count : null
   }
 
-  private meetOnce(effect: Effect, { landed, marked }: Reach): number | null {
+  // `counted` collects the units the goal is met on.
+  private meetOnce(effect: Effect, { landed, marked }: Reach, counted?: number[]): number | null {
     const { rule, holder } = effect
     const { goal } = rule
     const self = holder === undefined ? undefined : ruleUnit(holder)
@@ -418,6 +453,7 @@ export class PlacementScorer {
         new Set(on.map((unit) => this.board.lookups.factionOf(ruleUnit(unit)))).size !== 1
       )
         return 0
+      counted?.push(...new Set(on.map(ruleUnit)))
       return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
     }
 
@@ -428,12 +464,16 @@ export class PlacementScorer {
     if ('target' in goal) {
       // An effect that lands on two wants the list's first two, half each.
       const count = Math.max(effect.marks, hit.size)
-      return order.slice(0, count).filter((hero) => hit.has(hero)).length / count
+      const reached = order.slice(0, count).filter((hero) => hit.has(hero))
+      counted?.push(...reached)
+      return reached.length / count
     }
     // Include: a share for each listed hero among those it reaches, where a
     // single target needs only one of them.
     const slots = marked.length ? order.length : 1
-    return Math.min(1, order.filter((hero) => hit.has(hero)).length / slots)
+    const reached = order.filter((hero) => hit.has(hero))
+    counted?.push(...reached)
+    return Math.min(1, reached.length / slots)
   }
 
   private held(rule: FormationRule): boolean {

@@ -27,4 +27,6 @@ export const PLACEMENT_LOOKUPS: PlacementLookups = {
     const artifact = artifactById.get(id)
     return artifact && { name: artifact.name, rules: artifact.rules ?? [] }
   },
+  nameOf: (id) =>
+    inPhantimalBand(id) ? phantimalOf(id)?.name : heroById.get(toBaseHeroId(id))?.name,
 }

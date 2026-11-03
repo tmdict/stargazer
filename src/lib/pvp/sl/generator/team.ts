@@ -19,6 +19,7 @@ import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSeria
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
+import type { SuggestedBoard } from './suggested'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 
 // The season a chosen team comes from: this season's, or the season before's.
@@ -30,7 +31,7 @@ export function slTeamData(
   set: SlChoice,
   picks: readonly SlPick[],
   boards: readonly SlBoard[],
-  suggested: readonly (SlUnit[] | null)[],
+  suggested: readonly (Pick<SuggestedBoard, 'units'> | null)[],
 ): string {
   const retired = isRetiredSeason(data.season)
   const levels = new Map(
@@ -53,7 +54,7 @@ export function slTeamData(
       tile.team = Team.ALLY
       tile.state = State.OCCUPIED_ALLY
     }
-    for (const [hexId, unitId] of suggested[index] ?? recorded) place(hexId, unitId)
+    for (const [hexId, unitId] of suggested[index]?.units ?? recorded) place(hexId, unitId)
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),

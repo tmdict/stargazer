@@ -5,8 +5,8 @@
 
 import { onMounted, readonly, ref } from 'vue'
 
-import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
+import type { SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
@@ -69,10 +69,10 @@ export function useSlEngine() {
     set: SlChoice,
     boards: SlBoard[],
     everyBoard: boolean,
-  ): Promise<(SlUnit[] | null)[]> => {
+  ): Promise<(SuggestedBoard | null)[]> => {
     const answer = await ask((id) => ({ type: 'place', id, set, boards, everyBoard }))
     if (answer.type !== 'placed') throw new Error('The worker answered another request')
-    return answer.units
+    return answer.boards
   }
 
   const predict = async (teams: Pair<WwwTeam>): Promise<WwwPanel> => {

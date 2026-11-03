@@ -50,6 +50,8 @@ export interface PlacementLookups extends SkillLookups {
   // The charm a hero holds this season.
   charmOf: (heroId: number) => { id: string; rules: readonly Rule[] } | undefined
   artifactOf: (artifactId: number) => { name: string; rules: readonly Rule[] } | undefined
+  // The name of a hero's or phantimal's data file, by unit id.
+  nameOf: (unitId: number) => string | undefined
 }
 
 // The team to place: five hero ids, and the phantimal's unit id.

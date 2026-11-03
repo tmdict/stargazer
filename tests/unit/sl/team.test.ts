@@ -9,7 +9,7 @@ import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlData } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
-import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
+import { suggestedBoards } from '@/lib/pvp/sl/generator/suggested'
 import { slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
@@ -152,9 +152,11 @@ describe('a file behind the current maps', () => {
 
   it('draws held maps as recorded and new maps in the engine formation, and saves as Supreme League', () => {
     const chosen = chooseOn(behind, onCurrent)!
-    const units = suggestedUnits(behind, chosen, onCurrent, false)
-    expect(units.map((placed) => placed !== null)).toEqual([false, false, false, true, true])
-    const state = decodeMultiGridStateFromUrl(slTeamData(behind, chosen, picks, onCurrent, units))!
+    const suggested = suggestedBoards(behind, chosen, onCurrent, false)
+    expect(suggested.map((placed) => placed !== null)).toEqual([false, false, false, true, true])
+    const state = decodeMultiGridStateFromUrl(
+      slTeamData(behind, chosen, picks, onCurrent, suggested),
+    )!
     expect(
       matchVariant(
         '5v5',
@@ -176,11 +178,11 @@ describe('a file behind the current maps', () => {
 })
 
 describe("the engine's formations", () => {
-  const units = suggestedUnits(data, set, boards, true)
+  const suggested = suggestedBoards(data, set, boards, true)
 
   it('stand each team on its map with the phantimal its heroes summon', () => {
     set.teams.forEach((choice, i) => {
-      const placed = units[i]!
+      const placed = suggested[i]!.units
       const map = boards[i]!.key
       const tiles = placed.map(([tile]) => tile)
       expect(new Set(tiles).size).toBe(tiles.length)
@@ -202,18 +204,18 @@ describe("the engine's formations", () => {
       teams: unplaced(data.teams),
       before: data.before && { ...data.before, teams: unplaced(data.before.teams) },
     }
-    expect(suggestedUnits(without, set, boards, true)).toEqual(units)
+    expect(suggestedBoards(without, set, boards, true)).toEqual(suggested)
   })
 
   it('are what the saved set holds', () => {
-    const state = decodeMultiGridStateFromUrl(slTeamData(data, set, picks, boards, units))!
+    const state = decodeMultiGridStateFromUrl(slTeamData(data, set, picks, boards, suggested))!
     state.boards.forEach((board, i) => {
       const saved = [
         ...(board.c ?? []),
         ...(board.s ?? []).map(([tile, local]) => [tile, toPhantimalId(local), Team.ALLY]),
       ]
       expect(saved.sort(byTile)).toEqual(
-        units[i]!.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
+        suggested[i]!.units.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
       )
     })
   })

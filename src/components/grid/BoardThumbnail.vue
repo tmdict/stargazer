@@ -179,6 +179,7 @@ const {
   viewBoxSize,
   crisp = false,
   numbered = false,
+  outlined = [],
 } = defineProps<{
   mapKey: string
   // Explicit [hexId, state] tile states (a record's serialized `t`), the
@@ -196,6 +197,8 @@ const {
   crisp?: boolean
   // Each tile's number, low in the hex so a portrait's face stays clear.
   numbered?: boolean
+  // Tiles drawn with a dashed outline.
+  outlined?: number[]
 }>()
 
 const uid = useId()
@@ -326,11 +329,19 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       :points="tile.points"
       :fill="tile.fill"
     />
+    <polygon
+      v-for="hexId in outlined"
+      :key="`outline-${hexId}`"
+      class="outlined"
+      :points="geometry.points.get(hexId)"
+      vector-effect="non-scaling-stroke"
+    />
 
     <g
       v-for="unit in placedUnits"
       :key="`unit-${unit.hexId}`"
       :class="{ faded: spotlit && !unit.highlight }"
+      :data-hex="unit.hexId"
     >
       <title v-if="unit.title">{{ unit.title }}</title>
       <template v-if="unit.image && crisp">
@@ -409,6 +420,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       v-for="art in placedArtifacts"
       :key="`artifact-${art.side}`"
       :class="{ faded: spotlit && !art.highlight }"
+      :data-artifact="art.side"
     >
       <title v-if="art.title">{{ art.title }}</title>
       <image
@@ -509,6 +521,13 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
 
 .ring {
   stroke: var(--color-warning);
+}
+
+.outlined {
+  fill: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2.5;
 }
 
 .ring-edge {
