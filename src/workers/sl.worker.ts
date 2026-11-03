@@ -1,12 +1,13 @@
 /* Supreme League worker: reads the data file once and answers the generator,
- * its engine's formations and Who Would Win?, so neither the search, the
- * placing nor a prediction holds up the page. */
+ * its engine's formations, the swaps tried on them and Who Would Win?, so
+ * neither the search, the placing nor a prediction holds up the page. */
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { suggestedBoards, type SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
+import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
@@ -15,6 +16,7 @@ import { artifactSurvives } from '@/lib/seasonal'
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[] }
   | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[]; everyBoard: boolean }
+  | { type: 'swap'; id: number; swap: SwapRequest }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
 export type SlResponse =
@@ -22,6 +24,7 @@ export type SlResponse =
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
   | { type: 'placed'; id: number; boards: (SuggestedBoard | null)[] }
+  | { type: 'swapped'; id: number; preview: SwapPreview }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
 
@@ -50,6 +53,9 @@ scope.addEventListener('message', async (event) => {
     } else if (msg.type === 'place') {
       const boards = suggestedBoards(data, msg.set, msg.boards, msg.everyBoard)
       scope.postMessage({ type: 'placed', id: msg.id, boards })
+    } else if (msg.type === 'swap') {
+      const preview = previewSwap(data, reader, fit, counts, msg.swap)
+      scope.postMessage({ type: 'swapped', id: msg.id, preview })
     } else {
       const panel = wwwPanel(data, reader, msg.teams, counts)
       scope.postMessage({ type: 'predicted', id: msg.id, panel })

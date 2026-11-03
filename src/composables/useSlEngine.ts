@@ -7,6 +7,7 @@ import { onMounted, readonly, ref } from 'vue'
 
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
+import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
@@ -16,7 +17,7 @@ type SlEngineStatus = 'loading' | 'ready' | 'failed'
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
 let nextId = 0
-type Answer = Extract<SlResponse, { type: 'generated' | 'placed' | 'predicted' }>
+type Answer = Extract<SlResponse, { type: 'generated' | 'placed' | 'swapped' | 'predicted' }>
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
 const fail = (): void => {
@@ -75,11 +76,17 @@ export function useSlEngine() {
     return answer.boards
   }
 
+  const swap = async (request: SwapRequest): Promise<SwapPreview> => {
+    const answer = await ask((id) => ({ type: 'swap', id, swap: request }))
+    if (answer.type !== 'swapped') throw new Error('The worker answered another request')
+    return answer.preview
+  }
+
   const predict = async (teams: Pair<WwwTeam>): Promise<WwwPanel> => {
     const answer = await ask((id) => ({ type: 'predict', id, teams }))
     if (answer.type !== 'predicted') throw new Error('The worker answered another request')
     return answer.panel
   }
 
-  return { status: readonly(status), generate, place, predict }
+  return { status: readonly(status), generate, place, swap, predict }
 }

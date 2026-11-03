@@ -1,9 +1,9 @@
 /* Why a placement puts each unit where it stands, as the scorer values it: the
- * effects a unit gives, reaches or receives, the effects of others that a move
- * to a worse tile would cost, the buff tile, the rules found in the formations
- * it keeps and the side its hero leans to, and the free tiles it could take
- * alone with a placement as good. Units are named by id and effects by the data
- * file their rule sits in, so the page words each reason in its own language. */
+ * effects a unit gives, reaches or receives, the buff tile, the rules found in
+ * the formations it keeps and the side its hero leans to, and the free tiles it
+ * could take alone with a placement as good. Units are named by id and effects
+ * by the data file their rule sits in, so the page words each reason in its own
+ * language. */
 
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
@@ -35,11 +35,10 @@ type Standing =
   | 'right-behind'
   | 'next-to'
   | 'on-row'
-  | 'free'
 
-// `heroes`: those a given effect goes to, or those a kept effect stays on.
+// `heroes`: those a given effect goes to.
 export type PlacementReason =
-  | { verb: 'gives' | 'reaches' | 'receives' | 'keeps'; effect: PlacedEffect; heroes: number[] }
+  | { verb: 'gives' | 'reaches' | 'receives'; effect: PlacedEffect; heroes: number[] }
   | { verb: 'stands'; place: Standing; hero?: number }
 
 export interface UnitPlacement {
@@ -125,30 +124,19 @@ export function explainPlacement(
 
   const used = new Set(positions)
   const free = board.tiles.filter((hexId) => !used.has(hexId))
-  // Each unit moved alone to every free tile: the tiles as good, and the goals
-  // that every move to another tile lowers.
-  const moves = board.units.map((_, index) => {
-    const alsoFine: number[] = []
-    let lowered: number[] | undefined
-    for (const hexId of free) {
+  const alsoFineFor = board.units.map((_, index) =>
+    free.filter((hexId) => {
       const next = [...positions]
       next[index] = hexId
       board.place(next)
-      if (asGoodAs(scorer.score(), best, margin)) {
-        alsoFine.push(hexId)
-        continue
-      }
-      const after = scorer.ownGoals()
-      const here = goals.flatMap(({ met }, k) => ((after[k]!.met ?? 0) < (met ?? 0) ? [k] : []))
-      lowered = lowered ? lowered.filter((k) => here.includes(k)) : here
-    }
-    return { alsoFine, lowered: new Set(lowered) }
-  })
+      return asGoodAs(scorer.score(), best, margin)
+    }),
+  )
   board.place(positions)
 
   const units = board.units.map((unit, index): UnitPlacement => {
     const owner = ruleUnit(unit)
-    const { alsoFine, lowered } = moves[index]!
+    const alsoFine = alsoFineFor[index]!
     const reasons: PlacementReason[] = []
     goals.forEach(({ rule, met, on }, k) => {
       const verb = effectVerb(rule.goal)
@@ -160,19 +148,12 @@ export function explainPlacement(
       if (met && on.includes(owner) && !isOwn(k, owner))
         reasons.push({ verb: 'receives', effect: effects[k]!, heroes: [] })
     })
-    goals.forEach(({ on }, k) => {
-      if (lowered.has(k) && on.length && !on.includes(owner) && !isOwn(k, owner))
-        reasons.push({ verb: 'keeps', effect: effects[k]!, heroes: on })
-    })
     if (onBuff.has(unit)) reasons.push({ verb: 'stands', place: 'buff' })
     const own = habits.filter((rule) => rule.heroes.includes(unit))
     for (const rule of own) reasons.push(habitOf(rule, unit))
     const lean = leans.get(unit)
     if (lean && !own.some((rule) => RANKS[rule.relation])) {
       reasons.push({ verb: 'stands', place: lean })
-    }
-    if (!reasons.length && free.length && alsoFine.length === free.length) {
-      reasons.push({ verb: 'stands', place: 'free' })
     }
     return { unit, tile: positions[index]!, reasons, alsoFine }
   })

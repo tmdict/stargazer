@@ -9,6 +9,7 @@ import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { placeTeam } from '@/lib/placement/engine'
 import { explainPlacement, type PlacementExplanation } from '@/lib/placement/explain'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
+import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { loadPhantimals } from '@/utils/dataLoader'
 import type { SlData, SlUnit } from '../data/types'
@@ -32,6 +33,25 @@ export interface SuggestedBoard {
   why: PlacementExplanation
 }
 
+// A chosen team as the engine places it on a board: its heroes, the phantimal
+// they summon and the artifact the set gives it.
+export const boardTeam = (
+  data: SlData,
+  heroes: number[],
+  artifact: number | null,
+): PlacementTeam => ({
+  heroes,
+  phantimal: summonedPhantimal(data, heroes),
+  artifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
+})
+
+// The engine's tuning on a board. A map with no games yet is expected to draw
+// the enemy heroes of the map whose teams it takes.
+export const boardPlacement = (data: SlData, { key, source }: SlBoard): PlacementData => ({
+  ...data.placement,
+  pickRates: { [key]: data.placement.pickRates[data.maps[source]!] ?? {} },
+})
+
 // One entry per board, in board order. A board whose teams were recorded on its
 // map is left null unless `everyBoard`, and keeps the recorded formation.
 export function suggestedBoards(
@@ -40,22 +60,12 @@ export function suggestedBoards(
   boards: readonly SlBoard[],
   everyBoard: boolean,
 ): (SuggestedBoard | null)[] {
-  const { pickRates } = data.placement
   return set.teams.map((choice, index) => {
-    const { key, source, recorded } = boards[index]!
-    if (recorded && !everyBoard) return null
-    const { artifact } = choice
-    const team = {
-      heroes: choice.heroes,
-      phantimal: summonedPhantimal(data, choice.heroes),
-      artifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
-    }
-    // A map with no games yet is expected to draw the enemy heroes of the map
-    // whose teams it takes.
-    const placement = {
-      ...data.placement,
-      pickRates: { [key]: pickRates[data.maps[source]!] ?? {} },
-    }
+    const board = boards[index]!
+    if (board.recorded && !everyBoard) return null
+    const { key } = board
+    const team = boardTeam(data, choice.heroes, choice.artifact)
+    const placement = boardPlacement(data, board)
     const placed = placeTeam(team, key, placement, PLACEMENT_LOOKUPS)
     return {
       units: placed.units.map((unit, i): SlUnit => [placed.positions[i]!, unit]),

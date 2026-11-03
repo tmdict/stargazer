@@ -11,9 +11,9 @@ const {
   offset = 10,
   maxWidth = '300px',
 } = defineProps<{
-  // Only read via getBoundingClientRect, so SVG triggers (icon components)
-  // anchor as well as HTML ones.
-  targetElement: Element
+  // Only read via getBoundingClientRect, so SVG triggers (icon components) and
+  // a box worked out on each read anchor as well as HTML ones.
+  targetElement: Pick<Element, 'getBoundingClientRect'>
   variant: 'simple' | 'detailed'
   offset?: number
   maxWidth?: string

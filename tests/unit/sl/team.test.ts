@@ -8,9 +8,11 @@ import { deploymentTiles, MAPS } from '@/lib/maps'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlData } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
+import { slFit } from '@/lib/pvp/sl/generator/fit'
 import { slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { suggestedBoards } from '@/lib/pvp/sl/generator/suggested'
-import { slTeamData } from '@/lib/pvp/sl/generator/team'
+import { previewSwap } from '@/lib/pvp/sl/generator/swapPreview'
+import { drawnUnits, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
@@ -218,5 +220,39 @@ describe("the engine's formations", () => {
         suggested[i]!.units.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
       )
     })
+  })
+})
+
+describe('a swap tried on a board', () => {
+  // The shipped file on its own maps, so a recorded board stands on the map it
+  // was recorded on.
+  const onShipped = slBoards(shipped, 'sl')
+  const chosen = chooseOn(shipped, onShipped)!
+  const suggested = suggestedBoards(shipped, chosen, onShipped, false)
+  const tryOn = (index: number, out: number[], into: number[]) => {
+    const team = chosen.teams[index]!
+    const units = drawnUnits(shipped, team, suggested[index])
+    const swap = { board: onShipped[index]!, team, units, out, into, picks }
+    return previewSwap(shipped, readSlFile(shipped), slFit(shipped), () => true, swap)
+  }
+
+  it("keeps every unit and the team's chance when nothing changes", () => {
+    chosen.teams.forEach((team, index) => {
+      const hero = team.heroes[0]!
+      const preview = tryOn(index, [hero], [hero])
+      expect(preview).toMatchObject({ joined: [], left: [] })
+      expect(preview.chance).toBeCloseTo(team.chance, 12)
+    })
+  })
+
+  it('brings in the hero swapped in and takes out the one it replaces', () => {
+    const index = chosen.teams.findIndex((team) => team.flex.length)
+    const { out, options } = chosen.teams[index]!.flex[0]!
+    const outTile = drawnUnits(shipped, chosen.teams[index]!, suggested[index]).find(
+      ([, unit]) => unit === out,
+    )![0]
+    const preview = tryOn(index, [out], [options[0]!])
+    expect(preview.joined.map(([, unit]) => unit)).toContain(options[0])
+    expect(preview.left).toContain(outTile)
   })
 })

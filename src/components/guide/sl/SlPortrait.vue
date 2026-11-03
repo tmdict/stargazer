@@ -1,5 +1,6 @@
 <script setup lang="ts">
-/* A hero portrait under a generated set's board, sized by its host's --pt. */
+/* A hero portrait under a generated set's board, sized by its host's --pt, and
+   titled with the hero's name unless a card names it. */
 
 import { computed } from 'vue'
 
@@ -7,7 +8,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
 
-const { id } = defineProps<{ id: number }>()
+const { id, titled = true } = defineProps<{ id: number; titled?: boolean }>()
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
@@ -15,7 +16,7 @@ const slug = computed(() => gameData.getCharacterNameById(id) ?? '')
 </script>
 
 <template>
-  <span class="pt" :title="curatedHeroName(slug, i18n.currentLocale)">
+  <span class="pt" :title="titled ? curatedHeroName(slug, i18n.currentLocale) : undefined">
     <img :src="gameData.getCharacterImage(slug)" alt="" />
   </span>
 </template>

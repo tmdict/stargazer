@@ -26,6 +26,20 @@ import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 export const choiceSeason = (data: SlData, choice: Pick<SlChoiceTeam, 'source'>) =>
   choice.source === 0 ? data : data.before!
 
+// A board's units as drawn: the engine's formation where the board has one,
+// else the recorded placement.
+export function drawnUnits(
+  data: SlData,
+  choice: SlChoiceTeam,
+  suggested: Pick<SuggestedBoard, 'units'> | null | undefined,
+): SlUnit[] {
+  if (suggested) return suggested.units
+  const { c, s } = choiceSeason(data, choice).teams[choice.team]!.placements[choice.placement]!
+  return isRetiredSeason(data.season)
+    ? c
+    : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
+}
+
 export function slTeamData(
   data: SlData,
   set: SlChoice,
@@ -33,7 +47,6 @@ export function slTeamData(
   boards: readonly SlBoard[],
   suggested: readonly (Pick<SuggestedBoard, 'units'> | null)[],
 ): string {
-  const retired = isRetiredSeason(data.season)
   const levels = new Map(
     picks.map((pick): [number, AttrRecord] => [
       pick.id,
@@ -41,11 +54,6 @@ export function slTeamData(
     ]),
   )
   const drawn = set.teams.map((choice, index): BoardInput => {
-    const team = choiceSeason(data, choice).teams[choice.team]!
-    const { c, s } = team.placements[choice.placement]!
-    const recorded = retired
-      ? c
-      : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
     const { key } = boards[index]!
     const grid = new Grid(FULL_GRID, getMapByKey(key)!)
     const place = (hexId: number, unitId: number): void => {
@@ -54,7 +62,7 @@ export function slTeamData(
       tile.team = Team.ALLY
       tile.state = State.OCCUPIED_ALLY
     }
-    for (const [hexId, unitId] of suggested[index]?.units ?? recorded) place(hexId, unitId)
+    for (const [hexId, unitId] of drawnUnits(data, choice, suggested[index])) place(hexId, unitId)
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),

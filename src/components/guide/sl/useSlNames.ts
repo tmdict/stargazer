@@ -1,3 +1,4 @@
+import { useUnitLabels } from '@/composables/useUnitLabels'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -43,10 +44,13 @@ export const slMood = (chance: number): string => {
 
 /* A team's group named in the site language: by the name the data file gives
  * it in this language, else by its core heroes, as the guide names a team the
- * report has no name for. */
+ * report has no name for. A unit named in a board's card: the site's Chinese
+ * hero names carry the players' nickname in brackets, and a card uses the
+ * nickname alone. */
 export function useSlNames() {
   const gameData = useGameDataStore()
   const i18n = useI18nStore()
+  const { unitName } = useUnitLabels()
 
   const heroSlug = (id: number): string => gameData.getCharacterNameById(id) ?? String(id)
 
@@ -56,5 +60,14 @@ export function useSlNames() {
     return group.name[lang] ?? group.core.map((id) => curatedHeroName(heroSlug(id), lang)).join('/')
   }
 
-  return { groupName }
+  const cardName = (unit: number): string => {
+    const name = unitName(unit)
+    return (i18n.currentLocale === 'zh' && name.match(/\(([^)]+)\)$/)?.[1]) || name
+  }
+
+  // Heroes named together, as a sentence lists them.
+  const cardNames = (units: readonly number[]): string =>
+    new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' }).format(units.map(cardName))
+
+  return { groupName, cardName, cardNames }
 }

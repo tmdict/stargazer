@@ -5,20 +5,25 @@
    60% and red to 40%, as the report colours one. Its host sizes it: --pt for
    the portraits, and --sl-unit, the length of one of the generator page's
    pixels, for the gaps and icons of the core and swap rows (1px there, a share
-   of its column's width on the guide index's card, which shows no record). */
+   of its column's width on the guide index's card, which shows no record).
+   Hovering or tapping a swap's heroes tries them on the board when the team
+   can try swaps. */
 
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import SlIcon from './SlIcon.vue'
 import SlMapBoard from './SlMapBoard.vue'
 import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import type { PlacementExplanation } from '@/lib/placement/explain'
+import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
 const { team } = defineProps<{
-  team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'>
+  team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
+    Partial<Pick<SlShownTeam, 'chance' | 'trySwap'>>
   board: PreviewBoard | undefined
   why?: PlacementExplanation | null
 }>()
@@ -34,6 +39,30 @@ const swaps = computed(() => [
   })),
   ...team.pairs,
 ])
+
+const {
+  payload: tried,
+  hoverOpen,
+  hoverClose,
+  toggle,
+  onTouchStart,
+} = useInfoTip<{ out: number[]; into: number[] }>()
+const preview = ref<SwapPreview | null>(null)
+const canTry = computed(() => !!team.trySwap && team.chance !== undefined)
+
+// The worker answers after a moment, by when another swap may be shown.
+watch(tried, async (swap) => {
+  preview.value = null
+  if (!swap || !team.trySwap) return
+  const found = await team.trySwap(swap.out, swap.into)
+  if (tried.value === swap) preview.value = found
+})
+
+const boardSwap = computed(() =>
+  tried.value && preview.value && team.chance !== undefined
+    ? { into: tried.value.into, preview: preview.value, before: team.chance }
+    : null,
+)
 
 const record = computed(() => {
   if (!team.comp) return null
@@ -52,7 +81,7 @@ const record = computed(() => {
 
 <template>
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
-    <SlMapBoard v-if="board" :board :why />
+    <SlMapBoard v-if="board" :board :why :swap="boardSwap" />
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
       <div class="sl-aside-in">
@@ -99,8 +128,17 @@ const record = computed(() => {
               <SlIcon name="arrow" class="sl-arrow" />
             </span>
             <span class="sl-options" :class="{ stacked: swap.out.length > 1 }">
-              <span v-for="option in swap.options" :key="option.join()" class="sl-pair">
-                <SlPortrait v-for="id in option" :key="id" :id />
+              <span
+                v-for="option in swap.options"
+                :key="option.join()"
+                class="sl-pair"
+                :class="{ 'sl-try': canTry }"
+                @mouseenter="canTry && hoverOpen($event, { out: swap.out, into: option })"
+                @mouseleave="hoverClose"
+                @click="canTry && toggle($event, { out: swap.out, into: option })"
+                @touchstart.passive="onTouchStart"
+              >
+                <SlPortrait v-for="id in option" :key="id" :id :titled="!canTry" />
               </span>
             </span>
           </span>
@@ -219,6 +257,10 @@ const record = computed(() => {
 
 .sl-pair {
   gap: calc(3 * var(--u));
+}
+
+.sl-try {
+  cursor: pointer;
 }
 
 .sl-arrow {

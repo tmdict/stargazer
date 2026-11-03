@@ -15,6 +15,9 @@ const EQUAL_CAP = 1000
 interface PlacementOptions {
   // Score every placement instead of searching from a few.
   full?: boolean
+  // Units kept on these tiles, by unit id: only the team's other units move. A
+  // unit not in the team leaves its tile free.
+  held?: ReadonlyMap<number, number>
 }
 
 export interface PlacementResult {
@@ -67,6 +70,8 @@ class Search {
   constructor(
     private readonly board: PlacementBoard,
     private readonly scorer: PlacementScorer,
+    // The indices of the units a step may move.
+    private readonly movable: readonly number[],
   ) {}
 
   evaluate(positions: readonly number[]): PlacementScore {
@@ -85,13 +90,16 @@ class Search {
   *neighbours(positions: readonly number[]): Generator<number[]> {
     const used = new Set(positions)
     const free = this.board.tiles.filter((hexId) => !used.has(hexId))
-    for (let i = 0; i < positions.length; i++) {
+    const movable = this.movable
+    for (let p = 0; p < movable.length; p++) {
+      const i = movable[p]!
       for (const hexId of free) {
         const next = [...positions]
         next[i] = hexId
         yield next
       }
-      for (let j = i + 1; j < positions.length; j++) {
+      for (let q = p + 1; q < movable.length; q++) {
+        const j = movable[q]!
         const next = [...positions]
         next[i] = positions[j]!
         next[j] = positions[i]!
@@ -105,8 +113,11 @@ class Search {
   *pairs(positions: readonly number[]): Generator<number[]> {
     const used = new Set(positions)
     const free = this.board.tiles.filter((hexId) => !used.has(hexId))
-    for (let i = 0; i < positions.length; i++) {
-      for (let j = i + 1; j < positions.length; j++) {
+    const movable = this.movable
+    for (let p = 0; p < movable.length; p++) {
+      const i = movable[p]!
+      for (let q = p + 1; q < movable.length; q++) {
+        const j = movable[q]!
         const options = [...free, positions[i]!, positions[j]!]
         for (const a of options) {
           for (const b of options) {
@@ -219,20 +230,26 @@ function searched(
 ): { board: PlacementBoard; scorer: PlacementScorer; search: Search } {
   const board = new PlacementBoard(team, mapKey, lookups)
   const scorer = new PlacementScorer(board, team, data)
-  const search = new Search(board, scorer)
+  const held = board.units.map((unit) => options.held?.get(unit))
+  const movable = held.flatMap((hexId, i) => (hexId === undefined ? [i] : []))
+  const open = board.tiles.filter((hexId) => !held.includes(hexId))
+  // A placement with the moving units on `tiles`, in order.
+  const fill = (tiles: readonly number[]): number[] => {
+    let next = 0
+    return held.map((hexId) => hexId ?? tiles[next++]!)
+  }
+  const search = new Search(board, scorer, movable)
   if (options.full) {
-    for (const positions of everyPlacement(board.tiles, board.units.length)) {
-      search.evaluate(positions)
-    }
+    for (const tiles of everyPlacement(open, movable.length)) search.evaluate(fill(tiles))
   } else {
     const random = seeded(`${mapKey}|${board.units.join(',')}|${team.artifact ?? ''}`)
     for (let start = 0; start < STARTS; start++) {
-      const tiles = [...board.tiles]
+      const tiles = [...open]
       for (let i = tiles.length - 1; i > 0; i--) {
         const j = Math.floor(random() * (i + 1))
         ;[tiles[i], tiles[j]] = [tiles[j]!, tiles[i]!]
       }
-      search.climb(tiles.slice(0, board.units.length))
+      search.climb(fill(tiles))
     }
   }
   return { board, scorer, search }

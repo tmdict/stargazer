@@ -2,6 +2,7 @@
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
+import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
 
 // A chosen team as the page shows it, read off the data file once.
@@ -14,6 +15,8 @@ export interface SlShownTeam extends Pick<
   group: Pick<SlFamily, 'name' | 'core'> | null
   // Why each unit stands where it does, on a board the engine placed.
   why: PlacementExplanation | null
+  // A swap tried on the board as drawn, null when the worker cannot answer.
+  trySwap: (out: number[], into: number[]) => Promise<SwapPreview | null>
 }
 
 export interface SlShown {
@@ -122,9 +125,6 @@ const {
         :why="team.why"
       />
     </div>
-    <p v-if="shown.teams.some((team) => team.why)" class="sl-why-hint">
-      {{ i18n.t('app.placement-hint') }}
-    </p>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
     <Teleport to="body">
@@ -212,14 +212,6 @@ const {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   padding: 24px 16px;
-}
-
-.sl-why-hint {
-  margin: -8px 0 0;
-  padding: 0 16px 18px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  text-align: center;
 }
 
 @container (min-width: 1171px) {

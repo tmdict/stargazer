@@ -1,5 +1,5 @@
 <script lang="ts">
-import { computed, useId } from 'vue'
+import { computed, useId, useTemplateRef } from 'vue'
 
 import TileHatchPatterns from './TileHatchPatterns.vue'
 import { artifactHostHex, Grid } from '@/lib/grid'
@@ -26,6 +26,12 @@ export interface ThumbnailUnit {
   title?: string
   // Ringed; a ringed unit or artifact fades the board's other ones.
   highlight?: boolean
+  // Ringed in blue instead of amber: the one the other rings are for.
+  focus?: boolean
+  // Drawn faint, as a unit leaving the board.
+  faded?: boolean
+  // Opens something on hover or tap, so it shows a hand cursor.
+  interactive?: boolean
 }
 
 // An artifact slot: its image, or a labeled placeholder circle.
@@ -34,6 +40,8 @@ export interface ThumbnailArtifact {
   label?: string
   title?: string
   highlight?: boolean
+  focus?: boolean
+  interactive?: boolean
 }
 
 interface Geometry {
@@ -148,10 +156,15 @@ const hexAt = (center: Point, r: number): string =>
 const ARTIFACT_RADIUS_RATIO = 0.62
 
 // The amber ring rides on a soft dark halo, so it reads over pale tiles and
-// bright portraits alike without a hard outline.
-const RING_RATIO = 0.3
-const RING_EDGE_RATIO = 0.5
-const RING_EDGE_BLUR_RATIO = 0.08
+// bright portraits alike without a hard outline. A board drawn large reads a
+// much thinner one.
+const RINGS = {
+  bold: { ring: 0.3, edge: 0.5, blur: 0.08 },
+  fine: { ring: 0.1, edge: 0.2, blur: 0.04 },
+}
+
+// Inside the tile's border and bevel, which would hide the dashes.
+const OUTLINE_INSET = 4.5 / 18
 
 // Tile numbers sit in the hex's lower half on a dark halo, so they read over
 // portraits and pale tiles alike.
@@ -180,6 +193,7 @@ const {
   crisp = false,
   numbered = false,
   outlined = [],
+  fineRing = false,
 } = defineProps<{
   mapKey: string
   // Explicit [hexId, state] tile states (a record's serialized `t`), the
@@ -199,6 +213,7 @@ const {
   numbered?: boolean
   // Tiles drawn with a dashed outline.
   outlined?: number[]
+  fineRing?: boolean
 }>()
 
 const uid = useId()
@@ -256,6 +271,21 @@ const placedUnits = computed(() =>
     })),
 )
 
+const outlinedTiles = computed(() =>
+  outlined.flatMap((hexId) => {
+    const center = geometry.value.centers.get(hexId)
+    return center
+      ? [
+          {
+            hexId,
+            tile: geometry.value.points.get(hexId)!,
+            inner: hexAt(center, hexSize * (1 - OUTLINE_INSET)),
+          },
+        ]
+      : []
+  }),
+)
+
 const placedArtifacts = computed(() =>
   ARTIFACT_SIDES.flatMap(({ side, team }) => {
     const value = artifacts?.[side]
@@ -272,13 +302,60 @@ const placedArtifacts = computed(() =>
   }),
 )
 
-const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
-const ringedArtifacts = computed(() => placedArtifacts.value.filter((art) => art.highlight))
-const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.value.length > 0)
+const ringSize = computed(() => {
+  const ratios = RINGS[fineRing ? 'fine' : 'bold']
+  return {
+    width: hexSize * ratios.ring,
+    edge: hexSize * ratios.edge,
+    blur: hexSize * ratios.blur,
+  }
+})
+
+const isLit = (item: { highlight?: boolean; focus?: boolean }) => !!(item.highlight || item.focus)
+
+// A focus ring comes last, so it keeps an edge it shares with an amber one.
+const rings = computed(() =>
+  [
+    ...placedUnits.value.filter(isLit).map((unit) => ({
+      key: `unit-${unit.hexId}`,
+      focus: !!unit.focus,
+      tag: 'polygon' as const,
+      shape: { points: unit.corners },
+    })),
+    ...placedArtifacts.value.filter(isLit).map((art) => ({
+      key: `artifact-${art.side}`,
+      focus: !!art.focus,
+      tag: 'circle' as const,
+      shape: { cx: art.center.x, cy: art.center.y, r: art.radius },
+    })),
+  ].sort((a, b) => Number(a.focus) - Number(b.focus)),
+)
+const spotlit = computed(() => rings.value.length > 0)
+
+const svgEl = useTemplateRef<SVGSVGElement>('svg')
+
+// The box on screen round a side's tiles, for a popup kept clear of them.
+function zoneBox(zone: 'ally' | 'enemy'): DOMRect | undefined {
+  const toScreen = svgEl.value?.getScreenCTM()
+  const centers = zonedTiles.value
+    .filter((tile) => tile.zone === zone)
+    .map((tile) => geometry.value.centers.get(tile.hexId)!)
+  if (!toScreen || !centers.length) return undefined
+  const halfWidth = (hexSize * Math.sqrt(3)) / 2
+  const xs = centers.map((center) => center.x)
+  const ys = centers.map((center) => center.y)
+  const from = new DOMPoint(Math.min(...xs) - halfWidth, Math.min(...ys) - hexSize)
+  const to = new DOMPoint(Math.max(...xs) + halfWidth, Math.max(...ys) + hexSize)
+  const a = from.matrixTransform(toScreen)
+  const b = to.matrixTransform(toScreen)
+  return new DOMRect(a.x, a.y, b.x - a.x, b.y - a.y)
+}
+
+defineExpose({ zoneBox })
 </script>
 
 <template>
-  <svg :viewBox="geometry.viewBox">
+  <svg ref="svg" :viewBox="geometry.viewBox">
     <defs>
       <!-- Clip paths only for occupied hexes, not all 45 tiles. -->
       <clipPath v-for="unit in placedUnits" :id="`${uid}-u-${unit.hexId}`" :key="unit.hexId">
@@ -291,7 +368,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       <!-- The region is sized off the hex's geometry, so the default 10%
            margin would clip the halo's stroke and blur. -->
       <filter v-if="spotlit" :id="`${uid}-ring-edge`" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur :stdDeviation="hexSize * RING_EDGE_BLUR_RATIO" />
+        <feGaussianBlur :stdDeviation="ringSize.blur" />
       </filter>
     </defs>
 
@@ -329,18 +406,20 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       :points="tile.points"
       :fill="tile.fill"
     />
-    <polygon
-      v-for="hexId in outlined"
-      :key="`outline-${hexId}`"
-      class="outlined"
-      :points="geometry.points.get(hexId)"
-      vector-effect="non-scaling-stroke"
-    />
+    <template v-for="tile in outlinedTiles" :key="`outline-${tile.hexId}`">
+      <polygon class="outlined-fill" :points="tile.tile" />
+      <polygon
+        class="outlined"
+        :points="tile.inner"
+        stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"
+      />
+    </template>
 
     <g
       v-for="unit in placedUnits"
       :key="`unit-${unit.hexId}`"
-      :class="{ faded: spotlit && !unit.highlight }"
+      :class="{ faded: unit.faded || (spotlit && !isLit(unit)), interactive: unit.interactive }"
       :data-hex="unit.hexId"
     >
       <title v-if="unit.title">{{ unit.title }}</title>
@@ -419,7 +498,7 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
     <g
       v-for="art in placedArtifacts"
       :key="`artifact-${art.side}`"
-      :class="{ faded: spotlit && !art.highlight }"
+      :class="{ faded: spotlit && !isLit(art), interactive: art.interactive }"
       :data-artifact="art.side"
     >
       <title v-if="art.title">{{ art.title }}</title>
@@ -473,44 +552,31 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
       </text>
     </template>
 
-    <!-- A layer of their own: drawn inside its unit's group, a ring would lose
-         its outer half under neighbors painted after it. -->
-    <template v-for="unit in ringedUnits" :key="`ring-${unit.hexId}`">
-      <polygon
-        class="ring-edge"
-        :points="unit.corners"
-        fill="none"
-        stroke-linejoin="round"
-        :stroke-width="hexSize * RING_EDGE_RATIO"
-        :filter="`url(#${uid}-ring-edge)`"
-      />
-      <polygon
-        class="ring"
-        :points="unit.corners"
-        fill="none"
-        stroke-linejoin="round"
-        :stroke-width="hexSize * RING_RATIO"
-      />
-    </template>
-    <template v-for="art in ringedArtifacts" :key="`ring-${art.side}`">
-      <circle
-        class="ring-edge"
-        :cx="art.center.x"
-        :cy="art.center.y"
-        :r="art.radius"
-        fill="none"
-        :stroke-width="hexSize * RING_EDGE_RATIO"
-        :filter="`url(#${uid}-ring-edge)`"
-      />
-      <circle
-        class="ring"
-        :cx="art.center.x"
-        :cy="art.center.y"
-        :r="art.radius"
-        fill="none"
-        :stroke-width="hexSize * RING_RATIO"
-      />
-    </template>
+    <!-- Layers of their own: drawn inside its unit's group, a ring would lose
+         its outer half under neighbors painted after it, and with every halo
+         under every ring, neighbouring rings share one edge with no halo
+         across it. -->
+    <component
+      :is="item.tag"
+      v-for="item in rings"
+      :key="`edge-${item.key}`"
+      v-bind="item.shape"
+      class="ring-edge"
+      fill="none"
+      stroke-linejoin="round"
+      :stroke-width="ringSize.edge"
+      :filter="`url(#${uid}-ring-edge)`"
+    />
+    <component
+      :is="item.tag"
+      v-for="item in rings"
+      :key="`ring-${item.key}`"
+      v-bind="item.shape"
+      :class="['ring', { focus: item.focus }]"
+      fill="none"
+      stroke-linejoin="round"
+      :stroke-width="ringSize.width"
+    />
   </svg>
 </template>
 
@@ -519,15 +585,28 @@ const spotlit = computed(() => ringedUnits.value.length > 0 || ringedArtifacts.v
   opacity: 0.35;
 }
 
+.interactive {
+  cursor: pointer;
+}
+
 .ring {
   stroke: var(--color-warning);
+}
+
+.ring.focus {
+  stroke: var(--color-info);
 }
 
 .outlined {
   fill: none;
   stroke: var(--color-text-primary);
-  stroke-width: 1.5;
-  stroke-dasharray: 3 2.5;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.outlined-fill {
+  fill: var(--color-text-primary);
+  fill-opacity: 0.12;
 }
 
 .ring-edge {

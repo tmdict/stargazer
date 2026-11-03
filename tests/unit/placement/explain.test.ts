@@ -42,7 +42,7 @@ function explained(at: Record<number, number>, data = DATA) {
 
 describe('placement explanation', () => {
   // Ravion's Objectives go to the two rearmost allies, tiles 3 and 4 here.
-  it('names what a unit gives and receives, and an effect only its tile keeps', () => {
+  it('names what a unit gives and receives, and the tiles as good for one with no reason', () => {
     const of = explained({ [RAVION]: 13, [ORION]: 3, [SYLPHIRA]: 4, [PERSEUS]: 6, [SENEA]: 7 })
     const objectives = { source: 'unit', file: 'ravion', giver: RAVION }
     expect(of(RAVION).reasons).toEqual([
@@ -50,12 +50,7 @@ describe('placement explanation', () => {
     ])
     expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, heroes: [] }])
     // Tiles 1 and 2 would make Perseus one of the two rearmost.
-    expect(of(PERSEUS)).toEqual({
-      unit: PERSEUS,
-      tile: 6,
-      reasons: [{ verb: 'keeps', effect: objectives, heroes: [ORION, SYLPHIRA] }],
-      alsoFine: [5, 8, 10],
-    })
+    expect(of(PERSEUS)).toEqual({ unit: PERSEUS, tile: 6, reasons: [], alsoFine: [5, 8, 10] })
   })
 
   it("words a formation rule from each hero's side, and a lean only without a rank", () => {

@@ -7,10 +7,10 @@
  * by the share of its own effects its board's map leaves it (fit.ts). */
 
 import type { SlData, SlEvidence } from '../data/types'
-import { shortfall } from '../data/upgrades'
-import { oddsInto, sigmoid, winsNeeded } from '../model/odds'
+import { oddsInto, winsNeeded } from '../model/odds'
 import type { SlReader } from '../model/reader'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
+import { boardChance, levelGap } from './chance'
 import { slFit, type SlFit } from './fit'
 import type { SlBoard } from './setType'
 import { swapsOf } from './swaps'
@@ -53,8 +53,7 @@ function choose(
   fit: SlFit,
 ): SlChoice | null {
   const excluded = (id: number): boolean => !picked.has(id)
-  const gap = (heroes: number[]): number =>
-    -heroes.reduce((n, id) => n + shortfall(data.prices, picked.get(id)!), 0)
+  const gap = (heroes: number[]): number => levelGap(data.prices, picked, heroes)
   const claimOf = artifactClaims(data)
   const needed = winsNeeded(boards.length)
   const odds = new Float64Array(boards.length + 1)
@@ -93,13 +92,12 @@ function choose(
             const claim = claimOf(source, team, kind)
             const points = gap(t.heroes)
             let share = fit.known(board, t.heroes)
-            const shift = (): number => Math.log(share ?? 1)
             const cache = new Map<number | null, number>()
             const chanceWith = (artifact: number | null): number => {
               if (!cache.has(artifact)) {
                 const counted = artifact !== null && counts(artifact) ? artifact : null
                 const side = { heroes: t.heroes, kind, artifact: counted }
-                cache.set(artifact, sigmoid(model.againstTypical(side, points) + shift()))
+                cache.set(artifact, boardChance(model, side, points, share))
               }
               return cache.get(artifact)!
             }
@@ -234,11 +232,10 @@ function choose(
             : swapsOf(t.heroes, elsewhere, {
                 family: s.families[t.family]!,
                 chanceOf: (heroes) =>
-                  sigmoid(
-                    model.againstTypical(
-                      { heroes, kind: t.source === 0 ? t.family : kindOf(heroes), artifact: null },
-                      gap(heroes),
-                    ),
+                  boardChance(
+                    model,
+                    { heroes, kind: t.source === 0 ? t.family : kindOf(heroes), artifact: null },
+                    gap(heroes),
                   ),
                 excluded,
                 before,

@@ -167,4 +167,19 @@ describe('placement search', () => {
     expect(searched.best).toEqual(full.best)
     expect(placeTeam(team, MAP, data, PLACEMENT_LOOKUPS).positions).toEqual(searched.positions)
   })
+
+  it('keeps held units on their tiles and finds the best tiles for the rest', () => {
+    const placed = placeTeam(team, MAP, data, PLACEMENT_LOOKUPS)
+    const held = new Map(
+      placed.units.flatMap((unit, i): [number, number][] =>
+        unit === ORION || unit === PERSEUS ? [] : [[unit, placed.positions[i]!]],
+      ),
+    )
+    const swapped = { heroes: [ALNA, SYLPHIRA, TAICHI, SENEA, DIONEL] }
+    const searched = placeTeam(swapped, MAP, data, PLACEMENT_LOOKUPS, { held })
+    const full = placeTeam(swapped, MAP, data, PLACEMENT_LOOKUPS, { held, full: true })
+    const tiles = new Map(searched.units.map((unit, i) => [unit, searched.positions[i]]))
+    for (const [unit, hexId] of held) expect(tiles.get(unit)).toBe(hexId)
+    expect(searched.best).toEqual(full.best)
+  })
 })
