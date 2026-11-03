@@ -7,12 +7,12 @@
  * than five heroes has empty slots, which the model counts and the page
  * warns of. */
 
-import { decidedGames, TEAM_HEROES } from '../data/games'
-import { gamesIn, seasonRecords, type WinLoss } from '../data/records'
+import { gamesIn, type WinLoss } from '../data/records'
+import { TEAM_HEROES } from '../data/sides'
 import type { SlData } from '../data/types'
 import { emptyShortfall, rivalryPoints, shortfall } from '../data/upgrades'
 import type { SlPick } from '../generator/types'
-import type { SlLearned } from '../model/models'
+import type { SlReader } from '../model/reader'
 import { splitChance } from '../model/reasons'
 import type { Reason, ReasonItem, Side } from '../model/types'
 
@@ -85,8 +85,6 @@ export interface WwwPanel {
   // Each hero below the top levels, and each empty slot with a null id.
   short: Pair<{ id: number | null; points: number }[]>
   lineups: Pair<WinLoss | null>
-  // Each lineup's wins in their games against each other.
-  met: Pair<number>
   heroGames: Pair<[fewest: number, most: number]>
   warnings: WwwWarning[]
 }
@@ -98,15 +96,14 @@ const strongestFirst = (lines: WwwLine[]): WwwLine[] => [...lines].sort((x, y) =
 
 export function wwwPanel(
   data: SlData,
-  learned: SlLearned,
+  { model, records: recorded, kindOf }: SlReader,
   teams: Pair<WwwTeam>,
   counts: (artifact: number) => boolean,
 ): WwwPanel {
-  const recorded = seasonRecords(decidedGames(data))
   const heroIds = (side: TeamSide): number[] => teams[side].heroes.map((h) => h.id)
   const kinds: Pair<number | null> = {
-    a: learned.kindOf(heroIds('a')),
-    b: learned.kindOf(heroIds('b')),
+    a: kindOf(heroIds('a')),
+    b: kindOf(heroIds('b')),
   }
   const known = (artifact: number | null): artifact is number =>
     artifact !== null && counts(artifact) && gamesIn(recorded.artifact(artifact)) > 0
@@ -119,7 +116,7 @@ export function wwwPanel(
     teams[side].heroes.reduce((sum, h) => sum + rivalryPoints(data.prices, h), 0)
   const points = { a: pointsOf('a'), b: pointsOf('b') }
   const matchup = { a: sideOf('a'), b: sideOf('b'), gap: points.a - points.b }
-  const { parts, items } = learned.model.explain(matchup)
+  const { parts, items } = model.explain(matchup)
   const { shown, reasons } = splitChance(parts)
   const favourite = Math.max(shown, 1000 - shown)
 
@@ -221,7 +218,6 @@ export function wwwPanel(
     if (empty(side) > 0) warn(`e${side}`, { type: 'empty-slots', side })
   }
 
-  const met = recorded.headToHead(heroIds('a'), heroIds('b'))
   return {
     shown,
     verdict: VERDICTS.find(([from]) => favourite >= from)![1],
@@ -236,7 +232,6 @@ export function wwwPanel(
       a: recordOrNull(recorded.lineup(heroIds('a'))),
       b: recordOrNull(recorded.lineup(heroIds('b'))),
     },
-    met: { a: met.wins, b: met.losses },
     heroGames: { a: heroGamesOf('a'), b: heroGamesOf('b') },
     warnings,
   }

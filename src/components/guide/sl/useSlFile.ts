@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import { decidedGames, unratedHeroes } from '@/lib/pvp/sl/data/games'
+import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
 import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
 import { slBoards } from '@/lib/pvp/sl/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
@@ -68,7 +68,7 @@ export function useSlFile() {
       before: data.before ? { season: data.before.season, ...data.before.sample } : null,
     }
     unrated.value = unratedHeroes(
-      decidedGames(data),
+      data.model,
       data.season,
       gameData.characters.filter((c) => !c.placeholder),
     )

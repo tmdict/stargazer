@@ -11,7 +11,7 @@ import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
 import { useI18nStore } from '@/stores/i18n'
 
-// waiting: the Supreme League worker is still learning the model.
+// waiting: the Supreme League worker is still reading the data file.
 const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; waiting: boolean }>()
 
 const emit = defineEmits<{ generate: [] }>()

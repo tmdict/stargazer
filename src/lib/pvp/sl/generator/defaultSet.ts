@@ -6,7 +6,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attr
 import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
-import { learnSeason } from '../model/models'
+import { readSlFile } from '../model/reader'
 import { chooseSlSet } from './chooser'
 import { slBoards } from './setType'
 import { suggestedUnits } from './suggested'
@@ -37,7 +37,7 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
   const boards = slBoards(file, 'sl')
   const set = chooseSlSet(
     file,
-    learnSeason(file),
+    readSlFile(file),
     picks,
     (id) => artifactSurvives(file.season, id),
     boards.map((board) => board.source),

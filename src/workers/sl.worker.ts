@@ -1,7 +1,6 @@
-/* Supreme League worker: reads the data file, learns the prediction model
- * once, and answers the generator, its engine's formations and Who Would
- * Win?, so neither the search, the placing nor a prediction holds up the
- * page. */
+/* Supreme League worker: reads the data file once and answers the generator,
+ * its engine's formations and Who Would Win?, so neither the search, the
+ * placing nor a prediction holds up the page. */
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlUnit } from '@/lib/pvp/sl/data/types'
@@ -9,7 +8,7 @@ import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
-import { learnSeason } from '@/lib/pvp/sl/model/models'
+import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
 import { artifactSurvives } from '@/lib/seasonal'
 
@@ -33,7 +32,7 @@ const scope = self as unknown as {
   addEventListener(type: 'message', listener: (event: MessageEvent<SlRequest>) => void): void
 }
 
-const engine = loadSlData().then((data) => ({ data, learned: learnSeason(data) }))
+const engine = loadSlData().then((data) => ({ data, reader: readSlFile(data) }))
 
 engine.then(
   () => scope.postMessage({ type: 'ready' }),
@@ -43,16 +42,16 @@ engine.then(
 scope.addEventListener('message', async (event) => {
   const msg = event.data
   try {
-    const { data, learned } = await engine
+    const { data, reader } = await engine
     const counts = (id: number): boolean => artifactSurvives(data.season, id)
     if (msg.type === 'generate') {
-      const set = chooseSlSet(data, learned, msg.picks, counts, msg.boards)
+      const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'place') {
       const units = suggestedUnits(data, msg.set, msg.boards, msg.everyBoard)
       scope.postMessage({ type: 'placed', id: msg.id, units })
     } else {
-      const panel = wwwPanel(data, learned, msg.teams, counts)
+      const panel = wwwPanel(data, reader, msg.teams, counts)
       scope.postMessage({ type: 'predicted', id: msg.id, panel })
     }
   } catch {

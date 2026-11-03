@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { sigmoid } from '@/lib/pvp/sl/model/fit'
+import { sigmoid } from '@/lib/pvp/sl/model/odds'
 import { splitChance } from '@/lib/pvp/sl/model/reasons'
 import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
 import { seededRandom } from '../fixtures/slSeason'

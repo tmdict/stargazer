@@ -35,17 +35,6 @@ const isNumbers = (value: unknown, length?: number): boolean =>
   value.every((n) => typeof n === 'number') &&
   (length === undefined || value.length === length)
 
-const RESULTS: readonly unknown[] = ['w', 'l', 't']
-
-// A game's entry: this season's ends with its artifact, last season's has none.
-const isGame = (value: unknown, withArtifact: boolean): boolean =>
-  Array.isArray(value) &&
-  value.length === (withArtifact ? 4 : 3) &&
-  Number.isInteger(value[0]) &&
-  RESULTS.includes(value[1]) &&
-  typeof value[2] === 'number' &&
-  (!withArtifact || value[3] === null || Number.isInteger(value[3]))
-
 const isFamily = (value: unknown): boolean =>
   isObject(value) &&
   isObject(value.name) &&
@@ -55,13 +44,22 @@ const isFamily = (value: unknown): boolean =>
   Array.isArray(value.perMap) &&
   value.perMap.every((record: unknown) => isNumbers(record, 3))
 
-// One season's part of the file: its games, teams and groups.
+const isOwnArtifacts = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
+  artifacts === 'like'
+    ? isNumbers(value)
+    : Array.isArray(value) && value.every((row: unknown) => isNumbers(row, 2))
+
+const isPick = (value: unknown): boolean =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  (value[0] === null || Number.isInteger(value[0])) &&
+  Number.isInteger(value[1])
+
+// One season's part of the file: its teams and groups.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
   isObject(value) &&
   isObject(value.sample) &&
   isNumbers([value.sample.matches, value.sample.games, value.sample.players]) &&
-  Array.isArray(value.games) &&
-  value.games.every((g: unknown) => isGame(g, artifacts === 'artifacts')) &&
   Array.isArray(value.families) &&
   value.families.every(isFamily) &&
   Array.isArray(value.teams) &&
@@ -69,13 +67,30 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
     (t: unknown) =>
       isObject(t) &&
       isNumbers(t.heroes, 5) &&
-      isNumbers(t[artifacts]) &&
+      typeof t.decided === 'number' &&
+      isOwnArtifacts(t[artifacts], artifacts) &&
       Array.isArray(t.placements) &&
-      t.placements.length > 0,
+      t.placements.length > 0 &&
+      (t.pick === undefined || (Array.isArray(t.pick) && t.pick.every(isPick))),
   )
 
 const isNumberRecord = (value: unknown): boolean =>
   isObject(value) && Object.values(value).every((n) => typeof n === 'number')
+
+const isRows = (value: unknown, length: number): boolean =>
+  isObject(value) && Object.values(value).every((row) => isNumbers(row, length))
+
+// A hero's row carries its number against the field after its record, so it
+// is one longer than the others.
+const isModel = (value: unknown): boolean =>
+  isObject(value) &&
+  isNumbers([value.gap, value.emptySlot, value.typicalHeroes, value.typicalArtifact]) &&
+  isNumberRecord(value.fieldAgainst) &&
+  isRows(value.heroes, 4) &&
+  isRows(value.lineups, 3) &&
+  isRows(value.counters, 3) &&
+  isRows(value.artifacts, 3) &&
+  isRows(value.artifactsOnKind, 3)
 
 const isListEntry = (value: unknown): boolean =>
   Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
@@ -99,7 +114,7 @@ const isPlacementData = (value: unknown): boolean =>
   isObject(value.pickRates) &&
   Object.values(value.pickRates).every(isNumberRecord)
 
-/* The shape the model, the generator and the pages rely on: a file of another
+/* The shape the reader, the generator and the pages rely on: a file of another
  * shape (one written for other code, or a page the host served in its place)
  * is refused whole. The levels' prices must cover every level Stargazer
  * offers. */
@@ -112,8 +127,6 @@ function isSlData(value: unknown): value is SlData {
     Array.isArray(value.maps) &&
     value.maps.length === TEAM_MODES['5v5'].boardCount &&
     value.maps.every((key) => typeof key === 'string') &&
-    typeof value.prior === 'number' &&
-    typeof value.alpha === 'number' &&
     Array.isArray(value.evidence) &&
     value.evidence.length > 0 &&
     isObject(value.flex) &&
@@ -123,6 +136,11 @@ function isSlData(value: unknown): value is SlData {
     Object.values(prices.paragon).every((list) => isNumbers(list, attrMax(ATTR_PARAGON) + 1)) &&
     isNumbers(value.order) &&
     isPlacementData(value.placement) &&
+    isModel(value.model) &&
+    // A team outside every group falls back on the last list.
+    Array.isArray(value.fallback) &&
+    value.fallback.length === (value.families as unknown[]).length + 1 &&
+    value.fallback.every((list) => isNumbers(list)) &&
     (before === undefined ||
       (isSeason(before, 'like') &&
         typeof (before as Record<string, unknown>).season === 'number' &&

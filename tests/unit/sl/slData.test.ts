@@ -7,7 +7,7 @@ import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlBefore, SlData, SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
-import { learnSeason } from '@/lib/pvp/sl/model/models'
+import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 
@@ -21,9 +21,9 @@ vi.stubGlobal(
 const data = await loadSlData()
 vi.unstubAllGlobals()
 const seasons = [data, ...(data.before ? [data.before] : [])]
-const learned = learnSeason(data)
+const reader = readSlFile(data)
 const everyMap = data.maps.map((_, i) => i)
-const choose = (picks: SlPick[]) => chooseSlSet(data, learned, picks, () => true, everyMap)
+const choose = (picks: SlPick[]) => chooseSlSet(data, reader, picks, () => true, everyMap)
 const heroes = new Map(
   loadCharacters()
     .filter((c) => !c.placeholder)
@@ -48,11 +48,7 @@ function fills(
     const pool: number[][] = []
     for (const s of from)
       for (const t of s.teams)
-        if (
-          t.map === map &&
-          t.heroes.every((id) => picked.has(id)) &&
-          t.games.some((i) => s.games[i]![1] !== 't')
-        )
+        if (t.map === map && t.heroes.every((id) => picked.has(id)) && t.decided > 0)
           pool.push(t.heroes)
     return pool
   })
@@ -136,21 +132,6 @@ describe('the shipped Supreme League data', () => {
     expect(strays).toEqual([])
   })
 
-  // Both pages find a game's opponent this way.
-  it('holds each game as two consecutive entries, the first at an even index', () => {
-    const opposite = { w: 'l', l: 'w', t: 't' }
-    for (const s of seasons) {
-      expect(s.games.length % 2).toBe(0)
-      for (let i = 0; i < s.games.length; i += 2) {
-        const [a, resultA, gapA] = s.games[i]!
-        const [b, resultB, gapB] = s.games[i + 1]!
-        expect(s.teams[a]!.map).toBe(s.teams[b]!.map)
-        expect(resultB).toBe(opposite[resultA])
-        expect(gapA + gapB).toBe(0)
-      }
-    }
-  })
-
   // The set hands each of last season's teams the first artifact on its list
   // that the other four leave free.
   it.runIf(!!data.before)('lists an artifact for every map on each of last season’s teams', () => {
@@ -164,14 +145,14 @@ describe('the shipped Supreme League data', () => {
     const phantimals = new Set(loadPhantimals().map((p) => p.id))
     for (const s of seasons) {
       for (const t of s.teams) {
-        const ids = 'artifacts' in t ? t.artifacts : t.like
+        const ids = 'artifacts' in t ? t.artifacts.map(([id]) => id) : t.like
         expect(ids.filter((id) => !artifacts.has(id))).toEqual([])
         const used = t.placements.flatMap((p) => (p.s[0] ? [p.s[0][1]] : []))
         expect(used.filter((id) => !phantimals.has(id))).toEqual([])
       }
     }
-    const played = data.games.flatMap(([, , , id]) => (id === null ? [] : [id]))
-    expect(played.filter((id) => !artifacts.has(id))).toEqual([])
+    const rated = [...Object.keys(data.model.artifacts).map(Number), ...data.fallback.flat()]
+    expect(rated.filter((id) => !artifacts.has(id))).toEqual([])
   })
 })
 

@@ -5,13 +5,14 @@
  *    ways to give them out, the one with the most games played on the
  *    artifacts given wins, and of equal ways the first found, which leaves an
  *    artifact with the team on the earlier board.
- * 2. A team left without one takes the free artifact its kind of team played
- *    most this season, then the season's most played, boards in order.
+ * 2. A team left without one takes the first free artifact of its kind's
+ *    fallback list in the file, boards in order.
  * 3. Last season's teams take the first free artifact on their `like` list,
  *    boards in order.
  *
  * A team's artifact is always one of its own or among the first it falls back
- * to, as many as there are boards, which bounds the search (chooser.ts). */
+ * to, as many as there are boards, which bounds the search (chooser.ts) and is
+ * every artifact the file gives a team a board for. */
 
 import type { SlData } from '../data/types'
 
@@ -24,44 +25,14 @@ export interface ArtifactClaim {
   before: boolean
 }
 
-const count = <K>(counts: Map<K, number>, key: K): void => {
-  counts.set(key, (counts.get(key) ?? 0) + 1)
-}
-
-export function artifactClaims(
-  data: SlData,
-): (source: number, team: number, kind: number | null) => ArtifactClaim {
-  const season = new Map<number, number>()
-  const byKind = new Map<number, Map<number, number>>()
-  const byTeam = new Map<number, Map<number, number>>()
-  for (const [team, , , artifact] of data.games) {
-    if (artifact === null) continue
-    count(season, artifact)
-    const kind = data.teams[team]!.family
-    if (kind !== null) {
-      if (!byKind.has(kind)) byKind.set(kind, new Map())
-      count(byKind.get(kind)!, artifact)
-    }
-    if (!byTeam.has(team)) byTeam.set(team, new Map())
-    count(byTeam.get(team)!, artifact)
-  }
-  const fallbackOf = (kind: number | null): number[] => {
-    const used = (kind === null ? undefined : byKind.get(kind)) ?? new Map<number, number>()
-    return [...season.keys()].sort(
-      (a, b) => (used.get(b) ?? 0) - (used.get(a) ?? 0) || season.get(b)! - season.get(a)! || a - b,
-    )
-  }
-  return (source, team, kind) => {
+export const artifactClaims =
+  (data: SlData) =>
+  (source: number, team: number, kind: number | null): ArtifactClaim => {
     if (source !== 0) return { own: [], fallback: data.before!.teams[team]!.like, before: true }
-    const games = byTeam.get(team)
-    const own = data.teams[team]!.artifacts.map((id) => ({ id, games: games?.get(id) ?? 0 }))
-    return {
-      own,
-      fallback: fallbackOf(kind).filter((id) => !own.some((o) => o.id === id)),
-      before: false,
-    }
+    const own = data.teams[team]!.artifacts.map(([id, games]) => ({ id, games }))
+    const list = data.fallback[kind ?? data.fallback.length - 1]!
+    return { own, fallback: list.filter((id) => !own.some((o) => o.id === id)), before: false }
   }
-}
 
 // The artifact of each claim, in board order; null only when no artifact is free.
 export function handOutArtifacts(claims: readonly ArtifactClaim[]): (number | null)[] {

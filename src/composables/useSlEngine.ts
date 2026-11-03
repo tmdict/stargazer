@@ -1,8 +1,7 @@
 /* The Supreme League worker for the visit (workers/sl.worker.ts): started
  * when a page that needs it mounts and kept until the tab reloads, so a visit
- * that opens more than one such page loads the file and learns the model
- * once. A worker that fails is dropped, and the next page to mount starts
- * another. */
+ * that opens more than one such page reads the file once. A worker that fails
+ * is dropped, and the next page to mount starts another. */
 
 import { onMounted, readonly, ref } from 'vue'
 

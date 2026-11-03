@@ -1,5 +1,9 @@
-/* The chance of winning each number of games, each game won or lost on its
- * own: the generator's boards and Who Would Win?'s five games. */
+/* Chances from the model's log-odds, and the chance of winning each number of
+ * games, each game won or lost on its own: the generator's boards and Who
+ * Would Win?'s five games. */
+
+export const sigmoid = (x: number): number =>
+  x >= 0 ? 1 / (1 + Math.exp(-x)) : Math.exp(x) / (1 + Math.exp(x))
 
 export const winsNeeded = (games: number): number => Math.floor(games / 2) + 1
 

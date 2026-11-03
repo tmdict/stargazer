@@ -1,18 +1,53 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SlData, SlGame } from '@/lib/pvp/sl/data/types'
+import { lineupKey } from '@/lib/pvp/sl/data/sides'
+import type { SlData, SlModel } from '@/lib/pvp/sl/data/types'
 import { shortfall } from '@/lib/pvp/sl/data/upgrades'
 import { artifactClaims, handOutArtifacts } from '@/lib/pvp/sl/generator/artifacts'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
-import { sigmoid } from '@/lib/pvp/sl/model/fit'
-import { learnSeason, type SlLearned } from '@/lib/pvp/sl/model/models'
-import { madeUpData, seededRandom, type MadeUpTeam } from '../fixtures/slSeason'
+import { sigmoid } from '@/lib/pvp/sl/model/odds'
+import { readSlFile, type SlReader } from '@/lib/pvp/sl/model/reader'
+import { madeUpData, madeUpModel, seededRandom, type MadeUpTeam } from '../fixtures/slSeason'
+
+// Made-up numbers for heroes 1 to `heroes` and artifacts 1 to `artifacts`,
+// where artifact 1 does most for a team, and more on group 0, so which
+// artifact a team gets matters.
+const randomModel = (next: () => number, heroes: number, artifacts: number): SlModel =>
+  madeUpModel({
+    gap: 0.01,
+    fieldAgainst: { 0: next() - 0.5, 1: next() - 0.5 },
+    heroes: Object.fromEntries(
+      Array.from({ length: heroes }, (_, i) => [i + 1, [next() - 0.5, 1, 1, (next() - 0.5) / 5]]),
+    ),
+    artifacts: Object.fromEntries(
+      Array.from({ length: artifacts }, (_, i) => [i + 1, [i ? (next() - 0.5) / 2 : 1.5, 1, 1]]),
+    ),
+    artifactsOnKind: { '1:0': [0.3, 1, 1] },
+  })
+
+const shuffled = (next: () => number, ids: number[]): number[] =>
+  ids
+    .map((id) => [next(), id] as const)
+    .sort((a, b) => a[0] - b[0])
+    .map(([, id]) => id)
+
+// Each group's fallback list and the list for teams outside every group.
+const randomFallback = (next: () => number, artifacts: number): number[][] =>
+  [0, 1, 2].map(() =>
+    shuffled(
+      next,
+      Array.from({ length: artifacts }, (_, i) => i + 1),
+    ),
+  )
+
+// A team's artifacts, each with a made-up count of games.
+const withGames = (next: () => number, ids: number[]): [number, number][] =>
+  ids.map((id) => [id, 1 + Math.floor(next() * 5)])
 
 // Nine teams a map, each with heroes of its map's own seven and one or two
-// of six every map shares, so sets clash only there, and 200 games between
-// teams on the same map, where artifact 1 helps a side win, so which
-// artifact a team gets matters.
+// of six every map shares, so sets clash only there, and some with no decided
+// game, which the set leaves out.
 const randomSeason = (next: () => number): SlData => {
   const pick = (n: number, from: number, after: number) => {
     const ids = new Set<number>()
@@ -26,23 +61,11 @@ const randomSeason = (next: () => number): SlData => {
       map: i % 5,
       family: family === 2 ? null : family,
       heroes: [...pick(5 - shared, 7, (i % 5) * 7), ...pick(shared, 6, 35)],
-      artifacts: pick(Math.floor(next() * 3), 7, 0),
+      artifacts: withGames(next, pick(Math.floor(next() * 3), 7, 0)),
+      decided: Math.floor(next() * 4),
     }
   })
-  const games: SlGame[] = []
-  for (let k = 0; k < 200; k++) {
-    const a = Math.floor(next() * teams.length)
-    const b = 5 * Math.floor(next() * 9) + (a % 5)
-    const gap = Math.round((next() - 0.5) * 200)
-    const artifact = (team: number) => {
-      const own = teams[team]!.artifacts
-      return own.length ? own[Math.floor(next() * own.length)]! : null
-    }
-    const [x, y] = [artifact(a), artifact(b)]
-    const won = next() < sigmoid((x === 1 ? 1.5 : 0) - (y === 1 ? 1.5 : 0) + gap / 100)
-    games.push([a, won ? 'w' : 'l', gap, x], [b, won ? 'l' : 'w', -gap, y])
-  }
-  return madeUpData(teams, games)
+  return madeUpData(teams, randomModel(next, 41, 7), randomFallback(next, 7))
 }
 
 // The chance of winning most of the maps, over every way the maps can fall.
@@ -60,18 +83,14 @@ const winningMost = (chances: number[]): number => {
 // Every set of one team a map with no hero twice, the best kept.
 const tryEvery = (
   data: SlData,
-  { model }: SlLearned,
+  { model }: SlReader,
   picks: SlPick[],
 ): { chance: number; teams: number[] } | null => {
   const picked = new Map(picks.map((p) => [p.id, p]))
   const claimOf = artifactClaims(data)
   const pools = data.maps.map((_, map) =>
     data.teams.flatMap((t, i) =>
-      t.map === map &&
-      t.heroes.every((h) => picked.has(h)) &&
-      t.games.some((k) => data.games[k]![1] !== 't')
-        ? [i]
-        : [],
+      t.map === map && t.heroes.every((h) => picked.has(h)) && t.decided > 0 ? [i] : [],
     ),
   )
   let best: { chance: number; teams: number[] } | null = null
@@ -98,10 +117,13 @@ const tryEvery = (
 
 // Twenty-four teams on one map, four ways of splitting thirty heroes into
 // six teams, so many sets of five share no hero, each team recorded with up
-// to two of four artifacts, where artifact 1 helps a side win.
+// to two of four artifacts, and each split stronger together than the last.
 const oneMapSeason = (next: () => number): SlData => {
   const teams: MadeUpTeam[] = Array.from({ length: 4 }).flatMap(() => {
-    const heroes = Array.from({ length: 30 }, (_, i) => i + 1).sort(() => next() - 0.5)
+    const heroes = shuffled(
+      next,
+      Array.from({ length: 30 }, (_, i) => i + 1),
+    )
     return Array.from({ length: 6 }, (_, k) => {
       const family = Math.floor(next() * 3)
       const artifacts = [...new Set([1 + Math.floor(next() * 4), 1 + Math.floor(next() * 4)])]
@@ -109,25 +131,16 @@ const oneMapSeason = (next: () => number): SlData => {
         map: 0,
         family: family === 2 ? null : family,
         heroes: heroes.slice(5 * k, 5 * k + 5),
-        artifacts: artifacts.slice(0, Math.floor(next() * 3)),
+        artifacts: withGames(next, artifacts.slice(0, Math.floor(next() * 3))),
+        decided: 1 + Math.floor(next() * 3),
       }
     })
   })
-  const games: SlGame[] = []
-  for (let k = 0; k < 200; k++) {
-    const a = Math.floor(next() * 24)
-    const b = (a + 1 + Math.floor(next() * 23)) % 24
-    const gap = Math.round((next() - 0.5) * 200)
-    const artifact = (team: number) => {
-      const own = teams[team]!.artifacts
-      return own.length ? own[Math.floor(next() * own.length)]! : null
-    }
-    const [x, y] = [artifact(a), artifact(b)]
-    const lift = (x === 1 ? 1.5 : 0) - (y === 1 ? 1.5 : 0)
-    const won = next() < sigmoid((a % 4) - (b % 4) + lift + gap / 100)
-    games.push([a, won ? 'w' : 'l', gap, x], [b, won ? 'l' : 'w', -gap, y])
-  }
-  return madeUpData(teams, games)
+  const model = randomModel(next, 30, 4)
+  model.lineups = Object.fromEntries(
+    teams.map((t, i) => [lineupKey(t.heroes), [Math.floor(i / 6) / 2, 1, 1]]),
+  )
+  return madeUpData(teams, model, randomFallback(next, 4))
 }
 
 // Every set of teams on map 0 with no hero twice, the best kept. Boards sharing
@@ -135,7 +148,7 @@ const oneMapSeason = (next: () => number): SlData => {
 // team can end up with first, so an artifact tie goes to the better team.
 const tryEveryOnOneMap = (
   data: SlData,
-  { model }: SlLearned,
+  { model }: SlReader,
   picks: SlPick[],
   boards: number,
 ): { chance: number; teams: number[] } | null => {
@@ -156,11 +169,7 @@ const tryEveryOnOneMap = (
     return Math.max(...reachable.map((a) => chanceOf(i, a)))
   }
   const pool = data.teams
-    .flatMap((t, i) =>
-      t.heroes.every((h) => picked.has(h)) && t.games.some((k) => data.games[k]![1] !== 't')
-        ? [i]
-        : [],
-    )
+    .flatMap((t, i) => (t.heroes.every((h) => picked.has(h)) && t.decided > 0 ? [i] : []))
     .sort((a, b) => bestOf(b) - bestOf(a) || data.teams[a]!.rank - data.teams[b]!.rank)
   let best: { chance: number; teams: number[] } | null = null
   const walk = (chosen: number[], from: number): void => {
@@ -183,7 +192,7 @@ describe('the search', () => {
   it.each([3, 5, 8])('finds the set trying every set finds (season %i)', (seed) => {
     const next = seededRandom(seed)
     const data = randomSeason(next)
-    const learned = learnSeason(data)
+    const reader = readSlFile(data)
     for (let i = 0; i < 12; i++) {
       const picks: SlPick[] = data.order
         .filter(() => next() < 0.95)
@@ -193,10 +202,10 @@ describe('the search', () => {
           paragon: Math.floor(next() * 5),
           refinement: Math.floor(next() * 5),
         }))
-      const expected = tryEvery(data, learned, picks)
+      const expected = tryEvery(data, reader, picks)
       const set = chooseSlSet(
         data,
-        learned,
+        reader,
         picks,
         () => true,
         data.maps.map((_, i) => i),
@@ -216,7 +225,7 @@ describe('the search', () => {
   ])('finds the best set when every board is on one map (season %i, %i boards)', (seed, boards) => {
     const next = seededRandom(seed)
     const data = oneMapSeason(next)
-    const learned = learnSeason(data)
+    const reader = readSlFile(data)
     for (let i = 0; i < 8; i++) {
       const picks: SlPick[] = data.order
         .filter(() => next() < 0.9)
@@ -226,8 +235,8 @@ describe('the search', () => {
           paragon: Math.floor(next() * 5),
           refinement: Math.floor(next() * 5),
         }))
-      const expected = tryEveryOnOneMap(data, learned, picks, boards)
-      const set = chooseSlSet(data, learned, picks, () => true, Array<number>(boards).fill(0))
+      const expected = tryEveryOnOneMap(data, reader, picks, boards)
+      const set = chooseSlSet(data, reader, picks, () => true, Array<number>(boards).fill(0))
       expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
     }

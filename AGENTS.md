@@ -17,7 +17,7 @@
 
 ### Data Contracts
 
-Any new or changed data contract requires the owner's explicit approval before it is implemented, however small. This covers localStorage keys and every field or shape inside a stored value, export and import file formats, and share-link formats. A version field, a backup key or a default field counts. Present the exact keys and field-by-field shapes for approval, then document each one, with a complete example payload, in the doc of the feature that owns it, and list new keys in the key index under "Where state is stored" in [Architecture](./docs/ARCHITECTURE.md), in the same change.
+Any new or changed data contract requires the owner's explicit approval before it is implemented, however small. This covers localStorage keys and every field or shape inside a stored value, export and import file formats, and share-link formats. A version field, a backup key or a default field counts. Present the exact keys and field-by-field shapes for approval, then document each one, with a complete example payload, in the doc of the feature that owns it, and list new keys in the key index under "Where state is stored" in [Architecture](./docs/ARCHITECTURE.md), in the same change. A file the external report generator writes into the data pack is documented where it is written, and a change to it still needs the owner's approval.
 
 ### Private Sources
 

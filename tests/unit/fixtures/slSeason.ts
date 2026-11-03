@@ -1,26 +1,39 @@
 /**
- * Made-up Supreme League seasons for the Supreme League tests: five maps, two
+ * Made-up Supreme League files for the Supreme League tests: five maps, two
  * groups, and one evidence rule every team with a decided game passes.
  */
 
-import type { SlData, SlGame, SlTeam } from '@/lib/pvp/sl/data/types'
+import type { SlData, SlModel, SlTeam } from '@/lib/pvp/sl/data/types'
 
-export type MadeUpTeam = Pick<SlTeam, 'map' | 'family' | 'heroes' | 'artifacts'>
+export type MadeUpTeam = Pick<SlTeam, 'map' | 'family' | 'heroes' | 'artifacts' | 'decided'>
 
 export const seededRandom = (seed: number) => () => {
   seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
   return seed / 2 ** 32
 }
 
-export function madeUpData(teams: MadeUpTeam[], games: SlGame[]): SlData {
+// Every number the tests leave out counts 0.
+export const madeUpModel = (numbers: Partial<SlModel>): SlModel => ({
+  gap: 0,
+  emptySlot: 0,
+  typicalHeroes: 0,
+  typicalArtifact: 0,
+  fieldAgainst: {},
+  heroes: {},
+  lineups: {},
+  counters: {},
+  artifacts: {},
+  artifactsOnKind: {},
+  ...numbers,
+})
+
+export function madeUpData(teams: MadeUpTeam[], model: SlModel, fallback: number[][]): SlData {
   const perMap = () => Array.from({ length: 5 }, (): [number, number, number] => [1, 1, 0])
   return {
     season: 8,
     exportedAt: '2026-10-01',
-    sample: { matches: games.length / 2, games: games.length / 2, players: 1 },
+    sample: { matches: 1, games: 1, players: 1 },
     maps: Array.from({ length: 5 }, (_, i) => `map-${i}`),
-    prior: 2,
-    alpha: 0.5,
     evidence: [{ groupGames: 0, players: 0, games: 1, oneOffs: true }],
     flex: { heroes: 2, options: 2 },
     prices: { paragon: { f: [0, 10, 20, 30, 40] }, refinement: [0, 5, 10, 15, 20] },
@@ -32,19 +45,9 @@ export function madeUpData(teams: MadeUpTeam[], games: SlGame[]): SlData {
       weights: {},
       pickRates: {},
     },
-    games,
-    teams: teams.map((t, i) => {
-      const own = games.flatMap(([team], k) => (team === i ? [k] : []))
-      return {
-        ...t,
-        rank: i,
-        players: 1,
-        games: own,
-        placements: [
-          { games: own, use: 1, players: 1, setups: 1, agree: 1, order: 0, c: [], s: [] },
-        ],
-      }
-    }),
+    model,
+    fallback,
+    teams: teams.map((t, i) => ({ ...t, rank: i, players: 1, placements: [{ c: [], s: [] }] })),
     families: [0, 1].map(() => ({ name: {}, core: [], swaps: [], perMap: perMap() })),
   }
 }

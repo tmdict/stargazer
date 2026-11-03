@@ -1,30 +1,13 @@
-/* The Supreme League data file, as codec.ts reads it. The format and a
- * complete example are in docs/architecture/GUIDE.md ("The data file"). */
+/* The Supreme League data file, as codec.ts reads it. The external report
+ * generator owns the format and publishes what each field means; these types
+ * are the fields Stargazer reads. */
 
 import type { PlacementData } from '@/lib/placement/types'
-
-export type SlResult = 'w' | 'l' | 't'
-
-// [team, result, gap, artifact]: the team's index, a win, a loss or a tie, the
-// upgrade gap toward the team in Rivalry points, and the artifact on its board
-// (null for none). Entries 2k and 2k + 1 are the two sides of one game.
-export type SlGame = [team: number, result: SlResult, gap: number, artifact: number | null]
-
-// Last season's games carry no artifact: its seasonal ids name other
-// artifacts this season.
-export type SlBeforeGame = [team: number, result: SlResult, gap: number]
 
 // [tile, unit id], tiles numbered from the ally side.
 export type SlUnit = [tile: number, id: number]
 
 export interface SlPlacement {
-  // The decided games played with it.
-  games: number[]
-  use: number
-  players: number
-  setups: number
-  agree: number
-  order: number
   // Heroes and their companions (N * 10000 + the hero's id).
   c: SlUnit[]
   // The phantimal, then its companions (N * 10000 + the phantimal's id).
@@ -40,13 +23,18 @@ interface SlTeamBase {
   // Tie order among both seasons' teams.
   rank: number
   players: number
-  games: number[]
+  // Its games with a winner.
+  decided: number
+  // The boards it can draw, the one it draws most often first.
   placements: SlPlacement[]
+  // [artifact, index into placements] for each artifact (null for none) that
+  // draws a board other than the first.
+  pick?: [artifact: number | null, placement: number][]
 }
 
 export interface SlTeam extends SlTeamBase {
-  // Artifact ids, most used first.
-  artifacts: number[]
+  // [artifact id, games played with it], most used first.
+  artifacts: [id: number, games: number][]
 }
 
 // A team of the season before takes this season's artifacts, the first of
@@ -73,9 +61,8 @@ export interface SlSample {
   players: number
 }
 
-export interface SlSeason<Team, Game> {
+export interface SlSeason<Team> {
   sample: SlSample
-  games: Game[]
   teams: Team[]
   families: SlFamily[]
 }
@@ -92,15 +79,33 @@ export interface SlPrices {
   refinement: number[]
 }
 
-export type SlBefore = SlSeason<SlBeforeTeam, SlBeforeGame> & { season: number }
+export type SlRow = [number: number, wins: number, losses: number]
+export type SlHeroRow = [number: number, wins: number, losses: number, againstField: number]
 
-export interface SlData extends SlSeason<SlTeam, SlGame> {
+// The prediction model's numbers, each keyed as the reader looks it up.
+export interface SlModel {
+  gap: number
+  emptySlot: number
+  typicalHeroes: number
+  typicalArtifact: number
+  fieldAgainst: Record<string, number>
+  heroes: Record<string, SlHeroRow>
+  // By the five hero ids in ascending order, joined with /.
+  lineups: Record<string, SlRow>
+  // By hero:group.
+  counters: Record<string, SlRow>
+  artifacts: Record<string, SlRow>
+  // By artifact:group.
+  artifactsOnKind: Record<string, SlRow>
+}
+
+export type SlBefore = SlSeason<SlBeforeTeam> & { season: number }
+
+export interface SlData extends SlSeason<SlTeam> {
   season: number
   // YYYY-MM-DD
   exportedAt: string
   maps: string[]
-  prior: number
-  alpha: number
   // The strict rule first, then the relaxed one.
   evidence: SlEvidence[]
   flex: { heroes: number; options: number }
@@ -110,6 +115,10 @@ export interface SlData extends SlSeason<SlTeam, SlGame> {
   order: number[]
   // What the placement engine is tuned with, for the engine's formations.
   placement: PlacementData
+  model: SlModel
+  // Per group, then one for teams outside every group: the artifacts a team
+  // turns to when its own are taken, first choice first.
+  fallback: number[][]
   before?: SlBefore
   beforeUnder?: number
 }

@@ -7,11 +7,10 @@
 
 import type { SlData, SlEvidence } from '../data/types'
 import { shortfall } from '../data/upgrades'
-import { sigmoid } from '../model/fit'
-import type { SlLearned } from '../model/models'
-import { oddsInto, winsNeeded } from '../model/odds'
+import { oddsInto, sigmoid, winsNeeded } from '../model/odds'
+import type { SlReader } from '../model/reader'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
-import { placementOf, swapsOf } from './boards'
+import { swapsOf } from './swaps'
 import type { SlChoice, SlPick } from './types'
 
 const CELESTIAL_HYPOGEAN = ['celestial', 'hypogean']
@@ -39,13 +38,12 @@ interface Found {
 
 function choose(
   data: SlData,
-  learned: SlLearned,
+  { model, kindOf }: SlReader,
   sources: number[],
   picked: ReadonlyMap<number, SlPick>,
   counts: (artifact: number) => boolean,
   boards: readonly number[],
 ): SlChoice | null {
-  const { model, kindOf } = learned
   const excluded = (id: number): boolean => !picked.has(id)
   const gap = (heroes: number[]): number =>
     -heroes.reduce((n, id) => n + shortfall(data.prices, picked.get(id)!), 0)
@@ -69,20 +67,18 @@ function choose(
       const found: Option[] = []
       for (const source of sources) {
         const s = source === 0 ? data : data.before!
-        const decided = (ids: number[]): number => ids.filter((i) => s.games[i]![1] !== 't').length
         const byFamily = new Map<number | null, number[]>()
-        s.games.forEach(([team], i) => {
-          const t = s.teams[team]!
+        s.teams.forEach((t, team) => {
           if (t.map !== map || t.heroes.some(excluded)) return
           if (!byFamily.has(t.family)) byFamily.set(t.family, [])
-          byFamily.get(t.family)!.push(i)
+          byFamily.get(t.family)!.push(team)
         })
-        for (const [family, ids] of byFamily) {
+        for (const [family, teams] of byFamily) {
           if (family === null && !proof.oneOffs) continue
-          if (decided(ids) < proof.groupGames) continue
-          for (const team of new Set(ids.map((i) => s.games[i]![0]))) {
+          if (teams.reduce((n, i) => n + s.teams[i]!.decided, 0) < proof.groupGames) continue
+          for (const team of teams) {
             const t = s.teams[team]!
-            const n = decided(t.games)
+            const n = t.decided
             if (n < 1 || !(t.players >= proof.players || n >= proof.games)) continue
             const kind = source === 0 ? t.family : kindOf(t.heroes)
             const claim = claimOf(source, team, kind)
@@ -229,7 +225,7 @@ function choose(
           chance: set.chances[i]!,
           comp: t.family === null ? null : s.families[t.family]!.perMap[t.map]!,
           artifact,
-          placement: placementOf(data, learned, t.source, t.team, counted),
+          placement: s.teams[t.team]!.pick?.find(([a]) => a === counted)?.[1] ?? 0,
           ...swaps,
         }
       }),
@@ -247,14 +243,14 @@ function choose(
  * game, so the set still hands them out and counts them as typical ones. */
 export function chooseSlSet(
   data: SlData,
-  learned: SlLearned,
+  reader: SlReader,
   picks: readonly SlPick[],
   counts: (artifact: number) => boolean,
   boards: readonly number[],
 ): SlChoice | null {
   const picked = new Map(picks.map((pick) => [pick.id, pick]))
   const { before, beforeUnder = 0 } = data
-  const chooseFrom = (sources: number[]) => choose(data, learned, sources, picked, counts, boards)
+  const chooseFrom = (sources: number[]) => choose(data, reader, sources, picked, counts, boards)
   if (!before) return chooseFrom([0])
   const held = new Set([...data.teams, ...before.teams].flatMap((t) => t.heroes))
   const rare = picks.filter(

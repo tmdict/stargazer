@@ -358,11 +358,6 @@ const warningText = (warning: WwwWarning): string => {
         }}</span>
       </div>
       <div class="www-row">
-        <span class="l">{{ panel.met.a }}</span>
-        <span class="c">{{ i18n.t('app.www-head-to-head') }}</span>
-        <span class="r">{{ panel.met.b }}</span>
-      </div>
-      <div class="www-row">
         <span v-for="side in SIDES" :key="side" :class="side === 'a' ? 'l' : 'r'">
           {{
             i18n.t('app.www-range', {

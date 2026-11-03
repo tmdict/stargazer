@@ -12,7 +12,7 @@ import { slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { suggestedUnits } from '@/lib/pvp/sl/generator/suggested'
 import { slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
-import { learnSeason } from '@/lib/pvp/sl/model/models'
+import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
 import { matchVariant, TEAM_VARIANTS } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
@@ -33,7 +33,7 @@ const fileOn = (keys: readonly string[]): SlData => ({
   maps: [...keys],
 })
 const data = fileOn(TEAM_VARIANTS.sl.maps)
-const learned = learnSeason(data)
+const reader = readSlFile(data)
 const faction = new Map(loadCharacters().map((c) => [c.id, c.faction]))
 const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((id, i) => ({
   id,
@@ -44,7 +44,7 @@ const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((i
 const chooseOn = (file: SlData, boards: SlBoard[], from = picks) =>
   chooseSlSet(
     file,
-    learned,
+    reader,
     from,
     () => true,
     boards.map((board) => board.source),
