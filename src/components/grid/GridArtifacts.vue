@@ -406,8 +406,9 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   fill: var(--tile-artifact-fill-hover);
 }
 
+/* Under auto an unfilled cell takes no pointer events inside it, so drops there are lost. */
 .artifact-cell.droppable {
-  pointer-events: auto;
+  pointer-events: all;
 }
 
 .artifact-cell.invalid-drop {
