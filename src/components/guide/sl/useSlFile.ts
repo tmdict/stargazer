@@ -50,7 +50,11 @@ export function useSlFile() {
       // A tab left open across a deploy asks for a file the deploy replaced, so
       // it reloads once. A browser that cannot decode the file never would.
       if (!active) return
-      if (typeof DecompressionStream === 'undefined' || !reloadOntoCurrentBuild(route.fullPath)) {
+      if (
+        typeof DecompressionStream === 'undefined' ||
+        !globalThis.crypto?.subtle ||
+        !reloadOntoCurrentBuild(route.fullPath)
+      ) {
         failed.value = true
       }
       return

@@ -6,7 +6,6 @@ import { configDefaults, defineConfig } from 'vitest/config'
 // These read the PvP data, which comes with the data pack. A copy without it
 // leaves them out and says so.
 const PVP_DATA_TESTS = [
-  'tests/integration/guideReports.test.ts',
   'tests/unit/content/pvpSeasons.test.ts',
   'tests/unit/sl/slData.test.ts',
   'tests/unit/sl/team.test.ts',

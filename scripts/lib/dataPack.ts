@@ -217,11 +217,18 @@ export function packProblems(
   ]) {
     if (!hasFile(pack, file)) problems.push(`the pack has no ${file}`)
   }
-  // The guide index links every summary to its report's page.
+  // The guide index links every summary to the report of the season it names.
   for (const file of listFiles(join(pack, 'pvp'))) {
-    const season = /^(s\d+)\/summary\.json$/.exec(file)?.[1]
-    if (season && !hasFile(pack, `pvp/${season}/index.template.html`)) {
-      problems.push(`the ${season} summary has no report in the pack`)
+    const folder = /^s(\d+)\/summary\.json$/.exec(file)?.[1]
+    if (!folder) continue
+    if (!hasFile(pack, `pvp/s${folder}/index.template.html`)) {
+      problems.push(`the s${folder} summary has no report in the pack`)
+    }
+    const { season } = JSON.parse(readFileSync(join(pack, 'pvp', file), 'utf8')) as {
+      season?: unknown
+    }
+    if (season !== Number(folder)) {
+      problems.push(`the s${folder} summary says season ${String(season)}`)
     }
   }
 

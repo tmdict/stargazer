@@ -105,7 +105,7 @@ describe('build checks', () => {
   })
 
   it('stop on a summary with no report', () => {
-    put('pack/pvp/s9/summary.json', '{}')
+    put('pack/pvp/s9/summary.json', '{ "season": 9 }')
     expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
       'the s9 summary has no report in the pack',
     ])
