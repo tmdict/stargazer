@@ -13,7 +13,7 @@ npm run dev
 
 Then open http://localhost:5173.
 
-The game's pictures and text come from a data pack kept outside this repo. Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder. The PvP reports and the team generator's data file come with the pack too. Without them the guide index lists no reports, the generator's page cannot load its data, and the tests of that data are skipped.
+The game's pictures and text come from a data pack, put together outside this repo from several sources. Without it the app runs with plain portraits and no skill text, and `npm run build` stops. To use one, copy `.env.example` to `.env.local` (gitignored) and set `DATA_PACK_DIR` to the pack's folder. The PvP reports and the team generator's data file come with the pack too. Without them the guide index lists no reports, the generator's page cannot load its data, and the tests of that data are skipped.
 
 ## Commands
 
@@ -29,7 +29,7 @@ npm run lint          # ESLint (lint:fix to auto-fix)
 npm run type-check    # vue-tsc
 npm run test          # all tests (test:unit, test:it, test:watch)
 npm run data          # copy the data pack into src/pack/ (dev, test and prep run it first)
-npm run data:pin      # pin the DATA_PACK_DIR folder's version in data.lock
+npm run data:pin      # record in data.lock the data pack version the build uses
 ```
 
 ## Common tasks
@@ -37,7 +37,7 @@ npm run data:pin      # pin the DATA_PACK_DIR folder's version in data.lock
 ### Adding a character
 
 1. Add `src/data/character/<name>.json`.
-2. Add the English and Chinese display names in `src/locales/character/<name>.json`. The Korean name, the game's own, is written into that file by the data export.
+2. Add the English and Chinese display names in `src/locales/character/<name>.json`. The Korean name, the game's own, is filled in by a pack update.
 3. Once the data pack holds the hero's portrait and skill text, run `npm run data:pin` so the build takes that version.
 
 The hero list, skill pages and search pick the character up from those files.

@@ -4,7 +4,7 @@ The `/skills` browser, skill modal and pre-rendered `/<code>/skill/<slug>` pages
 
 ## Skill text
 
-Skill text comes from the data pack, one folder per language, which the data export writes from the upstream feed. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
+Skill text comes from the data pack, one folder per language. `SKILL_LOCALES` is the one list of text languages, and the build stops while the pack lacks one's folder.
 
 Each hero's file, named by its slug, stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
@@ -23,9 +23,9 @@ In the terms file, `ultimate` and `ex` prefix slot headings. The remaining field
 }
 ```
 
-The data export requires terms and glossary metadata, identical hero and slot coverage across languages, and valid glossary references. It warns about missing heroes, invalid tag pins and initial-energy discrepancies. `hasSkillLocale` reads the English skill file names, without loading any language, to gate links and inspect gestures.
+`hasSkillLocale` reads the English skill file names, without loading any language, to gate links and inspect gestures.
 
-Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; the data export writes the Korean ones, the game's own, from the feed.
+Chrome names live in `src/locales/character/<slug>.json`. English and Chinese are curated; a pack update fills in the Korean ones, the game's own.
 
 ## Loading languages
 
@@ -58,9 +58,9 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Cooldowns and range
 
-The data export writes one language-independent file of skill numbers, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
+The data pack carries one language-independent file of skill numbers, which holds each slot's level-one values and only later changes, so a page listing every level can show a value chain. These are base values; changes from other skills remain in those skills' text.
 
-Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills. The data export reports discrepancies with the feed rather than overwriting hand-maintained hero data.
+Initial energy has a separate source: the hero data file's first `energy` number. The ultimate displays that base value, while tooltips and filters also count subsequent numbers added by skills.
 
 ## Pages and meta
 
@@ -72,7 +72,7 @@ Descriptions are extracted at build time from the first article's first two skil
 
 ## Tags
 
-Tags are hand-maintained in `src/data/character/<slug>.json`; the data export only validates their pins:
+Tags are hand-maintained in `src/data/character/<slug>.json`:
 
 ```jsonc
 "tags": {
