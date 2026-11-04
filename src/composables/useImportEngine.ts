@@ -31,10 +31,10 @@ import {
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
-import { FORMATION_MAX_WIDTH, FORMATION_MIN_WIDTH } from '@/lib/import/screens/formation/formation'
-import { MATCHUP_MAX_WIDTH, MATCHUP_MIN_WIDTH } from '@/lib/import/screens/matchup/layout'
+import { FORMATION_MAX_WIDTH } from '@/lib/import/screens/formation/formation'
+import { MATCHUP_MAX_WIDTH } from '@/lib/import/screens/matchup/layout'
 import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
-import { ROSTER_MAX_WIDTH, ROSTER_MIN_WIDTH } from '@/lib/import/screens/roster/roster'
+import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/roster'
 import { SORT_WIDTH } from '@/lib/import/sort'
 import { useGameDataStore } from '@/stores/gameData'
 import { loadImportFrames, loadMatcherPortraits, loadOutfitPortraits } from '@/utils/dataLoader'
@@ -95,14 +95,19 @@ export interface IntakeResult {
   refused: Partial<Record<ImportKind, number>>
 }
 
-// The widths each kind is read within: narrower is refused, wider is drawn
-// down to the most.
-const DECODE_WIDTHS: Record<ImportKind, { min: number; max: number }> = {
-  result: { min: 600, max: RESULT_MAX_WIDTH },
-  formation: { min: FORMATION_MIN_WIDTH, max: FORMATION_MAX_WIDTH },
-  replay: { min: 600, max: RESULT_MAX_WIDTH },
-  roster: { min: ROSTER_MIN_WIDTH, max: ROSTER_MAX_WIDTH },
-  matchup: { min: MATCHUP_MIN_WIDTH, max: MATCHUP_MAX_WIDTH },
+// A narrower screenshot is refused unread. Shrunk to 400 px, the labelled
+// samples of every kind still read with at most two wrong readings marked sure;
+// at 300 px the matchup lists and result screens give over a dozen each, which
+// the review would not ask about.
+const MIN_WIDTH = 400
+
+// Each kind is drawn down to its width when wider.
+const MAX_WIDTHS: Record<ImportKind, number> = {
+  result: RESULT_MAX_WIDTH,
+  formation: FORMATION_MAX_WIDTH,
+  replay: RESULT_MAX_WIDTH,
+  roster: ROSTER_MAX_WIDTH,
+  matchup: MATCHUP_MAX_WIDTH,
 }
 
 const PARTS: readonly ReferencePart[] = ['heroes', 'match']
@@ -585,11 +590,14 @@ const decodeFile = async (file: Blob): Promise<ImageBitmap | null> => {
 // part it needs failed the shot fails too, but its pixels stay queued for the
 // retry the next added shot makes.
 const queueShot = (shot: EngineShot, bitmap: ImageBitmap | null): void => {
-  const { min, max } = DECODE_WIDTHS[shot.kind]
   if (!bitmap) return failShot(shot, 'unsupported')
-  if (bitmap.width < min) return failShot(shot, 'too-small')
+  if (bitmap.width < MIN_WIDTH) return failShot(shot, 'too-small')
   try {
-    queue.push({ id: shot.id, image: drawUpToWidth(bitmap, max), kind: shot.kind })
+    queue.push({
+      id: shot.id,
+      image: drawUpToWidth(bitmap, MAX_WIDTHS[shot.kind]),
+      kind: shot.kind,
+    })
   } catch {
     return failShot(shot, 'unsupported')
   }

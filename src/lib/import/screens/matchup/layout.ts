@@ -6,10 +6,8 @@
 import type { StarRow } from '../../card/stars'
 
 // A matchup shot is read at its own size up to this width: each card is read
-// rescaled, so a wider capture only costs decoding. The narrowest sample is 1178
-// px wide; at the least, a card is about 80 px wide.
+// rescaled, so a wider capture only costs decoding.
 export const MATCHUP_MAX_WIDTH = 2560
-export const MATCHUP_MIN_WIDTH = 900
 
 // The five cards' frame template boxes: `w` wide, `pitch` apart from `x` in, `y`
 // below the bar's top.

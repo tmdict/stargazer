@@ -22,7 +22,6 @@ import type { BoardFit, FormationReading, UnitReading } from './types'
 // A formation shot is read at its own size, which the board fit measures, up
 // to a width that keeps a full-resolution phone capture quick to read.
 export const FORMATION_MAX_WIDTH = 1200
-export const FORMATION_MIN_WIDTH = 400
 
 const luminance = (img: RgbaImage, x: number, y: number): number => {
   const xi = Math.round(x)

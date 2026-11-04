@@ -35,9 +35,8 @@ const CREAM = { vMin: 0.8, vMax: 0.985, greyS: 0.04, s: 0.13, h: [20, 65] } as c
 export const WORK_MAX = 1000
 // A roster shot is read at its own size up to this width: the grid is found on a
 // copy WORK_MAX wide and each card is read rescaled, so a wider capture only costs
-// decoding. Narrower than the least, its cards are too small to read.
+// decoding.
 export const ROSTER_MAX_WIDTH = 2560
-export const ROSTER_MIN_WIDTH = 600
 // The star row of a card read at READ_WIDTH, larger than a result card's: on the
 // labelled roster shots a refined row's stars are 9.8 to 10 px apart, centred
 // from 0.1 px right to 0.6 px left of the box's middle, and a seven-row band

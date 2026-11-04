@@ -144,7 +144,7 @@ A card or an artifact asks about two things (`WwwIssue`), and both hold back Sav
 
 ## What a screenshot needs
 
-A result screen, replay frame or roster screenshot must be at least 600 px wide, a formation panel `FORMATION_MIN_WIDTH` and a matchup list `MATCHUP_MIN_WIDTH`. Wider captures are drawn down, so only decoding costs more. A roster's six columns must span at least a fifth of the capture's width.
+Every screenshot must be at least 400 px wide; narrower ones are refused unread. Wider captures are drawn down, so only decoding costs more. A roster's six columns must span at least a fifth of the capture's width.
 
 Other game languages are untested on the match screens. The result tabs' lettering is skipped as small gaps, so a language whose label covers much more of a tab could hide the tabs, and the reader then finds the panel from its cards. The roster screen reads in French as in English. A game update that moves or recolours a landmark stops that screen reading until its reader is measured again on new samples.
 
