@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import PhantimalTooltip from './PhantimalTooltip.vue'
 import HoldRing from './ui/HoldRing.vue'
-import TooltipCard from './ui/TooltipCard.vue'
-import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { useUnitTooltipRows } from '@/composables/useUnitTooltipRows'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
@@ -18,7 +16,6 @@ import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalDisplayName } from '@/utils/nameFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
   phantimals: readonly PhantimalType[]
@@ -27,7 +24,6 @@ const { phantimals, isDraggable = false } = defineProps<{
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
-const { traitRow, rangeRow } = useUnitTooltipRows()
 const { fillOrder, targetHexId, targetTile, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
 
@@ -134,13 +130,7 @@ const {
   onTouchStart: onPortraitTouchStart,
 } = useHoverTooltip<PhantimalType>()
 
-const tooltipName = computed(() => {
-  const phantimal = hovered.value
-  if (!phantimal) return ''
-  return phantimalDisplayName(i18n.currentLocale, phantimal.name)
-})
-
-const tooltipRows = computed(() => {
+const availability = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return []
   const id = toPhantimalId(phantimal.id)
@@ -150,10 +140,6 @@ const tooltipRows = computed(() => {
     ? 'app.phantimal-deployable'
     : 'app.phantimal-locked'
   return [
-    traitRow('faction', phantimal.faction),
-    traitRow('class', phantimal.class),
-    traitRow('damage', phantimal.damage),
-    rangeRow(phantimal.range),
     {
       label: `${i18n.t('app.availability')}:`,
       value: i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT }),
@@ -209,17 +195,13 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
       </div>
     </div>
 
-    <Teleport to="body">
-      <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="detailed">
-        <template #content>
-          <TooltipCard
-            :name="tooltipName"
-            :rows="tooltipRows"
-            :hint="i18n.t('app.hold-for-details')"
-          />
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <PhantimalTooltip
+      v-if="hovered && hoveredEl"
+      :phantimal="hovered"
+      :target-element="hoveredEl"
+      :extra-rows="availability"
+      :hint="i18n.t('app.hold-for-details')"
+    />
   </section>
 </template>
 

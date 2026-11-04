@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
+import PhantimalTooltip from '../PhantimalTooltip.vue'
 import HoldRing from '../ui/HoldRing.vue'
 import IconInfo from '../ui/IconInfo.vue'
 import TooltipPopup from '../ui/TooltipPopup.vue'
@@ -22,11 +23,12 @@ import {
   isBaseHeroId,
   toBaseHeroId,
 } from '@/lib/characters/character'
-import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import type { BadgeIcon } from '@/lib/types/unitBadge'
 import { useGameDataStore } from '@/stores/gameData'
@@ -62,20 +64,28 @@ const gridEvents = useGridEvents()
 const { startDrag, endDrag } = useDragDrop()
 const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
-// Hover tooltip: the same character card as the picker. Dismissed on any
-// placement change, since an icon removed/swapped from under a still cursor
+// Hover tooltip: the same hero or phantimal card as the pickers. Dismissed on
+// any placement change, since an icon removed/swapped from under a still cursor
 // fires no mouseleave.
+type HoverCard =
+  { kind: 'hero'; hero: CharacterType } | { kind: 'phantimal'; phantimal: PhantimalType }
 const {
   hoveredEl,
-  hovered: hoveredCharacter,
+  hovered: hoveredCard,
   show,
   hide: hideTooltip,
-} = useGridHoverTooltip<CharacterType>(() => ctx.placements)
+} = useGridHoverTooltip<HoverCard>(() => ctx.placements)
 
-// A synergy copy keeps its hero's card; companions and phantimals have none.
-const baseCharacterAt = (characterId: number): CharacterType | undefined => {
+// A synergy copy keeps its hero's card; companions, a phantimal's included,
+// have none.
+const cardAt = (characterId: number): HoverCard | undefined => {
+  if (isPhantimalId(characterId)) {
+    const phantimal = gameDataStore.getPhantimalById(characterId)
+    return phantimal && { kind: 'phantimal', phantimal }
+  }
   const { localId } = decomposeUnitId(characterId)
-  return isBaseHeroId(localId) ? props.characters.find((c) => c.id === localId) : undefined
+  const hero = isBaseHeroId(localId) ? props.characters.find((c) => c.id === localId) : undefined
+  return hero && { kind: 'hero', hero }
 }
 
 // Inspect (long-press, right-click, the lifted unit's Skills button).
@@ -112,11 +122,11 @@ const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number
   if (!props.isMapEditorMode && inspectTargetOf(characterId)) onContextMenu(event, hexId)
 }
 
-const hoverHint = computed(() =>
-  hoveredCharacter.value && heroInspectTarget(hoveredCharacter.value)
-    ? i18n.t('app.hold-for-skills')
-    : undefined,
-)
+const hoverHint = computed(() => {
+  const card = hoveredCard.value
+  if (card?.kind === 'phantimal') return i18n.t('app.hold-for-details')
+  return card && heroInspectTarget(card.hero) ? i18n.t('app.hold-for-skills') : undefined
+})
 
 // Where a point dy screen pixels below a sprite's center lands on the layer.
 // Perspective lifts the sprite and squashes it about its center
@@ -132,13 +142,13 @@ const spriteLayerY = (hexId: number, dy: number): number => {
 const LIFT_PILL_GAP = 8
 const LIFT_PILL_ROOM = LIFT_PILL_GAP + 24
 
-// Anchored to the lifted unit's visual top edge, or below the unit when it would
-// leave the band the board draws in (drawnBounds), where team view's crop would
-// cut it off.
 // Exposed so Placement tips' card stays clear of it.
 const liftActionsEl = ref<HTMLElement | null>(null)
 defineExpose({ liftActionsEl })
 
+// Anchored to the lifted unit's visual top edge, or below the unit when it would
+// leave the band the board draws in (drawnBounds), where team view's crop would
+// cut it off.
 const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
@@ -322,7 +332,7 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
   gridEvents.emit('character:mouseenter', hexId)
   const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
-  if (props.showHover || (props.showRules && enemy)) show(event, baseCharacterAt(characterId))
+  if (props.showHover || (props.showRules && enemy)) show(event, cardAt(characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
@@ -536,10 +546,16 @@ const liftedMode = computed(() =>
     </Teleport>
 
     <CharacterTooltip
-      v-if="hoveredEl && hoveredCharacter"
-      :character="hoveredCharacter"
+      v-if="hoveredEl && hoveredCard?.kind === 'hero'"
+      :character="hoveredCard.hero"
       :target-element="hoveredEl"
       variant="detailed"
+      :hint="hoverHint"
+    />
+    <PhantimalTooltip
+      v-else-if="hoveredEl && hoveredCard?.kind === 'phantimal'"
+      :phantimal="hoveredCard.phantimal"
+      :target-element="hoveredEl"
       :hint="hoverHint"
     />
   </div>
