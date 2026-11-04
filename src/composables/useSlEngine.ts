@@ -5,7 +5,7 @@
 
 import { onMounted, readonly, ref } from 'vue'
 
-import type { BoardFormation } from '@/lib/pvp/sl/generator/formation'
+import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
@@ -17,7 +17,10 @@ type SlEngineStatus = 'loading' | 'ready' | 'failed'
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
 let nextId = 0
-type Answer = Extract<SlResponse, { type: 'generated' | 'placed' | 'swapped' | 'predicted' }>
+type Answer = Extract<
+  SlResponse,
+  { type: 'generated' | 'placed' | 'placedEngine' | 'swapped' | 'predicted' }
+>
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
 const fail = (): void => {
@@ -64,15 +67,22 @@ export function useSlEngine() {
     return answer.set
   }
 
-  // Each board of a set as drawn, and why each unit stands there.
-  const place = async (
-    set: SlChoice,
-    boards: SlBoard[],
-    everyBoard: boolean,
-  ): Promise<BoardFormation[]> => {
-    const answer = await ask((id) => ({ type: 'place', id, set, boards, everyBoard }))
+  // Each board of a set as first drawn, and why each unit stands there.
+  const place = async (set: SlChoice, boards: SlBoard[]): Promise<BoardDraw[]> => {
+    const answer = await ask((id) => ({ type: 'place', id, set, boards }))
     if (answer.type !== 'placed') throw new Error('The worker answered another request')
     return answer.boards
+  }
+
+  // The engine's formations of the boards `which` names, by index.
+  const placeEngine = async (
+    set: SlChoice,
+    boards: SlBoard[],
+    which: number[],
+  ): Promise<BoardFormation[]> => {
+    const answer = await ask((id) => ({ type: 'placeEngine', id, set, boards, which }))
+    if (answer.type !== 'placedEngine') throw new Error('The worker answered another request')
+    return answer.formations
   }
 
   const swap = async (request: SwapRequest): Promise<SwapPreview> => {
@@ -87,5 +97,5 @@ export function useSlEngine() {
     return answer.panel
   }
 
-  return { status: readonly(status), generate, place, swap, predict }
+  return { status: readonly(status), generate, place, placeEngine, swap, predict }
 }

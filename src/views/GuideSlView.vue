@@ -7,10 +7,11 @@
    boards are. The picker edits a copy of the active roster, so trying a hero
    out never changes the roster, and picking or importing another roster takes
    a fresh copy. The set is chosen only on Generate and stays as it is while the
-   selection, the type or the formation changes. The formation says whether
-   Generate draws the set as recorded or in the engine's formations, worked out
-   in the worker, and a map with no recorded teams takes the engine's either
-   way. Save as team opens the set on the Teams page as drawn.
+   selection or the type changes. A board draws the formation of its team's
+   recorded game where the team was recorded on its map, and the engine's
+   elsewhere; the engine's formations of the recorded boards, which their
+   switches show, are worked out in the worker once the set is drawn. Save as team opens the set
+   on the Teams page as drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */
@@ -20,9 +21,8 @@ import { useRouter } from 'vue-router'
 
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar from '@/components/guide/sl/SlBar.vue'
-import type { SlFormation } from '@/components/guide/sl/SlFormationPicker.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import SlResult, { type SlShown } from '@/components/guide/sl/SlResult.vue'
+import SlResult, { type SlShown, type SlShownTeam } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { slPercent } from '@/components/guide/sl/useSlNames'
@@ -36,10 +36,11 @@ import {
   TOP_LEVELS,
   type AttrRecord,
 } from '@/lib/characters/attributes'
-import { slBoards, slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
+import { shownFormation, type BoardFormation } from '@/lib/pvp/sl/generator/formation'
+import { slBoards, slSetMode, type SlBoard, type SlSetType } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
-import type { SlPick } from '@/lib/pvp/sl/generator/types'
+import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
@@ -64,6 +65,7 @@ const {
   status: engineStatus,
   generate: generateSet,
   place: placeSet,
+  placeEngine,
   swap: previewSwap,
 } = useSlEngine()
 
@@ -104,9 +106,19 @@ const edit = (changes: Record<string, AttrRecord | null>): void => {
 const armedConfirm = useArmedConfirm()
 
 const type = ref<SlSetType>('sl')
-const formation = ref<SlFormation>('recorded')
 
 const shown = ref<SlShown | null>(null)
+// The boards switched to the engine's formation, by index.
+const engineOn = ref<boolean[]>([])
+const drawn = computed(
+  () =>
+    shown.value &&
+    shown.value.encode(
+      shown.value.teams.map((team, index) => shownFormation(team, !!engineOn.value[index])),
+    ),
+)
+// Counts Generate presses, so a formation worked out for an earlier set is dropped.
+let generations = 0
 // How many teams the last Generate could not make; 0 when it made them.
 const noSet = ref(0)
 const busy = ref(false)
@@ -127,55 +139,80 @@ const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
       : []
   })
 
+// A worker that cannot answer leaves the switches on the recorded games.
+const fillEngine = async (
+  generation: number,
+  set: SlChoice,
+  boards: SlBoard[],
+  which: number[],
+): Promise<void> => {
+  let found: BoardFormation[]
+  try {
+    found = await placeEngine(set, boards, which)
+  } catch {
+    return
+  }
+  if (generation !== generations || !shown.value) return
+  which.forEach((index, k) => {
+    shown.value!.teams[index]!.engine = found[k]!
+  })
+}
+
 const generate = async (): Promise<void> => {
   const file = slFile()
   if (!file) return
   busy.value = true
+  const generation = ++generations
   try {
     const picks = picksOf(copy.value)
     const chosenFor = type.value
-    const everyBoard = formation.value === 'suggested'
     const boards = slBoards(file, chosenFor)
     const set = await generateSet(picks, boards)
-    const formations = set ? await placeSet(set, boards, everyBoard) : []
-    // Each swap is tried once per set, when first shown.
+    const draws = set ? await placeSet(set, boards) : []
+    // Each swap is tried once per set and formation, when first shown.
     const tried = new Map<string, Promise<SwapPreview | null>>()
+    const teams = (set?.teams ?? []).map((t, index): SlShownTeam => {
+      const board = boards[index]!
+      const family = t.family === null ? null : choiceSeason(file, t).families[t.family]!
+      return {
+        map: board.map,
+        group: family && { name: family.name, core: family.core },
+        // The comp's record is from the map its teams came from.
+        comp: board.recorded ? t.comp : null,
+        core: t.core,
+        flex: t.flex,
+        pairs: t.pairs,
+        chance: t.chance,
+        ...draws[index]!,
+        trySwap: (out: number[], into: number[], engine: boolean) => {
+          const key = `${index}|${engine}|${out.join()}|${into.join()}`
+          let found = tried.get(key)
+          if (!found) {
+            // Copies, since the page's reactive lists cannot be posted to the worker.
+            const units = shownFormation(teams[index]!, engine).units.map(
+              ([hexId, unit]): [number, number] => [hexId, unit],
+            )
+            const swap = { board, team: t, units, out: [...out], into: [...into], picks }
+            found = previewSwap(swap).catch(() => null)
+            tried.set(key, found)
+          }
+          return found
+        },
+      }
+    })
+    engineOn.value = []
     shown.value = set && {
       type: chosenFor,
       chance: set.chance,
       odds: set.odds,
       beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
-      teams: set.teams.map((t, index) => {
-        const board = boards[index]!
-        const family = t.family === null ? null : choiceSeason(file, t).families[t.family]!
-        return {
-          map: board.map,
-          group: family && { name: family.name, core: family.core },
-          // The comp's record is from the map its teams came from.
-          comp: board.recorded ? t.comp : null,
-          core: t.core,
-          flex: t.flex,
-          pairs: t.pairs,
-          chance: t.chance,
-          why: formations[index]!.why,
-          trySwap: (out: number[], into: number[]) => {
-            const key = `${index}|${out.join()}|${into.join()}`
-            let found = tried.get(key)
-            if (!found) {
-              const { units } = formations[index]!
-              // Copies, since the page's reactive lists cannot be posted to the worker.
-              const swap = { board, team: t, units, out: [...out], into: [...into], picks }
-              found = previewSwap(swap).catch(() => null)
-              tried.set(key, found)
-            }
-            return found
-          },
-        }
-      }),
-      data: slTeamData(file, set, picks, boards, formations),
+      teams,
+      encode: (formations) => slTeamData(file, set, picks, boards, formations),
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false
+    const which = draws.flatMap((draw, index) => (draw.engine ? [] : [index]))
+    if (set && which.length) void fillEngine(generation, set, boards, which)
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker or here.
@@ -218,7 +255,7 @@ const save = (): void => {
     shown.value.type === 'sl'
       ? i18n.t('app.sl-team-name', { chance })
       : i18n.t('app.sl-team-name-mode', { mode, chance })
-  const team = library.saveAsNew(mode, shown.value.data, name)
+  const team = library.saveAsNew(mode, drawn.value!, name)
   if (!team) {
     // The library re-reads storage first, so another tab may have filled it.
     error(
@@ -260,14 +297,20 @@ const save = (): void => {
     </p>
 
     <div v-if="mounted" ref="result" class="sl-result-slot">
-      <SlResult v-if="shown" :shown :save-armed @save="save" />
+      <SlResult
+        v-if="shown && drawn"
+        v-model:engine-on="engineOn"
+        :shown
+        :data="drawn"
+        :save-armed
+        @save="save"
+      />
       <p v-else-if="noSet" class="sl-line">{{ i18n.t('app.sl-no-set', { count: noSet }) }}</p>
     </div>
 
     <section v-if="mounted" class="sl-panel sl-picker">
       <SlBar
         v-model:type="type"
-        v-model:formation="formation"
         :busy
         :ready="!!heading && engineStatus === 'ready'"
         :waiting="!failed && engineStatus === 'loading'"

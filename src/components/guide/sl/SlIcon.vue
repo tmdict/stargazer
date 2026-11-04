@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The icons under a generated set's boards. */
+/* The icons on and under a generated set's boards. */
 
 import { computed } from 'vue'
 
@@ -8,7 +8,7 @@ const {
   label,
   share = 0,
 } = defineProps<{
-  name: 'players' | 'record' | 'chance' | 'lock' | 'swap' | 'arrow'
+  name: 'players' | 'record' | 'chance' | 'lock' | 'swap' | 'arrow' | 'check' | 'sparkle'
   label?: string
   // How much of the chance icon's ring is filled, from 0 to 1.
   share?: number
@@ -65,6 +65,20 @@ const wedge = computed(() => {
       stroke-width="2.2"
       stroke-linecap="round"
       stroke-linejoin="round"
+    />
+    <path
+      v-else-if="name === 'check'"
+      d="M6 12.5l4 4 8-9"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      v-else-if="name === 'sparkle'"
+      d="M11 3.5c.6 4.2 2.3 5.9 6.5 6.5-4.2.6-5.9 2.3-6.5 6.5-.6-4.2-2.3-5.9-6.5-6.5 4.2-.6 5.9-2.3 6.5-6.5zM18 14.5c.3 1.9 1 2.6 2.9 2.9-1.9.3-2.6 1-2.9 2.9-.3-1.9-1-2.6-2.9-2.9 1.9-.3 2.6-1 2.9-2.9z"
+      fill="currentColor"
     />
     <path
       v-else

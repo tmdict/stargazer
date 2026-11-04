@@ -1,22 +1,20 @@
 <script lang="ts">
-import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
+import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
 
-// A chosen team as the page shows it, read off the data file once.
-export interface SlShownTeam extends Pick<
-  SlChoiceTeam,
-  'comp' | 'core' | 'flex' | 'pairs' | 'chance'
-> {
+// A chosen team as the page shows it, read off the data file once, with its
+// board's formations.
+export interface SlShownTeam
+  extends Pick<SlChoiceTeam, 'comp' | 'core' | 'flex' | 'pairs' | 'chance'>, BoardDraw {
   // The map's place in the set's type's list.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
-  // Why each unit stands where it does.
-  why: PlacementExplanation
-  // A swap tried on the board as drawn, null when the worker cannot answer.
-  trySwap: (out: number[], into: number[]) => Promise<SwapPreview | null>
+  // A swap tried on the board in the engine's formation or as first drawn,
+  // null when the worker cannot answer.
+  trySwap: (out: number[], into: number[], engine: boolean) => Promise<SwapPreview | null>
 }
 
 export interface SlShown {
@@ -29,9 +27,9 @@ export interface SlShown {
   // null when the data file has none.
   beforeUnder: number | null
   teams: SlShownTeam[]
-  // The set as one encoded team: the boards drawn here, and what Save as team
-  // stores.
-  data: string
+  // The set as one encoded team with each board in the formation given, as
+  // the page draws it and Save as team stores it.
+  encode: (formations: readonly Pick<BoardFormation, 'units'>[]) => string
 }
 </script>
 
@@ -55,12 +53,24 @@ import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slMood, slPercent } from './useSlNames'
 
-const { shown, saveArmed } = defineProps<{ shown: SlShown; saveArmed: boolean }>()
+// data: the set encoded with each board as drawn.
+const { shown, data, saveArmed } = defineProps<{
+  shown: SlShown
+  data: string
+  saveArmed: boolean
+}>()
 
 const emit = defineEmits<{ save: [] }>()
 
+const engineOn = defineModel<boolean[]>('engineOn', { required: true })
+
 const i18n = useI18nStore()
-const boards = computed(() => teamPreviewBoards(shown.data) ?? [])
+const boards = computed(() => teamPreviewBoards(data) ?? [])
+const switchBoard = (index: number, engine: boolean): void => {
+  const next = shown.teams.map((_, i) => !!engineOn.value[i])
+  next[index] = engine
+  engineOn.value = next
+}
 const explaining = ref(false)
 
 const {
@@ -122,7 +132,8 @@ const {
         :key="index"
         :team
         :board="boards[index]"
-        :why="team.why"
+        :engine="!!engineOn[index]"
+        @switch="switchBoard(index, $event)"
       />
     </div>
 

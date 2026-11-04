@@ -373,10 +373,7 @@ const SKILL = {
           <li>
             <span>
               Choose <b>SL</b> for the Supreme League maps, <b>5v5</b> to use map 1 for all five, or
-              <b>3v3</b> to use it for all three. Choose <b>Recorded</b> to see each team as players
-              placed it in recorded games, or <b>Generated</b> to have each hero's tile worked out
-              for you. A map with no recorded games yet is always generated. Then press
-              <b>Generate</b>.
+              <b>3v3</b> to use it for all three. Then press <b>Generate</b>.
             </span>
           </li>
           <li>
@@ -392,6 +389,12 @@ const SKILL = {
           Under each map, <SlIcon name="players" class="help-inline-icon" /> is how many players
           used that team's comp on the map, and <SlIcon name="record" class="help-inline-icon" />
           the comp's wins and losses there.
+        </li>
+        <li>
+          <SlIcon name="check" class="help-inline-icon" /> on a board marks a formation players used
+          in a recorded game. <SlIcon name="sparkle" class="help-inline-icon" /> next to it shows
+          where each hero would stand by the team's skills, which is how every other board is
+          placed.
         </li>
         <li>
           <SlIcon name="lock" class="help-inline-icon" /> marks the core heroes, which stay.

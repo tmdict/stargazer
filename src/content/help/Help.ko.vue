@@ -379,9 +379,6 @@ const SKILL = {
             <span>
               유형을 고른 뒤 <b>생성</b>을 누르세요. <b>최강자 리그</b>는 최강자 리그 맵을 쓰고,
               <b>5v5</b> 유형은 다섯 맵 모두, <b>3v3</b> 유형은 세 맵 모두 맵 1을 씁니다.
-              <b>기록</b>은 기록된 전투에서 플레이어가 배치한 그대로 각 팀을 보여 주고,
-              <b>자동 생성</b>은 각 영웅이 설 자리를 정해 줍니다. 아직 기록된 전투가 없는 맵은 항상
-              자동 생성됩니다.
             </span>
           </li>
           <li>
@@ -397,6 +394,11 @@ const SKILL = {
           각 맵 아래의 <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의
           조합을 쓴 플레이어 수이고, <SlIcon name="record" class="help-inline-icon" /> 옆에는 그
           맵에서 이 조합의 승패가 나옵니다.
+        </li>
+        <li>
+          <SlIcon name="check" class="help-inline-icon" /> 표시가 있는 보드는 플레이어가 기록된
+          전투에서 사용한 배치입니다. 옆의 <SlIcon name="sparkle" class="help-inline-icon" />을
+          누르면 팀의 스킬에 따라 정한 자리를 볼 수 있으며, 다른 보드는 모두 이렇게 배치됩니다.
         </li>
         <li>
           <SlIcon name="lock" class="help-inline-icon" /> 표시 옆의 영웅은 바뀌지 않는 핵심

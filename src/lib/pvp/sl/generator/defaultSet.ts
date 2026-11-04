@@ -8,7 +8,7 @@ import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
 import { readSlFile } from '../model/reader'
 import { chooseSlSet } from './chooser'
-import { boardFormations } from './formation'
+import { boardDraws, shownFormation } from './formation'
 import { slBoards } from './setType'
 import { slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
@@ -44,7 +44,13 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
   )
   if (!set) return null
   return {
-    data: slTeamData(file, set, picks, boards, boardFormations(file, set, boards, false)),
+    data: slTeamData(
+      file,
+      set,
+      picks,
+      boards,
+      boardDraws(file, set, boards).map((draw) => shownFormation(draw, false)),
+    ),
     teams: set.teams.map((t, index) => ({
       map: boards[index]!.map,
       core: t.core,

@@ -5,7 +5,12 @@
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
-import { boardFormations, type BoardFormation } from '@/lib/pvp/sl/generator/formation'
+import {
+  boardDraws,
+  engineFormation,
+  type BoardDraw,
+  type BoardFormation,
+} from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
@@ -15,7 +20,8 @@ import { artifactSurvives } from '@/lib/seasonal'
 
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[] }
-  | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[]; everyBoard: boolean }
+  | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[] }
+  | { type: 'placeEngine'; id: number; set: SlChoice; boards: SlBoard[]; which: number[] }
   | { type: 'swap'; id: number; swap: SwapRequest }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
@@ -23,7 +29,8 @@ export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
-  | { type: 'placed'; id: number; boards: BoardFormation[] }
+  | { type: 'placed'; id: number; boards: BoardDraw[] }
+  | { type: 'placedEngine'; id: number; formations: BoardFormation[] }
   | { type: 'swapped'; id: number; preview: SwapPreview }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
@@ -51,8 +58,13 @@ scope.addEventListener('message', async (event) => {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'place') {
-      const boards = boardFormations(data, msg.set, msg.boards, msg.everyBoard)
+      const boards = boardDraws(data, msg.set, msg.boards)
       scope.postMessage({ type: 'placed', id: msg.id, boards })
+    } else if (msg.type === 'placeEngine') {
+      const formations = msg.which.map((index) =>
+        engineFormation(data, msg.set.teams[index]!, msg.boards[index]!),
+      )
+      scope.postMessage({ type: 'placedEngine', id: msg.id, formations })
     } else if (msg.type === 'swap') {
       const preview = previewSwap(data, reader, fit, counts, msg.swap)
       scope.postMessage({ type: 'swapped', id: msg.id, preview })

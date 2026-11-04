@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import SlFormationPicker from '@/components/guide/sl/SlFormationPicker.vue'
+import SlFormationSwitch from '@/components/guide/sl/SlFormationSwitch.vue'
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
 import SlTypePicker from '@/components/guide/sl/SlTypePicker.vue'
@@ -56,7 +56,6 @@ const characterId = (slug: string): number =>
         </div>
         <div class="help-mock-bar help-sl-choices">
           <SlTypePicker type="sl" />
-          <SlFormationPicker formation="recorded" />
           <span class="solid-btn help-sl-action">{{ label('sl-generate') }}</span>
         </div>
         <div class="help-heroes">
@@ -74,7 +73,10 @@ const characterId = (slug: string): number =>
 
     <template #to>
       <HelpMock :caption="interpolate(label('sl-map'), { n: 1 })" data-theme="dark">
-        <HelpBoard class="help-sl-board" :tokens="TEAM" />
+        <div class="help-sl-board">
+          <SlFormationSwitch :engine="false" ready :moved="[]" />
+          <HelpBoard :tokens="TEAM" />
+        </div>
         <div class="help-sl-aside">
           <span />
           <span class="help-sl-stats">
@@ -106,9 +108,17 @@ const characterId = (slug: string): number =>
 }
 
 .help-sl-board {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   width: 190px;
   margin: 4px auto 0;
+}
+
+.help-sl-board > :last-child {
+  display: block;
+  width: 100%;
 }
 
 .help-sl-aside {

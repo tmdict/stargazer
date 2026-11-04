@@ -1,5 +1,7 @@
 <script setup lang="ts">
-/* One map of the set: the board, its artifact on its cell, then the comp's
+/* One map of the set: the board, its artifact on its cell, the switch between
+   the formation of a recorded game and the engine's on a board that has one,
+   then the comp's
    record on the map, the team's chance to win the map, the core heroes to keep
    and the swaps recorded in place of one hero or two. A win rate shows from eight decided games, green from
    60% and red to 40%, as the report colours one. Its host sizes it: --pt for
@@ -11,24 +13,28 @@
 
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
+import SlFormationSwitch from './SlFormationSwitch.vue'
 import SlIcon from './SlIcon.vue'
 import SlMapBoard from './SlMapBoard.vue'
 import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
 import SlSwapCard from './SlSwapCard.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
-import type { PlacementExplanation } from '@/lib/placement/explain'
+import { shownFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent } from './useSlNames'
 
-const { team } = defineProps<{
+// engine: the board shows the engine's formation in place of a recorded game's.
+const { team, engine = false } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
-    Partial<Pick<SlShownTeam, 'chance' | 'trySwap'>>
+    Partial<Pick<SlShownTeam, 'chance' | 'trySwap' | 'played' | 'engine'>>
   board: PreviewBoard | undefined
-  why?: PlacementExplanation | null
+  engine?: boolean
 }>()
+
+const emit = defineEmits<{ switch: [engine: boolean] }>()
 
 const TONE_GAMES = 8
 
@@ -57,12 +63,17 @@ const boardBox = {
   getBoundingClientRect: (): DOMRect => boardView.value?.box() ?? new DOMRect(),
 }
 const canTry = computed(() => !!team.trySwap && team.chance !== undefined)
+const why = computed(() =>
+  team.played || team.engine
+    ? shownFormation({ played: team.played ?? null, engine: team.engine ?? null }, engine).why
+    : null,
+)
 
 // The worker answers after a moment, by when another swap may be shown.
 watch(tried, async (swap) => {
   preview.value = null
   if (!swap || !team.trySwap) return
-  const found = await team.trySwap(swap.out, swap.into)
+  const found = await team.trySwap(swap.out, swap.into, engine)
   if (tried.value === swap) preview.value = found
 })
 
@@ -85,6 +96,14 @@ const stats = computed(() => !!record.value || team.chance !== undefined)
 <template>
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
     <SlMapBoard v-if="board" ref="board" :board :why :swap="preview" />
+    <SlFormationSwitch
+      v-if="board && team.played"
+      class="sl-formation-switch"
+      :engine
+      :ready="!!team.engine"
+      :moved="team.played.moved"
+      @switch="emit('switch', $event)"
+    />
     <SlSwapCard
       v-if="anchor && tried && preview && team.chance !== undefined"
       :anchor
@@ -170,9 +189,16 @@ const stats = computed(() => !!record.value || team.chance !== undefined)
 
 <style scoped>
 .sl-col {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+.sl-formation-switch {
+  position: absolute;
+  top: 2px;
+  left: 2px;
 }
 
 .sl-aside {

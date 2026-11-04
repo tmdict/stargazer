@@ -313,8 +313,7 @@ const SKILL = {
           <li>
             <span
               >选<b>巅峰联赛</b>使用巅峰联赛的地图，选 <b>5v5</b> 则五张都用地图 1，选
-              <b>3v3</b> 则三张都用地图
-              1。选<b>实战记录</b>按玩家在记录对局中的布阵摆放每支队伍，选<b>自动生成</b>则算出每位英雄站在哪里。还没有记录对局的地图一律自动生成。然后点<b>生成</b>。</span
+              <b>3v3</b> 则三张都用地图 1。然后点<b>生成</b>。</span
             >
           </li>
           <li>
@@ -329,6 +328,12 @@ const SKILL = {
           每张地图下方，<SlIcon name="players" class="help-inline-icon" />
           是在这张地图上用过这个阵容的玩家数，<SlIcon name="record" class="help-inline-icon" />
           是这个阵容在这张地图上的胜负。
+        </li>
+        <li>
+          <SlIcon name="check" class="help-inline-icon" />
+          表示这张棋盘的布阵是玩家在记录对局中用过的。点旁边的
+          <SlIcon name="sparkle" class="help-inline-icon" />
+          可以改看按队伍技能算出的站位，其他棋盘也都是这样摆的。
         </li>
         <li>
           <SlIcon name="lock" class="help-inline-icon" />
