@@ -19,6 +19,7 @@ const PHRAESTO = 50
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
+// By the walk to the enemy round its walls, back to front: 3 8 | 1 6 | 2 4 5 | 7 10 | 13.
 const MAP = presetLayout('arena2')!
 
 const DATA: PlacementData = {
@@ -93,7 +94,7 @@ describe('placement explanation', () => {
 
   it("words a formation rule from each hero's side, and a lean only without a rank", () => {
     const of = explained(
-      { [GUNNAR]: 7, [GWYNETH]: 2, [ORION]: 6, [PERSEUS]: 3, [DIONEL]: 4 },
+      { [GUNNAR]: 7, [GWYNETH]: 2, [ORION]: 13, [PERSEUS]: 3, [DIONEL]: 4 },
       {
         ...DATA,
         formationRules: [
@@ -116,14 +117,17 @@ describe('placement explanation', () => {
     expect(of(ORION).reasons).toEqual([{ verb: 'stands', place: 'front' }])
   })
 
-  // Tile 7 is on the front row of this team, and tile 4 a row behind it.
-  it("words a lean only for a hero on the team's frontmost or rearmost row", () => {
+  // Tile 6 is a row in front of tile 4 but farther from the enemy round the
+  // walls, and tile 5 as near the enemy as tile 2 but a row behind tile 6.
+  it("words a lean only for a hero on the team's front row and as near the enemy as any", () => {
     const data = { ...DATA, leans: { front: [ORION], back: [] } }
     const orionWhy = (orion: number, perseus: number) =>
       explained({ [ORION]: orion, [PERSEUS]: perseus, [DIONEL]: 1, [SENEA]: 2 }, data)(ORION)
         .reasons
     expect(orionWhy(7, 4)).toEqual([{ verb: 'stands', place: 'front' }])
     expect(orionWhy(4, 7)).toEqual([])
+    expect(orionWhy(6, 4)).toEqual([])
+    expect(orionWhy(5, 6)).toEqual([])
   })
 
   // Tile 2 is the tile directly behind tile 7, where the Illusion stands.

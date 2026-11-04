@@ -166,11 +166,19 @@ export function explainPlacement(
     }
   })
   board.place(positions)
-  // A front or back line is true of the team: the hero is on the frontmost or
-  // rearmost row of the heroes and their other bodies, the phantimal left out.
-  const rowOf = (unit: number) => board.grid.getHexById(board.tileOf(unit)).getDiagonal()
-  const rows = board.units.filter((unit) => !inPhantimalBand(unit)).map(rowOf)
-  const edge = { front: Math.max(...rows), back: Math.min(...rows) }
+  // A front or back line is true of the team: no hero or other body, the
+  // phantimal left out, stands on a row ahead of the hero (behind, for the
+  // back), nor nearer the enemy walking round the walls, as its lean is scored.
+  const bodies = board.units.filter((unit) => !inPhantimalBand(unit))
+  const measures = [
+    (unit: number) => board.grid.getHexById(board.tileOf(unit)).getDiagonal(),
+    (unit: number) => scorer.depth.get(board.tileOf(unit))!,
+  ]
+  const onEdge = (unit: number, lean: 'front' | 'back'): boolean =>
+    measures.every((at) => {
+      const all = bodies.map(at)
+      return at(unit) === (lean === 'front' ? Math.max(...all) : Math.min(...all))
+    })
 
   const units = board.units.map((unit, index): UnitPlacement => {
     const owner = ruleUnit(unit)
@@ -189,7 +197,7 @@ export function explainPlacement(
     const kept = habits.filter((rule) => rule.heroes.includes(unit))
     for (const rule of kept) reasons.push(habitOf(rule, unit))
     const lean = leans.get(unit)
-    if (lean && rowOf(unit) === edge[lean] && !kept.some((rule) => RANKS[rule.relation])) {
+    if (lean && onEdge(unit, lean) && !kept.some((rule) => RANKS[rule.relation])) {
       reasons.push({ verb: 'stands', place: lean })
     }
     return { unit, tile: positions[index]!, reasons, ...movesFor[index]! }

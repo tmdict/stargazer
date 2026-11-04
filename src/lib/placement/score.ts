@@ -156,7 +156,7 @@ export class PlacementScorer {
   private readonly buffTiles: number[]
   // How far toward the enemy each ally tile is, walking round the walls, from 0
   // at the back to 1 at the front. A tile with no way to the enemy is at the back.
-  private readonly depth: Map<number, number>
+  readonly depth: Map<number, number>
   // The ally tiles with no way to the enemy at the start.
   private readonly sealed: Set<number>
   private readonly heroes: number[]
