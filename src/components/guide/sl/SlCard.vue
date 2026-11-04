@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* A card on a generator board. Names show in the amber that rings the units a
-   card names on the board. */
+/* A card on a generator page: a title, bullet lines or a plain sentence. Names
+   show in the amber that rings the units a card names on the board. */
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
@@ -11,7 +11,8 @@ defineProps<{
   clearOf?: Pick<Element, 'getBoundingClientRect'>
   offset?: number
   title?: TextPart[]
-  lines: { lead?: string; parts: TextPart[] }[]
+  lines?: { lead?: string; parts: TextPart[] }[]
+  text?: string
 }>()
 </script>
 
@@ -26,7 +27,8 @@ defineProps<{
                 part.text
               }}</span>
             </div>
-            <ul class="sl-card-lines">
+            <div v-if="text">{{ text }}</div>
+            <ul v-if="lines?.length" class="sl-card-lines">
               <li v-for="(line, index) in lines" :key="index">
                 <template v-if="line.lead"
                   ><b>{{ line.lead }}</b
@@ -47,7 +49,7 @@ defineProps<{
 </template>
 
 <style scoped>
-.sl-card-title {
+.sl-card-title:not(:last-child) {
   margin-bottom: 6px;
   font-weight: 600;
 }

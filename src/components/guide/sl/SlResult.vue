@@ -40,12 +40,12 @@ export interface SlShown {
 
 import { computed, ref } from 'vue'
 
+import SlCard from './SlCard.vue'
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { shownFormation } from '@/lib/pvp/sl/generator/formation'
 import { slSetMode } from '@/lib/pvp/sl/generator/setType'
@@ -143,18 +143,16 @@ const {
     </div>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
-    <Teleport to="body">
-      <TooltipPopup v-if="tipAnchor" :target-element="tipAnchor" variant="detailed">
-        <template #content>
-          {{
-            i18n.t('app.sl-chance-tip', {
-              needed: winsNeeded(shown.teams.length),
-              boards: shown.teams.length,
-            })
-          }}
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <SlCard
+      v-if="tipAnchor"
+      :anchor="tipAnchor"
+      :text="
+        i18n.t('app.sl-chance-tip', {
+          needed: winsNeeded(shown.teams.length),
+          boards: shown.teams.length,
+        })
+      "
+    />
   </section>
 </template>
 
@@ -221,7 +219,7 @@ const {
 .sl-maps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
+  gap: 24px;
   padding: 24px 16px;
 }
 
@@ -242,7 +240,6 @@ const {
 @container (max-width: 1170px) {
   .sl-maps {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    row-gap: 24px;
   }
   .sl-maps > * {
     grid-column: span 2;
