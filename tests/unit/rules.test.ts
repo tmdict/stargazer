@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
-import { effectVerb } from '@/lib/placement/explain'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
@@ -126,8 +125,9 @@ describe('placement rules', () => {
     }
   })
 
-  // A placement card words an effect by the file its rule sits in: what it
-  // gives and what a hero receives, or what it reaches.
+  // A placement card words an effect by the file its rule sits in: what a goal
+  // for heroes (target, include, exactly) gives and what a hero receives, or
+  // what a most goal reaches.
   it('each have the words a placement card names their effect with, and no words outlive one', () => {
     const owners = [
       ...units,
@@ -136,9 +136,15 @@ describe('placement rules', () => {
     const needed = new Set<string>()
     for (const { name, rules } of owners) {
       for (const rule of rules ?? []) {
-        const verb = rule.team === 'ally' && rule.weight !== undefined && effectVerb(rule.goal)
-        if (!verb) continue
-        const kinds = verb === 'gives' ? ['gives', 'receives'] : ['reaches']
+        if (rule.team !== 'ally' || rule.weight === undefined) continue
+        const { goal } = rule
+        const kinds =
+          goal === 'most' || (typeof goal === 'object' && 'most' in goal)
+            ? ['reaches']
+            : typeof goal === 'object' &&
+                ('target' in goal || 'include' in goal || 'exactly' in goal)
+              ? ['gives', 'receives']
+              : []
         for (const key of kinds.map((kind) => `placement-${kind}-${name}`)) {
           expect(needed.has(key), `two of ${name}'s rules are worded by ${key}`).toBe(false)
           needed.add(key)

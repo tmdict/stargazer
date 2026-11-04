@@ -19,7 +19,6 @@ import {
   boardPlacement,
   boardTeam,
   engineFormation,
-  playedFormation,
   shownFormation,
 } from '@/lib/pvp/sl/generator/formation'
 import { slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
@@ -61,7 +60,7 @@ const boards = slBoards(data, 'sl')
 const set = chooseOn(data, boards)!
 const byTile = (a: readonly number[], b: readonly number[]) => a[0]! - b[0]!
 // Every board of a set as the page draws it: in its team's recorded placement,
-// or the engine's for a team with none. playedFormation would also have the
+// or the engine's for a team with none. boardDraws would also have the
 // engine explain a recorded placement, which `data`'s renamed maps can leave
 // with a unit off its map's ally tiles, so it is left out here.
 const drawnOf = (file: SlData, chosen: SlChoice, on: SlBoard[] = boards) =>
@@ -334,7 +333,9 @@ describe('a recorded board', () => {
       return [{ choice, board, team, recorded }]
     })
     const drawn = tried.slice(0, 60).map(({ choice, board, team, recorded }) => {
-      const { units, moved } = playedFormation(shipped, choice, board)!
+      const { units, moved } = boardDraws(shipped, { chance: 0, odds: [], teams: [choice] }, [
+        board,
+      ])[0]!.played!
       return {
         moved,
         phantimal: team.phantimal,
@@ -350,7 +351,10 @@ describe('a recorded board', () => {
     expect(drawn.every(({ kept }) => kept)).toBe(true)
     expect(
       moves.every(
-        ({ moved, phantimal, gain }) => moved[0] === phantimal && moved.length <= 2 && gain > 0,
+        ({ moved, phantimal, gain }) =>
+          moved.filter((unit) => unit !== phantimal).length <= 1 &&
+          (!moved.includes(phantimal!) || moved[0] === phantimal) &&
+          gain > 0,
       ),
     ).toBe(true)
     expect(keeps.every(({ asRecorded }) => asRecorded)).toBe(true)

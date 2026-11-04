@@ -10,8 +10,8 @@
    selection or the type changes. A board draws the formation of its team's
    recorded game where the team was recorded on its map, and the engine's
    elsewhere; the engine's formations of the recorded boards, which their
-   switches show, are worked out in the worker once the set is drawn. Save as team opens the set
-   on the Teams page as drawn.
+   switches show, are worked out in the worker once the set is drawn. Save as
+   team opens the set on the Teams page as drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */
@@ -139,23 +139,25 @@ const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
       : []
   })
 
-// A worker that cannot answer leaves the switches on the recorded games.
+// One board at a time, so each switch is ready once its own formation is and a
+// new Generate waits behind one board's work at most. A worker that cannot
+// answer leaves the switches on the recorded games.
 const fillEngine = async (
   generation: number,
   set: SlChoice,
   boards: SlBoard[],
   which: number[],
 ): Promise<void> => {
-  let found: BoardFormation[]
-  try {
-    found = await placeEngine(set, boards, which)
-  } catch {
-    return
+  for (const index of which) {
+    let found: BoardFormation
+    try {
+      found = await placeEngine(set.teams[index]!, boards[index]!)
+    } catch {
+      return
+    }
+    if (generation !== generations || !shown.value) return
+    shown.value.teams[index]!.engine = found
   }
-  if (generation !== generations || !shown.value) return
-  which.forEach((index, k) => {
-    shown.value!.teams[index]!.engine = found[k]!
-  })
 }
 
 const generate = async (): Promise<void> => {
@@ -184,12 +186,12 @@ const generate = async (): Promise<void> => {
         pairs: t.pairs,
         chance: t.chance,
         ...draws[index]!,
-        trySwap: (out: number[], into: number[], engine: boolean) => {
-          const key = `${index}|${engine}|${out.join()}|${into.join()}`
+        trySwap: (out: number[], into: number[], engineOn: boolean) => {
+          const key = `${index}|${engineOn}|${out.join()}|${into.join()}`
           let found = tried.get(key)
           if (!found) {
             // Copies, since the page's reactive lists cannot be posted to the worker.
-            const units = shownFormation(teams[index]!, engine).units.map(
+            const units = shownFormation(teams[index]!, engineOn).units.map(
               ([hexId, unit]): [number, number] => [hexId, unit],
             )
             const swap = { board, team: t, units, out: [...out], into: [...into], picks }

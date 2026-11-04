@@ -57,7 +57,7 @@ export interface PlacementExplanation {
 
 // How a unit's own effect reads: given to heroes, or reaching as much as it can.
 // A goal about enemy heroes explains nothing on our side.
-export function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
+function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
   if (goal === 'most' || (typeof goal === 'object' && 'most' in goal)) return 'reaches'
   if (typeof goal === 'object' && ('target' in goal || 'include' in goal || 'exactly' in goal))
     return 'gives'

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /* A map's board in the set. Hovering or tapping a unit or the artifact shows
    why it stands where it does, rings it and the units the card names and
-   outlines the free tiles the unit could take as well. A swap
-   tried below the board draws its heroes on the tiles they would take and fades
-   the units that leave. */
+   outlines the free tiles the unit could take as well. A swap tried below the
+   board draws its heroes on the tiles they would take and fades the units that
+   leave. */
 
 import { computed, useTemplateRef } from 'vue'
 
@@ -135,12 +135,12 @@ const artifact = computed(() => {
   )
 })
 
-// Over its unit and above the board's ally tiles, so a card covers none of
-// the tiles it rings or outlines; with no room above, under them.
 defineExpose({
   box: (): DOMRect => thumbnailView.value?.$el.getBoundingClientRect() ?? new DOMRect(),
 })
 
+// Over its unit and above the board's ally tiles, so a card covers none of
+// the tiles it rings or outlines; with no room above, under them.
 const unitCardAnchor = computed(() => {
   const el = anchor.value
   return (

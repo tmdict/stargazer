@@ -1,7 +1,7 @@
 /* A chosen set's boards as the page draws them, and why each unit stands where
  * it does (lib/placement). A board whose team was recorded on its map draws
- * that game's formation, which the engine reads with every unit held on its
- * recorded tile, and every board can draw the engine's formation: the team's
+ * that game's formation, with at most its phantimal and one hero moved for the
+ * Spirit Mark, and every board can draw the engine's formation: the team's
  * heroes, the artifact the set gives it and the phantimal they can summon,
  * placed on the board's map from their skills, reading no recorded placement.
  * A file from another season than Stargazer's is placed as slTeamData draws
@@ -59,8 +59,8 @@ export interface BoardDraw {
 
 // The formation a board shows: the engine's when asked for and worked out,
 // else the recorded game's where there is one.
-export const shownFormation = (draw: BoardDraw, engine: boolean): BoardFormation =>
-  (engine && draw.engine) || draw.played || draw.engine!
+export const shownFormation = (draw: BoardDraw, engineOn: boolean): BoardFormation =>
+  (engineOn && draw.engine) || draw.played || draw.engine!
 
 // A chosen team as the engine places it on a board: its heroes, the phantimal
 // they summon and the artifact the set gives it.
@@ -110,13 +110,13 @@ function phantimalGoals(
 }
 
 /**
- * The recorded game's formation of a board, null when its team was not
- * recorded on the board's map. Where the phantimal's Spirit Mark lands better
- * with the phantimal moved, or the phantimal and one hero, the engine moves
- * them and keeps every other unit on its recorded tile; fewer units moved wins
- * a tie.
+ * The recorded game's formation of a board, null when the board has no
+ * recorded formation of its team. Where the phantimal's Spirit Mark lands
+ * better with the phantimal moved, or the phantimal and one hero, the engine
+ * moves them and keeps every other unit on its recorded tile; of the tries that
+ * land it best, the one moving the fewest units wins.
  */
-export function playedFormation(
+function playedFormation(
   data: SlData,
   choice: SlChoiceTeam,
   board: SlBoard,
@@ -131,30 +131,38 @@ export function playedFormation(
   const asRecorded = place(held)
   const explained = (placed: PlacementResult) =>
     explainPlacement(team, board.key, placement, PLACEMENT_LOOKUPS, placed)
+  const asIs = (): PlayedFormation => ({ units: recorded, why: explained(asRecorded), moved: [] })
   const { phantimal } = team
-  if (phantimal === undefined) return { units: recorded, why: explained(asRecorded), moved: [] }
-
+  if (phantimal === undefined) return asIs()
   const goalsAt = phantimalGoals(team, board.key, placement)
-  let best = goalsAt(asRecorded.positions)
-  let picked = asRecorded
-  if (best !== null) {
-    for (const free of [[phantimal], ...team.heroes.map((hero) => [phantimal, hero])]) {
-      const tried = place(new Map([...held].filter(([unit]) => !free.includes(ruleUnit(unit)))))
-      const met = goalsAt(tried.positions)!
-      if (met > best + EPS) {
-        best = met
-        picked = tried
-      }
+  const recordedMet = goalsAt(asRecorded.positions)
+  if (recordedMet === null) return asIs()
+
+  let best: { placed: PlacementResult; met: number; moved: number[] } | undefined
+  for (const free of [[phantimal], ...team.heroes.map((hero) => [phantimal, hero])]) {
+    const placed = place(new Map([...held].filter(([unit]) => !free.includes(ruleUnit(unit)))))
+    const met = goalsAt(placed.positions)!
+    if (met <= recordedMet + EPS) continue
+    // A freed unit can land back on its recorded tile, so a try is ranked by
+    // the units it moved, not the ones it freed.
+    const moved = [
+      ...new Set(
+        unitsOf(placed).flatMap(([hexId, unit]) =>
+          held.get(unit) === hexId ? [] : [ruleUnit(unit)],
+        ),
+      ),
+    ]
+    const tie = best && Math.abs(met - best.met) <= EPS
+    if (!best || met > best.met + EPS || (tie && moved.length < best.moved.length)) {
+      best = { placed, met, moved }
     }
   }
-  if (picked === asRecorded) return { units: recorded, why: explained(asRecorded), moved: [] }
-  const units = unitsOf(picked)
-  const moved = [
-    ...new Set(
-      units.flatMap(([hexId, unit]) => (held.get(unit) === hexId ? [] : [ruleUnit(unit)])),
-    ),
-  ].sort((a, b) => Number(b === phantimal) - Number(a === phantimal))
-  return { units, why: explained(picked), moved }
+  if (!best) return asIs()
+  return {
+    units: unitsOf(best.placed),
+    why: explained(best.placed),
+    moved: best.moved.sort((a, b) => Number(b === phantimal) - Number(a === phantimal)),
+  }
 }
 
 // The engine's formation of a board, read from no recorded placement.

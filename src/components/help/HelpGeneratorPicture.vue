@@ -74,7 +74,7 @@ const characterId = (slug: string): number =>
     <template #to>
       <HelpMock :caption="interpolate(label('sl-map'), { n: 1 })" data-theme="dark">
         <div class="help-sl-board">
-          <SlFormationSwitch :engine="false" ready :moved="[]" />
+          <SlFormationSwitch :engine-on="false" ready :moved="[]" />
           <HelpBoard :tokens="TEAM" />
         </div>
         <div class="help-sl-aside">

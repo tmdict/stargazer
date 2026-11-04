@@ -1,13 +1,11 @@
 <script setup lang="ts">
-/* Why a unit on a board stands where it does: one line per reason, a
-   verb then what it is about, and a last line when the outlined tiles would do
-   as well. */
+/* Why a unit on a board stands where it does: one line per reason, a verb
+   then what it is about, and a last line when the outlined tiles would do as
+   well. */
 
 import { computed } from 'vue'
 
-import SlCardLines from './SlCardLines.vue'
-import TooltipCard from '@/components/ui/TooltipCard.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import SlCard from './SlCard.vue'
 import type { PlacedEffect, PlacementReason } from '@/lib/placement/explain'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
@@ -59,15 +57,5 @@ const lines = computed(() => [
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup :target-element="anchor" variant="detailed" max-width="290px">
-      <template #content>
-        <TooltipCard>
-          <template #default>
-            <SlCardLines :lines />
-          </template>
-        </TooltipCard>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <SlCard :anchor :lines />
 </template>

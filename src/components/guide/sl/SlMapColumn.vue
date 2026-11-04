@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* One map of the set: the board, its artifact on its cell, the switch between
    the formation of a recorded game and the engine's on a board that has one,
-   then the comp's
-   record on the map, the team's chance to win the map, the core heroes to keep
-   and the swaps recorded in place of one hero or two. A win rate shows from eight decided games, green from
-   60% and red to 40%, as the report colours one. Its host sizes it: --pt for
+   then the comp's record on the map, the team's chance to win the map, the core
+   heroes to keep and the swaps recorded in place of one hero or two. A win rate
+   shows from eight decided games, green from 60% and red to 40%, as the report
+   colours one. Its host sizes it: --pt for
    the portraits, and --sl-unit, the length of one of the generator page's
    pixels, for the gaps and icons of the core and swap rows (1px there, a share
    of its column's width on the guide index's card, which shows no record).
@@ -20,21 +20,23 @@ import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
 import SlSwapCard from './SlSwapCard.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
-import { shownFormation } from '@/lib/pvp/sl/generator/formation'
+import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent } from './useSlNames'
 
-// engine: the board shows the engine's formation in place of a recorded game's.
-const { team, engine = false } = defineProps<{
+// engineOn: the board shows the engine's formation in place of a recorded
+// game's. why: the shown formation's.
+const { team, engineOn = false } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
     Partial<Pick<SlShownTeam, 'chance' | 'trySwap' | 'played' | 'engine'>>
   board: PreviewBoard | undefined
-  engine?: boolean
+  why?: PlacementExplanation | null
+  engineOn?: boolean
 }>()
 
-const emit = defineEmits<{ switch: [engine: boolean] }>()
+const emit = defineEmits<{ switch: [engineOn: boolean] }>()
 
 const TONE_GAMES = 8
 
@@ -55,6 +57,7 @@ const {
   hoverClose,
   toggle,
   onTouchStart,
+  close,
 } = useInfoTip<{ out: number[]; into: number[] }>()
 const preview = ref<SwapPreview | null>(null)
 const boardView = useTemplateRef<InstanceType<typeof SlMapBoard>>('board')
@@ -63,17 +66,16 @@ const boardBox = {
   getBoundingClientRect: (): DOMRect => boardView.value?.box() ?? new DOMRect(),
 }
 const canTry = computed(() => !!team.trySwap && team.chance !== undefined)
-const why = computed(() =>
-  team.played || team.engine
-    ? shownFormation({ played: team.played ?? null, engine: team.engine ?? null }, engine).why
-    : null,
-)
+
+// Columns are kept by board when another set is drawn, and a swap is tried on
+// one team in one formation.
+watch([() => team.trySwap, () => engineOn], close)
 
 // The worker answers after a moment, by when another swap may be shown.
 watch(tried, async (swap) => {
   preview.value = null
   if (!swap || !team.trySwap) return
-  const found = await team.trySwap(swap.out, swap.into, engine)
+  const found = await team.trySwap(swap.out, swap.into, engineOn)
   if (tried.value === swap) preview.value = found
 })
 
@@ -99,7 +101,7 @@ const stats = computed(() => !!record.value || team.chance !== undefined)
     <SlFormationSwitch
       v-if="board && team.played"
       class="sl-formation-switch"
-      :engine
+      :engine-on
       :ready="!!team.engine"
       :moved="team.played.moved"
       @switch="emit('switch', $event)"

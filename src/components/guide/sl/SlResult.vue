@@ -14,7 +14,7 @@ export interface SlShownTeam
   group: Pick<SlFamily, 'name' | 'core'> | null
   // A swap tried on the board in the engine's formation or as first drawn,
   // null when the worker cannot answer.
-  trySwap: (out: number[], into: number[], engine: boolean) => Promise<SwapPreview | null>
+  trySwap: (out: number[], into: number[], engineOn: boolean) => Promise<SwapPreview | null>
 }
 
 export interface SlShown {
@@ -47,6 +47,7 @@ import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { shownFormation } from '@/lib/pvp/sl/generator/formation'
 import { slSetMode } from '@/lib/pvp/sl/generator/setType'
 import { winsNeeded } from '@/lib/pvp/sl/model/odds'
 import { teamPreviewBoards } from '@/lib/teams/preview'
@@ -66,9 +67,12 @@ const engineOn = defineModel<boolean[]>('engineOn', { required: true })
 
 const i18n = useI18nStore()
 const boards = computed(() => teamPreviewBoards(data) ?? [])
-const switchBoard = (index: number, engine: boolean): void => {
+const why = computed(() =>
+  shown.teams.map((team, index) => shownFormation(team, !!engineOn.value[index]).why),
+)
+const switchBoard = (index: number, on: boolean): void => {
   const next = shown.teams.map((_, i) => !!engineOn.value[i])
-  next[index] = engine
+  next[index] = on
   engineOn.value = next
 }
 const explaining = ref(false)
@@ -132,19 +136,15 @@ const {
         :key="index"
         :team
         :board="boards[index]"
-        :engine="!!engineOn[index]"
+        :why="why[index]"
+        :engine-on="!!engineOn[index]"
         @switch="switchBoard(index, $event)"
       />
     </div>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
     <Teleport to="body">
-      <TooltipPopup
-        v-if="tipAnchor"
-        :target-element="tipAnchor"
-        variant="detailed"
-        max-width="290px"
-      >
+      <TooltipPopup v-if="tipAnchor" :target-element="tipAnchor" variant="detailed">
         <template #content>
           {{
             i18n.t('app.sl-chance-tip', {

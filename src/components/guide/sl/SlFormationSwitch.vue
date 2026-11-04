@@ -7,10 +7,8 @@
 
 import { computed } from 'vue'
 
-import SlCardLines from './SlCardLines.vue'
+import SlCard from './SlCard.vue'
 import SlIcon from './SlIcon.vue'
-import TooltipCard from '@/components/ui/TooltipCard.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts } from '@/utils/interpolate'
@@ -19,13 +17,13 @@ import { useSlNames } from './useSlNames'
 type Half = 'played' | 'engine'
 
 // moved: the units moved from the recorded game's tiles, the phantimal first.
-const { engine, ready, moved } = defineProps<{
-  engine: boolean
+const { engineOn, ready, moved } = defineProps<{
+  engineOn: boolean
   ready: boolean
   moved: number[]
 }>()
 
-const emit = defineEmits<{ switch: [engine: boolean] }>()
+const emit = defineEmits<{ switch: [engineOn: boolean] }>()
 
 const i18n = useI18nStore()
 const { cardNames } = useSlNames()
@@ -38,7 +36,7 @@ const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string }[] = [
 
 const press = (event: MouseEvent, pressed: Half): void => {
   const on = pressed === 'engine'
-  if (on === engine || (on && !ready)) {
+  if (on === engineOn || (on && !ready)) {
     toggle(event, pressed)
     return
   }
@@ -74,8 +72,8 @@ const card = computed(() => {
       v-for="{ half: h, icon, label } in HALVES"
       :key="h"
       type="button"
-      :class="{ on: (h === 'engine') === engine }"
-      :aria-pressed="(h === 'engine') === engine"
+      :class="{ on: (h === 'engine') === engineOn }"
+      :aria-pressed="(h === 'engine') === engineOn"
       :aria-disabled="h === 'engine' && !ready ? 'true' : undefined"
       :aria-label="i18n.t(label)"
       @mouseenter="hoverOpen($event, h)"
@@ -87,22 +85,7 @@ const card = computed(() => {
     >
       <SlIcon :name="icon" />
     </button>
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="anchor && card"
-        :target-element="anchor"
-        variant="detailed"
-        max-width="300px"
-      >
-        <template #content>
-          <TooltipCard>
-            <template #default>
-              <SlCardLines :title="card.title" :lines="card.lines" />
-            </template>
-          </TooltipCard>
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <SlCard v-if="anchor && card" :anchor :title="card.title" :lines="card.lines" />
   </span>
 </template>
 

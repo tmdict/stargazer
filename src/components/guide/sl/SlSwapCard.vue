@@ -4,9 +4,7 @@
 
 import { computed } from 'vue'
 
-import SlCardLines from './SlCardLines.vue'
-import TooltipCard from '@/components/ui/TooltipCard.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import SlCard from './SlCard.vue'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts } from '@/utils/interpolate'
 import { slPercent, useSlNames } from './useSlNames'
@@ -28,27 +26,12 @@ const title = computed(() =>
 const lines = computed(() => [
   {
     lead: i18n.t('app.sl-explain-chance'),
-    parts: [{ text: `${slPercent(before)} → ${slPercent(after)}` }],
+    // Before and after wrap as one.
+    parts: [{ text: `${slPercent(before)}\u00a0→\u00a0${slPercent(after)}` }],
   },
 ])
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup
-      :target-element="anchor"
-      :clear-of
-      :offset="6"
-      variant="detailed"
-      max-width="330px"
-    >
-      <template #content>
-        <TooltipCard>
-          <template #default>
-            <SlCardLines :title :lines />
-          </template>
-        </TooltipCard>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <SlCard :anchor :clear-of :offset="6" :title :lines />
 </template>

@@ -8,7 +8,7 @@ import { onMounted, readonly, ref } from 'vue'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
-import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
+import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
 
@@ -74,15 +74,11 @@ export function useSlEngine() {
     return answer.boards
   }
 
-  // The engine's formations of the boards `which` names, by index.
-  const placeEngine = async (
-    set: SlChoice,
-    boards: SlBoard[],
-    which: number[],
-  ): Promise<BoardFormation[]> => {
-    const answer = await ask((id) => ({ type: 'placeEngine', id, set, boards, which }))
+  // The engine's formation of a chosen team on its board.
+  const placeEngine = async (team: SlChoiceTeam, board: SlBoard): Promise<BoardFormation> => {
+    const answer = await ask((id) => ({ type: 'placeEngine', id, team, board }))
     if (answer.type !== 'placedEngine') throw new Error('The worker answered another request')
-    return answer.formations
+    return answer.formation
   }
 
   const swap = async (request: SwapRequest): Promise<SwapPreview> => {
