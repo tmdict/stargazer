@@ -9,6 +9,7 @@
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
+import type { MapLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { explainPlacement, type PlacementExplanation } from '@/lib/placement/explain'
@@ -20,7 +21,7 @@ import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { loadPhantimals } from '@/utils/dataLoader'
 import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
-import { recordedUnits } from './team'
+import { choiceSeason, recordedUnits } from './team'
 import type { SlChoice, SlChoiceTeam } from './types'
 
 const EPS = 1e-9
@@ -72,12 +73,19 @@ export const boardTeam = (
   artifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
 })
 
-// A map with no games yet is expected to draw the enemy heroes of the map whose
-// teams it takes.
-export const boardPlacement = (data: SlData, { key, source }: SlBoard): PlacementData => ({
-  ...data.placement,
-  pickRates: { [key]: data.placement.pickRates[data.maps[source]!] ?? {} },
-})
+// A map with no records is expected to draw the enemy heroes of the map the
+// team was recorded on.
+export const boardPlacement = (
+  data: SlData,
+  { layout, source }: SlBoard,
+  choice: Pick<SlChoiceTeam, 'source' | 'team'>,
+): PlacementData => {
+  const from = source ?? choiceSeason(data, choice).teams[choice.team]!.map
+  return {
+    ...data.placement,
+    pickRates: { [layout.key]: data.placement.pickRates[data.maps[from]!] ?? {} },
+  }
+}
 
 // Units kept on their tiles, by unit id.
 export const heldOn = (units: readonly SlUnit[]): Map<number, number> =>
@@ -90,10 +98,10 @@ const unitsOf = ({ units, positions }: PlacementResult): SlUnit[] =>
 // when the team cannot meet them.
 function phantimalGoals(
   team: PlacementTeam,
-  mapKey: string,
+  layout: MapLayout,
   placement: PlacementData,
 ): (positions: number[]) => number | null {
-  const board = new PlacementBoard(team, mapKey, PLACEMENT_LOOKUPS)
+  const board = new PlacementBoard(team, layout, PLACEMENT_LOOKUPS)
   const scorer = new PlacementScorer(board, team, placement)
   return (positions) => {
     board.place(positions)
@@ -119,20 +127,20 @@ function playedFormation(
   choice: SlChoiceTeam,
   board: SlBoard,
 ): PlayedFormation | null {
-  const recorded = board.recorded ? recordedUnits(data, choice) : null
+  const recorded = board.source !== null ? recordedUnits(data, choice) : null
   if (!recorded) return null
   const team = boardTeam(data, choice.heroes, choice.artifact)
-  const placement = boardPlacement(data, board)
+  const placement = boardPlacement(data, board, choice)
   const held = heldOn(recorded)
   const place = (keep: ReadonlyMap<number, number>) =>
-    placeTeam(team, board.key, placement, PLACEMENT_LOOKUPS, { held: keep })
+    placeTeam(team, board.layout, placement, PLACEMENT_LOOKUPS, { held: keep })
   const asRecorded = place(held)
   const explained = (placed: PlacementResult) =>
-    explainPlacement(team, board.key, placement, PLACEMENT_LOOKUPS, placed)
+    explainPlacement(team, board.layout, placement, PLACEMENT_LOOKUPS, placed)
   const asIs = (): PlayedFormation => ({ units: recorded, why: explained(asRecorded), moved: [] })
   const { phantimal } = team
   if (phantimal === undefined) return asIs()
-  const goalsAt = phantimalGoals(team, board.key, placement)
+  const goalsAt = phantimalGoals(team, board.layout, placement)
   const recordedMet = goalsAt(asRecorded.positions)
   if (recordedMet === null) return asIs()
 
@@ -170,11 +178,11 @@ export function engineFormation(
   board: SlBoard,
 ): BoardFormation {
   const team = boardTeam(data, choice.heroes, choice.artifact)
-  const placement = boardPlacement(data, board)
-  const placed = placeTeam(team, board.key, placement, PLACEMENT_LOOKUPS)
+  const placement = boardPlacement(data, board, choice)
+  const placed = placeTeam(team, board.layout, placement, PLACEMENT_LOOKUPS)
   return {
     units: unitsOf(placed),
-    why: explainPlacement(team, board.key, placement, PLACEMENT_LOOKUPS, placed),
+    why: explainPlacement(team, board.layout, placement, PLACEMENT_LOOKUPS, placed),
   }
 }
 

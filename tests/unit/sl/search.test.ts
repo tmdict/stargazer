@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import type { MapLayout } from '@/lib/maps'
 import { lineupKey } from '@/lib/pvp/sl/data/sides'
 import type { SlData, SlModel } from '@/lib/pvp/sl/data/types'
 import { shortfall } from '@/lib/pvp/sl/data/upgrades'
@@ -69,8 +70,15 @@ const randomSeason = (next: () => number): SlData => {
   return madeUpData(teams, randomModel(next, 41, 7), randomFallback(next, 7))
 }
 
-const boardsOn = (data: SlData, maps: number[], recorded = true): SlBoard[] =>
-  maps.map((source) => ({ key: data.maps[source]!, map: source, source, recorded }))
+// The chooser reads only a board's key, so the made-up maps need no tiles.
+const layoutOf = (key: string): MapLayout => ({
+  key,
+  config: { id: 0, name: '', grid: [] },
+  buffTiles: [],
+})
+
+const boardsOn = (data: SlData, maps: number[]): SlBoard[] =>
+  maps.map((source) => ({ layout: layoutOf(data.maps[source]!), map: source, source }))
 
 // The chance of winning most of the maps, over every way the maps can fall.
 const winningMost = (chances: number[]): number => {
@@ -227,7 +235,7 @@ describe('the search', () => {
   // The search measures only the teams it picks, so this checks that the set
   // it settles on is the one measuring every team gives.
   it.each([3, 5, 8])(
-    'finds the set trying every set finds when every map is new (season %i)',
+    'finds the set trying every set finds when no fit is known yet (season %i)',
     (seed) => {
       const next = seededRandom(seed)
       const data = randomSeason(next)
@@ -239,11 +247,14 @@ describe('the search', () => {
         ]),
       )
       const share = (heroes: number[]): number => shares.get(lineupKey(heroes))!
-      const fit: SlFit = { known: () => undefined, measure: (_, heroes) => share(heroes) }
-      const borrowed = boardsOn(
+      const fit: SlFit = {
+        stands: () => true,
+        known: () => undefined,
+        measure: (_, heroes) => share(heroes),
+      }
+      const boards = boardsOn(
         data,
         data.maps.map((_, i) => i),
-        false,
       )
       for (let i = 0; i < 12; i++) {
         const picks: SlPick[] = data.order
@@ -255,7 +266,7 @@ describe('the search', () => {
             refinement: Math.floor(next() * 5),
           }))
         const expected = tryEvery(data, reader, picks, share)
-        const set = chooseSlSet(data, reader, picks, () => true, borrowed, fit)
+        const set = chooseSlSet(data, reader, picks, () => true, boards, fit)
         expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
         expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
       }
@@ -294,4 +305,107 @@ describe('the search', () => {
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
     }
   })
+
+  it('draws one team per lineup from every map on a map with no records', () => {
+    const next = seededRandom(1)
+    const lineup = (map: number, heroes: number[], decided: number): MadeUpTeam => ({
+      map,
+      family: 0,
+      heroes,
+      artifacts: [],
+      decided,
+    })
+    // The first record ranks better, so a pool holding both would take it.
+    const data = madeUpData(
+      [
+        lineup(0, [1, 2, 3, 4, 5], 2),
+        lineup(1, [5, 4, 3, 2, 1], 4),
+        lineup(2, [6, 7, 8, 9, 10], 3),
+      ],
+      randomModel(next, 10, 1),
+      randomFallback(next, 1),
+    )
+    const picks: SlPick[] = [1, 2, 3, 4, 5].map((id) => ({
+      id,
+      faction: 'f',
+      paragon: 4,
+      refinement: 4,
+    }))
+    const board: SlBoard = { layout: layoutOf('new'), map: 0, source: null }
+    const fit: SlFit = { stands: () => true, known: () => 1, measure: () => 1 }
+    const set = chooseSlSet(data, readSlFile(data), picks, () => true, [board], fit)
+    expect(set?.teams.map((t) => t.team)).toEqual([1])
+  })
+
+  // Every map's teams share one pool there, so this checks that the teams a
+  // set settles on and the boards they trade to are the best of every way of
+  // standing them, where a team's fit and whether it stands differ by map.
+  it.each([3, 5, 8])(
+    'finds the best set trying every set finds on maps with no records (season %i)',
+    (seed) => {
+      const next = seededRandom(seed)
+      const season = randomSeason(next)
+      // With no artifact to hand out, which board a team stands on changes only
+      // its fit.
+      const data: SlData = {
+        ...season,
+        teams: season.teams.map((t) => ({ ...t, artifacts: [] })),
+        fallback: [[], [], []],
+      }
+      const reader = readSlFile(data)
+      const layouts = ['new-0', 'new-1', 'new-2']
+      const fits = new Map(
+        data.teams.flatMap((t) =>
+          layouts.map((layout) => [
+            `${layout}|${lineupKey(t.heroes)}`,
+            next() < 0.15 ? null : [1, 1, 0.3, 0.1, 0.03][Math.floor(next() * 5)]!,
+          ]),
+        ),
+      )
+      const fitOf = (layout: string, heroes: number[]) =>
+        fits.get(`${layout}|${lineupKey(heroes)}`)!
+      const fit: SlFit = {
+        stands: (board, heroes) => fitOf(board.layout.key, heroes) !== null,
+        known: () => undefined,
+        measure: (board, heroes) => fitOf(board.layout.key, heroes)!,
+      }
+      const boards = layouts.map((key, map) => ({ layout: layoutOf(key), map, source: null }))
+      for (let i = 0; i < 12; i++) {
+        const picks: SlPick[] = data.order
+          .filter(() => next() < 0.95)
+          .map((id) => ({
+            id,
+            faction: 'f',
+            paragon: Math.floor(next() * 5),
+            refinement: Math.floor(next() * 5),
+          }))
+        const picked = new Map(picks.map((p) => [p.id, p]))
+        const teams = data.teams.filter(
+          (t) => t.decided > 0 && t.heroes.every((h) => picked.has(h)),
+        )
+        const chanceOf = (t: (typeof teams)[number], layout: string): number | null => {
+          const share = fitOf(layout, t.heroes)
+          if (share === null) return null
+          const gap = -t.heroes.reduce((n, h) => n + shortfall(data.prices, picked.get(h)!), 0)
+          const side = { heroes: t.heroes, kind: t.family, artifact: null }
+          return sigmoid(reader.model.againstTypical(side, gap) + Math.log(share))
+        }
+        let expected = 0
+        for (const a of teams) {
+          for (const b of teams) {
+            for (const c of teams) {
+              const heroes = [...a.heroes, ...b.heroes, ...c.heroes]
+              if (new Set(heroes).size < heroes.length) continue
+              const chances = [a, b, c].map((t, k) => chanceOf(t, layouts[k]!))
+              if (chances.some((chance) => chance === null)) continue
+              expected = Math.max(expected, winningMost(chances as number[]))
+            }
+          }
+        }
+        const set = chooseSlSet(data, reader, picks, () => true, boards, fit)
+        expect(set?.chance ?? 0).toBeCloseTo(expected, 12)
+        set?.teams.forEach((t, k) => expect(fitOf(layouts[k]!, t.heroes)).not.toBeNull())
+      }
+    },
+  )
 })

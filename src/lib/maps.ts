@@ -108,10 +108,14 @@ export const getMapByKey = (key: string): MapConfig | undefined => {
   return MAPS[key]
 }
 
-export const deploymentTiles = (mapKey: string, team: Team): Set<number> => {
+// A side's deployment tiles on a map's layout.
+export const configTiles = (config: Pick<MapConfig, 'grid'>, team: Team): Set<number> => {
   const state = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-  return new Set((MAPS[mapKey]?.grid ?? []).filter((g) => g.type === state).flatMap((g) => g.hex))
+  return new Set(config.grid.filter((g) => g.type === state).flatMap((g) => g.hex))
 }
+
+export const deploymentTiles = (mapKey: string, team: Team): Set<number> =>
+  configTiles(MAPS[mapKey] ?? { grid: [] }, team)
 
 const AVAILABLE_STATE: Partial<Record<State, State>> = {
   [State.OCCUPIED_ALLY]: State.AVAILABLE_ALLY,
@@ -147,6 +151,38 @@ export const findMapByTiles = (tiles: readonly number[][]): string | undefined =
     ),
   )
   return LAYOUTS.find((preset) => preset.layout === layout)?.key
+}
+
+// A board's tiles and buff tiles as the placement engine plans on them, under
+// the key it reads its seed, its cached fits and the enemies' pick rates by: a
+// preset's own key, or `edited:` and the layout for tiles no preset has.
+export interface MapLayout {
+  key: string
+  config: MapConfig
+  buffTiles: readonly number[]
+}
+
+export const presetLayout = (key: string): MapLayout | undefined => {
+  const config = MAPS[key]
+  return config && { key, config, buffTiles: buffTiles(key) }
+}
+
+// The layout serialized `[hexId, state]` tiles stand on. A Map Editor map has
+// no buff tiles, since the editor cannot place them.
+export const tilesLayout = (tiles: readonly number[][]): MapLayout => {
+  const preset = findMapByTiles(tiles)
+  if (preset) return presetLayout(preset)!
+  const byState = new Map<State, number[]>()
+  for (const [hexId, state] of tiles) {
+    if (hexId === undefined || state === undefined) continue
+    const type = availableState(state)
+    byState.set(type, [...(byState.get(type) ?? []), hexId])
+  }
+  const grid = [...byState]
+    .sort(([a], [b]) => a - b)
+    .map(([type, hex]) => ({ type, hex: hex.sort((a, b) => a - b) }))
+  const key = layoutKey(grid.flatMap(({ type, hex }) => hex.map((id) => tileKey(id, type))))
+  return { key: `edited:${key}`, config: { id: 0, name: '', grid }, buffTiles: [] }
 }
 
 /* The map a serialized board stands on: its key when present, else the preset

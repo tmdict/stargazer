@@ -180,7 +180,7 @@ const generate = async (): Promise<void> => {
         map: board.map,
         group: family && { name: family.name, core: family.core },
         // The comp's record is from the map its teams came from.
-        comp: board.recorded ? t.comp : null,
+        comp: board.source !== null ? t.comp : null,
         core: t.core,
         flex: t.flex,
         pairs: t.pairs,

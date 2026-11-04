@@ -5,9 +5,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { presetLayout } from '@/lib/maps'
 import { decodeSlData, loadSlData } from '@/lib/pvp/sl/data/codec'
 import type { SlData, SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
+import { layoutBoards } from '@/lib/pvp/sl/generator/setType'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON } from '@/lib/seasonal'
@@ -24,7 +26,10 @@ const data = await loadSlData()
 vi.unstubAllGlobals()
 const seasons = [data, ...(data.before ? [data.before] : [])]
 const reader = readSlFile(data)
-const everyMap = data.maps.map((key, i) => ({ key, map: i, source: i, recorded: true }))
+const everyMap = layoutBoards(
+  data,
+  data.maps.map((key) => presetLayout(key)!),
+)
 const choose = (picks: SlPick[]) => chooseSlSet(data, reader, picks, () => true, everyMap)
 const heroes = new Map(
   loadCharacters()

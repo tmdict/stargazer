@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { presetLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
@@ -28,7 +29,7 @@ const LUDOVIC = 53
 const WEDGE_OF_MATTER = toPhantimalId(5)
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
-const MAP = 'arena2'
+const MAP = presetLayout('arena2')!
 
 const DATA: PlacementData = {
   lists: {
@@ -102,7 +103,7 @@ describe('placement scoring', () => {
   // back is that unit from some enemy tiles, at the front from none. Her rule
   // scales by her pick rate and leaves the team's own score as it is.
   it('reads an enemy rule from each enemy tile, scaled by how often it is picked', () => {
-    const data = { ...DATA, pickRates: { [MAP]: { [ALICETH]: 0.5 } } }
+    const data = { ...DATA, pickRates: { [MAP.key]: { [ALICETH]: 0.5 } } }
     const back = { [ALNA]: 1, [SYLPHIRA]: 5, [ORION]: 6, [PERSEUS]: 8, [DIONEL]: 13 }
     const scorer = scoredAt(back, data)
     const met = metOf(scorer, ALICETH)!

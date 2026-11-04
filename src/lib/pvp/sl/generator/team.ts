@@ -9,7 +9,6 @@
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
-import { getMapByKey } from '@/lib/maps'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_MODE_ORDER, TEAM_MODES } from '@/lib/teams/modes'
 import { FULL_GRID } from '@/lib/types/grid'
@@ -52,8 +51,8 @@ export function slTeamData(
     ]),
   )
   const drawn = set.teams.map((choice, index): BoardInput => {
-    const { key } = boards[index]!
-    const grid = new Grid(FULL_GRID, getMapByKey(key)!)
+    const { layout } = boards[index]!
+    const grid = new Grid(FULL_GRID, layout.config)
     const place = (hexId: number, unitId: number): void => {
       const tile = grid.getTileById(hexId)
       tile.characterId = unitId
@@ -66,7 +65,7 @@ export function slTeamData(
       tiles: grid.getAllTiles(),
       allyArtifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : null,
       enemyArtifact: null,
-      map: key,
+      map: layout.key,
       getAttrs: (side, unitId) => (side === Team.ALLY ? (levels.get(unitId) ?? {}) : {}),
     }
   })

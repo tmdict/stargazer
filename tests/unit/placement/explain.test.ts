@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { presetLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { explainPlacement } from '@/lib/placement/explain'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
@@ -16,7 +17,7 @@ const GUNNAR = 106
 const GWYNETH = 115
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
-const MAP = 'arena2'
+const MAP = presetLayout('arena2')!
 
 const DATA: PlacementData = {
   lists: { damage: [ORION, SYLPHIRA, DIONEL], gunnar: [GWYNETH] },

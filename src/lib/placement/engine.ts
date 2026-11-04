@@ -1,3 +1,4 @@
+import type { MapLayout } from '../maps'
 import { PlacementBoard } from './board'
 import { PlacementScorer, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
@@ -221,12 +222,12 @@ function* everyPlacement(tiles: number[], count: number): Generator<number[]> {
 
 function searched(
   team: PlacementTeam,
-  mapKey: string,
+  layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
   options: PlacementOptions,
 ): { board: PlacementBoard; scorer: PlacementScorer; search: Search } {
-  const board = new PlacementBoard(team, mapKey, lookups)
+  const board = new PlacementBoard(team, layout, lookups)
   const scorer = new PlacementScorer(board, team, data)
   const held = board.units.map((unit) => options.held?.get(unit))
   const movable = held.flatMap((hexId, i) => (hexId === undefined ? [i] : []))
@@ -240,7 +241,7 @@ function searched(
   if (options.full) {
     for (const tiles of everyPlacement(open, movable.length)) search.evaluate(fill(tiles))
   } else {
-    const random = seeded(`${mapKey}|${board.units.join(',')}|${team.artifact ?? ''}`)
+    const random = seeded(`${layout.key}|${board.units.join(',')}|${team.artifact ?? ''}`)
     for (let start = 0; start < STARTS; start++) {
       const tiles = [...open]
       for (let i = tiles.length - 1; i > 0; i--) {
@@ -262,12 +263,12 @@ function searched(
  */
 export function placeTeam(
   team: PlacementTeam,
-  mapKey: string,
+  layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
   options: PlacementOptions = {},
 ): PlacementResult {
-  const { board, scorer, search } = searched(team, mapKey, data, lookups, options)
+  const { board, scorer, search } = searched(team, layout, data, lookups, options)
   const { keys, complete } = search.equallyGood(data.weights.margin ?? 0, !options.full)
 
   // The highest total among them, the enemy units' rules counted, then the
@@ -320,11 +321,11 @@ export function placeTeam(
  */
 export function effectPoints(
   team: PlacementTeam,
-  mapKey: string,
+  layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
 ): number {
-  const { board, scorer, search } = searched(team, mapKey, data, lookups, {})
+  const { board, scorer, search } = searched(team, layout, data, lookups, {})
   board.place(positionsOf(search.bestKey()))
   return scorer.effectPoints()
 }

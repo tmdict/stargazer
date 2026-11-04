@@ -62,7 +62,7 @@ export function useSlFile() {
     heading.value = {
       season: data.season,
       date: data.exportedAt,
-      newMaps: slBoards(data, 'sl').some((board) => !board.recorded),
+      newMaps: slBoards(data, 'sl').some((board) => board.source === null),
       retired: isRetiredSeason(data.season),
       sample: data.sample,
       before: data.before ? { season: data.before.season, ...data.before.sample } : null,

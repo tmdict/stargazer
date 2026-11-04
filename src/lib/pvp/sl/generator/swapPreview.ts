@@ -10,11 +10,12 @@ import { boardChance, levelGap } from './chance'
 import type { SlFit } from './fit'
 import { boardPlacement, boardTeam, heldOn } from './formation'
 import type { SlBoard } from './setType'
+import { choiceSeason } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
 
 export interface SwapRequest {
   board: SlBoard
-  team: Pick<SlChoiceTeam, 'source' | 'family' | 'heroes' | 'artifact'>
+  team: Pick<SlChoiceTeam, 'source' | 'team' | 'family' | 'heroes' | 'artifact'>
   // The board's units as drawn.
   units: SlUnit[]
   // The heroes swapped out, and those that take their places, in the same order.
@@ -42,8 +43,8 @@ export function previewSwap(
   const heroes = team.heroes.map((id) => (out.includes(id) ? into[out.indexOf(id)]! : id))
   const placed = placeTeam(
     boardTeam(data, heroes, team.artifact),
-    board.key,
-    boardPlacement(data, board),
+    board.layout,
+    boardPlacement(data, board, team),
     PLACEMENT_LOOKUPS,
     { held: heldOn(units) },
   )
@@ -65,7 +66,7 @@ export function previewSwap(
       model,
       side,
       levelGap(data.prices, levels, heroes),
-      fit.measure(board, heroes),
+      fit.measure(board, heroes, choiceSeason(data, team).teams[team.team]!.map),
     ),
   }
 }

@@ -4,7 +4,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
-import { deploymentTiles, MAPS } from '@/lib/maps'
+import {
+  configTiles,
+  deploymentTiles,
+  MAPS,
+  presetLayout,
+  tilesLayout,
+  type MapLayout,
+} from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { ruleUnit } from '@/lib/placement/reach'
@@ -21,13 +28,14 @@ import {
   engineFormation,
   shownFormation,
 } from '@/lib/pvp/sl/generator/formation'
-import { slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
+import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { previewSwap } from '@/lib/pvp/sl/generator/swapPreview'
 import { recordedUnits, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
 import { matchVariant, TEAM_VARIANTS } from '@/lib/teams/modes'
+import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
@@ -164,22 +172,20 @@ describe('a file behind the current maps', () => {
   const behind = fileOn([...current.slice(0, 3), gone[0]!, gone[1]!])
   const onCurrent = slBoards(behind, 'sl')
 
-  it('stands every board on a current map, and gives a new map the teams of the one it replaced', () => {
-    expect(onCurrent.map((board) => board.key)).toEqual(current)
-    expect(onCurrent.map((board) => board.source)).toEqual([0, 1, 2, 3, 4])
-    expect(onCurrent.map((board) => board.recorded)).toEqual([true, true, true, false, false])
+  it('stands every board on a current map, and gives a new map the teams of every map', () => {
+    expect(onCurrent.map((board) => board.layout.key)).toEqual(current)
+    expect(onCurrent.map((board) => board.source)).toEqual([0, 1, 2, null, null])
   })
 
   it('keeps a held map on its own teams wherever the file holds it', () => {
     const shuffled = slBoards(fileOn([...current.slice(0, 3), gone[0]!, current[3]!]), 'sl')
-    expect(shuffled.map((board) => board.source)).toEqual([0, 1, 2, 4, 3])
-    expect(shuffled.map((board) => board.recorded)).toEqual([true, true, true, true, false])
+    expect(shuffled.map((board) => board.source)).toEqual([0, 1, 2, 4, null])
   })
 
   it('leaves the 5v5 and 3v3 types on map 1, which the file still holds', () => {
     for (const type of ['5v5', '3v3'] as const) {
       for (const board of slBoards(behind, type)) {
-        expect(board).toEqual({ key: current[0], map: 0, source: 0, recorded: true })
+        expect(board).toEqual({ layout: presetLayout(current[0]!), map: 0, source: 0 })
       }
     }
   })
@@ -216,6 +222,31 @@ describe('a file behind the current maps', () => {
   })
 })
 
+describe('a Map Editor map', () => {
+  // The first Supreme League map with only its first `ally` ally tiles.
+  const trimmed = (ally: number): MapLayout => {
+    const tiles = MAPS[TEAM_VARIANTS.sl.maps[0]!]!.grid.flatMap(({ type, hex }) =>
+      hex.map((id) => [id, type]),
+    )
+    const kept = tiles.filter(([, state]) => state === State.AVAILABLE_ALLY).slice(0, ally)
+    return tilesLayout([...tiles.filter(([, state]) => state !== State.AVAILABLE_ALLY), ...kept])
+  }
+
+  it('takes a set drawn in the engine formation on its own tiles', () => {
+    const layout = trimmed(9)
+    const on = layoutBoards(data, [layout])
+    const chosen = chooseOn(data, on)!
+    const [draw] = boardDraws(data, chosen, on)
+    expect(draw!.played).toBeNull()
+    const tiles = configTiles(layout.config, Team.ALLY)
+    expect(draw!.engine!.units.every(([tile]) => tiles.has(tile))).toBe(true)
+  })
+
+  it('takes no set when no team has a tile for each of its units', () => {
+    expect(chooseOn(data, layoutBoards(data, [trimmed(4)]))).toBeNull()
+  })
+})
+
 describe("the engine's formations", () => {
   const engineOf = (file: SlData) =>
     set.teams.map((team, i) => engineFormation(file, team, boards[i]!))
@@ -224,7 +255,7 @@ describe("the engine's formations", () => {
   it('stand each team on its map with the phantimal its heroes summon', () => {
     set.teams.forEach((choice, i) => {
       const placed = suggested[i]!.units
-      const map = boards[i]!.key
+      const map = boards[i]!.layout.key
       const tiles = placed.map(([tile]) => tile)
       expect(new Set(tiles).size).toBe(tiles.length)
       expect(tiles.every((tile) => deploymentTiles(map, Team.ALLY).has(tile))).toBe(true)
@@ -271,9 +302,14 @@ const shippedFormations = shippedDraws.map((draw) => shownFormation(draw, false)
 
 // How much of its phantimal's own goals, its Spirit Mark's, a team meets with
 // its units on these tiles.
-const phantimalMet = (team: PlacementTeam, board: SlBoard, units: readonly SlUnit[]): number => {
-  const placing = new PlacementBoard(team, board.key, PLACEMENT_LOOKUPS)
-  const scorer = new PlacementScorer(placing, team, boardPlacement(shipped, board))
+const phantimalMet = (
+  team: PlacementTeam,
+  choice: SlChoiceTeam,
+  board: SlBoard,
+  units: readonly SlUnit[],
+): number => {
+  const placing = new PlacementBoard(team, board.layout, PLACEMENT_LOOKUPS)
+  const scorer = new PlacementScorer(placing, team, boardPlacement(shipped, board, choice))
   const tileOf = new Map(units.map(([hexId, unit]) => [unit, hexId]))
   placing.place(placing.units.map((unit) => tileOf.get(unit)!))
   return scorer
@@ -293,10 +329,10 @@ const keepsUnmoved = (recorded: readonly SlUnit[], drawn: readonly SlUnit[], mov
 
 describe('a recorded board', () => {
   it('keeps every unit on its recorded tile but those moved for the Spirit Mark, and is explained as drawn', () => {
-    expect(onShipped.some((board) => board.recorded)).toBe(true)
+    expect(onShipped.some((board) => board.source !== null)).toBe(true)
     shippedSet.teams.forEach((team, index) => {
       const played = shippedDraws[index]!.played
-      expect(!!played).toBe(onShipped[index]!.recorded && !!recordedUnits(shipped, team))
+      expect(!!played).toBe(onShipped[index]!.source !== null && !!recordedUnits(shipped, team))
       if (!played) return
       const { units, why, moved } = played
       expect(keepsUnmoved(recordedUnits(shipped, team)!, units, moved)).toBe(true)
@@ -322,7 +358,7 @@ describe('a recorded board', () => {
         flex: [],
         pairs: [],
       }
-      const board: SlBoard = { key: shipped.maps[t.map]!, map: 0, source: t.map, recorded: true }
+      const board: SlBoard = { layout: presetLayout(shipped.maps[t.map]!)!, map: 0, source: t.map }
       const team = boardTeam(shipped, choice.heroes, choice.artifact)
       const recorded = recordedUnits(shipped, choice)!
       if (!recorded.some(([, unit]) => unit === team.phantimal)) return []
@@ -337,7 +373,8 @@ describe('a recorded board', () => {
         phantimal: team.phantimal,
         kept: keepsUnmoved(recorded, units, moved),
         asRecorded: JSON.stringify(units) === JSON.stringify(recorded),
-        gain: phantimalMet(team, board, units) - phantimalMet(team, board, recorded),
+        gain:
+          phantimalMet(team, choice, board, units) - phantimalMet(team, choice, board, recorded),
       }
     })
     const moves = drawn.filter(({ moved }) => moved.length)

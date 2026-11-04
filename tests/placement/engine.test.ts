@@ -30,7 +30,7 @@ import {
 } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
-import { buffTiles, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
+import { buffTiles, deploymentTiles, getMapByKey, presetLayout, resolveBoardMap } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
@@ -233,7 +233,7 @@ function scoreAt(
   data: PlacementData,
   positionsOf: (board: PlacementBoard) => number[] | null,
 ): Scored | null {
-  const board = new PlacementBoard(setup.team, setup.map, PLACEMENT_LOOKUPS)
+  const board = new PlacementBoard(setup.team, presetLayout(setup.map)!, PLACEMENT_LOOKUPS)
   const positions = positionsOf(board)
   if (!positions) return null
   const scorer = new PlacementScorer(board, setup.team, dataFor(setup, data))
@@ -262,7 +262,12 @@ interface Placed {
 
 function placeSetup(setup: Setup, data: PlacementData): Placed & { ms: number } {
   const start = performance.now()
-  const result = placeTeam(setup.team, setup.map, dataFor(setup, data), PLACEMENT_LOOKUPS)
+  const result = placeTeam(
+    setup.team,
+    presetLayout(setup.map)!,
+    dataFor(setup, data),
+    PLACEMENT_LOOKUPS,
+  )
   const ms = performance.now() - start
   return { result, pick: scoreAt(setup, data, () => result.positions)!, ms }
 }
@@ -648,7 +653,9 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
         const { result } = engineOf(setup)
         const start = performance.now()
         const data = dataFor(setup, dataOf(setup))
-        const full = placeTeam(setup.team, setup.map, data, PLACEMENT_LOOKUPS, { full: true })
+        const full = placeTeam(setup.team, presetLayout(setup.map)!, data, PLACEMENT_LOOKUPS, {
+          full: true,
+        })
         times.push(performance.now() - start)
         if (
           full.best.broken === result.best.broken &&

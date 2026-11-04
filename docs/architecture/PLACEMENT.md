@@ -1,12 +1,12 @@
 # Placement
 
-The placement engine (`src/lib/placement/`) works out where a team stands on one map: five heroes, the phantimal and the artifact, on the map's ally tiles. It scores a placement by what each unit's skill does from where it stands when the battle starts, read from the same skill code the boards draw, and by how the heroes stand in recorded formations. The PvP team generator draws a board in its formation where the board's team has no recorded game on the map, and on every other board when the board's switch asks for it. On a map with no recorded games yet, it also scales a borrowed team's odds by the share of its goals' points the engine's best placement keeps there, against the map the team was recorded on (`effectPoints`, `src/lib/pvp/sl/generator/fit.ts`).
+The placement engine (`src/lib/placement/`) works out where a team stands on one map: five heroes, the phantimal and the artifact, on the map's ally tiles. It scores a placement by what each unit's skill does from where it stands when the battle starts, read from the same skill code the boards draw, and by how the heroes stand in recorded formations. The PvP team generator draws a board in its formation where the board's team has no recorded game on the map, and on every other board when the board's switch asks for it. A board on a map with no recorded games yet takes the teams of every recorded map, one record per lineup, and the generator scales each team's odds by the share of its goals' points the engine's best placement keeps there, against the map the team was recorded on (`effectPoints`, `src/lib/pvp/sl/generator/fit.ts`). A team with more units than the map has tiles for gets no chance there.
 
 Two things make it hard. A team has too many placements to score them all on a page: five heroes on 13 tiles are 154,440 placements, and a phantimal makes eight times as many. And most goals leave many placements as good as each other, so the engine has to say how sure it is as well as pick one.
 
 ## What it takes
 
-`placeTeam(team, mapKey, data, lookups)` (`engine.ts`) returns the placement it picks, the best score found, how many placements were about as good and the tiles each hero stands on among them. Three inputs come from outside the engine:
+`placeTeam(team, layout, data, lookups)` (`engine.ts`) returns the placement it picks, the best score found, how many placements were about as good and the tiles each hero stands on among them. Three inputs come from outside the engine:
 
 | Input     | From                                                                                                                | Holds                                                                                                                                                                                         |
 | --------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -14,7 +14,7 @@ Two things make it hard. A team has too many placements to score them all on a p
 | `data`    | `placement` in the Supreme League data file, written by the external report generator (`PlacementData`, `types.ts`) | The lists the rules name, the heroes who lean to the front or the back, rules found in recorded formations, the weights, and how often each enemy hero with a rule against us is on each map. |
 | `lookups` | `PLACEMENT_LOOKUPS` (`lookups.ts`), over the data files                                                             | Each unit's faction, class and rules, each hero's charm and each artifact's rules.                                                                                                            |
 
-The engine imports from `src/lib` alone, and its lookups from the data loader, so its tests run it without a page. It reads each map's tiles and buff tiles from the map files (`src/lib/maps.ts`), never from `data`.
+The engine imports from `src/lib` alone, and its lookups from the data loader, so its tests run it without a page. It reads the map's tiles and buff tiles from `layout` (`MapLayout`, `src/lib/maps.ts`), never from `data`: a preset's from its map file under the preset's key, or a Map Editor map's from its tiles, with no buff tiles, under a key built from them (`tilesLayout`). The key seeds the search and picks the enemies' pick rates in `data`.
 
 ## The board
 

@@ -3,7 +3,7 @@ import { inPhantimalBand } from '../characters/phantimal'
 import { performPlace } from '../characters/place'
 import { performRemove } from '../characters/remove'
 import type { Hex } from '../hex'
-import { buffTiles, deploymentTiles } from '../maps'
+import { configTiles } from '../maps'
 import { getCharacterSkill, type SkillContext } from '../skills/skill'
 import { searchByRow } from '../skills/utils/ring'
 import { findUnitBehind } from '../skills/utils/targeting'
@@ -144,12 +144,12 @@ export class PlacementScorer {
     team: PlacementTeam,
     private readonly data: PlacementData,
   ) {
-    const { grid, mapKey, lookups } = board
+    const { grid, layout, lookups } = board
     this.heroes = team.heroes
-    this.enemyTiles = deploymentTiles(mapKey, Team.ENEMY)
+    this.enemyTiles = configTiles(layout.config, Team.ENEMY)
     this.enemyOrder = [...this.enemyTiles].sort((a, b) => a - b)
     const allyTiles = new Set(board.tiles)
-    this.buffTiles = buffTiles(mapKey).filter((hexId) => allyTiles.has(hexId))
+    this.buffTiles = layout.buffTiles.filter((hexId) => allyTiles.has(hexId))
     const enemyHexes = [...this.enemyTiles].map((hexId) => grid.getHexById(hexId))
     const near = new Map(
       board.tiles.map((hexId) => {
@@ -188,7 +188,7 @@ export class PlacementScorer {
     }
     // An enemy unit stands alone on its side, so a skill that reads its own
     // teammates finds none.
-    for (const [id, share] of Object.entries(data.pickRates[mapKey] ?? {})) {
+    for (const [id, share] of Object.entries(data.pickRates[layout.key] ?? {})) {
       const unit = Number(id)
       const rules = lookups.rulesOf(unit)
       if (rules.some((rule) => rule.team === 'enemy') && !getCharacterSkill(unit)) {
@@ -374,11 +374,11 @@ export class PlacementScorer {
   // on where the holder stands, not on its team. Allies count on the marked
   // tiles an ally can stand on, at most every other unit of the team.
   private bestCount(effect: Effect, holder: number): number {
-    const { mapKey, lookups } = this.board
+    const { layout, lookups } = this.board
     const { goal } = effect.rule
     const solo = new PlacementBoard(
       inPhantimalBand(holder) ? { heroes: [], phantimal: holder } : { heroes: [holder] },
-      mapKey,
+      layout,
       lookups,
     )
     const allyTiles = new Set(solo.tiles)

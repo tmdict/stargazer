@@ -2,6 +2,7 @@
  * Units are named by id and effects by the data file their rule sits in, so the
  * page words each reason in its own language. */
 
+import type { MapLayout } from '../maps'
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
 import { asGoodAs, type PlacementResult } from './engine'
@@ -91,12 +92,12 @@ function habitOf({ relation, heroes: [a, b] }: FormationRule, hero: number): Pla
  */
 export function explainPlacement(
   team: PlacementTeam,
-  mapKey: string,
+  layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
   { positions, best }: Pick<PlacementResult, 'positions' | 'best'>,
 ): PlacementExplanation {
-  const board = new PlacementBoard(team, mapKey, lookups)
+  const board = new PlacementBoard(team, layout, lookups)
   // The enemy units' rules only choose among placements as good, so no tile is
   // taken for them.
   const scorer = new PlacementScorer(board, team, { ...data, pickRates: {} })

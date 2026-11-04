@@ -1,8 +1,8 @@
 /* What the generator's picker offers: a Teams mode with every board on its
- * default map, or Supreme League on its current maps. The data file can be a
- * rotation behind those maps, so slBoards pairs each board with the file's
- * teams. */
+ * default map, or Supreme League on its current maps, and the teams each board
+ * draws from. */
 
+import { presetLayout, type MapLayout } from '@/lib/maps'
 import { DEFAULT_VARIANT, TEAM_VARIANTS, variantMaps, type TeamModeKey } from '@/lib/teams/modes'
 import type { SlData } from '../data/types'
 
@@ -14,28 +14,26 @@ export const slSetMode = (type: SlSetType): TeamModeKey =>
   type === 'sl' ? TEAM_VARIANTS.sl.mode : type
 
 export interface SlBoard {
-  key: string
-  // The map's place in the type's list, which boards on one map share.
+  layout: MapLayout
+  // The map's place in the set's list, which boards on one map share.
   map: number
-  // The file's map whose teams the board takes, or -1 when it has none to give.
-  source: number
-  // Whether those teams were recorded on this board's own map.
-  recorded: boolean
+  // The board's own map in the file, whose teams it takes; null on a map with
+  // no records, which takes the teams of every map.
+  source: number | null
 }
 
-// A map the file does not hold takes the teams of a map that has left the list,
-// the first map missing from the file with the first map gone from the list.
-export function slBoards(data: SlData, type: SlSetType): SlBoard[] {
-  const keys = type === 'sl' ? TEAM_VARIANTS.sl.maps : variantMaps(type, DEFAULT_VARIANT)
-  const held = data.maps
-  const replaced = held.flatMap((key, i) => (keys.includes(key) ? [] : [i]))
-  return keys.map((key) => {
-    const own = held.indexOf(key)
-    return {
-      key,
-      map: keys.indexOf(key),
-      source: own < 0 ? (replaced.shift() ?? -1) : own,
-      recorded: own >= 0,
-    }
+export function layoutBoards(data: SlData, layouts: readonly MapLayout[]): SlBoard[] {
+  const keys = layouts.map((layout) => layout.key)
+  return layouts.map((layout) => {
+    const own = data.maps.indexOf(layout.key)
+    return { layout, map: keys.indexOf(layout.key), source: own < 0 ? null : own }
   })
 }
+
+export const slBoards = (data: SlData, type: SlSetType): SlBoard[] =>
+  layoutBoards(
+    data,
+    (type === 'sl' ? TEAM_VARIANTS.sl.maps : variantMaps(type, DEFAULT_VARIANT)).map((key) =>
+      presetLayout(key)!,
+    ),
+  )

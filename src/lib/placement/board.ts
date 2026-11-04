@@ -2,14 +2,14 @@ import { findCharacterHex, getTilesWithCharactersByTeam } from '../characters/ch
 import { executePlaceCharacter, performPlace } from '../characters/place'
 import { performRemove } from '../characters/remove'
 import { Grid } from '../grid'
-import { deploymentTiles, getMapByKey } from '../maps'
+import { configTiles, type MapLayout } from '../maps'
 import { SkillManager } from '../skills/skill'
 import { FULL_GRID } from '../types/grid'
 import { Team } from '../types/team'
 import type { PlacementLookups, PlacementTeam } from './types'
 
 /**
- * One team on one map's ally tiles, placed with Stargazer's own placing. Each
+ * One team on a map layout's ally tiles, placed with Stargazer's own placing. Each
  * unit is placed once, so its skill spawns its companions, and from then on the
  * units are lifted and put down tile to tile, every skill updated after each
  * move, as a board does when a unit is dragged.
@@ -26,15 +26,13 @@ export class PlacementBoard {
 
   constructor(
     team: PlacementTeam,
-    readonly mapKey: string,
+    readonly layout: MapLayout,
     readonly lookups: PlacementLookups,
   ) {
-    const map = getMapByKey(mapKey)
-    if (!map) throw new Error(`placement: no map ${mapKey}`)
-    this.grid = new Grid(FULL_GRID, map)
+    this.grid = new Grid(FULL_GRID, layout.config)
     this.manager = new SkillManager(lookups)
     this.grid.skillManager = this.manager
-    this.tiles = [...deploymentTiles(mapKey, Team.ALLY)].sort((a, b) => a - b)
+    this.tiles = [...configTiles(layout.config, Team.ALLY)].sort((a, b) => a - b)
 
     const mains = team.phantimal === undefined ? team.heroes : [...team.heroes, team.phantimal]
     for (const unit of mains) {
@@ -45,7 +43,7 @@ export class PlacementBoard {
         free === undefined ||
         !executePlaceCharacter(this.grid, this.manager, free, unit, Team.ALLY)
       ) {
-        throw new Error(`placement: could not place unit ${unit} on ${mapKey}`)
+        throw new Error(`placement: could not place unit ${unit} on ${layout.key}`)
       }
     }
     const spawned = getTilesWithCharactersByTeam(this.grid, Team.ALLY)
