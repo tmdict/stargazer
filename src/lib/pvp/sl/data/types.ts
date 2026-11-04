@@ -25,7 +25,8 @@ interface SlTeamBase {
   players: number
   // Its games with a winner.
   decided: number
-  // The boards it can draw, the one it draws most often first.
+  // The boards it can draw, the one it draws most often first. Empty when its
+  // games recorded no formation, and then pick is absent.
   placements: SlPlacement[]
   // [artifact, index into placements] for each artifact (null for none) that
   // draws a board other than the first.

@@ -72,7 +72,6 @@ const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
       typeof t.decided === 'number' &&
       isOwnArtifacts(t[artifacts], artifacts) &&
       Array.isArray(t.placements) &&
-      t.placements.length > 0 &&
       (t.pick === undefined ||
         (Array.isArray(t.pick) &&
           t.pick.every((pick: unknown) => isPick(pick, (t.placements as unknown[]).length)))),

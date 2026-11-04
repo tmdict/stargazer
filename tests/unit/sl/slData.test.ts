@@ -82,7 +82,7 @@ function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
     expect(t.chance).toBeGreaterThan(0)
     expect(t.chance).toBeLessThan(1)
     expect(t.placement).toBeGreaterThanOrEqual(0)
-    expect(t.placement).toBeLessThan(team.placements.length)
+    expect(t.placement).toBeLessThan(Math.max(team.placements.length, 1))
     expect(
       t.flex.every((f) => t.heroes.includes(f.out) && f.options.every((id) => free.has(id))),
     ).toBe(true)

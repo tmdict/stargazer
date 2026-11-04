@@ -48,13 +48,20 @@ const chooseOn = (file: SlData, boards: SlBoard[], from = picks) =>
 const boards = slBoards(data, 'sl')
 const set = chooseOn(data, boards)!
 const byTile = (a: readonly number[], b: readonly number[]) => a[0]! - b[0]!
-// Every board of a set in its recorded placement.
-const recordedOf = (file: SlData, chosen: SlChoice) =>
-  chosen.teams.map((team) => ({ units: recordedUnits(file, team) }))
+// Every board of a set as the page draws it: in its team's recorded placement,
+// or the engine's for a team with none. boardFormations would also have the
+// engine explain a recorded placement, which `data`'s renamed maps can leave
+// with a unit off its map's ally tiles, so the engine places every board here.
+const drawnOf = (file: SlData, chosen: SlChoice, on: SlBoard[] = boards) => {
+  const engine = boardFormations(file, chosen, on, true)
+  return chosen.teams.map((team, i) => ({ units: recordedUnits(file, team) ?? engine[i]!.units }))
+}
 const decoded = (season: number) => {
   const file = { ...data, season }
-  return decodeMultiGridStateFromUrl(slTeamData(file, set, picks, boards, recordedOf(file, set)))!
+  return decodeMultiGridStateFromUrl(slTeamData(file, set, picks, boards, drawnOf(file, set)))!
 }
+const placementOf = (file: SlData, choice: SlChoice['teams'][number]) =>
+  (choice.source === 0 ? file : file.before!).teams[choice.team]!.placements[choice.placement]
 
 // Each board of a saved set against the team it came from, in that team's
 // season.
@@ -64,8 +71,9 @@ const expectSaved = (
   chosenOn: SlBoard[] = boards,
   mode = '5v5',
 ) => {
+  const formations = drawnOf(data, chosen, chosenOn)
   const state = decodeMultiGridStateFromUrl(
-    slTeamData(data, chosen, chosenWith, chosenOn, recordedOf(data, chosen)),
+    slTeamData(data, chosen, chosenWith, chosenOn, formations),
   )!
   expect(state.mode).toBe(mode)
   expect(state.boards).toHaveLength(chosen.teams.length)
@@ -73,12 +81,16 @@ const expectSaved = (
   state.boards.forEach((board, i) => {
     const choice = chosen.teams[i]!
     const team = (choice.source === 0 ? data : data.before!).teams[choice.team]!
-    const placement = team.placements[choice.placement]!
     expect(board.m).toBe(data.maps[team.map])
-    expect([...(board.c ?? [])].sort(byTile)).toEqual(
-      placement.c.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
+    const { units } = formations[i]!
+    if (placementOf(data, choice)) expect(units).toEqual(recordedUnits(data, choice))
+    const saved = [
+      ...(board.c ?? []),
+      ...(board.s ?? []).map(([tile, local]) => [tile, toPhantimalId(local), Team.ALLY]),
+    ]
+    expect(saved.sort(byTile)).toEqual(
+      units.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
     )
-    expect(board.s ?? []).toEqual(placement.s.map(([tile, id]) => [tile, id, Team.ALLY]))
     expect(board.a?.[0] ?? null).toBe(choice.artifact)
     const levels = (id: number) => chosenWith.find((p) => p.id === id)!
     expect(board.u).toEqual(
@@ -127,8 +139,13 @@ describe('a set saved as a team', () => {
       expect(board.s).toBeUndefined()
       expect(board.a === undefined || isPermanentArtifactId(board.a[0]!)).toBe(true)
     }
-    expect(state.boards.map((board) => board.c)).toEqual(
-      decoded(data.season).boards.map((board) => board.c),
+    // A recorded placement keeps its heroes' tiles. The engine places a team
+    // with none afresh, without the phantimal.
+    const recorded = set.teams.map((choice) => !!placementOf(data, choice))
+    expect(state.boards.filter((_, i) => recorded[i]).map((board) => board.c)).toEqual(
+      decoded(data.season)
+        .boards.filter((_, i) => recorded[i])
+        .map((board) => board.c),
     )
   })
 })
@@ -172,16 +189,18 @@ describe('a file behind the current maps', () => {
       ),
     ).toBe('sl')
     const saved = (i: number) => [...(state.boards[i]!.c ?? [])].sort(byTile)
-    for (const i of [0, 1, 2]) {
-      const choice = chosen.teams[i]!
-      const team = (choice.source === 0 ? behind : behind.before!).teams[choice.team]!
-      const { c } = team.placements[choice.placement]!
-      expect(saved(i)).toEqual(c.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile))
-    }
-    for (const i of [3, 4]) {
-      const allyTiles = deploymentTiles(current[i]!, Team.ALLY)
+    const held = [0, 1, 2].filter((i) => placementOf(behind, chosen.teams[i]!))
+    expect(held.map(saved)).toEqual(
+      held.map((i) =>
+        placementOf(behind, chosen.teams[i]!)!
+          .c.map(([tile, id]) => [tile, id, Team.ALLY])
+          .sort(byTile),
+      ),
+    )
+    current.forEach((key, i) => {
+      const allyTiles = deploymentTiles(key, Team.ALLY)
       expect(saved(i).every(([tile]) => allyTiles.has(tile!))).toBe(true)
-    }
+    })
   })
 })
 
@@ -239,9 +258,10 @@ describe('a recorded board', () => {
   it('is explained with every unit on its recorded tile', () => {
     expect(onShipped.some((board) => board.recorded)).toBe(true)
     shippedSet.teams.forEach((team, index) => {
-      if (!onShipped[index]!.recorded) return
+      const recorded = onShipped[index]!.recorded && recordedUnits(shipped, team)
+      if (!recorded) return
       const { units, why } = shippedFormations[index]!
-      expect(units).toEqual(recordedUnits(shipped, team))
+      expect(units).toEqual(recorded)
       const explained = why.units.map(({ unit, tile }) => [tile, unit])
       expect(explained.sort(byTile)).toEqual([...units].sort(byTile))
     })

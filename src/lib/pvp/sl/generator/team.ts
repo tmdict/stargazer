@@ -26,9 +26,12 @@ export const choiceSeason = (data: SlData, choice: Pick<SlChoiceTeam, 'source'>)
   choice.source === 0 ? data : data.before!
 
 // A team's recorded placement: its heroes and their companions, then its
-// phantimal and the phantimal's companions.
-export function recordedUnits(data: SlData, choice: SlChoiceTeam): SlUnit[] {
-  const { c, s } = choiceSeason(data, choice).teams[choice.team]!.placements[choice.placement]!
+// phantimal and the phantimal's companions. Null for a team whose games
+// recorded no formation, which the engine places.
+export function recordedUnits(data: SlData, choice: SlChoiceTeam): SlUnit[] | null {
+  const placement = choiceSeason(data, choice).teams[choice.team]!.placements[choice.placement]
+  if (!placement) return null
+  const { c, s } = placement
   return isRetiredSeason(data.season)
     ? c
     : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
