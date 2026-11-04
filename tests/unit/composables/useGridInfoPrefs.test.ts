@@ -102,6 +102,21 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.upgrades).toBe(true)
   })
 
+  it('keeps Details and Rules on hover either/or, Details winning a stored pair', async () => {
+    storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { hover: true, rules: true } }))
+    const mod = await importComposable()
+    const { prefs, setPref } = mountPrefs(mod)
+    expect(prefs.hover).toBe(true)
+    expect(prefs.rules).toBe(false)
+
+    setPref('rules', true)
+    expect(prefs.hover).toBe(false)
+    setPref('hover', true)
+    expect(prefs.rules).toBe(false)
+    setPref('hover', false)
+    expect(prefs.rules).toBe(false)
+  })
+
   it('persists the slice while preserving sibling slices of stargazer.prefs', async () => {
     const { useGridInfoPrefs } = await importComposable()
     const { setPref } = useGridInfoPrefs()
@@ -123,6 +138,7 @@ describe('deriveGridInfoView', () => {
       master: true,
       tileIds: true,
       hover: true,
+      rules: true,
       heroCard: true,
       upgrades: true,
       targeting: true,
@@ -134,6 +150,7 @@ describe('deriveGridInfoView', () => {
       tileIds: true,
       coordinates: true,
       hover: true,
+      rules: true,
       heroCard: true,
       upgrades: true,
       targeting: true,

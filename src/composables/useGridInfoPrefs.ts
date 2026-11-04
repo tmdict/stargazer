@@ -9,7 +9,9 @@
  *
  * Enabling a child auto-enables what it needs to take effect (master; Upgrades
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
- * re-enabled parent restores the children it had.
+ * re-enabled parent restores the children it had. Details on hover and Rules
+ * on hover are either/or: enabling one clears the other, and a stored pair
+ * with both on keeps Details.
  */
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
@@ -20,6 +22,7 @@ export interface GridInfoPrefs {
   master: boolean
   tileIds: boolean
   hover: boolean
+  rules: boolean
   heroCard: boolean
   upgrades: boolean
   targeting: boolean
@@ -35,6 +38,7 @@ export interface GridInfoView {
   tileIds: boolean
   coordinates: boolean
   hover: boolean
+  rules: boolean
   heroCard: boolean
   upgrades: boolean
   targeting: boolean
@@ -45,6 +49,7 @@ const DEFAULTS: GridInfoPrefs = {
   master: false,
   tileIds: true,
   hover: true,
+  rules: false,
   heroCard: false,
   upgrades: false,
   targeting: false,
@@ -62,6 +67,8 @@ export const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
   coordinates: ['tileIds'],
 }
 
+const EITHER_OR: Partial<Record<GridInfoKey, GridInfoKey>> = { hover: 'rules', rules: 'hover' }
+
 export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
   const effective = (key: Exclude<GridInfoKey, 'master'>): boolean =>
     prefs.master && prefs[key] && (GRID_INFO_PARENTS[key] ?? []).every((parent) => prefs[parent])
@@ -69,6 +76,7 @@ export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
     tileIds: effective('tileIds'),
     coordinates: effective('coordinates'),
     hover: effective('hover'),
+    rules: effective('rules'),
     heroCard: effective('heroCard'),
     upgrades: effective('upgrades'),
     targeting: effective('targeting'),
@@ -81,6 +89,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
   tileIds: false,
   coordinates: false,
   hover: false,
+  rules: false,
   heroCard: false,
   upgrades: false,
   targeting: false,
@@ -95,6 +104,7 @@ const sliceFrom = (slice: object): GridInfoPrefs => {
     const value = (slice as Record<string, unknown>)[key]
     if (typeof value === 'boolean') merged[key] = value
   }
+  if (merged.hover) merged.rules = false
   return merged
 }
 
@@ -134,6 +144,8 @@ export function useGridInfoPrefs(): {
 
   const setPref = (key: GridInfoKey, value: boolean): void => {
     state[key] = value
+    const other = EITHER_OR[key]
+    if (value && other) state[other] = false
     if (value && key !== 'master') {
       state.master = true
       const enableParents = (child: GridInfoKey): void => {

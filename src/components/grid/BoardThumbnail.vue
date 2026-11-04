@@ -193,6 +193,7 @@ const {
   crisp = false,
   numbered = false,
   outlined = [],
+  better = [],
   fineRing = false,
 } = defineProps<{
   mapKey: string
@@ -211,8 +212,9 @@ const {
   crisp?: boolean
   // Each tile's number, low in the hex so a portrait's face stays clear.
   numbered?: boolean
-  // Tiles drawn with a dashed outline.
+  // Tiles drawn with a dashed outline, and with a solid green one.
   outlined?: number[]
+  better?: number[]
   fineRing?: boolean
 }>()
 
@@ -272,12 +274,16 @@ const placedUnits = computed(() =>
 )
 
 const outlinedTiles = computed(() =>
-  outlined.flatMap((hexId) => {
+  [
+    ...outlined.map((hexId) => ({ hexId, better: false })),
+    ...better.map((hexId) => ({ hexId, better: true })),
+  ].flatMap(({ hexId, better }) => {
     const center = geometry.value.centers.get(hexId)
     return center
       ? [
           {
             hexId,
+            better,
             tile: geometry.value.points.get(hexId)!,
             inner: hexAt(center, hexSize * (1 - OUTLINE_INSET)),
           },
@@ -407,9 +413,10 @@ defineExpose({ zoneBox })
       :fill="tile.fill"
     />
     <template v-for="tile in outlinedTiles" :key="`outline-${tile.hexId}`">
-      <polygon class="outlined-fill" :points="tile.tile" />
+      <polygon class="outlined-fill" :class="{ better: tile.better }" :points="tile.tile" />
       <polygon
         class="outlined"
+        :class="{ better: tile.better }"
         :points="tile.inner"
         stroke-linejoin="round"
         vector-effect="non-scaling-stroke"
@@ -606,14 +613,25 @@ defineExpose({ zoneBox })
 
 .outlined {
   fill: none;
-  stroke: var(--color-text-primary);
+  stroke: var(--placement-also-fine);
   stroke-width: 2;
   stroke-dasharray: 4 3;
 }
 
+.outlined.better {
+  stroke: var(--placement-better);
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
 .outlined-fill {
-  fill: var(--color-text-primary);
+  fill: var(--placement-also-fine);
   fill-opacity: 0.12;
+}
+
+.outlined-fill.better {
+  fill: var(--placement-better);
+  fill-opacity: 0.2;
 }
 
 .ring-edge {

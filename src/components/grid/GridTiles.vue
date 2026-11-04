@@ -8,6 +8,7 @@ import SkillCornerLines from '@/components/SkillCornerLines.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
+import type { RulesCard } from '@/composables/useRulesOnHover'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
@@ -32,6 +33,8 @@ interface Props {
   selectedMapEditorState: State
   showSkills: boolean
   readonly?: boolean
+  // Rules on hover's rings and outlined tiles.
+  rules?: RulesCard | null
 }
 
 const props = defineProps<Props>()
@@ -124,6 +127,44 @@ const scaledFontSizes = computed(() => {
 const scaledStrokeWidth = computed(() => {
   const scale = ctx.hexScale
   return Math.max(1, BASE_STROKE_WIDTH * scale)
+})
+
+// Inside the tile's border and bevel, which would hide the dashes.
+const OUTLINE_SCALE = 0.75
+
+const cornerPoints = (hexId: number, scale = 1): string => {
+  const hex = ctx.grid.getHexById(hexId)
+  const center = ctx.layout.hexToPixel(hex)
+  return ctx.layout
+    .polygonCorners(hex)
+    .map((p) => `${center.x + (p.x - center.x) * scale},${center.y + (p.y - center.y) * scale}`)
+    .join(' ')
+}
+
+const rulesMarks = computed(() => {
+  const rules = props.rules
+  if (!rules) return null
+  const scale = ctx.hexScale
+  return {
+    outlines: [
+      ...rules.alsoFine.map((hexId) => ({ hexId, better: false })),
+      ...rules.better.map((hexId) => ({ hexId, better: true })),
+    ].map(({ hexId, better }) => ({
+      hexId,
+      better,
+      tile: cornerPoints(hexId),
+      inner: cornerPoints(hexId, OUTLINE_SCALE),
+    })),
+    // A focus ring comes last, so it keeps an edge it shares with an amber one.
+    rings: [...[...rules.named].filter((hexId) => !rules.own.has(hexId)), ...rules.own].map(
+      (hexId) => ({ hexId, focus: rules.own.has(hexId), points: cornerPoints(hexId) }),
+    ),
+    dash: `${5 * scale} ${4 * scale}`,
+    outline: 2.4 * scale,
+    betterOutline: 3 * scale,
+    ring: 3.2 * scale,
+    ringEdge: 7 * scale,
+  }
 })
 
 let blockHoverTimeout: number | null = null
@@ -516,9 +557,9 @@ onUnmounted(() => {
           </text>
         </g>
 
-        <!-- Invisible event layer. Rendered last so it is the topmost SVG layer and
-             receives the hover, click, and drop events; the tile polygons above are
-             visual only. The HTML character portraits are not under it (they keep
+        <!-- Invisible event layer. The topmost SVG layer that takes pointer events,
+             so it receives the hover, click, and drop events; the tile polygons above
+             are visual only. The HTML character portraits are not under it (they keep
              pointer-events: auto so they can be dragged), so a drag hovering over a
              portrait is resolved by DragDropProvider's position-based hex detection
              instead of by this layer. -->
@@ -546,6 +587,34 @@ onUnmounted(() => {
             @drop="!readonly && handleHexDrop($event, hex)"
           />
         </g>
+
+        <!-- Above the event layer and taking no pointer events, so the card's
+             ring is not hidden under the hovered tile's highlight. -->
+        <g v-if="rulesMarks" class="rules-marks capture-exclude">
+          <template v-for="tile in rulesMarks.outlines" :key="`rules-${tile.hexId}`">
+            <polygon class="rules-fill" :class="{ better: tile.better }" :points="tile.tile" />
+            <polygon
+              class="rules-outline"
+              :class="{ better: tile.better }"
+              :points="tile.inner"
+              :stroke-width="tile.better ? rulesMarks.betterOutline : rulesMarks.outline"
+              :stroke-dasharray="tile.better ? undefined : rulesMarks.dash"
+            />
+          </template>
+          <template v-for="ring in rulesMarks.rings" :key="`rules-ring-${ring.hexId}`">
+            <polygon
+              class="rules-ring-edge"
+              :points="ring.points"
+              :stroke-width="rulesMarks.ringEdge"
+            />
+            <polygon
+              class="rules-ring"
+              :class="{ focus: ring.focus }"
+              :points="ring.points"
+              :stroke-width="rulesMarks.ring"
+            />
+          </template>
+        </g>
       </g>
     </g>
   </svg>
@@ -567,6 +636,44 @@ onUnmounted(() => {
 
 .hex-text {
   pointer-events: none;
+}
+
+.rules-marks {
+  pointer-events: none;
+  stroke-linejoin: round;
+}
+
+.rules-fill {
+  fill: var(--placement-also-fine);
+  fill-opacity: 0.12;
+}
+
+.rules-fill.better {
+  fill: var(--placement-better);
+  fill-opacity: 0.2;
+}
+
+.rules-outline {
+  fill: none;
+  stroke: var(--placement-also-fine);
+}
+
+.rules-outline.better {
+  stroke: var(--placement-better);
+}
+
+.rules-ring-edge {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.35);
+}
+
+.rules-ring {
+  fill: none;
+  stroke: var(--color-warning);
+}
+
+.rules-ring.focus {
+  stroke: var(--color-info);
 }
 
 .tile-id {

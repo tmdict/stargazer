@@ -47,6 +47,11 @@ function compare(a: PlacementScore, b: PlacementScore): number {
 export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
   score.broken === best.broken && score.goals >= best.goals - margin - EPS
 
+// Better by more than the margin, the one difference within it that counts.
+export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean =>
+  score.broken < base.broken ||
+  (score.broken === base.broken && score.goals > base.goals + margin + EPS)
+
 // A generator of numbers in [0, 1) seeded from a string, so one team on one map
 // always searches from the same starts.
 function seeded(text: string): () => number {

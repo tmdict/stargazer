@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Why a unit on a board stands where it does: one line per reason, a verb
-   then what it is about, and a last line when the outlined tiles would do as
-   well. */
+   then what it is about, then a line when the green tiles would do better and
+   a last one when the dashed tiles would do as well. */
 
 import { computed } from 'vue'
 
@@ -12,10 +12,11 @@ import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 import { useSlNames } from './useSlNames'
 
-const { reasons, alsoFine } = defineProps<{
+const { reasons, alsoFine, better } = defineProps<{
   anchor: Pick<Element, 'getBoundingClientRect'>
-  reasons: PlacementReason[]
+  reasons: readonly PlacementReason[]
   alsoFine: boolean
+  better: boolean
 }>()
 
 const i18n = useI18nStore()
@@ -50,6 +51,15 @@ const lines = computed(() => [
     lead: i18n.t(`app.placement-${reason.verb}`),
     parts: partsOf(reason),
   })),
+  ...(better
+    ? [
+        {
+          lead: i18n.t('app.placement-stands'),
+          parts: line('placement-stands-better', { better: named(i18n.t('app.placement-better')) }),
+          better: true,
+        },
+      ]
+    : []),
   ...(alsoFine
     ? [{ lead: i18n.t('app.placement-stands'), parts: line('placement-stands-also-fine') }]
     : []),

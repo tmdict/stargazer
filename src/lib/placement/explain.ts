@@ -5,9 +5,9 @@
 import type { MapLayout } from '../maps'
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
-import { asGoodAs, type PlacementResult } from './engine'
+import { asGoodAs, beats } from './engine'
 import { ruleUnit } from './reach'
-import { PlacementScorer, type OwnGoalCheck } from './score'
+import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { FormationRule, PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // One of the team's effects: the data file its rule sits in (the unit's, the
@@ -43,8 +43,10 @@ export interface UnitPlacement {
   unit: number
   tile: number
   reasons: PlacementReason[]
-  // The free tiles the unit could move to alone with a placement as good.
+  // The free tiles the unit could move to alone with a placement as good, and
+  // those where it would be better.
   alsoFine: number[]
+  better: number[]
 }
 
 export interface PlacementExplanation {
@@ -87,15 +89,16 @@ function habitOf({ relation, heroes: [a, b] }: FormationRule, hero: number): Pla
 }
 
 /**
- * The reasons for each unit's tile in a placement placeTeam picked, and for the
- * artifact's effects.
+ * The reasons for each unit's tile in a placement, and for the artifact's
+ * effects. A unit's other tiles are measured against `best`, the best score
+ * placeTeam found, or the placement's own where none is given.
  */
 export function explainPlacement(
   team: PlacementTeam,
   layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
-  { positions, best }: Pick<PlacementResult, 'positions' | 'best'>,
+  { positions, best }: { positions: number[]; best?: PlacementScore },
 ): PlacementExplanation {
   const board = new PlacementBoard(team, layout, lookups)
   // The enemy units' rules only choose among placements as good, so no tile is
@@ -103,6 +106,7 @@ export function explainPlacement(
   const scorer = new PlacementScorer(board, team, { ...data, pickRates: {} })
   const margin = data.weights.margin ?? 0
   board.place(positions)
+  const base = best ?? scorer.score()
 
   const goals = scorer.ownGoals()
   const effects = goals.map((goal): PlacedEffect => ({
@@ -122,19 +126,23 @@ export function explainPlacement(
 
   const used = new Set(positions)
   const free = board.tiles.filter((hexId) => !used.has(hexId))
-  const alsoFineFor = board.units.map((_, index) =>
-    free.filter((hexId) => {
+  const movesFor = board.units.map((_, index) => {
+    const alsoFine: number[] = []
+    const better: number[] = []
+    for (const hexId of free) {
       const next = [...positions]
       next[index] = hexId
       board.place(next)
-      return asGoodAs(scorer.score(), best, margin)
-    }),
-  )
+      const score = scorer.score()
+      if (beats(score, base, margin)) better.push(hexId)
+      else if (asGoodAs(score, base, margin)) alsoFine.push(hexId)
+    }
+    return { alsoFine, better }
+  })
   board.place(positions)
 
   const units = board.units.map((unit, index): UnitPlacement => {
     const owner = ruleUnit(unit)
-    const alsoFine = alsoFineFor[index]!
     const reasons: PlacementReason[] = []
     goals.forEach(({ rule, met, on, to }, k) => {
       const verb = effectVerb(rule.goal)
@@ -153,7 +161,7 @@ export function explainPlacement(
     if (lean && !own.some((rule) => RANKS[rule.relation])) {
       reasons.push({ verb: 'stands', place: lean })
     }
-    return { unit, tile: positions[index]!, reasons, alsoFine }
+    return { unit, tile: positions[index]!, reasons, ...movesFor[index]! }
   })
 
   const artifact = goals.flatMap(({ source, rule, met, on, to }, k): PlacementReason[] =>
@@ -162,4 +170,45 @@ export function explainPlacement(
       : [],
   )
   return { units, artifact }
+}
+
+// A unit with nothing to explain and no other tile to point at has no card.
+export const hasCard = ({ reasons, alsoFine, better }: UnitPlacement): boolean =>
+  reasons.length > 0 || alsoFine.length > 0 || better.length > 0
+
+/**
+ * The tiles a card rings: those of its unit, with its companions, and of the
+ * units its reasons name, and whether it is the artifact's own card (no unit)
+ * or names the artifact.
+ */
+export function cardRings(
+  why: PlacementExplanation,
+  reasons: readonly PlacementReason[],
+  unit?: number,
+): { own: Set<number>; named: Set<number>; artifact?: 'own' | 'named' } {
+  const named = new Set<number>()
+  let artifact = false
+  for (const reason of reasons) {
+    if (reason.verb === 'stands') {
+      if (reason.hero !== undefined) named.add(reason.hero)
+      continue
+    }
+    for (const to of reason.to) named.add(to)
+    if (reason.verb === 'receives') {
+      if (reason.effect.giver === undefined) artifact = true
+      else named.add(reason.effect.giver)
+    }
+  }
+  const tilesOf = (units: Set<number>) =>
+    new Set(
+      why.units
+        .filter((entry) => units.has(entry.unit) || units.has(ruleUnit(entry.unit)))
+        .map(({ tile }) => tile),
+    )
+  const own = unit === undefined ? undefined : ruleUnit(unit)
+  return {
+    own: tilesOf(new Set(own === undefined ? [] : [own])),
+    named: tilesOf(named),
+    artifact: own === undefined ? 'own' : artifact ? 'named' : undefined,
+  }
 }

@@ -5,9 +5,11 @@
  * heroes, the artifact the set gives it and the phantimal they can summon,
  * placed on the board's map from their skills, reading no recorded placement.
  * A file from another season than Stargazer's is placed as slTeamData draws
- * it, without its seasonal artifacts and phantimals. */
+ * it, without its seasonal artifacts and phantimals. A side placed by hand on
+ * the Arena or Teams is explained where it stands (Rules on hover). */
 
-import { toPhantimalId } from '@/lib/characters/phantimal'
+import { isBaseHeroId } from '@/lib/characters/character'
+import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import type { MapLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
@@ -194,4 +196,34 @@ export function boardDraws(data: SlData, set: SlChoice, boards: readonly SlBoard
     const played = playedFormation(data, choice, board)
     return { played, engine: played ? null : engineFormation(data, choice, board) }
   })
+}
+
+/**
+ * Why each unit of a side stands where it does, measured against where it
+ * stands; null for a side the engine would place otherwise, such as one with a
+ * synergy hero or a unit its skills would not spawn.
+ */
+export function sideExplanation(
+  data: SlData,
+  layout: MapLayout,
+  units: readonly SlUnit[],
+  artifact: number | null,
+): PlacementExplanation | null {
+  const ids = units.map(([, unit]) => unit)
+  const team = {
+    ...boardTeam(data, ids.filter(isBaseHeroId), artifact),
+    phantimal: isRetiredSeason(data.season) ? undefined : ids.find(isPhantimalId),
+  }
+  let board: PlacementBoard
+  try {
+    board = new PlacementBoard(team, layout, PLACEMENT_LOOKUPS)
+  } catch {
+    return null
+  }
+  const held = heldOn(units)
+  if (board.units.length !== units.length || board.units.some((unit) => !held.has(unit))) {
+    return null
+  }
+  const positions = board.units.map((unit) => held.get(unit)!)
+  return explainPlacement(team, layout, data.placement, PLACEMENT_LOOKUPS, { positions })
 }

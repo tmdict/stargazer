@@ -93,7 +93,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 
-`stargazer.prefs` holds two fields, `gridInfo` for Grid Info and `theme` for the site's look, and a write replaces its own field and keeps the other. In `gridInfo` a missing or non-boolean field takes its default, and a value that does not parse is replaced with the defaults. `theme` is `"light"` or `"dark"`, written only when the top bar's light and dark button is pressed; while it is missing or holds anything else, the site follows the device's light or dark setting, live. The example shows the Grid Info defaults with the dark look picked:
+`stargazer.prefs` holds two fields, `gridInfo` for Grid Info and `theme` for the site's look, and a write replaces its own field and keeps the other. In `gridInfo` a missing or non-boolean field takes its default, and a value that does not parse is replaced with the defaults. `hover` (Details on hover) and `rules` (Rules on hover) are never both true: turning one on turns the other off, and a stored value with both true reads as `hover` on and `rules` off. `theme` is `"light"` or `"dark"`, written only when the top bar's light and dark button is pressed; while it is missing or holds anything else, the site follows the device's light or dark setting, live. The example shows the Grid Info defaults with the dark look picked:
 
 ```json
 {
@@ -101,6 +101,7 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
     "master": false,
     "tileIds": true,
     "hover": true,
+    "rules": false,
     "heroCard": false,
     "upgrades": false,
     "targeting": false,

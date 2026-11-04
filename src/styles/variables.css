@@ -58,6 +58,9 @@
   --tile-stroke-held-enemy: var(--tile-stroke-strong);
   --tile-artifact-fill: rgba(0, 0, 0, 0.06);
   --tile-artifact-fill-hover: rgba(0, 0, 0, 0.16);
+  --placement-also-fine: var(--tile-stroke-strong);
+  --placement-better: #1f9d55;
+  --placement-better-on-dark: #4ade80;
   --tile-wall-blocked: #858b91;
   --tile-wall-breakable: #a0a59d;
   --tile-hatch-blocked: transparent;
@@ -330,6 +333,8 @@
   --tile-stroke-held-ally: var(--unit-frame-ally);
   --tile-stroke-held-enemy: var(--unit-frame-enemy);
   --tile-artifact-fill: rgba(255, 255, 255, 0.06);
+  --placement-also-fine: var(--color-text-primary);
+  --placement-better: var(--placement-better-on-dark);
   --tile-artifact-fill-hover: rgba(255, 255, 255, 0.16);
   --tile-wall-blocked: var(--tile-stroke);
   --tile-wall-breakable: var(--tile-stroke);

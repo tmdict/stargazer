@@ -31,6 +31,7 @@ const rows: Row[] = [
   { key: 'tileIds', label: 'app.tile-ids' },
   { key: 'coordinates', label: 'app.coordinates' },
   { key: 'hover', label: 'app.details-on-hover' },
+  { key: 'rules', label: 'app.rules-on-hover' },
   { key: 'targeting', label: 'app.targeting' },
   { key: 'heroCard', label: 'app.hero-card' },
   { key: 'upgrades', label: 'app.upgrades' },

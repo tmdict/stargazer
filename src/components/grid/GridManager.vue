@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import GridArrows from './GridArrows.vue'
 import GridArtifacts from './GridArtifacts.vue'
@@ -8,11 +8,13 @@ import GridTiles from './GridTiles.vue'
 import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
+import SlPlacementCard from '@/components/guide/sl/SlPlacementCard.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
+import { useRulesOnHover } from '@/composables/useRulesOnHover'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
@@ -58,6 +60,19 @@ const { registerHexDetector, unregisterHexDetector, registerDropHandler, unregis
 
 // GridTiles exposes its root SVG for screen→SVG coordinate conversion
 const gridTilesRef = ref<InstanceType<typeof GridTiles> | null>(null)
+const gridCharactersRef = ref<InstanceType<typeof GridCharacters> | null>(null)
+
+const {
+  card: rulesCard,
+  faded: rulesFaded,
+  anchor: rulesAnchor,
+} = useRulesOnHover(
+  gridEvents,
+  () => props.info.rules,
+  () => gridTilesRef.value?.svgEl,
+  () => gridCharactersRef.value?.liftActionsEl,
+)
+const rulesArtifactMark = computed(() => rulesCard.value && (rulesCard.value.artifact ?? 'faded'))
 
 const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
@@ -242,6 +257,7 @@ defineExpose({
       :selected-map-editor-state="selectedMapEditorState"
       :show-skills="showSkills"
       :readonly
+      :rules="rulesCard"
     />
 
     <!-- Artifact layer (behind characters). Team-view hiding and invert-aware
@@ -250,6 +266,8 @@ defineExpose({
       :ally-artifact-id="ctx.artifacts.ally"
       :enemy-artifact-id="ctx.artifacts.enemy"
       :show-hover="info.hover"
+      :show-rules="info.rules"
+      :rules-mark="rulesArtifactMark"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
       :tap-mode
@@ -257,8 +275,11 @@ defineExpose({
 
     <!-- Character layer (above artifacts) -->
     <GridCharacters
+      ref="gridCharactersRef"
       :characters
       :show-hover="info.hover"
+      :show-rules="info.rules"
+      :faded="rulesFaded"
       :show-skin="info.heroSkin"
       :show-skills
       :is-map-editor-mode="isMapEditorMode"
@@ -285,6 +306,14 @@ defineExpose({
          the pathfinding debug lines when the Debug tab shows both. -->
     <GridArrows v-if="info.targeting" />
   </div>
+
+  <SlPlacementCard
+    v-if="rulesCard && rulesAnchor"
+    :anchor="rulesAnchor"
+    :reasons="rulesCard.reasons"
+    :also-fine="rulesCard.alsoFine.length > 0"
+    :better="rulesCard.better.length > 0"
+  />
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->
   <Teleport to="body">

@@ -3,6 +3,7 @@
    dataLoader and Vue. */
 
 import variantMapLists from '@/data/maps.json'
+import type { Grid } from './grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -184,6 +185,14 @@ export const tilesLayout = (tiles: readonly number[][]): MapLayout => {
   const key = layoutKey(grid.flatMap(({ type, hex }) => hex.map((id) => tileKey(id, type))))
   return { key: `edited:${key}`, config: { id: 0, name: '', grid }, buffTiles: [] }
 }
+
+// The layout a live board's tiles stand on.
+export const gridLayout = (grid: Pick<Grid, 'getAllTiles'>): MapLayout =>
+  tilesLayout(
+    grid
+      .getAllTiles()
+      .flatMap((tile) => (tile.state === State.DEFAULT ? [] : [[tile.hex.getId(), tile.state]])),
+  )
 
 /* The map a serialized board stands on: its key when present, else the preset
  * its tiles reproduce, else the default map. The one rule shared by

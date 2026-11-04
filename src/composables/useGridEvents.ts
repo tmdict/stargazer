@@ -1,6 +1,7 @@
 import { inject, provide, type InjectionKey } from 'vue'
 
 import type { Hex } from '@/lib/hex'
+import type { Team } from '@/lib/types/team'
 
 export interface GridEvents {
   // Hex interactions; the DOM event travels along so handlers can tell touch
@@ -10,6 +11,8 @@ export interface GridEvents {
   // Character interactions
   'character:mouseenter': (hexId: number) => void
   'character:mouseleave': (hexId: number) => void
+  'artifact:mouseenter': (team: Team) => void
+  'artifact:mouseleave': (team: Team) => void
 }
 
 /**

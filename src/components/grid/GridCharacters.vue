@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
 import HoldRing from '../ui/HoldRing.vue'
@@ -38,6 +38,11 @@ interface Props {
   characters: readonly CharacterType[]
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
   showHover: boolean
+  // Rules on hover, whose card the board draws for the ally side, so only an
+  // enemy unit keeps its hover card.
+  showRules: boolean
+  // Ally units Rules on hover fades while its card shows, by tile.
+  faded?: ReadonlySet<number> | null
   showSkin: boolean
   showSkills: boolean
   isMapEditorMode: boolean
@@ -130,6 +135,10 @@ const LIFT_PILL_ROOM = LIFT_PILL_GAP + 24
 // Anchored to the lifted unit's visual top edge, or below the unit when it would
 // leave the band the board draws in (drawnBounds), where team view's crop would
 // cut it off.
+// Exposed so Rules on hover's card stays clear of it.
+const liftActionsEl = ref<HTMLElement | null>(null)
+defineExpose({ liftActionsEl })
+
 const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
@@ -312,7 +321,8 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 // own their interactivity policy (GridTiles ignores these on readonly).
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
   gridEvents.emit('character:mouseenter', hexId)
-  if (props.showHover) show(event, baseCharacterAt(characterId))
+  const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
+  if (props.showHover || (props.showRules && enemy)) show(event, baseCharacterAt(characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
@@ -414,6 +424,7 @@ const liftedMode = computed(() =>
         'map-editor-disabled': isMapEditorMode,
         readonly: readonly,
         lifted: liftedHexId === hexId && liftedGridId === ctx.id,
+        'rules-faded': faded?.has(hexId),
       }"
       :style="getCharacterStyle(hexId)"
       :draggable="!isMapEditorMode && !readonly"
@@ -472,7 +483,7 @@ const liftedMode = computed(() =>
         :disabled="readonly"
         :aria-label="i18n.t(`app.${button.mode.name}`)"
         @click="cycleMode(button)"
-        @mouseenter="showHover && onModeEnter($event, button.hexId)"
+        @mouseenter="(showHover || showRules) && onModeEnter($event, button.hexId)"
         @mouseleave="onModeLeave"
         @touchstart.passive="onModeTouch"
         @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
@@ -497,6 +508,7 @@ const liftedMode = computed(() =>
 
     <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
       <div
+        ref="liftActionsEl"
         class="lift-actions capture-exclude"
         :class="{ below: liftPill.below }"
         :style="liftPill.style"
@@ -568,6 +580,10 @@ const liftedMode = computed(() =>
 
 .character.readonly {
   cursor: default;
+}
+
+.character.rules-faded {
+  opacity: 0.35;
 }
 
 .character-content {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /* A map's board in the set. Hovering or tapping a unit or the artifact shows
    why it stands where it does, rings it and the units the card names and
-   outlines the free tiles the unit could take as well. A swap tried below the
-   board draws its heroes on the tiles they would take and fades the units that
-   leave. */
+   outlines the free tiles the unit could take as well (dashed) or better
+   (green). A swap tried below the board draws its heroes on the tiles they
+   would take and fades the units that leave. */
 
 import { computed, useTemplateRef } from 'vue'
 
@@ -13,8 +13,12 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { usePreviewImages } from '@/composables/usePreviewImages'
 import { inPhantimalBand, phantimalBandLocal } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
-import type { PlacementExplanation, UnitPlacement } from '@/lib/placement/explain'
-import { ruleUnit } from '@/lib/placement/reach'
+import {
+  cardRings,
+  hasCard,
+  type PlacementExplanation,
+  type UnitPlacement,
+} from '@/lib/placement/explain'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { PreviewBoard, PreviewUnit } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
@@ -30,7 +34,7 @@ const {
 }>()
 
 // The artifact's card has no unit and no tiles of its own.
-type Shown = Pick<UnitPlacement, 'reasons' | 'alsoFine'> & { unit?: number }
+type Shown = Pick<UnitPlacement, 'reasons' | 'alsoFine' | 'better'> & { unit?: number }
 
 const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
 const { anchor, payload: shown, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Shown>()
@@ -38,7 +42,7 @@ const thumbnailView = useTemplateRef<InstanceType<typeof BoardThumbnail>>('thumb
 
 // The unit on a tile, when it has a card.
 const entryOn = (tile: number): UnitPlacement | undefined =>
-  why?.units.find((entry) => entry.tile === tile && (entry.reasons.length || entry.alsoFine.length))
+  why?.units.find((entry) => entry.tile === tile && hasCard(entry))
 
 const shownAt = (target: EventTarget | null): [Element, Shown] | null => {
   if (!why || !(target instanceof Element)) return null
@@ -49,7 +53,7 @@ const shownAt = (target: EventTarget | null): [Element, Shown] | null => {
   }
   const artifact = target.closest('[data-artifact="ally"]')
   return artifact && why.artifact.length
-    ? [artifact, { reasons: why.artifact, alsoFine: [] }]
+    ? [artifact, { reasons: why.artifact, alsoFine: [], better: [] }]
     : null
 }
 
@@ -63,38 +67,9 @@ const onClick = (event: Event): void => {
   if (found) toggle(...found)
 }
 
-// The card's own hero (its companion with it) or the artifact, and the units
-// and artifact the card names, each by tile.
-const lit = computed(() => {
-  const entry = shown.value
-  if (!entry || !why) return null
-  const named = new Set<number>()
-  let artifact = false
-  for (const reason of entry.reasons) {
-    if (reason.verb === 'stands') {
-      if (reason.hero !== undefined) named.add(reason.hero)
-      continue
-    }
-    for (const unit of reason.to) named.add(unit)
-    if (reason.verb === 'receives') {
-      if (reason.effect.giver === undefined) artifact = true
-      else named.add(reason.effect.giver)
-    }
-  }
-  // A unit by its own id, or a hero with its companions.
-  const tilesOf = (units: Set<number>) =>
-    new Set(
-      why.units
-        .filter(({ unit }) => units.has(unit) || units.has(ruleUnit(unit)))
-        .map(({ tile }) => tile),
-    )
-  const own = entry.unit === undefined ? undefined : ruleUnit(entry.unit)
-  return {
-    own: tilesOf(new Set(own === undefined ? [] : [own])),
-    named: tilesOf(named),
-    artifact: own === undefined ? 'own' : artifact ? 'named' : undefined,
-  }
-})
+const lit = computed(() =>
+  shown.value && why ? cardRings(why, shown.value.reasons, shown.value.unit) : null,
+)
 
 const drawnOn = (hexId: number, unit: number): PreviewUnit => ({
   hexId,
@@ -167,6 +142,7 @@ const unitCardAnchor = computed(() => {
     crisp
     fine-ring
     :outlined="shown?.alsoFine"
+    :better="shown?.better"
     @mouseover="onOver"
     @mouseout="hoverClose"
     @click="onClick"
@@ -177,6 +153,7 @@ const unitCardAnchor = computed(() => {
     :anchor="unitCardAnchor"
     :reasons="shown.reasons"
     :also-fine="shown.alsoFine.length > 0"
+    :better="shown.better.length > 0"
   />
 </template>
 

@@ -1,18 +1,21 @@
 /* Supreme League worker: reads the data file once and answers the generator,
- * the boards' formations, the swaps tried on them, Generate on the Arena and
- * Teams and Who Would Win?, so neither the search, the placing nor a
- * prediction holds up the page. */
+ * the boards' formations, the swaps tried on them, Generate and Rules on hover
+ * on the Arena and Teams and Who Would Win?, so neither the search, the
+ * placing nor a prediction holds up the page. */
 
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
+import type { PlacementExplanation } from '@/lib/placement/explain'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
+import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
 import {
   boardDraws,
   engineFormation,
   shownFormation,
+  sideExplanation,
   type BoardDraw,
   type BoardFormation,
 } from '@/lib/pvp/sl/generator/formation'
@@ -36,6 +39,14 @@ export type SlRequest =
       layouts: MapLayout[]
     }
   | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[] }
+  // A side of a board as it stands, its units on their tiles.
+  | {
+      type: 'explain'
+      id: number
+      layout: MapLayout
+      units: SlUnit[]
+      artifact: number | null
+    }
   | { type: 'placeEngine'; id: number; team: SlChoiceTeam; board: SlBoard }
   | { type: 'swap'; id: number; swap: SwapRequest }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
@@ -48,6 +59,7 @@ export type SlResponse =
   // draws first; null when no set can be made.
   | { type: 'filled'; id: number; team: string | null }
   | { type: 'placed'; id: number; boards: BoardDraw[] }
+  | { type: 'explained'; id: number; why: PlacementExplanation | null }
   | { type: 'placedEngine'; id: number; formation: BoardFormation }
   | { type: 'swapped'; id: number; preview: SwapPreview }
   | { type: 'predicted'; id: number; panel: WwwPanel }
@@ -93,6 +105,9 @@ scope.addEventListener('message', async (event) => {
         : []
       const team = set && slTeamData(data, set, picks, boards, formations)
       scope.postMessage({ type: 'filled', id: msg.id, team })
+    } else if (msg.type === 'explain') {
+      const why = sideExplanation(data, msg.layout, msg.units, msg.artifact)
+      scope.postMessage({ type: 'explained', id: msg.id, why })
     } else if (msg.type === 'place') {
       const boards = boardDraws(data, msg.set, msg.boards)
       scope.postMessage({ type: 'placed', id: msg.id, boards })

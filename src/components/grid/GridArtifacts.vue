@@ -8,6 +8,7 @@ import GridPointer from '@/components/grid/GridPointer.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
+import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
@@ -27,6 +28,11 @@ const props = defineProps<{
   enemyArtifactId?: number | null
   // Gates the hover card only; placement interactions are unaffected.
   showHover: boolean
+  // Rules on hover, whose card the board draws for the ally artifact, so only
+  // the enemy's keeps its hover card.
+  showRules: boolean
+  // How Rules on hover's card marks the ally artifact.
+  rulesMark?: 'own' | 'named' | 'faded' | null
   readonly?: boolean
   isMapEditorMode?: boolean
   // The sheet layout's tap-to-sheet instead of the desktop popup.
@@ -37,6 +43,7 @@ const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const grids = useGrids()
+const gridEvents = useGridEvents()
 const { setArtifactTarget, requestTab } = useSelectionState()
 const { artifactDragPayload } = useDragDrop()
 
@@ -53,8 +60,15 @@ const {
 
 // Runs on readonly boards too: the card is pure information, gated by the
 // pref alone.
-const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null) => {
-  if (props.showHover) show(event, artifact)
+const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null, team: Team) => {
+  if (!artifact) return
+  gridEvents.emit('artifact:mouseenter', team)
+  if (props.showHover || (props.showRules && team === Team.ENEMY)) show(event, artifact)
+}
+
+const hideArtifactHover = (team: Team) => {
+  gridEvents.emit('artifact:mouseleave', team)
+  hideArtifactTooltip()
 }
 
 // This board's host-cell SVG, used to anchor the artifact popup to the clicked
@@ -301,7 +315,10 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     <div
       v-if="allyArtifact || allyRetired"
       class="grid-artifact"
-      :class="{ readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) }"
+      :class="[
+        { readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) },
+        rulesMark && `rules-${rulesMark}`,
+      ]"
       :style="getAllyStyles"
       :draggable="canDrag && !!allyArtifact"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
@@ -310,8 +327,8 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragover="allowArtifactDrop($event, Team.ALLY)"
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ALLY)"
-      @mouseenter="allyArtifact && showArtifactTooltip($event, allyArtifact)"
-      @mouseleave="hideArtifactTooltip"
+      @mouseenter="showArtifactTooltip($event, allyArtifact, Team.ALLY)"
+      @mouseleave="hideArtifactHover(Team.ALLY)"
       @pointerdown="allyArtifact && startHold($event, Team.ALLY)"
       @contextmenu="allyArtifact && onContextMenu($event, Team.ALLY)"
     >
@@ -337,8 +354,8 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragover="allowArtifactDrop($event, Team.ENEMY)"
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ENEMY)"
-      @mouseenter="enemyArtifact && showArtifactTooltip($event, enemyArtifact)"
-      @mouseleave="hideArtifactTooltip"
+      @mouseenter="showArtifactTooltip($event, enemyArtifact, Team.ENEMY)"
+      @mouseleave="hideArtifactHover(Team.ENEMY)"
       @pointerdown="enemyArtifact && startHold($event, Team.ENEMY)"
       @contextmenu="enemyArtifact && onContextMenu($event, Team.ENEMY)"
     >
@@ -442,6 +459,22 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 .grid-artifact.readonly {
   cursor: default;
+}
+
+.grid-artifact.rules-faded {
+  opacity: 0.35;
+}
+
+.rules-own .artifact-circle {
+  box-shadow:
+    0 0 0 3px var(--color-info),
+    0 0 0 5px rgba(0, 0, 0, 0.35);
+}
+
+.rules-named .artifact-circle {
+  box-shadow:
+    0 0 0 3px var(--color-warning),
+    0 0 0 5px rgba(0, 0, 0, 0.35);
 }
 
 .retired-artifact {

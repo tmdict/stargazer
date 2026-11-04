@@ -1,13 +1,16 @@
 /* The Supreme League worker for the visit (workers/sl.worker.ts): started
  * when a page that needs it mounts, or by the first request of one that needs
- * it only now and then (Generate), and kept until the tab reloads, so a visit
- * that opens more than one such page reads the file once. A worker that fails
- * is dropped, and the next page to mount or request starts another. */
+ * it only now and then (Generate, Rules on hover), and kept until the tab
+ * reloads, so a visit that opens more than one such page reads the file once.
+ * A worker that fails is dropped, and the next page to mount or request starts
+ * another. */
 
 import { onMounted, readonly, ref } from 'vue'
 
 import type { AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
+import type { PlacementExplanation } from '@/lib/placement/explain'
+import type { SlUnit } from '@/lib/pvp/sl/data/types'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
@@ -22,7 +25,9 @@ let worker: Worker | null = null
 let nextId = 0
 type Answer = Extract<
   SlResponse,
-  { type: 'generated' | 'filled' | 'placed' | 'placedEngine' | 'swapped' | 'predicted' }
+  {
+    type: 'generated' | 'filled' | 'explained' | 'placed' | 'placedEngine' | 'swapped' | 'predicted'
+  }
 >
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
@@ -81,6 +86,18 @@ export function useSlEngine({ startOnMount = true } = {}) {
     return answer.team
   }
 
+  // Why each unit of a side stands where it does, null for a side the engine
+  // cannot explain.
+  const explain = async (
+    layout: MapLayout,
+    units: SlUnit[],
+    artifact: number | null,
+  ): Promise<PlacementExplanation | null> => {
+    const answer = await ask((id) => ({ type: 'explain', id, layout, units, artifact }))
+    if (answer.type !== 'explained') throw new Error('The worker answered another request')
+    return answer.why
+  }
+
   // Each board of a set as first drawn, and why each unit stands there.
   const place = async (set: SlChoice, boards: SlBoard[]): Promise<BoardDraw[]> => {
     const answer = await ask((id) => ({ type: 'place', id, set, boards }))
@@ -106,5 +123,5 @@ export function useSlEngine({ startOnMount = true } = {}) {
     return answer.panel
   }
 
-  return { status: readonly(status), generate, fill, place, placeEngine, swap, predict }
+  return { status: readonly(status), generate, fill, explain, place, placeEngine, swap, predict }
 }

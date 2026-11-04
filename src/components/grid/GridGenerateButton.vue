@@ -14,9 +14,8 @@ import { useFillSide } from '@/composables/useGeneratedSide'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
-import { tilesLayout, type MapLayout } from '@/lib/maps'
+import { gridLayout, type MapLayout } from '@/lib/maps'
 import type { GeneratorFrom } from '@/lib/pvp/sl/generator/handover'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
@@ -45,14 +44,7 @@ onScopeDispose(() => {
   clearTimeout(slowTimer)
 })
 
-const boardLayouts = (): MapLayout[] =>
-  grids.contexts.map((ctx) =>
-    tilesLayout(
-      ctx.grid
-        .getAllTiles()
-        .flatMap((tile) => (tile.state === State.DEFAULT ? [] : [[tile.hex.getId(), tile.state]])),
-    ),
-  )
+const boardLayouts = (): MapLayout[] => grids.contexts.map((ctx) => gridLayout(ctx.grid))
 
 const layoutKeys = (layouts: readonly MapLayout[]): string =>
   layouts.map((layout) => layout.key).join(' ')

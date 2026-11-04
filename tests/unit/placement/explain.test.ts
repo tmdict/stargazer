@@ -4,7 +4,6 @@ import { presetLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { explainPlacement } from '@/lib/placement/explain'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
-import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementData } from '@/lib/placement/types'
 
 const ORION = 120
@@ -27,17 +26,12 @@ const DATA: PlacementData = {
   pickRates: {},
 }
 
-// The placement explained as the best there is.
+// The placement explained against its own score, as a side placed by hand is.
 function explained(at: Record<number, number>, data = DATA) {
   const team = { heroes: Object.keys(at).map(Number) }
   const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
-  const scorer = new PlacementScorer(board, team, data)
   const positions = board.units.map((unit) => at[unit]!)
-  board.place(positions)
-  const why = explainPlacement(team, MAP, data, PLACEMENT_LOOKUPS, {
-    positions,
-    best: scorer.score(),
-  })
+  const why = explainPlacement(team, MAP, data, PLACEMENT_LOOKUPS, { positions })
   return (unit: number) => why.units.find((entry) => entry.unit === unit)!
 }
 
@@ -51,7 +45,13 @@ describe('placement explanation', () => {
     ])
     expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, to: [] }])
     // Tiles 1 and 2 would make Perseus one of the two rearmost.
-    expect(of(PERSEUS)).toEqual({ unit: PERSEUS, tile: 6, reasons: [], alsoFine: [5, 8, 10] })
+    expect(of(PERSEUS)).toEqual({
+      unit: PERSEUS,
+      tile: 6,
+      reasons: [],
+      alsoFine: [5, 8, 10],
+      better: [],
+    })
   })
 
   it('names every ally a targeted effect lands on, and only a listed one receives it', () => {
@@ -62,6 +62,14 @@ describe('placement explanation', () => {
     ])
     expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, to: [] }])
     expect(of(PERSEUS).reasons).toEqual([])
+  })
+
+  // On the same board, Sylphira moved behind Orion or Perseus moved up past her
+  // takes the Objectives off Perseus, who is not on the damage list.
+  it('splits the tiles a unit could move to into better ones and ones as good', () => {
+    const of = explained({ [RAVION]: 13, [ORION]: 3, [PERSEUS]: 4, [SYLPHIRA]: 6, [SENEA]: 7 })
+    expect(of(SYLPHIRA)).toMatchObject({ alsoFine: [5, 8, 10], better: [1, 2] })
+    expect(of(PERSEUS)).toMatchObject({ alsoFine: [1, 2, 5], better: [8, 10] })
   })
 
   it("words a formation rule from each hero's side, and a lean only without a rank", () => {
