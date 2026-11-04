@@ -7,6 +7,7 @@
  * object, never put in a store or on window. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import { MAPS } from '@/lib/maps'
 import { TEAM_MODES } from '@/lib/teams/modes'
 import slFileUrl from '@/pack/pvp/sl.bin?url'
 import slKey from '@/pack/pvp/sl.key?raw'
@@ -127,7 +128,7 @@ const isPlacementData = (value: unknown): boolean =>
 /* The shape the reader, the generator and the pages rely on: a file of another
  * shape (one written for other code, or a page the host served in its place)
  * is refused whole. The levels' prices must cover every level Stargazer
- * offers. */
+ * offers, and every map it names must be one of Stargazer's. */
 function isSlData(value: unknown): value is SlData {
   if (!isObject(value) || !isSeason(value, 'artifacts')) return false
   const { prices, before } = value
@@ -136,7 +137,7 @@ function isSlData(value: unknown): value is SlData {
     typeof value.exportedAt === 'string' &&
     Array.isArray(value.maps) &&
     value.maps.length === TEAM_MODES['5v5'].boardCount &&
-    value.maps.every((key) => typeof key === 'string') &&
+    value.maps.every((key) => typeof key === 'string' && Object.hasOwn(MAPS, key)) &&
     Array.isArray(value.evidence) &&
     value.evidence.length > 0 &&
     isObject(value.flex) &&

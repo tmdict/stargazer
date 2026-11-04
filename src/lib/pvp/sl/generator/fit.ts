@@ -33,11 +33,13 @@ const tilesTaken = ({ heroes, phantimal }: PlacementTeam): number =>
     0,
   )
 
-// Each lineup is placed once for the life of the result, so the worker keeps
-// one for the visit.
+// Each lineup is placed once on each map for the life of the result, so the
+// worker keeps one for the visit. A team is placed on its own map once,
+// however many boards it is measured on.
 export function slFit(data: SlData): SlFit {
   const placement = { ...data.placement, pickRates: {} }
   const measured = new Map<string, number>()
+  const atHome = new Map<string, number>()
   const room = new Map<string, boolean>()
   const teamOf = (heroes: number[]): PlacementTeam => ({
     heroes,
@@ -64,7 +66,12 @@ export function slFit(data: SlData): SlFit {
       const team = teamOf(heroes)
       const points = (layout: MapLayout): number =>
         effectPoints(team, layout, placement, PLACEMENT_LOOKUPS)
-      const before = points(presetLayout(data.maps[from]!)!)
+      const home = `${from}|${heroes.join(',')}`
+      let before = atHome.get(home)
+      if (before === undefined) {
+        before = points(presetLayout(data.maps[from]!)!)
+        atHome.set(home, before)
+      }
       const kept = before > 0 ? Math.min(1, Math.max(0, points(board.layout) / before)) : 1
       measured.set(keyOf(board, heroes, from), kept)
       return kept

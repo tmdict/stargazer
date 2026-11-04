@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { companionIdsOf } from '@/lib/characters/companion'
 import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
+import { toSynergyId } from '@/lib/characters/synergy'
 import {
   configTiles,
   deploymentTiles,
@@ -27,6 +29,7 @@ import {
   boardTeam,
   engineFormation,
   shownFormation,
+  sideExplanation,
 } from '@/lib/pvp/sl/generator/formation'
 import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { previewSwap } from '@/lib/pvp/sl/generator/swapPreview'
@@ -263,6 +266,29 @@ describe('a Map Editor map', () => {
       swapped.push(...all)
     }
     expect(swapped.length).toBeGreaterThan(0)
+  })
+})
+
+describe('a side placed by hand', () => {
+  const board = boards[0]!
+  const choice = set.teams[0]!
+  const { units } = engineFormation(data, choice, board)
+  const free = [...deploymentTiles(board.layout.key, Team.ALLY)].find(
+    (tile) => !units.some(([used]) => used === tile),
+  )!
+  const explained = (side: SlUnit[]) => sideExplanation(data, board.layout, side, choice.artifact)
+
+  it('is explained where it stands when the engine would place each of its units', () => {
+    expect(explained(units)).not.toBeNull()
+  })
+
+  it('is not explained with a synergy copy or a companion its heroes do not summon', () => {
+    const stray = loadCharacters()
+      .map((c) => c.id)
+      .filter((id) => !choice.heroes.includes(id))
+      .flatMap(companionIdsOf)[0]!
+    expect(explained([...units, [free, toSynergyId(choice.heroes[0]!)]])).toBeNull()
+    expect(explained([...units, [free, stray]])).toBeNull()
   })
 })
 

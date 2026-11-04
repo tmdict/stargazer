@@ -4,7 +4,7 @@
    active roster, ticks Placement tips in Grid Info, and links to the
    generator page on the same boards. */
 
-import { computed, onScopeDispose, ref, toRaw } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
@@ -16,6 +16,7 @@ import { useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
+import { getCharacterTeam } from '@/lib/characters/character'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
 import { gridLayout, type MapLayout } from '@/lib/maps'
 import type { GeneratorFrom } from '@/lib/pvp/sl/generator/handover'
@@ -31,13 +32,19 @@ const gameData = useGameDataStore()
 const grids = useGrids()
 const i18n = useI18nStore()
 const rosters = useRosters()
-const { success, error } = useToast()
+const { show, success, error } = useToast()
 const fillSide = useFillSide()
 const { tickRules } = useGridInfoPrefs()
-const { armed, confirm } = useArmedConfirm()
+const { armed, confirm, disarm } = useArmedConfirm()
+// An armed press confirms only on the boards it was armed for, so a switch of
+// mode, map or boards disarms it.
+watch(
+  [() => from, () => grids.contexts.map((ctx) => `${ctx.id}:${ctx.currentMap}`).join(' ')],
+  disarm,
+)
 const { fill } = useSlEngine({ startOnMount: false })
 
-type TipId = 'build' | 'open'
+type TipId = 'generate' | 'open'
 const {
   anchor: tipTarget,
   payload: tip,
@@ -64,8 +71,17 @@ onScopeDispose(() => {
 
 const boardLayouts = (): MapLayout[] => grids.contexts.map((ctx) => gridLayout(ctx.grid))
 
-const layoutKeys = (layouts: readonly MapLayout[]): string =>
-  layouts.map((layout) => layout.key).join(' ')
+// The maps and the ally side of every board, which a set is drawn for and
+// replaces.
+const boardsKey = (): string =>
+  grids.contexts
+    .map((ctx) => {
+      const ally = [...ctx.placements]
+        .filter(([hexId]) => getCharacterTeam(ctx.grid, hexId) === Team.ALLY)
+        .sort(([a], [b]) => a - b)
+      return `${gridLayout(ctx.grid).key}|${ctx.artifacts.ally}|${ally.join(';')}`
+    })
+    .join(' ')
 
 const generate = async (): Promise<void> => {
   if (busy.value) return
@@ -73,13 +89,23 @@ const generate = async (): Promise<void> => {
   busy.value = true
   slowTimer = setTimeout(() => (slow.value = true), SLOW_MS)
   const layouts = boardLayouts()
+  const pressed = boardsKey()
   const roster = rosters.active
   const rosterName = roster?.name ?? i18n.t('app.all-heroes')
   try {
-    const team = await fill(roster ? toRaw(roster.heroes) : null, layouts)
-    // The set was drawn for the boards as they stood at the press, so it is
-    // dropped if the page was left or a board changed map meanwhile.
-    if (!live || layoutKeys(boardLayouts()) !== layoutKeys(layouts)) return
+    // A worker takes plain data only, and a roster kept in memory when storage
+    // fails holds its levels as reactive objects.
+    const levels = roster
+      ? Object.fromEntries(Object.entries(roster.heroes).map(([id, attrs]) => [id, { ...attrs }]))
+      : null
+    const team = await fill(levels, layouts)
+    if (!live) return
+    // The set was drawn for the boards as they stood at the press, so it never
+    // replaces a side placed or loaded during the wait.
+    if (boardsKey() !== pressed) {
+      show(i18n.t('app.sl-boards-changed'), 'info')
+      return
+    }
     if (team === null) {
       error(
         layouts.length === 1
@@ -111,7 +137,7 @@ const generate = async (): Promise<void> => {
       :aria-busy="busy"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
       @click="generate"
-      @mouseenter="showTip($event, 'build')"
+      @mouseenter="showTip($event, 'generate')"
       @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >

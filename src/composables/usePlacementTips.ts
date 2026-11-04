@@ -30,8 +30,8 @@ export interface PlacementTip {
   reasons: readonly PlacementReason[]
   alsoFine: readonly number[]
   better: readonly number[]
-  // The tiles ringed in blue (the card's unit) and in amber (the units it
-  // names), and how the ally artifact is ringed.
+  // The tiles ringed for the card's unit and for the units it names, and how
+  // the ally artifact is ringed.
   own: ReadonlySet<number>
   named: ReadonlySet<number>
   artifact?: 'own' | 'named'
