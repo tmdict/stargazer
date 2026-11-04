@@ -54,7 +54,7 @@ const SHAPES = {
 .upgrade-icon.paragon {
   height: 0.74em;
   vertical-align: -0.02em;
-  translate: 0 -0.05em;
+  translate: 0 -0.03em;
 }
 
 .upgrade-icon.before-level {
