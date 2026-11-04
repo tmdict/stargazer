@@ -52,6 +52,7 @@ export interface PlacementLookups extends SkillLookups {
   artifactOf: (artifactId: number) => { name: string; rules: readonly Rule[] } | undefined
   // The name of a hero's or phantimal's data file, by unit id.
   nameOf: (unitId: number) => string | undefined
+  rangeOf: (unitId: number) => number | undefined
 }
 
 // The team to place: five hero ids, and the phantimal's unit id.

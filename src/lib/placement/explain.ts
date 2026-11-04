@@ -2,6 +2,7 @@
  * Units are named by id and effects by the data file their rule sits in, so the
  * page words each reason in its own language. */
 
+import { inPhantimalBand } from '../characters/phantimal'
 import type { MapLayout } from '../maps'
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
@@ -11,8 +12,9 @@ import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score
 import type { FormationRule, PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // One of the team's effects: the data file its rule sits in (the unit's, the
-// charm's id or the artifact's) and the unit giving it, the charm's holder for
-// a charm and none for the artifact.
+// charm's id or the artifact's), with -companion after a unit's for the effect
+// its other body gives, and the unit giving it, the charm's holder for a charm
+// and none for the artifact.
 export interface PlacedEffect {
   source: OwnGoalCheck['source']
   file: string
@@ -55,14 +57,17 @@ export interface PlacementExplanation {
   artifact: PlacementReason[]
 }
 
-// How a unit's own effect reads: given to heroes, or reaching as much as it can.
-// A goal about enemy heroes explains nothing on our side.
+// How a unit's own effect reads: given to heroes, or reaching as much as it can
+// or its own other body. A goal about enemy heroes explains nothing on our side.
 function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
-  if (goal === 'most' || (typeof goal === 'object' && 'most' in goal)) return 'reaches'
+  if (goal === 'most' || goal === 'companion' || (typeof goal === 'object' && 'most' in goal))
+    return 'reaches'
   if (typeof goal === 'object' && ('target' in goal || 'include' in goal || 'exactly' in goal))
     return 'gives'
   return undefined
 }
+
+const EPS = 1e-9
 
 const RANKS: Partial<Record<FormationRule['relation'], Standing>> = {
   frontmost: 'frontmost',
@@ -109,37 +114,62 @@ export function explainPlacement(
   const base = best ?? scorer.score()
 
   const goals = scorer.ownGoals()
-  const effects = goals.map((goal): PlacedEffect => ({
-    source: goal.source,
-    file:
-      typeof goal.owner === 'string' ? goal.owner : (lookups.nameOf(goal.owner) ?? `${goal.owner}`),
-    giver: goal.holder,
-  }))
+  const effects = goals.map((goal): PlacedEffect => {
+    const file =
+      typeof goal.owner === 'string' ? goal.owner : (lookups.nameOf(goal.owner) ?? `${goal.owner}`)
+    return {
+      source: goal.source,
+      file: goal.rule.from === 'companion' ? `${file}-companion` : file,
+      giver: goal.holder,
+    }
+  })
   const habits = scorer
     .formation()
     .filter(({ held }) => held)
     .map(({ rule }) => rule)
-  const leans = new Map(team.heroes.map((hero) => [hero, scorer.leanHeld(hero)]))
+  const leans = new Map(team.heroes.map((hero) => [hero, scorer.leanOf(hero)]))
   const onBuff = new Set(board.units.filter((unit) => scorer.onBuffTile(unit)))
   const isOwn = (k: number, owner: number) =>
     goals[k]!.source !== 'artifact' && ruleUnit(goals[k]!.holder!) === owner
 
+  // A unit's other tiles are those the engine itself would pick for it moved
+  // alone, in the order it picks a placement by: fewest broken rules, goals
+  // within the margin of the best, then the highest total, its lean included.
   const used = new Set(positions)
   const free = board.tiles.filter((hexId) => !used.has(hexId))
+  const own = scorer.score()
   const movesFor = board.units.map((_, index) => {
-    const alsoFine: number[] = []
-    const better: number[] = []
-    for (const hexId of free) {
+    const options = free.map((hexId) => {
       const next = [...positions]
       next[index] = hexId
       board.place(next)
-      const score = scorer.score()
-      if (beats(score, base, margin)) better.push(hexId)
-      else if (asGoodAs(score, base, margin)) alsoFine.push(hexId)
+      return { hexId, score: scorer.score() }
+    })
+    const scores = [own, ...options.map(({ score }) => score)]
+    const broken = Math.min(...scores.map((score) => score.broken))
+    const goals = Math.max(
+      ...scores.filter((score) => score.broken === broken).map((score) => score.goals),
+    )
+    const top = { broken, goals, total: 0 }
+    const total = Math.max(
+      ...scores.filter((score) => asGoodAs(score, top, margin)).map((score) => score.total),
+    )
+    const picks = options.filter(
+      ({ score }) => asGoodAs(score, top, margin) && score.total >= total - EPS,
+    )
+    return {
+      better: picks.filter(({ score }) => beats(score, base, margin)).map(({ hexId }) => hexId),
+      alsoFine: picks
+        .filter(({ score }) => !beats(score, base, margin) && asGoodAs(score, base, margin))
+        .map(({ hexId }) => hexId),
     }
-    return { alsoFine, better }
   })
   board.place(positions)
+  // A front or back line is true of the team: the hero is on the frontmost or
+  // rearmost row of the heroes and their other bodies, the phantimal left out.
+  const rowOf = (unit: number) => board.grid.getHexById(board.tileOf(unit)).getDiagonal()
+  const rows = board.units.filter((unit) => !inPhantimalBand(unit)).map(rowOf)
+  const edge = { front: Math.max(...rows), back: Math.min(...rows) }
 
   const units = board.units.map((unit, index): UnitPlacement => {
     const owner = ruleUnit(unit)
@@ -155,10 +185,10 @@ export function explainPlacement(
         reasons.push({ verb: 'receives', effect: effects[k]!, to: [] })
     })
     if (onBuff.has(unit)) reasons.push({ verb: 'stands', place: 'buff' })
-    const own = habits.filter((rule) => rule.heroes.includes(unit))
-    for (const rule of own) reasons.push(habitOf(rule, unit))
+    const kept = habits.filter((rule) => rule.heroes.includes(unit))
+    for (const rule of kept) reasons.push(habitOf(rule, unit))
     const lean = leans.get(unit)
-    if (lean && !own.some((rule) => RANKS[rule.relation])) {
+    if (lean && rowOf(unit) === edge[lean] && !kept.some((rule) => RANKS[rule.relation])) {
       reasons.push({ verb: 'stands', place: lean })
     }
     return { unit, tile: positions[index]!, reasons, ...movesFor[index]! }

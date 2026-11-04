@@ -35,6 +35,16 @@ export function tileReach(holder: SkillContext, tile: NonNullable<Rule['tile']>)
       marked: around.flatMap((hex) => grid.getTileOrUndefined(hex)?.hex.getId() ?? []),
     }
   }
+  if (tile === 'row') {
+    const row = grid.getHexById(hexId).getDiagonal()
+    return {
+      landed: [],
+      marked: grid
+        .getAllTiles()
+        .filter(({ hex }) => hex.getDiagonal() === row && hex.getId() !== hexId)
+        .map(({ hex }) => hex.getId()),
+    }
+  }
   const found = (tile === 'behind' ? findUnitBehind : findUnitInFront)(holder)?.targetHexId
   return { landed: found == null ? [] : [found], marked: [] }
 }

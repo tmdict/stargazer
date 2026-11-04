@@ -6,8 +6,8 @@
 export type RuleTeam = 'ally' | 'enemy'
 
 // Where an effect with no skill code acts: on the unit behind or in front of
-// its holder, or on the tiles around it.
-type RuleTile = 'behind' | 'front' | 'around'
+// its holder, on the tiles around it, or on the other tiles of its row.
+type RuleTile = 'behind' | 'front' | 'around' | 'row'
 
 export type RuleGoal =
   | { target: string }
@@ -22,12 +22,17 @@ export type RuleGoal =
   // the walls on the enemy's side among them, and allies our units on them.
   | 'most'
   | { most: 'walls' | 'allies' }
+  // The holder's own other body, such as Phraesto's Illusion, on the tiles.
+  | 'companion'
   | 'none'
 
 export interface Rule {
   team: RuleTeam
   goal: RuleGoal
   tile?: RuleTile
+  // Where a tile rule reads from: the holder's own other body in place of the
+  // holder, for an effect each body gives on its own.
+  from?: 'companion'
   // Absent only for a goal of none, which scores nothing.
   weight?: string
   note: string

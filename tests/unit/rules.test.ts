@@ -20,14 +20,14 @@ const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
   import: 'default',
 })
 
-const FIELDS = new Set(['team', 'goal', 'tile', 'weight', 'note'])
+const FIELDS = new Set(['team', 'goal', 'tile', 'from', 'weight', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
 const COUNT_GOALS = new Set(['atMost', 'exactly'])
 const MOST_KINDS = new Set(['walls', 'allies'])
-const TILE_WORDS = new Set(['behind', 'front', 'around'])
+const TILE_WORDS = new Set(['behind', 'front', 'around', 'row'])
 
 function goalProblem(goal: unknown): string | null {
-  if (goal === 'most' || goal === 'none') return null
+  if (goal === 'most' || goal === 'none' || goal === 'companion') return null
   if (typeof goal !== 'object' || goal === null) return `the goal ${JSON.stringify(goal)}`
   const { sameFaction, nonHero, ...words } = goal as Record<string, unknown>
   const entries = Object.entries(words)
@@ -55,14 +55,14 @@ function goalProblem(goal: unknown): string | null {
 function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may'): string[] {
   const problems: string[] = []
   // One effect can have two aims, each its own rule, but never two of one goal
-  // word for one team.
+  // word for one team from one body.
   const aims = new Set<string>()
   for (const rule of rules) {
     for (const field of Object.keys(rule))
       if (!FIELDS.has(field)) problems.push(`the field ${field}`)
     if (rule.team !== 'ally' && rule.team !== 'enemy') problems.push(`the team ${rule.team}`)
     const word = typeof rule.goal === 'string' ? rule.goal : Object.keys(rule.goal)[0]
-    const aim = `${rule.team} ${word}`
+    const aim = `${rule.team} ${word}${rule.from ? ` from ${rule.from}` : ''}`
     if (aims.has(aim)) problems.push(`two ${aim} rules`)
     aims.add(aim)
     const goal = goalProblem(rule.goal)
@@ -73,6 +73,8 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
       if (!TILE_WORDS.has(rule.tile)) problems.push(`the tile word ${rule.tile}`)
       if (rule.team !== 'ally') problems.push('a tile word on an enemy rule')
     }
+    if (rule.from !== undefined && (rule.from !== 'companion' || rule.tile === undefined))
+      problems.push(`from ${rule.from} off a companion tile rule`)
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {
       problems.push(rule.goal === 'none' ? 'a weight on a goal of none' : 'no weight')
     }
@@ -125,9 +127,10 @@ describe('placement rules', () => {
     }
   })
 
-  // A placement card words an effect by the file its rule sits in: what a goal
-  // for heroes (target, include, exactly) gives and what a hero receives, or
-  // what a most goal reaches.
+  // A placement card words an effect by the file its rule sits in, with
+  // -companion for the effect a unit's other body gives: what a goal for heroes
+  // (target, include, exactly) gives and what a hero receives, or what a most or
+  // companion goal reaches.
   it('each have the words a placement card names their effect with, and no words outlive one', () => {
     const owners = [
       ...units,
@@ -139,13 +142,14 @@ describe('placement rules', () => {
         if (rule.team !== 'ally' || rule.weight === undefined) continue
         const { goal } = rule
         const kinds =
-          goal === 'most' || (typeof goal === 'object' && 'most' in goal)
+          goal === 'most' || goal === 'companion' || (typeof goal === 'object' && 'most' in goal)
             ? ['reaches']
             : typeof goal === 'object' &&
                 ('target' in goal || 'include' in goal || 'exactly' in goal)
               ? ['gives', 'receives']
               : []
-        for (const key of kinds.map((kind) => `placement-${kind}-${name}`)) {
+        const file = rule.from === 'companion' ? `${name}-companion` : name
+        for (const key of kinds.map((kind) => `placement-${kind}-${file}`)) {
           expect(needed.has(key), `two of ${name}'s rules are worded by ${key}`).toBe(false)
           needed.add(key)
         }

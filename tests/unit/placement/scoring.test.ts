@@ -27,6 +27,7 @@ const MEHIRA = 94
 const PHRAESTO = 50
 const LUDOVIC = 53
 const WEDGE_OF_MATTER = toPhantimalId(5)
+const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
 const MAP = presetLayout('arena2')!
@@ -47,9 +48,13 @@ const DATA: PlacementData = {
   pickRates: {},
 }
 
-function scoredAt(at: Record<number, number>, data = DATA): PlacementScorer {
-  const team = { heroes: Object.keys(at).map(Number) }
-  const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+function scoredAt(at: Record<number, number>, data = DATA, map = MAP): PlacementScorer {
+  const team = {
+    heroes: Object.keys(at)
+      .map(Number)
+      .filter((unit) => unit < COMPANION_ID_OFFSET),
+  }
+  const board = new PlacementBoard(team, map, PLACEMENT_LOOKUPS)
   const scorer = new PlacementScorer(board, team, data)
   board.place(board.units.map((unit) => at[unit]!))
   return scorer
@@ -140,18 +145,26 @@ describe('placement scoring', () => {
 
   // The Wedge of Matter on tile 1 marks the hero on tile 6, and the Wedge of
   // Power the hero behind it: none from tile 2, the one on tile 2 from tile 4.
-  it('scores half for each Wedge whose Spirit Mark lands on one of the first two listed heroes', () => {
-    const data = { ...DATA, lists: { ...DATA.lists, melee: [ALNA, SYLPHIRA] } }
+  const wedgesMet = (at: Record<number, number>, power: number, leans = DATA.leans) => {
+    const data = { ...DATA, lists: { ...DATA.lists, melee: [ALNA, SYLPHIRA] }, leans }
     const team = { heroes: [ALNA, SYLPHIRA, ORION, PERSEUS, DIONEL], phantimal: WEDGE_OF_MATTER }
-    const wedgesMet = (at: Record<number, number>, power: number) => {
-      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
-      const scorer = new PlacementScorer(board, team, data)
-      board.place(board.units.map((unit) => at[unit] ?? (unit === WEDGE_OF_MATTER ? 1 : power)))
-      return metOf(scorer, WEDGE_OF_MATTER)
-    }
-    const heroes = { [ALNA]: 6, [ORION]: 3, [PERSEUS]: 5, [DIONEL]: 7 }
-    expect(wedgesMet({ ...heroes, [SYLPHIRA]: 2 }, 4)).toBe(1)
-    expect(wedgesMet({ ...heroes, [SYLPHIRA]: 4 }, 2)).toBe(0.5)
+    const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+    const scorer = new PlacementScorer(board, team, data)
+    board.place(board.units.map((unit) => at[unit] ?? (unit === WEDGE_OF_MATTER ? 1 : power)))
+    return metOf(scorer, WEDGE_OF_MATTER)
+  }
+  const wedgeHeroes = { [ALNA]: 6, [ORION]: 3, [PERSEUS]: 5, [DIONEL]: 7 }
+
+  it('scores half for each Wedge whose Spirit Mark lands on one of the first two listed heroes', () => {
+    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 2 }, 4)).toBe(1)
+    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 4 }, 2)).toBe(0.5)
+  })
+
+  // Walking round arena2's walls, tile 6 is in the back half of the ally tiles.
+  it('counts a Spirit Mark only on a hero standing on the side it leans to', () => {
+    const at = { ...wedgeHeroes, [SYLPHIRA]: 2 }
+    expect(wedgesMet(at, 4, { front: [], back: [ALNA] })).toBe(1)
+    expect(wedgesMet(at, 4, { front: [ALNA], back: [] })).toBe(0.5)
   })
 
   // Tile 7 touches tiles 2, 4, 5, 10 and 13, and tile 8 only tiles 3 and 6, so
@@ -162,6 +175,42 @@ describe('placement scoring', () => {
     const corner = { [LUDOVIC]: 8, [ALNA]: 3, [SYLPHIRA]: 6, [ORION]: 1, [PERSEUS]: 2 }
     expect(metOf(scoredAt(corner), LUDOVIC)).toBe(0.5)
     expect(metOf(scoredAt({ [LUDOVIC]: 8, [ALNA]: 3, [SYLPHIRA]: 6 }), LUDOVIC)).toBe(1)
+  })
+
+  // Tiles 3, 4 and 5 make up one row of arena2.
+  it("meets a companion goal when the holder's other body stands on the tiles it marks", () => {
+    const rowMet = (at: Record<number, number>) =>
+      scoredAt(at)
+        .goals()
+        .find(({ owner, rule }) => owner === PHRAESTO && rule.goal === 'companion')!.met
+    const rest = { [PERSEUS]: 1, [ORION]: 2, [DIONEL]: 7 }
+    expect(rowMet({ [PHRAESTO]: 3, [ILLUSION]: 5, ...rest })).toBe(1)
+    expect(rowMet({ [PHRAESTO]: 3, [ILLUSION]: 6, ...rest })).toBe(0)
+  })
+
+  // Tile 2 is the tile directly behind tile 7.
+  it("reads a tile rule from the holder's other body when the rule acts from there", () => {
+    const data = { ...DATA, lists: { ...DATA.lists, support: [PERSEUS] } }
+    const contractMet = (at: Record<number, number>) =>
+      scoredAt(at, data)
+        .goals()
+        .find(({ owner, rule }) => owner === PHRAESTO && rule.from === 'companion')!.met
+    const rest = { [PERSEUS]: 2, [ORION]: 1, [DIONEL]: 3 }
+    expect(contractMet({ [PHRAESTO]: 13, [ILLUSION]: 7, ...rest })).toBe(1)
+    expect(contractMet({ [PHRAESTO]: 7, [ILLUSION]: 13, ...rest })).toBe(0)
+  })
+
+  // preset-sr3's tile 14 has no way to the enemy until a wall falls.
+  it('takes the walled weight off for each melee hero on a tile with no way to the enemy', () => {
+    const sr3 = presetLayout('preset-sr3')!
+    const walledOff = (at: Record<number, number>) => {
+      const goals = (walled: number) =>
+        scoredAt(at, { ...DATA, weights: { ...DATA.weights, walled } }, sr3).score().goals
+      return goals(0) - goals(5)
+    }
+    const rest = { [SENEA]: 2, [ROLAN]: 4, [MEHIRA]: 6 }
+    expect(walledOff({ [ALNA]: 14, [DIONEL]: 1, ...rest })).toBeCloseTo(5)
+    expect(walledOff({ [DIONEL]: 14, [ALNA]: 1, ...rest })).toBeCloseTo(0)
   })
 })
 

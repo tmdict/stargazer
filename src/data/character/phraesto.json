@@ -13,5 +13,29 @@
     "dot": [{ "skill3": 1, "mods": ["shadewing"] }],
     "energy-battery": [{ "skill2": 2 }],
     "summon": [{ "ex": 4 }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": "companion",
+      "tile": "row",
+      "weight": "aim",
+      "note": "Phraesto and his Illusion each gain damage reduction, and with his awakening a shield, when they stand in the same row."
+    },
+    {
+      "team": "ally",
+      "goal": { "target": "ultimate" },
+      "tile": "behind",
+      "weight": "aim",
+      "note": "Phraesto's Crimson Contract speeds up the Energy of the ally right behind him, best the hero whose ultimate matters most."
+    },
+    {
+      "team": "ally",
+      "goal": { "target": "support" },
+      "tile": "behind",
+      "from": "companion",
+      "weight": "aim",
+      "note": "The Illusion's Crimson Contract raises the damage reduction of the ally right behind it, best a support."
+    }
+  ]
 }

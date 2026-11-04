@@ -27,4 +27,5 @@ export const PLACEMENT_LOOKUPS: PlacementLookups = {
     return artifact && { name: artifact.name, rules: artifact.rules ?? [] }
   },
   nameOf: (id) => dataOf(id)?.name,
+  rangeOf: (id) => dataOf(id)?.range,
 }

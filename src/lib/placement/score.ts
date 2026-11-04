@@ -2,8 +2,10 @@ import { getCompanions } from '../characters/companion'
 import { inPhantimalBand } from '../characters/phantimal'
 import { performPlace } from '../characters/place'
 import { performRemove } from '../characters/remove'
+import type { Grid } from '../grid'
 import type { Hex } from '../hex'
 import { configTiles } from '../maps'
+import { defaultCanTraverse } from '../pathfinding'
 import { getCharacterSkill, type SkillContext } from '../skills/skill'
 import { searchByRow } from '../skills/utils/ring'
 import { findUnitBehind } from '../skills/utils/targeting'
@@ -103,6 +105,26 @@ function expandList(
   return heroes
 }
 
+// Each tile a unit can walk to from the given tiles round the walls, with its
+// fewest steps.
+function walkingSteps(grid: Grid, from: Iterable<number>): Map<number, number> {
+  let frontier = [...from]
+  const steps = new Map(frontier.map((hexId) => [hexId, 0]))
+  while (frontier.length) {
+    const next: number[] = []
+    for (const hexId of frontier) {
+      for (const hex of grid.getHexById(hexId).getNeighbors()) {
+        const tile = grid.getTileOrUndefined(hex)
+        if (!tile || !defaultCanTraverse(tile) || steps.has(tile.hex.getId())) continue
+        steps.set(tile.hex.getId(), steps.get(hexId)! + 1)
+        next.push(tile.hex.getId())
+      }
+    }
+    frontier = next
+  }
+  return steps
+}
+
 function goalList(goal: RuleGoal): string | undefined {
   if (typeof goal !== 'object') return undefined
   if ('target' in goal) return goal.target
@@ -132,12 +154,15 @@ export class PlacementScorer {
   // Ascending, the tiles an enemy unit is tried on.
   private readonly enemyOrder: number[]
   private readonly buffTiles: number[]
-  // How far toward the enemy each ally tile is, from 0 at the back to 1 at the front.
+  // How far toward the enemy each ally tile is, walking round the walls, from 0
+  // at the back to 1 at the front. A tile with no way to the enemy is at the back.
   private readonly depth: Map<number, number>
+  // The ally tiles with no way to the enemy at the start.
+  private readonly sealed: Set<number>
   private readonly heroes: number[]
   private readonly front: number[]
   private readonly back: number[]
-  private readonly weights: { buff: number; lean: number }
+  private readonly weights: { buff: number; lean: number; walled: number }
 
   constructor(
     private readonly board: PlacementBoard,
@@ -150,21 +175,24 @@ export class PlacementScorer {
     this.enemyOrder = [...this.enemyTiles].sort((a, b) => a - b)
     const allyTiles = new Set(board.tiles)
     this.buffTiles = layout.buffTiles.filter((hexId) => allyTiles.has(hexId))
-    const enemyHexes = [...this.enemyTiles].map((hexId) => grid.getHexById(hexId))
-    const near = new Map(
-      board.tiles.map((hexId) => {
-        const hex = grid.getHexById(hexId)
-        return [hexId, Math.min(...enemyHexes.map((other) => hex.distance(other)))]
-      }),
-    )
-    const nearest = Math.min(...near.values())
-    const farthest = Math.max(...near.values())
+    const steps = walkingSteps(grid, this.enemyTiles)
+    const reached = board.tiles.flatMap((hexId) => steps.get(hexId) ?? [])
+    const nearest = reached.length ? Math.min(...reached) : 0
+    const farthest = reached.length ? Math.max(...reached) : 0
+    this.sealed = new Set(board.tiles.filter((hexId) => !steps.has(hexId)))
     this.depth = new Map(
-      [...near].map(([hexId, d]) => [hexId, (farthest - d) / (farthest - nearest || 1)]),
+      board.tiles.map((hexId) => [
+        hexId,
+        (farthest - (steps.get(hexId) ?? farthest)) / (farthest - nearest || 1),
+      ]),
     )
     this.front = data.leans.front.filter((hero) => team.heroes.includes(hero))
     this.back = data.leans.back.filter((hero) => team.heroes.includes(hero))
-    this.weights = { buff: this.weightOf('buff'), lean: this.weightOf('lean') }
+    this.weights = {
+      buff: this.weightOf('buff'),
+      lean: this.weightOf('lean'),
+      walled: this.weightOf('walled'),
+    }
 
     const formation = data.formationRules.filter((rule) =>
       rule.heroes.every((hero) => team.heroes.includes(hero)),
@@ -181,9 +209,14 @@ export class PlacementScorer {
       }
       for (const rule of rules) {
         const { tile } = rule
-        this.addEffect('unit', unit, unit, rule, (b) => [
-          tile ? tileReach(this.contextOf(b, unit), tile) : skillReach(b.manager, unit, Team.ALLY),
-        ])
+        this.addEffect('unit', unit, unit, rule, (b) => {
+          if (!tile) return [skillReach(b.manager, unit, Team.ALLY)]
+          const from =
+            rule.from === 'companion'
+              ? b.units.find((other) => other !== unit && ruleUnit(other) === unit)
+              : unit
+          return from === undefined ? [] : [tileReach(this.contextOf(b, from), tile)]
+        })
       }
     }
     // An enemy unit stands alone on its side, so a skill that reads its own
@@ -233,7 +266,9 @@ export class PlacementScorer {
   }
 
   score(): PlacementScore {
-    const goals = this.addEffects(this.weights.buff * this.onBuffTiles())
+    const goals =
+      this.addEffects(this.weights.buff * this.onBuffTiles()) -
+      this.weights.walled * this.walledIn()
     let broken = 0
     for (const rule of this.mustHold) if (!this.held(rule)) broken++
     let light = this.leaning()
@@ -283,11 +318,12 @@ export class PlacementScorer {
     return this.effects.map((effect) => {
       const on: number[] = []
       const [reach] = effect.reach(this.board)
-      const met = this.meetOnce(effect, reach!, on)
       const { source, owner, holder, rule } = effect
+      if (!reach) return { source, owner, holder, rule, met: null, on, to: on }
+      const met = this.meetOnce(effect, reach, on)
       const to =
         typeof rule.goal === 'object' && 'target' in rule.goal
-          ? [...this.alliesOn([...reach!.landed, ...reach!.marked], holder, false)]
+          ? [...this.alliesOn([...reach.landed, ...reach.marked], holder, false)]
           : on
       return { source, owner, holder, rule, met, on, to }
     })
@@ -305,12 +341,9 @@ export class PlacementScorer {
     )
   }
 
-  // The side a hero leans to, when it stands in that half of the ally tiles.
-  leanHeld(hero: number): 'front' | 'back' | undefined {
-    const depth = this.depth.get(this.board.tileOf(hero))!
-    if (this.front.includes(hero) && depth > 0.5) return 'front'
-    if (this.back.includes(hero) && depth < 0.5) return 'back'
-    return undefined
+  leanOf(hero: number): 'front' | 'back' | undefined {
+    if (this.front.includes(hero)) return 'front'
+    return this.back.includes(hero) ? 'back' : undefined
   }
 
   private addEffects(points: number): number {
@@ -474,6 +507,11 @@ export class PlacementScorer {
     const self = holder === undefined ? undefined : ruleUnit(holder)
 
     if (goal === 'none') return null
+    if (goal === 'companion') {
+      const bodies = this.board.units.filter((unit) => unit !== holder && ruleUnit(unit) === self)
+      if (!bodies.length) return null
+      return bodies.some((unit) => marked.includes(this.board.tileOf(unit))) ? 1 : 0
+    }
     if (goal === 'most' || 'most' in goal) {
       return effect.best ? this.countMarked(goal, marked, this.board, holder) / effect.best : null
     }
@@ -494,7 +532,15 @@ export class PlacementScorer {
 
     const order = this.ranked(goalList(goal)!, self)
     if (!order.length) return null
-    const hit = this.alliesOn([...landed, ...marked], holder)
+    // A hero's lean comes before a Spirit Mark: the Mark counts only on a hero
+    // standing in the half it leans to, or on one with no lean.
+    const tiles = [...landed, ...marked]
+    const hit = this.alliesOn(
+      holder !== undefined && inPhantimalBand(holder)
+        ? tiles.filter((hexId) => !this.offSide(hexId))
+        : tiles,
+      holder,
+    )
     if ('avoid' in goal) return hit.has(order[0]!) ? 0 : 1
     if ('target' in goal) {
       // An effect that lands on two wants the list's first two, half each.
@@ -546,6 +592,23 @@ export class PlacementScorer {
       const unit = this.board.grid.getTileById(hexId).characterId
       return unit !== undefined && !inPhantimalBand(unit)
     }).length
+  }
+
+  // The team's melee heroes on tiles with no way to the enemy at the start.
+  private walledIn(): number {
+    return this.heroes.filter(
+      (hero) => this.board.lookups.rangeOf(hero) === 1 && this.sealed.has(this.board.tileOf(hero)),
+    ).length
+  }
+
+  // Whether the hero on a tile stands in the half away from the side it leans to.
+  private offSide(hexId: number): boolean {
+    const unit = this.board.grid.getTileById(hexId).characterId
+    if (unit === undefined) return false
+    const hero = ruleUnit(unit)
+    const depth = this.depth.get(hexId)
+    if (depth === undefined) return false
+    return (this.front.includes(hero) && depth < 0.5) || (this.back.includes(hero) && depth > 0.5)
   }
 
   private leaning(): number {
