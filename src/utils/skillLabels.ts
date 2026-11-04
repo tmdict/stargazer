@@ -78,7 +78,7 @@ export function slotLabel(slot: SlotKey, lang: AppLocale): string {
   return appLabel(SLOT_LABEL_KEY[slot], lang)
 }
 
-/** Hero display name in a skill-text language: the feed's `_hero.name` in
+/** Hero display name in a skill-text language: the data pack's `_hero.name` in
  * every language (falling back to the curated en name, then the slug). The
  * single copy of this fallback chain, shared by the skill header, search
  * index, and page meta. Curated character-locale names stay on chrome
@@ -99,9 +99,9 @@ export function pvpTeamName(team: PvpTeam, lang: AppLocale): string {
   return team.name[lang] ?? team.heroes.map((slug) => curatedHeroName(slug, lang)).join('/')
 }
 
-// Heading composition per slot. Skill content is feed-sourced end to end:
-// names come from each slot's `n` and the ultimate/ex prefixes from the
-// language's terms (the game's official slot-type labels). The app-locale
+// Heading composition per slot: names come from each slot's `n` and the
+// ultimate/ex prefixes from the language's terms (the game's official
+// slot-type labels). The app-locale
 // entries below stand in for a missing name only; chrome surfaces
 // (search-result labels) keep using app-locale labels by design.
 //   ultimate / ex        →  "<term>: <name>"

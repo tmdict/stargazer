@@ -18,7 +18,7 @@ const {
   variant: 'simple' | 'detailed'
   offset?: number
   maxWidth?: string
-  // A box a tooltip above its trigger stays clear of, as of the window's top.
+  // A box a tooltip above its trigger stays clear of, like the window's top.
   clearOf?: Pick<Element, 'getBoundingClientRect'>
 }>()
 

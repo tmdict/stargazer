@@ -62,7 +62,7 @@ const effectLevels = computed(() =>
 
     <template v-if="applied || failed">
       <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
-      <!-- A season can ship before the upstream feed carries its text. -->
+      <!-- A season can ship before the data pack carries its text. -->
       <p v-else class="details-pending" :lang="i18n.currentLocale">
         {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
       </p>

@@ -1,9 +1,6 @@
-/* Why a placement puts each unit where it stands, as the scorer values it: the
- * effects a unit gives, reaches or receives, the buff tile, the rules found in
- * the formations it keeps and the side its hero leans to, and the free tiles it
- * could take alone with a placement as good. Units are named by id and effects
- * by the data file their rule sits in, so the page words each reason in its own
- * language. */
+/* Why a placement puts each unit where it stands, as the scorer values it.
+ * Units are named by id and effects by the data file their rule sits in, so the
+ * page words each reason in its own language. */
 
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'

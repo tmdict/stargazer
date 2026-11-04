@@ -66,7 +66,6 @@ export function useSlNames() {
     return (i18n.currentLocale === 'zh' && name.match(/\(([^)]+)\)$/)?.[1]) || name
   }
 
-  // Units named together, as a sentence lists them, each name marked.
   const cardNames = (units: readonly number[]): TextPart[] =>
     new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' })
       .formatToParts(units.map(cardName))

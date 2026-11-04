@@ -32,7 +32,7 @@ import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
 import { buffTiles, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
-import { placeTeam } from '@/lib/placement/engine'
+import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer, type PlacementScore } from '@/lib/placement/score'
 import type { FormationRule, PlacementData, PlacementTeam } from '@/lib/placement/types'
@@ -256,7 +256,7 @@ const scoreSetup = (setup: Setup, data: PlacementData) =>
   )
 
 interface Placed {
-  result: ReturnType<typeof placeTeam>
+  result: PlacementResult
   pick: Scored
 }
 

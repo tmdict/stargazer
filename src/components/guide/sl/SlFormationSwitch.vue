@@ -11,7 +11,7 @@ import SlCard from './SlCard.vue'
 import SlIcon from './SlIcon.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
-import { interpolateParts } from '@/utils/interpolate'
+import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { useSlNames } from './useSlNames'
 
 type Half = 'played' | 'engine'
@@ -29,9 +29,19 @@ const i18n = useI18nStore()
 const { cardNames } = useSlNames()
 const { anchor, payload: half, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Half>()
 
-const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string }[] = [
-  { half: 'played', icon: 'check', label: 'app.sl-formation-recorded' },
-  { half: 'engine', icon: 'sparkle', label: 'app.sl-formation-suggested' },
+const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string; tip: string }[] = [
+  {
+    half: 'played',
+    icon: 'check',
+    label: 'app.sl-formation-recorded',
+    tip: 'app.sl-formation-recorded-tip',
+  },
+  {
+    half: 'engine',
+    icon: 'sparkle',
+    label: 'app.sl-formation-suggested',
+    tip: 'app.sl-formation-suggested-tip',
+  },
 ]
 
 const press = (event: MouseEvent, pressed: Half): void => {
@@ -45,24 +55,14 @@ const press = (event: MouseEvent, pressed: Half): void => {
 }
 
 const card = computed(() => {
-  if (!half.value) return null
-  const { label } = HALVES.find((h) => h.half === half.value)!
-  const lines =
-    half.value === 'played'
-      ? [
-          { parts: [{ text: i18n.t('app.sl-formation-recorded-tip') }] },
-          ...(moved.length
-            ? [
-                {
-                  parts: interpolateParts(i18n.t('app.sl-formation-moved'), {
-                    units: cardNames(moved),
-                  }),
-                },
-              ]
-            : []),
-        ]
-      : [{ parts: [{ text: i18n.t('app.sl-formation-suggested-tip') }] }]
-  return { title: [{ text: i18n.t(label) }], lines }
+  const open = HALVES.find((h) => h.half === half.value)
+  if (!open) return null
+  const lines: { parts: TextPart[] }[] = [{ parts: [{ text: i18n.t(open.tip) }] }]
+  if (open.half === 'played' && moved.length) {
+    const units = cardNames(moved)
+    lines.push({ parts: interpolateParts(i18n.t('app.sl-formation-moved'), { units }) })
+  }
+  return { title: [{ text: i18n.t(open.label) }], lines }
 })
 </script>
 

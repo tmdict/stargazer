@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/* A card on a generator board: a title, then a list of lines, each a bold
-   lead, where it has one, then the rest. Names show in the amber that rings
-   the units a card names on the board. */
+/* A card on a generator board. Names show in the amber that rings the units a
+   card names on the board. */
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'

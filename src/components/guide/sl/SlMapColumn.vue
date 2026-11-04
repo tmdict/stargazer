@@ -4,12 +4,10 @@
    then the comp's record on the map, the team's chance to win the map, the core
    heroes to keep and the swaps recorded in place of one hero or two. A win rate
    shows from eight decided games, green from 60% and red to 40%, as the report
-   colours one. Its host sizes it: --pt for
-   the portraits, and --sl-unit, the length of one of the generator page's
-   pixels, for the gaps and icons of the core and swap rows (1px there, a share
-   of its column's width on the guide index's card, which shows no record).
-   Hovering or tapping a swap's heroes tries them on the board when the team
-   can try swaps. */
+   colours one. Its host sizes it: --pt for the portraits, and --sl-unit, the
+   length of one of the generator page's pixels, for the gaps and icons of the
+   core and swap rows (1px there, a share of its column's width on the guide
+   index's card, which shows no record). */
 
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
@@ -26,8 +24,6 @@ import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent } from './useSlNames'
 
-// engineOn: the board shows the engine's formation in place of a recorded
-// game's. why: the shown formation's.
 const { team, engineOn = false } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
     Partial<Pick<SlShownTeam, 'chance' | 'trySwap' | 'played' | 'engine'>>

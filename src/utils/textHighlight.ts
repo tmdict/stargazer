@@ -1,6 +1,6 @@
 // Renders skill descriptions to HTML: [[value]] → highlight span,
-// {stat} → stat-tag span. Output is consumed via v-html / innerHTML; input is
-// from a controlled feed, not user input.
+// {stat} → stat-tag span. Output is consumed via v-html / innerHTML; input
+// comes from the data pack, not from users.
 
 const STAT_LABEL: Record<string, string> = {
   atk: 'ATK',

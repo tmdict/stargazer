@@ -71,8 +71,6 @@ const decoded = (season: number) => {
   const file = { ...data, season }
   return decodeMultiGridStateFromUrl(slTeamData(file, set, picks, boards, drawnOf(file, set)))!
 }
-const placementOf = (file: SlData, choice: SlChoice['teams'][number]) =>
-  (choice.source === 0 ? file : file.before!).teams[choice.team]!.placements[choice.placement]
 
 // Each board of a saved set against the team it came from, in that team's
 // season.
@@ -94,7 +92,6 @@ const expectSaved = (
     const team = (choice.source === 0 ? data : data.before!).teams[choice.team]!
     expect(board.m).toBe(data.maps[team.map])
     const { units } = formations[i]!
-    if (placementOf(data, choice)) expect(units).toEqual(recordedUnits(data, choice))
     const saved = [
       ...(board.c ?? []),
       ...(board.s ?? []).map(([tile, local]) => [tile, toPhantimalId(local), Team.ALLY]),
@@ -152,7 +149,7 @@ describe('a set saved as a team', () => {
     }
     // A recorded placement keeps its heroes' tiles. The engine places a team
     // with none afresh, without the phantimal.
-    const recorded = set.teams.map((choice) => !!placementOf(data, choice))
+    const recorded = set.teams.map((choice) => !!recordedUnits(data, choice))
     expect(state.boards.filter((_, i) => recorded[i]).map((board) => board.c)).toEqual(
       decoded(data.season)
         .boards.filter((_, i) => recorded[i])
@@ -192,7 +189,7 @@ describe('a file behind the current maps', () => {
     const draws = boardDraws(behind, chosen, onCurrent)
     const formations = draws.map((draw) => shownFormation(draw, false))
     expect(draws.map((draw) => !!draw.played)).toEqual(
-      chosen.teams.map((team, i) => i < 3 && !!placementOf(behind, team)),
+      chosen.teams.map((team, i) => i < 3 && !!recordedUnits(behind, team)),
     )
     const state = decodeMultiGridStateFromUrl(
       slTeamData(behind, chosen, picks, onCurrent, formations),
@@ -287,7 +284,6 @@ const phantimalMet = (team: PlacementTeam, board: SlBoard, units: readonly SlUni
     .reduce((sum, { met }) => sum + (met ?? 0), 0)
 }
 
-// Every unit the engine did not move stands on its recorded tile.
 const keepsUnmoved = (recorded: readonly SlUnit[], drawn: readonly SlUnit[], moved: number[]) => {
   const drawnTile = new Map(drawn.map(([hexId, unit]) => [unit, hexId]))
   return recorded.every(
@@ -309,7 +305,7 @@ describe('a recorded board', () => {
     })
   })
 
-  // Season 8's recorded teams with a phantimal, each on the map it was recorded on.
+  // The shipped teams with a recorded phantimal, each on the map it was recorded on.
   it('moves the phantimal, and at most one hero, only where its Spirit Mark lands better', () => {
     const tried = shipped.teams.flatMap((t, index) => {
       if (!t.placements[0]?.s.length) return []

@@ -194,7 +194,7 @@ export async function boardPictures(root: string): Promise<string[]> {
 
 /** What stops a build: the pack lacking what the app reads, or out of step
  * with this repo's own files. New content whose text or portrait lags behind
- * the feed is only a note: a hero with no portrait or skill text yet, and a
+ * the pack is only a note: a hero with no portrait or skill text yet, and a
  * seasonal unit with no text yet. A seasonal unit's pictures come with its
  * season, so a missing one is what a season shipped without a new pin looks
  * like, and stops the build. A board picture the pack lacks is a note, since

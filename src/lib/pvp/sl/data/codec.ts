@@ -57,7 +57,6 @@ const isPick = (value: unknown, placements: number): boolean =>
   value[1] >= 0 &&
   value[1] < placements
 
-// One season's part of the file.
 const isSeason = (value: unknown, artifacts: 'artifacts' | 'like'): boolean =>
   isObject(value) &&
   isObject(value.sample) &&

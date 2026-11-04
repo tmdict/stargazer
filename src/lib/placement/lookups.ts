@@ -9,15 +9,14 @@ const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
 const artifactById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact]))
 const phantimals = new Map(loadPhantimals().map((phantimal) => [phantimal.id, phantimal]))
 const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
+const dataOf = (unitId: number) =>
+  inPhantimalBand(unitId) ? phantimalOf(unitId) : heroById.get(toBaseHeroId(unitId))
 
 export const PLACEMENT_LOOKUPS: PlacementLookups = {
-  factionOf: (id) =>
-    inPhantimalBand(id) ? phantimalOf(id)?.faction : heroById.get(toBaseHeroId(id))?.faction,
-  classOf: (id) =>
-    inPhantimalBand(id) ? phantimalOf(id)?.class : heroById.get(toBaseHeroId(id))?.class,
+  factionOf: (id) => dataOf(id)?.faction,
+  classOf: (id) => dataOf(id)?.class,
   seasonalTargeting: (id) => inPhantimalBand(id) && phantimalOf(id)?.targeting === true,
-  rulesOf: (id) =>
-    (inPhantimalBand(id) ? phantimalOf(id)?.rules : heroById.get(toBaseHeroId(id))?.rules) ?? [],
+  rulesOf: (id) => dataOf(id)?.rules ?? [],
   charmOf: (id) => {
     const hero = heroById.get(id)
     const charm = hero && getCharmForHero(hero.name)
@@ -27,6 +26,5 @@ export const PLACEMENT_LOOKUPS: PlacementLookups = {
     const artifact = artifactById.get(id)
     return artifact && { name: artifact.name, rules: artifact.rules ?? [] }
   },
-  nameOf: (id) =>
-    inPhantimalBand(id) ? phantimalOf(id)?.name : heroById.get(toBaseHeroId(id))?.name,
+  nameOf: (id) => dataOf(id)?.name,
 }

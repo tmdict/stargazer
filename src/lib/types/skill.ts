@@ -26,10 +26,9 @@ export interface TagPick {
   readonly mods: readonly string[]
 }
 
-// On-disk shape of src/pack/text/skill/<lang>/<slug>.json (written by the data
-// export). Skill content is entirely feed-sourced: every slot carries `n`.
-// `r` carries EX refinement tiers (Refine 2, Refine 4) and is only emitted on
-// the `ex` slot when the source data has them.
+// On-disk shape of src/pack/text/skill/<lang>/<slug>.json, written by a pack
+// update. Every slot carries `n`. `r` carries EX refinement tiers (Refine 2,
+// Refine 4) and is present only on the `ex` slot of a hero that has them.
 export interface SkillRefineEntry {
   t: number // tier: 2 or 4 in current data
   d: string // pre-rendered body text in the entry's locale
@@ -41,7 +40,7 @@ export interface SkillLocaleSlot {
   r?: SkillRefineEntry[]
 }
 
-// `_hero` is the feed's localized hero display name: skill pages and the
+// `_hero` is the data pack's localized hero display name: skill pages and the
 // search index read it in every language (curated character locales stay on
 // chrome surfaces and as search aliases).
 export type SkillLocaleFile = {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* The paragon crown or the refinement star, in the text colour and named for
-   screen readers. Each is drawn at a digit's height: on a phone the board
-   panel's pills have no width to spare. The crown's box ends at its outer
-   points. It sits a little higher than its box and leaves more room before a
-   number than the star does: its weight is in its base and its right side is a
-   straight edge, so placed like the star it reads low and close. */
+/* The paragon crown or the refinement star. Each is drawn at a digit's height:
+   on a phone the board panel's pills have no width to spare. The crown's box
+   ends at its outer points. It sits a little higher than its box and leaves
+   more room before a number than the star does: its weight is in its base and
+   its right side is a straight edge, so placed like the star it reads low and
+   close. */
 
 import { useI18nStore } from '@/stores/i18n'
 

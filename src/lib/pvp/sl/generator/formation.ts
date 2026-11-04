@@ -45,7 +45,7 @@ export interface BoardFormation {
 // A recorded game's formation as drawn, with the units the engine moved in it
 // for the phantimal's Spirit Mark, the phantimal first; none when it is drawn
 // as recorded.
-export interface PlayedFormation extends BoardFormation {
+interface PlayedFormation extends BoardFormation {
   moved: number[]
 }
 
@@ -62,8 +62,6 @@ export interface BoardDraw {
 export const shownFormation = (draw: BoardDraw, engineOn: boolean): BoardFormation =>
   (engineOn && draw.engine) || draw.played || draw.engine!
 
-// A chosen team as the engine places it on a board: its heroes, the phantimal
-// they summon and the artifact the set gives it.
 export const boardTeam = (
   data: SlData,
   heroes: number[],
@@ -74,8 +72,8 @@ export const boardTeam = (
   artifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : undefined,
 })
 
-// The engine's tuning on a board. A map with no games yet is expected to draw
-// the enemy heroes of the map whose teams it takes.
+// A map with no games yet is expected to draw the enemy heroes of the map whose
+// teams it takes.
 export const boardPlacement = (data: SlData, { key, source }: SlBoard): PlacementData => ({
   ...data.placement,
   pickRates: { [key]: data.placement.pickRates[data.maps[source]!] ?? {} },

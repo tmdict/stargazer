@@ -70,8 +70,7 @@ interface Effect {
   // once for each enemy tile it could stand on, every tile as likely.
   reach: (board: PlacementBoard) => Reach[]
   // For a most goal: the most the effect can count from any of the holder's
-  // tiles on this map, with no other unit placed, or for allies, with every
-  // other unit of the team on a marked tile where there are tiles enough.
+  // tiles on this map.
   best?: number
   // How many heroes a target goal wants, however many the effect reaches.
   marks: number
@@ -298,7 +297,6 @@ export class PlacementScorer {
     return [...this.mustHold, ...this.usually].map((rule) => ({ rule, held: this.held(rule) }))
   }
 
-  // Whether the unit counts as on the map's buff tile as the board stands.
   onBuffTile(unit: number): boolean {
     return (
       this.weights.buff > 0 &&
@@ -474,18 +472,16 @@ export class PlacementScorer {
     const { rule, holder } = effect
     const { goal } = rule
     const self = holder === undefined ? undefined : ruleUnit(holder)
-    const unitsOn = (hexIds: number[], asRuleUnit = true) =>
-      this.alliesOn(hexIds, holder, asRuleUnit)
 
     if (goal === 'none') return null
     if (goal === 'most' || 'most' in goal) {
       return effect.best ? this.countMarked(goal, marked, this.board, holder) / effect.best : null
     }
-    if ('atMost' in goal) return unitsOn(marked).size <= goal.atMost ? 1 : 0
+    if ('atMost' in goal) return this.alliesOn(marked, holder).size <= goal.atMost ? 1 : 0
     if ('exactly' in goal) {
       // A companion takes a tile of its own, so it counts as a unit other than
       // the team's heroes, as a phantimal does.
-      const on = [...unitsOn(marked, false)]
+      const on = [...this.alliesOn(marked, holder, false)]
       if (on.length !== goal.exactly) return 0
       if (
         goal.sameFaction &&
@@ -498,7 +494,7 @@ export class PlacementScorer {
 
     const order = this.ranked(goalList(goal)!, self)
     if (!order.length) return null
-    const hit = unitsOn([...landed, ...marked])
+    const hit = this.alliesOn([...landed, ...marked], holder)
     if ('avoid' in goal) return hit.has(order[0]!) ? 0 : 1
     if ('target' in goal) {
       // An effect that lands on two wants the list's first two, half each.

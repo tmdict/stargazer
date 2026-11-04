@@ -556,10 +556,9 @@ defineExpose({ zoneBox })
       </text>
     </template>
 
-    <!-- Layers of their own: drawn inside its unit's group, a ring would lose
-         its outer half under neighbors painted after it, and with every halo
-         under every ring, neighbouring rings share one edge with no halo
-         across it. -->
+    <!-- Layers of their own: inside its unit's group a ring would lose its outer
+         half under neighbors painted after it, and with every halo under every
+         ring, neighboring rings share an edge with no halo across it. -->
     <component
       :is="item.tag"
       v-for="item in rings"

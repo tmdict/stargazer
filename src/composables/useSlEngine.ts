@@ -74,7 +74,6 @@ export function useSlEngine() {
     return answer.boards
   }
 
-  // The engine's formation of a chosen team on its board.
   const placeEngine = async (team: SlChoiceTeam, board: SlBoard): Promise<BoardFormation> => {
     const answer = await ask((id) => ({ type: 'placeEngine', id, team, board }))
     if (answer.type !== 'placedEngine') throw new Error('The worker answered another request')

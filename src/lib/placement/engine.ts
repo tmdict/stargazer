@@ -43,8 +43,6 @@ function compare(a: PlacementScore, b: PlacementScore): number {
   return 0
 }
 
-// Whether a placement counts as good as the best: the same always rules broken,
-// and goals within the margin.
 export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
   score.broken === best.broken && score.goals >= best.goals - margin - EPS
 
