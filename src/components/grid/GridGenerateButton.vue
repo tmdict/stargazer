@@ -109,7 +109,7 @@ const generate = async (): Promise<void> => {
       @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
-      <IconSparkle :size="14" class="btn-icon" aria-hidden="true" />
+      <IconSparkle :size="20" class="btn-icon" aria-hidden="true" />
     </button>
     <RouterLink
       :to="{ path: SL_GENERATOR_PATH, state: { generatorFrom: from } }"
