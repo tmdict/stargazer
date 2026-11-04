@@ -34,7 +34,7 @@ import { recordedUnits, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
-import { matchVariant, TEAM_VARIANTS } from '@/lib/teams/modes'
+import { DEFAULT_VARIANT, matchVariant, TEAM_VARIANTS, variantMaps } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
@@ -64,7 +64,7 @@ const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((i
 }))
 const chooseOn = (file: SlData, boards: SlBoard[], from = picks) =>
   chooseSlSet(file, reader, from, () => true, boards)
-const boards = slBoards(data, 'sl')
+const boards = slBoards(data, TEAM_VARIANTS.sl.maps)
 const set = chooseOn(data, boards)!
 const byTile = (a: readonly number[], b: readonly number[]) => a[0]! - b[0]!
 // Every board of a set as the page draws it: in its team's recorded placement,
@@ -128,7 +128,7 @@ describe('a set saved as a team', () => {
   })
 
   it('saves a set of three boards as a 3v3 team', () => {
-    const onMapOne = slBoards(data, '3v3')
+    const onMapOne = slBoards(data, variantMaps('3v3', DEFAULT_VARIANT))
     const three = chooseOn(data, onMapOne)!
     expect(three.teams).toHaveLength(3)
     expectSaved(three, picks, onMapOne, '3v3')
@@ -170,7 +170,7 @@ describe('a file behind the current maps', () => {
   const current = TEAM_VARIANTS.sl.maps
   const gone = Object.keys(MAPS).filter((key) => !current.includes(key))
   const behind = fileOn([...current.slice(0, 3), gone[0]!, gone[1]!])
-  const onCurrent = slBoards(behind, 'sl')
+  const onCurrent = slBoards(behind, current)
 
   it('stands every board on a current map, and gives a new map the teams of every map', () => {
     expect(onCurrent.map((board) => board.layout.key)).toEqual(current)
@@ -178,13 +178,13 @@ describe('a file behind the current maps', () => {
   })
 
   it('keeps a held map on its own teams wherever the file holds it', () => {
-    const shuffled = slBoards(fileOn([...current.slice(0, 3), gone[0]!, current[3]!]), 'sl')
+    const shuffled = slBoards(fileOn([...current.slice(0, 3), gone[0]!, current[3]!]), current)
     expect(shuffled.map((board) => board.source)).toEqual([0, 1, 2, 4, null])
   })
 
   it('leaves the 5v5 and 3v3 types on map 1, which the file still holds', () => {
-    for (const type of ['5v5', '3v3'] as const) {
-      for (const board of slBoards(behind, type)) {
+    for (const mode of ['5v5', '3v3'] as const) {
+      for (const board of slBoards(behind, variantMaps(mode, DEFAULT_VARIANT))) {
         expect(board).toEqual({ layout: presetLayout(current[0]!), map: 0, source: 0 })
       }
     }
@@ -245,6 +245,25 @@ describe('a Map Editor map', () => {
   it('takes no set when no team has a tile for each of its units', () => {
     expect(chooseOn(data, layoutBoards(data, [trimmed(4)]))).toBeNull()
   })
+
+  it('offers no swap that leaves its team short of tiles', () => {
+    const fit = slFit(data)
+    const swapped: number[][] = []
+    for (const ally of [5, 6, 7, 8]) {
+      const on = layoutBoards(data, [trimmed(ally)])
+      const team = chooseOn(data, on)?.teams[0]
+      if (!team) continue
+      const into = (out: number[], heroes: number[]) =>
+        team.heroes.map((id) => (out.includes(id) ? heroes[out.indexOf(id)]! : id))
+      const all = [
+        ...team.flex.flatMap(({ out, options }) => options.map((id) => into([out], [id]))),
+        ...team.pairs.flatMap(({ out, options }) => options.map((ids) => into(out, ids))),
+      ]
+      expect(all.every((heroes) => fit.stands(on[0]!, heroes))).toBe(true)
+      swapped.push(...all)
+    }
+    expect(swapped.length).toBeGreaterThan(0)
+  })
 })
 
 describe("the engine's formations", () => {
@@ -295,7 +314,7 @@ describe("the engine's formations", () => {
 
 // The shipped file on its own maps, so a recorded board stands on the map it was
 // recorded on.
-const onShipped = slBoards(shipped, 'sl')
+const onShipped = slBoards(shipped, TEAM_VARIANTS.sl.maps)
 const shippedSet = chooseOn(shipped, onShipped)!
 const shippedDraws = boardDraws(shipped, shippedSet, onShipped)
 const shippedFormations = shippedDraws.map((draw) => shownFormation(draw, false))

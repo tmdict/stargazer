@@ -1,25 +1,40 @@
 /* Supreme League worker: reads the data file once and answers the generator,
- * the boards' formations, the swaps tried on them and Who Would Win?, so
- * neither the search, the placing nor a prediction holds up the page. */
+ * the boards' formations, the swaps tried on them, Generate on the Arena and
+ * Teams and Who Would Win?, so neither the search, the placing nor a
+ * prediction holds up the page. */
 
+import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
+import type { MapLayout } from '@/lib/maps'
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
+import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
 import {
   boardDraws,
   engineFormation,
+  shownFormation,
   type BoardDraw,
   type BoardFormation,
 } from '@/lib/pvp/sl/generator/formation'
-import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
+import { slPicks } from '@/lib/pvp/sl/generator/picks'
+import { layoutBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
+import { slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
 import { artifactSurvives } from '@/lib/seasonal'
+import { loadCharacters } from '@/utils/dataLoader'
 
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[] }
+  // A roster's levels, or null for every hero at the top levels.
+  | {
+      type: 'fill'
+      id: number
+      levels: Record<string, AttrRecord> | null
+      layouts: MapLayout[]
+    }
   | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[] }
   | { type: 'placeEngine'; id: number; team: SlChoiceTeam; board: SlBoard }
   | { type: 'swap'; id: number; swap: SwapRequest }
@@ -29,6 +44,9 @@ export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
+  // The set as a saved team, each board in the formation the generator page
+  // draws first; null when no set can be made.
+  | { type: 'filled'; id: number; team: string | null }
   | { type: 'placed'; id: number; boards: BoardDraw[] }
   | { type: 'placedEngine'; id: number; formation: BoardFormation }
   | { type: 'swapped'; id: number; preview: SwapPreview }
@@ -42,7 +60,15 @@ const scope = self as unknown as {
   addEventListener(type: 'message', listener: (event: MessageEvent<SlRequest>) => void): void
 }
 
-const engine = loadSlData().then((data) => ({ data, reader: readSlFile(data), fit: slFit(data) }))
+const heroes = loadCharacters().filter((c) => !c.placeholder)
+const factions = new Map(heroes.map((c) => [c.id, c.faction]))
+
+const engine = loadSlData().then((data) => ({
+  data,
+  reader: readSlFile(data),
+  fit: slFit(data),
+  unrated: unratedHeroes(data.model, data.season, heroes),
+}))
 
 engine.then(
   () => scope.postMessage({ type: 'ready' }),
@@ -52,11 +78,21 @@ engine.then(
 scope.addEventListener('message', async (event) => {
   const msg = event.data
   try {
-    const { data, reader, fit } = await engine
+    const { data, reader, fit, unrated } = await engine
     const counts = (id: number): boolean => artifactSurvives(data.season, id)
     if (msg.type === 'generate') {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
       scope.postMessage({ type: 'generated', id: msg.id, set })
+    } else if (msg.type === 'fill') {
+      const levels = msg.levels ?? Object.fromEntries(heroes.map((c) => [c.id, TOP_LEVELS]))
+      const picks = slPicks(levels, (id) => factions.get(id), unrated)
+      const boards = layoutBoards(data, msg.layouts)
+      const set = chooseSlSet(data, reader, picks, counts, boards, fit)
+      const formations = set
+        ? boardDraws(data, set, boards).map((draw) => shownFormation(draw, false))
+        : []
+      const team = set && slTeamData(data, set, picks, boards, formations)
+      scope.postMessage({ type: 'filled', id: msg.id, team })
     } else if (msg.type === 'place') {
       const boards = boardDraws(data, msg.set, msg.boards)
       scope.postMessage({ type: 'placed', id: msg.id, boards })

@@ -4,6 +4,7 @@
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
 import { artifactSurvives } from '@/lib/seasonal'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
 import { readSlFile } from '../model/reader'
@@ -34,7 +35,7 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
       paragon: TOP_LEVELS[ATTR_PARAGON]!,
       refinement: TOP_LEVELS[ATTR_REFINEMENT]!,
     }))
-  const boards = slBoards(file, 'sl')
+  const boards = slBoards(file, TEAM_VARIANTS.sl.maps)
   const set = chooseSlSet(
     file,
     readSlFile(file),

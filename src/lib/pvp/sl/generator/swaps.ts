@@ -8,22 +8,25 @@ interface SwapRules {
   // The chance of a recorded team of the family at the visitor's levels.
   chanceOf: (heroes: number[]) => number
   excluded: (id: number) => boolean
+  // Whether a recorded team has an ally tile on the board for each of its units.
+  stands: (heroes: number[]) => boolean
   // Ties break in the order of the heroes' English names.
   before: (a: number, b: number) => boolean
   flex: SlData['flex']
 }
 
 /* Swaps: the group's recorded teams that differ from this one by a single
- * hero, by their chance, best first, leaving out a hero not selected or one
- * the set uses elsewhere. Core keeps the group's core heroes the team holds
- * that no swap replaces: one with a swap is listed under Flex even past its
- * limit, and the other swaps fill what that limit leaves. */
+ * hero, by their chance, best first, leaving out a hero not selected, one the
+ * set uses elsewhere, and a team the board has too few ally tiles for. Core
+ * keeps the group's core heroes the team holds that no swap replaces: one with
+ * a swap is listed under Flex even past its limit, and the other swaps fill
+ * what that limit leaves. */
 export function swapsOf(
   heroes: number[],
   elsewhere: ReadonlySet<number>,
   rules: SwapRules,
 ): Pick<SlChoiceTeam, 'core' | 'flex' | 'pairs'> {
-  const { family, chanceOf, excluded, before, flex } = rules
+  const { family, chanceOf, excluded, stands, before, flex } = rules
   const core = family.core.filter((id) => heroes.includes(id))
   const swaps = new Map<number, { hero: number; chance: number }[]>()
   for (const team of family.swaps) {
@@ -32,7 +35,7 @@ export function swapsOf(
     if (added.length !== 1 || dropped.length !== 1) continue
     const hero = added[0]!
     const out = dropped[0]!
-    if (elsewhere.has(hero) || excluded(hero)) continue
+    if (elsewhere.has(hero) || excluded(hero) || !stands(team)) continue
     if (!swaps.has(out)) swaps.set(out, [])
     swaps.get(out)!.push({ hero, chance: chanceOf(team) })
   }
@@ -63,7 +66,7 @@ export function swapsOf(
 function pairSwaps(
   heroes: number[],
   elsewhere: ReadonlySet<number>,
-  { family, chanceOf, excluded, before, flex }: SwapRules,
+  { family, chanceOf, excluded, stands, before, flex }: SwapRules,
   core: number[],
   shown: { out: number }[],
 ): SlChoiceTeam['pairs'] {
@@ -78,7 +81,7 @@ function pairSwaps(
     const added = team.filter((h) => !heroes.includes(h))
     const dropped = heroes.filter((h) => !team.includes(h))
     if (added.length !== 2 || dropped.length !== 2 || dropped.some((h) => fixed.has(h))) continue
-    if (added.some((h) => elsewhere.has(h) || excluded(h))) continue
+    if (added.some((h) => elsewhere.has(h) || excluded(h)) || !stands(team)) continue
     const out = [...dropped].sort(byOrder)
     const key = out.join('/')
     if (!byOut.has(key)) byOut.set(key, { out, found: [] })

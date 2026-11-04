@@ -241,7 +241,7 @@ onUnmounted(() => {
 <style scoped>
 header {
   background-color: #282c34;
-  border-bottom: 3px solid #f7d87c;
+  border-bottom: 3px solid var(--color-header-gold);
   padding: 0.5rem 0;
 }
 
@@ -303,7 +303,7 @@ nav ul li {
 .menu a:hover,
 .menu button:hover,
 .menu-locale:hover {
-  color: #f7d87c;
+  color: var(--color-header-gold);
 }
 
 .nav-search {
@@ -350,12 +350,12 @@ nav ul li {
 }
 
 .nav-text-link:hover {
-  color: #f7d87c;
+  color: var(--color-header-gold);
   background: rgba(255, 255, 255, 0.18);
 }
 
 .nav-text-link.active {
-  color: #f7d87c;
+  color: var(--color-header-gold);
 }
 
 .icon-link {
@@ -418,7 +418,7 @@ nav ul li {
   }
 
   .nav-text-link.active {
-    background: rgba(247, 216, 124, 0.18);
+    background: color-mix(in srgb, var(--color-header-gold) 18%, transparent);
   }
 }
 

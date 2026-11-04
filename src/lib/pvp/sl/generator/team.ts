@@ -9,6 +9,7 @@
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
+import { DEFAULT_MAP_KEY, getMapByKey } from '@/lib/maps'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_MODE_ORDER, TEAM_MODES } from '@/lib/teams/modes'
 import { FULL_GRID } from '@/lib/types/grid'
@@ -65,7 +66,9 @@ export function slTeamData(
       tiles: grid.getAllTiles(),
       allyArtifact: artifact !== null && artifactSurvives(data.season, artifact) ? artifact : null,
       enemyArtifact: null,
-      map: layout.key,
+      // A Map Editor map has no name a saved team can hold, so the team keeps
+      // its tiles and loads on the default map, as a board without a map does.
+      map: getMapByKey(layout.key) ? layout.key : DEFAULT_MAP_KEY,
       getAttrs: (side, unitId) => (side === Team.ALLY ? (levels.get(unitId) ?? {}) : {}),
     }
   })

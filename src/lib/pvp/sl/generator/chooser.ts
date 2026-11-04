@@ -320,6 +320,7 @@ function choose(
                     gap(heroes),
                   ),
                 excluded,
+                stands: (heroes) => fit.stands(boards[i]!, heroes),
                 before,
                 flex: data.flex,
               })

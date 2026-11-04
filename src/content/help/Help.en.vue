@@ -9,6 +9,7 @@ import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -347,8 +348,8 @@ const SKILL = {
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          Get a team for each map of a 3v3, 5v5 or Supreme League match, made from your own heroes
-          and picked from games players recorded.
+          Get a team for each map of a 1v1, 3v3 or 5v5 match, Supreme League and Guild Duel
+          included, made from your own heroes and picked from games players recorded.
         </p>
         <ol class="help-steps">
           <li>
@@ -377,8 +378,9 @@ const SKILL = {
           </li>
           <li>
             <span>
-              Choose <b>SL</b> for the Supreme League maps, <b>5v5</b> to use map 1 for all five, or
-              <b>3v3</b> to use it for all three. Then press <b>Generate</b>.
+              Choose <b>1v1</b>, <b>3v3</b> or <b>5v5</b>, then the maps as on the Teams page:
+              <b>SL</b> and <b>GD</b> for the Supreme League and Guild Duel maps, or
+              <b>Default</b> to use map 1 for every grid. Then press <b>Generate</b>.
             </span>
           </li>
           <li>
@@ -390,6 +392,12 @@ const SKILL = {
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
+        <li>
+          <b>Generate</b> on the Arena and Teams pages fills your side of the grids from your roster
+          in one press. <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span> next to
+          it opens this page on those grids, Map editor maps included, and <b>Open in Arena</b> or
+          <b>Open in Teams</b> puts the set back on your side there.
+        </li>
         <li>
           Under each map, <SlIcon name="players" class="help-inline-icon" /> is how many players
           used that team's comp on the map, and <SlIcon name="record" class="help-inline-icon" />

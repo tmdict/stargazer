@@ -1,17 +1,7 @@
-/* What the generator's picker offers: a Teams mode with every board on its
- * default map, or Supreme League on its current maps, and the teams each board
- * draws from. */
+/* The boards a set is chosen for, and the teams each board draws from. */
 
 import { presetLayout, type MapLayout } from '@/lib/maps'
-import { DEFAULT_VARIANT, TEAM_VARIANTS, variantMaps, type TeamModeKey } from '@/lib/teams/modes'
 import type { SlData } from '../data/types'
-
-export const SL_SET_TYPES = ['3v3', '5v5', 'sl'] as const
-
-export type SlSetType = (typeof SL_SET_TYPES)[number]
-
-export const slSetMode = (type: SlSetType): TeamModeKey =>
-  type === 'sl' ? TEAM_VARIANTS.sl.mode : type
 
 export interface SlBoard {
   layout: MapLayout
@@ -30,10 +20,9 @@ export function layoutBoards(data: SlData, layouts: readonly MapLayout[]): SlBoa
   })
 }
 
-export const slBoards = (data: SlData, type: SlSetType): SlBoard[] =>
+// Boards on preset maps, by their keys.
+export const slBoards = (data: SlData, maps: readonly string[]): SlBoard[] =>
   layoutBoards(
     data,
-    (type === 'sl' ? TEAM_VARIANTS.sl.maps : variantMaps(type, DEFAULT_VARIANT)).map((key) =>
-      presetLayout(key)!,
-    ),
+    maps.map((key) => presetLayout(key)!),
   )

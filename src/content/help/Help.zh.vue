@@ -9,6 +9,7 @@ import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -288,7 +289,8 @@ const SKILL = {
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          用你自己的英雄，为 3v3、5v5 或巅峰联赛的每张地图各配一支队伍，队伍都选自玩家记录的对局。
+          用你自己的英雄，为 1v1、3v3 或 5v5
+          比赛（包括巅峰联赛和公会征锋）的每张地图各配一支队伍，队伍都选自玩家记录的对局。
         </p>
         <ol class="help-steps">
           <li>
@@ -316,8 +318,10 @@ const SKILL = {
           </li>
           <li>
             <span
-              >选<b>巅峰联赛</b>使用巅峰联赛的地图，选 <b>5v5</b> 则五张都用地图 1，选
-              <b>3v3</b> 则三张都用地图 1。然后点<b>生成</b>。</span
+              >选择 <b>1v1</b>、<b>3v3</b> 或
+              <b>5v5</b
+              >，再像在「阵容」页面一样选地图：<b>巅峰联赛</b>和<b>公会征锋</b>使用对应的比赛地图，<b>默认</b>则每个棋盘都用地图
+              1。然后点<b>生成</b>。</span
             >
           </li>
           <li>
@@ -328,6 +332,11 @@ const SKILL = {
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
+        <li>
+          竞技场和「阵容」页面上的<b>生成</b>会用你的英雄池一键填好友方的棋盘。旁边的
+          <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>
+          会在本页打开同样的棋盘（地图编辑里的地图也可以），<b>在竞技场中打开</b>或<b>在阵容中打开</b>则把这套阵容放回那里的友方。
+        </li>
         <li>
           每张地图下方，<SlIcon name="players" class="help-inline-icon" />
           是在这张地图上用过这个阵容的玩家数，<SlIcon name="record" class="help-inline-icon" />

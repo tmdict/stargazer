@@ -9,6 +9,7 @@ import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconBell from '@/components/ui/IconBell.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -350,8 +351,8 @@ const SKILL = {
       <HelpGeneratorPicture />
       <div class="help-side">
         <p class="help-lead">
-          내 영웅으로 3v3, 5v5 또는 최강자 리그의 각 맵에 팀을 하나씩 짜 줍니다. 팀은 플레이어들이
-          기록한 전투에서 골라냅니다.
+          내 영웅으로 1v1, 3v3, 5v5 매치(최강자 리그와 길드 격돌 포함)의 각 맵에 팀을 하나씩 짜
+          줍니다. 팀은 플레이어들이 기록한 전투에서 골라냅니다.
         </p>
         <ol class="help-steps">
           <li>
@@ -380,8 +381,9 @@ const SKILL = {
           </li>
           <li>
             <span>
-              유형을 고른 뒤 <b>생성</b>을 누르세요. <b>최강자 리그</b>는 최강자 리그 맵을 쓰고,
-              <b>5v5</b> 유형은 다섯 맵 모두, <b>3v3</b> 유형은 세 맵 모두 맵 1을 씁니다.
+              <b>1v1</b>, <b>3v3</b>, <b>5v5</b> 중에서 고른 뒤 진형 페이지처럼 맵을 고르고
+              <b>생성</b>을 누르세요. <b>최강자 리그</b>와 <b>길드 격돌</b>은 해당 콘텐츠의 맵을
+              쓰고, <b>기본</b>은 모든 보드에 맵 1을 씁니다.
             </span>
           </li>
           <li>
@@ -393,6 +395,12 @@ const SKILL = {
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
+        <li>
+          아레나와 진형 페이지의 <b>생성</b>은 로스터로 아군 보드를 한 번에 채웁니다. 옆의
+          <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>은 같은 보드(맵
+          에디터의 맵 포함)로 이 페이지를 열고, <b>아레나에서 열기</b> 또는 <b>진형에서 열기</b>는
+          세트를 그곳의 아군 쪽에 다시 놓습니다.
+        </li>
         <li>
           각 맵 아래의 <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의
           조합을 쓴 플레이어 수이고, <SlIcon name="record" class="help-inline-icon" /> 옆에는 그

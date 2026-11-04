@@ -48,11 +48,11 @@ const shortcut = useShortcutLabel()
 
 .header-search:hover {
   background: rgba(255, 255, 255, 0.18);
-  color: #f7d87c;
+  color: var(--color-header-gold);
 }
 
 .header-search:focus-visible {
-  outline: 2px solid rgba(247, 216, 124, 0.7);
+  outline: 2px solid color-mix(in srgb, var(--color-header-gold) 70%, transparent);
   outline-offset: 2px;
 }
 

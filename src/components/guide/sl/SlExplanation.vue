@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
 import { winsNeeded } from '@/lib/pvp/sl/model/odds'
+import { DEFAULT_VARIANT } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent as percent, useSlNames } from './useSlNames'
 
@@ -21,9 +22,11 @@ const boards = computed(() => shown.teams.length)
 const needed = computed(() => winsNeeded(boards.value))
 
 const setLine = computed(() =>
-  shown.type === 'sl'
-    ? i18n.t('app.sl-explain-set')
-    : i18n.t('app.sl-explain-set-mode', { mode: shown.type, boards: boards.value }),
+  boards.value === 1
+    ? i18n.t('app.sl-explain-set-one')
+    : shown.variant === DEFAULT_VARIANT
+      ? i18n.t('app.sl-explain-set-mode', { mode: shown.mode, boards: boards.value })
+      : i18n.t('app.sl-explain-set'),
 )
 
 const outcomes = computed(() =>
@@ -40,7 +43,12 @@ const outcomes = computed(() =>
     <h1>{{ i18n.t('app.sl-explain-title') }}</h1>
 
     <h2>{{ i18n.t('app.sl-explain-meaning-head') }}</h2>
-    <p>{{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance), needed, boards }) }}</p>
+    <p v-if="boards === 1">
+      {{ i18n.t('app.sl-explain-intro-one', { chance: percent(shown.chance) }) }}
+    </p>
+    <p v-else>
+      {{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance), needed, boards }) }}
+    </p>
     <p>{{ i18n.t('app.sl-explain-typical') }}</p>
     <p>{{ i18n.t('app.sl-explain-forecast') }}</p>
 
@@ -88,24 +96,26 @@ const outcomes = computed(() =>
     <p>{{ i18n.t('app.sl-explain-steps') }}</p>
     <p>{{ i18n.t('app.sl-explain-weights') }}</p>
 
-    <h2>{{ i18n.t('app.sl-explain-sum-head') }}</h2>
-    <p>{{ i18n.t('app.sl-explain-sum-lead') }}</p>
-    <div class="sl-table-wrap">
-      <table class="sl-table">
-        <tbody>
-          <tr v-for="row in outcomes" :key="row.label">
-            <th scope="row">{{ row.label }}</th>
-            <td class="sl-num">{{ percent(row.chance) }}</td>
-          </tr>
-          <tr class="sl-total">
-            <th scope="row">{{ i18n.t('app.sl-explain-won-match', { count: needed }) }}</th>
-            <td class="sl-num">
-              <strong>{{ percent(shown.chance) }}</strong>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <template v-if="boards > 1">
+      <h2>{{ i18n.t('app.sl-explain-sum-head') }}</h2>
+      <p>{{ i18n.t('app.sl-explain-sum-lead') }}</p>
+      <div class="sl-table-wrap">
+        <table class="sl-table">
+          <tbody>
+            <tr v-for="row in outcomes" :key="row.label">
+              <th scope="row">{{ row.label }}</th>
+              <td class="sl-num">{{ percent(row.chance) }}</td>
+            </tr>
+            <tr class="sl-total">
+              <th scope="row">{{ i18n.t('app.sl-explain-won-match', { count: needed }) }}</th>
+              <td class="sl-num">
+                <strong>{{ percent(shown.chance) }}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
 
     <h2>{{ i18n.t('app.sl-explain-search-head') }}</h2>
     <p>{{ i18n.t('app.sl-explain-search') }}</p>

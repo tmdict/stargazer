@@ -40,7 +40,7 @@ const onClick = (): void => {
 }
 
 .sun {
-  color: #f7d87c;
+  color: var(--color-header-gold);
   display: none;
 }
 

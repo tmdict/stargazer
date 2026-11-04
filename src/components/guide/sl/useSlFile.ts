@@ -6,6 +6,7 @@ import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
 import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
 import { slBoards } from '@/lib/pvp/sl/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { LockedHeroes } from '@/lib/types/character'
 import { reloadOntoCurrentBuild } from '@/router/routes'
 import { useGameDataStore } from '@/stores/gameData'
@@ -62,7 +63,7 @@ export function useSlFile() {
     heading.value = {
       season: data.season,
       date: data.exportedAt,
-      newMaps: slBoards(data, 'sl').some((board) => board.source === null),
+      newMaps: slBoards(data, TEAM_VARIANTS.sl.maps).some((board) => board.source === null),
       retired: isRetiredSeason(data.season),
       sample: data.sample,
       before: data.before ? { season: data.before.season, ...data.before.sample } : null,

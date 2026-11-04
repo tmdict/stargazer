@@ -7,6 +7,10 @@
   --color-danger-text: var(--color-danger);
   --color-neutral: #666;
   --color-neutral-hover: #333;
+  --color-header-gold: #f7d87c;
+  --color-generate: #f2c94c;
+  --color-generate-hover: #e0b230;
+  --color-generate-text: #282c34;
 
   --color-accent: #5fc4bb;
   --color-accent-active: #3a8a83;
@@ -308,6 +312,8 @@
   --color-neutral: #4a5361;
   --color-neutral-hover: #5d6779;
   --color-danger-text: #e28174;
+  --color-generate: var(--color-header-gold);
+  --color-generate-hover: #f2c94c;
 
   --dock-chip-fill: rgba(255, 255, 255, 0.08);
   --dock-chip-fill-hover: rgba(255, 255, 255, 0.14);

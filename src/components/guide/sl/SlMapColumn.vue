@@ -26,12 +26,18 @@ import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { slPercent, useSlNames } from './useSlNames'
 
-const { team, engineOn = false } = defineProps<{
+const {
+  team,
+  engineOn = false,
+  hideChance = false,
+} = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
     Partial<Pick<SlShownTeam, 'chance' | 'trySwap' | 'played' | 'engine'>>
   board: PreviewBoard | undefined
   why?: PlacementExplanation | null
   engineOn?: boolean
+  // The set's own heading gives the chance of a one-board set.
+  hideChance?: boolean
 }>()
 
 const emit = defineEmits<{ switch: [engineOn: boolean] }>()
@@ -105,7 +111,8 @@ const record = computed(() => {
     tone: decided < TONE_GAMES ? '' : rate >= 0.6 ? 'good' : rate <= 0.4 ? 'bad' : '',
   }
 })
-const stats = computed(() => !!record.value || team.chance !== undefined)
+const chance = computed(() => (hideChance ? undefined : team.chance))
+const stats = computed(() => !!record.value || chance.value !== undefined)
 </script>
 
 <template>
@@ -151,12 +158,12 @@ const stats = computed(() => !!record.value || team.chance !== undefined)
             </span>
           </span>
         </template>
-        <template v-if="team.chance !== undefined">
+        <template v-if="chance !== undefined">
           <span />
           <span class="sl-stats">
             <span class="sl-stat" v-on="sayOn('app.sl-map-chance-tip')">
-              <SlIcon name="chance" :share="team.chance" class="sl-small-icon" />
-              <b>{{ slPercent(team.chance) }}</b>
+              <SlIcon name="chance" :share="chance" class="sl-small-icon" />
+              <b>{{ slPercent(chance) }}</b>
             </span>
           </span>
         </template>

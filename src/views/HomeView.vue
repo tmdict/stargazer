@@ -18,6 +18,7 @@ import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useBoardFit } from '@/composables/useBoardFit'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
+import { takeGeneratedSide, useFillSide } from '@/composables/useGeneratedSide'
 import { useGridExport } from '@/composables/useGridExport'
 import {
   deriveGridInfoView,
@@ -201,6 +202,7 @@ gameDataStore.initializeData()
 i18nStore.initialize()
 
 const arenaPersistence = useArenaPersistence(toFlags)
+const fillSide = useFillSide()
 
 // A ?g= link takes priority and is applied in setup (before paint, matching the
 // existing share behavior); the autosave on mount then overwrites the saved arena
@@ -243,6 +245,8 @@ onMounted(() => {
     }
   }
   arenaPersistence.startAutosave()
+  const generated = gameDataStore.dataLoaded ? takeGeneratedSide() : null
+  if (generated && fillSide(generated)) success(i18nStore.t('app.team-loaded'))
 })
 
 // Action button handlers
@@ -300,6 +304,7 @@ const handleResetMap = () => {
             <TeamPowerDock :context="activeContext" :show-upgrades="info.upgrades" />
           </template>
           <GridControls
+            generator-from="arena"
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"
             v-model:team-view="gridStore.teamView"

@@ -162,6 +162,7 @@ const {
     </div>
 
     <GridControls
+      :generator-from="activeMode"
       :show-wrap-toggle="canWrap"
       :show-syn-toggle="TEAM_MODES[activeMode].allowSynergy"
       confirm-clear

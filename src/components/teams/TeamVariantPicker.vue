@@ -4,7 +4,9 @@
    boards' maps, so hand-picked maps light nothing. Selecting moves every
    board onto the chosen list's map; a hero keeps its tile only where the new
    map has it, hence the two-step confirm whenever a board holds anything.
-   Hidden where there is nothing to choose (1v1 has no named types). */
+   Hidden where there is nothing to choose (1v1 has no named types). The
+   generator page adds one more choice for boards handed over from the Arena
+   or Teams that match no list, lit while their own maps are used. */
 
 import { computed, watch } from 'vue'
 
@@ -20,7 +22,7 @@ import {
 } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { activeMode, match, sourceId, hasContent } = defineProps<{
+const { activeMode, match, sourceId, hasContent, custom } = defineProps<{
   activeMode: TeamModeKey
   // The live boards' type; null = custom maps, nothing lit.
   match: VariantMatch
@@ -28,20 +30,27 @@ const { activeMode, match, sourceId, hasContent } = defineProps<{
   sourceId: string | null
   // Whether any board holds anything, gating the confirm.
   hasContent: boolean
+  // The label of the boards' own maps as one more choice, lit on a null match.
+  custom?: string
 }>()
 
 const emit = defineEmits<{
   selectVariant: [choice: TeamVariantChoice]
+  selectCustom: []
 }>()
+
+const CUSTOM = 'custom' as const
+type Choice = TeamVariantChoice | typeof CUSTOM
 
 const i18n = useI18nStore()
 
-const choices = computed((): { key: TeamVariantChoice; label: string }[] => [
+const choices = computed((): { key: Choice; label: string }[] => [
   { key: DEFAULT_VARIANT, label: i18n.t('app.default') },
   ...variantsForMode(activeMode).map((variant) => ({
     key: variant.key,
     label: i18n.t(variant.labelKey),
   })),
+  ...(custom ? [{ key: CUSTOM, label: custom }] : []),
 ])
 
 // An armed click must not outlive the boards it was armed for: the key is
@@ -51,20 +60,21 @@ const choices = computed((): { key: TeamVariantChoice; label: string }[] => [
 const { armed, confirm, disarm } = useArmedConfirm()
 watch([() => activeMode, () => match, () => sourceId], disarm)
 
-const armedKey = (choice: TeamVariantChoice): string => `${activeMode}:${choice}`
+const armedKey = (choice: Choice): string => `${activeMode}:${choice}`
 
 const segments = computed(() =>
   choices.value.map((choice) => ({
     ...choice,
-    selected: match === choice.key,
+    selected: (match ?? CUSTOM) === choice.key,
     armed: armed.value === armedKey(choice.key),
   })),
 )
 
-const select = (choice: TeamVariantChoice): void => {
-  if (choice === match) return
+const select = (choice: Choice): void => {
+  if (choice === (match ?? CUSTOM)) return
   if (hasContent && !confirm(armedKey(choice))) return
-  emit('selectVariant', choice)
+  if (choice === CUSTOM) emit('selectCustom')
+  else emit('selectVariant', choice)
 }
 </script>
 

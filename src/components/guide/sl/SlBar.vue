@@ -1,20 +1,30 @@
 <script setup lang="ts">
-/* The generator's roster bar, with the type of set to generate. Picking or
-   importing a roster makes it the active one, which the page copies. */
+/* The generator's roster bar, with the Teams page's mode and maps pickers
+   for the boards to generate on. Picking or importing a roster makes it the
+   active one, which the page copies. */
 
-import SlTypePicker from './SlTypePicker.vue'
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
+import TeamModePicker from '@/components/teams/TeamModePicker.vue'
+import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
-import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
+import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-// waiting: the Supreme League worker is still reading the data file.
-const { busy, ready, waiting } = defineProps<{ busy: boolean; ready: boolean; waiting: boolean }>()
+const { busy, ready, waiting, custom } = defineProps<{
+  busy: boolean
+  ready: boolean
+  // The Supreme League worker is still reading the data file.
+  waiting: boolean
+  // The maps picker's choice for boards handed over from the Arena or Teams.
+  custom?: string
+}>()
 
 const emit = defineEmits<{ generate: [] }>()
 
-const type = defineModel<SlSetType>('type', { required: true })
+const mode = defineModel<TeamModeKey>('mode', { required: true })
+// Null for the handed-over boards' own maps.
+const variant = defineModel<VariantMatch>('variant', { required: true })
 
 const i18n = useI18nStore()
 </script>
@@ -25,7 +35,16 @@ const i18n = useI18nStore()
     <RosterMenu />
     <span class="sl-bar-actions">
       <RosterTransferActions />
-      <SlTypePicker :type @select="type = $event" />
+      <TeamModePicker :active-mode="mode" @switch-mode="mode = $event" />
+      <TeamVariantPicker
+        :active-mode="mode"
+        :match="variant"
+        :source-id="null"
+        :has-content="false"
+        :custom
+        @select-variant="variant = $event"
+        @select-custom="variant = null"
+      />
       <button
         type="button"
         class="solid-btn sl-action"

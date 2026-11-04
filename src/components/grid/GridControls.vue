@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import GridGenerateButton from '@/components/grid/GridGenerateButton.vue'
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import GridSkillsToggle from '@/components/grid/GridSkillsToggle.vue'
 import ClearButton, { type ClearSide } from '@/components/ui/ClearButton.vue'
@@ -9,6 +10,7 @@ import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import ToggleChip from '@/components/ui/ToggleChip.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import type { GeneratorFrom } from '@/lib/pvp/sl/generator/handover'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -24,10 +26,12 @@ const teamView = defineModel<boolean>('teamView')
 const wrap = defineModel<boolean>('wrap')
 
 defineProps<{
+  // The page Generate's link names to the generator page.
+  generatorFrom: GeneratorFrom
   // When true, the Team View toggle is shown but locked (Map Editor / Debug tabs,
   // where team view doesn't apply).
   disableTeamView?: boolean
-  // Hides Clear (Map Editor / Debug don't place characters).
+  // Hides Generate and Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
   // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
@@ -90,28 +94,34 @@ const clearSides = computed((): ClearSide[] =>
       <ToggleChip v-model="teamView" :disabled="disableTeamView" :label="i18n.t('app.team-view')" />
     </div>
 
-    <!-- Row 2: action buttons (plus the page's own, e.g. team save actions) -->
+    <!-- Row 2: action buttons (plus the page's own, e.g. team save actions). Each
+         group keeps to one line, so a narrow row breaks between the groups. -->
     <div class="controls-row controls-actions">
-      <slot name="actions-start" />
-      <button @click="emit('copyLink')" class="control-btn" :title="i18n.t('app.link')">
-        <IconLink :size="14" class="btn-icon" />
-        <span class="btn-text">{{ i18n.t('app.link') }}</span>
-      </button>
-      <button @click="emit('copyImage')" class="control-btn" :title="i18n.t('app.copy')">
-        <IconCopy :size="14" class="btn-icon" />
-        <span class="btn-text">{{ i18n.t('app.copy') }}</span>
-      </button>
-      <button @click="emit('download')" class="control-btn" :title="i18n.t('app.download')">
-        <IconDownload :size="14" class="btn-icon" />
-        <span class="btn-text">{{ i18n.t('app.download') }}</span>
-      </button>
-      <ClearButton
-        v-if="!hideTeamControls"
-        :confirm-first="confirmClear"
-        :sides="confirmClear ? clearSides : undefined"
-        @click="handleClearAll"
-        @clear-side="handleClearSide"
-      />
+      <span v-if="$slots['actions-start']" class="actions-group">
+        <slot name="actions-start" />
+      </span>
+      <span class="actions-group">
+        <GridGenerateButton v-if="!hideTeamControls" :from="generatorFrom" />
+        <button @click="emit('copyLink')" class="control-btn" :title="i18n.t('app.link')">
+          <IconLink :size="14" class="btn-icon" />
+          <span class="btn-text">{{ i18n.t('app.link') }}</span>
+        </button>
+        <button @click="emit('copyImage')" class="control-btn" :title="i18n.t('app.copy')">
+          <IconCopy :size="14" class="btn-icon" />
+          <span class="btn-text">{{ i18n.t('app.copy') }}</span>
+        </button>
+        <button @click="emit('download')" class="control-btn" :title="i18n.t('app.download')">
+          <IconDownload :size="14" class="btn-icon" />
+          <span class="btn-text">{{ i18n.t('app.download') }}</span>
+        </button>
+        <ClearButton
+          v-if="!hideTeamControls"
+          :confirm-first="confirmClear"
+          :sides="confirmClear ? clearSides : undefined"
+          @click="handleClearAll"
+          @clear-side="handleClearSide"
+        />
+      </span>
     </div>
   </div>
 </template>
@@ -131,6 +141,12 @@ const clearSides = computed((): ClearSide[] =>
   justify-content: center;
   align-items: center;
   gap: var(--spacing-md);
+}
+
+.actions-group {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
 }
 
 @media (min-width: 769px) and (max-width: 1599px) {

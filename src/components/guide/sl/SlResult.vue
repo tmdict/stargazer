@@ -1,9 +1,10 @@
 <script lang="ts">
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
-import type { SlSetType } from '@/lib/pvp/sl/generator/setType'
+import type { GeneratorFrom } from '@/lib/pvp/sl/generator/handover'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
+import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 
 // A chosen team as the page shows it, read off the data file once, with its
 // board's formations.
@@ -18,8 +19,12 @@ export interface SlShownTeam
 }
 
 export interface SlShown {
-  // The type the set was chosen for.
-  type: SlSetType
+  // The mode and maps the set was chosen for, null maps for boards handed
+  // over from the Arena or Teams.
+  mode: TeamModeKey
+  variant: VariantMatch
+  // The page whose boards the set was drawn on, which Open in takes it back to.
+  from: GeneratorFrom | null
   chance: number
   // The chance of winning each number of maps, from none to all.
   odds: number[]
@@ -34,9 +39,10 @@ export interface SlShown {
 </script>
 
 <script setup lang="ts">
-/* The chosen set: its chance to win the match with a tooltip and a line on
-   what it is measured against, the explanation, Save as team, and one column
-   per board. */
+/* The chosen set: its chance to win the match (the map, for one board) with a
+   tooltip and a line on what it is measured against, the explanation, Save as
+   team, Open in Arena or Teams for a set drawn on that page's boards, and one
+   column per board. */
 
 import { computed, ref } from 'vue'
 
@@ -44,24 +50,25 @@ import SlCard from './SlCard.vue'
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
+import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { shownFormation } from '@/lib/pvp/sl/generator/formation'
-import { slSetMode } from '@/lib/pvp/sl/generator/setType'
 import { winsNeeded } from '@/lib/pvp/sl/model/odds'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slMood, slPercent } from './useSlNames'
 
 // data: the set encoded with each board as drawn.
-const { shown, data, saveArmed } = defineProps<{
+const { shown, data, saveArmed, openArmed } = defineProps<{
   shown: SlShown
   data: string
   saveArmed: boolean
+  openArmed: boolean
 }>()
 
-const emit = defineEmits<{ save: [] }>()
+const emit = defineEmits<{ save: []; open: [] }>()
 
 const engineOn = defineModel<boolean[]>('engineOn', { required: true })
 
@@ -76,6 +83,15 @@ const switchBoard = (index: number, on: boolean): void => {
   engineOn.value = next
 }
 const explaining = ref(false)
+// One board's chance is the set's, so the board leaves its own line out.
+const oneBoard = computed(() => shown.teams.length === 1)
+const openLabel = computed(
+  () =>
+    shown.from &&
+    i18n.t('app.sl-open-in', {
+      page: i18n.t(shown.from === 'arena' ? 'app.arena' : 'app.teams'),
+    }),
+)
 
 const {
   anchor: tipAnchor,
@@ -101,7 +117,7 @@ const {
             @click="tipToggle"
             @touchstart.passive="tipTouchStart"
           >
-            {{ i18n.t('app.sl-chance')
+            {{ i18n.t(oneBoard ? 'app.sl-explain-chance' : 'app.sl-chance')
             }}<IconHelpSmall :size="14" class="sl-help-mark" aria-hidden="true" />
           </button>
           <span class="sl-chance-value">
@@ -120,26 +136,38 @@ const {
           type="button"
           class="solid-btn sl-action"
           :class="{ 'confirm-armed': saveArmed }"
-          :title="
-            saveArmed ? i18n.t('app.sl-save-replaces', { mode: slSetMode(shown.type) }) : undefined
-          "
+          :title="saveArmed ? i18n.t('app.sl-save-replaces', { mode: shown.mode }) : undefined"
           @click="emit('save')"
         >
           <IconSavePlus :size="14" />
           <ConfirmLabel :armed="saveArmed" :label="i18n.t('app.sl-save')" />
         </button>
+        <button
+          v-if="openLabel"
+          type="button"
+          class="solid-btn sl-action"
+          :class="{ 'confirm-armed': openArmed }"
+          :title="openArmed ? i18n.t('app.confirm-replace-ally') : undefined"
+          @click="emit('open')"
+        >
+          <IconArrowUpRight :size="14" />
+          <ConfirmLabel :armed="openArmed" :label="openLabel" />
+        </button>
       </span>
     </div>
-    <div class="sl-maps">
-      <SlMapColumn
-        v-for="(team, index) in shown.teams"
-        :key="index"
-        :team
-        :board="boards[index]"
-        :why="why[index]"
-        :engine-on="!!engineOn[index]"
-        @switch="switchBoard(index, $event)"
-      />
+    <div class="sl-maps-box" :class="{ one: oneBoard }">
+      <div class="sl-maps">
+        <SlMapColumn
+          v-for="(team, index) in shown.teams"
+          :key="index"
+          :team
+          :board="boards[index]"
+          :why="why[index]"
+          :engine-on="!!engineOn[index]"
+          :hide-chance="oneBoard"
+          @switch="switchBoard(index, $event)"
+        />
+      </div>
     </div>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
@@ -147,10 +175,12 @@ const {
       v-if="tipAnchor"
       :anchor="tipAnchor"
       :text="
-        i18n.t('app.sl-chance-tip', {
-          needed: winsNeeded(shown.teams.length),
-          boards: shown.teams.length,
-        })
+        oneBoard
+          ? i18n.t('app.sl-map-chance-tip')
+          : i18n.t('app.sl-chance-tip', {
+              needed: winsNeeded(shown.teams.length),
+              boards: shown.teams.length,
+            })
       "
     />
   </section>
@@ -159,7 +189,15 @@ const {
 <style scoped>
 .sl-band {
   overflow: hidden;
+}
+
+.sl-maps-box {
   container-type: inline-size;
+}
+
+.sl-maps-box.one {
+  max-width: 710px;
+  margin-inline: auto;
 }
 
 .sl-band-head {

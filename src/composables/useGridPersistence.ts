@@ -25,9 +25,15 @@ import {
   serializeMultiGridState,
   unpackDisplayFlags,
   type DisplayFlags,
+  type GridState,
 } from '@/utils/gridStateSerializer'
 import { readStorage, writeStorage } from '@/utils/storage'
-import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import {
+  decodeGridStateFromUrl,
+  decodeMultiGridStateFromUrl,
+  encodeGridStateToUrl,
+  encodeMultiGridStateToUrl,
+} from '@/utils/urlStateManager'
 
 const ARENA_KEY = 'stargazer.arena'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
@@ -72,6 +78,18 @@ export const readTeamsSlot = (mode: TeamModeKey): ActiveSlot | null => {
   } catch {
     return null
   }
+}
+
+/* The Arena's or a Teams mode's saved boards, decoded; null when none are
+ * saved or they do not decode. */
+export const readSavedBoards = (page: 'arena' | TeamModeKey): GridState[] | null => {
+  if (page === 'arena') {
+    const raw = readStorage(ARENA_KEY)
+    const board = raw ? decodeGridStateFromUrl(raw) : null
+    return board && [board]
+  }
+  const slot = readTeamsSlot(page)
+  return (slot && decodeMultiGridStateFromUrl(slot.data)?.boards) ?? null
 }
 
 interface GridPersistence {

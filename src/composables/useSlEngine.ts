@@ -1,10 +1,13 @@
 /* The Supreme League worker for the visit (workers/sl.worker.ts): started
- * when a page that needs it mounts and kept until the tab reloads, so a visit
+ * when a page that needs it mounts, or by the first request of one that needs
+ * it only now and then (Generate), and kept until the tab reloads, so a visit
  * that opens more than one such page reads the file once. A worker that fails
- * is dropped, and the next page to mount starts another. */
+ * is dropped, and the next page to mount or request starts another. */
 
 import { onMounted, readonly, ref } from 'vue'
 
+import type { AttrRecord } from '@/lib/characters/attributes'
+import type { MapLayout } from '@/lib/maps'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
@@ -19,7 +22,7 @@ let worker: Worker | null = null
 let nextId = 0
 type Answer = Extract<
   SlResponse,
-  { type: 'generated' | 'placed' | 'placedEngine' | 'swapped' | 'predicted' }
+  { type: 'generated' | 'filled' | 'placed' | 'placedEngine' | 'swapped' | 'predicted' }
 >
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
 
@@ -49,12 +52,13 @@ const start = (): void => {
   worker.onerror = fail
 }
 
-export function useSlEngine() {
-  onMounted(start)
+export function useSlEngine({ startOnMount = true } = {}) {
+  if (startOnMount) onMounted(start)
 
   // Rejects when the worker cannot answer.
   const ask = (request: (id: number) => SlRequest): Promise<Answer> =>
     new Promise((resolve, reject) => {
+      start()
       if (!worker) return reject()
       const id = nextId++
       waiting.set(id, { resolve, reject })
@@ -65,6 +69,16 @@ export function useSlEngine() {
     const answer = await ask((id) => ({ type: 'generate', id, picks, boards }))
     if (answer.type !== 'generated') throw new Error('The worker answered another request')
     return answer.set
+  }
+
+  // The set for these boards as a saved team, or null when none can be made.
+  const fill = async (
+    levels: Record<string, AttrRecord> | null,
+    layouts: MapLayout[],
+  ): Promise<string | null> => {
+    const answer = await ask((id) => ({ type: 'fill', id, levels, layouts }))
+    if (answer.type !== 'filled') throw new Error('The worker answered another request')
+    return answer.team
   }
 
   // Each board of a set as first drawn, and why each unit stands there.
@@ -92,5 +106,5 @@ export function useSlEngine() {
     return answer.panel
   }
 
-  return { status: readonly(status), generate, place, placeEngine, swap, predict }
+  return { status: readonly(status), generate, fill, place, placeEngine, swap, predict }
 }

@@ -18,6 +18,7 @@ import TeamsBoards from '@/components/teams/TeamsBoards.vue'
 import TeamsPanel from '@/components/teams/TeamsPanel.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
+import { takeGeneratedSide, useFillSide } from '@/composables/useGeneratedSide'
 import { useGridExport } from '@/composables/useGridExport'
 import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { loadTeamsDisplayPrefs, saveTeamsDisplayPrefs } from '@/composables/useGridPersistence'
@@ -32,6 +33,7 @@ import { CURRENT_SEASON } from '@/lib/seasonal'
 import {
   DEFAULT_VARIANT,
   MAX_SAVED_TEAMS,
+  resolveTeamMode,
   TEAM_MODES,
   TEAM_VARIANTS,
   type TeamModeKey,
@@ -57,6 +59,7 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 const { success, error, show } = useToast()
 const { report } = useTeamLibraryFeedback()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
+const fillSide = useFillSide()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
 
@@ -241,6 +244,13 @@ if (gameDataStore.dataLoaded) {
   if (opened) {
     teamsRestore.applyTeamData(opened.mode, opened.data, opened.id)
     history.replaceState({ ...history.state, openTeam: null }, '')
+  }
+  // The generator page's Open in Teams goes onto your side of its mode's boards.
+  const generated = takeGeneratedSide()
+  const decoded = generated ? decodeMultiGridStateFromUrl(generated) : null
+  if (generated && decoded) {
+    teamsRestore.switchMode(resolveTeamMode(decoded))
+    if (fillSide(generated)) success(i18n.t('app.team-loaded'))
   }
 } else {
   // Data failed to load: show the default mode's empty boards, no persistence.
