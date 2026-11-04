@@ -1,18 +1,25 @@
 <script setup lang="ts">
 /* The paragon crown or the refinement star, in the text colour and named for
    screen readers. Each is drawn at a digit's height: on a phone the board
-   panel's pills have no width to spare. */
+   panel's pills have no width to spare. The crown's box ends at its outer
+   points. It sits a little higher than its box and leaves more room before a
+   number than the star does: its weight is in its base and its right side is a
+   straight edge, so placed like the star it reads low and close. */
 
 import { useI18nStore } from '@/stores/i18n'
 
-defineProps<{ kind: 'paragon' | 'refinement' }>()
+defineProps<{
+  kind: 'paragon' | 'refinement'
+  // A level's number follows, set apart by the room this icon needs.
+  beforeLevel?: boolean
+}>()
 
 const i18n = useI18nStore()
 
 const SHAPES = {
   paragon: {
-    viewBox: '0 0 18 16',
-    d: 'M0.9 3.4 L5.4 8.4 L9 1 L12.6 8.4 L17.1 3.4 L15.57 15.6 H2.43 Z',
+    viewBox: '0 0 16.2 16',
+    d: 'M0 3.4 L4.5 8.4 L8.1 1 L11.7 8.4 L16.2 3.4 L14.67 15.6 H1.53 Z',
   },
   refinement: {
     viewBox: '0 0 20 20',
@@ -24,7 +31,7 @@ const SHAPES = {
 <template>
   <svg
     class="upgrade-icon"
-    :class="kind"
+    :class="[kind, { 'before-level': beforeLevel }]"
     :viewBox="SHAPES[kind].viewBox"
     fill="currentColor"
     role="img"
@@ -40,11 +47,21 @@ const SHAPES = {
   flex: none;
   width: auto;
   height: 0.84em;
+  overflow: visible;
   vertical-align: -0.07em;
 }
 
 .upgrade-icon.paragon {
   height: 0.74em;
   vertical-align: -0.02em;
+  translate: 0 -0.05em;
+}
+
+.upgrade-icon.before-level {
+  margin-right: 0.06em;
+}
+
+.upgrade-icon.paragon.before-level {
+  margin-right: 0.14em;
 }
 </style>

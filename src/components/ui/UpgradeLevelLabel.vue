@@ -6,7 +6,7 @@ defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
 
 <template>
   <span class="upgrade-level-label">
-    <UpgradeIcon :kind />
+    <UpgradeIcon :kind before-level />
     <span>{{ level }}</span>
   </span>
 </template>
@@ -24,7 +24,6 @@ defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
 /* Digits have no descenders; center them inside a stable line box so font
    metrics don't change the chip's height or alignment. */
 .upgrade-level-label > span {
-  margin-left: 0.06em;
   text-box: trim-both cap alphabetic;
 }
 </style>
