@@ -95,13 +95,10 @@ export interface IntakeResult {
   refused: Partial<Record<ImportKind, number>>
 }
 
-// A narrower screenshot is refused unread. Shrunk to 400 px, the labelled
-// samples of every kind still read with at most two wrong readings marked sure;
-// at 300 px the matchup lists and result screens give over a dozen each, which
-// the review would not ask about.
+// Narrower screenshots are refused unread: below 400 px the readers make many
+// more wrong readings marked sure, which the review never asks about.
 const MIN_WIDTH = 400
 
-// Each kind is drawn down to its width when wider.
 const MAX_WIDTHS: Record<ImportKind, number> = {
   result: RESULT_MAX_WIDTH,
   formation: FORMATION_MAX_WIDTH,
