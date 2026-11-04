@@ -21,6 +21,7 @@ import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
@@ -164,11 +165,12 @@ const SKILL = {
           <li><span>打开<b>英雄池</b>标签页，点<b>新建</b>。点铅笔图标可以改名。</span></li>
           <li>
             <span class="help-mouse">
-              点选你拥有的英雄，也可以按住鼠标一次拖过多个英雄。再点英雄下方的 <b>P</b> 或
-              <b>R</b> 调整等级。
+              点选你拥有的英雄，也可以按住鼠标一次拖过多个英雄。再点英雄下方的
+              <UpgradeIcon kind="paragon" /> 或 <UpgradeIcon kind="refinement" /> 调整等级。
             </span>
             <span class="help-touch">
-              点选你拥有的英雄，再点英雄下方的 <b>P</b> 或 <b>R</b> 调整等级。
+              点选你拥有的英雄，再点英雄下方的 <UpgradeIcon kind="paragon" /> 或
+              <UpgradeIcon kind="refinement" /> 调整等级。
             </span>
           </li>
           <li><span>在英雄列表顶部选择你的英雄池，英雄上场时会带上你设置的等级。</span></li>
@@ -302,11 +304,13 @@ const SKILL = {
           </li>
           <li>
             <span class="help-mouse">
-              点击英雄可以加入或移除，也可以按住鼠标一次拖过多个英雄。再点英雄下方的 <b>P</b> 或
-              <b>R</b> 调整等级。保存的英雄池不会改变。
+              点击英雄可以加入或移除，也可以按住鼠标一次拖过多个英雄。再点英雄下方的
+              <UpgradeIcon kind="paragon" /> 或
+              <UpgradeIcon kind="refinement" /> 调整等级。保存的英雄池不会改变。
             </span>
             <span class="help-touch">
-              点英雄可以加入或移除，再点英雄下方的 <b>P</b> 或 <b>R</b>
+              点英雄可以加入或移除，再点英雄下方的 <UpgradeIcon kind="paragon" /> 或
+              <UpgradeIcon kind="refinement" />
               调整等级。保存的英雄池不会改变。
             </span>
           </li>
@@ -377,8 +381,9 @@ const SKILL = {
           </li>
           <li>
             <span
-              >用每位英雄下方的 <b>P</b> 和
-              <b>R</b> 调整等级，或者用队伍的<b>强化</b>菜单一次设置整队。加入 A
+              >用每位英雄下方的 <UpgradeIcon kind="paragon" /> 和
+              <UpgradeIcon kind="refinement" />
+              调整等级，或者用队伍的<b>强化</b>菜单一次设置整队。加入 A
               队的英雄沿用你英雄池里的等级，加入 B 队的英雄为满强化。</span
             >
           </li>
@@ -433,7 +438,10 @@ const SKILL = {
         <h3 class="help-col-h">英雄等级</h3>
         <div class="help-rows">
           <UpgradePill :paragon="2" :refinement="1" />
-          <p>点 <b>P</b> 或 <b>R</b> 升一级，超过 4 级会回到 0。</p>
+          <p>
+            点 <UpgradeIcon kind="paragon" /> 或 <UpgradeIcon kind="refinement" /> 升一级，超过 4
+            级会回到 0。
+          </p>
           <span inert
             ><UpgradeDock><UpgradeLayerChips :lit="ATTR_PARAGON" /></UpgradeDock
           ></span>

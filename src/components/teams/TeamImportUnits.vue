@@ -505,7 +505,6 @@ const tileBoxes = (): HTMLInputElement[] => [
               v-if="view.state === 'review' && view.unitId !== null"
               state="review"
               :reading="unitName(view.unitId)"
-              :title="unitName(view.unitId)"
               @confirm="emit('setUnit', shot.id, view.index, view.unitId)"
             />
             <ImportCellState v-else-if="view.state === 'none'" state="none" />

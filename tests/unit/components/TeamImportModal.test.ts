@@ -155,7 +155,7 @@ describe('match import review and save', () => {
       expect(document.querySelector('.cell.review .confirm-choice')).toBeNull()
       expect(document.querySelector('.selection-popup')).toBeNull()
       const confirm = document.querySelector<HTMLButtonElement>('.cell.paragon .confirm-choice')!
-      expect(confirm.textContent).toContain('Confirm P4')
+      expect(confirm.title).toBe('Paragon 4')
       expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
       confirm.click()
       await nextTick()

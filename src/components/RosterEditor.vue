@@ -26,6 +26,7 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeDockChip from '@/components/ui/UpgradeDockChip.vue'
 import UpgradeDockDivider from '@/components/ui/UpgradeDockDivider.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
+import UpgradeIconText from '@/components/ui/UpgradeIconText.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradeLevelChips from '@/components/ui/UpgradeLevelChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -435,7 +436,7 @@ const onPillClick = (character: CharacterType, event: MouseEvent): void => {
       </div>
     </UpgradeDock>
     <p class="roster-hint">
-      {{ i18n.t(selecting ? 'app.rosters-select-hint' : 'app.rosters-hint') }}
+      <UpgradeIconText :text="i18n.t(selecting ? 'app.rosters-select-hint' : 'app.rosters-hint')" />
     </p>
 
     <CharacterFilterStrip

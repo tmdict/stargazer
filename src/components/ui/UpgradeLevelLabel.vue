@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
+
 defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
 </script>
 
 <template>
   <span class="upgrade-level-label">
-    <span>{{ kind === 'paragon' ? 'P' : 'R' }}{{ level }}</span>
+    <UpgradeIcon :kind />
+    <span>{{ level }}</span>
   </span>
 </template>
 
@@ -18,9 +21,10 @@ defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
   line-height: 1;
 }
 
-/* P/R and digits have no descenders; center their capitals inside a stable
-   line box so font metrics don't change the chip's height or alignment. */
+/* Digits have no descenders; center them inside a stable line box so font
+   metrics don't change the chip's height or alignment. */
 .upgrade-level-label > span {
+  margin-left: 0.06em;
   text-box: trim-both cap alphabetic;
 }
 </style>

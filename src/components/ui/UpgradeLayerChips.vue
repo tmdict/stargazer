@@ -1,10 +1,9 @@
 <script setup lang="ts">
-/* The ALL / P / R chips that choose which upgrade layer the bulk actions edit.
-   The owner holds the choice: the board docks share one page-wide choice, the
-   Rosters tab keeps its own. */
+/* The All, paragon and refinement chips that choose which upgrade layer the
+   bulk actions edit. The owner holds the choice: the board docks share one
+   page-wide choice, the Rosters tab keeps its own. */
 
-import { computed } from 'vue'
-
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import type { AttrLayerChoice } from '@/composables/useAttrLayerSelection'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { useI18nStore } from '@/stores/i18n'
@@ -15,17 +14,17 @@ const emit = defineEmits<{ select: [choice: AttrLayerChoice] }>()
 
 const i18n = useI18nStore()
 
-const chips = computed((): { choice: AttrLayerChoice; label: string; name: string }[] => [
-  { choice: 'all', label: i18n.t('app.all'), name: 'app.all' },
-  { choice: ATTR_PARAGON, label: 'P', name: 'app.paragon' },
-  { choice: ATTR_REFINEMENT, label: 'R', name: 'app.refinement' },
-])
+const CHIPS: { choice: AttrLayerChoice; name: string; icon?: 'paragon' | 'refinement' }[] = [
+  { choice: 'all', name: 'app.all' },
+  { choice: ATTR_PARAGON, name: 'app.paragon', icon: 'paragon' },
+  { choice: ATTR_REFINEMENT, name: 'app.refinement', icon: 'refinement' },
+]
 </script>
 
 <template>
   <span class="layer-chips">
     <button
-      v-for="chip in chips"
+      v-for="chip in CHIPS"
       :key="chip.choice"
       type="button"
       class="layer-chip"
@@ -35,7 +34,8 @@ const chips = computed((): { choice: AttrLayerChoice; label: string; name: strin
       :title="i18n.t(chip.name)"
       @click="emit('select', chip.choice)"
     >
-      {{ chip.label }}
+      <UpgradeIcon v-if="chip.icon" class="layer-icon" :kind="chip.icon" />
+      <template v-else>{{ i18n.t(chip.name) }}</template>
     </button>
   </span>
 </template>
@@ -47,6 +47,9 @@ const chips = computed((): { choice: AttrLayerChoice; label: string; name: strin
 }
 
 .layer-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1.5px solid var(--color-border-primary);
   background: var(--color-bg-raised);
   border-radius: 999px;
@@ -57,6 +60,10 @@ const chips = computed((): { choice: AttrLayerChoice; label: string; name: strin
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.layer-icon {
+  font-size: 1.42em;
 }
 
 .layer-chip.lit {

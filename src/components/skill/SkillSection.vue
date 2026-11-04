@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import SkillSectionHeader from './SkillSectionHeader.vue'
 import IconArrowRight from '@/components/ui/IconArrowRight.vue'
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import type { SkillTerms, SlotNumbers } from '@/lib/types/skill'
 import { skillMetaItems } from '@/utils/skillLabels'
 import { highlightSkillText } from '@/utils/textHighlight'
@@ -88,7 +89,9 @@ const renderedRefinements = computed(() =>
         class="skill-level upgrade refine"
       >
         <div class="skill-level-row">
-          <span class="skill-level-badge refine-badge">R{{ row.tier }}</span>
+          <span class="skill-level-badge refine-badge">
+            <UpgradeIcon kind="refinement" />{{ row.tier }}
+          </span>
           <p class="skill-level-desc reading-secondary" v-html="row.html" />
         </div>
       </div>
@@ -169,6 +172,9 @@ const renderedRefinements = computed(() =>
 }
 
 .skill-level-badge.refine-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
   color: var(--color-accent);
 }
 

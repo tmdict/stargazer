@@ -37,7 +37,7 @@ const { heroName, heroImage } = useUnitLabels()
 
 const reading = (part: ReviewPart): string => {
   if (part === 'hero') return heroName(props.characterId)
-  return part === 'paragon' ? `P${props.paragon}` : `R${props.refinement}`
+  return part === 'paragon' ? `{paragon}${props.paragon}` : `{refinement}${props.refinement}`
 }
 
 const confirm = (part: ReviewPart): void => {
@@ -72,7 +72,6 @@ const confirm = (part: ReviewPart): void => {
         v-if="doubtful.length === 1"
         state="review"
         :reading="reading(doubtful[0]!)"
-        :title="reading(doubtful[0]!)"
         @confirm="confirm(doubtful[0]!)"
       />
       <ImportCellState v-else-if="state === 'none' || state === 'duplicate'" :state />

@@ -234,7 +234,6 @@ const closePickers = (event: MouseEvent): void => {
               v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
               state="review"
               :reading="artifactName(sideArtifacts[team].artifact)"
-              :title="artifactName(sideArtifacts[team].artifact)"
               @confirm="emit('setArtifact', shot.id, team, sideArtifacts[team].artifact!.id)"
             />
             <ImportCellState v-else-if="!sideArtifacts[team].sure" state="review" />

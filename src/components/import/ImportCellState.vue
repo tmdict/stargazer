@@ -6,13 +6,16 @@
 
 import { computed } from 'vue'
 
+import UpgradeIconText from '@/components/ui/UpgradeIconText.vue'
 import { useI18nStore } from '@/stores/i18n'
+import { interpolate } from '@/utils/interpolate'
 
 type Shown = 'review' | 'none' | 'duplicate' | 'edited'
 
 const props = defineProps<{
   state: Shown
-  // The reading to confirm, offered on a button in place of the label.
+  // The reading to confirm, offered on a button in place of the label. An
+  // upgrade level reads `{paragon}2`, drawn with the upgrade's icon.
   reading?: string
   // The button shows the reading beside a check mark, for several in a row.
   compact?: boolean
@@ -22,9 +25,22 @@ const emit = defineEmits<{ confirm: [] }>()
 
 const i18n = useI18nStore()
 
-const confirmText = computed(() =>
-  props.reading === undefined ? undefined : i18n.t('app.import-confirm', { value: props.reading }),
-)
+// A tooltip and a screen reader get the upgrade's name where the button shows its icon.
+const words = (text: string): string =>
+  interpolate(text, {
+    paragon: `${i18n.t('app.paragon')} `,
+    refinement: `${i18n.t('app.refinement')} `,
+  })
+
+const confirm = computed(() => {
+  if (props.reading === undefined) return undefined
+  const text = i18n.t('app.import-confirm', { value: props.reading })
+  return {
+    shown: props.compact ? `✓ ${props.reading}` : text,
+    title: words(props.compact ? text : props.reading),
+    ariaLabel: words(text),
+  }
+})
 
 const LABEL: Record<Shown, string> = {
   review: 'app.import-review',
@@ -36,15 +52,15 @@ const LABEL: Record<Shown, string> = {
 
 <template>
   <button
-    v-if="confirmText !== undefined || $slots.default"
+    v-if="confirm !== undefined || $slots.default"
     type="button"
     class="cell-state confirm-choice"
     :class="state"
-    :title="compact ? confirmText : undefined"
-    :aria-label="compact ? confirmText : undefined"
+    :title="confirm?.title"
+    :aria-label="confirm?.ariaLabel"
     @click="emit('confirm')"
   >
-    <slot>{{ compact ? `✓ ${reading}` : confirmText }}</slot>
+    <slot><UpgradeIconText v-if="confirm" :text="confirm.shown" /></slot>
   </button>
   <span v-else class="cell-state" :class="state">{{ i18n.t(LABEL[state]) }}</span>
 </template>

@@ -21,6 +21,7 @@ import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
@@ -195,12 +196,13 @@ const SKILL = {
           </li>
           <li>
             <span class="help-mouse">
-              보유한 영웅을 클릭하거나 여러 영웅 위로 드래그하세요. 영웅 아래의 <b>P</b> 또는
-              <b>R</b>을 클릭하면 레벨을 설정할 수 있습니다.
+              보유한 영웅을 클릭하거나 여러 영웅 위로 드래그하세요. 영웅 아래의
+              <UpgradeIcon kind="paragon" /> 또는 <UpgradeIcon kind="refinement" />을 클릭하면
+              레벨을 설정할 수 있습니다.
             </span>
             <span class="help-touch">
-              보유한 영웅을 누르세요. 영웅 아래의 <b>P</b> 또는 <b>R</b>을 누르면 레벨을 설정할 수
-              있습니다.
+              보유한 영웅을 누르세요. 영웅 아래의 <UpgradeIcon kind="paragon" /> 또는
+              <UpgradeIcon kind="refinement" />을 누르면 레벨을 설정할 수 있습니다.
             </span>
           </li>
           <li>
@@ -367,12 +369,13 @@ const SKILL = {
           <li>
             <span class="help-mouse">
               영웅을 클릭해 넣거나 빼고, 여러 영웅 위로 드래그할 수도 있습니다. 영웅 아래의
-              <b>P</b> 또는 <b>R</b>을 클릭하면 레벨을 설정할 수 있습니다. 저장된 로스터는 바뀌지
-              않습니다.
+              <UpgradeIcon kind="paragon" /> 또는 <UpgradeIcon kind="refinement" />을 클릭하면
+              레벨을 설정할 수 있습니다. 저장된 로스터는 바뀌지 않습니다.
             </span>
             <span class="help-touch">
-              영웅을 눌러 넣거나 빼고, 영웅 아래의 <b>P</b> 또는 <b>R</b>을 눌러 레벨을 설정하세요.
-              저장된 로스터는 바뀌지 않습니다.
+              영웅을 눌러 넣거나 빼고, 영웅 아래의 <UpgradeIcon kind="paragon" /> 또는
+              <UpgradeIcon kind="refinement" />을 눌러 레벨을 설정하세요. 저장된 로스터는 바뀌지
+              않습니다.
             </span>
           </li>
           <li>
@@ -452,9 +455,9 @@ const SKILL = {
           </li>
           <li>
             <span>
-              각 영웅 아래의 <b>P</b>와 <b>R</b>로 레벨을 정하거나, 팀의 <b>강화</b> 메뉴로 팀
-              전체를 한 번에 정하세요. A 팀 영웅은 내 로스터의 레벨로, B 팀 영웅은 최대로 강화한
-              상태로 들어갑니다.
+              각 영웅 아래의 <UpgradeIcon kind="paragon" />와 <UpgradeIcon kind="refinement" />로
+              레벨을 정하거나, 팀의 <b>강화</b> 메뉴로 팀 전체를 한 번에 정하세요. A 팀 영웅은 내
+              로스터의 레벨로, B 팀 영웅은 최대로 강화한 상태로 들어갑니다.
             </span>
           </li>
           <li>
@@ -514,8 +517,14 @@ const SKILL = {
         <div class="help-rows">
           <UpgradePill :paragon="2" :refinement="1" />
           <p>
-            <span class="help-mouse"><b>P</b> 또는 <b>R</b>을 클릭하면 올라갑니다.</span>
-            <span class="help-touch"><b>P</b> 또는 <b>R</b>을 누르면 올라갑니다.</span>
+            <span class="help-mouse"
+              ><UpgradeIcon kind="paragon" /> 또는 <UpgradeIcon kind="refinement" />을 클릭하면
+              올라갑니다.</span
+            >
+            <span class="help-touch"
+              ><UpgradeIcon kind="paragon" /> 또는 <UpgradeIcon kind="refinement" />을 누르면
+              올라갑니다.</span
+            >
             4 다음에는 0으로 돌아갑니다.
           </p>
           <span inert

@@ -8,6 +8,7 @@
 
 import { computed } from 'vue'
 
+import UpgradeIconText from '@/components/ui/UpgradeIconText.vue'
 import UpgradeLevelPill from '@/components/ui/UpgradeLevelPill.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import {
@@ -163,7 +164,7 @@ const intro = computed((): string => {
 <template>
   <section class="upgrade-section">
     <h2 class="section-title">{{ label('guide-upgrades') }}</h2>
-    <p class="intro">{{ intro }}</p>
+    <p class="intro"><UpgradeIconText :text="intro" /></p>
 
     <!-- Wide panels: one matrix, bands side by side. -->
     <table class="stat-table matrix">

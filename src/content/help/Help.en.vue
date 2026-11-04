@@ -21,6 +21,7 @@ import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
+import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
@@ -191,11 +192,13 @@ const SKILL = {
           </li>
           <li>
             <span class="help-mouse">
-              Click the heroes you own, or drag across several. Click <b>P</b> or <b>R</b> under a
-              hero to set its level.
+              Click the heroes you own, or drag across several. Click
+              <UpgradeIcon kind="paragon" /> or <UpgradeIcon kind="refinement" /> under a hero to
+              set its level.
             </span>
             <span class="help-touch">
-              Tap the heroes you own. Tap <b>P</b> or <b>R</b> under a hero to set its level.
+              Tap the heroes you own. Tap <UpgradeIcon kind="paragon" /> or
+              <UpgradeIcon kind="refinement" /> under a hero to set its level.
             </span>
           </li>
           <li>
@@ -362,12 +365,14 @@ const SKILL = {
           </li>
           <li>
             <span class="help-mouse">
-              Click heroes to add or remove them, or drag across several. Click <b>P</b> or
-              <b>R</b> under a hero to set its level. Your saved roster stays as it is.
+              Click heroes to add or remove them, or drag across several. Click
+              <UpgradeIcon kind="paragon" /> or <UpgradeIcon kind="refinement" /> under a hero to
+              set its level. Your saved roster stays as it is.
             </span>
             <span class="help-touch">
-              Tap heroes to add or remove them, and tap <b>P</b> or <b>R</b> under a hero to set its
-              level. Your saved roster stays as it is.
+              Tap heroes to add or remove them, and tap <UpgradeIcon kind="paragon" /> or
+              <UpgradeIcon kind="refinement" /> under a hero to set its level. Your saved roster
+              stays as it is.
             </span>
           </li>
           <li>
@@ -445,7 +450,8 @@ const SKILL = {
           </li>
           <li>
             <span>
-              Set levels with <b>P</b> and <b>R</b> under each hero, or for a whole team with its
+              Set levels with <UpgradeIcon kind="paragon" /> and
+              <UpgradeIcon kind="refinement" /> under each hero, or for a whole team with its
               <b>Upgrades</b> menu. Heroes start at your roster's levels on Team A, and fully
               upgraded on Team B.
             </span>
@@ -507,8 +513,14 @@ const SKILL = {
         <div class="help-rows">
           <UpgradePill :paragon="2" :refinement="1" />
           <p>
-            <span class="help-mouse">Click <b>P</b> or <b>R</b> to raise it.</span>
-            <span class="help-touch">Tap <b>P</b> or <b>R</b> to raise it.</span>
+            <span class="help-mouse"
+              >Click <UpgradeIcon kind="paragon" /> or <UpgradeIcon kind="refinement" /> to raise
+              it.</span
+            >
+            <span class="help-touch"
+              >Tap <UpgradeIcon kind="paragon" /> or <UpgradeIcon kind="refinement" /> to raise
+              it.</span
+            >
             After 4 it goes back to 0.
           </p>
           <span inert

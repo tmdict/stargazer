@@ -65,6 +65,9 @@ const button = (selector: string, label: string): HTMLButtonElement =>
     (el) => el.textContent?.trim() === label,
   )!
 
+const levelChip = (name: string): HTMLButtonElement =>
+  document.querySelector<HTMLButtonElement>(`.level-chip[aria-label="${name}"]`)!
+
 const heroIds = (): number[] => {
   const gameData = useGameDataStore()
   return [...document.querySelectorAll('.character-grid .portrait')].map(
@@ -112,7 +115,7 @@ describe('RosterPanel select mode', () => {
     await tap(unowned)
     expect(tickedCount()).toBe('5 selected')
 
-    button('.level-chip', 'P3').click()
+    levelChip('Paragon 3').click()
     await nextTick()
     const ticked = [owned[0]!, ...owned.slice(2, 6)].map((i) => ids[i]!)
     const withTicked = (levels: AttrRecord): Record<number, AttrRecord> => ({
@@ -120,9 +123,9 @@ describe('RosterPanel select mode', () => {
       ...Object.fromEntries(ticked.map((id) => [id, { ...before[id], ...levels }])),
     })
     expect(rosters.active!.heroes).toEqual(withTicked({ [ATTR_PARAGON]: 3 }))
-    expect(button('.level-chip', 'P3').classList.contains('lit')).toBe(true)
+    expect(levelChip('Paragon 3').classList.contains('lit')).toBe(true)
 
-    button('.level-chip', 'R2').click()
+    levelChip('Refinement 2').click()
     await nextTick()
     expect(rosters.active!.heroes).toEqual(withTicked({ [ATTR_PARAGON]: 3, [ATTR_REFINEMENT]: 2 }))
   })
