@@ -28,10 +28,10 @@ const props = defineProps<{
   enemyArtifactId?: number | null
   // Gates the hover card only; placement interactions are unaffected.
   showHover: boolean
-  // Rules on hover, whose card the board draws for the ally artifact, so only
+  // Placement tips, whose card the board draws for the ally artifact, so only
   // the enemy's keeps its hover card.
   showRules: boolean
-  // How Rules on hover's card marks the ally artifact.
+  // How Placement tips' card marks the ally artifact.
   rulesMark?: 'own' | 'named' | 'faded' | null
   readonly?: boolean
   isMapEditorMode?: boolean
@@ -467,14 +467,14 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 .rules-own .artifact-circle {
   box-shadow:
-    0 0 0 3px var(--color-info),
-    0 0 0 5px rgba(0, 0, 0, 0.35);
+    0 0 0 3px var(--placement-ring-focus),
+    0 0 0 5px var(--placement-ring-edge);
 }
 
 .rules-named .artifact-circle {
   box-shadow:
-    0 0 0 3px var(--color-warning),
-    0 0 0 5px rgba(0, 0, 0, 0.35);
+    0 0 0 3px var(--placement-ring-named),
+    0 0 0 5px var(--placement-ring-edge);
 }
 
 .retired-artifact {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-/* A card on a generator page or a board's Rules on hover: a title, bullet
-   lines or a plain sentence. Names show in the amber that rings the units a
-   card names on the board, and in a line on better tiles, the word for them in
-   their green. */
+/* A card on a generator page or a board's Placement tips: a title, bullet
+   lines or a plain sentence. Names show in the colour that rings the units a
+   card names on its board, and in a line on better tiles, the word for them in
+   their colour. */
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
@@ -15,12 +15,22 @@ defineProps<{
   title?: TextPart[]
   lines?: { lead?: string; parts: TextPart[]; better?: boolean }[]
   text?: string
+  // The board it explains follows the page's light or dark look, where the
+  // generator's boards are dark in both; the card is teleported, so it cannot
+  // read that from the board.
+  pageLook?: boolean
 }>()
 </script>
 
 <template>
   <Teleport to="body">
-    <TooltipPopup :target-element="anchor" :clear-of :offset variant="detailed">
+    <TooltipPopup
+      :target-element="anchor"
+      :clear-of
+      :offset
+      variant="detailed"
+      :class="{ 'page-look': pageLook }"
+    >
       <template #content>
         <TooltipCard>
           <template #default>
@@ -88,7 +98,11 @@ defineProps<{
   color: var(--color-warning);
 }
 
+.page-look .sl-card-name {
+  color: var(--placement-name);
+}
+
 .better .sl-card-name {
-  color: var(--placement-better-on-dark);
+  color: var(--placement-better);
 }
 </style>

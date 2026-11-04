@@ -1,5 +1,5 @@
 /* Supreme League worker: reads the data file once and answers the generator,
- * the boards' formations, the swaps tried on them, Generate and Rules on hover
+ * the boards' formations, the swaps tried on them, Generate and Placement tips
  * on the Arena and Teams and Who Would Win?, so neither the search, the
  * placing nor a prediction holds up the page. */
 

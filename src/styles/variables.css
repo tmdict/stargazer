@@ -8,9 +8,9 @@
   --color-neutral: #666;
   --color-neutral-hover: #333;
   --color-header-gold: #f7d87c;
-  --color-generate: #f2c94c;
-  --color-generate-hover: #e0b230;
-  --color-generate-text: #282c34;
+  --color-generate: #535c6d;
+  --color-generate-hover: #4a5262;
+  --color-generate-text: #fff;
 
   --color-accent: #5fc4bb;
   --color-accent-active: #3a8a83;
@@ -59,8 +59,11 @@
   --tile-artifact-fill: rgba(0, 0, 0, 0.06);
   --tile-artifact-fill-hover: rgba(0, 0, 0, 0.16);
   --placement-also-fine: var(--tile-stroke-strong);
-  --placement-better: #1f9d55;
-  --placement-better-on-dark: #4ade80;
+  --placement-better: var(--import-good);
+  --placement-ring-focus: var(--color-primary);
+  --placement-ring-named: #e0b230;
+  --placement-ring-edge: transparent;
+  --placement-name: var(--color-header-gold);
   --tile-wall-blocked: #858b91;
   --tile-wall-breakable: #a0a59d;
   --tile-hatch-blocked: transparent;
@@ -315,8 +318,8 @@
   --color-neutral: #4a5361;
   --color-neutral-hover: #5d6779;
   --color-danger-text: #e28174;
-  --color-generate: var(--color-header-gold);
-  --color-generate-hover: #f2c94c;
+  --color-generate: #4a5262;
+  --color-generate-hover: #566072;
 
   --dock-chip-fill: rgba(255, 255, 255, 0.08);
   --dock-chip-fill-hover: rgba(255, 255, 255, 0.14);
@@ -334,7 +337,10 @@
   --tile-stroke-held-enemy: var(--unit-frame-enemy);
   --tile-artifact-fill: rgba(255, 255, 255, 0.06);
   --placement-also-fine: var(--color-text-primary);
-  --placement-better: var(--placement-better-on-dark);
+  --placement-ring-focus: var(--color-info);
+  --placement-ring-named: var(--color-warning);
+  --placement-ring-edge: rgba(0, 0, 0, 0.35);
+  --placement-name: var(--color-warning);
   --tile-artifact-fill-hover: rgba(255, 255, 255, 0.16);
   --tile-wall-blocked: var(--tile-stroke);
   --tile-wall-breakable: var(--tile-stroke);

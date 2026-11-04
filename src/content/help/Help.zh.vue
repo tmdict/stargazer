@@ -20,6 +20,7 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
+import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -333,7 +334,8 @@ const SKILL = {
       </div>
       <ul class="help-notes reading-secondary">
         <li>
-          竞技场和「阵容」页面上的<b>生成</b>会用你的英雄池一键填好友方的棋盘。旁边的
+          竞技场和「阵容」页面上的<span class="help-inline-btn"><IconSparkle :size="13" /></span
+          >会用你的英雄池一键填好友方的棋盘。旁边的
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>
           会在本页打开同样的棋盘（地图编辑里的地图也可以），<b>在竞技场中打开</b>或<b>在阵容中打开</b>则把这套阵容放回那里的友方。
         </li>

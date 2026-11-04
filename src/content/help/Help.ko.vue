@@ -20,6 +20,7 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
+import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -396,7 +397,9 @@ const SKILL = {
       </div>
       <ul class="help-notes reading-secondary">
         <li>
-          아레나와 진형 페이지의 <b>생성</b>은 로스터로 아군 보드를 한 번에 채웁니다. 옆의
+          아레나와 진형 페이지의
+          <span class="help-inline-btn"><IconSparkle :size="13" /></span> 버튼은 로스터로 아군
+          보드를 한 번에 채웁니다. 옆의
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>은 같은 보드(맵
           에디터의 맵 포함)로 이 페이지를 열고, <b>아레나에서 열기</b> 또는 <b>진형에서 열기</b>는
           세트를 그곳의 아군 쪽에 다시 놓습니다.

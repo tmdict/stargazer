@@ -38,10 +38,10 @@ interface Props {
   characters: readonly CharacterType[]
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
   showHover: boolean
-  // Rules on hover, whose card the board draws for the ally side, so only an
+  // Placement tips, whose card the board draws for the ally side, so only an
   // enemy unit keeps its hover card.
   showRules: boolean
-  // Ally units Rules on hover fades while its card shows, by tile.
+  // The ally units Placement tips fades while its card shows, by tile.
   faded?: ReadonlySet<number> | null
   showSkin: boolean
   showSkills: boolean
@@ -135,7 +135,7 @@ const LIFT_PILL_ROOM = LIFT_PILL_GAP + 24
 // Anchored to the lifted unit's visual top edge, or below the unit when it would
 // leave the band the board draws in (drawnBounds), where team view's crop would
 // cut it off.
-// Exposed so Rules on hover's card stays clear of it.
+// Exposed so Placement tips' card stays clear of it.
 const liftActionsEl = ref<HTMLElement | null>(null)
 defineExpose({ liftActionsEl })
 

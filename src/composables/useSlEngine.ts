@@ -1,6 +1,6 @@
 /* The Supreme League worker for the visit (workers/sl.worker.ts): started
  * when a page that needs it mounts, or by the first request of one that needs
- * it only now and then (Generate, Rules on hover), and kept until the tab
+ * it only now and then (Generate, Placement tips), and kept until the tab
  * reloads, so a visit that opens more than one such page reads the file once.
  * A worker that fails is dropped, and the next page to mount or request starts
  * another. */

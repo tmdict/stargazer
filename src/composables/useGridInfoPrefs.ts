@@ -9,9 +9,9 @@
  *
  * Enabling a child auto-enables what it needs to take effect (master; Upgrades
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
- * re-enabled parent restores the children it had. Details on hover and Rules
- * on hover are either/or: enabling one clears the other, and a stored pair
- * with both on keeps Details.
+ * re-enabled parent restores the children it had. Details on hover and
+ * Placement tips are either/or: enabling one clears the other, and a stored
+ * pair with both on keeps Details.
  */
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'

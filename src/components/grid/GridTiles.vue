@@ -8,7 +8,7 @@ import SkillCornerLines from '@/components/SkillCornerLines.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
-import type { RulesCard } from '@/composables/useRulesOnHover'
+import type { PlacementTip } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
@@ -33,8 +33,8 @@ interface Props {
   selectedMapEditorState: State
   showSkills: boolean
   readonly?: boolean
-  // Rules on hover's rings and outlined tiles.
-  rules?: RulesCard | null
+  // Placement tips' rings and outlined tiles.
+  rules?: PlacementTip | null
 }
 
 const props = defineProps<Props>()
@@ -161,7 +161,6 @@ const rulesMarks = computed(() => {
     ),
     dash: `${5 * scale} ${4 * scale}`,
     outline: 2.4 * scale,
-    betterOutline: 3 * scale,
     ring: 3.2 * scale,
     ringEdge: 7 * scale,
   }
@@ -597,7 +596,7 @@ onUnmounted(() => {
               class="rules-outline"
               :class="{ better: tile.better }"
               :points="tile.inner"
-              :stroke-width="tile.better ? rulesMarks.betterOutline : rulesMarks.outline"
+              :stroke-width="rulesMarks.outline"
               :stroke-dasharray="tile.better ? undefined : rulesMarks.dash"
             />
           </template>
@@ -650,7 +649,7 @@ onUnmounted(() => {
 
 .rules-fill.better {
   fill: var(--placement-better);
-  fill-opacity: 0.2;
+  fill-opacity: 0.16;
 }
 
 .rules-outline {
@@ -664,16 +663,16 @@ onUnmounted(() => {
 
 .rules-ring-edge {
   fill: none;
-  stroke: rgba(0, 0, 0, 0.35);
+  stroke: var(--placement-ring-edge);
 }
 
 .rules-ring {
   fill: none;
-  stroke: var(--color-warning);
+  stroke: var(--placement-ring-named);
 }
 
 .rules-ring.focus {
-  stroke: var(--color-info);
+  stroke: var(--placement-ring-focus);
 }
 
 .tile-id {

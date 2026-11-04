@@ -143,6 +143,10 @@ const clearSides = computed((): ClearSide[] =>
   gap: var(--spacing-md);
 }
 
+.controls-actions {
+  --control-height: var(--control-height-compact);
+}
+
 .actions-group {
   display: inline-flex;
   align-items: center;

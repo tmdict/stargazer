@@ -20,6 +20,7 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
+import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -393,9 +394,11 @@ const SKILL = {
       </div>
       <ul class="help-notes reading-secondary">
         <li>
-          <b>Generate</b> on the Arena and Teams pages fills your side of the grids from your roster
-          in one press. <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span> next to
-          it opens this page on those grids, Map editor maps included, and <b>Open in Arena</b> or
+          On the Arena and Teams pages,
+          <span class="help-inline-btn"><IconSparkle :size="13" /></span> fills your side of the
+          grids from your roster in one press.
+          <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span> next to it opens this
+          page on those grids, Map editor maps included, and <b>Open in Arena</b> or
           <b>Open in Teams</b> puts the set back on your side there.
         </li>
         <li>

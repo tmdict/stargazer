@@ -3,14 +3,15 @@
    page with the set the PvP team generator draws for those boards and the
    active roster, and links to the generator page on the same boards. */
 
-import { onScopeDispose, ref, toRaw } from 'vue'
+import { computed, onScopeDispose, ref, toRaw } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconSparkle from '@/components/ui/IconSparkle.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useFillSide } from '@/composables/useGeneratedSide'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
@@ -32,6 +33,20 @@ const { success, error } = useToast()
 const fillSide = useFillSide()
 const { armed, confirm } = useArmedConfirm()
 const { fill } = useSlEngine({ startOnMount: false })
+
+type TipId = 'build' | 'open'
+const {
+  anchor: tipTarget,
+  payload: tip,
+  onMouseEnter: showTip,
+  onMouseLeave: hideTip,
+  onTouchStart: tipTouchStart,
+} = useHoverTooltip<TipId>()
+
+const tipText = computed((): string => {
+  if (tip.value === 'open') return i18n.t('app.sl-open-generator-tip')
+  return i18n.t(armed.value !== null ? 'app.confirm' : 'app.sl-generate-tip')
+})
 
 const busy = ref(false)
 // The working look waits this long, so a quick press does not flash it.
@@ -88,25 +103,29 @@ const generate = async (): Promise<void> => {
       class="control-btn generate-main"
       :class="{ 'confirm-armed': armed !== null, busy: slow }"
       :aria-busy="busy"
-      :title="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
+      :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
       @click="generate"
+      @mouseenter="showTip($event, 'build')"
+      @touchstart.passive="tipTouchStart"
+      @mouseleave="hideTip"
     >
       <IconSparkle :size="14" class="btn-icon" aria-hidden="true" />
-      <span class="btn-text">
-        <ConfirmLabel
-          :armed="armed !== null"
-          :label="i18n.t(slow ? 'app.sl-generating' : 'app.sl-generate')"
-        />
-      </span>
     </button>
     <RouterLink
       :to="{ path: SL_GENERATOR_PATH, state: { generatorFrom: from } }"
       class="control-btn generate-open"
-      :title="i18n.t('app.sl-open-generator')"
       :aria-label="i18n.t('app.sl-open-generator')"
+      @mouseenter="showTip($event, 'open')"
+      @touchstart.passive="tipTouchStart"
+      @mouseleave="hideTip"
     >
       <IconArrowUpRight :size="14" class="btn-icon" aria-hidden="true" />
     </RouterLink>
+    <Teleport to="body">
+      <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
+        <template #content>{{ tipText }}</template>
+      </TooltipPopup>
+    </Teleport>
   </span>
 </template>
 
@@ -130,6 +149,10 @@ const generate = async (): Promise<void> => {
 .generate-main {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.generate-main .btn-icon {
+  color: var(--color-header-gold);
 }
 
 .generate-main.busy {

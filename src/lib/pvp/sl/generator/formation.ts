@@ -6,7 +6,7 @@
  * placed on the board's map from their skills, reading no recorded placement.
  * A file from another season than Stargazer's is placed as slTeamData draws
  * it, without its seasonal artifacts and phantimals. A side placed by hand on
- * the Arena or Teams is explained where it stands (Rules on hover). */
+ * the Arena or Teams is explained where it stands (Placement tips). */
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'

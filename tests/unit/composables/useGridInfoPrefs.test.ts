@@ -102,7 +102,7 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.upgrades).toBe(true)
   })
 
-  it('keeps Details and Rules on hover either/or, Details winning a stored pair', async () => {
+  it('keeps Details on hover and Placement tips either/or, Details winning a stored pair', async () => {
     storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { hover: true, rules: true } }))
     const mod = await importComposable()
     const { prefs, setPref } = mountPrefs(mod)

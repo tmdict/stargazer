@@ -14,7 +14,7 @@ import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
-import { useRulesOnHover } from '@/composables/useRulesOnHover'
+import { usePlacementTips } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
@@ -66,7 +66,7 @@ const {
   card: rulesCard,
   faded: rulesFaded,
   anchor: rulesAnchor,
-} = useRulesOnHover(
+} = usePlacementTips(
   gridEvents,
   () => props.info.rules,
   () => gridTilesRef.value?.svgEl,
@@ -313,6 +313,7 @@ defineExpose({
     :reasons="rulesCard.reasons"
     :also-fine="rulesCard.alsoFine.length > 0"
     :better="rulesCard.better.length > 0"
+    page-look
   />
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

@@ -1,4 +1,4 @@
-/* Rules on hover on one board of the Arena or Teams: the PvP team generator's
+/* Placement tips on one board of the Arena or Teams: the PvP team generator's
  * card on why a unit stands where it does, for the ally unit hovered, dragged
  * or lifted, or the ally artifact hovered. The side is explained as it stands
  * by the Supreme League worker (sideExplanation), which starts with the first
@@ -26,7 +26,7 @@ import { useSelectionState } from './useSelectionState'
 import { useSlEngine } from './useSlEngine'
 import { useTouchDetection } from './useTouchDetection'
 
-export interface RulesCard {
+export interface PlacementTip {
   reasons: readonly PlacementReason[]
   alsoFine: readonly number[]
   better: readonly number[]
@@ -39,7 +39,7 @@ export interface RulesCard {
 
 // `gridEvents` is the board's own bus, which its manager provides, and
 // `liftActions` the lifted unit's Skills button.
-export function useRulesOnHover(
+export function usePlacementTips(
   gridEvents: GridEventAPI,
   enabled: () => boolean,
   svgEl: () => SVGSVGElement | null | undefined,
@@ -132,7 +132,7 @@ export function useRulesOnHover(
     },
   )
 
-  const card = computed((): RulesCard | null => {
+  const card = computed((): PlacementTip | null => {
     const at = subject.value
     const why = answer.value?.key === sideKey.value ? answer.value.why : null
     if (at === null || !why) return null
