@@ -33,7 +33,6 @@ interface Props {
   selectedMapEditorState: State
   showSkills: boolean
   readonly?: boolean
-  // Placement tips' rings and outlined tiles.
   rules?: PlacementTip | null
 }
 

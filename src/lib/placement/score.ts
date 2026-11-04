@@ -594,14 +594,12 @@ export class PlacementScorer {
     }).length
   }
 
-  // The team's melee heroes on tiles with no way to the enemy at the start.
   private walledIn(): number {
     return this.heroes.filter(
       (hero) => this.board.lookups.rangeOf(hero) === 1 && this.sealed.has(this.board.tileOf(hero)),
     ).length
   }
 
-  // Whether the hero on a tile stands in the half away from the side it leans to.
   private offSide(hexId: number): boolean {
     const unit = this.board.grid.getTileById(hexId).characterId
     if (unit === undefined) return false

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* A card on a generator page or a board's Placement tips: a title, then
-   lines, bulleted unless plain, or a sentence. Names show in the colour that rings the units a
-   card names on its board, and in a line on better tiles, the word for them in
-   their colour. */
+   lines, bulleted unless plain, or a sentence. Names show in the colour that
+   rings the units a card names on its board, and in a line on better tiles,
+   the word for them in their colour. */
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'

@@ -5,7 +5,7 @@ import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // Scores closer than this are equal, so sums of the same weights in another
 // order compare equal.
-const EPS = 1e-9
+export const EPS = 1e-9
 // The local search climbs from this many placements drawn at random. A goal
 // that three units must move together to meet, such as two heroes of one
 // faction between the twins, is reached only from a start near it, and 16
@@ -47,7 +47,7 @@ function compare(a: PlacementScore, b: PlacementScore): number {
 export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
   score.broken === best.broken && score.goals >= best.goals - margin - EPS
 
-// Better by more than the margin, the one difference within it that counts.
+// Fewer broken rules, or goals higher by more than the margin.
 export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean =>
   score.broken < base.broken ||
   (score.broken === base.broken && score.goals > base.goals + margin + EPS)

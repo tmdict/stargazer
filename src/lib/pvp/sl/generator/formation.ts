@@ -13,7 +13,7 @@ import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import type { MapLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
-import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
+import { EPS, placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { explainPlacement, type PlacementExplanation } from '@/lib/placement/explain'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { ruleUnit } from '@/lib/placement/reach'
@@ -25,8 +25,6 @@ import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
 import { choiceSeason, recordedUnits } from './team'
 import type { SlChoice, SlChoiceTeam } from './types'
-
-const EPS = 1e-9
 
 // Each of a season's phantimals needs three heroes of its own factions, so
 // five heroes can summon one of them at most.

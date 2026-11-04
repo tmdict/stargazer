@@ -6,7 +6,7 @@ import { inPhantimalBand } from '../characters/phantimal'
 import type { MapLayout } from '../maps'
 import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
-import { asGoodAs, beats } from './engine'
+import { asGoodAs, beats, EPS } from './engine'
 import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { FormationRule, PlacementData, PlacementLookups, PlacementTeam } from './types'
@@ -45,8 +45,8 @@ export interface UnitPlacement {
   unit: number
   tile: number
   reasons: PlacementReason[]
-  // The free tiles the unit could move to alone with a placement as good, and
-  // those where it would be better.
+  // The free tiles the engine would pick for the unit moved alone, as good as
+  // where it stands or better.
   alsoFine: number[]
   better: number[]
 }
@@ -66,8 +66,6 @@ function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
     return 'gives'
   return undefined
 }
-
-const EPS = 1e-9
 
 const RANKS: Partial<Record<FormationRule['relation'], Standing>> = {
   frontmost: 'frontmost',
@@ -147,10 +145,13 @@ export function explainPlacement(
     })
     const scores = [own, ...options.map(({ score }) => score)]
     const broken = Math.min(...scores.map((score) => score.broken))
-    const goals = Math.max(
-      ...scores.filter((score) => score.broken === broken).map((score) => score.goals),
-    )
-    const top = { broken, goals, total: 0 }
+    const top = {
+      broken,
+      goals: Math.max(
+        ...scores.filter((score) => score.broken === broken).map((score) => score.goals),
+      ),
+      total: 0,
+    }
     const total = Math.max(
       ...scores.filter((score) => asGoodAs(score, top, margin)).map((score) => score.total),
     )

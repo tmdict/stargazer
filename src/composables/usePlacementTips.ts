@@ -147,7 +147,6 @@ export function usePlacementTips(
     return { reasons, alsoFine, better, ...cardRings(why, reasons, entry.unit) }
   })
 
-  // The side's other units, and its artifact, fade while a card shows.
   const faded = computed((): ReadonlySet<number> | null => {
     const shown = card.value
     if (!shown) return null

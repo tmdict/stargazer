@@ -137,7 +137,6 @@ function choose(
             const t = s.teams[team]!
             const n = t.decided
             if (n < 1 || !(t.players >= proof.players || n >= proof.games)) continue
-            // The team's share on each map it stands on, by map.
             const shares = new Map<string, number | undefined>()
             for (const [layout, b] of served) {
               if (fit.stands(b, t.heroes)) shares.set(layout, fit.known(b, t.heroes, t.map))
