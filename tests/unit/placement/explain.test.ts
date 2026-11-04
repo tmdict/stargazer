@@ -46,11 +46,21 @@ describe('placement explanation', () => {
     const of = explained({ [RAVION]: 13, [ORION]: 3, [SYLPHIRA]: 4, [PERSEUS]: 6, [SENEA]: 7 })
     const objectives = { source: 'unit', file: 'ravion', giver: RAVION }
     expect(of(RAVION).reasons).toEqual([
-      { verb: 'gives', effect: objectives, heroes: [ORION, SYLPHIRA] },
+      { verb: 'gives', effect: objectives, to: [ORION, SYLPHIRA] },
     ])
-    expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, heroes: [] }])
+    expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, to: [] }])
     // Tiles 1 and 2 would make Perseus one of the two rearmost.
     expect(of(PERSEUS)).toEqual({ unit: PERSEUS, tile: 6, reasons: [], alsoFine: [5, 8, 10] })
+  })
+
+  it('names every ally a targeted effect lands on, and only a listed one receives it', () => {
+    const of = explained({ [RAVION]: 13, [ORION]: 3, [PERSEUS]: 4, [SYLPHIRA]: 6, [SENEA]: 7 })
+    const objectives = { source: 'unit', file: 'ravion', giver: RAVION }
+    expect(of(RAVION).reasons).toEqual([
+      { verb: 'gives', effect: objectives, to: [ORION, PERSEUS] },
+    ])
+    expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, to: [] }])
+    expect(of(PERSEUS).reasons).toEqual([])
   })
 
   it("words a formation rule from each hero's side, and a lean only without a rank", () => {
@@ -67,11 +77,11 @@ describe('placement explanation', () => {
     )
     const doomfield = { source: 'unit', file: 'gunnar', giver: GUNNAR }
     expect(of(GUNNAR).reasons).toEqual([
-      { verb: 'gives', effect: doomfield, heroes: [GWYNETH] },
+      { verb: 'gives', effect: doomfield, to: [GWYNETH] },
       { verb: 'stands', place: 'right-in-front-of', hero: GWYNETH },
     ])
     expect(of(GWYNETH).reasons).toEqual([
-      { verb: 'receives', effect: doomfield, heroes: [] },
+      { verb: 'receives', effect: doomfield, to: [] },
       { verb: 'stands', place: 'right-behind', hero: GUNNAR },
       { verb: 'stands', place: 'rearmost' },
     ])

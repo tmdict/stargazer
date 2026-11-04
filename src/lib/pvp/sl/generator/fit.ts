@@ -10,8 +10,8 @@
 import { effectPoints } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import type { SlData } from '../data/types'
+import { summonedPhantimal } from './formation'
 import type { SlBoard } from './setType'
-import { summonedPhantimal } from './suggested'
 
 export interface SlFit {
   // The share, or undefined while it waits on a placement.

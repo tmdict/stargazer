@@ -26,7 +26,15 @@ export function skillReach(manager: SkillManager, unit: number, team: Team): Rea
   return { landed, marked: manager.getMarkedTiles(unit, team) }
 }
 
-export function charmReach(holder: SkillContext, tile: NonNullable<Rule['tile']>): Reach {
+export function tileReach(holder: SkillContext, tile: NonNullable<Rule['tile']>): Reach {
+  const { grid, hexId } = holder
+  if (tile === 'around') {
+    const around = grid.getHexById(hexId).getNeighbors()
+    return {
+      landed: [],
+      marked: around.flatMap((hex) => grid.getTileOrUndefined(hex)?.hex.getId() ?? []),
+    }
+  }
   const found = (tile === 'behind' ? findUnitBehind : findUnitInFront)(holder)?.targetHexId
   return { landed: found == null ? [] : [found], marked: [] }
 }

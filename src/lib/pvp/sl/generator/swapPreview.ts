@@ -8,8 +8,8 @@ import type { SlData, SlUnit } from '../data/types'
 import type { SlReader } from '../model/reader'
 import { boardChance, levelGap } from './chance'
 import type { SlFit } from './fit'
+import { boardPlacement, boardTeam, heldOn } from './formation'
 import type { SlBoard } from './setType'
-import { boardPlacement, boardTeam } from './suggested'
 import type { SlChoiceTeam, SlPick } from './types'
 
 export interface SwapRequest {
@@ -45,7 +45,7 @@ export function previewSwap(
     board.key,
     boardPlacement(data, board),
     PLACEMENT_LOOKUPS,
-    { held: new Map(units.map(([hexId, unit]) => [unit, hexId])) },
+    { held: heldOn(units) },
   )
   const drawn = new Set(units.map(([, unit]) => unit))
   const stays = new Set(placed.units)

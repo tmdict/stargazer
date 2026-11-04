@@ -10,6 +10,7 @@ const {
   targetElement,
   offset = 10,
   maxWidth = '300px',
+  clearOf,
 } = defineProps<{
   // Only read via getBoundingClientRect, so SVG triggers (icon components) and
   // a box worked out on each read anchor as well as HTML ones.
@@ -17,6 +18,8 @@ const {
   variant: 'simple' | 'detailed'
   offset?: number
   maxWidth?: string
+  // A box a tooltip above its trigger stays clear of, as of the window's top.
+  clearOf?: Pick<Element, 'getBoundingClientRect'>
 }>()
 
 const VIEWPORT_MARGIN = 10
@@ -31,15 +34,17 @@ const updatePosition = () => {
   const tooltipRect = tooltipRef.value.getBoundingClientRect()
 
   // Centered on the trigger (left-aligned for wide triggers), above it,
-  // flipping below when there is no room above.
+  // flipping below when there is no room above under the window's top or
+  // `clearOf`.
   const isWide = rect.width > tooltipRect.width * 1.5
   const x = clampX(
     isWide ? rect.left : rect.left + rect.width / 2 - tooltipRect.width / 2,
     tooltipRect.width,
     VIEWPORT_MARGIN,
   )
+  const top = Math.max(VIEWPORT_MARGIN, clearOf?.getBoundingClientRect().bottom ?? -Infinity)
   let y = rect.top - tooltipRect.height - offset
-  if (y < VIEWPORT_MARGIN) y = rect.bottom + offset
+  if (y < top) y = rect.bottom + offset
 
   position.value = { x, y }
 }

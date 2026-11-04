@@ -2,6 +2,7 @@ import { useUnitLabels } from '@/composables/useUnitLabels'
 import type { SlFamily } from '@/lib/pvp/sl/data/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import type { TextPart } from '@/utils/interpolate'
 import { curatedHeroName } from '@/utils/skillLabels'
 
 // A chance as a percentage to one decimal. One that rounds to 0% or 100% is
@@ -65,9 +66,11 @@ export function useSlNames() {
     return (i18n.currentLocale === 'zh' && name.match(/\(([^)]+)\)$/)?.[1]) || name
   }
 
-  // Heroes named together, as a sentence lists them.
-  const cardNames = (units: readonly number[]): string =>
-    new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' }).format(units.map(cardName))
+  // Units named together, as a sentence lists them, each name marked.
+  const cardNames = (units: readonly number[]): TextPart[] =>
+    new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' })
+      .formatToParts(units.map(cardName))
+      .map(({ type, value }) => ({ text: value, marked: type === 'element' }))
 
   return { groupName, cardName, cardNames }
 }

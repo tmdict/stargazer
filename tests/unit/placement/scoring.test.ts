@@ -24,6 +24,7 @@ const ROLAN = 121
 const LILY_MAY = 54
 const MEHIRA = 94
 const PHRAESTO = 50
+const LUDOVIC = 53
 const WEDGE_OF_MATTER = toPhantimalId(5)
 
 // arena2's ally tiles by diagonal row, back to front: 1 2 | 3 4 5 | 6 7 | 8 10 | 13.
@@ -150,6 +151,16 @@ describe('placement scoring', () => {
     const heroes = { [ALNA]: 6, [ORION]: 3, [PERSEUS]: 5, [DIONEL]: 7 }
     expect(wedgesMet({ ...heroes, [SYLPHIRA]: 2 }, 4)).toBe(1)
     expect(wedgesMet({ ...heroes, [SYLPHIRA]: 4 }, 2)).toBe(0.5)
+  })
+
+  // Tile 7 touches tiles 2, 4, 5, 10 and 13, and tile 8 only tiles 3 and 6, so
+  // the most allies next to Ludovic is the rest of the team, up to five.
+  it('scores the allies next to a unit out of the most that can stand next to it', () => {
+    const around = { [LUDOVIC]: 7, [ALNA]: 13, [SYLPHIRA]: 4, [ORION]: 2, [PERSEUS]: 5 }
+    expect(metOf(scoredAt(around), LUDOVIC)).toBe(1)
+    const corner = { [LUDOVIC]: 8, [ALNA]: 3, [SYLPHIRA]: 6, [ORION]: 1, [PERSEUS]: 2 }
+    expect(metOf(scoredAt(corner), LUDOVIC)).toBe(0.5)
+    expect(metOf(scoredAt({ [LUDOVIC]: 8, [ALNA]: 3, [SYLPHIRA]: 6 }), LUDOVIC)).toBe(1)
   })
 })
 

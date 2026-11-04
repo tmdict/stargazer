@@ -2,13 +2,18 @@
 /* A swap tried on a board: the heroes swapped in, and the chance to win the
    map without them and with them. */
 
+import { computed } from 'vue'
+
+import SlCardLines from './SlCardLines.vue'
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useI18nStore } from '@/stores/i18n'
+import { interpolateParts } from '@/utils/interpolate'
 import { slPercent, useSlNames } from './useSlNames'
 
-defineProps<{
+const { into, before, after } = defineProps<{
   anchor: Pick<Element, 'getBoundingClientRect'>
+  clearOf?: Pick<Element, 'getBoundingClientRect'>
   into: number[]
   before: number
   after: number
@@ -16,21 +21,33 @@ defineProps<{
 
 const i18n = useI18nStore()
 const { cardNames } = useSlNames()
+
+const title = computed(() =>
+  interpolateParts(i18n.t('app.sl-swap-heroes'), { heroes: cardNames(into) }),
+)
+const lines = computed(() => [
+  {
+    lead: i18n.t('app.sl-explain-chance'),
+    parts: [{ text: `${slPercent(before)} → ${slPercent(after)}` }],
+  },
+])
 </script>
 
 <template>
   <Teleport to="body">
-    <TooltipPopup :target-element="anchor" variant="detailed" max-width="330px">
+    <TooltipPopup
+      :target-element="anchor"
+      :clear-of
+      :offset="6"
+      variant="detailed"
+      max-width="330px"
+    >
       <template #content>
-        <TooltipCard
-          :name="cardNames(into)"
-          :rows="[
-            {
-              label: i18n.t('app.sl-explain-chance'),
-              value: `${slPercent(before)} → ${slPercent(after)}`,
-            },
-          ]"
-        />
+        <TooltipCard>
+          <template #default>
+            <SlCardLines :title :lines />
+          </template>
+        </TooltipCard>
       </template>
     </TooltipPopup>
   </Teleport>

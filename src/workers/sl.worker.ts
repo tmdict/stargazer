@@ -1,12 +1,12 @@
 /* Supreme League worker: reads the data file once and answers the generator,
- * its engine's formations, the swaps tried on them and Who Would Win?, so
+ * the boards' formations, the swaps tried on them and Who Would Win?, so
  * neither the search, the placing nor a prediction holds up the page. */
 
 import { loadSlData } from '@/lib/pvp/sl/data/codec'
 import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
 import { slFit } from '@/lib/pvp/sl/generator/fit'
+import { boardFormations, type BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
-import { suggestedBoards, type SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import { readSlFile } from '@/lib/pvp/sl/model/reader'
@@ -23,7 +23,7 @@ export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   | { type: 'generated'; id: number; set: SlChoice | null }
-  | { type: 'placed'; id: number; boards: (SuggestedBoard | null)[] }
+  | { type: 'placed'; id: number; boards: BoardFormation[] }
   | { type: 'swapped'; id: number; preview: SwapPreview }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
@@ -51,7 +51,7 @@ scope.addEventListener('message', async (event) => {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'place') {
-      const boards = suggestedBoards(data, msg.set, msg.boards, msg.everyBoard)
+      const boards = boardFormations(data, msg.set, msg.boards, msg.everyBoard)
       scope.postMessage({ type: 'placed', id: msg.id, boards })
     } else if (msg.type === 'swap') {
       const preview = previewSwap(data, reader, fit, counts, msg.swap)

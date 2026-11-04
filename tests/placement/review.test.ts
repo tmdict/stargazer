@@ -29,7 +29,7 @@ import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { availableState, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
-import { artifactReach, charmReach, ruleUnit, skillReach, type Reach } from '@/lib/placement/reach'
+import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from '@/lib/placement/reach'
 import { getCharacterSkill, SkillManager } from '@/lib/skills/skill'
 import { FULL_GRID } from '@/lib/types/grid'
 import type { Rule } from '@/lib/types/rule'
@@ -174,17 +174,21 @@ function sidesOf(board: BoardState): Side[] {
       }
 
       const charm = isHero ? getCharmForHero(name) : null
-      for (const rule of charm?.rules ?? []) {
-        if (!rule.tile) continue
-        const ctx = {
-          grid,
-          hexId,
-          team,
-          characterId: id,
-          skillManager: manager,
-          lookups: PLACEMENT_LOOKUPS,
-        }
-        side.landings.push(landing(charm!.id, { name, hexId }, team, charmReach(ctx, rule.tile)))
+      const ctx = {
+        grid,
+        hexId,
+        team,
+        characterId: id,
+        skillManager: manager,
+        lookups: PLACEMENT_LOOKUPS,
+      }
+      const tiled = [
+        ...PLACEMENT_LOOKUPS.rulesOf(id).map((rule) => [name, rule] as const),
+        ...(charm?.rules ?? []).map((rule) => [charm!.id, rule] as const),
+      ]
+      for (const [owner, rule] of tiled) {
+        if (rule.tile)
+          side.landings.push(landing(owner, { name, hexId }, team, tileReach(ctx, rule.tile)))
       }
     }
     const artifactId = board.a?.[team === Team.ALLY ? 0 : 1]

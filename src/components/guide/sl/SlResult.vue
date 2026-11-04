@@ -13,8 +13,8 @@ export interface SlShownTeam extends Pick<
   // The map's place in the set's type's list.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
-  // Why each unit stands where it does, on a board the engine placed.
-  why: PlacementExplanation | null
+  // Why each unit stands where it does.
+  why: PlacementExplanation
   // A swap tried on the board as drawn, null when the worker cannot answer.
   trySwap: (out: number[], into: number[]) => Promise<SwapPreview | null>
 }

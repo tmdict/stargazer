@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* One map of the set: the board, its artifact on its cell, then the comp's
-   record on the map, the core heroes to keep and the swaps recorded in place
-   of one hero or two. A win rate shows from eight decided games, green from
+   record on the map, the team's chance to win the map, the core heroes to keep
+   and the swaps recorded in place of one hero or two. A win rate shows from eight decided games, green from
    60% and red to 40%, as the report colours one. Its host sizes it: --pt for
    the portraits, and --sl-unit, the length of one of the generator page's
    pixels, for the gaps and icons of the core and swap rows (1px there, a share
@@ -9,17 +9,19 @@
    Hovering or tapping a swap's heroes tries them on the board when the team
    can try swaps. */
 
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import SlIcon from './SlIcon.vue'
 import SlMapBoard from './SlMapBoard.vue'
 import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
+import SlSwapCard from './SlSwapCard.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
+import { slPercent } from './useSlNames'
 
 const { team } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
@@ -41,6 +43,7 @@ const swaps = computed(() => [
 ])
 
 const {
+  anchor,
   payload: tried,
   hoverOpen,
   hoverClose,
@@ -48,6 +51,11 @@ const {
   onTouchStart,
 } = useInfoTip<{ out: number[]; into: number[] }>()
 const preview = ref<SwapPreview | null>(null)
+const boardView = useTemplateRef<InstanceType<typeof SlMapBoard>>('board')
+// The board, which the card of a swap below it opens above when it fits.
+const boardBox = {
+  getBoundingClientRect: (): DOMRect => boardView.value?.box() ?? new DOMRect(),
+}
 const canTry = computed(() => !!team.trySwap && team.chance !== undefined)
 
 // The worker answers after a moment, by when another swap may be shown.
@@ -57,12 +65,6 @@ watch(tried, async (swap) => {
   const found = await team.trySwap(swap.out, swap.into)
   if (tried.value === swap) preview.value = found
 })
-
-const boardSwap = computed(() =>
-  tried.value && preview.value && team.chance !== undefined
-    ? { into: tried.value.into, preview: preview.value, before: team.chance }
-    : null,
-)
 
 const record = computed(() => {
   if (!team.comp) return null
@@ -77,11 +79,20 @@ const record = computed(() => {
     tone: decided < TONE_GAMES ? '' : rate >= 0.6 ? 'good' : rate <= 0.4 ? 'bad' : '',
   }
 })
+const stats = computed(() => !!record.value || team.chance !== undefined)
 </script>
 
 <template>
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
-    <SlMapBoard v-if="board" :board :why :swap="boardSwap" />
+    <SlMapBoard v-if="board" ref="board" :board :why :swap="preview" />
+    <SlSwapCard
+      v-if="anchor && tried && preview && team.chance !== undefined"
+      :anchor
+      :clear-of="boardBox"
+      :into="tried.into"
+      :before="team.chance"
+      :after="preview.chance"
+    />
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
       <div class="sl-aside-in">
@@ -99,11 +110,20 @@ const record = computed(() => {
             </span>
           </span>
         </template>
+        <template v-if="team.chance !== undefined">
+          <span />
+          <span class="sl-stats">
+            <span class="sl-stat" :title="i18n.t('app.sl-map-chance-tip')">
+              <SlIcon name="chance" :share="team.chance" class="sl-small-icon" />
+              <b>{{ slPercent(team.chance) }}</b>
+            </span>
+          </span>
+        </template>
         <template v-if="team.core.length">
-          <span class="sl-label" :class="{ start: record }" :title="i18n.t('app.sl-core-tip')">
+          <span class="sl-label" :class="{ start: stats }" :title="i18n.t('app.sl-core-tip')">
             <SlIcon name="lock" :label="i18n.t('app.sl-core')" />
           </span>
-          <span class="sl-faces" :class="{ start: record }">
+          <span class="sl-faces" :class="{ start: stats }">
             <SlPortrait v-for="id in team.core" :key="id" :id />
           </span>
         </template>
@@ -112,14 +132,14 @@ const record = computed(() => {
           <span
             v-else
             class="sl-label"
-            :class="{ start: record || team.core.length, top: swap.out.length > 1 }"
+            :class="{ start: stats || team.core.length, top: swap.out.length > 1 }"
             :title="i18n.t('app.sl-swaps-tip')"
           >
             <SlIcon name="swap" :label="i18n.t('app.sl-swaps')" />
           </span>
           <span
             class="sl-swap"
-            :class="{ start: !index && (record || team.core.length), top: swap.out.length > 1 }"
+            :class="{ start: !index && (stats || team.core.length), top: swap.out.length > 1 }"
           >
             <span class="sl-from">
               <span class="sl-pair">

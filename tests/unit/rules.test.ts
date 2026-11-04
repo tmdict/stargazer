@@ -1,8 +1,8 @@
 // Placement rule data integrity: every rule in the hero, artifact, phantimal
 // and charm files keeps the rule contract's fields and words, and sits on a
-// unit whose skill says where its effect lands, or for a charm, which Stargazer
-// does not draw, names the tile. The placement engine reads these files with
-// no checks of its own.
+// unit whose skill says where its effect lands, or names the tile for an effect
+// Stargazer does not draw, as every charm's is. The placement engine reads
+// these files with no checks of its own.
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
@@ -24,7 +24,8 @@ const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
 const FIELDS = new Set(['team', 'goal', 'tile', 'weight', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
 const COUNT_GOALS = new Set(['atMost', 'exactly'])
-const MOST_KINDS = new Set(['walls'])
+const MOST_KINDS = new Set(['walls', 'allies'])
+const TILE_WORDS = new Set(['behind', 'front', 'around'])
 
 function goalProblem(goal: unknown): string | null {
   if (goal === 'most' || goal === 'none') return null
@@ -50,7 +51,9 @@ function goalProblem(goal: unknown): string | null {
   return `the goal word ${word}`
 }
 
-function shapeProblems(rules: readonly Rule[], charm: boolean): string[] {
+// Whether a rule names its tile: a charm's always, an artifact's never, since
+// the engine reads an artifact's effect off its arrows alone.
+function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may'): string[] {
   const problems: string[] = []
   // One effect can have two aims, each its own rule, but never two of one goal
   // word for one team.
@@ -65,9 +68,11 @@ function shapeProblems(rules: readonly Rule[], charm: boolean): string[] {
     aims.add(aim)
     const goal = goalProblem(rule.goal)
     if (goal) problems.push(goal)
-    if (charm !== (rule.tile !== undefined)) problems.push(charm ? 'no tile word' : 'a tile word')
-    if (rule.tile !== undefined && rule.tile !== 'behind' && rule.tile !== 'front') {
-      problems.push(`the tile word ${rule.tile}`)
+    if (tile === 'always' && rule.tile === undefined) problems.push('no tile word')
+    if (tile === 'never' && rule.tile !== undefined) problems.push('a tile word')
+    if (rule.tile !== undefined) {
+      if (!TILE_WORDS.has(rule.tile)) problems.push(`the tile word ${rule.tile}`)
+      if (rule.team !== 'ally') problems.push('a tile word on an enemy rule')
     }
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {
       problems.push(rule.goal === 'none' ? 'a weight on a goal of none' : 'no weight')
@@ -89,32 +94,35 @@ function artifactLands(name: string): boolean {
 const units = [
   ...loadCharacters().map((hero) => ({
     name: hero.name,
+    tile: 'may' as const,
     rules: hero.rules,
-    lands: hasSkill(hero.id),
+    lands: hasSkill(hero.id) || !!hero.rules?.every((rule) => rule.tile),
   })),
   ...loadArtifacts().map((artifact) => ({
     name: artifact.name,
+    tile: 'never' as const,
     rules: artifact.rules,
     lands: artifactLands(artifact.name),
   })),
   ...loadPhantimals().map((phantimal) => ({
     name: phantimal.name,
+    tile: 'may' as const,
     rules: phantimal.rules,
-    lands: hasSkill(toPhantimalId(phantimal.id)),
+    lands: hasSkill(toPhantimalId(phantimal.id)) || !!phantimal.rules?.every((rule) => rule.tile),
   })),
 ].filter((unit) => unit.rules)
 
 describe('placement rules', () => {
-  it('keep the contract on every hero, artifact and phantimal, each on a unit Stargazer places', () => {
+  it('keep the contract on every hero, artifact and phantimal, each on a unit Stargazer places or naming its tile', () => {
     for (const unit of units) {
-      expect(shapeProblems(unit.rules!, false), `${unit.name}'s rules`).toEqual([])
+      expect(shapeProblems(unit.rules!, unit.tile), `${unit.name}'s rules`).toEqual([])
       expect(unit.lands, `${unit.name} has rules but no skill that says where it lands`).toBe(true)
     }
   })
 
   it('keep the contract on every charm, each naming its tile', () => {
     for (const charm of Object.values(charmFiles)) {
-      expect(shapeProblems(charm.rules ?? [], true), `${charm.id}'s rules`).toEqual([])
+      expect(shapeProblems(charm.rules ?? [], 'always'), `${charm.id}'s rules`).toEqual([])
     }
   })
 

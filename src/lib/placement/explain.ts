@@ -36,9 +36,9 @@ type Standing =
   | 'next-to'
   | 'on-row'
 
-// `heroes`: those a given effect goes to.
+// `to`: the units a given effect goes to.
 export type PlacementReason =
-  | { verb: 'gives' | 'reaches' | 'receives'; effect: PlacedEffect; heroes: number[] }
+  | { verb: 'gives' | 'reaches' | 'receives'; effect: PlacedEffect; to: number[] }
   | { verb: 'stands'; place: Standing; hero?: number }
 
 export interface UnitPlacement {
@@ -138,15 +138,15 @@ export function explainPlacement(
     const owner = ruleUnit(unit)
     const alsoFine = alsoFineFor[index]!
     const reasons: PlacementReason[] = []
-    goals.forEach(({ rule, met, on }, k) => {
+    goals.forEach(({ rule, met, on, to }, k) => {
       const verb = effectVerb(rule.goal)
       if (!met || !verb || !isOwn(k, owner)) return
-      if (verb === 'reaches') reasons.push({ verb, effect: effects[k]!, heroes: [] })
-      else if (on.length) reasons.push({ verb, effect: effects[k]!, heroes: on })
+      if (verb === 'reaches') reasons.push({ verb, effect: effects[k]!, to: [] })
+      else if (on.length) reasons.push({ verb, effect: effects[k]!, to })
     })
     goals.forEach(({ met, on }, k) => {
       if (met && on.includes(owner) && !isOwn(k, owner))
-        reasons.push({ verb: 'receives', effect: effects[k]!, heroes: [] })
+        reasons.push({ verb: 'receives', effect: effects[k]!, to: [] })
     })
     if (onBuff.has(unit)) reasons.push({ verb: 'stands', place: 'buff' })
     const own = habits.filter((rule) => rule.heroes.includes(unit))
@@ -158,9 +158,9 @@ export function explainPlacement(
     return { unit, tile: positions[index]!, reasons, alsoFine }
   })
 
-  const artifact = goals.flatMap(({ source, rule, met, on }, k): PlacementReason[] =>
+  const artifact = goals.flatMap(({ source, rule, met, on, to }, k): PlacementReason[] =>
     source === 'artifact' && met && on.length && effectVerb(rule.goal) === 'gives'
-      ? [{ verb: 'gives', effect: effects[k]!, heroes: on }]
+      ? [{ verb: 'gives', effect: effects[k]!, to }]
       : [],
   )
   return { units, artifact }

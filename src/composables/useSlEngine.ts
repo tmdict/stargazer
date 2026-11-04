@@ -5,8 +5,8 @@
 
 import { onMounted, readonly, ref } from 'vue'
 
+import type { BoardFormation } from '@/lib/pvp/sl/generator/formation'
 import type { SlBoard } from '@/lib/pvp/sl/generator/setType'
-import type { SuggestedBoard } from '@/lib/pvp/sl/generator/suggested'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
 import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/sl/www/panel'
@@ -64,13 +64,12 @@ export function useSlEngine() {
     return answer.set
   }
 
-  // The engine's formation for each board of a set, null where a board keeps
-  // the recorded one.
+  // Each board of a set as drawn, and why each unit stands there.
   const place = async (
     set: SlChoice,
     boards: SlBoard[],
     everyBoard: boolean,
-  ): Promise<(SuggestedBoard | null)[]> => {
+  ): Promise<BoardFormation[]> => {
     const answer = await ask((id) => ({ type: 'place', id, set, boards, everyBoard }))
     if (answer.type !== 'placed') throw new Error('The worker answered another request')
     return answer.boards

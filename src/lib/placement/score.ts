@@ -11,7 +11,7 @@ import type { Rule, RuleGoal, RuleTeam } from '../types/rule'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
-import { artifactReach, charmReach, ruleUnit, skillReach, type Reach } from './reach'
+import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from './reach'
 import type { FormationRule, ListEntry, PlacementData, PlacementTeam } from './types'
 
 // The list a rule falls back on when the team has none of its own list's heroes.
@@ -39,10 +39,13 @@ interface GoalCheck {
 }
 
 // One of the team's own goals, with the units it counts as met on: the listed
-// heroes the effect reaches, or the units an exactly goal covers.
+// heroes the effect reaches, or the units an exactly goal covers. `to` holds
+// the units it goes to: every ally a target goal's effect lands on, listed or
+// not, else those of `on`.
 export interface OwnGoalCheck extends GoalCheck {
   holder: number | undefined
   on: number[]
+  to: number[]
 }
 
 interface FormationCheck {
@@ -66,12 +69,16 @@ interface Effect {
   // Where the effect lands: once for an effect of ours, and for an enemy unit's
   // once for each enemy tile it could stand on, every tile as likely.
   reach: (board: PlacementBoard) => Reach[]
-  // For a most goal: the most tiles the effect can count from any of the
-  // holder's tiles on this map, with no other unit placed.
+  // For a most goal: the most the effect can count from any of the holder's
+  // tiles on this map, with no other unit placed, or for allies, with every
+  // other unit of the team on a marked tile where there are tiles enough.
   best?: number
   // How many heroes a target goal wants, however many the effect reaches.
   marks: number
 }
+
+const countsAllies = (goal: RuleGoal): boolean =>
+  typeof goal === 'object' && 'most' in goal && goal.most === 'allies'
 
 const isWall = (state: State): boolean =>
   state === State.BLOCKED || state === State.BLOCKED_BREAKABLE
@@ -169,12 +176,15 @@ export class PlacementScorer {
     const units = team.phantimal === undefined ? team.heroes : [...team.heroes, team.phantimal]
     for (const unit of units) {
       const rules = lookups.rulesOf(unit)
-      if (rules.some((rule) => rule.team === 'ally') && !getCharacterSkill(unit)) {
+      if (rules.some((rule) => rule.team === 'ally' && !rule.tile) && !getCharacterSkill(unit)) {
         this.skipped.push({ owner: unit, reason: 'no skill' })
         continue
       }
       for (const rule of rules) {
-        this.addEffect('unit', unit, unit, rule, (b) => [skillReach(b.manager, unit, Team.ALLY)])
+        const { tile } = rule
+        this.addEffect('unit', unit, unit, rule, (b) => [
+          tile ? tileReach(this.contextOf(b, unit), tile) : skillReach(b.manager, unit, Team.ALLY),
+        ])
       }
     }
     // An enemy unit stands alone on its side, so a skill that reads its own
@@ -201,7 +211,7 @@ export class PlacementScorer {
       const charm = lookups.charmOf(hero)
       for (const rule of charm?.rules ?? []) {
         this.addEffect('charm', charm!.id, hero, rule, (b) => [
-          charmReach(this.contextOf(b, hero), rule.tile!),
+          tileReach(this.contextOf(b, hero), rule.tile!),
         ])
       }
     }
@@ -276,7 +286,11 @@ export class PlacementScorer {
       const [reach] = effect.reach(this.board)
       const met = this.meetOnce(effect, reach!, on)
       const { source, owner, holder, rule } = effect
-      return { source, owner, holder, rule, met, on }
+      const to =
+        typeof rule.goal === 'object' && 'target' in rule.goal
+          ? [...this.alliesOn([...reach!.landed, ...reach!.marked], holder, false)]
+          : on
+      return { source, owner, holder, rule, met, on, to }
     })
   }
 
@@ -357,27 +371,41 @@ export class PlacementScorer {
     ;(team === 'ally' ? this.effects : this.threatEffects).push(effect)
   }
 
-  // The most tiles a most goal can count, trying the holder on each ally tile of
-  // a board of its own: what it counts, the enemy's tiles or its walls, depends
-  // on where the holder stands, not on its team.
+  // The most a most goal can count, trying the holder on each ally tile of a
+  // board of its own: what it counts, the enemy's tiles or its walls, depends
+  // on where the holder stands, not on its team. Allies count on the marked
+  // tiles an ally can stand on, at most every other unit of the team.
   private bestCount(effect: Effect, holder: number): number {
     const { mapKey, lookups } = this.board
+    const { goal } = effect.rule
     const solo = new PlacementBoard(
       inPhantimalBand(holder) ? { heroes: [], phantimal: holder } : { heroes: [holder] },
       mapKey,
       lookups,
     )
+    const allyTiles = new Set(solo.tiles)
+    const others = this.board.units.filter((unit) => ruleUnit(unit) !== ruleUnit(holder)).length
     let best = 0
     for (const hexId of solo.tiles) {
       const rest = solo.tiles.filter((other) => other !== hexId)
       solo.place([hexId, ...rest.slice(0, solo.units.length - 1)])
-      best = Math.max(best, this.countMarked(effect.rule.goal, effect.reach(solo)[0]!.marked, solo))
+      const { marked } = effect.reach(solo)[0]!
+      const count = countsAllies(goal)
+        ? Math.min(others, marked.filter((tile) => allyTiles.has(tile)).length)
+        : this.countMarked(goal, marked, solo, holder)
+      best = Math.max(best, count)
     }
     return best
   }
 
-  private countMarked(goal: RuleGoal, marked: number[], board: PlacementBoard): number {
+  private countMarked(
+    goal: RuleGoal,
+    marked: number[],
+    board: PlacementBoard,
+    holder: number | undefined,
+  ): number {
     if (goal === 'most') return marked.filter((hexId) => this.enemyTiles.has(hexId)).length
+    if (countsAllies(goal)) return this.alliesOn(marked, holder, false, board).size
     // The enemy's side: the rows past the middle one.
     const enemySide = (hex: Hex) => hex.getDiagonal() > 0
     return marked.filter((hexId) => {
@@ -422,25 +450,36 @@ export class PlacementScorer {
     return count ? sum / count : null
   }
 
+  // The ally units on these tiles but the holder and its companions, each as a
+  // rule names it or as itself.
+  private alliesOn(
+    hexIds: number[],
+    holder: number | undefined,
+    asRuleUnit = true,
+    board = this.board,
+  ): Set<number> {
+    const self = holder === undefined ? undefined : ruleUnit(holder)
+    const units = new Set<number>()
+    for (const hexId of hexIds) {
+      const tile = board.grid.getTileById(hexId)
+      if (tile.characterId === undefined || tile.team !== Team.ALLY) continue
+      if (ruleUnit(tile.characterId) === self) continue
+      units.add(asRuleUnit ? ruleUnit(tile.characterId) : tile.characterId)
+    }
+    return units
+  }
+
   // `counted` collects the units the goal is met on.
   private meetOnce(effect: Effect, { landed, marked }: Reach, counted?: number[]): number | null {
     const { rule, holder } = effect
     const { goal } = rule
     const self = holder === undefined ? undefined : ruleUnit(holder)
-    const unitsOn = (hexIds: number[], asRuleUnit = true): Set<number> => {
-      const units = new Set<number>()
-      for (const hexId of hexIds) {
-        const tile = this.board.grid.getTileById(hexId)
-        if (tile.characterId === undefined || tile.team !== Team.ALLY) continue
-        if (ruleUnit(tile.characterId) === self) continue
-        units.add(asRuleUnit ? ruleUnit(tile.characterId) : tile.characterId)
-      }
-      return units
-    }
+    const unitsOn = (hexIds: number[], asRuleUnit = true) =>
+      this.alliesOn(hexIds, holder, asRuleUnit)
 
     if (goal === 'none') return null
     if (goal === 'most' || 'most' in goal) {
-      return effect.best ? this.countMarked(goal, marked, this.board) / effect.best : null
+      return effect.best ? this.countMarked(goal, marked, this.board, holder) / effect.best : null
     }
     if ('atMost' in goal) return unitsOn(marked).size <= goal.atMost ? 1 : 0
     if ('exactly' in goal) {

@@ -38,7 +38,7 @@ import {
 } from '@/lib/characters/attributes'
 import { slBoards, slSetMode, type SlSetType } from '@/lib/pvp/sl/generator/setType'
 import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
-import { choiceSeason, drawnUnits, slTeamData } from '@/lib/pvp/sl/generator/team'
+import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
 import type { SlPick } from '@/lib/pvp/sl/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
 import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
@@ -137,7 +137,7 @@ const generate = async (): Promise<void> => {
     const everyBoard = formation.value === 'suggested'
     const boards = slBoards(file, chosenFor)
     const set = await generateSet(picks, boards)
-    const suggested = set ? await placeSet(set, boards, everyBoard) : []
+    const formations = set ? await placeSet(set, boards, everyBoard) : []
     // Each swap is tried once per set, when first shown.
     const tried = new Map<string, Promise<SwapPreview | null>>()
     shown.value = set && {
@@ -157,12 +157,12 @@ const generate = async (): Promise<void> => {
           flex: t.flex,
           pairs: t.pairs,
           chance: t.chance,
-          why: suggested[index]?.why ?? null,
+          why: formations[index]!.why,
           trySwap: (out: number[], into: number[]) => {
             const key = `${index}|${out.join()}|${into.join()}`
             let found = tried.get(key)
             if (!found) {
-              const units = drawnUnits(file, t, suggested[index])
+              const { units } = formations[index]!
               // Copies, since the page's reactive lists cannot be posted to the worker.
               const swap = { board, team: t, units, out: [...out], into: [...into], picks }
               found = previewSwap(swap).catch(() => null)
@@ -172,7 +172,7 @@ const generate = async (): Promise<void> => {
           },
         }
       }),
-      data: slTeamData(file, set, picks, boards, suggested),
+      data: slTeamData(file, set, picks, boards, formations),
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false

@@ -10,5 +10,14 @@
   "season": 1,
   "tags": {
     "dot": [{ "skill2": 1, "mods": ["shadewing"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": { "most": "allies" },
+      "tile": "around",
+      "weight": "aim",
+      "note": "Ludovic's everbloom field, made under him when the battle starts, heals the allies next to him, so he stands next to as many allies as he can."
+    }
+  ]
 }

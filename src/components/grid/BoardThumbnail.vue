@@ -28,8 +28,8 @@ export interface ThumbnailUnit {
   highlight?: boolean
   // Ringed in blue instead of amber: the one the other rings are for.
   focus?: boolean
-  // Drawn faint, as a unit leaving the board.
-  faded?: boolean
+  // Drawn fainter than the units a ring fades: one leaving the board.
+  leaving?: boolean
   // Opens something on hover or tap, so it shows a hand cursor.
   interactive?: boolean
 }
@@ -419,7 +419,11 @@ defineExpose({ zoneBox })
     <g
       v-for="unit in placedUnits"
       :key="`unit-${unit.hexId}`"
-      :class="{ faded: unit.faded || (spotlit && !isLit(unit)), interactive: unit.interactive }"
+      :class="{
+        faded: spotlit && !isLit(unit),
+        leaving: unit.leaving,
+        interactive: unit.interactive,
+      }"
       :data-hex="unit.hexId"
     >
       <title v-if="unit.title">{{ unit.title }}</title>
@@ -583,6 +587,10 @@ defineExpose({ zoneBox })
 <style scoped>
 .faded {
   opacity: 0.35;
+}
+
+.leaving {
+  opacity: 0.2;
 }
 
 .interactive {

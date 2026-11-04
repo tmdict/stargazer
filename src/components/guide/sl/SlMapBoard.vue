@@ -1,14 +1,13 @@
 <script setup lang="ts">
-/* A map's board in the set. On a board the engine placed, hovering or tapping a
-   unit or the artifact shows why it stands where it does, rings it and the units
-   the card names and outlines the free tiles the unit could take as well. A swap
+/* A map's board in the set. Hovering or tapping a unit or the artifact shows
+   why it stands where it does, rings it and the units the card names and
+   outlines the free tiles the unit could take as well. A swap
    tried below the board draws its heroes on the tiles they would take and fades
    the units that leave. */
 
 import { computed, useTemplateRef } from 'vue'
 
 import SlPlacementCard from './SlPlacementCard.vue'
-import SlSwapCard from './SlSwapCard.vue'
 import BoardThumbnail from '@/components/grid/BoardThumbnail.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { usePreviewImages } from '@/composables/usePreviewImages'
@@ -27,9 +26,7 @@ const {
 } = defineProps<{
   board: PreviewBoard
   why?: PlacementExplanation | null
-  // The heroes swapped in, where the units go, and the chance to win the map
-  // without the swap.
-  swap?: { into: number[]; preview: SwapPreview; before: number } | null
+  swap?: SwapPreview | null
 }>()
 
 // The artifact's card has no unit and no tiles of its own.
@@ -66,7 +63,7 @@ const onClick = (event: Event): void => {
   if (found) toggle(...found)
 }
 
-// The card's own hero (its companion with it) or the artifact, and the heroes
+// The card's own hero (its companion with it) or the artifact, and the units
 // and artifact the card names, each by tile.
 const lit = computed(() => {
   const entry = shown.value
@@ -78,14 +75,19 @@ const lit = computed(() => {
       if (reason.hero !== undefined) named.add(reason.hero)
       continue
     }
-    for (const hero of reason.heroes) named.add(hero)
+    for (const unit of reason.to) named.add(unit)
     if (reason.verb === 'receives') {
       if (reason.effect.giver === undefined) artifact = true
       else named.add(reason.effect.giver)
     }
   }
-  const tilesOf = (heroes: Set<number>) =>
-    new Set(why.units.filter(({ unit }) => heroes.has(ruleUnit(unit))).map(({ tile }) => tile))
+  // A unit by its own id, or a hero with its companions.
+  const tilesOf = (units: Set<number>) =>
+    new Set(
+      why.units
+        .filter(({ unit }) => units.has(unit) || units.has(ruleUnit(unit)))
+        .map(({ tile }) => tile),
+    )
   const own = entry.unit === undefined ? undefined : ruleUnit(entry.unit)
   return {
     own: tilesOf(new Set(own === undefined ? [] : [own])),
@@ -104,15 +106,15 @@ const drawnOn = (hexId: number, unit: number): PreviewUnit => ({
 
 // A unit that joins on the tile of one that leaves takes its place.
 const units = computed(() => {
-  const joined = swap?.preview.joined ?? []
+  const joined = swap?.joined ?? []
   const taken = new Set(joined.map(([hexId]) => hexId))
-  const left = new Set(swap?.preview.left)
+  const left = new Set(swap?.left)
   return [
     ...board.units
       .filter((unit) => !taken.has(unit.hexId))
       .map((unit) => ({
         ...thumbnailUnit(unit),
-        faded: left.has(unit.hexId),
+        leaving: left.has(unit.hexId),
         focus: lit.value?.own.has(unit.hexId),
         highlight: lit.value?.named.has(unit.hexId),
         interactive: entryOn(unit.hexId) !== undefined,
@@ -133,35 +135,23 @@ const artifact = computed(() => {
   )
 })
 
-// Over its units and above the board's ally tiles, so a card covers none of
-// the tiles it rings, outlines or swaps; with no room above, under them.
-const aboveAllies = (own: () => DOMRect) => ({
-  getBoundingClientRect: (): DOMRect => {
-    const box = own()
-    const allies = thumbnailView.value?.zoneBox('ally') ?? box
-    return new DOMRect(box.x, allies.y, box.width, allies.height)
-  },
+// Over its unit and above the board's ally tiles, so a card covers none of
+// the tiles it rings or outlines; with no room above, under them.
+defineExpose({
+  box: (): DOMRect => thumbnailView.value?.$el.getBoundingClientRect() ?? new DOMRect(),
 })
 
 const unitCardAnchor = computed(() => {
   const el = anchor.value
-  return el && aboveAllies(() => el.getBoundingClientRect())
-})
-
-const swapCardAnchor = computed(() => {
-  if (!swap) return null
-  const { into, preview } = swap
-  const tiles = preview.joined.flatMap(([hexId, unit]) => (into.includes(unit) ? [hexId] : []))
-  return aboveAllies(() => {
-    const boxes = tiles.flatMap((hexId) => {
-      const el = thumbnailView.value?.$el.querySelector(`[data-hex="${hexId}"]`)
-      return el ? [el.getBoundingClientRect()] : []
-    })
-    if (!boxes.length) return new DOMRect()
-    const left = Math.min(...boxes.map((box) => box.left))
-    const right = Math.max(...boxes.map((box) => box.right))
-    return new DOMRect(left, boxes[0]!.y, right - left, boxes[0]!.height)
-  })
+  return (
+    el && {
+      getBoundingClientRect: (): DOMRect => {
+        const box = el.getBoundingClientRect()
+        const allies = thumbnailView.value?.zoneBox('ally') ?? box
+        return new DOMRect(box.x, allies.y, box.width, allies.height)
+      },
+    }
+  )
 })
 </script>
 
@@ -187,13 +177,6 @@ const swapCardAnchor = computed(() => {
     :anchor="unitCardAnchor"
     :reasons="shown.reasons"
     :also-fine="shown.alsoFine.length > 0"
-  />
-  <SlSwapCard
-    v-if="swap && swapCardAnchor"
-    :anchor="swapCardAnchor"
-    :into="swap.into"
-    :before="swap.before"
-    :after="swap.preview.chance"
   />
 </template>
 

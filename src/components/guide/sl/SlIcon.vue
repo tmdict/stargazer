@@ -1,10 +1,27 @@
 <script setup lang="ts">
 /* The icons under a generated set's boards. */
 
-const { name, label } = defineProps<{
-  name: 'players' | 'record' | 'lock' | 'swap' | 'arrow'
+import { computed } from 'vue'
+
+const {
+  name,
+  label,
+  share = 0,
+} = defineProps<{
+  name: 'players' | 'record' | 'chance' | 'lock' | 'swap' | 'arrow'
   label?: string
+  // How much of the chance icon's ring is filled, from 0 to 1.
+  share?: number
 }>()
+
+const WEDGE = 5.4
+// Clockwise from the top.
+const wedge = computed(() => {
+  const turn = share * 2 * Math.PI
+  const x = (12 + WEDGE * Math.sin(turn)).toFixed(2)
+  const y = (12 - WEDGE * Math.cos(turn)).toFixed(2)
+  return `M12 12V${12 - WEDGE}A${WEDGE} ${WEDGE} 0 ${share > 0.5 ? 1 : 0} 1 ${x} ${y}z`
+})
 </script>
 
 <template>
@@ -30,6 +47,11 @@ const { name, label } = defineProps<{
         stroke-width="2.2"
         stroke-linecap="round"
       />
+    </template>
+    <template v-else-if="name === 'chance'">
+      <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.2" />
+      <circle v-if="share >= 1" cx="12" cy="12" :r="WEDGE" fill="currentColor" />
+      <path v-else-if="share > 0" :d="wedge" fill="currentColor" />
     </template>
     <template v-else-if="name === 'lock'">
       <rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor" />
