@@ -48,8 +48,8 @@ export interface GridInfoView {
 const DEFAULTS: GridInfoPrefs = {
   master: false,
   tileIds: true,
-  hover: true,
-  rules: false,
+  hover: false,
+  rules: true,
   heroCard: false,
   upgrades: false,
   targeting: false,

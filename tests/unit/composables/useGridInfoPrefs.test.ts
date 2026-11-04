@@ -79,7 +79,7 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.master).toBe(true)
     expect(prefs.tileIds).toBe(false)
     expect(prefs.upgrades).toBe(false) // non-boolean ignored
-    expect(prefs.hover).toBe(true) // absent key keeps its default
+    expect(prefs.rules).toBe(true) // absent key keeps its default
   })
 
   it('enable cascades run upward; disabling never cascades', async () => {

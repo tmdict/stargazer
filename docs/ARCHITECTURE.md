@@ -100,8 +100,8 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
   "gridInfo": {
     "master": false,
     "tileIds": true,
-    "hover": true,
-    "rules": false,
+    "hover": false,
+    "rules": true,
     "heroCard": false,
     "upgrades": false,
     "targeting": false,
