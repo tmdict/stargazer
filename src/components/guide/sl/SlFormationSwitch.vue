@@ -85,7 +85,7 @@ const card = computed(() => {
     >
       <SlIcon :name="icon" />
     </button>
-    <SlCard v-if="anchor && card" :anchor :title="card.title" :lines="card.lines" />
+    <SlCard v-if="anchor && card" :anchor :title="card.title" :lines="card.lines" plain />
   </span>
 </template>
 
