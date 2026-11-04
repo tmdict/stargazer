@@ -11,7 +11,8 @@
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
  * re-enabled parent restores the children it had. Details on hover and
  * Placement tips are either/or: enabling one clears the other, and a stored
- * pair with both on keeps Details.
+ * pair with both on keeps Details. Generate ticks Placement tips through
+ * tickRules, the one enable that leaves the master as it is.
  */
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
@@ -126,6 +127,7 @@ let adopted = false
 export function useGridInfoPrefs(): {
   prefs: GridInfoPrefs
   setPref: (key: GridInfoKey, value: boolean) => void
+  tickRules: () => void
 } {
   if (!prefs) {
     prefs = reactive({ ...DEFAULTS })
@@ -142,22 +144,36 @@ export function useGridInfoPrefs(): {
     })
   }
 
-  const setPref = (key: GridInfoKey, value: boolean): void => {
-    state[key] = value
+  const tick = (key: GridInfoKey): void => {
+    state[key] = true
     const other = EITHER_OR[key]
-    if (value && other) state[other] = false
-    if (value && key !== 'master') {
-      state.master = true
-      const enableParents = (child: GridInfoKey): void => {
-        for (const parent of GRID_INFO_PARENTS[child] ?? []) {
-          state[parent] = true
-          enableParents(parent)
-        }
+    if (other) state[other] = false
+  }
+
+  const enableParents = (child: GridInfoKey): void => {
+    for (const parent of GRID_INFO_PARENTS[child] ?? []) {
+      state[parent] = true
+      enableParents(parent)
+    }
+  }
+
+  const setPref = (key: GridInfoKey, value: boolean): void => {
+    if (!value) {
+      state[key] = false
+    } else {
+      tick(key)
+      if (key !== 'master') {
+        state.master = true
+        enableParents(key)
       }
-      enableParents(key)
     }
     writePref('gridInfo', { ...state })
   }
 
-  return { prefs: state, setPref }
+  const tickRules = (): void => {
+    tick('rules')
+    writePref('gridInfo', { ...state })
+  }
+
+  return { prefs: state, setPref, tickRules }
 }

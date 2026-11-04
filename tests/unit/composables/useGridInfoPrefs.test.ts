@@ -117,6 +117,21 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.rules).toBe(false)
   })
 
+  it("ticks Placement tips for Generate without turning on Grid Info's master", async () => {
+    storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { master: false, hover: true } }))
+    const mod = await importComposable()
+    const { prefs, tickRules } = mountPrefs(mod)
+
+    tickRules()
+
+    expect(prefs).toMatchObject({ master: false, rules: true, hover: false })
+    expect(JSON.parse(storage.get(PREFS_KEY)!).gridInfo).toMatchObject({
+      master: false,
+      rules: true,
+      hover: false,
+    })
+  })
+
   it('persists the slice while preserving sibling slices of stargazer.prefs', async () => {
     const { useGridInfoPrefs } = await importComposable()
     const { setPref } = useGridInfoPrefs()
