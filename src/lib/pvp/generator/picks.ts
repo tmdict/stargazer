@@ -1,6 +1,6 @@
 /* The heroes a set is chosen from: each hero the levels hold, at those levels,
- * but those the data file cannot rate yet (unratedHeroes), so the generator
- * page and Generate on the Arena and Teams choose from the same heroes. */
+ * but those kept off teams (withheldHeroes), so the generator page and
+ * Generate on the Arena and Teams choose from the same heroes. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
 import type { SlPick } from './types'

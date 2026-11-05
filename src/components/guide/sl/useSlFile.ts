@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { loadSlData } from '@/lib/pvp/data/codec'
-import { unratedHeroes } from '@/lib/pvp/data/sides'
+import { withheldHeroes } from '@/lib/pvp/data/sides'
 import type { SlData, SlSeason } from '@/lib/pvp/data/types'
 import { slBoards } from '@/lib/pvp/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
@@ -24,15 +24,15 @@ interface SlHeading {
 /* The PvP data file for a page that draws from it, read after mount, as the
  * pages are pre-rendered with their heading alone. The file stays plain,
  * never reactive, so the decoded data stays out of anything the console can
- * reach. `locked` holds the heroes the file cannot rate yet, which
- * the pages' pickers keep off teams; it is empty until the file loads. */
+ * reach. `locked` holds the heroes kept off teams (withheldHeroes), which
+ * the pages' pickers lock; it is empty until the file loads. */
 export function useSlFile() {
   const route = useRoute()
   const gameData = useGameDataStore()
   const i18n = useI18nStore()
   let data: SlData | null = null
   const heading = ref<SlHeading | null>(null)
-  const unrated = ref<ReadonlySet<number>>(new Set())
+  const withheld = ref<ReadonlySet<number>>(new Set())
   const failed = ref(false)
   const mounted = ref(false)
 
@@ -66,7 +66,7 @@ export function useSlFile() {
       retired: isRetiredSeason(data.season),
       seasons: data.seasons,
     }
-    unrated.value = unratedHeroes(
+    withheld.value = withheldHeroes(
       data.model,
       data.season,
       gameData.characters.filter((c) => !c.placeholder),
@@ -74,8 +74,8 @@ export function useSlFile() {
   })
 
   const locked = computed<LockedHeroes>(() => ({
-    ids: unrated.value,
-    note: i18n.t('app.sl-unrated'),
+    ids: withheld.value,
+    note: i18n.t('app.sl-withheld'),
   }))
 
   return { file: (): SlData | null => data, heading, locked, failed, mounted }

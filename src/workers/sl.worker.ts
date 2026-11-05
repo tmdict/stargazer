@@ -7,7 +7,7 @@ import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import { loadSlData } from '@/lib/pvp/data/codec'
-import { unratedHeroes } from '@/lib/pvp/data/sides'
+import { withheldHeroes } from '@/lib/pvp/data/sides'
 import type { SlUnit } from '@/lib/pvp/data/types'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
 import { slFit } from '@/lib/pvp/generator/fit'
@@ -79,7 +79,7 @@ const engine = loadSlData().then((data) => ({
   data,
   reader: readSlFile(data),
   fit: slFit(data),
-  unrated: unratedHeroes(data.model, data.season, heroes),
+  withheld: withheldHeroes(data.model, data.season, heroes),
 }))
 
 engine.then(
@@ -90,14 +90,14 @@ engine.then(
 scope.addEventListener('message', async (event) => {
   const msg = event.data
   try {
-    const { data, reader, fit, unrated } = await engine
+    const { data, reader, fit, withheld } = await engine
     const counts = (id: number): boolean => artifactSurvives(data.season, id)
     if (msg.type === 'generate') {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
       scope.postMessage({ type: 'generated', id: msg.id, set })
     } else if (msg.type === 'fill') {
       const levels = msg.levels ?? Object.fromEntries(heroes.map((c) => [c.id, TOP_LEVELS]))
-      const picks = slPicks(levels, (id) => factions.get(id), unrated)
+      const picks = slPicks(levels, (id) => factions.get(id), withheld)
       const boards = layoutBoards(data, msg.layouts)
       const set = chooseSlSet(data, reader, picks, counts, boards, fit)
       const formations = set
