@@ -76,7 +76,7 @@ const i18n = useI18nStore()
 }
 
 .sl-bar {
-  gap: var(--spacing-sm) var(--spacing-lg);
+  column-gap: var(--spacing-lg);
 }
 
 @media (max-width: 768px) {
@@ -97,7 +97,7 @@ const i18n = useI18nStore()
 
 @media (max-width: 480px) {
   .sl-bar {
-    gap: var(--spacing-sm);
+    column-gap: var(--spacing-sm);
   }
   .sl-bar-roster {
     flex-basis: 100%;
