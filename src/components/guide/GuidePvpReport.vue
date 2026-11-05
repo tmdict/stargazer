@@ -20,7 +20,7 @@ const label = (key: string): string => appLabel(key, props.lang)
 const title = computed(() => {
   const { season, league } = props.summary
   return `${interpolate(label('season'), { n: season })} ${
-    league ? interpolate(label('league-report'), { n: league }) : label('pvp-report')
+    league ? label('supreme-league-report') : label('pvp-report')
   }`
 })
 </script>

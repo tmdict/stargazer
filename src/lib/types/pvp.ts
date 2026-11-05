@@ -19,9 +19,9 @@ export interface PvpSeasonSummary {
   season: number
   /** True while the season is played: the guide marks it as the current season. */
   live?: boolean
-  /** The Supreme League event the report's title names while the season is
-   * played. */
-  league?: number
+  /** True while the report's title names Supreme League, a temporary title
+   * the season's report can take while it is played. */
+  league?: boolean
   /** The languages the report is written in, English first. A site language
    * outside them reads the English report and names teams by their heroes. */
   languages: readonly AppLocale[]
