@@ -2,21 +2,20 @@
  * machine. PLACEMENT_EXPORT names one or more saved-teams exports, or folders
  * of them, joined as a PATH is, and PLACEMENT_OUT the folder, outside the
  * repository, its measures and review page go to, since an export names
- * players. What the engine is
- * tuned with comes from the Supreme League data file. Each Supreme League
- * set-up is placed by the engine and set beside the player's own. A season
- * other than the one Stargazer holds phantimals for is placed without its
- * phantimal and seasonal artifact, and scores no buff tile, since the map
- * files hold this season's, and how often each enemy hero is on a map is
- * counted from its boards. PLACEMENT_FULL is how many of the most used teams
- * are also placed by trying every placement, to check the search.
- * PLACEMENT_TUNE names weights, joined by commas, for which the run suggests a
- * value from the players' formations. PLACEMENT_UNITS names heroes, phantimals
- * or artifacts by their data file's name, joined by commas, and only the
- * set-ups that hold one are placed. The run also writes picks.json, each
- * team's pick and what the search found, and PLACEMENT_COMPARE names an
- * earlier run's picks.json to compare the picks with. Left out when
- * PLACEMENT_EXPORT is not set. */
+ * players. What the engine is tuned with comes from the Supreme League data
+ * file. Each recorded set-up, every format's, is placed by the engine and set
+ * beside the player's own. A season other than the one Stargazer holds
+ * phantimals for is placed without its phantimal and seasonal artifact, and
+ * scores no buff tile, since the map files hold this season's, and how often
+ * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is
+ * how many of the most used teams are also placed by trying every placement,
+ * to check the search. PLACEMENT_TUNE names weights, joined by commas, for
+ * which the run suggests a value from the players' formations. PLACEMENT_UNITS
+ * names heroes, phantimals or artifacts by their data file's name, joined by
+ * commas, and only the set-ups that hold one are placed. The run also writes
+ * picks.json, each team's pick and what the search found, and
+ * PLACEMENT_COMPARE names an earlier run's picks.json to compare the picks
+ * with. Left out when PLACEMENT_EXPORT is not set. */
 
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { delimiter, join } from 'node:path'
@@ -93,9 +92,10 @@ interface Setup {
   tiles: Map<number, number>
 }
 
-// "S8 SL1 Group - A > B (1,2,3 > 4,5)": the season, then the two players, the
-// first on the ally side.
-const RECORD_NAME = /^S(\d+) SL\d+\b.*?\s-\s(.+?)\s*[<>]\s*(.+?)\s*\(/
+// A scored record of any format, "S8 SL1 Group - A > B (1,2,3 > 4,5)" or
+// "S8 TR 1103 t1-t3 - A > B": the season, then the two players, the first on
+// the ally side.
+const RECORD_NAME = /^S(\d+) [A-Z]+\d*\b.*?\s-\s(.+?)\s*[<>]\s*(.+?)(?:\s*\(.*\))?\s*$/
 const FULL_BOARD = new Grid()
 
 function sideOf(
@@ -209,7 +209,8 @@ function setupsOf(records: { name: string; data: string }[]): Setup[] {
       for (const team of [Team.ALLY, Team.ENEMY]) {
         const side = sideOf(board, team, map, live)
         if (!side) continue
-        // A locked stage repeats a set-up, which counts once.
+        // A locked stage, or a Treasure Rush team kept all day, repeats a
+        // set-up, which counts once.
         const placed = [...side.tiles].sort(([a], [b]) => a - b).map(([u, t]) => `${u}@${t}`)
         const key = `${season}|${players[team - 1]}|${map}|${placed.join(',')}`
         if (!found.has(key)) found.set(key, { season, live, map, ...side })
