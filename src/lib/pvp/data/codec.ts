@@ -10,7 +10,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attribu
 import { MAPS } from '@/lib/maps'
 import pvpFileUrl from '@/pack/pvp/pvp.bin?url'
 import pvpKey from '@/pack/pvp/pvp.key?raw'
-import type { SlData, SlMap, SlModel } from './types'
+import type { SlData, SlMap } from './types'
 
 // The writer combines pvp.key with the same text, so what the script stores is
 // not itself the key.
@@ -93,16 +93,6 @@ const isModel = (value: unknown): boolean =>
   isRows(value.artifacts, 3) &&
   isRows(value.artifactsOnKind, 3)
 
-// The generator locks a hero with no row as one the file cannot rate yet, so
-// the rows must be exactly the heroes of the decided games.
-const ratesDecidedHeroes = (model: SlModel, maps: readonly SlMap[]): boolean => {
-  const played = new Set(
-    maps.flatMap((m) => m.teams.filter((t) => t.decided > 0).flatMap((t) => t.heroes)),
-  )
-  const rated = Object.keys(model.heroes)
-  return rated.length === played.size && rated.every((id) => played.has(Number(id)))
-}
-
 const isListEntry = (value: unknown): boolean =>
   Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
 
@@ -164,7 +154,6 @@ function isSlData(value: unknown): value is SlData {
     maps.length > 0 &&
     maps.every((m) => isMap(m, families)) &&
     new Set(maps.map((m: SlMap) => m.key)).size === maps.length &&
-    ratesDecidedHeroes(value.model as SlModel, maps as SlMap[]) &&
     Array.isArray(value.everyMap) &&
     value.everyMap.every((t) => isTeam(t, families) && isIndex(t.home, maps.length)) &&
     // A team outside every group falls back on the last list.

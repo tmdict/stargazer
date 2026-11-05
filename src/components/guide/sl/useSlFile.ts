@@ -25,14 +25,13 @@ interface SlHeading {
  * pages are pre-rendered with their heading alone. The file stays plain,
  * never reactive, so the decoded data stays out of anything the console can
  * reach. `locked` holds the heroes kept off teams (withheldHeroes), which
- * the pages' pickers lock; it is empty until the file loads. */
+ * the pages' pickers lock. */
 export function useSlFile() {
   const route = useRoute()
   const gameData = useGameDataStore()
   const i18n = useI18nStore()
   let data: SlData | null = null
   const heading = ref<SlHeading | null>(null)
-  const withheld = ref<ReadonlySet<number>>(new Set())
   const failed = ref(false)
   const mounted = ref(false)
 
@@ -66,15 +65,10 @@ export function useSlFile() {
       retired: isRetiredSeason(data.season),
       seasons: data.seasons,
     }
-    withheld.value = withheldHeroes(
-      data.model,
-      data.season,
-      gameData.characters.filter((c) => !c.placeholder),
-    )
   })
 
   const locked = computed<LockedHeroes>(() => ({
-    ids: withheld.value,
+    ids: withheldHeroes(gameData.characters),
     note: i18n.t('app.sl-withheld'),
   }))
 

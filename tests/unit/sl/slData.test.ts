@@ -184,11 +184,8 @@ describe('the shipped PvP data', () => {
 
   it('refuses a file whose rows or indexes do not match its teams and maps', async () => {
     await expect(decodeSlData(sealed(() => {}))).resolves.toBeTruthy()
-    const played = mapTeams.find((t) => t.decided > 0)!.heroes[0]!
     const team = data.maps[0]!.teams[0]!
     for (const edit of [
-      (c: SlData) => delete c.model.heroes[played],
-      (c: SlData) => (c.model.heroes[999_999] = [0, 0, 0, 0]),
       (c: SlData) => (c.maps[0]!.teams[0]!.pick = [[null, team.placements.length]]),
       (c: SlData) => (c.maps[1]!.key = c.maps[0]!.key),
       (c: SlData) => c.maps[0]!.records.pop(),

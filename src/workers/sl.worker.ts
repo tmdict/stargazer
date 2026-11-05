@@ -74,12 +74,12 @@ const scope = self as unknown as {
 
 const heroes = loadCharacters().filter((c) => !c.placeholder)
 const factions = new Map(heroes.map((c) => [c.id, c.faction]))
+const withheld = withheldHeroes(heroes)
 
 const engine = loadSlData().then((data) => ({
   data,
   reader: readSlFile(data),
   fit: slFit(data),
-  withheld: withheldHeroes(data.model, data.season, heroes),
 }))
 
 engine.then(
@@ -90,7 +90,7 @@ engine.then(
 scope.addEventListener('message', async (event) => {
   const msg = event.data
   try {
-    const { data, reader, fit, withheld } = await engine
+    const { data, reader, fit } = await engine
     const counts = (id: number): boolean => artifactSurvives(data.season, id)
     if (msg.type === 'generate') {
       const set = chooseSlSet(data, reader, msg.picks, counts, msg.boards, fit)
