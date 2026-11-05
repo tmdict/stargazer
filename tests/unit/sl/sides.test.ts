@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
+import { unratedHeroes } from '@/lib/pvp/data/sides'
 import { madeUpModel } from '../fixtures/slSeason'
 
 const model = madeUpModel({ heroes: { 1: [0, 1, 0, 0], 3: [0, 0, 1, 0] } })

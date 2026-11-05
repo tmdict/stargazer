@@ -6,11 +6,11 @@
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
 import type { PlacementExplanation } from '@/lib/placement/explain'
-import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
-import type { SlUnit } from '@/lib/pvp/sl/data/types'
-import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
-import { slFit } from '@/lib/pvp/sl/generator/fit'
+import { loadSlData } from '@/lib/pvp/data/codec'
+import { unratedHeroes } from '@/lib/pvp/data/sides'
+import type { SlUnit } from '@/lib/pvp/data/types'
+import { chooseSlSet } from '@/lib/pvp/generator/chooser'
+import { slFit } from '@/lib/pvp/generator/fit'
 import {
   boardDraws,
   engineFormation,
@@ -18,14 +18,14 @@ import {
   sideExplanation,
   type BoardDraw,
   type BoardFormation,
-} from '@/lib/pvp/sl/generator/formation'
-import { slPicks } from '@/lib/pvp/sl/generator/picks'
-import { layoutBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
-import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/sl/generator/swapPreview'
-import { slTeamData } from '@/lib/pvp/sl/generator/team'
-import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
-import { readSlFile } from '@/lib/pvp/sl/model/reader'
-import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/sl/www/panel'
+} from '@/lib/pvp/generator/formation'
+import { slPicks } from '@/lib/pvp/generator/picks'
+import { layoutBoards, type SlBoard } from '@/lib/pvp/generator/setType'
+import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/generator/swapPreview'
+import { slTeamData } from '@/lib/pvp/generator/team'
+import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
+import { readSlFile } from '@/lib/pvp/model/reader'
+import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/www/panel'
 import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
 

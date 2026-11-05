@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { matchOdds } from '@/lib/pvp/sl/www/match'
+import { matchOdds } from '@/lib/pvp/www/match'
 
 describe('matchOdds', () => {
   it('gives the binomial chance of three games or more for five even games', () => {

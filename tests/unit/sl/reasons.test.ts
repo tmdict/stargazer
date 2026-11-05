@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { sigmoid } from '@/lib/pvp/sl/model/odds'
-import { splitChance } from '@/lib/pvp/sl/model/reasons'
-import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
+import { sigmoid } from '@/lib/pvp/model/odds'
+import { splitChance } from '@/lib/pvp/model/reasons'
+import { REASONS, type Reason } from '@/lib/pvp/model/types'
 import { seededRandom } from '../fixtures/slSeason'
 
 const factorial = (n: number): number => (n <= 1 ? 1 : n * factorial(n - 1))

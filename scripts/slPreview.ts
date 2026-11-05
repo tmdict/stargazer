@@ -1,6 +1,6 @@
 // Gives the guide index the set the PvP team generator gives before a
 // roster is picked, as `virtual:sl-preview`. The generator's own code works
-// it out (src/lib/pvp/sl/generator/defaultSet.ts), through Vite's module
+// it out (src/lib/pvp/generator/defaultSet.ts), through Vite's module
 // runner so the app's imports resolve, and the page receives the set alone.
 // The runner (`runnerImport`) is marked experimental in Vite, so a Vite
 // upgrade checks that the guide index still draws the card.
@@ -24,15 +24,15 @@ export function slPreview(): Plugin {
       if (id !== RESOLVED) return
       // A copy without the data pack runs with no preview on the guide index. A
       // build never gets here without it.
-      if (!readFileSync(join(config.root, 'src/pack/pvp/sl.key'), 'utf8').trim()) {
+      if (!readFileSync(join(config.root, 'src/pack/pvp/pvp.key'), 'utf8').trim()) {
         config.logger.warn('sl-preview: no data pack, so the guide index shows no preview')
         return 'export default null'
       }
-      const file = join(config.root, 'src/pack/pvp/sl.bin')
+      const file = join(config.root, 'src/pack/pvp/pvp.bin')
       this.addWatchFile(file)
       const { module, dependencies } = await runnerImport<{
         defaultSlSet: (bytes: Uint8Array<ArrayBuffer>) => Promise<unknown>
-      }>(join(config.root, 'src/lib/pvp/sl/generator/defaultSet.ts'), {
+      }>(join(config.root, 'src/lib/pvp/generator/defaultSet.ts'), {
         configFile: false,
         root: config.root,
         resolve: { alias: config.resolve.alias },

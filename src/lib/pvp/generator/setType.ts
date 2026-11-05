@@ -14,8 +14,9 @@ export interface SlBoard {
 
 export function layoutBoards(data: SlData, layouts: readonly MapLayout[]): SlBoard[] {
   const keys = layouts.map((layout) => layout.key)
+  const recorded = data.maps.map((m) => m.key)
   return layouts.map((layout) => {
-    const own = data.maps.indexOf(layout.key)
+    const own = recorded.indexOf(layout.key)
     return { layout, map: keys.indexOf(layout.key), source: own < 0 ? null : own }
   })
 }

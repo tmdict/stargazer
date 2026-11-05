@@ -1,0 +1,5 @@
+{
+  "en": "Older matches count as well, each game at {share}% of one from this season: {matches}+ from Season {season} ({games}+ games) between {players}+ players.",
+  "zh": "更早的比赛也会计入，每局按本赛季一局的 {share}% 计算：第 {season} 赛季的 {matches}+ 场比赛（{games}+ 局），涉及 {players}+ 名玩家。",
+  "ko": "이전 시즌의 매치도 반영하며, 전투 한 판을 이번 시즌 한 판의 {share}%로 계산합니다. 시즌 {season}의 매치 {matches}회 이상(전투 {games}판 이상)이며, 플레이어 {players}명 이상이 참여했습니다."
+}

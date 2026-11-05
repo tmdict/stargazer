@@ -1,9 +1,11 @@
 /* A chosen set's boards as the page draws them, and why each unit stands where
  * it does (lib/placement). A board whose team was recorded on its map draws
  * that game's formation, with at most its phantimal and one hero moved for the
- * Spirit Mark, and every board can draw the engine's formation: the team's
- * heroes, the artifact the set gives it and the phantimal they can summon,
- * placed on the board's map from their skills, reading no recorded placement.
+ * Spirit Mark; a board of an earlier season recorded no phantimal, so the
+ * engine places the one its heroes summon. Every board can draw the engine's
+ * formation: the team's heroes, the artifact the set gives it and the
+ * phantimal they can summon, placed on the board's map from their skills,
+ * reading no recorded placement.
  * A file from another season than Stargazer's is placed as slTeamData draws
  * it, without its seasonal artifacts and phantimals. A side placed by hand on
  * the Arena or Teams is explained where it stands (Placement tips). */
@@ -23,7 +25,7 @@ import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { loadPhantimals } from '@/utils/dataLoader'
 import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
-import { choiceSeason, recordedUnits } from './team'
+import { homeMap, recordedUnits } from './team'
 import type { SlChoice, SlChoiceTeam } from './types'
 
 // Each of a season's phantimals needs three heroes of its own factions, so
@@ -45,7 +47,7 @@ export interface BoardFormation {
 
 // A recorded game's formation as drawn, with the units the engine moved in it
 // for the phantimal's Spirit Mark, the phantimal first; none when it is drawn
-// as recorded.
+// as recorded. A phantimal the game did not record is placed, not moved.
 interface PlayedFormation extends BoardFormation {
   moved: number[]
 }
@@ -80,11 +82,8 @@ export const boardPlacement = (
   { layout, source }: SlBoard,
   choice: Pick<SlChoiceTeam, 'source' | 'team'>,
 ): PlacementData => {
-  const from = source ?? choiceSeason(data, choice).teams[choice.team]!.map
-  return {
-    ...data.placement,
-    pickRates: { [layout.key]: data.placement.pickRates[data.maps[from]!] ?? {} },
-  }
+  const from = source ?? homeMap(data, choice)
+  return { ...data.placement, pickRates: { [layout.key]: data.maps[from]!.pickRates } }
 }
 
 // Units kept on their tiles, by unit id.
@@ -127,7 +126,7 @@ function playedFormation(
   choice: SlChoiceTeam,
   board: SlBoard,
 ): PlayedFormation | null {
-  const recorded = board.source !== null ? recordedUnits(data, choice) : null
+  const recorded = choice.source === board.source ? recordedUnits(data, choice) : null
   if (!recorded) return null
   const team = boardTeam(data, choice.heroes, choice.artifact)
   const placement = boardPlacement(data, board, choice)
@@ -137,7 +136,11 @@ function playedFormation(
   const asRecorded = place(held)
   const explained = (placed: PlacementResult) =>
     explainPlacement(team, board.layout, placement, PLACEMENT_LOOKUPS, placed)
-  const asIs = (): PlayedFormation => ({ units: recorded, why: explained(asRecorded), moved: [] })
+  const asIs = (): PlayedFormation => ({
+    units: asRecorded.units.every((unit) => held.has(unit)) ? recorded : unitsOf(asRecorded),
+    why: explained(asRecorded),
+    moved: [],
+  })
   const { phantimal } = team
   if (phantimal === undefined) return asIs()
   const goalsAt = phantimalGoals(team, board.layout, placement)
@@ -154,7 +157,7 @@ function playedFormation(
     const moved = [
       ...new Set(
         unitsOf(placed).flatMap(([hexId, unit]) =>
-          held.get(unit) === hexId ? [] : [ruleUnit(unit)],
+          held.has(unit) && held.get(unit) !== hexId ? [ruleUnit(unit)] : [],
         ),
       ),
     ]
@@ -223,5 +226,7 @@ export function sideExplanation(
     return null
   }
   const positions = board.units.map((unit) => held.get(unit)!)
-  return explainPlacement(team, layout, data.placement, PLACEMENT_LOOKUPS, { positions })
+  return explainPlacement(team, layout, { ...data.placement, pickRates: {} }, PLACEMENT_LOOKUPS, {
+    positions,
+  })
 }

@@ -1,5 +1,5 @@
 import { useUnitLabels } from '@/composables/useUnitLabels'
-import type { SlFamily } from '@/lib/pvp/sl/data/types'
+import type { SlFamily } from '@/lib/pvp/data/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import type { TextPart } from '@/utils/interpolate'

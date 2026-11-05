@@ -6,7 +6,7 @@
 import { defineAsyncComponent, ref } from 'vue'
 
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
-import type { WwwGame } from '@/lib/pvp/sl/www/match'
+import type { WwwGame } from '@/lib/pvp/www/match'
 import { useI18nStore } from '@/stores/i18n'
 
 const WwwImportModal = defineAsyncComponent(() => import('@/components/modals/WwwImportModal.vue'))

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { kindRule } from '@/lib/pvp/sl/data/kinds'
-import { handOutArtifacts, type ArtifactClaim } from '@/lib/pvp/sl/generator/artifacts'
+import { kindRule } from '@/lib/pvp/data/kinds'
+import { handOutArtifacts, type ArtifactClaim } from '@/lib/pvp/generator/artifacts'
 
 describe('a team’s kind', () => {
   const kindOf = kindRule([
@@ -40,9 +40,7 @@ describe('the artifact rule', () => {
   const now = (own: [id: number, games: number][], fallback: number[] = []): ArtifactClaim => ({
     own: own.map(([id, games]) => ({ id, games })),
     fallback,
-    before: false,
   })
-  const before = (like: number[]): ArtifactClaim => ({ own: [], fallback: like, before: true })
 
   it('keeps the way that gives out the artifacts with the most games', () => {
     expect(
@@ -65,8 +63,8 @@ describe('the artifact rule', () => {
     expect(handOutArtifacts(claims)).toEqual([1, 3, 4])
   })
 
-  it('gives last season’s teams the first free artifact they like, after this season’s', () => {
-    const claims = [before([5, 6]), now([[1, 1]], [5, 6]), now([[1, 9]], [5])]
-    expect(handOutArtifacts(claims)).toEqual([6, 5, 1])
+  it('gives a team with none of its own, as one only earlier seasons recorded, the first free one in board order', () => {
+    const claims = [now([], [5, 6]), now([[1, 1]], [5, 6]), now([[1, 9]], [5])]
+    expect(handOutArtifacts(claims)).toEqual([5, 6, 1])
   })
 })

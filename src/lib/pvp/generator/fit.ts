@@ -1,11 +1,12 @@
 /* How much of a team's own effects its board's map leaves it. A board on a map
- * with no records takes the teams of every map (chooser.ts) that have an ally
- * tile there for each of their units (`stands`). A team there keeps the points
- * its goals earn in the engine's best placement on the board's map, as a share
- * of those on the map it was recorded on, at most all of them. A team recorded
- * on its board's map, or one whose goals earn nothing on its own map, keeps all
- * of them. Both placements leave out the artifact and the enemy units' rules,
- * so the share is the team's alone. */
+ * with no records takes the rows of every map (chooser.ts) that have an ally
+ * tile there for each of their units (`stands`). A team on another map than
+ * the one it was recorded on keeps the points its goals earn in the engine's
+ * best placement on the board's map, as a share of those on its own map (for
+ * a row of every map, its home), at most all of them. A team on its own map,
+ * or one whose goals earn nothing there, keeps all of them. Both placements
+ * leave out the artifact and the enemy units' rules, so the share is the
+ * team's alone. */
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { configTiles, presetLayout, type MapLayout } from '@/lib/maps'
@@ -22,7 +23,7 @@ export interface SlFit {
   // companions included, on the board's map.
   stands(board: SlBoard, heroes: number[]): boolean
   // The share, or undefined while it waits on a placement, for heroes
-  // recorded on the file's map `from`.
+  // recorded on the file's map `from` (an index into its maps).
   known(board: SlBoard, heroes: number[], from: number): number | undefined
   measure(board: SlBoard, heroes: number[], from: number): number
 }
@@ -48,7 +49,7 @@ export function slFit(data: SlData): SlFit {
   const keyOf = (board: SlBoard, heroes: number[], from: number): string =>
     `${from}|${board.layout.key}|${heroes.join(',')}`
   const known = (board: SlBoard, heroes: number[], from: number): number | undefined =>
-    board.source !== null ? 1 : measured.get(keyOf(board, heroes, from))
+    from === board.source ? 1 : measured.get(keyOf(board, heroes, from))
   return {
     stands(board, heroes) {
       if (board.source !== null) return true
@@ -69,7 +70,7 @@ export function slFit(data: SlData): SlFit {
       const home = `${from}|${heroes.join(',')}`
       let before = atHome.get(home)
       if (before === undefined) {
-        before = points(presetLayout(data.maps[from]!)!)
+        before = points(presetLayout(data.maps[from]!.key)!)
         atHome.set(home, before)
       }
       const kept = before > 0 ? Math.min(1, Math.max(0, points(board.layout) / before)) : 1

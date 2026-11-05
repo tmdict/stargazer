@@ -22,7 +22,7 @@ import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { ShotRef, WwwImportShot } from '@/composables/useWwwImport'
 import type { Point } from '@/lib/layout'
-import type { TeamSide } from '@/lib/pvp/sl/www/panel'
+import type { TeamSide } from '@/lib/pvp/www/panel'
 import {
   filledSlots,
   type WwwCard,
@@ -30,7 +30,7 @@ import {
   type WwwIssue,
   type WwwSlot,
   type WwwTeamPlan,
-} from '@/lib/pvp/sl/www/wwwImport'
+} from '@/lib/pvp/www/wwwImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'

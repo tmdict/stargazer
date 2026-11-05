@@ -8,8 +8,8 @@ import {
   type WwwLevelAttr,
   type WwwSlotHero,
   type WwwTeamState,
-} from '@/lib/pvp/sl/www/match'
-import type { TeamSide } from '@/lib/pvp/sl/www/panel'
+} from '@/lib/pvp/www/match'
+import type { TeamSide } from '@/lib/pvp/www/panel'
 import { useRosters } from '@/stores/rosters'
 
 export type WwwMode = 'one' | 'match'

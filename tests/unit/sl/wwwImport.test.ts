@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { HeroReading } from '@/lib/import/card/types'
 import type { MatchupPanel, MatchupTeam } from '@/lib/import/screens/matchup/types'
-import { buildWwwImportPlan, shotToCheck, type WwwShotInput } from '@/lib/pvp/sl/www/wwwImport'
+import { buildWwwImportPlan, shotToCheck, type WwwShotInput } from '@/lib/pvp/www/wwwImport'
 import { createImage } from '../fixtures/image'
 
 const hero = (characterId: number, { sure = true, paragon = 0 } = {}): HeroReading => ({

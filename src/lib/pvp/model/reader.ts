@@ -89,5 +89,5 @@ export interface SlReader {
 export const readSlFile = (data: SlData): SlReader => ({
   model: readModel(data.model),
   records: seasonRecords(data.model),
-  kindOf: kindRule(data.teams),
+  kindOf: kindRule(data.maps.flatMap((m) => m.teams)),
 })

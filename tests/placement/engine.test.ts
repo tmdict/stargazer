@@ -36,7 +36,7 @@ import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer, type PlacementScore } from '@/lib/placement/score'
 import type { FormationRule, PlacementData, PlacementTeam } from '@/lib/placement/types'
-import { decodeSlData } from '@/lib/pvp/sl/data/codec'
+import { decodeSlData } from '@/lib/pvp/data/codec'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -209,8 +209,8 @@ function setupsOf(records: { name: string; data: string }[]): Setup[] {
       for (const team of [Team.ALLY, Team.ENEMY]) {
         const side = sideOf(board, team, map, live)
         if (!side) continue
-        // A locked stage, or a Treasure Rush team kept all day, repeats a
-        // set-up, which counts once.
+        // A locked stage, or a Treasure Rush team played again the same day,
+        // repeats a set-up, which counts once.
         const placed = [...side.tiles].sort(([a], [b]) => a - b).map(([u, t]) => `${u}@${t}`)
         const key = `${season}|${players[team - 1]}|${map}|${placed.join(',')}`
         if (!found.has(key)) found.set(key, { season, live, map, ...side })
@@ -424,9 +424,13 @@ const scoreLine = (score: PlacementScore) =>
 describe.skipIf(!EXPORTS.length)('placement engine', () => {
   it('places every recorded set-up and measures it against the player', async () => {
     if (!OUT) throw new Error('PLACEMENT_OUT names the folder the measures go to')
-    const liveData = (
-      await decodeSlData(readFileSync(new URL('../../src/pack/pvp/sl.bin', import.meta.url)))
-    ).placement
+    const file = await decodeSlData(
+      readFileSync(new URL('../../src/pack/pvp/pvp.bin', import.meta.url)),
+    )
+    const liveData = {
+      ...file.placement,
+      pickRates: Object.fromEntries(file.maps.map((m) => [m.key, m.pickRates])),
+    }
     const margin = liveData.weights.margin ?? 0
     const recorded = setupsOf(recordsOf(EXPORTS))
     const setups = UNITS.length ? recorded.filter(holdsUnit) : recorded

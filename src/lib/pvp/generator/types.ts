@@ -1,6 +1,7 @@
 /* The generator's input, the heroes a visitor picks at their levels, and its
  * answer, the set of recorded teams, one per board. */
 
+import type { SlRecord } from '../data/types'
 import type { SlLevels } from '../data/upgrades'
 
 export interface SlPick extends SlLevels {
@@ -8,16 +9,18 @@ export interface SlPick extends SlLevels {
 }
 
 export interface SlChoiceTeam {
-  // 0 for this season's teams, 1 for the season before's.
-  source: number
-  // Index into that season's teams.
+  // Index into the file's maps whose teams it comes from; null for a row of
+  // everyMap.
+  source: number | null
+  // Index into that list.
   team: number
   heroes: number[]
-  // Index into that season's families; null outside every group.
+  // Index into the file's families; null outside every group.
   family: number | null
   chance: number
-  // The comp's [players, wins, losses] on this map.
-  comp: [number, number, number] | null
+  // The group's [players, wins, losses] on the board's map; null outside every
+  // group or on a map with no records.
+  comp: SlRecord | null
   artifact: number | null
   // Index into the team's placements: the board drawn.
   placement: number

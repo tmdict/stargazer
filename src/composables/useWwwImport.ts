@@ -1,6 +1,6 @@
 /* Who Would Win?'s screenshot import: file intake of the Supreme League's
  * knockout matchup list, the review's corrections beside each reading, and the
- * games they make (lib/pvp/sl/www/wwwImport). The import engine
+ * games they make (lib/pvp/www/wwwImport). The import engine
  * (useImportEngine) decodes and reads the screenshots. Module-level state like
  * useRosterImport: the shots belong to one opening of the modal, and closing it
  * (clearImport) drops them and releases the engine. */
@@ -35,7 +35,7 @@ import {
   teamKey,
   type WwwCard,
   type WwwImportPlan,
-} from '@/lib/pvp/sl/www/wwwImport'
+} from '@/lib/pvp/www/wwwImport'
 
 export interface WwwImportShot {
   id: string

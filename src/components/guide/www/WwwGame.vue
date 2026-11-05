@@ -4,8 +4,8 @@
 
 import WwwTeamRow from './WwwTeamRow.vue'
 import type { Point } from '@/lib/layout'
-import type { WwwGame, WwwLevelAttr } from '@/lib/pvp/sl/www/match'
-import type { TeamSide } from '@/lib/pvp/sl/www/panel'
+import type { WwwGame, WwwLevelAttr } from '@/lib/pvp/www/match'
+import type { TeamSide } from '@/lib/pvp/www/panel'
 import { useI18nStore } from '@/stores/i18n'
 
 const { game, number, target } = defineProps<{

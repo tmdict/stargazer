@@ -10,7 +10,7 @@ const PVP_DATA_TESTS = [
   'tests/unit/sl/slData.test.ts',
   'tests/unit/sl/team.test.ts',
 ]
-const keyFile = statSync(new URL('./src/pack/pvp/sl.key', import.meta.url), {
+const keyFile = statSync(new URL('./src/pack/pvp/pvp.key', import.meta.url), {
   throwIfNoEntry: false,
 })
 const pvpPacked = Boolean(keyFile?.size)

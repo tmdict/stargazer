@@ -17,20 +17,28 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlData, SlUnit } from '../data/types'
+import type { SlData, SlTeam, SlUnit } from '../data/types'
 import type { BoardFormation } from './formation'
 import type { SlBoard } from './setType'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 
-// The season a chosen team comes from: this season's, or the season before's.
-export const choiceSeason = (data: SlData, choice: Pick<SlChoiceTeam, 'source'>) =>
-  choice.source === 0 ? data : data.before!
+type ChoiceOf = Pick<SlChoiceTeam, 'source' | 'team'>
+
+// A chosen team's record in the file: on one map, or over every map.
+export const fileTeam = (data: SlData, { source, team }: ChoiceOf): SlTeam =>
+  source === null ? data.everyMap[team]! : data.maps[source]!.teams[team]!
+
+// The map in the file a chosen team was recorded on, or for a row of every
+// map the one where it has the most games.
+export const homeMap = (data: SlData, { source, team }: ChoiceOf): number =>
+  source ?? data.everyMap[team]!.home
 
 // A team's recorded placement: its heroes and their companions, then its
 // phantimal and the phantimal's companions. Null for a team whose games
-// recorded no formation, which the engine places.
+// recorded no formation, or a row of every map, which the engine places.
 export function recordedUnits(data: SlData, choice: SlChoiceTeam): SlUnit[] | null {
-  const placement = choiceSeason(data, choice).teams[choice.team]!.placements[choice.placement]
+  if (choice.source === null) return null
+  const placement = data.maps[choice.source]!.teams[choice.team]!.placements[choice.placement]
   if (!placement) return null
   const { c, s } = placement
   return isRetiredSeason(data.season)

@@ -8,8 +8,8 @@ import { sideLabelKey } from './WwwTeamRow.vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import UpgradeLevelChips from '@/components/ui/UpgradeLevelChips.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
-import type { WwwLevelAttr, WwwSlotHero } from '@/lib/pvp/sl/www/match'
-import type { TeamSide } from '@/lib/pvp/sl/www/panel'
+import type { WwwLevelAttr, WwwSlotHero } from '@/lib/pvp/www/match'
+import type { TeamSide } from '@/lib/pvp/www/panel'
 import { useI18nStore } from '@/stores/i18n'
 
 const { slots } = defineProps<{

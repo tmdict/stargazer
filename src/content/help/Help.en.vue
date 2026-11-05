@@ -489,12 +489,12 @@ const SKILL = {
           show whole in at least one.
         </li>
         <li>
-          A team can have fewer than five heroes. Each empty slot counts as weaker than the season's
-          weakest hero, with no upgrades.
+          A team can have fewer than five heroes. Each empty slot counts as weaker than the weakest
+          recorded hero, with no upgrades.
         </li>
         <li>
           A mark next to the verdict warns where the records are thin, such as a hero with few
-          recorded games this season. Such a hero counts as close to average.
+          recorded games. Such a hero counts as close to average.
         </li>
         <li><b>Swap sides</b> swaps the two teams, and <b>Clear</b> empties the games shown.</li>
       </ul>

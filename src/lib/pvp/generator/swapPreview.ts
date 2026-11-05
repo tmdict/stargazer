@@ -10,7 +10,7 @@ import { boardChance, levelGap } from './chance'
 import type { SlFit } from './fit'
 import { boardPlacement, boardTeam, heldOn } from './formation'
 import type { SlBoard } from './setType'
-import { choiceSeason } from './team'
+import { homeMap } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
 
 export interface SwapRequest {
@@ -35,7 +35,7 @@ export interface SwapPreview {
 
 export function previewSwap(
   data: SlData,
-  { model, kindOf }: SlReader,
+  { model }: SlReader,
   fit: SlFit,
   counts: (artifact: number) => boolean,
   { board, team, units, out, into, picks }: SwapRequest,
@@ -53,7 +53,7 @@ export function previewSwap(
   const { artifact } = team
   const side = {
     heroes,
-    kind: team.source === 0 ? team.family : kindOf(heroes),
+    kind: team.family,
     artifact: artifact !== null && counts(artifact) ? artifact : null,
   }
   const levels = new Map(picks.map((pick) => [pick.id, pick]))
@@ -66,7 +66,7 @@ export function previewSwap(
       model,
       side,
       levelGap(data.prices, levels, heroes),
-      fit.measure(board, heroes, choiceSeason(data, team).teams[team.team]!.map),
+      fit.measure(board, heroes, homeMap(data, team)),
     ),
   }
 }

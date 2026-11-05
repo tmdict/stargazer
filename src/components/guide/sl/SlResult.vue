@@ -1,9 +1,9 @@
 <script lang="ts">
-import type { SlFamily } from '@/lib/pvp/sl/data/types'
-import type { BoardDraw, BoardFormation } from '@/lib/pvp/sl/generator/formation'
-import type { GeneratorFrom } from '@/lib/pvp/sl/generator/handover'
-import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
-import type { SlChoiceTeam } from '@/lib/pvp/sl/generator/types'
+import type { SlFamily } from '@/lib/pvp/data/types'
+import type { BoardDraw, BoardFormation } from '@/lib/pvp/generator/formation'
+import type { GeneratorFrom } from '@/lib/pvp/generator/handover'
+import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
+import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 
 // A chosen team as the page shows it, read off the data file once, with its
@@ -28,9 +28,6 @@ export interface SlShown {
   chance: number
   // The chance of winning each number of maps, from none to all.
   odds: number[]
-  // Under this many Celestial and Hypogean heroes last season's teams join;
-  // null when the data file has none.
-  beforeUnder: number | null
   teams: SlShownTeam[]
   // The set as one encoded team with each board in the formation given, as
   // the page draws it and Save as team stores it.
@@ -54,8 +51,8 @@ import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
-import { shownFormation } from '@/lib/pvp/sl/generator/formation'
-import { winsNeeded } from '@/lib/pvp/sl/model/odds'
+import { shownFormation } from '@/lib/pvp/generator/formation'
+import { winsNeeded } from '@/lib/pvp/model/odds'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { slMood, slPercent } from './useSlNames'

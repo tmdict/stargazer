@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Side } from '@/lib/pvp/sl/data/sides'
-import { readSlFile } from '@/lib/pvp/sl/model/reader'
-import { splitChance } from '@/lib/pvp/sl/model/reasons'
-import type { Explanation, ReasonItem } from '@/lib/pvp/sl/model/types'
+import type { Side } from '@/lib/pvp/data/sides'
+import { readSlFile } from '@/lib/pvp/model/reader'
+import { splitChance } from '@/lib/pvp/model/reasons'
+import type { Explanation, ReasonItem } from '@/lib/pvp/model/types'
 import { madeUpData, madeUpModel } from '../fixtures/slSeason'
 
 // The worked example of the file's published format, every value worked out

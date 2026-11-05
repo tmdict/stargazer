@@ -76,7 +76,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 Each report comes with a summary, which the guide index shows. The external report generator writes it with the report, owns its format, and documents it where it writes the file, so nothing here derives or edits its numbers. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) finds the summaries newest first, so a new season needs no entry in the code. The data step stops a build on a summary with no report beside it, while a report with no summary yet still gets its page and stays off the index. A summary carries each team's label in the languages its report is written in, and in any other app locale a team is named by its heroes (`pvpTeamName`), so a season needs nothing per app locale beyond the hero names the app already has.
 
-The guide index's card for the PvP team generator draws a default set worked out once per build (`scripts/slPreview.ts`, handed to the card as `virtual:sl-preview`), so its boards are in the baked HTML and the index loads neither the Supreme League data file nor the model.
+The guide index's card for the PvP team generator draws a default set worked out once per build (`scripts/slPreview.ts`, handed to the card as `virtual:sl-preview`), so its boards are in the baked HTML and the index loads neither the PvP data file nor the model.
 
 ## Hosting
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Who Would Win?: two teams of heroes at their levels, each with an optional
    artifact, and which should win and why from this season's recorded Supreme
-   League games (lib/pvp/sl/www), worked out in the Supreme League worker
+   League games (lib/pvp/www), worked out in the Supreme League worker
    (useSlEngine). One game holds one such game, and Match the five games of a
    Supreme League match, with Team A's chance to win the match; useWwwGames
    holds the games, and Screenshots fills all five from screenshots of the
@@ -38,7 +38,7 @@ import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { Point } from '@/lib/layout'
-import type { TeamSide, WwwTeam } from '@/lib/pvp/sl/www/panel'
+import type { TeamSide, WwwTeam } from '@/lib/pvp/www/panel'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -203,10 +203,8 @@ const predictWinner = async (): Promise<void> => {
       v-if="heading"
       :show="aboutOpen"
       page="www"
-      :season="heading.season"
       :date="heading.date"
-      :sample="heading.sample"
-      :before="null"
+      :seasons="heading.seasons"
       @close="aboutOpen = false"
     />
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.www-previous-season') }}</p>

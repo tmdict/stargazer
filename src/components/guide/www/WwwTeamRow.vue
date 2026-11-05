@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Point } from '@/lib/layout'
-import type { WwwLevelAttr, WwwTeamState } from '@/lib/pvp/sl/www/match'
-import type { TeamSide } from '@/lib/pvp/sl/www/panel'
+import type { WwwLevelAttr, WwwTeamState } from '@/lib/pvp/www/match'
+import type { TeamSide } from '@/lib/pvp/www/panel'
 
 export const sideLabelKey = (side: TeamSide): string =>
   side === 'a' ? 'app.www-team-a' : 'app.www-team-b'

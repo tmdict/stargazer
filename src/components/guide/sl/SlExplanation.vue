@@ -6,7 +6,7 @@ import { computed } from 'vue'
 
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
-import { winsNeeded } from '@/lib/pvp/sl/model/odds'
+import { winsNeeded } from '@/lib/pvp/model/odds'
 import { DEFAULT_VARIANT } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 import { slPercent as percent, useSlNames } from './useSlNames'
@@ -119,9 +119,6 @@ const outcomes = computed(() =>
 
     <h2>{{ i18n.t('app.sl-explain-search-head') }}</h2>
     <p>{{ i18n.t('app.sl-explain-search') }}</p>
-    <p v-if="shown.beforeUnder !== null">
-      {{ i18n.t('app.sl-explain-before', { count: shown.beforeUnder }) }}
-    </p>
     <p>{{ i18n.t('app.sl-explain-roster') }}</p>
     <p class="reading-secondary">{{ i18n.t('app.sl-explain-limits') }}</p>
   </BaseModal>

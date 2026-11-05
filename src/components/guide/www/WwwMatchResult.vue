@@ -10,7 +10,7 @@ import { computed, ref } from 'vue'
 import WwwChances from './WwwChances.vue'
 import WwwResult, { type WwwShown } from './WwwResult.vue'
 import { slPercent } from '@/components/guide/sl/useSlNames'
-import { matchOdds } from '@/lib/pvp/sl/www/match'
+import { matchOdds } from '@/lib/pvp/www/match'
 import { useI18nStore } from '@/stores/i18n'
 
 const { games } = defineProps<{ games: readonly WwwShown[] }>()

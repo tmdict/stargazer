@@ -17,8 +17,8 @@ import { readStatus, unreadStatus, type ShotStatusView } from '@/components/impo
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useToast } from '@/composables/useToast'
 import { useWwwImport, type WwwImportShot } from '@/composables/useWwwImport'
-import { WWW_GAMES, type WwwGame } from '@/lib/pvp/sl/www/match'
-import { shotToCheck } from '@/lib/pvp/sl/www/wwwImport'
+import { WWW_GAMES, type WwwGame } from '@/lib/pvp/www/match'
+import { shotToCheck } from '@/lib/pvp/www/wwwImport'
 import { useI18nStore } from '@/stores/i18n'
 import { imageFilesFromPaste } from '@/utils/imageFile'
 

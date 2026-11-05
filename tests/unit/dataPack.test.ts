@@ -82,8 +82,8 @@ describe('build checks', () => {
     for (const { code } of SKILL_LOCALES) put(`pack/text/skill/${code}/odie.json`)
     put('pack/text/skill/numbers.json', '{ "odie": {} }')
     put('pack/screenshot-import/hero-icons.json', '{ "icons": [1] }')
-    put('pack/pvp/sl.bin', 'x')
-    put('pack/pvp/sl.key', 'x')
+    put('pack/pvp/pvp.bin', 'x')
+    put('pack/pvp/pvp.key', 'x')
     put('pack/text/skill/en/_artifacts.json', '{ "starshard": { "name": "", "levels": [] } }')
   })
 

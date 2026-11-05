@@ -1,10 +1,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import { unratedHeroes } from '@/lib/pvp/sl/data/sides'
-import type { SlData, SlSample } from '@/lib/pvp/sl/data/types'
-import { slBoards } from '@/lib/pvp/sl/generator/setType'
+import { loadSlData } from '@/lib/pvp/data/codec'
+import { unratedHeroes } from '@/lib/pvp/data/sides'
+import type { SlData, SlSeason } from '@/lib/pvp/data/types'
+import { slBoards } from '@/lib/pvp/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { LockedHeroes } from '@/lib/types/character'
@@ -18,14 +18,13 @@ interface SlHeading {
   // A Supreme League map has no recorded teams yet.
   newMaps: boolean
   retired: boolean
-  sample: SlSample
-  before: (SlSample & { season: number }) | null
+  seasons: SlSeason[]
 }
 
-/* The Supreme League data file for a page that draws from it, read after
- * mount, as the pages are pre-rendered with their heading alone. The file
- * stays plain, never reactive, so the decoded data stays out of anything the
- * console can reach. `locked` holds the heroes the file cannot rate yet, which
+/* The PvP data file for a page that draws from it, read after mount, as the
+ * pages are pre-rendered with their heading alone. The file stays plain,
+ * never reactive, so the decoded data stays out of anything the console can
+ * reach. `locked` holds the heroes the file cannot rate yet, which
  * the pages' pickers keep off teams; it is empty until the file loads. */
 export function useSlFile() {
   const route = useRoute()
@@ -65,8 +64,7 @@ export function useSlFile() {
       date: data.exportedAt,
       newMaps: slBoards(data, TEAM_VARIANTS.sl.maps).some((board) => board.source === null),
       retired: isRetiredSeason(data.season),
-      sample: data.sample,
-      before: data.before ? { season: data.before.season, ...data.before.sample } : null,
+      seasons: data.seasons,
     }
     unrated.value = unratedHeroes(
       data.model,

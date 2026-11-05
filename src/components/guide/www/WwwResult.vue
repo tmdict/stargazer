@@ -1,7 +1,7 @@
 <script lang="ts">
 import { sideLabelKey } from './WwwTeamRow.vue'
-import type { SlFamily } from '@/lib/pvp/sl/data/types'
-import type { Pair, WwwPanel } from '@/lib/pvp/sl/www/panel'
+import type { SlFamily } from '@/lib/pvp/data/types'
+import type { Pair, WwwPanel } from '@/lib/pvp/www/panel'
 
 // A game's result as the page keeps it: the worker's panel and each team's group.
 export interface WwwShown {
@@ -28,9 +28,9 @@ import IconAlertSmall from '@/components/ui/IconAlertSmall.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useSlNames } from '@/components/guide/sl/useSlNames'
 import { useInfoTip } from '@/composables/useInfoTip'
-import type { WinLoss } from '@/lib/pvp/sl/data/records'
-import { REASONS, type Reason } from '@/lib/pvp/sl/model/types'
-import type { TeamSide, WwwLine, WwwWarning } from '@/lib/pvp/sl/www/panel'
+import type { WinLoss } from '@/lib/pvp/data/records'
+import { REASONS, type Reason } from '@/lib/pvp/model/types'
+import type { TeamSide, WwwLine, WwwWarning } from '@/lib/pvp/www/panel'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'

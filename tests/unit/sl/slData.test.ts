@@ -5,32 +5,34 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { presetLayout } from '@/lib/maps'
-import { decodeSlData, loadSlData } from '@/lib/pvp/sl/data/codec'
-import type { SlData, SlUnit } from '@/lib/pvp/sl/data/types'
-import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
-import { layoutBoards } from '@/lib/pvp/sl/generator/setType'
-import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
-import { readSlFile } from '@/lib/pvp/sl/model/reader'
+import { decodeSlData, loadSlData } from '@/lib/pvp/data/codec'
+import type { SlData, SlTeam, SlUnit } from '@/lib/pvp/data/types'
+import { chooseSlSet } from '@/lib/pvp/generator/chooser'
+import { slFit } from '@/lib/pvp/generator/fit'
+import { slBoards } from '@/lib/pvp/generator/setType'
+import { fileTeam } from '@/lib/pvp/generator/team'
+import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
+import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import { wholeFit } from '../fixtures/slSeason'
 
 // The file a deploy ships, as copied in from the external report generator.
 // The page fetches the file the build emits, so the test serves it the same
 // bytes.
 vi.stubGlobal(
   'fetch',
-  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/sl.bin', import.meta.url))),
+  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/pvp.bin', import.meta.url))),
 )
 const data = await loadSlData()
 vi.unstubAllGlobals()
-const seasons = [data, ...(data.before ? [data.before] : [])]
 const reader = readSlFile(data)
-const everyMap = layoutBoards(
-  data,
-  data.maps.map((key) => presetLayout(key)!),
-)
-const choose = (picks: SlPick[]) => chooseSlSet(data, reader, picks, () => true, everyMap)
+const boards = slBoards(data, TEAM_VARIANTS.sl.maps)
+// One store of measured fits for every call, as the worker keeps for a visit.
+const fit = slFit(data)
+const choose = (picks: SlPick[], on = boards, measured = fit) =>
+  chooseSlSet(data, reader, picks, () => true, on, measured)
 const heroes = new Map(
   loadCharacters()
     .filter((c) => !c.placeholder)
@@ -42,52 +44,63 @@ const pick = (id: number, paragon = 4, refinement = 4): SlPick => ({
   paragon,
   refinement,
 })
-const named = [...new Set(seasons.flatMap((s) => s.teams.flatMap((t) => t.heroes)))]
-const RARE = ['celestial', 'hypogean']
+const mapTeams = data.maps.flatMap((m) => m.teams)
+const named = [...new Set(mapTeams.flatMap((t) => t.heroes))]
 
-// Whether the selected heroes' teams in `from`, each with a decided game, fill
-// every map with no hero twice: the generator makes a set exactly then.
-function fills(
-  picked: ReadonlySet<number>,
-  from: readonly (SlData | NonNullable<SlData['before']>)[] = seasons,
-): boolean {
-  const pools = data.maps.map((_, map) => {
-    const pool: number[][] = []
-    for (const s of from)
-      for (const t of s.teams)
-        if (t.map === map && t.heroes.every((id) => picked.has(id)) && t.decided > 0)
-          pool.push(t.heroes)
-    return pool
-  })
-  const fill = (map: number, used: ReadonlySet<number>): boolean =>
-    map === pools.length ||
-    pools[map]!.some(
-      (team) => !team.some((id) => used.has(id)) && fill(map + 1, new Set([...used, ...team])),
+// The heroes of the teams in `list` the relaxed rule lets a selection take.
+function allowed(list: readonly SlTeam[], picked: ReadonlySet<number>): number[][] {
+  const proof = data.evidence.at(-1)!
+  const meets = (count: number, minimum: number) => count + 1e-6 >= minimum
+  const open = list.filter((t) => t.heroes.every((id) => picked.has(id)))
+  const groupGames = new Map<number | null, number>()
+  for (const t of open) groupGames.set(t.family, (groupGames.get(t.family) ?? 0) + t.games)
+  return open
+    .filter(
+      (t) =>
+        (t.family !== null || proof.oneOffs) &&
+        meets(groupGames.get(t.family)!, proof.groupGames) &&
+        t.decided >= 1 &&
+        (meets(t.players, proof.players) || meets(t.games, proof.games)),
     )
-  return fill(0, new Set())
+    .map((t) => t.heroes)
+}
+
+// Whether the selected heroes make a set: from each board's own map, else with
+// the rows of every map on a board its map leaves none, else on every board.
+function fills(picked: ReadonlySet<number>): boolean {
+  const fill = (pools: number[][][], board = 0, used = new Set<number>()): boolean =>
+    board === pools.length ||
+    pools[board]!.some(
+      (team) =>
+        !team.some((id) => used.has(id)) && fill(pools, board + 1, new Set([...used, ...team])),
+    )
+  const own = boards.map((b) => allowed(data.maps[b.source!]!.teams, picked))
+  const every = allowed(data.everyMap, picked)
+  return (
+    fill(own) || fill(own.map((pool) => (pool.length ? pool : every))) || fill(own.map(() => every))
+  )
 }
 
 // The generator's rules for the set it chose for `picks`.
 function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
   expect(chosen).not.toBeNull()
   const set = chosen!
-  expect(set.teams).toHaveLength(data.maps.length)
+  expect(set.teams).toHaveLength(boards.length)
   const used = set.teams.flatMap((t) => t.heroes)
   expect(new Set(used).size).toBe(used.length)
   const selected = new Set(picks.map((p) => p.id))
   expect(used.every((id) => selected.has(id))).toBe(true)
   const free = new Set([...selected].filter((id) => !used.includes(id)))
-  set.teams.forEach((t, map) => {
-    const team = (t.source === 0 ? data : data.before!).teams[t.team]!
-    expect(team.map).toBe(map)
+  set.teams.forEach((t, i) => {
+    const team = fileTeam(data, t)
+    if (t.source !== null) expect(t.source).toBe(boards[i]!.source)
     expect(t.heroes).toEqual(team.heroes)
     expect(t.artifact).not.toBeNull()
-    // Each of last season's teams takes an artifact from its own list.
-    if ('like' in team) expect(team.like).toContain(t.artifact)
     expect(t.chance).toBeGreaterThan(0)
     expect(t.chance).toBeLessThan(1)
+    const placements = t.source === null ? 0 : data.maps[t.source]!.teams[t.team]!.placements.length
     expect(t.placement).toBeGreaterThanOrEqual(0)
-    expect(t.placement).toBeLessThan(Math.max(team.placements.length, 1))
+    expect(t.placement).toBeLessThan(Math.max(placements, 1))
     expect(
       t.flex.every((f) => t.heroes.includes(f.out) && f.options.every((id) => free.has(id))),
     ).toBe(true)
@@ -95,8 +108,7 @@ function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
     // be, and the other one-hero swaps and then the two-hero swaps fill the rows
     // it leaves. A two-hero swap takes heroes the set leaves free, for two of the
     // team's that are neither core nor out in a one-hero swap.
-    const season = t.source === 0 ? data : data.before!
-    const groupCore = t.family === null ? [] : season.families[t.family]!.core
+    const groupCore = t.family === null ? [] : data.families[t.family]!.core
     const moved = t.flex.filter((f) => groupCore.includes(f.out)).length
     expect(t.flex.length - moved).toBeLessThanOrEqual(Math.max(0, data.flex.heroes - moved))
     expect(t.pairs.length).toBeLessThanOrEqual(Math.max(0, data.flex.heroes - t.flex.length))
@@ -114,35 +126,28 @@ function holds(picks: SlPick[], chosen = choose(picks)): SlChoice {
   const sum = (odds: number[]) => odds.reduce((a, b) => a + b, 0)
   expect(Math.abs(sum(set.odds) - 1)).toBeLessThan(1e-12)
   expect(
-    Math.abs(sum(set.odds.slice(Math.floor(data.maps.length / 2) + 1)) - set.chance),
+    Math.abs(sum(set.odds.slice(Math.floor(boards.length / 2) + 1)) - set.chance),
   ).toBeLessThan(1e-12)
   return set
 }
 
-describe('the shipped Supreme League data', () => {
+describe('the shipped PvP data', () => {
   it('names only heroes Stargazer knows, and companions their heroes spawn', () => {
     expect(data.order.filter((id) => !heroes.has(id))).toEqual([])
+    expect(data.everyMap.every((t) => t.heroes.every((id) => heroes.has(id)))).toBe(true)
     const strays: SlUnit[] = []
-    for (const s of seasons) {
-      for (const t of s.teams) {
-        expect(t.heroes.every((id) => heroes.has(id))).toBe(true)
-        for (const p of t.placements) {
-          const units = p.c.map(([, id]) => id)
-          const spawned = new Set(units.flatMap((id) => companionIdsOf(id)))
-          strays.push(...p.c.filter(([, id]) => !t.heroes.includes(id) && !spawned.has(id)))
-          const [phantimal, ...companions] = p.s
-          const own = new Set(phantimal ? companionIdsOf(toPhantimalId(phantimal[1])) : [])
-          strays.push(...companions.filter(([, id]) => !own.has(toPhantimalId(id))))
-        }
+    for (const t of mapTeams) {
+      expect(t.heroes.every((id) => heroes.has(id))).toBe(true)
+      for (const p of t.placements) {
+        const units = p.c.map(([, id]) => id)
+        const spawned = new Set(units.flatMap((id) => companionIdsOf(id)))
+        strays.push(...p.c.filter(([, id]) => !t.heroes.includes(id) && !spawned.has(id)))
+        const [phantimal, ...companions] = p.s
+        const own = new Set(phantimal ? companionIdsOf(toPhantimalId(phantimal[1])) : [])
+        strays.push(...companions.filter(([, id]) => !own.has(toPhantimalId(id))))
       }
     }
     expect(strays).toEqual([])
-  })
-
-  // The set hands each of last season's teams the first artifact on its list
-  // that the other four leave free.
-  it.runIf(!!data.before)('lists an artifact for every map on each of last season’s teams', () => {
-    expect(data.before!.teams.filter((t) => t.like.length < data.maps.length)).toEqual([])
   })
 
   // After a cutover the ids name the new season's content, so they are only
@@ -150,13 +155,12 @@ describe('the shipped Supreme League data', () => {
   it.runIf(data.season === CURRENT_SEASON)('uses the season’s own artifacts and phantimals', () => {
     const artifacts = new Set(loadArtifacts().map((a) => a.id))
     const phantimals = new Set(loadPhantimals().map((p) => p.id))
-    for (const s of seasons) {
-      for (const t of s.teams) {
-        const ids = 'artifacts' in t ? t.artifacts.map(([id]) => id) : t.like
-        expect(ids.filter((id) => !artifacts.has(id))).toEqual([])
-        const used = t.placements.flatMap((p) => (p.s[0] ? [p.s[0][1]] : []))
-        expect(used.filter((id) => !phantimals.has(id))).toEqual([])
-      }
+    for (const t of [...mapTeams, ...data.everyMap]) {
+      expect(t.artifacts.map(([id]) => id).filter((id) => !artifacts.has(id))).toEqual([])
+    }
+    for (const t of mapTeams) {
+      const used = t.placements.flatMap((p) => (p.s[0] ? [p.s[0][1]] : []))
+      expect(used.filter((id) => !phantimals.has(id))).toEqual([])
     }
     const rated = [...Object.keys(data.model.artifacts).map(Number), ...data.fallback.flat()]
     expect(rated.filter((id) => !artifacts.has(id))).toEqual([])
@@ -166,25 +170,29 @@ describe('the shipped Supreme League data', () => {
   const sealed = (edit: (copy: SlData) => void): Uint8Array<ArrayBuffer> => {
     const copy = structuredClone(data)
     edit(copy)
-    const key = readFileSync(new URL('../../../src/pack/pvp/sl.key', import.meta.url), 'utf8')
+    const key = readFileSync(new URL('../../../src/pack/pvp/pvp.key', import.meta.url), 'utf8')
     const iv = randomBytes(12)
     const cipher = createCipheriv(
       'aes-256-gcm',
-      createHash('sha256').update(`${key.trim()}stargazer-sl`).digest(),
+      createHash('sha256').update(`${key.trim()}stargazer-pvp`).digest(),
       iv,
     )
     const body = [cipher.update(deflateRawSync(JSON.stringify(copy))), cipher.final()]
     return new Uint8Array(Buffer.concat([iv, ...body, cipher.getAuthTag()]))
   }
 
-  it('refuses a file whose hero rows or board picks do not match its teams', async () => {
+  it('refuses a file whose rows or indexes do not match its teams and maps', async () => {
     await expect(decodeSlData(sealed(() => {}))).resolves.toBeTruthy()
-    const played = data.teams.find((t) => t.decided > 0)!.heroes[0]!
-    const team = data.teams[0]!
+    const played = mapTeams.find((t) => t.decided > 0)!.heroes[0]!
+    const team = data.maps[0]!.teams[0]!
     for (const edit of [
       (c: SlData) => delete c.model.heroes[played],
       (c: SlData) => (c.model.heroes[999_999] = [0, 0, 0, 0]),
-      (c: SlData) => (c.teams[0]!.pick = [[null, team.placements.length]]),
+      (c: SlData) => (c.maps[0]!.teams[0]!.pick = [[null, team.placements.length]]),
+      (c: SlData) => (c.maps[1]!.key = c.maps[0]!.key),
+      (c: SlData) => c.maps[0]!.records.pop(),
+      (c: SlData) => (c.everyMap[0]!.home = c.maps.length),
+      (c: SlData) => (c.seasons[0]!.weight = 0.3),
     ])
       await expect(decodeSlData(sealed(edit))).rejects.toThrow()
   })
@@ -198,16 +206,30 @@ describe('chooseSlSet on the shipped data', () => {
     holds(picks, set)
   })
 
-  // Early in a season this season's teams fill no set yet, and the season
-  // before's join them.
-  const rare = named.filter((id) => RARE.includes(heroes.get(id)!.faction)).length
-  it.runIf(rare >= (data.beforeUnder ?? 0) && fills(new Set(named), [data]))(
-    'takes that set from this season alone once its teams fill every map',
-    () => {
-      const set = holds(named.map((id) => pick(id)))
-      expect(set.teams.every((t) => t.source === 0)).toBe(true)
-    },
-  )
+  // A team only an earlier season recorded on a map, with games enough for the
+  // relaxed rule, is the one team a selection of its heroes makes there.
+  it('draws teams only an earlier season recorded, on the league maps and arena1', () => {
+    const checked = [...new Set([...TEAM_VARIANTS.sl.maps, 'arena1'])].filter((key) => {
+      const source = data.maps.findIndex((m) => m.key === key)
+      expect(source).toBeGreaterThanOrEqual(0)
+      const index = data.maps[source]!.teams.findIndex(
+        (t) =>
+          !t.artifacts.length &&
+          t.placements.every((p) => !p.s.length) &&
+          allowed([t], new Set(t.heroes)).length > 0,
+      )
+      if (index < 0) return false
+      const team = data.maps[source]!.teams[index]!
+      const set = choose(
+        team.heroes.map((id) => pick(id)),
+        slBoards(data, [key]),
+      )
+      expect(set?.teams.map((t) => [t.source, t.team])).toEqual([[source, index]])
+      expect(set?.teams[0]!.artifact).not.toBeNull()
+      return true
+    })
+    expect(checked.length).toBeGreaterThan(0)
+  })
 
   it('counts upgrades against a team', () => {
     const full = holds(named.map((id) => pick(id)))
@@ -220,10 +242,9 @@ describe('chooseSlSet on the shipped data', () => {
   })
 })
 
-// Seeded and random selections, the same on every run: few Celestial and
-// Hypogean heroes, which the season before's teams join, partial ones this
-// season's teams alone cannot fill, near-full ones, some again with Celestial
-// and Hypogean heroes no recorded team holds, each hero at random levels, and
+// Seeded and random selections, the same on every run: a few heroes, which
+// often leave a map's own teams short, partial ones, near-full ones, some
+// again with heroes no recorded team holds, each hero at random levels, and
 // every hero at P4 R4.
 describe('chooseSlSet on 626 seeded selections', () => {
   let seed = 20261024
@@ -231,48 +252,26 @@ describe('chooseSlSet on 626 seeded selections', () => {
   const level = () => Math.floor(random() * 5)
   const roster = [...heroes.values()]
   const held = new Set(named)
-  const under = data.beforeUnder ?? 0
   const pickOf = (h: { id: number; faction: string }, top: boolean): SlPick => ({
     id: h.id,
     faction: h.faction,
     paragon: top ? 4 : level(),
     refinement: top ? 4 : level(),
   })
-  // Celestial and Hypogean heroes no team holds, as a newly released one is:
-  // those Stargazer knows, and stand-ins under ids no hero has, enough to pass
-  // the threshold if they were counted.
+  // Heroes no team holds, as a newly released one is: those Stargazer knows,
+  // and stand-ins under ids no hero has.
   const spare = Math.max(...heroes.keys()) + 1
   const unrecorded = [
-    ...roster.filter((h) => RARE.includes(h.faction) && !held.has(h.id)),
-    ...Array.from({ length: under }, (_, i) => ({ id: spare + i, faction: RARE[i % 2]! })),
+    ...roster.filter((h) => !held.has(h.id)),
+    ...Array.from({ length: 4 }, (_, i) => ({ id: spare + i, faction: 'celestial' })),
   ]
-  // How many recorded Celestial and Hypogean heroes a kind of selection takes,
-  // and what share of the rest.
-  const recordedRare = roster.filter((h) => RARE.includes(h.faction) && held.has(h.id))
-  const kinds: [string, () => number, () => number][] = [
-    [
-      'few Celestial and Hypogean heroes',
-      () => Math.round(recordedRare.length * 0.1),
-      () => 0.6 + random() * 0.35,
-    ],
-    [
-      'one Celestial or Hypogean hero under the threshold',
-      () => under - 1,
-      () => 0.6 + random() * 0.35,
-    ],
-    ['Celestial and Hypogean heroes at the threshold', () => under, () => 0.6 + random() * 0.35],
-    [
-      'a part of the heroes',
-      () => Math.round(recordedRare.length * (0.2 + random() * 0.3)),
-      () => 0.2 + random() * 0.3,
-    ],
-    ['nearly every hero', () => recordedRare.length, () => 0.85 + random() * 0.15],
+  // What share of the heroes a kind of selection takes.
+  const kinds: [string, () => number][] = [
+    ['few heroes', () => 0.15 + random() * 0.15],
+    ['a part of the heroes', () => 0.3 + random() * 0.3],
+    ['most heroes', () => 0.6 + random() * 0.25],
+    ['nearly every hero', () => 0.85 + random() * 0.15],
   ]
-  const shuffled = <T>(list: T[]) =>
-    list
-      .map((x) => [random(), x] as const)
-      .sort((a, b) => a[0] - b[0])
-      .map(([, x]) => x)
   interface Selection {
     kind: string
     picks: SlPick[]
@@ -283,15 +282,11 @@ describe('chooseSlSet on 626 seeded selections', () => {
     { kind: 'every hero at P4 R4', picks: roster.map((h) => pickOf(h, true)) },
   ]
   for (let i = 0; i < 500; i++) {
-    const [kind, rare, rest] = kinds[i % kinds.length]!
-    const rareOnes = new Set(shuffled(recordedRare).slice(0, rare()))
-    const restShare = rest()
-    const picks = roster
-      .filter((h) => (RARE.includes(h.faction) ? rareOnes.has(h) : random() < restShare))
-      .map((h) => pickOf(h, false))
+    const [kind, share] = kinds[i % kinds.length]!
+    const kept = share()
+    const picks = roster.filter(() => random() < kept).map((h) => pickOf(h, false))
     selections.push({ kind, picks })
-    // One in four again with every unrecorded hero, which can never keep the
-    // season before's teams out.
+    // One in four again with every unrecorded hero.
     if (i % 4 === 0)
       selections.push({
         kind,
@@ -300,16 +295,21 @@ describe('chooseSlSet on 626 seeded selections', () => {
       })
   }
 
+  // The selections that fall back on every board would wait most of a minute
+  // on measured fits; search.test.ts checks the search against fits.
+  const whole = wholeFit(data)
+
   for (const kind of [...new Set(selections.map((s) => s.kind))])
-    it(`holds the generator's rules for ${kind}`, { timeout: 30_000 }, () => {
+    it(`holds the generator's rules for ${kind}`, () => {
       const answers = new Map<number, SlChoice | null>()
       selections.forEach((s, i) => {
         if (s.kind !== kind) return
-        const set = choose(s.picks)
+        const set = choose(s.picks, boards, whole)
         answers.set(i, set)
-        expect(!!set, `selection ${i}: a set exactly when its teams fill every map`).toBe(
-          fills(new Set(s.picks.map((p) => p.id))),
-        )
+        expect(
+          !!set,
+          `selection ${i}: a set exactly when the teams it may take fill every map`,
+        ).toBe(fills(new Set(s.picks.map((p) => p.id))))
         if (set) holds(s.picks, set)
       })
       const again = selections.flatMap((s, i) =>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* The PvP team generator: for the heroes and levels a visitor picks, the set
    of recorded teams, one per board and no hero twice, with the best chance to
-   win a match (lib/pvp/sl), chosen in the Supreme League worker (useSlEngine)
+   win a match (lib/pvp), chosen in the Supreme League worker (useSlEngine)
    so the page stays responsive. The boards are a Teams mode on one of its map
    lists, picked as on the Teams page, or the boards of the page Generate's ↗
-   opened this one from (lib/pvp/sl/generator/handover), drawn on arrival and
+   opened this one from (lib/pvp/generator/handover), drawn on arrival and
    offered back with Open in Arena or Teams. The picker edits a copy of the
    active roster, so trying a hero out never changes the roster, and picking or
    importing another roster takes a fresh copy. The set is chosen only on
@@ -34,19 +34,19 @@ import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
-import type { SlData } from '@/lib/pvp/sl/data/types'
-import { shownFormation, type BoardFormation } from '@/lib/pvp/sl/generator/formation'
+import type { SlData } from '@/lib/pvp/data/types'
+import { shownFormation, type BoardFormation } from '@/lib/pvp/generator/formation'
 import {
   generatorMode,
   generatorPagePath,
   isGeneratorFrom,
   type GeneratorFrom,
-} from '@/lib/pvp/sl/generator/handover'
-import { slPicks } from '@/lib/pvp/sl/generator/picks'
-import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
-import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
-import { choiceSeason, slTeamData } from '@/lib/pvp/sl/generator/team'
-import type { SlChoice, SlPick } from '@/lib/pvp/sl/generator/types'
+} from '@/lib/pvp/generator/handover'
+import { slPicks } from '@/lib/pvp/generator/picks'
+import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
+import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
+import { slTeamData } from '@/lib/pvp/generator/team'
+import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { canonicalLevels } from '@/lib/rosters'
 import {
   DEFAULT_TEAM_MODE,
@@ -216,12 +216,11 @@ const generate = async (): Promise<void> => {
     const tried = new Map<string, Promise<SwapPreview | null>>()
     const teams = (set?.teams ?? []).map((t, index): SlShownTeam => {
       const board = boards[index]!
-      const family = t.family === null ? null : choiceSeason(file, t).families[t.family]!
+      const family = t.family === null ? null : file.families[t.family]!
       return {
         map: board.map,
         group: family && { name: family.name, core: family.core },
-        // The comp's record is from the map its teams came from.
-        comp: board.source !== null ? t.comp : null,
+        comp: t.comp,
         core: t.core,
         flex: t.flex,
         pairs: t.pairs,
@@ -249,7 +248,6 @@ const generate = async (): Promise<void> => {
       from: backTo(boards),
       chance: set.chance,
       odds: set.odds,
-      beforeUnder: file.before ? (file.beforeUnder ?? null) : null,
       teams,
       encode: (formations) => slTeamData(file, set, picks, boards, formations),
     }
@@ -367,10 +365,8 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
       v-if="heading"
       :show="aboutOpen"
       page="sl"
-      :season="heading.season"
       :date="heading.date"
-      :sample="heading.sample"
-      :before="heading.before"
+      :seasons="heading.seasons"
       @close="aboutOpen = false"
     />
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.sl-previous-season') }}</p>

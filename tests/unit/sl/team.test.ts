@@ -19,10 +19,10 @@ import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { ruleUnit } from '@/lib/placement/reach'
 import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementTeam } from '@/lib/placement/types'
-import { loadSlData } from '@/lib/pvp/sl/data/codec'
-import type { SlData, SlUnit } from '@/lib/pvp/sl/data/types'
-import { chooseSlSet } from '@/lib/pvp/sl/generator/chooser'
-import { slFit } from '@/lib/pvp/sl/generator/fit'
+import { loadSlData } from '@/lib/pvp/data/codec'
+import type { SlData, SlUnit } from '@/lib/pvp/data/types'
+import { chooseSlSet } from '@/lib/pvp/generator/chooser'
+import { slFit } from '@/lib/pvp/generator/fit'
 import {
   boardDraws,
   boardPlacement,
@@ -30,36 +30,32 @@ import {
   engineFormation,
   shownFormation,
   sideExplanation,
-} from '@/lib/pvp/sl/generator/formation'
-import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/sl/generator/setType'
-import { previewSwap } from '@/lib/pvp/sl/generator/swapPreview'
-import { recordedUnits, slTeamData } from '@/lib/pvp/sl/generator/team'
-import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/sl/generator/types'
-import { readSlFile } from '@/lib/pvp/sl/model/reader'
+  summonedPhantimal,
+} from '@/lib/pvp/generator/formation'
+import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
+import { previewSwap } from '@/lib/pvp/generator/swapPreview'
+import { fileTeam, recordedUnits, slTeamData } from '@/lib/pvp/generator/team'
+import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
+import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
 import { DEFAULT_VARIANT, matchVariant, TEAM_VARIANTS, variantMaps } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
+import { wholeFit } from '../fixtures/slSeason'
 
 // The page fetches the file the build emits, so the test serves it the same bytes.
 vi.stubGlobal(
   'fetch',
-  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/sl.bin', import.meta.url))),
+  async () => new Response(readFileSync(new URL('../../../src/pack/pvp/pvp.bin', import.meta.url))),
 )
-const shipped = await loadSlData()
+const data = await loadSlData()
 vi.unstubAllGlobals()
-// The shipped teams under chosen map keys, so these tests hold whichever
-// rotation the shipped file is on.
-const fileOn = (keys: readonly string[]): SlData => ({
-  ...shipped,
-  maps: [...keys],
-})
-const data = fileOn(TEAM_VARIANTS.sl.maps)
 const reader = readSlFile(data)
 const faction = new Map(loadCharacters().map((c) => [c.id, c.faction]))
-const picks: SlPick[] = [...new Set(data.teams.flatMap((t) => t.heroes))].map((id, i) => ({
+const mapTeams = data.maps.flatMap((m) => m.teams)
+const picks: SlPick[] = [...new Set(mapTeams.flatMap((t) => t.heroes))].map((id, i) => ({
   id,
   faction: faction.get(id)!,
   paragon: i % 5,
@@ -69,11 +65,12 @@ const chooseOn = (file: SlData, boards: SlBoard[], from = picks) =>
   chooseSlSet(file, reader, from, () => true, boards)
 const boards = slBoards(data, TEAM_VARIANTS.sl.maps)
 const set = chooseOn(data, boards)!
+const draws = boardDraws(data, set, boards)
+const formations = draws.map((draw) => shownFormation(draw, false))
 const byTile = (a: readonly number[], b: readonly number[]) => a[0]! - b[0]!
-// Every board of a set as the page draws it: in its team's recorded placement,
-// or the engine's for a team with none. boardDraws would also have the
-// engine explain a recorded placement, which `data`'s renamed maps can leave
-// with a unit off its map's ally tiles, so it is left out here.
+// Every board of a set in its team's recorded placement, or the engine's for a
+// team with none, with no unit moved for the Spirit Mark, so a file of another
+// season draws the same tiles.
 const drawnOf = (file: SlData, chosen: SlChoice, on: SlBoard[] = boards) =>
   chosen.teams.map((team, i) => ({
     units: recordedUnits(file, team) ?? engineFormation(file, team, on[i]!).units,
@@ -83,8 +80,7 @@ const decoded = (season: number) => {
   return decodeMultiGridStateFromUrl(slTeamData(file, set, picks, boards, drawnOf(file, set)))!
 }
 
-// Each board of a saved set against the team it came from, in that team's
-// season.
+// Each board of a saved set against the team it came from.
 const expectSaved = (
   chosen: SlChoice,
   chosenWith: SlPick[],
@@ -100,8 +96,9 @@ const expectSaved = (
   expect(state.season).toBe(CURRENT_SEASON)
   state.boards.forEach((board, i) => {
     const choice = chosen.teams[i]!
-    const team = (choice.source === 0 ? data : data.before!).teams[choice.team]!
-    expect(board.m).toBe(data.maps[team.map])
+    const team = fileTeam(data, choice)
+    expect(board.m).toBe(chosenOn[i]!.layout.key)
+    if (choice.source !== null) expect(data.maps[choice.source]!.key).toBe(board.m)
     const { units } = formations[i]!
     const saved = [
       ...(board.c ?? []),
@@ -126,7 +123,7 @@ const expectSaved = (
 
 describe('a set saved as a team', () => {
   it('puts each team on its map with its units, artifact, phantimal and the levels chosen with', () => {
-    expect(set.teams).toHaveLength(data.maps.length)
+    expect(set.teams).toHaveLength(boards.length)
     expectSaved(set, picks)
   })
 
@@ -135,18 +132,6 @@ describe('a set saved as a team', () => {
     const three = chooseOn(data, onMapOne)!
     expect(three.teams).toHaveLength(3)
     expectSaved(three, picks, onMapOne, '3v3')
-  })
-
-  // A selection with no Celestial or Hypogean hero takes last season's teams too.
-  it.skipIf(!data.before)("saves last season's teams the same way", () => {
-    const fewer: SlPick[] = [
-      ...new Set([...data.teams, ...data.before!.teams].flatMap((t) => t.heroes)),
-    ]
-      .filter((id) => !['celestial', 'hypogean'].includes(faction.get(id)!))
-      .map((id) => ({ id, faction: faction.get(id)!, paragon: 4, refinement: 4 }))
-    const chosen = chooseOn(data, boards, fewer)!
-    expect(chosen.teams.some((t) => t.source === 1)).toBe(true)
-    expectSaved(chosen, fewer)
   })
 
   // After Stargazer's cutover the file's seasonal ids name the new season's
@@ -169,32 +154,39 @@ describe('a set saved as a team', () => {
   })
 })
 
+// The shipped file with the last two league maps under keys no entry holds,
+// as a file from before a rotation has them.
 describe('a file behind the current maps', () => {
   const current = TEAM_VARIANTS.sl.maps
-  const gone = Object.keys(MAPS).filter((key) => !current.includes(key))
-  const behind = fileOn([...current.slice(0, 3), gone[0]!, gone[1]!])
+  const gone = Object.keys(MAPS).filter((key) => !data.maps.some((m) => m.key === key))
+  const renamed = new Map(current.slice(3).map((key, i) => [key, gone[i]!]))
+  const behind: SlData = {
+    ...data,
+    maps: data.maps.map((m) => ({ ...m, key: renamed.get(m.key) ?? m.key })),
+  }
   const onCurrent = slBoards(behind, current)
+  const keyOf = (source: number | null) => (source === null ? null : behind.maps[source]!.key)
 
-  it('stands every board on a current map, and gives a new map the teams of every map', () => {
+  it('stands every board on a current map, and gives a new map the rows of every map', () => {
     expect(onCurrent.map((board) => board.layout.key)).toEqual(current)
-    expect(onCurrent.map((board) => board.source)).toEqual([0, 1, 2, null, null])
-  })
-
-  it('keeps a held map on its own teams wherever the file holds it', () => {
-    const shuffled = slBoards(fileOn([...current.slice(0, 3), gone[0]!, current[3]!]), current)
-    expect(shuffled.map((board) => board.source)).toEqual([0, 1, 2, 4, null])
+    expect(onCurrent.map((board) => keyOf(board.source))).toEqual([
+      ...current.slice(0, 3),
+      null,
+      null,
+    ])
   })
 
   it('leaves the 5v5 and 3v3 types on map 1, which the file still holds', () => {
+    const source = behind.maps.findIndex((m) => m.key === current[0])
     for (const mode of ['5v5', '3v3'] as const) {
       for (const board of slBoards(behind, variantMaps(mode, DEFAULT_VARIANT))) {
-        expect(board).toEqual({ layout: presetLayout(current[0]!), map: 0, source: 0 })
+        expect(board).toEqual({ layout: presetLayout(current[0]!), map: 0, source })
       }
     }
   })
 
   it('draws held maps as recorded and new maps in the engine formation, and saves as Supreme League', () => {
-    const chosen = chooseOn(behind, onCurrent)!
+    const chosen = chooseSlSet(behind, reader, picks, () => true, onCurrent, wholeFit(behind))!
     const draws = boardDraws(behind, chosen, onCurrent)
     const formations = draws.map((draw) => shownFormation(draw, false))
     expect(draws.map((draw) => !!draw.played)).toEqual(
@@ -318,8 +310,7 @@ describe("the engine's formations", () => {
       teams.map((team) => ({ ...team, placements: [] }))
     const without: SlData = {
       ...data,
-      teams: unplaced(data.teams),
-      before: data.before && { ...data.before, teams: unplaced(data.before.teams) },
+      maps: data.maps.map((m) => ({ ...m, teams: unplaced(m.teams) })),
     }
     expect(engineOf(without)).toEqual(suggested)
   })
@@ -338,13 +329,6 @@ describe("the engine's formations", () => {
   })
 })
 
-// The shipped file on its own maps, so a recorded board stands on the map it was
-// recorded on.
-const onShipped = slBoards(shipped, TEAM_VARIANTS.sl.maps)
-const shippedSet = chooseOn(shipped, onShipped)!
-const shippedDraws = boardDraws(shipped, shippedSet, onShipped)
-const shippedFormations = shippedDraws.map((draw) => shownFormation(draw, false))
-
 // How much of its phantimal's own goals, its Spirit Mark's, a team meets with
 // its units on these tiles.
 const phantimalMet = (
@@ -354,7 +338,7 @@ const phantimalMet = (
   units: readonly SlUnit[],
 ): number => {
   const placing = new PlacementBoard(team, board.layout, PLACEMENT_LOOKUPS)
-  const scorer = new PlacementScorer(placing, team, boardPlacement(shipped, board, choice))
+  const scorer = new PlacementScorer(placing, team, boardPlacement(data, board, choice))
   const tileOf = new Map(units.map(([hexId, unit]) => [unit, hexId]))
   placing.place(placing.units.map((unit) => tileOf.get(unit)!))
   return scorer
@@ -374,53 +358,62 @@ const keepsUnmoved = (recorded: readonly SlUnit[], drawn: readonly SlUnit[], mov
 
 describe('a recorded board', () => {
   it('keeps every unit on its recorded tile but those moved for the Spirit Mark, and is explained as drawn', () => {
-    expect(onShipped.some((board) => board.source !== null)).toBe(true)
-    shippedSet.teams.forEach((team, index) => {
-      const played = shippedDraws[index]!.played
-      expect(!!played).toBe(onShipped[index]!.source !== null && !!recordedUnits(shipped, team))
+    expect(boards.some((board) => board.source !== null)).toBe(true)
+    set.teams.forEach((team, index) => {
+      const played = draws[index]!.played
+      expect(!!played).toBe(boards[index]!.source !== null && !!recordedUnits(data, team))
       if (!played) return
       const { units, why, moved } = played
-      expect(keepsUnmoved(recordedUnits(shipped, team)!, units, moved)).toBe(true)
+      expect(keepsUnmoved(recordedUnits(data, team)!, units, moved)).toBe(true)
       const explained = why.units.map(({ unit, tile }) => [tile, unit])
       expect(explained.sort(byTile)).toEqual([...units].sort(byTile))
     })
   })
 
-  // The shipped teams with a recorded phantimal, each on the map it was recorded on.
+  // A shipped team on the map it was recorded on, drawn in its first placement.
+  const onOwnMap = (source: number, index: number) => {
+    const t = data.maps[source]!.teams[index]!
+    const choice: SlChoiceTeam = {
+      source,
+      team: index,
+      heroes: t.heroes,
+      family: t.family,
+      chance: 0,
+      comp: null,
+      artifact: t.artifacts[0]?.[0] ?? null,
+      placement: 0,
+      core: [],
+      flex: [],
+      pairs: [],
+    }
+    const board: SlBoard = { layout: presetLayout(data.maps[source]!.key)!, map: 0, source }
+    const played = boardDraws(data, { chance: 0, odds: [], teams: [choice] }, [board])[0]!.played!
+    return { t, choice, board, played }
+  }
+
+  // The first shipped teams of each map with a recorded phantimal, each on its map.
   it('moves the phantimal, and at most one hero, only where its Spirit Mark lands better', () => {
-    const tried = shipped.teams.flatMap((t, index) => {
-      if (!t.placements[0]?.s.length) return []
-      const choice: SlChoiceTeam = {
-        source: 0,
-        team: index,
-        heroes: t.heroes.filter((id) => !inPhantimalBand(id)),
-        family: t.family,
-        chance: 0,
-        comp: null,
-        artifact: t.artifacts[0]?.[0] ?? null,
-        placement: 0,
-        core: [],
-        flex: [],
-        pairs: [],
-      }
-      const board: SlBoard = { layout: presetLayout(shipped.maps[t.map]!)!, map: 0, source: t.map }
-      const team = boardTeam(shipped, choice.heroes, choice.artifact)
-      const recorded = recordedUnits(shipped, choice)!
+    const tried = data.maps.flatMap((m, source) =>
+      m.teams
+        .flatMap((t, index) => (t.placements[0]?.s.length ? [{ source, index }] : []))
+        .slice(0, 8),
+    )
+    const drawn = tried.flatMap(({ source, index }) => {
+      const { choice, board, played } = onOwnMap(source, index)
+      const team = boardTeam(data, choice.heroes, choice.artifact)
+      const recorded = recordedUnits(data, choice)!
       if (!recorded.some(([, unit]) => unit === team.phantimal)) return []
-      return [{ choice, board, team, recorded }]
-    })
-    const drawn = tried.slice(0, 60).map(({ choice, board, team, recorded }) => {
-      const { units, moved } = boardDraws(shipped, { chance: 0, odds: [], teams: [choice] }, [
-        board,
-      ])[0]!.played!
-      return {
-        moved,
-        phantimal: team.phantimal,
-        kept: keepsUnmoved(recorded, units, moved),
-        asRecorded: JSON.stringify(units) === JSON.stringify(recorded),
-        gain:
-          phantimalMet(team, choice, board, units) - phantimalMet(team, choice, board, recorded),
-      }
+      const { units, moved } = played
+      return [
+        {
+          moved,
+          phantimal: team.phantimal,
+          kept: keepsUnmoved(recorded, units, moved),
+          asRecorded: JSON.stringify(units) === JSON.stringify(recorded),
+          gain:
+            phantimalMet(team, choice, board, units) - phantimalMet(team, choice, board, recorded),
+        },
+      ]
     })
     const moves = drawn.filter(({ moved }) => moved.length)
     const keeps = drawn.filter(({ moved }) => !moved.length)
@@ -437,15 +430,40 @@ describe('a recorded board', () => {
     ).toBe(true)
     expect(keeps.every(({ asRecorded }) => asRecorded)).toBe(true)
   })
+
+  // A board of an earlier season recorded no phantimal.
+  it('places the phantimal its heroes summon on a board that recorded none, without listing it as moved', () => {
+    const tried = data.maps.flatMap((m, source) =>
+      m.teams
+        .flatMap((t, index) =>
+          t.placements[0] &&
+          !t.placements[0].s.length &&
+          summonedPhantimal(data, t.heroes) !== undefined
+            ? [{ source, index }]
+            : [],
+        )
+        .slice(0, 3),
+    )
+    expect(tried.length).toBeGreaterThan(0)
+    for (const { source, index } of tried) {
+      const { t, choice, played } = onOwnMap(source, index)
+      const phantimal = summonedPhantimal(data, t.heroes)!
+      const recorded = recordedUnits(data, choice)!
+      expect(played.units.some(([, unit]) => unit === phantimal)).toBe(true)
+      expect(played.moved).not.toContain(phantimal)
+      expect(played.moved.length).toBeLessThanOrEqual(1)
+      expect(keepsUnmoved(recorded, played.units, played.moved)).toBe(true)
+    }
+  })
 })
 
 describe('a swap tried on a board', () => {
-  const chosen = shippedSet
+  const chosen = set
   const tryOn = (index: number, out: number[], into: number[]) => {
     const team = chosen.teams[index]!
-    const { units } = shippedFormations[index]!
-    const swap = { board: onShipped[index]!, team, units, out, into, picks }
-    return previewSwap(shipped, readSlFile(shipped), slFit(shipped), () => true, swap)
+    const { units } = formations[index]!
+    const swap = { board: boards[index]!, team, units, out, into, picks }
+    return previewSwap(data, reader, slFit(data), () => true, swap)
   }
 
   it("keeps every unit and the team's chance when nothing changes", () => {
@@ -460,7 +478,7 @@ describe('a swap tried on a board', () => {
   it('brings in the hero swapped in and takes out the one it replaces', () => {
     const index = chosen.teams.findIndex((team) => team.flex.length)
     const { out, options } = chosen.teams[index]!.flex[0]!
-    const outTile = shippedFormations[index]!.units.find(([, unit]) => unit === out)![0]
+    const outTile = formations[index]!.units.find(([, unit]) => unit === out)![0]
     const preview = tryOn(index, [out], [options[0]!])
     expect(preview.joined.map(([, unit]) => unit)).toContain(options[0])
     expect(preview.left).toContain(outTile)

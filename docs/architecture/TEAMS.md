@@ -129,7 +129,7 @@ It is deliberately not a restore. It clears the destination side with `clearTeam
 
 A team of the active mode loads board for board, and a 1v1 team loads onto the active board in any mode. Invert loads onto the other side and rotates every hex 180° (`rotatedHexId`).
 
-Generate on the Arena and Teams, and the PvP team generator's Open in Arena or Open in Teams, put a generated set on the ally side through the same loader (`useFillSide`). The two pages pass each other notes in the browser's history entry, never stored and in no link (`src/lib/pvp/sl/generator/handover.ts`): Generate's ↗ leaves `generatorFrom` (`arena`, `1v1`, `3v3` or `5v5`), and the generator reads that page's saved boards; Open in leaves `generatedSide`, the set as an encoded team, which the Arena or Teams page reads once and clears.
+Generate on the Arena and Teams, and the PvP team generator's Open in Arena or Open in Teams, put a generated set on the ally side through the same loader (`useFillSide`). The two pages pass each other notes in the browser's history entry, never stored and in no link (`src/lib/pvp/generator/handover.ts`): Generate's ↗ leaves `generatorFrom` (`arena`, `1v1`, `3v3` or `5v5`), and the generator reads that page's saved boards; Open in leaves `generatedSide`, the set as an encoded team, which the Arena or Teams page reads once and clears.
 
 ## Screenshot import
 

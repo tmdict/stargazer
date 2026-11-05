@@ -19,7 +19,7 @@ import {
   type PlacementExplanation,
   type UnitPlacement,
 } from '@/lib/placement/explain'
-import type { SwapPreview } from '@/lib/pvp/sl/generator/swapPreview'
+import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import type { PreviewBoard, PreviewUnit } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
 

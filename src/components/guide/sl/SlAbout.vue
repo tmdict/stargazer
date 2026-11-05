@@ -6,18 +6,17 @@
 import { computed } from 'vue'
 
 import BaseModal from '@/components/modals/BaseModal.vue'
-import type { SlSample } from '@/lib/pvp/sl/data/types'
+import type { SlSample, SlSeason } from '@/lib/pvp/data/types'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 import { textGap } from '@/utils/skillLabels'
 
-const { page, season, date, sample, before } = defineProps<{
+const { page, date, seasons } = defineProps<{
   show: boolean
   page: 'sl' | 'www'
-  season: number
   date: string
-  sample: SlSample
-  before: (SlSample & { season: number }) | null
+  // The live season first.
+  seasons: SlSeason[]
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -47,17 +46,23 @@ const counts = (s: SlSample): Record<string, string> => {
 // The sentence around the report's link, which takes the place of {report}.
 const SLOT = '\u0000'
 const reportText = computed(() => i18n.t('app.sl-about-report', { report: SLOT }).split(SLOT))
-const reportHref = computed(() => pvpReportHref(season, i18n.currentLocale))
+const season = computed(() => seasons[0]!.season)
+const reportHref = computed(() => pvpReportHref(season.value, i18n.currentLocale))
 
-const lead = computed(() =>
-  [
-    i18n.t(`app.${page}-about-sample`, { season, date, ...counts(sample) }),
-    ...(before
-      ? [i18n.t('app.sl-about-before', { season: before.season, ...counts(before) })]
-      : []),
+const lead = computed(() => {
+  const [live, ...earlier] = seasons
+  return [
+    i18n.t(`app.${page}-about-sample`, { season: live!.season, date, ...counts(live!.sample) }),
+    ...earlier.map((s) =>
+      i18n.t('app.sl-about-earlier', {
+        season: s.season,
+        share: Math.round(s.weight * 100),
+        ...counts(s.sample),
+      }),
+    ),
     reportText.value[0],
-  ].join(textGap(i18n.currentLocale)),
-)
+  ].join(textGap(i18n.currentLocale))
+})
 </script>
 
 <template>

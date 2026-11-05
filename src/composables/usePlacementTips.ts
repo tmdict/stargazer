@@ -16,7 +16,7 @@ import {
   type PlacementExplanation,
   type PlacementReason,
 } from '@/lib/placement/explain'
-import type { SlUnit } from '@/lib/pvp/sl/data/types'
+import type { SlUnit } from '@/lib/pvp/data/types'
 import { Team } from '@/lib/types/team'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { useDragDrop } from './useDragDrop'

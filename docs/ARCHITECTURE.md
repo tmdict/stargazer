@@ -39,7 +39,7 @@ Arrows show import direction.
 
 Three exceptions are deliberate. `src/stores/grids.ts` imports `createGridContext` from a composable, because the store that holds the boards is the one that builds them; no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and `src/utils/teamsBoardSize.ts` imports a type from the grid store; every other utility is store-free. Domain and utility modules import each other where needed (`lib/seasonal.ts` reads the data loader, the binary encoder reads `lib/teams/wire.ts`), so the "never imports" column is the only rule between them.
 
-The Supreme League code in `src/lib/pvp/sl/`, which the PvP team generator and Who Would Win? share, is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
+The Supreme League code in `src/lib/pvp/`, which the PvP team generator and Who Would Win? share, is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
 
 ## Boards
 

@@ -1,6 +1,6 @@
 /* A team's kind, the group in the data file it belongs with, for teams the
- * file holds as other heroes or not at all. Five heroes recorded as a team
- * this season, on any map, take that team's group. Otherwise the recorded
+ * file holds as other heroes or not at all. Five heroes recorded as a team in
+ * any season, on any map, take that team's group. Otherwise the recorded
  * teams sharing the most heroes with it, at least 3, vote, one vote a team,
  * and the group with the most votes wins, the one listed first in the file on
  * a tie. A team outside every group has no vote, and a team with no votes is
