@@ -1,7 +1,8 @@
 /* The placement engine measured against recorded formations, run on your own
- * machine. PLACEMENT_EXPORT names one or more saved-teams exports, joined as a
- * PATH is, and PLACEMENT_OUT the folder, outside the repository, its measures
- * and review page go to, since an export names players. What the engine is
+ * machine. PLACEMENT_EXPORT names one or more saved-teams exports, or folders
+ * of them, joined as a PATH is, and PLACEMENT_OUT the folder, outside the
+ * repository, its measures and review page go to, since an export names
+ * players. What the engine is
  * tuned with comes from the Supreme League data file. Each Supreme League
  * set-up is placed by the engine and set beside the player's own. A season
  * other than the one Stargazer holds phantimals for is placed without its
@@ -17,7 +18,7 @@
  * earlier run's picks.json to compare the picks with. Left out when
  * PLACEMENT_EXPORT is not set. */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { delimiter, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -172,12 +173,30 @@ const pickRatesOf = (season: number): PlacementData['pickRates'] =>
     ]),
   )
 
-function setupsOf(file: string): Setup[] {
-  const exported = JSON.parse(readFileSync(file, 'utf8')) as {
-    teams: { name: string; data: string }[]
+// Every record of the exports, a folder standing for the exports in it. A
+// record saved in two exports counts once.
+function recordsOf(paths: string[]): { name: string; data: string }[] {
+  const files = paths.flatMap((path) =>
+    statSync(path).isDirectory()
+      ? readdirSync(path)
+          .filter((name) => name.endsWith('.json'))
+          .sort()
+          .map((name) => join(path, name))
+      : [path],
+  )
+  const records = new Map<string, { name: string; data: string }>()
+  for (const file of files) {
+    const exported = JSON.parse(readFileSync(file, 'utf8')) as {
+      teams: { id: string; name: string; data: string }[]
+    }
+    for (const record of exported.teams) if (!records.has(record.id)) records.set(record.id, record)
   }
+  return [...records.values()]
+}
+
+function setupsOf(records: { name: string; data: string }[]): Setup[] {
   const found = new Map<string, Setup>()
-  for (const record of exported.teams) {
+  for (const record of records) {
     const name = RECORD_NAME.exec(record.name.replace(/\s*\(copy\)+\s*$/i, ''))
     if (!name) continue
     const season = Number(name[1])
@@ -192,7 +211,7 @@ function setupsOf(file: string): Setup[] {
         if (!side) continue
         // A locked stage repeats a set-up, which counts once.
         const placed = [...side.tiles].sort(([a], [b]) => a - b).map(([u, t]) => `${u}@${t}`)
-        const key = `${players[team - 1]}|${map}|${placed.join(',')}`
+        const key = `${season}|${players[team - 1]}|${map}|${placed.join(',')}`
         if (!found.has(key)) found.set(key, { season, live, map, ...side })
       }
     }
@@ -408,7 +427,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       await decodeSlData(readFileSync(new URL('../../src/pack/pvp/sl.bin', import.meta.url)))
     ).placement
     const margin = liveData.weights.margin ?? 0
-    const recorded = EXPORTS.flatMap(setupsOf)
+    const recorded = setupsOf(recordsOf(EXPORTS))
     const setups = UNITS.length ? recorded.filter(holdsUnit) : recorded
     expect(setups.length, 'set-ups read from the exports').toBeGreaterThan(0)
     // The live season's pick rates come with the data, another season's from its
