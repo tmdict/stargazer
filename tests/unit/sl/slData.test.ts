@@ -5,18 +5,19 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { configTiles } from '@/lib/maps'
 import { decodeSlData, loadSlData } from '@/lib/pvp/data/codec'
 import type { SlData, SlTeam, SlUnit } from '@/lib/pvp/data/types'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
 import { slFit } from '@/lib/pvp/generator/fit'
 import { slBoards } from '@/lib/pvp/generator/setType'
-import { fileTeam } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
+import { Team } from '@/lib/types/team'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
-import { wholeFit } from '../fixtures/slSeason'
+import { fileTeam, wholeFit } from '../fixtures/slSeason'
 
 // The file a deploy ships, as copied in from the external report generator.
 // The page fetches the file the build emits, so the test serves it the same
@@ -239,6 +240,15 @@ describe('chooseSlSet on the shipped data', () => {
 
   it('makes no set from no heroes', () => {
     expect(choose([])).toBeNull()
+  })
+
+  // A row of every map can come from a map with more ally tiles than a board
+  // with records of its own, whose tiles the engine could not place it on.
+  it('gives a team a board with records only where its map has a tile for each unit', () => {
+    const board = boards.find((b) => b.source !== null)!
+    const tiles = configTiles(board.layout.config, Team.ALLY).size
+    expect(fit.stands(board, named.slice(0, tiles + 1))).toBe(false)
+    expect(fit.stands(board, data.maps[board.source!]!.teams[0]!.heroes)).toBe(true)
   })
 })
 

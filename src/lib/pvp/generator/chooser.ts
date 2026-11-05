@@ -193,7 +193,10 @@ function searcher(
     const byDepth = order.map((i) => pools[i]!)
     let best: Found | null = null
     const chosen: Option[] = []
-    const used = new Uint8Array(Math.max(...pools.flat().flatMap((t) => t.heroes)) + 1)
+    // One spread over every pool's heroes passes tens of thousands of arguments
+    // once five boards share the rows of every map, near Safari's limit for a call.
+    const top = pools.reduce((m, pool) => pool.reduce((n, t) => Math.max(n, ...t.heroes), m), 0)
+    const used = new Uint8Array(top + 1)
     const fits = (t: Option): boolean => !t.heroes.some((h) => used[h])
     // first[d][j]: the first team of depth j's pool that fits beside the teams
     // chosen above depth d, and comes after those its pool gave them. Teams

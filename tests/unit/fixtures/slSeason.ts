@@ -6,6 +6,7 @@
 import { lineupKey } from '@/lib/pvp/data/sides'
 import type { SlData, SlEveryMapTeam, SlModel, SlTeam } from '@/lib/pvp/data/types'
 import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
+import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
 
 // A lineup on map `map`, its games counted whole by a single player.
 export type MadeUpTeam = Pick<SlTeam, 'family' | 'heroes' | 'artifacts' | 'decided'> & {
@@ -16,6 +17,12 @@ export const seededRandom = (seed: number) => () => {
   seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
   return seed / 2 ** 32
 }
+
+// A chosen team's record in the file: on one map, or over every map.
+export const fileTeam = (
+  data: SlData,
+  { source, team }: Pick<SlChoiceTeam, 'source' | 'team'>,
+): SlTeam => (source === null ? data.everyMap[team]! : data.maps[source]!.teams[team]!)
 
 // A fit that leaves every team all of its effects, for a test of rules a fit
 // cannot change: a fit decides which allowed set wins, never whether one

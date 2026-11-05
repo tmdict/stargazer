@@ -2,9 +2,9 @@
  * machine. PLACEMENT_EXPORT names one or more saved-teams exports, or folders
  * of them, joined as a PATH is, and PLACEMENT_OUT the folder, outside the
  * repository, its measures and review page go to, since an export names
- * players. What the engine is tuned with comes from the Supreme League data
- * file. Each recorded set-up, every format's, is placed by the engine and set
- * beside the player's own. A season other than the one Stargazer holds
+ * players. What the engine is tuned with comes from the PvP data file. Each
+ * recorded set-up, every format's, is placed by the engine and set beside the
+ * player's own. A season other than the one Stargazer holds
  * phantimals for is placed without its phantimal and seasonal artifact, and
  * scores no buff tile, since the map files hold this season's, and how often
  * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is

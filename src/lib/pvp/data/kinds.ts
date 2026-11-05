@@ -5,8 +5,7 @@
  * and the group with the most votes wins, the one listed first in the file on
  * a tie. A team outside every group has no vote, and a team with no votes is
  * outside every group (null). The external report generator publishes this
- * rule with the file's format and applies it when it writes the file, so this
- * copy follows its version. */
+ * rule with the file's format, so this copy follows its version. */
 
 import { lineupKey } from './sides'
 import type { SlTeam } from './types'

@@ -6,7 +6,7 @@ import type { SlData, SlModel, SlTeam } from '@/lib/pvp/data/types'
 import { shortfall } from '@/lib/pvp/data/upgrades'
 import { artifactClaims, handOutArtifacts } from '@/lib/pvp/generator/artifacts'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
-import type { SlFit } from '@/lib/pvp/generator/fit'
+import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
 import type { SlBoard } from '@/lib/pvp/generator/setType'
 import type { SlPick } from '@/lib/pvp/generator/types'
 import { sigmoid } from '@/lib/pvp/model/odds'
@@ -72,7 +72,7 @@ const randomSeason = (next: () => number, everyMap = false): SlData => {
   return everyMap ? data : { ...data, everyMap: [] }
 }
 
-// The chooser reads only a board's key, so the made-up maps need no tiles.
+// The made-up maps have no tiles, so a search on them lets every team stand there.
 const layoutOf = (key: string): MapLayout => ({
   key,
   config: { id: 0, name: '', grid: [] },
@@ -81,6 +81,7 @@ const layoutOf = (key: string): MapLayout => ({
 
 const boardsOn = (data: SlData, maps: number[]): SlBoard[] =>
   maps.map((source) => ({ layout: layoutOf(data.maps[source]!.key), map: source, source }))
+const standing = (data: SlData): SlFit => ({ ...slFit(data), stands: () => true })
 
 // The chance of winning most of the maps, over every way the maps can fall.
 const winningMost = (chances: number[]): number => {
@@ -226,6 +227,7 @@ describe('the search', () => {
           data,
           data.maps.map((_, i) => i),
         ),
+        standing(data),
       )
       expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)
@@ -299,6 +301,7 @@ describe('the search', () => {
         picks,
         () => true,
         boardsOn(data, Array<number>(boards).fill(0)),
+        standing(data),
       )
       expect(set?.teams.map((t) => t.team) ?? null).toEqual(expected?.teams ?? null)
       expect(set?.chance ?? 0).toBeCloseTo(expected?.chance ?? 0, 12)

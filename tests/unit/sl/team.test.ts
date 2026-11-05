@@ -34,7 +34,7 @@ import {
 } from '@/lib/pvp/generator/formation'
 import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import { previewSwap } from '@/lib/pvp/generator/swapPreview'
-import { fileTeam, recordedUnits, slTeamData } from '@/lib/pvp/generator/team'
+import { recordedUnits, slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
@@ -43,7 +43,7 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
-import { wholeFit } from '../fixtures/slSeason'
+import { fileTeam, wholeFit } from '../fixtures/slSeason'
 
 // The page fetches the file the build emits, so the test serves it the same bytes.
 vi.stubGlobal(

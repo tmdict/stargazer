@@ -17,16 +17,12 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlData, SlTeam, SlUnit } from '../data/types'
+import type { SlData, SlUnit } from '../data/types'
 import type { BoardFormation } from './formation'
 import type { SlBoard } from './setType'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
 
 type ChoiceOf = Pick<SlChoiceTeam, 'source' | 'team'>
-
-// A chosen team's record in the file: on one map, or over every map.
-export const fileTeam = (data: SlData, { source, team }: ChoiceOf): SlTeam =>
-  source === null ? data.everyMap[team]! : data.maps[source]!.teams[team]!
 
 // The map in the file a chosen team was recorded on, or for a row of every
 // map the one where it has the most games.

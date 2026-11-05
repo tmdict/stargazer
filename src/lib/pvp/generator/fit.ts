@@ -1,12 +1,12 @@
-/* How much of a team's own effects its board's map leaves it. A board on a map
- * with no records takes the rows of every map (chooser.ts) that have an ally
- * tile there for each of their units (`stands`). A team on another map than
- * the one it was recorded on keeps the points its goals earn in the engine's
- * best placement on the board's map, as a share of those on its own map (for
- * a row of every map, its home), at most all of them. A team on its own map,
- * or one whose goals earn nothing there, keeps all of them. Both placements
- * leave out the artifact and the enemy units' rules, so the share is the
- * team's alone. */
+/* How much of a team's own effects its board's map leaves it. A board takes
+ * only teams that have an ally tile on its map for each of their units
+ * (`stands`), since a row of every map (chooser.ts) may have been recorded on
+ * a map with more tiles. A team on another map than the one it was recorded
+ * on keeps the points its goals earn in the engine's best placement on the
+ * board's map, as a share of those on its own map (for a row of every map,
+ * its home), at most all of them. A team on its own map, or one whose goals
+ * earn nothing there, keeps all of them. Both placements leave out the
+ * artifact and the enemy units' rules, so the share is the team's alone. */
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { configTiles, presetLayout, type MapLayout } from '@/lib/maps'
@@ -52,7 +52,6 @@ export function slFit(data: SlData): SlFit {
     from === board.source ? 1 : measured.get(keyOf(board, heroes, from))
   return {
     stands(board, heroes) {
-      if (board.source !== null) return true
       const key = `${board.layout.key}|${heroes.join(',')}`
       if (!room.has(key)) {
         const tiles = configTiles(board.layout.config, Team.ALLY).size

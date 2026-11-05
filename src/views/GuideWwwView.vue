@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* Who Would Win?: two teams of heroes at their levels, each with an optional
-   artifact, and which should win and why from this season's recorded Supreme
-   League games (lib/pvp/www), worked out in the Supreme League worker
+   artifact, and which should win and why from the PvP data file's model of
+   recorded games (lib/pvp/www), worked out in the Supreme League worker
    (useSlEngine). One game holds one such game, and Match the five games of a
    Supreme League match, with Team A's chance to win the match; useWwwGames
    holds the games, and Screenshots fills all five from screenshots of the
