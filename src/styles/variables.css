@@ -62,7 +62,6 @@
   --placement-better: var(--import-good);
   --placement-ring-focus: var(--color-primary);
   --placement-ring-named: #e0b230;
-  --placement-ring-edge: transparent;
   --placement-name: var(--color-header-gold);
   --tile-wall-blocked: #858b91;
   --tile-wall-breakable: #a0a59d;
@@ -339,7 +338,6 @@
   --placement-also-fine: var(--color-text-primary);
   --placement-ring-focus: var(--color-info);
   --placement-ring-named: var(--color-warning);
-  --placement-ring-edge: rgba(0, 0, 0, 0.35);
   --placement-name: var(--color-warning);
   --tile-artifact-fill-hover: rgba(255, 255, 255, 0.16);
   --tile-wall-blocked: var(--tile-stroke);

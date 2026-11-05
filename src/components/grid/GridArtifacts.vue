@@ -466,15 +466,11 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 }
 
 .rules-own .artifact-circle {
-  box-shadow:
-    0 0 0 3px var(--placement-ring-focus),
-    0 0 0 5px var(--placement-ring-edge);
+  box-shadow: 0 0 0 3px var(--placement-ring-focus);
 }
 
 .rules-named .artifact-circle {
-  box-shadow:
-    0 0 0 3px var(--placement-ring-named),
-    0 0 0 5px var(--placement-ring-edge);
+  box-shadow: 0 0 0 3px var(--placement-ring-named);
 }
 
 .retired-artifact {

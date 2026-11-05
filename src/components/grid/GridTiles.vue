@@ -161,7 +161,6 @@ const rulesMarks = computed(() => {
     dash: `${5 * scale} ${4 * scale}`,
     outline: 2.4 * scale,
     ring: 3.2 * scale,
-    ringEdge: 7 * scale,
   }
 })
 
@@ -599,19 +598,14 @@ onUnmounted(() => {
               :stroke-dasharray="tile.better ? undefined : rulesMarks.dash"
             />
           </template>
-          <template v-for="ring in rulesMarks.rings" :key="`rules-ring-${ring.hexId}`">
-            <polygon
-              class="rules-ring-edge"
-              :points="ring.points"
-              :stroke-width="rulesMarks.ringEdge"
-            />
-            <polygon
-              class="rules-ring"
-              :class="{ focus: ring.focus }"
-              :points="ring.points"
-              :stroke-width="rulesMarks.ring"
-            />
-          </template>
+          <polygon
+            v-for="ring in rulesMarks.rings"
+            :key="`rules-ring-${ring.hexId}`"
+            class="rules-ring"
+            :class="{ focus: ring.focus }"
+            :points="ring.points"
+            :stroke-width="rulesMarks.ring"
+          />
         </g>
       </g>
     </g>
@@ -658,11 +652,6 @@ onUnmounted(() => {
 
 .rules-outline.better {
   stroke: var(--placement-better);
-}
-
-.rules-ring-edge {
-  fill: none;
-  stroke: var(--placement-ring-edge);
 }
 
 .rules-ring {
