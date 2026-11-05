@@ -132,7 +132,7 @@ const generate = async (): Promise<void> => {
   <span v-if="gameData.dataLoaded" class="generate">
     <button
       type="button"
-      class="control-btn generate-main"
+      class="control-btn generate-btn generate-main"
       :class="{ 'confirm-armed': armed !== null, busy: slow }"
       :aria-busy="busy"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
@@ -141,11 +141,11 @@ const generate = async (): Promise<void> => {
       @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
-      <IconSparkle :size="20" class="btn-icon" aria-hidden="true" />
+      <IconSparkle :size="20" class="btn-icon generate-sparkle" aria-hidden="true" />
     </button>
     <RouterLink
       :to="{ path: SL_GENERATOR_PATH, state: { generatorFrom: from } }"
-      class="control-btn generate-open"
+      class="control-btn generate-btn generate-open"
       :aria-label="i18n.t('app.sl-open-generator')"
       @mouseenter="showTip($event, 'open')"
       @touchstart.passive="tipTouchStart"
@@ -168,23 +168,12 @@ const generate = async (): Promise<void> => {
 }
 
 .generate .control-btn {
-  background: var(--color-generate);
-  border: 1px solid var(--color-generate-hover);
-  color: var(--color-generate-text);
-}
-
-.generate .control-btn:hover,
-.generate .confirm-armed {
-  background: var(--color-generate-hover);
+  border-width: 1px;
 }
 
 .generate-main {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-}
-
-.generate-main .btn-icon {
-  color: var(--color-header-gold);
 }
 
 .generate-main.busy {
@@ -198,7 +187,6 @@ const generate = async (): Promise<void> => {
   padding-right: 7px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  border-left-color: color-mix(in srgb, var(--color-generate-text) 28%, transparent);
   text-decoration: none;
 }
 </style>

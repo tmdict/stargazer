@@ -62,6 +62,25 @@
   border-color: var(--color-danger-hover);
 }
 
+.generate-btn,
+.generate-btn:hover {
+  border-color: var(--color-generate-hover);
+  color: var(--color-generate-text);
+}
+
+.generate-btn {
+  background: var(--color-generate);
+}
+
+.generate-btn:hover,
+.generate-btn.confirm-armed {
+  background: var(--color-generate-hover);
+}
+
+.generate-btn .generate-sparkle {
+  color: var(--color-header-gold);
+}
+
 .confirm-armed {
   box-shadow: var(--confirm-armed-ring);
   animation: confirm-ping 0.9s ease-out infinite;

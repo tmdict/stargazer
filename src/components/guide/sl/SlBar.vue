@@ -7,6 +7,7 @@ import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
+import IconSparkle from '@/components/ui/IconSparkle.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
@@ -31,10 +32,14 @@ const i18n = useI18nStore()
 
 <template>
   <div class="sl-bar">
-    <UpgradeDockLabel>{{ i18n.t('app.sl-roster') }}</UpgradeDockLabel>
-    <RosterMenu />
-    <span class="sl-bar-actions">
+    <span class="sl-bar-group sl-bar-roster">
+      <UpgradeDockLabel>{{ i18n.t('app.sl-roster') }}</UpgradeDockLabel>
+      <RosterMenu />
+    </span>
+    <span class="sl-bar-group">
       <RosterTransferActions />
+    </span>
+    <span class="sl-bar-group">
       <TeamModePicker :active-mode="mode" @switch-mode="mode = $event" />
       <TeamVariantPicker
         :active-mode="mode"
@@ -45,49 +50,60 @@ const i18n = useI18nStore()
         @select-variant="variant = $event"
         @select-custom="variant = null"
       />
-      <button
-        type="button"
-        class="solid-btn sl-action"
-        :disabled="!ready || busy"
-        :aria-busy="busy"
-        @click="emit('generate')"
-      >
-        {{
-          i18n.t(busy ? 'app.sl-generating' : waiting ? 'app.sl-getting-ready' : 'app.sl-generate')
-        }}
-      </button>
     </span>
+    <button
+      type="button"
+      class="solid-btn sl-action generate-btn"
+      :disabled="!ready || busy"
+      :aria-busy="busy"
+      @click="emit('generate')"
+    >
+      <IconSparkle :size="16" class="generate-sparkle" aria-hidden="true" />
+      {{
+        i18n.t(busy ? 'app.sl-generating' : waiting ? 'app.sl-getting-ready' : 'app.sl-generate')
+      }}
+    </button>
   </div>
 </template>
 
 <style scoped>
 .sl-bar,
-.sl-bar-actions {
+.sl-bar-group {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
 
+.sl-bar {
+  gap: var(--spacing-sm) var(--spacing-lg);
+}
+
 @media (max-width: 768px) {
+  .sl-bar-roster {
+    flex: 1;
+    flex-wrap: nowrap;
+  }
   .sl-bar :deep(.roster-menu) {
     flex: 1;
     min-width: 0;
     --dropdown-trigger-width: 100%;
     --dropdown-trigger-min-width: 0;
   }
+  .sl-bar .sl-action {
+    margin-left: auto;
+  }
 }
 
 @media (max-width: 480px) {
   .sl-bar {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    gap: var(--spacing-sm);
   }
-  .sl-bar-actions {
-    grid-column: 1 / -1;
+  .sl-bar-roster {
+    flex-basis: 100%;
   }
-  .sl-bar-actions .sl-action {
-    margin-left: auto;
+  .sl-bar-group:not(.sl-bar-roster) {
+    display: contents;
   }
 }
 </style>
