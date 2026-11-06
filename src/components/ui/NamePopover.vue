@@ -48,6 +48,22 @@ const commit = (): void => {
   open.value = false
   emit('commit', value.value)
 }
+
+// The key that ends an IME composition must not also save or close the box;
+// keyCode 229 covers browsers that omit isComposing.
+const composing = (event: KeyboardEvent): boolean => event.isComposing || event.keyCode === 229
+
+const onEnter = (event: KeyboardEvent): void => {
+  if (composing(event)) return
+  event.preventDefault()
+  commit()
+}
+
+// Esc goes no further than the box, so a page-wide Esc (the hero grid's
+// Select mode beside the generator's Save) keeps its own state.
+const onEsc = (event: KeyboardEvent): void => {
+  if (!composing(event)) open.value = false
+}
 </script>
 
 <template>
@@ -63,8 +79,8 @@ const commit = (): void => {
         type="text"
         :maxlength="MAX_NAME_LENGTH"
         spellcheck="false"
-        @keydown.enter.prevent="commit"
-        @keydown.esc="open = false"
+        @keydown.enter="onEnter"
+        @keydown.esc.stop="onEsc"
       />
       <div class="name-popover-actions">
         <button type="button" class="popover-btn solid-btn" @click="commit">
@@ -145,17 +161,5 @@ const commit = (): void => {
   min-height: 30px;
   padding: 4px 8px;
   font-size: 0.8rem;
-}
-
-.popover-btn.secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border-primary);
-}
-
-.popover-btn.secondary:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-bg-tertiary);
 }
 </style>

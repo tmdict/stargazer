@@ -33,13 +33,15 @@
   transform: scale(0.95);
 }
 
-.control-btn.secondary {
+.control-btn.secondary,
+.solid-btn.secondary {
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
   border-color: var(--color-border-primary);
 }
 
-.control-btn.secondary:hover {
+.control-btn.secondary:hover,
+.solid-btn.secondary:hover {
   color: var(--color-primary);
   border-color: var(--color-primary);
   background: var(--color-bg-tertiary);
