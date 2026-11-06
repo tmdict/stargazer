@@ -76,6 +76,21 @@ export function validateRoster(record: unknown): Roster | null {
   }
 }
 
+// A new roster, before it is stored.
+export function newRoster(
+  name: string,
+  heroes: Record<string, AttrRecord>,
+  now = Date.now(),
+): Roster {
+  return {
+    id: crypto.randomUUID(),
+    name,
+    heroes: canonicalHeroes(heroes) ?? {},
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
 export function buildRostersExport(
   rosters: readonly Roster[],
   exportedAt: string,

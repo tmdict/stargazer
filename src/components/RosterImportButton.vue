@@ -41,7 +41,7 @@ const handleSave = (name: string, heroes: Record<string, AttrRecord>): void => {
   }
   open.value = false
   report(
-    i18n.t('app.roster-import-saved', {
+    i18n.t('app.roster-saved', {
       name: created.name,
       count: Object.keys(created.heroes).length,
     }),

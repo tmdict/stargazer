@@ -71,7 +71,7 @@ const save = (): void => {
       <NamePopover
         v-if="dirty"
         v-model:open="naming"
-        :label="i18n.t('app.roster-import-name')"
+        :label="i18n.t('app.roster-name')"
         :name="newName"
         end
         @commit="emit('saveRoster', $event)"

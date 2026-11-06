@@ -19,7 +19,7 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
-import { MAX_NAME_LENGTH, nextAutoName } from '@/lib/names'
+import { MAX_NAME_LENGTH } from '@/lib/names'
 import { shotToCheck } from '@/lib/rosterImport'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -57,13 +57,6 @@ const {
 const tipParts = computed(() => i18n.t('app.roster-import-tip').split('**'))
 
 const name = ref('')
-// The name a blank field saves under.
-const autoName = computed(() =>
-  nextAutoName(
-    rosters.rosters.map((r) => r.name),
-    'Roster',
-  ),
-)
 
 // Every opening starts fresh: closing, by Save or otherwise, clears it.
 watch(
@@ -124,7 +117,7 @@ const blocked = computed(
 
 const handleSave = (): void => {
   if (blocked.value) return
-  emit('save', name.value.trim() || autoName.value, plan.value.heroes)
+  emit('save', name.value.trim() || rosters.nextName, plan.value.heroes)
 }
 
 const { armed, confirm } = useArmedConfirm()
@@ -199,14 +192,14 @@ const handleForgetLearned = (): void => {
 
       <div class="footer">
         <label class="field name">
-          <span class="field-label">{{ i18n.t('app.roster-import-name') }}</span>
+          <span class="field-label">{{ i18n.t('app.roster-name') }}</span>
           <input
             v-model="name"
             class="field-input"
             type="text"
             spellcheck="false"
             :maxlength="MAX_NAME_LENGTH"
-            :placeholder="autoName"
+            :placeholder="rosters.nextName"
           />
         </label>
         <button type="button" class="footer-btn danger" :disabled="blocked" @click="handleSave">

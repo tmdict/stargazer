@@ -6,11 +6,8 @@
    lists, picked as on the Teams page, or the boards of the page Generate's ↗
    opened this one from (lib/pvp/generator/handover), drawn on arrival and
    offered back with Open in Arena or Teams. The picker edits the active
-   roster in place, as the Rosters tab does. Under All heroes it edits a draft
-   of every hero at the top levels, which Save makes a new roster of and
-   Export writes as a roster file; picking or importing a roster drops it.
-   The set is chosen only on
-   Generate and stays as it is while the selection, the mode or the maps
+   roster, or under All heroes a draft (useSlRoster). The set is chosen only
+   on Generate and stays as it is while the selection, the mode or the maps
    change. A board draws the formation of its team's recorded game where the
    team was recorded on its map, and the engine's elsewhere; the engine's
    formations of the recorded boards, which their switches show, are worked out
@@ -29,14 +26,13 @@ import SlHead from '@/components/guide/sl/SlHead.vue'
 import SlResult, { type SlShown, type SlShownTeam } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
+import { useSlRoster } from '@/components/guide/sl/useSlRoster'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readSavedBoards, readTeamsSlot } from '@/composables/useGridPersistence'
-import { useRosterFeedback } from '@/composables/useRosterFeedback'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
-import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
+import type { AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
-import { nextAutoName } from '@/lib/names'
 import type { SlData } from '@/lib/pvp/data/types'
 import { shownFormation, type BoardFormation } from '@/lib/pvp/generator/formation'
 import {
@@ -50,12 +46,6 @@ import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setTyp
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import { slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
-import {
-  buildRostersExport,
-  canonicalHeroes,
-  canonicalLevels,
-  type RostersExportFile,
-} from '@/lib/rosters'
 import {
   DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
@@ -99,75 +89,7 @@ const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 const { file: slFile, heading, locked, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
-// Every hero at the top levels: what the picker starts from under All heroes.
-const allHeroes = computed((): Record<string, AttrRecord> =>
-  Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS])),
-)
-const draft = ref<Record<string, AttrRecord>>({})
-watch(
-  () => rosters.activeId,
-  () => (draft.value = { ...allHeroes.value }),
-  { immediate: true },
-)
-const levels = computed(() => rosters.active?.heroes ?? draft.value)
-
-const { report } = useRosterFeedback()
-
-// A roster takes each change at once, as on the Rosters tab. Under All heroes
-// a hero added back returns at the top levels.
-const edit = (changes: Record<string, AttrRecord | null>): void => {
-  const roster = rosters.active
-  if (roster) {
-    rosters.setHeroes(roster.id, changes)
-    return
-  }
-  const next = { ...draft.value }
-  for (const [key, change] of Object.entries(changes)) {
-    if (change === null) delete next[key]
-    else next[key] = next[key] ? canonicalLevels(Number(key), change) : TOP_LEVELS
-  }
-  draft.value = next
-}
-
-const heroesKey = (pool: Record<string, AttrRecord>): string =>
-  JSON.stringify(canonicalHeroes(pool))
-const dirty = computed(
-  () => !rosters.active && heroesKey(draft.value) !== heroesKey(allHeroes.value),
-)
-
-// The heroes the picker shows as owned, which leaves out locked ones.
-const shownHeroes = (): Record<string, AttrRecord> =>
-  Object.fromEntries(
-    Object.entries(draft.value).filter(([id]) => !locked.value.ids.has(Number(id))),
-  )
-const newRosterName = computed(() =>
-  nextAutoName(
-    rosters.rosters.map((r) => r.name),
-    'Roster',
-  ),
-)
-
-// The new roster becomes the active one, so later changes go straight into it.
-const saveRoster = (name: string): void => {
-  const created = rosters.create({ name, heroes: shownHeroes() })
-  if (!created) error(i18n.t('app.rosters-limit'))
-  else {
-    const count = Object.keys(created.heroes).length
-    report(i18n.t('app.roster-import-saved', { name: created.name, count }))
-  }
-}
-
-const exportShown = (): RostersExportFile => {
-  const now = Date.now()
-  const roster = {
-    id: crypto.randomUUID(),
-    name: newRosterName.value,
-    heroes: canonicalHeroes(shownHeroes()) ?? {},
-    createdAt: now,
-    updatedAt: now,
-  }
-  return buildRostersExport([roster], new Date(now).toISOString())
-}
+const { levels, edit, dirty, saveRoster, exportShown, report } = useSlRoster(heroes, locked)
 
 const armedConfirm = useArmedConfirm()
 
@@ -454,7 +376,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
         :ready
         :waiting="!failed && engineStatus === 'loading'"
         :dirty
-        :new-name="newRosterName"
+        :new-name="rosters.nextName"
         :export-file="rosters.active ? undefined : exportShown"
         @generate="generate"
         @save-roster="saveRoster"

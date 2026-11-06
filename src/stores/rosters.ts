@@ -13,9 +13,9 @@ import { importInto, type ImportOutcome } from '@/lib/exportFile'
 import { nextAutoName, sanitizeName } from '@/lib/names'
 import {
   buildRostersExport,
-  canonicalHeroes,
   canonicalLevels,
   MAX_ROSTERS,
+  newRoster,
   parseRostersImport,
   validateRoster,
   type Roster,
@@ -49,6 +49,12 @@ const readRosters = (): Roster[] => {
 const writeRosters = (rosters: Roster[]): boolean =>
   writeStorage(ROSTERS_KEY, JSON.stringify(rosters))
 
+const autoName = (rosters: readonly Roster[]): string =>
+  nextAutoName(
+    rosters.map((r) => r.name),
+    'Roster',
+  )
+
 export const useRosters = defineStore('rosters', () => {
   const rosters = ref<Roster[]>(readRosters())
   // Whether the last change reached storage.
@@ -57,6 +63,8 @@ export const useRosters = defineStore('rosters', () => {
 
   const active = computed(() => rosters.value.find((r) => r.id === activeId.value) ?? null)
   const count = computed(() => rosters.value.length)
+  // The name a roster saved without one gets.
+  const nextName = computed(() => autoName(rosters.value))
 
   const mutate = <T>(action: (fresh: Roster[]) => T): T => {
     const fresh = persisted.value ? readRosters() : [...rosters.value]
@@ -79,19 +87,7 @@ export const useRosters = defineStore('rosters', () => {
   ): Roster | null => {
     const created = mutate((fresh) => {
       if (fresh.length >= MAX_ROSTERS) return null
-      const now = Date.now()
-      const roster: Roster = {
-        id: crypto.randomUUID(),
-        name:
-          sanitizeName(init.name) ||
-          nextAutoName(
-            fresh.map((r) => r.name),
-            'Roster',
-          ),
-        heroes: canonicalHeroes(init.heroes ?? {}) ?? {},
-        createdAt: now,
-        updatedAt: now,
-      }
+      const roster = newRoster(sanitizeName(init.name) || autoName(fresh), init.heroes ?? {})
       fresh.push(roster)
       return roster
     })
@@ -162,6 +158,7 @@ export const useRosters = defineStore('rosters', () => {
     activeId,
     active,
     count,
+    nextName,
     setActive,
     create,
     rename,
