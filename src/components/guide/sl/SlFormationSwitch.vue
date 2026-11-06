@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /* The switch on a board drawn from a recorded game: the check shows that
-   game's formation and the sparkle the engine's, the one on show filled.
-   Hovering a half, or tapping it, shows what it is; pressing the half not on
-   show switches the board. The sparkle waits until the worker has placed the
-   board, which it does just after the set is drawn. */
+   game's formation and the sparkle the engine's, the one on show filled. The
+   chip is one button, so a press anywhere on it switches the board and opens
+   the tip of the formation then on show. Hovering a half shows what it is.
+   The sparkle waits until the worker has placed the board, which it does just
+   after the set is drawn; until then a press only shows a half's tip. */
 
 import { computed } from 'vue'
 
@@ -29,6 +30,9 @@ const i18n = useI18nStore()
 const { cardNames } = useSlNames()
 const { anchor, payload: half, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Half>()
 
+// The halves' elements, which the tips anchor on.
+const halfEl: Partial<Record<Half, Element>> = {}
+
 const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string; tip: string }[] = [
   {
     half: 'played',
@@ -44,14 +48,22 @@ const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string; tip: strin
   },
 ]
 
-const press = (event: MouseEvent, pressed: Half): void => {
-  const on = pressed === 'engine'
-  if (on === engineOn || (on && !ready)) {
-    toggle(event, pressed)
+const shown = computed((): Half => (engineOn ? 'engine' : 'played'))
+const canSwitch = computed(() => engineOn || ready)
+
+const halfAt = (target: EventTarget | null): Half =>
+  HALVES.find(({ half }) => halfEl[half]?.contains(target as Node))?.half ?? shown.value
+
+const press = (event: MouseEvent): void => {
+  if (!canSwitch.value) {
+    const pressed = halfAt(event.target)
+    toggle(halfEl[pressed]!, pressed)
     return
   }
-  emit('switch', on)
-  if (anchor.value !== event.currentTarget) toggle(event, pressed)
+  emit('switch', !engineOn)
+  const next: Half = engineOn ? 'played' : 'engine'
+  // Open, never close: hover has often opened that half's tip already.
+  if (anchor.value !== halfEl[next]) toggle(halfEl[next]!, next)
 }
 
 const card = computed(() => {
@@ -67,26 +79,30 @@ const card = computed(() => {
 </script>
 
 <template>
-  <span class="sl-switch" role="group" :aria-label="i18n.t('app.sl-formation')">
-    <button
-      v-for="{ half: h, icon, label } in HALVES"
+  <button
+    type="button"
+    class="sl-switch"
+    :aria-pressed="engineOn"
+    :aria-disabled="canSwitch ? undefined : 'true'"
+    :aria-label="i18n.t('app.sl-formation-suggested')"
+    @click="press"
+    @focus="hoverOpen(halfEl[shown]!, shown)"
+    @blur="hoverClose"
+    @touchstart.passive="onTouchStart"
+  >
+    <span
+      v-for="{ half: h, icon } in HALVES"
       :key="h"
-      type="button"
-      :class="{ on: (h === 'engine') === engineOn }"
-      :aria-pressed="(h === 'engine') === engineOn"
-      :aria-disabled="h === 'engine' && !ready ? 'true' : undefined"
-      :aria-label="i18n.t(label)"
+      :ref="(el) => (halfEl[h] = el as Element)"
+      class="sl-switch-half"
+      :class="{ on: h === shown, waiting: h === 'engine' && !ready }"
       @mouseenter="hoverOpen($event, h)"
       @mouseleave="hoverClose"
-      @focus="hoverOpen($event, h)"
-      @blur="hoverClose"
-      @click="press($event, h)"
-      @touchstart.passive="onTouchStart"
     >
       <SlIcon :name="icon" />
-    </button>
+    </span>
     <SlCard v-if="anchor && card" :anchor :title="card.title" :lines="card.lines" plain />
-  </span>
+  </button>
 </template>
 
 <style scoped>
@@ -97,29 +113,29 @@ const card = computed(() => {
   border: 1px solid var(--color-border-primary);
   border-radius: 13px;
   background: var(--color-bg-secondary);
-}
-
-.sl-switch button {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 22px;
-  padding: 0;
-  border: 0;
-  border-radius: 11px;
-  background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
 }
 
-.sl-switch button.on {
+.sl-switch[aria-disabled='true'] {
+  cursor: default;
+}
+
+.sl-switch-half {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 22px;
+  border-radius: 11px;
+}
+
+.sl-switch-half.on {
   background: var(--color-primary);
   color: #fff;
 }
 
-.sl-switch button[aria-disabled='true'] {
+.sl-switch-half.waiting {
   opacity: 0.45;
-  cursor: default;
 }
 
 .sl-switch .sl-icon {
