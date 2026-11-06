@@ -19,8 +19,8 @@ export interface SlShownTeam
 }
 
 export interface SlShown {
-  // The mode and maps the set was chosen for, null maps for boards handed
-  // over from the Arena or Teams.
+  // The mode and maps the set was chosen for, null maps for the boards of the
+  // Arena or Teams page.
   mode: TeamModeKey
   variant: VariantMatch
   // The page whose boards the set was drawn on, which Open in takes it back to.

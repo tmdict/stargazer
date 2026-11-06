@@ -3,16 +3,17 @@
    of recorded teams, one per board and no hero twice, with the best chance to
    win a match (lib/pvp), chosen in the Supreme League worker (useSlEngine)
    so the page stays responsive. The boards are a Teams mode on one of its map
-   lists, picked as on the Teams page, or the boards of the page Generate's ↗
-   opened this one from (lib/pvp/generator/handover), drawn on arrival and
-   offered back with Open in Arena or Teams. The picker edits the active
-   roster, or under All heroes a draft (useSlRoster). The set is chosen only
-   on Generate and stays as it is while the selection, the mode or the maps
-   change. A board draws the formation of its team's recorded game where the
-   team was recorded on its map, and the engine's elsewhere; the engine's
-   formations of the recorded boards, which their switches show, are worked out
-   in the worker once the set is drawn. Save as team opens the set on the Teams
-   page as drawn.
+   lists, picked as on the Teams page, or the boards of the Arena or Teams page
+   where they match no list. A set drawn on a page's boards is offered back
+   with Open in Arena or Teams, and the boards of the page Generate's ↗ opened
+   this one from (lib/pvp/generator/handover) are drawn on arrival. The picker
+   edits the active roster, or under All heroes a draft (useSlRoster). The set
+   is chosen only on Generate and stays as it is while the selection, the mode
+   or the maps change. A board draws the formation of its team's recorded game
+   where the team was recorded on its map, and the engine's elsewhere; the
+   engine's formations of the recorded boards, which their switches show, are
+   worked out in the worker once the set is drawn. Save as team opens the set
+   on the Teams page as drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */
@@ -21,7 +22,7 @@ import { computed, nextTick, onMounted, ref, shallowRef, useTemplateRef, watch }
 import { useRouter } from 'vue-router'
 
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
-import SlBar from '@/components/guide/sl/SlBar.vue'
+import SlBar, { type MapsChoice } from '@/components/guide/sl/SlBar.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import SlResult, { type SlShown, type SlShownTeam } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
@@ -51,6 +52,7 @@ import {
   DEFAULT_VARIANT,
   matchVariant,
   MAX_SAVED_TEAMS,
+  TEAM_MODE_ORDER,
   TEAM_MODES,
   variantMaps,
   type TeamModeKey,
@@ -93,42 +95,69 @@ const { levels, edit, dirty, saveRoster, exportShown, report } = useSlRoster(her
 
 const armedConfirm = useArmedConfirm()
 
-// The page Generate's ↗ came from, its boards as their map layouts, and the
-// list they match; null when they match none.
-interface Handed {
-  from: GeneratorFrom
-  mode: TeamModeKey
+// The saved boards of a page whose mode is the one on screen: the Arena's one
+// board in 1v1, the Teams page's boards of each mode.
+interface PageBoards {
+  page: GeneratorFrom
   layouts: MapLayout[]
+  // The list they match; null when they match none, which makes them a choice.
   match: VariantMatch
 }
-// Shallow, since its layouts are posted to the worker, which takes no proxies.
-const handed = shallowRef<Handed | null>(null)
-
-const initialVariant = (mode: TeamModeKey): VariantMatch =>
-  handed.value?.mode === mode
-    ? handed.value.match
-    : (TEAM_MODES[mode].initialVariant ?? DEFAULT_VARIANT)
-const mode = ref<TeamModeKey>(DEFAULT_TEAM_MODE)
-// Null for the handed-over boards' own maps.
-const variant = ref<VariantMatch>(initialVariant(DEFAULT_TEAM_MODE))
-watch(mode, (next) => (variant.value = initialVariant(next)))
-const customMaps = computed(() =>
-  handed.value?.mode === mode.value && handed.value.match === null
-    ? i18n.t(handed.value.from === 'arena' ? 'app.arena' : 'app.teams')
-    : undefined,
+const PAGES: GeneratorFrom[] = ['arena', ...TEAM_MODE_ORDER]
+const readPageBoards = (mode: TeamModeKey): PageBoards[] =>
+  PAGES.filter((page) => generatorMode(page) === mode).flatMap((page) => {
+    const boards = readSavedBoards(page)
+    if (!boards?.length) return []
+    const layouts = boards.map((board) => tilesLayout(board.t ?? []))
+    const match = matchVariant(
+      mode,
+      layouts.map((layout) => layout.key),
+    )
+    return [{ page, layouts, match }]
+  })
+// Read when the page opens and on each switch of mode, so the choices follow
+// those boards as they are then. Shallow, since the layouts are posted to the
+// worker, which takes no proxies.
+const pageBoards = shallowRef<PageBoards[]>([])
+const offeredPages = computed(() =>
+  pageBoards.value.flatMap((own) => (own.match === null ? [own.page] : [])),
 )
+// The page Generate's ↗ came from.
+let arrived: GeneratorFrom | null = null
 
-const boardsFor = (file: SlData): SlBoard[] =>
-  variant.value === null && handed.value
-    ? layoutBoards(file, handed.value.layouts)
+const mode = ref<TeamModeKey>(DEFAULT_TEAM_MODE)
+const maps = ref<MapsChoice>(TEAM_MODES[DEFAULT_TEAM_MODE].initialVariant ?? DEFAULT_VARIANT)
+const variant = computed((): VariantMatch => (isGeneratorFrom(maps.value) ? null : maps.value))
+
+// A mode opens on its usual list, or on the boards of the page Generate's ↗
+// came from when they are of that mode.
+const openMode = (next: TeamModeKey): void => {
+  pageBoards.value = readPageBoards(next)
+  const own = pageBoards.value.find((boards) => boards.page === arrived)
+  maps.value = own ? (own.match ?? own.page) : (TEAM_MODES[next].initialVariant ?? DEFAULT_VARIANT)
+}
+watch(mode, openMode)
+
+const boardsFor = (file: SlData): SlBoard[] => {
+  const own = pageBoards.value.find((boards) => boards.page === maps.value)
+  return own
+    ? layoutBoards(file, own.layouts)
     : slBoards(file, variantMaps(mode.value, variant.value ?? DEFAULT_VARIANT))
+}
 
-// The page a set can go back to: the one whose boards it was drawn on.
+// The page a set can go back to: one whose boards it is drawn on, the chosen
+// page or the one Generate's ↗ came from first, as the Arena and the Teams
+// page's 1v1 can share a map.
 const backTo = (boards: readonly SlBoard[]): GeneratorFrom | null => {
   const keys = (layouts: readonly MapLayout[]): string => layouts.map((l) => l.key).join(' ')
-  return handed.value && keys(boards.map((b) => b.layout)) === keys(handed.value.layouts)
-    ? handed.value.from
-    : null
+  const drawnOn = keys(boards.map((board) => board.layout))
+  const fits = pageBoards.value.flatMap((own) => (keys(own.layouts) === drawnOn ? [own.page] : []))
+  return (
+    fits.find((page) => page === maps.value) ??
+    fits.find((page) => page === arrived) ??
+    fits[0] ??
+    null
+  )
 }
 
 const shown = ref<SlShown | null>(null)
@@ -181,6 +210,7 @@ const generate = async (): Promise<void> => {
     const picks = picksOf(levels.value)
     const chosenFor = { mode: mode.value, variant: variant.value }
     const boards = boardsFor(file)
+    const from = backTo(boards)
     const set = await generateSet(picks, boards)
     const draws = set ? await placeSet(set, boards) : []
     // Each swap is tried once per set and formation, when first shown.
@@ -216,7 +246,7 @@ const generate = async (): Promise<void> => {
     engineOn.value = []
     shown.value = set && {
       ...chosenFor,
-      from: backTo(boards),
+      from,
       chance: set.chance,
       odds: set.odds,
       teams,
@@ -304,25 +334,18 @@ const open = (): void => {
   void router.push({ path: generatorPagePath(from), state: { generatedSide: drawn.value } })
 }
 
-// Opened through Generate's ↗: the page takes that page's boards and draws
-// their set as soon as it can. The note stays in the history entry, so a
-// reload reads the boards again.
+// Opened through Generate's ↗: the page opens on that page's mode and boards
+// and draws their set as soon as it can. The note stays in the history entry,
+// so a reload reads the boards again.
 const drawOnArrival = ref(false)
 onMounted(() => {
   const from: unknown = history.state?.generatorFrom
-  if (!isGeneratorFrom(from)) return
-  const boards = readSavedBoards(from)
-  if (!boards?.length) return
-  const layouts = boards.map((board) => tilesLayout(board.t ?? []))
-  const handedMode = generatorMode(from)
-  const match = matchVariant(
-    handedMode,
-    layouts.map((layout) => layout.key),
-  )
-  handed.value = { from, mode: handedMode, layouts, match }
-  mode.value = handedMode
-  variant.value = match
-  drawOnArrival.value = true
+  if (isGeneratorFrom(from) && readSavedBoards(from)?.length) {
+    arrived = from
+    mode.value = generatorMode(from)
+    drawOnArrival.value = true
+  }
+  openMode(mode.value)
 })
 const ready = computed(() => !!heading.value && engineStatus.value === 'ready')
 watch([ready, drawOnArrival], ([isReady, waiting]) => {
@@ -370,8 +393,8 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
     <section v-if="mounted" class="sl-panel sl-picker">
       <SlBar
         v-model:mode="mode"
-        v-model:variant="variant"
-        :custom="customMaps"
+        v-model:maps="maps"
+        :pages="offeredPages"
         :busy
         :ready
         :waiting="!failed && engineStatus === 'loading'"

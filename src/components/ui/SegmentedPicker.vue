@@ -9,10 +9,14 @@ export interface Segment {
   selected: boolean
   // The armed step of a two-step confirm (useArmedConfirm).
   armed?: boolean
+  tip?: string
 }
 </script>
 
 <script setup lang="ts" generic="T extends Segment">
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
+
 defineProps<{
   segments: readonly T[]
   small?: boolean
@@ -21,6 +25,8 @@ defineProps<{
 const emit = defineEmits<{ select: [key: T['key']] }>()
 
 defineSlots<{ default?(props: { segment: T }): unknown }>()
+
+const { anchor, payload: tip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip<string>()
 </script>
 
 <template>
@@ -36,9 +42,17 @@ defineSlots<{ default?(props: { segment: T }): unknown }>()
       class="segment"
       :class="{ active: segment.selected, 'confirm-armed': segment.armed }"
       @click="emit('select', segment.key)"
+      @mouseenter="segment.tip && onMouseEnter($event, segment.tip)"
+      @mouseleave="onMouseLeave"
+      @touchstart.passive="onTouchStart"
     >
       <slot :segment>{{ segment.label }}</slot>
     </button>
+    <Teleport to="body">
+      <TooltipPopup v-if="tip && anchor" :target-element="anchor" variant="detailed">
+        <template #content>{{ tip }}</template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 

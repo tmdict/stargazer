@@ -1,3 +1,12 @@
+<script lang="ts">
+import { isGeneratorFrom, type GeneratorFrom } from '@/lib/pvp/generator/handover'
+import type { TeamModeKey, TeamVariantChoice } from '@/lib/teams/modes'
+
+// The boards a set is drawn on: a map list of the mode, or the boards of the
+// Arena or Teams page.
+export type MapsChoice = TeamVariantChoice | GeneratorFrom
+</script>
+
 <script setup lang="ts">
 /* The generator's roster bar, with the Teams page's mode and maps pickers
    for the boards to generate on. Picking or importing a roster makes it the
@@ -6,7 +15,7 @@
    the unsaved-changes dot and makes a new roster of them under a name it asks
    for. */
 
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import RosterMenu from '@/components/RosterMenu.vue'
 import RosterTransferActions from '@/components/RosterTransferActions.vue'
@@ -15,20 +24,28 @@ import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSparkle from '@/components/ui/IconSparkle.vue'
 import NamePopover from '@/components/ui/NamePopover.vue'
+import type { Segment } from '@/components/ui/SegmentedPicker.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import type { RostersExportFile } from '@/lib/rosters'
-import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { busy, ready, waiting, custom, dirty, newName, exportFile } = defineProps<{
+const {
+  busy,
+  ready,
+  waiting,
+  pages = [],
+  dirty,
+  newName,
+  exportFile,
+} = defineProps<{
   busy: boolean
   ready: boolean
   // The Supreme League worker is still reading the data file.
   waiting: boolean
-  // The maps picker's choice for boards handed over from the Arena or Teams.
-  custom?: string
+  // The Arena and Teams pages whose boards of the mode match no map list.
+  pages?: readonly GeneratorFrom[]
   // Under All heroes, whether the heroes on screen differ from every hero.
   dirty: boolean
   newName: string
@@ -38,10 +55,22 @@ const { busy, ready, waiting, custom, dirty, newName, exportFile } = defineProps
 const emit = defineEmits<{ generate: []; saveRoster: [name: string] }>()
 
 const mode = defineModel<TeamModeKey>('mode', { required: true })
-// Null for the handed-over boards' own maps.
-const variant = defineModel<VariantMatch>('variant', { required: true })
+const maps = defineModel<MapsChoice>('maps', { required: true })
 
 const i18n = useI18nStore()
+
+const pageChoices = computed((): Segment[] =>
+  pages.map((page) => ({
+    key: page,
+    label: i18n.t(page === 'arena' ? 'app.arena' : 'app.teams'),
+    tip: i18n.t(page === 'arena' ? 'app.sl-arena-maps-tip' : 'app.sl-teams-maps-tip'),
+    selected: maps.value === page,
+  })),
+)
+
+const selectPage = (key: string): void => {
+  if (isGeneratorFrom(key)) maps.value = key
+}
 
 const naming = ref(false)
 watch(
@@ -98,12 +127,12 @@ const save = (): void => {
       <TeamModePicker :active-mode="mode" @switch-mode="mode = $event" />
       <TeamVariantPicker
         :active-mode="mode"
-        :match="variant"
+        :match="isGeneratorFrom(maps) ? null : maps"
         :source-id="null"
         :has-content="false"
-        :custom
-        @select-variant="variant = $event"
-        @select-custom="variant = null"
+        :custom="pageChoices"
+        @select-variant="maps = $event"
+        @select-custom="selectPage"
       />
     </span>
     <button

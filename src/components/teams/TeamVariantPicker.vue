@@ -5,13 +5,13 @@
    board onto the chosen list's map; a hero keeps its tile only where the new
    map has it, hence the two-step confirm whenever a board holds anything.
    Hidden where there is nothing to choose (1v1 has no named types). The
-   generator page adds one more choice for boards handed over from the Arena
-   or Teams that match no list, lit while their own maps are used. */
+   generator page adds a choice for the boards of the Arena or Teams page that
+   match no list, and lights those itself. */
 
 import { computed, watch } from 'vue'
 
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
-import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
+import SegmentedPicker, { type Segment } from '@/components/ui/SegmentedPicker.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import {
   DEFAULT_VARIANT,
@@ -22,35 +22,41 @@ import {
 } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { activeMode, match, sourceId, hasContent, custom } = defineProps<{
+const {
+  activeMode,
+  match,
+  sourceId,
+  hasContent,
+  custom = [],
+} = defineProps<{
   activeMode: TeamModeKey
-  // The live boards' type; null = custom maps, nothing lit.
+  // The live boards' type; null = custom maps, no list lit.
   match: VariantMatch
   // The saved team the boards came from; a change means they were replaced.
   sourceId: string | null
   // Whether any board holds anything, gating the confirm.
   hasContent: boolean
-  // The label of the boards' own maps as one more choice, lit on a null match.
-  custom?: string
+  custom?: readonly Segment[]
 }>()
 
 const emit = defineEmits<{
   selectVariant: [choice: TeamVariantChoice]
-  selectCustom: []
+  selectCustom: [key: string]
 }>()
-
-const CUSTOM = 'custom' as const
-type Choice = TeamVariantChoice | typeof CUSTOM
 
 const i18n = useI18nStore()
 
-const choices = computed((): { key: Choice; label: string }[] => [
+const variants = computed((): { key: TeamVariantChoice; label: string }[] => [
   { key: DEFAULT_VARIANT, label: i18n.t('app.default') },
   ...variantsForMode(activeMode).map((variant) => ({
     key: variant.key,
     label: i18n.t(variant.labelKey),
   })),
-  ...(custom ? [{ key: CUSTOM, label: custom }] : []),
+])
+
+const choices = computed((): Segment[] => [
+  ...variants.value.map((variant) => ({ ...variant, selected: match === variant.key })),
+  ...custom,
 ])
 
 // An armed click must not outlive the boards it was armed for: the key is
@@ -60,21 +66,18 @@ const choices = computed((): { key: Choice; label: string }[] => [
 const { armed, confirm, disarm } = useArmedConfirm()
 watch([() => activeMode, () => match, () => sourceId], disarm)
 
-const armedKey = (choice: Choice): string => `${activeMode}:${choice}`
+const armedKey = (key: string): string => `${activeMode}:${key}`
 
 const segments = computed(() =>
-  choices.value.map((choice) => ({
-    ...choice,
-    selected: (match ?? CUSTOM) === choice.key,
-    armed: armed.value === armedKey(choice.key),
-  })),
+  choices.value.map((choice) => ({ ...choice, armed: armed.value === armedKey(choice.key) })),
 )
 
-const select = (choice: Choice): void => {
-  if (choice === (match ?? CUSTOM)) return
-  if (hasContent && !confirm(armedKey(choice))) return
-  if (choice === CUSTOM) emit('selectCustom')
-  else emit('selectVariant', choice)
+const select = (key: string): void => {
+  if (choices.value.find((choice) => choice.key === key)?.selected) return
+  if (hasContent && !confirm(armedKey(key))) return
+  const variant = variants.value.find((choice) => choice.key === key)
+  if (variant) emit('selectVariant', variant.key)
+  else emit('selectCustom', key)
 }
 </script>
 

@@ -125,7 +125,7 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
         <template v-if="counts">
           <span />
           <span class="sl-stats">
-            <span class="sl-stat" v-on="sayOn('app.sl-meter-tip')">
+            <span class="sl-stat">
               <SlMeter :games />
             </span>
             <span class="sl-stat" v-on="sayOn('app.sl-players-tip')">
