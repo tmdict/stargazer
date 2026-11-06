@@ -1,5 +1,5 @@
 {
-  "en": "Changes you make to heroes on this page don't change your saved roster until you press Save.",
-  "zh": "在此页面对英雄做的修改，要按下保存后才会改动你保存的英雄池。",
-  "ko": "이 페이지에서 영웅의 설정을 바꿔도 저장을 누르기 전에는 저장된 로스터가 바뀌지 않습니다."
+  "en": "Changes you make to heroes on this page are saved to your selected roster. Under All heroes they stay on this page until you press Save, which makes a new roster.",
+  "zh": "在此页面对英雄做的修改会直接保存到所选的英雄池。在全部英雄下，修改只留在此页面，按下保存后会新建一个英雄池。",
+  "ko": "이 페이지에서 바꾼 영웅 설정은 선택한 로스터에 바로 저장됩니다. 모든 영웅에서는 저장을 눌러 새 로스터를 만들기 전까지 이 페이지에만 남습니다."
 }

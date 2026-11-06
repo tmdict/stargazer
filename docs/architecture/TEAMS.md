@@ -176,7 +176,7 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy. The generator's Save writes the copy into the active roster, or under All heroes into a new roster made with `create`.
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab and the PvP team generator both bind it to the active roster. Under All heroes the generator edits a draft of every hero at the top levels instead, which its Save makes a new roster of with `create`.
 
 The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
 

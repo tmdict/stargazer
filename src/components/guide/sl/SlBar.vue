@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /* The generator's roster bar, with the Teams page's mode and maps pickers
    for the boards to generate on. Picking or importing a roster makes it the
-   active one, which the page copies. Once the copy differs from its roster,
-   Save shows with the unsaved-changes dot: it writes the copy into the active
-   roster, or under All heroes asks for a name and makes a new one. */
+   active one, which the page edits in place. Under All heroes, once the
+   heroes on screen differ from every hero at the top levels, Save shows with
+   the unsaved-changes dot and makes a new roster of them under a name it asks
+   for. */
 
 import { ref, watch } from 'vue'
 
@@ -21,22 +22,20 @@ import type { RostersExportFile } from '@/lib/rosters'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { busy, ready, waiting, custom, dirty, saveTo, newName, exportFile } = defineProps<{
+const { busy, ready, waiting, custom, dirty, newName, exportFile } = defineProps<{
   busy: boolean
   ready: boolean
   // The Supreme League worker is still reading the data file.
   waiting: boolean
   // The maps picker's choice for boards handed over from the Arena or Teams.
   custom?: string
-  // Whether the page's heroes differ from the active roster's.
+  // Under All heroes, whether the heroes on screen differ from every hero.
   dirty: boolean
-  // The active roster's name; null under All heroes, where Save makes a new one.
-  saveTo: string | null
   newName: string
   exportFile?: () => RostersExportFile
 }>()
 
-const emit = defineEmits<{ generate: []; saveRoster: [name: string | null] }>()
+const emit = defineEmits<{ generate: []; saveRoster: [name: string] }>()
 
 const mode = defineModel<TeamModeKey>('mode', { required: true })
 // Null for the handed-over boards' own maps.
@@ -60,8 +59,7 @@ const {
 
 const save = (): void => {
   hideTip()
-  if (saveTo === null) naming.value = true
-  else emit('saveRoster', null)
+  naming.value = true
 }
 </script>
 
@@ -122,11 +120,7 @@ const save = (): void => {
     </button>
     <Teleport to="body">
       <TooltipPopup v-if="tipShown && tipEl" :target-element="tipEl" variant="detailed">
-        <template #content>{{
-          saveTo === null
-            ? i18n.t('app.sl-save-roster-new-tip')
-            : i18n.t('app.sl-save-roster-tip', { name: saveTo })
-        }}</template>
+        <template #content>{{ i18n.t('app.sl-save-roster-tip') }}</template>
       </TooltipPopup>
     </Teleport>
   </div>

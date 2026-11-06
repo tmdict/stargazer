@@ -5,12 +5,11 @@
    so the page stays responsive. The boards are a Teams mode on one of its map
    lists, picked as on the Teams page, or the boards of the page Generate's ↗
    opened this one from (lib/pvp/generator/handover), drawn on arrival and
-   offered back with Open in Arena or Teams. The picker edits a copy of the
-   active roster, every hero at the top levels under All heroes, so trying a
-   hero out changes no roster until Save writes the copy into the active one,
-   or into a new roster under All heroes. Picking or importing another roster
-   takes a fresh copy, dropping unsaved changes. Under All heroes, Export
-   writes the heroes on screen as a roster file. The set is chosen only on
+   offered back with Open in Arena or Teams. The picker edits the active
+   roster in place, as the Rosters tab does. Under All heroes it edits a draft
+   of every hero at the top levels, which Save makes a new roster of and
+   Export writes as a roster file; picking or importing a roster drops it.
+   The set is chosen only on
    Generate and stays as it is while the selection, the mode or the maps
    change. A board draws the formation of its team's recorded game where the
    team was recorded on its map, and the engine's elsewhere; the engine's
@@ -100,42 +99,47 @@ const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 const { file: slFile, heading, locked, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
-const sourceLevels = (id: number): AttrRecord | undefined =>
-  rosters.active ? rosters.active.heroes[id] : TOP_LEVELS
-
-const source = computed(
-  (): Record<string, AttrRecord> =>
-    rosters.active?.heroes ?? Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS])),
+// Every hero at the top levels: what the picker starts from under All heroes.
+const allHeroes = computed((): Record<string, AttrRecord> =>
+  Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS])),
 )
-const copy = ref<Record<string, AttrRecord>>({})
-// Taken again when another roster becomes active, never on the roster object
-// itself, which every library write replaces.
+const draft = ref<Record<string, AttrRecord>>({})
 watch(
   () => rosters.activeId,
-  () => (copy.value = { ...source.value }),
+  () => (draft.value = { ...allHeroes.value }),
   { immediate: true },
 )
+const levels = computed(() => rosters.active?.heroes ?? draft.value)
 
-// A hero added here comes back at the levels its roster gives it (the top
-// under All heroes), and at 0 only when the roster does not hold it.
+const { report } = useRosterFeedback()
+
+// A roster takes each change at once, as on the Rosters tab. Under All heroes
+// a hero added back returns at the top levels.
 const edit = (changes: Record<string, AttrRecord | null>): void => {
-  const next = { ...copy.value }
-  for (const [key, levels] of Object.entries(changes)) {
-    const id = Number(key)
-    if (levels === null) delete next[key]
-    else if (!next[key]) next[key] = sourceLevels(id) ?? {}
-    else next[key] = canonicalLevels(id, levels)
+  const roster = rosters.active
+  if (roster) {
+    rosters.setHeroes(roster.id, changes)
+    return
   }
-  copy.value = next
+  const next = { ...draft.value }
+  for (const [key, change] of Object.entries(changes)) {
+    if (change === null) delete next[key]
+    else next[key] = next[key] ? canonicalLevels(Number(key), change) : TOP_LEVELS
+  }
+  draft.value = next
 }
 
 const heroesKey = (pool: Record<string, AttrRecord>): string =>
   JSON.stringify(canonicalHeroes(pool))
-const dirty = computed(() => heroesKey(copy.value) !== heroesKey(source.value))
+const dirty = computed(
+  () => !rosters.active && heroesKey(draft.value) !== heroesKey(allHeroes.value),
+)
 
 // The heroes the picker shows as owned, which leaves out locked ones.
 const shownHeroes = (): Record<string, AttrRecord> =>
-  Object.fromEntries(Object.entries(copy.value).filter(([id]) => !locked.value.ids.has(Number(id))))
+  Object.fromEntries(
+    Object.entries(draft.value).filter(([id]) => !locked.value.ids.has(Number(id))),
+  )
 const newRosterName = computed(() =>
   nextAutoName(
     rosters.rosters.map((r) => r.name),
@@ -143,26 +147,13 @@ const newRosterName = computed(() =>
   ),
 )
 
-const { report } = useRosterFeedback()
-
-// Replaces the active roster's heroes with the copy, locked ones included, as
-// the roster held them; under All heroes makes a new roster of the heroes on
-// screen, which becomes the active one and so the copy's source.
-const saveRoster = (name: string | null): void => {
-  const target = rosters.active
-  if (target)
-    rosters.setHeroes(target.id, {
-      ...Object.fromEntries(Object.keys(target.heroes).map((id) => [id, null])),
-      ...copy.value,
-    })
-  else if (!rosters.create({ name: name ?? '', heroes: shownHeroes() })) {
-    error(i18n.t('app.rosters-limit'))
-    return
-  }
-  const saved = rosters.active
-  if (saved) {
-    const count = Object.keys(saved.heroes).length
-    report(i18n.t('app.roster-import-saved', { name: saved.name, count }))
+// The new roster becomes the active one, so later changes go straight into it.
+const saveRoster = (name: string): void => {
+  const created = rosters.create({ name, heroes: shownHeroes() })
+  if (!created) error(i18n.t('app.rosters-limit'))
+  else {
+    const count = Object.keys(created.heroes).length
+    report(i18n.t('app.roster-import-saved', { name: created.name, count }))
   }
 }
 
@@ -265,7 +256,7 @@ const generate = async (): Promise<void> => {
   busy.value = true
   const generation = ++generations
   try {
-    const picks = picksOf(copy.value)
+    const picks = picksOf(levels.value)
     const chosenFor = { mode: mode.value, variant: variant.value }
     const boards = boardsFor(file)
     const set = await generateSet(picks, boards)
@@ -463,7 +454,6 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
         :ready
         :waiting="!failed && engineStatus === 'loading'"
         :dirty
-        :save-to="rosters.active?.name ?? null"
         :new-name="newRosterName"
         :export-file="rosters.active ? undefined : exportShown"
         @generate="generate"
@@ -471,13 +461,14 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
       />
       <RosterEditor
         :heroes
-        :levels="copy"
+        :levels
         :source-key="rosters.activeId"
         :armed-confirm
         :locked
         hide-mechanics
         large-dock
         @edit="edit"
+        @settle="rosters.active && report()"
       />
     </section>
   </main>
