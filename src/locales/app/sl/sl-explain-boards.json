@@ -1,5 +1,5 @@
 {
-  "en": "{players} is how many players used the team's comp on that map, and {games} how many of its games were recorded there.",
-  "zh": "{players} 是在这张地图上用过这个阵容的玩家数，{games} 是这个阵容在这张地图上记录的对局数。",
-  "ko": "{players} 숫자는 그 맵에서 이 팀의 조합을 쓴 플레이어 수이고, {games} 숫자는 그 맵에서 기록된 이 조합의 전투 수입니다."
+  "en": "{players} is how many players used the team's comp on that map, and {games} how many of its games were recorded there. A team outside every comp counts its own.",
+  "zh": "{players} 是在这张地图上用过这个阵容的玩家数，{games} 是这个阵容在这张地图上记录的对局数。不属于任何阵容的队伍按它自己的记录计算。",
+  "ko": "{players} 숫자는 그 맵에서 이 팀의 조합을 쓴 플레이어 수이고, {games} 숫자는 그 맵에서 기록된 이 조합의 전투 수입니다. 어느 조합에도 속하지 않는 팀은 그 팀 자신의 기록을 셉니다."
 }

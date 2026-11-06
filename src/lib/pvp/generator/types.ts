@@ -18,8 +18,8 @@ export interface SlChoiceTeam {
   // Index into the file's families; null outside every group.
   family: number | null
   chance: number
-  // The group's [players, wins, losses] on the board's map; null outside every
-  // group or on a map with no records.
+  // The group's [players, wins, losses] on the board's map, or the team's own
+  // outside every group; null where the map has none.
   comp: SlRecord | null
   artifact: number | null
   // Index into the team's placements: the board drawn.

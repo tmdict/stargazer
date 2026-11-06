@@ -41,6 +41,8 @@ export interface SlMapTeam extends SlTeam {
   // [artifact, index into placements] for each artifact (null for none) that
   // draws a board other than the first.
   pick?: [artifact: number | null, placement: number][]
+  // Outside every group alone: its own record on the map, kept as a group's.
+  record?: SlRecord
 }
 
 export interface SlEveryMapTeam extends SlTeam {

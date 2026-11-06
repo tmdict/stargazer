@@ -65,7 +65,8 @@ const isMapTeam = (t: unknown, families: number): boolean =>
   Array.isArray(t.placements) &&
   (t.pick === undefined ||
     (Array.isArray(t.pick) &&
-      t.pick.every((pick: unknown) => isPick(pick, (t.placements as unknown[]).length))))
+      t.pick.every((pick: unknown) => isPick(pick, (t.placements as unknown[]).length)))) &&
+  (t.record === undefined || (t.family === null && isNumbers(t.record, 3)))
 
 const isMap = (value: unknown, families: number): boolean =>
   isObject(value) &&

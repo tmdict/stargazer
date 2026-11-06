@@ -191,6 +191,10 @@ describe('the shipped PvP data', () => {
       (c: SlData) => c.maps[0]!.records.pop(),
       (c: SlData) => (c.everyMap[0]!.home = c.maps.length),
       (c: SlData) => (c.seasons[0]!.weight = 0.3),
+      (c: SlData) =>
+        (c.maps.flatMap((m) => m.teams).find((t) => t.family !== null)!.record = [1, 1, 0]),
+      (c: SlData) =>
+        (c.maps.flatMap((m) => m.teams).find((t) => t.family === null)!.record = [1, 1] as never),
     ])
       await expect(decodeSlData(sealed(edit))).rejects.toThrow()
   })
@@ -228,6 +232,28 @@ describe('chooseSlSet on the shipped data', () => {
     })
     expect(checked.length).toBeGreaterThan(0)
   })
+
+  // The file gives such a team its own record once the pack holds it.
+  it.runIf(mapTeams.some((t) => t.record))(
+    'shows a team outside every group its own record under its board',
+    () => {
+      const keys = [...new Set([...TEAM_VARIANTS.sl.maps, 'arena1'])]
+      const map = data.maps.find(
+        (m) =>
+          keys.includes(m.key) &&
+          m.teams.some((t) => t.family === null && allowed([t], new Set(t.heroes)).length),
+      )!
+      const team = map.teams.find(
+        (t) => t.family === null && allowed([t], new Set(t.heroes)).length,
+      )!
+      const set = choose(
+        team.heroes.map((id) => pick(id)),
+        slBoards(data, [map.key]),
+      )
+      expect(set?.teams[0]!.heroes).toEqual(team.heroes)
+      expect(set?.teams[0]!.comp).toEqual(team.record)
+    },
+  )
 
   it('counts upgrades against a team', () => {
     const full = holds(named.map((id) => pick(id)))

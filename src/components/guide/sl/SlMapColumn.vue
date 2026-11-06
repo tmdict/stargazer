@@ -95,7 +95,7 @@ watch(tried, async (swap) => {
   if (tried.value === swap) preview.value = found
 })
 
-// A team outside every group, or on a map with no records, has no games there.
+// A map with no records, or none of a team outside every group, has no games.
 const players = computed(() => team.comp?.[0] ?? 0)
 const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
 </script>

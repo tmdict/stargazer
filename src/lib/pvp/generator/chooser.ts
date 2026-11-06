@@ -8,7 +8,7 @@
  * typical opponent at the top levels, with its odds scaled by the share of its
  * own effects its board's map leaves it (fit.ts). */
 
-import type { SlData, SlEvidence, SlTeam } from '../data/types'
+import type { SlData, SlEvidence, SlRecord, SlTeam } from '../data/types'
 import { oddsInto, winsNeeded } from '../model/odds'
 import type { SlReader } from '../model/reader'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
@@ -265,6 +265,19 @@ function searcher(
   const position = new Map(data.order.map((id, i) => [id, i]))
   const before = (a: number, b: number): boolean => position.get(a)! < position.get(b)!
 
+  // The record under a board is its map's: a team drawn from the rows over
+  // every map shows its group's there, or its own there outside every group.
+  const recordOn = (
+    source: number | null,
+    t: Pick<SlTeam, 'heroes' | 'family'>,
+  ): SlRecord | null => {
+    if (source === null) return null
+    const map = data.maps[source]!
+    if (t.family !== null) return map.records[t.family]!
+    const lineup = t.heroes.join()
+    return map.teams.find((o) => o.heroes.join() === lineup)?.record ?? null
+  }
+
   const answer = (set: Found): SlChoice => ({
     chance: set.chance,
     odds: [...oddsInto(set.chances, new Float64Array(boards.length + 1))],
@@ -291,7 +304,7 @@ function searcher(
         heroes: t.heroes,
         family: t.family,
         chance: set.chances[i]!,
-        comp: t.family === null || source === null ? null : data.maps[source]!.records[t.family]!,
+        comp: recordOn(source, t),
         artifact,
         placement:
           t.source === null
