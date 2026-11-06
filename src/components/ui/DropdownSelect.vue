@@ -134,7 +134,6 @@ const focusTrigger = (): void =>
 watch(open, (isOpen) => {
   if (isOpen) emit('open')
   else {
-    // An armed delete must not wait for the list's next opening.
     disarm()
     if (listRef.value?.contains(document.activeElement)) focusTrigger()
   }
@@ -272,9 +271,8 @@ const pressSegment = (): void => {
       >
         <slot :close="hide">
           <template v-for="item in items" :key="item.key">
-            <!-- The delete button sits over the row's end, beside the row rather
-                 than in it, since a button cannot hold another button. Other
-                 rows stay unwrapped, so neighbouring selected rows still join. -->
+            <!-- Beside the row, not in it: a button cannot hold another button.
+                 Other rows stay unwrapped, so neighbouring selected rows join. -->
             <div v-if="item.deletable" class="item-wrap" :class="{ selected: item.selected }">
               <DropdownRow
                 class="item"
