@@ -1,15 +1,16 @@
 <script setup lang="ts">
 /* Picks the active roster: the picker's source of heroes, and the roster the
-   Rosters tab edits. The Characters tab and the on-grid popup add a Manage
-   entry that jumps to that tab; the popup uses the dark variant, whose list
-   stays inside the popup so hovering it never trips the popup's mouse-leave
-   dismissal. In the side panels the list floats, since a panel scrolls and
-   can be shorter than the list. */
+   Rosters tab edits. Each roster's row also deletes it. The Characters tab and
+   the on-grid popup add a Manage entry that jumps to that tab; the popup uses
+   the dark variant, whose list stays inside the popup so hovering it never
+   trips the popup's mouse-leave dismissal. In the side panels the list floats,
+   since a panel scrolls and can be shorter than the list. */
 
 import { computed } from 'vue'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import IconUser from '@/components/ui/IconUser.vue'
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
@@ -23,6 +24,7 @@ const emit = defineEmits<{ manage: [] }>()
 
 const rosters = useRosters()
 const i18n = useI18nStore()
+const { report } = useRosterFeedback()
 
 // Roster ids are never empty (validateRoster), so the empty key cannot collide.
 const ALL_HEROES = ''
@@ -34,8 +36,14 @@ const items = computed((): DropdownItem[] => [
     label: roster.name,
     meta: Object.keys(roster.heroes).length,
     selected: rosters.active?.id === roster.id,
+    deletable: true,
   })),
 ])
+
+const remove = (id: string): void => {
+  rosters.remove(id)
+  report()
+}
 </script>
 
 <template>
@@ -51,6 +59,7 @@ const items = computed((): DropdownItem[] => [
     :action="manage ? i18n.t('app.manage-rosters') : undefined"
     @select="rosters.setActive($event === ALL_HEROES ? null : $event)"
     @action="emit('manage')"
+    @delete="remove"
   >
     <template v-if="large" #icon>
       <IconUser :size="15" />

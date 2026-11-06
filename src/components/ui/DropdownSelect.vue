@@ -2,8 +2,10 @@
 /* A dropdown: a trigger naming the current choice and a list that opens on
    hover (mouse) or click (useDropdown). The list is the `items`, several of
    which may show as selected (the Arena quick maps share maps across slots),
-   plus an optional trailing action item (e.g. Manage). A `default` slot
-   replaces it with the owner's own DropdownRows.
+   plus an optional trailing action item (e.g. Manage). A `deletable` item
+   carries a delete button, which arms on a first click and emits `delete` on
+   the second. A `default` slot replaces the list with the owner's own
+   DropdownRows.
 
    Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
    the tab strip, list right-aligned), `dark` (translucent, inside the dark
@@ -25,6 +27,8 @@ import DropdownRow from './DropdownRow.vue'
 import IconClose from './IconClose.vue'
 import IconMinus from './IconMinus.vue'
 import IconPlus from './IconPlus.vue'
+import IconTrashSmall from './IconTrashSmall.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { useFloatingPanel } from '@/composables/useFloatingPanel'
 import { usePanelFit } from '@/composables/usePanelFit'
@@ -40,6 +44,7 @@ export interface DropdownItem {
   // Makes the row a link; `select` still fires when it is followed here.
   to?: RouteLocationRaw
   href?: string
+  deletable?: boolean
 }
 
 const {
@@ -73,6 +78,7 @@ const emit = defineEmits<{
   clear: []
   segment: []
   open: []
+  delete: [key: string]
 }>()
 
 defineSlots<{
@@ -91,6 +97,7 @@ const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDrop
   panelRef: listRef,
   hover: true,
 })
+const { armed, confirm, disarm } = useArmedConfirm()
 const listMaxHeight = usePanelFit(listRef, () => open.value && !floating)
 const floatingStyle = useFloatingPanel(rootRef, listRef, () => open.value && floating)
 
@@ -126,7 +133,11 @@ const focusTrigger = (): void =>
 // elsewhere stays there.
 watch(open, (isOpen) => {
   if (isOpen) emit('open')
-  else if (listRef.value?.contains(document.activeElement)) focusTrigger()
+  else {
+    // An armed delete must not wait for the list's next opening.
+    disarm()
+    if (listRef.value?.contains(document.activeElement)) focusTrigger()
+  }
 })
 
 /* A floating list sits at the end of <body>, outside the Tab order. Tab from
@@ -166,6 +177,13 @@ const select = (item: DropdownItem, e: MouseEvent): void => {
   if ((item.to || item.href) && opensElsewhere(e)) return
   hide()
   emit('select', item.key)
+}
+
+const deleteItem = (item: DropdownItem, e: MouseEvent): void => {
+  if (!confirm(item.key)) return
+  // The button leaves with its row, and focus on it would fall to <body>.
+  if (document.activeElement === e.currentTarget) focusTrigger()
+  emit('delete', item.key)
 }
 
 const runAction = (): void => {
@@ -253,18 +271,44 @@ const pressSegment = (): void => {
         v-on="listEvents"
       >
         <slot :close="hide">
-          <DropdownRow
-            v-for="item in items"
-            :key="item.key"
-            class="item"
-            :label="item.label"
-            :meta="item.meta"
-            :meta-color="item.metaColor"
-            :selected="item.selected"
-            :to="item.to"
-            :href="item.href"
-            @click="select(item, $event)"
-          />
+          <template v-for="item in items" :key="item.key">
+            <!-- The delete button sits over the row's end, beside the row rather
+                 than in it, since a button cannot hold another button. Other
+                 rows stay unwrapped, so neighbouring selected rows still join. -->
+            <div v-if="item.deletable" class="item-wrap" :class="{ selected: item.selected }">
+              <DropdownRow
+                class="item"
+                :label="item.label"
+                :meta="item.meta"
+                :meta-color="item.metaColor"
+                :selected="item.selected"
+                :to="item.to"
+                :href="item.href"
+                @click="select(item, $event)"
+              />
+              <button
+                type="button"
+                class="item-delete"
+                :class="{ 'confirm-armed': armed === item.key }"
+                :title="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
+                :aria-label="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
+                @click="deleteItem(item, $event)"
+              >
+                <IconTrashSmall :size="11" />
+              </button>
+            </div>
+            <DropdownRow
+              v-else
+              class="item"
+              :label="item.label"
+              :meta="item.meta"
+              :meta-color="item.metaColor"
+              :selected="item.selected"
+              :to="item.to"
+              :href="item.href"
+              @click="select(item, $event)"
+            />
+          </template>
           <DropdownRow v-if="action" class="item" :label="action" action @click="runAction" />
         </slot>
       </div>
@@ -328,7 +372,51 @@ const pressSegment = (): void => {
   background: var(--color-border-primary);
 }
 
+.item-wrap {
+  position: relative;
+}
+
+.item-wrap > .item {
+  padding-right: calc(var(--spacing-sm) + var(--item-delete-size) + var(--spacing-sm));
+}
+
+.item-delete {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-sm);
+  display: grid;
+  place-items: center;
+  width: var(--item-delete-size);
+  height: var(--item-delete-size);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  opacity: 0.55;
+  translate: 0 -50%;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.item-wrap.selected .item-delete {
+  color: #fff;
+}
+
+.item-delete:hover,
+.item-delete:focus-visible,
+.item-delete.confirm-armed {
+  background: var(--color-danger);
+  color: #fff;
+  opacity: 1;
+}
+
+.item-delete.confirm-armed {
+  background: var(--color-danger-hover);
+}
+
 .list {
+  --item-delete-size: 22px;
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -514,8 +602,11 @@ const pressSegment = (): void => {
 
 .dark .item,
 .dark .item.action,
+.dark .item-delete,
 .icon .item,
-.nav .item {
+.icon .item-delete,
+.nav .item,
+.nav .item-delete {
   color: rgba(255, 255, 255, 0.8);
 }
 
