@@ -81,6 +81,14 @@
   color: var(--color-header-gold);
 }
 
+.dirty-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+
 .confirm-armed {
   box-shadow: var(--confirm-armed-ring);
   animation: confirm-ping 0.9s ease-out infinite;

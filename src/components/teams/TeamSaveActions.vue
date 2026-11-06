@@ -7,16 +7,16 @@
    the library it acts on. The root is display: contents, so every control sits
    directly in the action row's flex flow with its spacing. */
 
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
+import NamePopover from '@/components/ui/NamePopover.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { MAX_NAME_LENGTH } from '@/lib/names'
 import { type TeamModeKey, type VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -41,26 +41,15 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 const popoverOpen = ref(false)
-const popoverName = ref('')
-const nameInput = ref<HTMLInputElement>()
 
-const openPopover = async (): Promise<void> => {
+const openPopover = (): void => {
   hideTip()
-  popoverName.value = suggestedName
   popoverOpen.value = true
-  await nextTick()
-  nameInput.value?.focus()
-  nameInput.value?.select()
-}
-
-const commitPopover = (): void => {
-  popoverOpen.value = false
-  emit('saveAsNew', popoverName.value)
 }
 
 const handleSave = (): void => {
   if (hasSource) emit('save')
-  else void openPopover()
+  else openPopover()
 }
 
 // New discards the boards' current content, so it confirms like Clear does.
@@ -131,7 +120,12 @@ const tipText = computed((): string => {
       <IconSave :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.save') }}</span>
     </button>
-    <span class="popover-anchor">
+    <NamePopover
+      v-model:open="popoverOpen"
+      :label="i18n.t('app.team-name')"
+      :name="suggestedName"
+      @commit="emit('saveAsNew', $event)"
+    >
       <button
         type="button"
         class="control-btn secondary"
@@ -144,40 +138,7 @@ const tipText = computed((): string => {
         <IconSavePlus :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.save-as-new') }}</span>
       </button>
-      <div
-        v-if="popoverOpen"
-        class="name-popover"
-        role="dialog"
-        :aria-label="i18n.t('app.team-name')"
-      >
-        <label class="name-popover-label" for="team-name-input">
-          {{ i18n.t('app.team-name') }}
-        </label>
-        <input
-          id="team-name-input"
-          ref="nameInput"
-          v-model="popoverName"
-          class="name-popover-input"
-          type="text"
-          :maxlength="MAX_NAME_LENGTH"
-          spellcheck="false"
-          @keydown.enter.prevent="commitPopover"
-          @keydown.esc="popoverOpen = false"
-        />
-        <div class="name-popover-actions">
-          <button type="button" class="popover-btn solid-btn" @click="commitPopover">
-            {{ i18n.t('app.save') }}
-          </button>
-          <button
-            type="button"
-            class="popover-btn solid-btn secondary"
-            @click="popoverOpen = false"
-          >
-            {{ i18n.t('app.cancel') }}
-          </button>
-        </div>
-      </div>
-    </span>
+    </NamePopover>
     <Teleport to="body">
       <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
         <template #content>{{ tipText }}</template>
@@ -189,79 +150,5 @@ const tipText = computed((): string => {
 <style scoped>
 .team-save-actions {
   display: contents;
-}
-
-.popover-anchor {
-  position: relative;
-  display: inline-flex;
-}
-
-.name-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-dropdown);
-  background: var(--color-bg-primary);
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-float);
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  width: 240px;
-}
-
-.name-popover-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
-}
-
-.name-popover-input {
-  font: inherit;
-  font-size: max(0.85rem, var(--field-min-font-size));
-  padding: 6px 8px;
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  background: var(--color-bg-raised);
-  color: var(--color-text-primary);
-}
-
-.name-popover-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.name-popover-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-/* Not .control-btn, so the control bar's mobile icon-only collapse never
-   applies inside the popover. */
-.popover-btn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 30px;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-}
-
-.popover-btn.secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border-primary);
-}
-
-.popover-btn.secondary:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-bg-tertiary);
 }
 </style>

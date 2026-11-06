@@ -2,7 +2,8 @@
 /* The roster library's file controls, as the Rosters tab and the Supreme
    League generator show them: the screenshot import, then the rosters file
    import and export. An import merges into the library and never replaces
-   it. */
+   it. Export writes every saved roster unless the host hands it a file of its
+   own: the generator does, under All heroes, for the heroes on its screen. */
 
 import RosterImportButton from './RosterImportButton.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -11,8 +12,11 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
 import { useRosterFeedback } from '@/composables/useRosterFeedback'
+import type { RostersExportFile } from '@/lib/rosters'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
+
+const { exportFile } = defineProps<{ exportFile?: () => RostersExportFile }>()
 
 const rosters = useRosters()
 const i18n = useI18nStore()
@@ -58,12 +62,14 @@ const {
     <span class="btn-text">{{ i18n.t('app.import') }}</span>
   </button>
   <button
-    v-if="rosters.count > 0"
+    v-if="exportFile || rosters.count > 0"
     type="button"
     class="control-btn compact secondary"
     :aria-label="i18n.t('app.export')"
-    @click="download(rosters.exportRosters())"
-    @mouseenter="showTip($event, 'app.tooltip-rosters-export')"
+    @click="download(exportFile ? exportFile() : rosters.exportRosters())"
+    @mouseenter="
+      showTip($event, exportFile ? 'app.tooltip-roster-export-shown' : 'app.tooltip-rosters-export')
+    "
     @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >

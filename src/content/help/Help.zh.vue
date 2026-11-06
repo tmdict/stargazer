@@ -309,12 +309,13 @@ const SKILL = {
             <span class="help-mouse">
               点击英雄可以加入或移除，也可以按住鼠标一次拖过多个英雄。再点英雄下方的
               <UpgradeIcon kind="paragon" /> 或
-              <UpgradeIcon kind="refinement" /> 调整等级。保存的英雄池不会改变。
+              <UpgradeIcon kind="refinement" />
+              调整等级。按下<b>保存</b>前，保存的英雄池不会改变；做出修改后会出现该按钮。在<b>全部英雄</b>下，保存会新建一个英雄池，<b>导出</b>会下载屏幕上的英雄。
             </span>
             <span class="help-touch">
               点英雄可以加入或移除，再点英雄下方的 <UpgradeIcon kind="paragon" /> 或
               <UpgradeIcon kind="refinement" />
-              调整等级。保存的英雄池不会改变。
+              调整等级。按下<b>保存</b>前，保存的英雄池不会改变；做出修改后会出现该按钮。在<b>全部英雄</b>下，保存会新建一个英雄池，<b>导出</b>会下载屏幕上的英雄。
             </span>
           </li>
           <li>

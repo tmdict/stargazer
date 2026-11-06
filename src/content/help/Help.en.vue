@@ -369,12 +369,16 @@ const SKILL = {
             <span class="help-mouse">
               Click heroes to add or remove them, or drag across several. Click
               <UpgradeIcon kind="paragon" /> or <UpgradeIcon kind="refinement" /> under a hero to
-              set its level. Your saved roster stays as it is.
+              set its level. Your saved roster stays as it is until you press <b>Save</b>, which
+              shows once you change something. Under <b>All heroes</b>, Save makes a new roster and
+              <b>Export</b> downloads the heroes on screen.
             </span>
             <span class="help-touch">
               Tap heroes to add or remove them, and tap <UpgradeIcon kind="paragon" /> or
               <UpgradeIcon kind="refinement" /> under a hero to set its level. Your saved roster
-              stays as it is.
+              stays as it is until you press <b>Save</b>, which shows once you change something.
+              Under <b>All heroes</b>, Save makes a new roster and <b>Export</b> downloads the
+              heroes on screen.
             </span>
           </li>
           <li>

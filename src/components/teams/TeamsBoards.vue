@@ -308,14 +308,6 @@ const {
   white-space: nowrap;
 }
 
-.dirty-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-warning);
-  flex-shrink: 0;
-}
-
 @media (max-width: 768px) {
   .team-title-wrap {
     max-width: calc(100% - 2 * 24px);

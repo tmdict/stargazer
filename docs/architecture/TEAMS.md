@@ -176,7 +176,7 @@ A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy.
+The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab binds it to the active roster and the PvP team generator to a copy. The generator's Save writes the copy into the active roster, or under All heroes into a new roster made with `create`.
 
 The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
 
@@ -211,7 +211,7 @@ The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)
 
 A roster that breaks a rule is dropped with a console warning, and the others still load. Heroes are stored in ascending id order with levels in canonical form, so equal content is byte-equal.
 
-The Rosters tab exports every roster, and imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object. The first roster a file adds becomes the active one, as a new roster does, and a file that adds none leaves the active roster as it was:
+The Rosters tab exports every roster, and so does the PvP team generator, except under All heroes, where its Export writes a file holding one roster of the heroes on its screen. Imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object. The first roster a file adds becomes the active one, as a new roster does, and a file that adds none leaves the active roster as it was:
 
 ```json
 {

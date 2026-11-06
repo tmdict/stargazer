@@ -372,12 +372,16 @@ const SKILL = {
             <span class="help-mouse">
               영웅을 클릭해 넣거나 빼고, 여러 영웅 위로 드래그할 수도 있습니다. 영웅 아래의
               <UpgradeIcon kind="paragon" /> 또는 <UpgradeIcon kind="refinement" />을 클릭하면
-              레벨을 설정할 수 있습니다. 저장된 로스터는 바뀌지 않습니다.
+              레벨을 설정할 수 있습니다. <b>저장</b>을 누르기 전에는 저장된 로스터가 바뀌지 않으며,
+              무언가를 바꾸면 이 버튼이 나타납니다. <b>모든 영웅</b>에서는 저장하면 새 로스터가
+              만들어지고, <b>내보내기</b>는 화면의 영웅을 다운로드합니다.
             </span>
             <span class="help-touch">
               영웅을 눌러 넣거나 빼고, 영웅 아래의 <UpgradeIcon kind="paragon" /> 또는
-              <UpgradeIcon kind="refinement" />을 눌러 레벨을 설정하세요. 저장된 로스터는 바뀌지
-              않습니다.
+              <UpgradeIcon kind="refinement" />을 눌러 레벨을 설정하세요. <b>저장</b>을 누르기
+              전에는 저장된 로스터가 바뀌지 않으며, 무언가를 바꾸면 이 버튼이 나타납니다.
+              <b>모든 영웅</b>에서는 저장하면 새 로스터가 만들어지고, <b>내보내기</b>는 화면의
+              영웅을 다운로드합니다.
             </span>
           </li>
           <li>

@@ -6,8 +6,11 @@
    lists, picked as on the Teams page, or the boards of the page Generate's ↗
    opened this one from (lib/pvp/generator/handover), drawn on arrival and
    offered back with Open in Arena or Teams. The picker edits a copy of the
-   active roster, so trying a hero out never changes the roster, and picking or
-   importing another roster takes a fresh copy. The set is chosen only on
+   active roster, every hero at the top levels under All heroes, so trying a
+   hero out changes no roster until Save writes the copy into the active one,
+   or into a new roster under All heroes. Picking or importing another roster
+   takes a fresh copy, dropping unsaved changes. Under All heroes, Export
+   writes the heroes on screen as a roster file. The set is chosen only on
    Generate and stays as it is while the selection, the mode or the maps
    change. A board draws the formation of its team's recorded game where the
    team was recorded on its map, and the engine's elsewhere; the engine's
@@ -29,10 +32,12 @@ import RosterEditor from '@/components/RosterEditor.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readSavedBoards, readTeamsSlot } from '@/composables/useGridPersistence'
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
+import { nextAutoName } from '@/lib/names'
 import type { SlData } from '@/lib/pvp/data/types'
 import { shownFormation, type BoardFormation } from '@/lib/pvp/generator/formation'
 import {
@@ -46,7 +51,12 @@ import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setTyp
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import { slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
-import { canonicalLevels } from '@/lib/rosters'
+import {
+  buildRostersExport,
+  canonicalHeroes,
+  canonicalLevels,
+  type RostersExportFile,
+} from '@/lib/rosters'
 import {
   DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
@@ -93,16 +103,16 @@ const aboutOpen = ref(false)
 const sourceLevels = (id: number): AttrRecord | undefined =>
   rosters.active ? rosters.active.heroes[id] : TOP_LEVELS
 
+const source = computed(
+  (): Record<string, AttrRecord> =>
+    rosters.active?.heroes ?? Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS])),
+)
 const copy = ref<Record<string, AttrRecord>>({})
 // Taken again when another roster becomes active, never on the roster object
 // itself, which every library write replaces.
 watch(
   () => rosters.activeId,
-  () => {
-    copy.value = rosters.active
-      ? { ...rosters.active.heroes }
-      : Object.fromEntries(heroes.value.map((c) => [c.id, TOP_LEVELS]))
-  },
+  () => (copy.value = { ...source.value }),
   { immediate: true },
 )
 
@@ -117,6 +127,55 @@ const edit = (changes: Record<string, AttrRecord | null>): void => {
     else next[key] = canonicalLevels(id, levels)
   }
   copy.value = next
+}
+
+const heroesKey = (pool: Record<string, AttrRecord>): string =>
+  JSON.stringify(canonicalHeroes(pool))
+const dirty = computed(() => heroesKey(copy.value) !== heroesKey(source.value))
+
+// The heroes the picker shows as owned, which leaves out locked ones.
+const shownHeroes = (): Record<string, AttrRecord> =>
+  Object.fromEntries(Object.entries(copy.value).filter(([id]) => !locked.value.ids.has(Number(id))))
+const newRosterName = computed(() =>
+  nextAutoName(
+    rosters.rosters.map((r) => r.name),
+    'Roster',
+  ),
+)
+
+const { report } = useRosterFeedback()
+
+// Replaces the active roster's heroes with the copy, locked ones included, as
+// the roster held them; under All heroes makes a new roster of the heroes on
+// screen, which becomes the active one and so the copy's source.
+const saveRoster = (name: string | null): void => {
+  const target = rosters.active
+  if (target)
+    rosters.setHeroes(target.id, {
+      ...Object.fromEntries(Object.keys(target.heroes).map((id) => [id, null])),
+      ...copy.value,
+    })
+  else if (!rosters.create({ name: name ?? '', heroes: shownHeroes() })) {
+    error(i18n.t('app.rosters-limit'))
+    return
+  }
+  const saved = rosters.active
+  if (saved) {
+    const count = Object.keys(saved.heroes).length
+    report(i18n.t('app.roster-import-saved', { name: saved.name, count }))
+  }
+}
+
+const exportShown = (): RostersExportFile => {
+  const now = Date.now()
+  const roster = {
+    id: crypto.randomUUID(),
+    name: newRosterName.value,
+    heroes: canonicalHeroes(shownHeroes()) ?? {},
+    createdAt: now,
+    updatedAt: now,
+  }
+  return buildRostersExport([roster], new Date(now).toISOString())
 }
 
 const armedConfirm = useArmedConfirm()
@@ -403,7 +462,12 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
         :busy
         :ready
         :waiting="!failed && engineStatus === 'loading'"
+        :dirty
+        :save-to="rosters.active?.name ?? null"
+        :new-name="newRosterName"
+        :export-file="rosters.active ? undefined : exportShown"
         @generate="generate"
+        @save-roster="saveRoster"
       />
       <RosterEditor
         :heroes
