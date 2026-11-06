@@ -31,7 +31,7 @@ export function useImageStitch() {
     direction: 'vertical',
     gap: 0,
     background: 'transparent',
-    fit: 'original',
+    fit: 'scale',
   })
 
   let nextId = 0
