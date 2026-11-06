@@ -16,6 +16,7 @@ import type { SearchPick } from '@/composables/useSavedTeamSearch'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { isComposing } from '@/utils/keyboard'
 
 const { picks, suggestions } = defineProps<{
   picks: readonly SearchPick[]
@@ -70,9 +71,7 @@ const onMousedown = (event: MouseEvent): void => {
 }
 
 const onKeydown = (event: KeyboardEvent): void => {
-  // IME composition keys (Enter commits, arrows pick candidates) must not
-  // drive the list; keyCode 229 covers browsers that omit isComposing.
-  if (event.isComposing || event.keyCode === 229) return
+  if (isComposing(event)) return
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
     if (!open.value) return
     event.preventDefault()

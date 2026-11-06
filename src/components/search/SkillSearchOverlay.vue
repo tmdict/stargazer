@@ -19,6 +19,7 @@ import {
   hasSkillLocale,
   loadCharacterImages,
 } from '@/utils/dataLoader'
+import { isComposing } from '@/utils/keyboard'
 import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
 import { appLabel, curatedHeroName, slotLabel } from '@/utils/skillLabels'
 
@@ -304,9 +305,7 @@ function activate(slug: string, href: string, newTab: boolean): void {
 }
 
 function onInputKeydown(e: KeyboardEvent): void {
-  // IME composition keys (Enter commits, arrows pick candidates) must not
-  // drive the list; keyCode 229 covers browsers that omit isComposing.
-  if (e.isComposing || e.keyCode === 229) return
+  if (isComposing(e)) return
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault()
     const n = rows.value.length
@@ -358,7 +357,7 @@ const visibleBox = computed(() =>
 // document-level ones included: one press closes only the overlay, never
 // what sits beneath.
 const onCaptureKeydown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !isOpen.value || e.isComposing || e.keyCode === 229) return
+  if (e.key !== 'Escape' || !isOpen.value || isComposing(e)) return
   e.stopImmediatePropagation()
   close()
 }

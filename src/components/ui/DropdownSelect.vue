@@ -4,8 +4,9 @@
    which may show as selected (the Arena quick maps share maps across slots),
    plus an optional trailing action item (e.g. Manage). A `deletable` item
    carries a delete button, which arms on a first click and emits `delete` on
-   the second. A `default` slot replaces the list with the owner's own
-   DropdownRows.
+   the second, and a `renamable` one a pencil that turns its row into a name
+   field, which emits `rename`. A `default` slot replaces the list with the
+   owner's own DropdownRows.
 
    Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
    the tab strip, list right-aligned), `dark` (translucent, inside the dark
@@ -20,19 +21,23 @@
    event serve an owner that shows its options some other way and wants the
    list only on request. */
 
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 
 import DropdownRow from './DropdownRow.vue'
 import IconClose from './IconClose.vue'
+import IconEdit from './IconEdit.vue'
 import IconMinus from './IconMinus.vue'
 import IconPlus from './IconPlus.vue'
 import IconTrashSmall from './IconTrashSmall.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { useFloatingPanel } from '@/composables/useFloatingPanel'
+import { useInlineRename } from '@/composables/useInlineRename'
 import { usePanelFit } from '@/composables/usePanelFit'
+import { MAX_NAME_LENGTH } from '@/lib/names'
 import { useI18nStore } from '@/stores/i18n'
+import { isComposing } from '@/utils/keyboard'
 
 export interface DropdownItem {
   key: string
@@ -45,6 +50,7 @@ export interface DropdownItem {
   to?: RouteLocationRaw
   href?: string
   deletable?: boolean
+  renamable?: boolean
 }
 
 const {
@@ -79,6 +85,7 @@ const emit = defineEmits<{
   segment: []
   open: []
   delete: [key: string]
+  rename: [key: string, name: string]
 }>()
 
 defineSlots<{
@@ -98,6 +105,17 @@ const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDrop
   hover: true,
 })
 const { armed, confirm, disarm } = useArmedConfirm()
+const {
+  editingKey,
+  editingName,
+  setInput,
+  start: startRename,
+  commit: commitRename,
+  cancel: cancelRename,
+} = useInlineRename({
+  currentName: (key) => items.find((item) => item.key === key)?.label,
+  rename: (key, name) => emit('rename', key, name),
+})
 const listMaxHeight = usePanelFit(listRef, () => open.value && !floating)
 const floatingStyle = useFloatingPanel(rootRef, listRef, () => open.value && floating)
 
@@ -117,9 +135,13 @@ let hoverPaused = false
 const hoverTrigger = (): void => {
   if (!clickOnly && !hoverPaused) onMouseEnter()
 }
+// The pointer leaving mid-rename must not close the list under the field.
+const leaveList = (): void => {
+  if (editingKey.value === null) onMouseLeave()
+}
 const leave = (): void => {
   hoverPaused = false
-  onMouseLeave()
+  leaveList()
 }
 
 const tabbable = (el: HTMLElement | undefined): HTMLElement[] =>
@@ -135,9 +157,39 @@ watch(open, (isOpen) => {
   if (isOpen) emit('open')
   else {
     disarm()
+    // A rename keeps its name when the list closes, as when its field loses focus.
+    commitRename()
     if (listRef.value?.contains(document.activeElement)) focusTrigger()
   }
 })
+
+// The field leaves with the rename, and focus in it would fall to <body>.
+const endRename = (end: () => void): void => {
+  end()
+  focusTrigger()
+}
+
+// Without preventDefault the Enter would go on to press the trigger, which
+// has focus by then, and close the list.
+const renameEnter = (e: KeyboardEvent): void => {
+  if (isComposing(e)) return
+  e.preventDefault()
+  endRename(commitRename)
+}
+
+/* Esc mid-rename cancels it and leaves the list open. The dropdown closes on
+   Esc in the document's capture phase, ahead of the field, so the window,
+   which hears it first, takes it. Esc ending a composition only stops there. */
+const renameEsc = (e: KeyboardEvent): void => {
+  if (e.key !== 'Escape') return
+  e.stopPropagation()
+  if (!isComposing(e)) endRename(cancelRename)
+}
+watch(editingKey, (key) => {
+  if (key === null) window.removeEventListener('keydown', renameEsc, true)
+  else window.addEventListener('keydown', renameEsc, true)
+})
+onUnmounted(() => window.removeEventListener('keydown', renameEsc, true))
 
 /* A floating list sits at the end of <body>, outside the Tab order. Tab from
    the dropdown's last control enters it, and Tab or Shift+Tab off either end
@@ -166,7 +218,7 @@ const tabOutOfList = (e: KeyboardEvent): void => {
 const listEvents = floating
   ? {
       mouseenter: onMouseEnter,
-      mouseleave: onMouseLeave,
+      mouseleave: leaveList,
       keydown: tabOutOfList,
       click: (e: MouseEvent) => e.stopPropagation(),
     }
@@ -273,27 +325,57 @@ const pressSegment = (): void => {
           <template v-for="item in items" :key="item.key">
             <!-- Beside the row, not in it: a button cannot hold another button.
                  Other rows stay unwrapped, so neighbouring selected rows join. -->
-            <div v-if="item.deletable" class="item-wrap" :class="{ selected: item.selected }">
-              <DropdownRow
-                class="item"
-                :label="item.label"
-                :meta="item.meta"
-                :meta-color="item.metaColor"
-                :selected="item.selected"
-                :to="item.to"
-                :href="item.href"
-                @click="select(item, $event)"
+            <div
+              v-if="item.deletable || item.renamable"
+              class="item-wrap"
+              :class="{ selected: item.selected }"
+              :style="{ '--item-actions': Number(!!item.deletable) + Number(!!item.renamable) }"
+            >
+              <input
+                v-if="editingKey === item.key"
+                :ref="setInput"
+                v-model="editingName"
+                class="item-rename"
+                :maxlength="MAX_NAME_LENGTH"
+                :aria-label="i18n.t('app.rename')"
+                @keydown.enter="renameEnter"
+                @blur="commitRename"
               />
-              <button
-                type="button"
-                class="item-delete"
-                :class="{ 'confirm-armed': armed === item.key }"
-                :title="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
-                :aria-label="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
-                @click="deleteItem(item, $event)"
-              >
-                <IconTrashSmall :size="11" />
-              </button>
+              <template v-else>
+                <DropdownRow
+                  class="item"
+                  :label="item.label"
+                  :meta="item.meta"
+                  :meta-color="item.metaColor"
+                  :selected="item.selected"
+                  :to="item.to"
+                  :href="item.href"
+                  @click="select(item, $event)"
+                />
+                <span class="item-actions">
+                  <button
+                    v-if="item.renamable"
+                    type="button"
+                    class="item-action"
+                    :title="i18n.t('app.rename')"
+                    :aria-label="i18n.t('app.rename')"
+                    @click="startRename(item.key, item.label)"
+                  >
+                    <IconEdit :size="11" />
+                  </button>
+                  <button
+                    v-if="item.deletable"
+                    type="button"
+                    class="item-action item-delete"
+                    :class="{ 'confirm-armed': armed === item.key }"
+                    :title="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
+                    :aria-label="armed === item.key ? i18n.t('app.confirm') : i18n.t('app.delete')"
+                    @click="deleteItem(item, $event)"
+                  >
+                    <IconTrashSmall :size="11" />
+                  </button>
+                </span>
+              </template>
             </div>
             <DropdownRow
               v-else
@@ -375,30 +457,40 @@ const pressSegment = (): void => {
 }
 
 .item-wrap > .item {
-  padding-right: calc(var(--spacing-sm) + var(--item-delete-size) + var(--spacing-sm));
+  padding-right: calc(2 * var(--spacing-sm) + var(--item-actions) * var(--item-action-size));
 }
 
-.item-delete {
+.item-actions {
   position: absolute;
   top: 50%;
   right: var(--spacing-sm);
+  display: flex;
+  translate: 0 -50%;
+}
+
+.item-action {
   display: grid;
   place-items: center;
-  width: var(--item-delete-size);
-  height: var(--item-delete-size);
+  width: var(--item-action-size);
+  height: var(--item-action-size);
   padding: 0;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: var(--color-text-secondary);
   opacity: 0.55;
-  translate: 0 -50%;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.item-wrap.selected .item-delete {
+.item-wrap.selected .item-action {
   color: #fff;
+}
+
+.item-action:hover,
+.item-action:focus-visible {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  opacity: 1;
 }
 
 .item-delete:hover,
@@ -413,8 +505,27 @@ const pressSegment = (): void => {
   background: var(--color-danger-hover);
 }
 
+.item-rename {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: calc(var(--spacing-sm) - 2px) calc(var(--spacing-md) - 2px);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--dropdown-row-radius);
+  background: var(--color-bg-raised);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: max(1em, var(--field-min-font-size));
+  font-weight: 600;
+  line-height: 1lh;
+}
+
+.item-rename:focus {
+  outline: none;
+}
+
 .list {
-  --item-delete-size: 22px;
+  --item-action-size: 22px;
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -600,12 +711,19 @@ const pressSegment = (): void => {
 
 .dark .item,
 .dark .item.action,
-.dark .item-delete,
+.dark .item-action,
 .icon .item,
-.icon .item-delete,
+.icon .item-action,
 .nav .item,
-.nav .item-delete {
+.nav .item-action {
   color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .item-rename,
+.icon .item-rename,
+.nav .item-rename {
+  background: var(--field-dark-background);
+  color: #fff;
 }
 
 .dark .item:hover,

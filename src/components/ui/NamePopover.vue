@@ -8,6 +8,7 @@ import { ref, useId, watch } from 'vue'
 
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import { useI18nStore } from '@/stores/i18n'
+import { isComposing } from '@/utils/keyboard'
 
 const {
   label,
@@ -49,12 +50,8 @@ const commit = (): void => {
   emit('commit', value.value)
 }
 
-// The key that ends an IME composition must not also save or close the box;
-// keyCode 229 covers browsers that omit isComposing.
-const composing = (event: KeyboardEvent): boolean => event.isComposing || event.keyCode === 229
-
 const onEnter = (event: KeyboardEvent): void => {
-  if (composing(event)) return
+  if (isComposing(event)) return
   event.preventDefault()
   commit()
 }
@@ -62,7 +59,7 @@ const onEnter = (event: KeyboardEvent): void => {
 // Esc goes no further than the box, so a page-wide Esc (the hero grid's
 // Select mode beside the generator's Save) keeps its own state.
 const onEsc = (event: KeyboardEvent): void => {
-  if (!composing(event)) open.value = false
+  if (!isComposing(event)) open.value = false
 }
 </script>
 

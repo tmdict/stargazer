@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /* Picks the active roster: the picker's source of heroes, and the roster the
-   Rosters tab edits. Each roster's row also deletes it. The Characters tab and
-   the on-grid popup add a Manage entry that jumps to that tab; the popup uses
-   the dark variant, whose list stays inside the popup so hovering it never
-   trips the popup's mouse-leave dismissal. In the side panels the list floats,
-   since a panel scrolls and can be shorter than the list. */
+   Rosters tab edits. Each roster's row also renames and deletes it. The
+   Characters tab and the on-grid popup add a Manage entry that jumps to that
+   tab; the popup uses the dark variant, whose list stays inside the popup so
+   hovering it never trips the popup's mouse-leave dismissal. In the side
+   panels the list floats, since a panel scrolls and can be shorter than the
+   list. */
 
 import { computed } from 'vue'
 
@@ -37,11 +38,17 @@ const items = computed((): DropdownItem[] => [
     meta: Object.keys(roster.heroes).length,
     selected: rosters.active?.id === roster.id,
     deletable: true,
+    renamable: true,
   })),
 ])
 
 const remove = (id: string): void => {
   rosters.remove(id)
+  report()
+}
+
+const rename = (id: string, name: string): void => {
+  rosters.rename(id, name)
   report()
 }
 </script>
@@ -60,6 +67,7 @@ const remove = (id: string): void => {
     @select="rosters.setActive($event === ALL_HEROES ? null : $event)"
     @action="emit('manage')"
     @delete="remove"
+    @rename="rename"
   >
     <template v-if="large" #icon>
       <IconUser :size="15" />
