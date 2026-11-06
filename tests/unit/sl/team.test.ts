@@ -370,10 +370,10 @@ describe('a recorded board', () => {
     })
   })
 
-  // A shipped team on the map it was recorded on, drawn in its first placement.
-  const onOwnMap = (source: number, index: number) => {
+  // A shipped team in its first placement.
+  const choiceOf = (source: number, index: number): SlChoiceTeam => {
     const t = data.maps[source]!.teams[index]!
-    const choice: SlChoiceTeam = {
+    return {
       source,
       team: index,
       heroes: t.heroes,
@@ -386,10 +386,34 @@ describe('a recorded board', () => {
       flex: [],
       pairs: [],
     }
+  }
+
+  // A shipped team alone on the map it was recorded on.
+  const onOwnMap = (source: number, index: number) => {
+    const t = data.maps[source]!.teams[index]!
+    const choice = choiceOf(source, index)
     const board: SlBoard = { layout: presetLayout(data.maps[source]!.key)!, map: 0, source }
     const played = boardDraws(data, { chance: 0, odds: [], teams: [choice] }, [board])[0]!.played!
     return { t, choice, board, played }
   }
+
+  it('moves nothing for the Spirit Mark on the Supreme League maps, which play without the marks', () => {
+    // A team whose units the Spirit Mark moves when it stands alone on its map.
+    const mover = boards
+      .flatMap((board, at) =>
+        data.maps[board.source!]!.teams.flatMap((t, index) =>
+          t.placements[0]?.s.length ? [{ at, index, source: board.source! }] : [],
+        ),
+      )
+      .find(({ source, index }) => onOwnMap(source, index).played.moved.length > 0)!
+    expect(mover).toBeDefined()
+    const teams = boards.map((board, i) =>
+      i === mover.at ? choiceOf(mover.source, mover.index) : choiceOf(board.source!, 0),
+    )
+    const drawn = boardDraws(data, { chance: 0, odds: [], teams }, boards)
+    expect(drawn.map((draw) => draw.played?.moved ?? [])).toEqual(teams.map(() => []))
+    expect(drawn[mover.at]!.played!.units).toEqual(recordedUnits(data, teams[mover.at]!))
+  })
 
   // The first shipped teams of each map with a recorded phantimal, each on its map.
   it('moves the phantimal, and at most one hero, only where its Spirit Mark lands better', () => {

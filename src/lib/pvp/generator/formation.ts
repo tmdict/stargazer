@@ -1,11 +1,11 @@
 /* A chosen set's boards as the page draws them, and why each unit stands where
  * it does (lib/placement). A board whose team was recorded on its map draws
  * that game's formation, with at most its phantimal and one hero moved for the
- * Spirit Mark; a board of an earlier season recorded no phantimal, so the
- * engine places the one its heroes summon. Every board can draw the engine's
- * formation: the team's heroes, the artifact the set gives it and the
- * phantimal they can summon, placed on the board's map from their skills,
- * reading no recorded placement.
+ * Spirit Mark outside Supreme League, which plays without the marks; a board of
+ * an earlier season recorded no phantimal, so the engine places the one its
+ * heroes summon. Every board can draw the engine's formation: the team's
+ * heroes, the artifact the set gives it and the phantimal they can summon,
+ * placed on the board's map from their skills, reading no recorded placement.
  * A file from another season than Stargazer's is placed as slTeamData draws
  * it, without its seasonal artifacts and phantimals. A side placed by hand on
  * the Arena or Teams is explained where it stands (Placement tips). */
@@ -22,6 +22,7 @@ import { ruleUnit } from '@/lib/placement/reach'
 import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
+import { matchVariant } from '@/lib/teams/modes'
 import { loadPhantimals } from '@/utils/dataLoader'
 import type { SlData, SlUnit } from '../data/types'
 import type { SlBoard } from './setType'
@@ -114,17 +115,27 @@ function phantimalGoals(
   }
 }
 
+// Supreme League plays without Spirit Marks, so a set on its maps keeps every
+// recorded formation as recorded. Guild Duel shares two of its maps, so the
+// whole set decides, not a board's map.
+const marksCount = (boards: readonly SlBoard[]): boolean =>
+  matchVariant(
+    '5v5',
+    boards.map((board) => board.layout.key),
+  ) !== 'sl'
+
 /**
  * The recorded game's formation of a board, null when the board has no
- * recorded formation of its team. Where the phantimal's Spirit Mark lands
- * better with the phantimal moved, or the phantimal and one hero, the engine
- * moves them and keeps every other unit on its recorded tile; of the tries that
- * land it best, the one moving the fewest units wins.
+ * recorded formation of its team. Where the marks count and the phantimal's
+ * Spirit Mark lands better with the phantimal moved, or the phantimal and one
+ * hero, the engine moves them and keeps every other unit on its recorded tile;
+ * of the tries that land it best, the one moving the fewest units wins.
  */
 function playedFormation(
   data: SlData,
   choice: SlChoiceTeam,
   board: SlBoard,
+  marks: boolean,
 ): PlayedFormation | null {
   const recorded = choice.source === board.source ? recordedUnits(data, choice) : null
   if (!recorded) return null
@@ -142,7 +153,7 @@ function playedFormation(
     moved: [],
   })
   const { phantimal } = team
-  if (phantimal === undefined) return asIs()
+  if (phantimal === undefined || !marks) return asIs()
   const goalsAt = phantimalGoals(team, board.layout, placement)
   const recordedMet = goalsAt(asRecorded.positions)
   if (recordedMet === null) return asIs()
@@ -192,9 +203,10 @@ export function engineFormation(
 // One entry per board, in board order: the recorded game's formation where
 // there is one, the engine's elsewhere.
 export function boardDraws(data: SlData, set: SlChoice, boards: readonly SlBoard[]): BoardDraw[] {
+  const marks = marksCount(boards)
   return set.teams.map((choice, index) => {
     const board = boards[index]!
-    const played = playedFormation(data, choice, board)
+    const played = playedFormation(data, choice, board, marks)
     return { played, engine: played ? null : engineFormation(data, choice, board) }
   })
 }
