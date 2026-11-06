@@ -1,9 +1,11 @@
 <script setup lang="ts">
-/* What the set's chance to win means and how it is worked out, with the
-   set's own numbers. */
+/* How the set is picked, what its boards show, and its chance to win and how
+   that is worked out, with the set's own numbers. */
 
 import { computed } from 'vue'
 
+import SlIcon from './SlIcon.vue'
+import SlMeter, { METER_FROM } from './SlMeter.vue'
 import type { SlShown } from './SlResult.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
 import { winsNeeded } from '@/lib/pvp/model/odds'
@@ -19,15 +21,8 @@ const i18n = useI18nStore()
 const { groupName } = useSlNames()
 
 const boards = computed(() => shown.teams.length)
+const oneBoard = computed(() => boards.value === 1)
 const needed = computed(() => winsNeeded(boards.value))
-
-const setLine = computed(() =>
-  boards.value === 1
-    ? i18n.t('app.sl-explain-set-one')
-    : shown.variant === DEFAULT_VARIANT
-      ? i18n.t('app.sl-explain-set-mode', { mode: shown.mode, boards: boards.value })
-      : i18n.t('app.sl-explain-set'),
-)
 
 const outcomes = computed(() =>
   Array.from({ length: boards.value - needed.value + 1 }, (_, i) => {
@@ -36,32 +31,74 @@ const outcomes = computed(() =>
     return { label: i18n.t(key, { count: won }), chance: shown.odds[won] ?? 0 }
   }),
 )
+
+type Piece = { text: string } | { icon: 'players' | 'games' }
+
+// The text's {players} and {games} are the icons under each board.
+const iconLine = computed(() =>
+  i18n
+    .t('app.sl-explain-boards')
+    .split(/\{(players|games)\}/)
+    .map((piece, i): Piece =>
+      i % 2 ? { icon: piece === 'players' ? 'players' : 'games' } : { text: piece },
+    ),
+)
+
+// Each bar count leads the games it stands for, in the site language's list.
+const scale = computed(() => {
+  const ranges = METER_FROM.map((from, i) => {
+    const next = METER_FROM[i + 1]
+    return next
+      ? i18n.t('app.sl-meter-range', { from, to: next - 1 })
+      : i18n.t('app.sl-meter-from', { from })
+  })
+  let bar = 0
+  return new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' })
+    .formatToParts(ranges)
+    .map(({ type, value }) => ({ text: value, games: type === 'element' ? METER_FROM[bar++] : 0 }))
+})
+const meterLine = computed(() => i18n.t('app.sl-explain-meter').split('{scale}'))
 </script>
 
 <template>
   <BaseModal :show :label="i18n.t('app.sl-explain-title')" @close="emit('close')">
     <h1>{{ i18n.t('app.sl-explain-title') }}</h1>
 
-    <h2>{{ i18n.t('app.sl-explain-meaning-head') }}</h2>
-    <p v-if="boards === 1">
-      {{ i18n.t('app.sl-explain-intro-one', { chance: percent(shown.chance) }) }}
+    <h2>{{ i18n.t('app.sl-explain-search-head') }}</h2>
+    <p>{{ i18n.t(oneBoard ? 'app.sl-explain-search-one' : 'app.sl-explain-search') }}</p>
+    <p v-if="!oneBoard && shown.variant === DEFAULT_VARIANT">
+      {{ i18n.t('app.sl-explain-set-mode', { mode: shown.mode, boards }) }}
     </p>
-    <p v-else>
-      {{ i18n.t('app.sl-explain-intro', { chance: percent(shown.chance), needed, boards }) }}
-    </p>
-    <p>{{ i18n.t('app.sl-explain-typical') }}</p>
-    <p>{{ i18n.t('app.sl-explain-forecast') }}</p>
+    <p>{{ i18n.t('app.sl-explain-artifact') }}</p>
+    <p>{{ i18n.t('app.sl-explain-roster') }}</p>
 
-    <h2>{{ i18n.t('app.sl-explain-teams-head') }}</h2>
-    <p>{{ setLine }}</p>
+    <h2>{{ i18n.t('app.sl-explain-boards-head') }}</h2>
+    <p>
+      <template v-for="(piece, index) in iconLine" :key="index">
+        <SlIcon v-if="'icon' in piece" :name="piece.icon" class="sl-inline-icon" />
+        <template v-else>{{ piece.text }}</template>
+      </template>
+    </p>
+    <p>
+      {{ meterLine[0]
+      }}<template v-for="(part, index) in scale" :key="index"
+        ><SlMeter v-if="part.games" :games="part.games" class="sl-inline-meter" />{{
+          part.text
+        }}</template
+      >{{ meterLine[1] }}
+    </p>
+
+    <h2>{{ i18n.t('app.sl-explain-chance-head') }}</h2>
+    <p>{{ i18n.t(oneBoard ? 'app.sl-explain-intro-one' : 'app.sl-explain-intro') }}</p>
+    <p v-if="!oneBoard">{{ i18n.t('app.sl-explain-sum-lead') }}</p>
     <div class="sl-table-wrap">
       <table class="sl-table">
         <thead>
           <tr>
-            <th class="sl-num">{{ i18n.t('app.sl-explain-map') }}</th>
+            <th>{{ i18n.t('app.sl-explain-map') }}</th>
             <th>{{ i18n.t('app.sl-explain-comp') }}</th>
             <th>{{ i18n.t('app.sl-explain-record') }}</th>
-            <th>{{ i18n.t('app.sl-explain-chance') }}</th>
+            <th class="sl-chance">{{ i18n.t('app.sl-explain-chance') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -69,21 +106,27 @@ const outcomes = computed(() =>
             <td class="sl-num">{{ team.map + 1 }}</td>
             <td>{{ groupName(team.group) }}</td>
             <td class="sl-num">{{ team.comp ? `${team.comp[1]}–${team.comp[2]}` : '–' }}</td>
-            <td class="sl-num">
+            <td class="sl-num sl-chance">
               <strong>{{ percent(team.chance) }}</strong>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-if="!oneBoard" class="sl-total">
+          <tr v-for="row in outcomes" :key="row.label">
+            <th scope="row" colspan="3">{{ row.label }}</th>
+            <td class="sl-num sl-chance">{{ percent(row.chance) }}</td>
+          </tr>
+          <tr class="sl-match">
+            <th scope="row" colspan="3">
+              {{ i18n.t('app.sl-explain-won-match', { count: needed }) }}
+            </th>
+            <td class="sl-num sl-chance">
+              <strong>{{ percent(shown.chance) }}</strong>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p>
-      {{
-        i18n.t('app.sl-explain-formation', {
-          recorded: i18n.t('app.sl-formation-recorded'),
-          suggested: i18n.t('app.sl-formation-suggested'),
-        })
-      }}
-    </p>
 
     <h2>{{ i18n.t('app.sl-explain-steps-head') }}</h2>
     <p>{{ i18n.t('app.sl-explain-steps-lead') }}</p>
@@ -94,37 +137,33 @@ const outcomes = computed(() =>
       <li>{{ i18n.t('app.sl-explain-step-4') }}</li>
     </ol>
     <p>{{ i18n.t('app.sl-explain-steps') }}</p>
-    <p>{{ i18n.t('app.sl-explain-weights') }}</p>
 
-    <template v-if="boards > 1">
-      <h2>{{ i18n.t('app.sl-explain-sum-head') }}</h2>
-      <p>{{ i18n.t('app.sl-explain-sum-lead') }}</p>
-      <div class="sl-table-wrap">
-        <table class="sl-table">
-          <tbody>
-            <tr v-for="row in outcomes" :key="row.label">
-              <th scope="row">{{ row.label }}</th>
-              <td class="sl-num">{{ percent(row.chance) }}</td>
-            </tr>
-            <tr class="sl-total">
-              <th scope="row">{{ i18n.t('app.sl-explain-won-match', { count: needed }) }}</th>
-              <td class="sl-num">
-                <strong>{{ percent(shown.chance) }}</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </template>
-
-    <h2>{{ i18n.t('app.sl-explain-search-head') }}</h2>
-    <p>{{ i18n.t('app.sl-explain-search') }}</p>
-    <p>{{ i18n.t('app.sl-explain-roster') }}</p>
+    <h2>{{ i18n.t('app.sl-explain-formation-head') }}</h2>
+    <p>
+      {{
+        i18n.t('app.sl-explain-formation', {
+          recorded: i18n.t('app.sl-formation-recorded'),
+          suggested: i18n.t('app.sl-formation-suggested'),
+        })
+      }}
+    </p>
     <p class="reading-secondary">{{ i18n.t('app.sl-explain-limits') }}</p>
   </BaseModal>
 </template>
 
 <style scoped>
+.sl-inline-icon {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  color: var(--reading-muted);
+}
+
+.sl-inline-meter {
+  margin: 0 0.3em 0 0.2em;
+  vertical-align: -0.1em;
+}
+
 .sl-table-wrap {
   overflow-x: auto;
 }
@@ -151,8 +190,22 @@ const outcomes = computed(() =>
   white-space: nowrap;
 }
 
-.sl-table .sl-total :is(th, td) {
+.sl-table .sl-chance {
+  padding-right: 0;
+  text-align: right;
+}
+
+.sl-total tr:first-child > * {
+  border-top: 2px solid rgba(255, 255, 255, 0.28);
+}
+
+.sl-total th {
+  font-weight: 500;
+}
+
+.sl-total .sl-match > * {
   color: var(--reading-text);
+  font-weight: 600;
   border-bottom: 0;
 }
 </style>

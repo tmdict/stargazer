@@ -402,9 +402,10 @@ const SKILL = {
           <b>Open in Teams</b> puts the set back on your side there.
         </li>
         <li>
-          Under each map, <SlIcon name="players" class="help-inline-icon" /> is how many players
-          used that team's comp on the map, and <SlIcon name="record" class="help-inline-icon" />
-          the comp's wins and losses there.
+          Under each map, the four bars show how many games stand behind the team,
+          <SlIcon name="players" class="help-inline-icon" /> how many players used its comp on the
+          map, and <SlIcon name="games" class="help-inline-icon" /> how many of the comp's games
+          were recorded there.
         </li>
         <li>
           <SlIcon name="check" class="help-inline-icon" /> on a board marks a formation players used
@@ -419,8 +420,8 @@ const SKILL = {
           on the right, best first.
         </li>
         <li>
-          <b>Chance to win the match</b> is against a typical opponent, not a forecast of your next
-          match, so use it to compare sets. <b>How it works</b> explains where it comes from.
+          <b>How it works</b> explains how the set is picked from the records and how its chance to
+          win is worked out.
         </li>
         <li>
           <b>About the data</b>, next to the page title, says which season the teams come from and

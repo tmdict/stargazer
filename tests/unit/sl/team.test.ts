@@ -462,16 +462,13 @@ describe('a swap tried on a board', () => {
   const tryOn = (index: number, out: number[], into: number[]) => {
     const team = chosen.teams[index]!
     const { units } = formations[index]!
-    const swap = { board: boards[index]!, team, units, out, into, picks }
-    return previewSwap(data, reader, slFit(data), () => true, swap)
+    return previewSwap(data, { board: boards[index]!, team, units, out, into })
   }
 
-  it("keeps every unit and the team's chance when nothing changes", () => {
+  it('keeps every unit when nothing changes', () => {
     chosen.teams.forEach((team, index) => {
       const hero = team.heroes[0]!
-      const preview = tryOn(index, [hero], [hero])
-      expect(preview).toMatchObject({ joined: [], left: [] })
-      expect(preview.chance).toBeCloseTo(team.chance, 12)
+      expect(tryOn(index, [hero], [hero])).toMatchObject({ joined: [], left: [] })
     })
   })
 

@@ -36,26 +36,20 @@ export interface SlShown {
 </script>
 
 <script setup lang="ts">
-/* The chosen set: its chance to win the match (the map, for one board) with a
-   tooltip and a line on what it is measured against, the explanation, Save as
-   team, Open in Arena or Teams for a set drawn on that page's boards, and one
-   column per board. */
+/* The chosen set: the explanation, Save as team, Open in Arena or Teams for a
+   set drawn on that page's boards, and one column per board. */
 
 import { computed, ref } from 'vue'
 
-import SlCard from './SlCard.vue'
 import SlExplanation from './SlExplanation.vue'
 import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
-import { useInfoTip } from '@/composables/useInfoTip'
 import { shownFormation } from '@/lib/pvp/generator/formation'
-import { winsNeeded } from '@/lib/pvp/model/odds'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
-import { slMood, slPercent } from './useSlNames'
 
 // data: the set encoded with each board as drawn.
 const { shown, data, saveArmed, openArmed } = defineProps<{
@@ -80,7 +74,6 @@ const switchBoard = (index: number, on: boolean): void => {
   engineOn.value = next
 }
 const explaining = ref(false)
-// One board's chance is the set's, so the board leaves its own line out.
 const oneBoard = computed(() => shown.teams.length === 1)
 const openLabel = computed(
   () =>
@@ -89,41 +82,11 @@ const openLabel = computed(
       page: i18n.t(shown.from === 'arena' ? 'app.arena' : 'app.teams'),
     }),
 )
-
-const {
-  anchor: tipAnchor,
-  hoverOpen: tipOpen,
-  hoverClose: tipClose,
-  toggle: tipToggle,
-  onTouchStart: tipTouchStart,
-} = useInfoTip()
 </script>
 
 <template>
   <section class="sl-panel sl-band">
     <div class="sl-band-head">
-      <span class="sl-chance">
-        <span class="sl-chance-line">
-          <button
-            type="button"
-            class="sl-help"
-            @mouseenter="tipOpen"
-            @mouseleave="tipClose"
-            @focus="tipOpen"
-            @blur="tipClose"
-            @click="tipToggle"
-            @touchstart.passive="tipTouchStart"
-          >
-            {{ i18n.t(oneBoard ? 'app.sl-explain-chance' : 'app.sl-chance')
-            }}<IconHelpSmall :size="14" class="sl-help-mark" aria-hidden="true" />
-          </button>
-          <span class="sl-chance-value">
-            <b>{{ slPercent(shown.chance) }}</b>
-            <span class="sl-mood" aria-hidden="true">{{ slMood(shown.chance) }}</span>
-          </span>
-        </span>
-        <small class="sl-chance-note">{{ i18n.t('app.sl-chance-note') }}</small>
-      </span>
       <span class="sl-actions">
         <button type="button" class="solid-btn sl-action outline" @click="explaining = true">
           <IconHelpSmall :size="14" />
@@ -161,25 +124,12 @@ const {
           :board="boards[index]"
           :why="why[index]"
           :engine-on="!!engineOn[index]"
-          :hide-chance="oneBoard"
           @switch="switchBoard(index, $event)"
         />
       </div>
     </div>
 
     <SlExplanation :show="explaining" :shown @close="explaining = false" />
-    <SlCard
-      v-if="tipAnchor"
-      :anchor="tipAnchor"
-      :text="
-        oneBoard
-          ? i18n.t('app.sl-map-chance-tip')
-          : i18n.t('app.sl-chance-tip', {
-              needed: winsNeeded(shown.teams.length),
-              boards: shown.teams.length,
-            })
-      "
-    />
   </section>
 </template>
 
@@ -199,50 +149,9 @@ const {
 
 .sl-band-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 14px;
   padding: 9px 18px;
   background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border-primary);
-  font-size: 20px;
-}
-
-.sl-chance {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  color: var(--color-text-secondary);
-}
-
-.sl-chance-line {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 10px;
-}
-
-.sl-chance-value {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.sl-chance-note {
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.sl-mood {
-  font-size: 22px;
-  line-height: 1;
-}
-
-.sl-chance b {
-  color: var(--color-text-primary);
-  font-size: 24px;
 }
 
 .sl-actions {

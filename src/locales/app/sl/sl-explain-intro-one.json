@@ -1,5 +1,5 @@
 {
-  "en": "If you played this team many times against a typical opponent, it would win about {chance} of the games on this map.",
-  "zh": "如果用这支队伍对阵一般水平的对手打很多场，大约能在这张地图上赢下 {chance} 的对局。",
-  "ko": "이 팀으로 보통 수준의 상대와 여러 번 싸운다면 이 맵에서 약 {chance}를 이깁니다."
+  "en": "To choose between teams, the generator works out how often each would win this map against a typical opponent: average recorded teams with their artifacts and every hero fully upgraded, against yours at your levels with the artifact shown. It is not a prediction for your next match, since a real opponent can be stronger or weaker and can bring counters.",
+  "zh": "为了在不同队伍之间做选择，生成器会算出每支队伍对阵一般水平对手时赢下这张地图的频率：对手是记录中带着各自神器的平均队伍，英雄全部满强化；你的英雄按你选择的等级计算，神器按页面上显示的计算。这不是对你下一场比赛的预测，因为实际遇到的对手可能更强或更弱，也可能带上克制你的队伍。",
+  "ko": "생성기는 팀을 고르기 위해 각 팀이 보통 수준의 상대를 상대로 이 맵에서 얼마나 자주 이길지 계산합니다. 상대는 메아리까지 갖춘 기록 속 평균적인 팀이며 영웅은 모두 최대 강화이고, 내 팀은 고른 강화 수준과 보이는 메아리로 계산합니다. 실제 상대는 더 강하거나 약할 수 있고 내 팀에 강한 팀을 가져올 수도 있어서, 다음 매치를 예측하는 수치는 아닙니다."
 }

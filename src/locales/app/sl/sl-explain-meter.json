@@ -1,0 +1,5 @@
+{
+  "en": "The bars show how many games stand behind it: {scale}. Empty bars and zeros mean no games of its comp were recorded on that map.",
+  "zh": "竖条表示它背后有多少对局：{scale}。竖条全空、数字为 0，表示这张地图上没有记录过这个阵容的对局。",
+  "ko": "막대는 그 뒤에 기록된 전투가 얼마나 있는지 보여 줍니다: {scale}. 막대가 비어 있고 숫자가 0이면 그 맵에서 이 조합의 전투가 기록되지 않았다는 뜻입니다."
+}

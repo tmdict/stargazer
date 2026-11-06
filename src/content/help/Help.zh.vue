@@ -340,9 +340,12 @@ const SKILL = {
           会在本页打开同样的棋盘（地图编辑里的地图也可以），<b>在竞技场中打开</b>或<b>在阵容中打开</b>则把这套阵容放回那里的友方。
         </li>
         <li>
-          每张地图下方，<SlIcon name="players" class="help-inline-icon" />
-          是在这张地图上用过这个阵容的玩家数，<SlIcon name="record" class="help-inline-icon" />
-          是这个阵容在这张地图上的胜负。
+          每张地图下方，四个竖条表示这支队伍背后有多少对局，<SlIcon
+            name="players"
+            class="help-inline-icon"
+          />
+          是在这张地图上用过这个阵容的玩家数，<SlIcon name="games" class="help-inline-icon" />
+          是这个阵容在这张地图上记录的对局数。
         </li>
         <li>
           <SlIcon name="check" class="help-inline-icon" />
@@ -355,10 +358,7 @@ const SKILL = {
           标出核心英雄，这些英雄保留不动。<SlIcon name="swap" class="help-inline-icon" />
           列出同一阵容的记录队伍中出现过的替换，只用这套阵容没用到的你的英雄：左边的一位或两位英雄可以换成右边任意一个选项，越靠前越好。
         </li>
-        <li>
-          <b>整场获胜几率</b
-          >是对阵一般水平对手的结果，不是对你下一场比赛的预测，可以用来比较不同的阵容。<b>原理说明</b>解释了它是怎么算出来的。
-        </li>
+        <li><b>原理说明</b>解释了这套阵容是怎么从记录中选出来的，以及它的获胜几率是怎么算的。</li>
         <li>页面标题旁的<b>数据说明</b>写明这些队伍来自哪个赛季，以及涵盖多少局对局。</li>
       </ul>
     </div>

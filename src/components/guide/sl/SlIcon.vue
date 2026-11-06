@@ -1,29 +1,12 @@
 <script setup lang="ts">
 /* The icons on and under a generated set's boards. */
 
-import { computed } from 'vue'
-
 import { SPARKLE_PATH } from '@/components/ui/IconSparkle.vue'
 
-const {
-  name,
-  label,
-  share = 0,
-} = defineProps<{
-  name: 'players' | 'record' | 'chance' | 'lock' | 'swap' | 'arrow' | 'check' | 'sparkle'
+const { name, label } = defineProps<{
+  name: 'players' | 'games' | 'lock' | 'swap' | 'arrow' | 'check' | 'sparkle'
   label?: string
-  // How much of the chance icon's ring is filled, from 0 to 1.
-  share?: number
 }>()
-
-const WEDGE = 5.4
-// Clockwise from the top.
-const wedge = computed(() => {
-  const turn = share * 2 * Math.PI
-  const x = (12 + WEDGE * Math.sin(turn)).toFixed(2)
-  const y = (12 - WEDGE * Math.cos(turn)).toFixed(2)
-  return `M12 12V${12 - WEDGE}A${WEDGE} ${WEDGE} 0 ${share > 0.5 ? 1 : 0} 1 ${x} ${y}z`
-})
 </script>
 
 <template>
@@ -40,21 +23,19 @@ const wedge = computed(() => {
       <circle cx="16.8" cy="9" r="2.7" fill="currentColor" />
       <path d="M16.3 13.6c3.1-.3 5.4 2 5.4 5.9h-4.6c0-2.4-.3-4.2-.8-5.9z" fill="currentColor" />
     </template>
-    <template v-else-if="name === 'record'">
-      <path d="M7 3.5h10v5.2a5 5 0 0 1-10 0z" fill="currentColor" />
+    <g
+      v-else-if="name === 'games'"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.6"
+      stroke-linecap="round"
+    >
+      <path d="M3 3l9.75 9.75M21 3l-9.75 9.75" />
       <path
-        d="M7 5.5H4.2c0 3 1.2 4.7 3.4 5.1M17 5.5h2.8c0 3-1.2 4.7-3.4 5.1M12 13.5v3.5M8 20.5h8"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
+        d="M5.25 14.25l4.5 4.5M18.75 14.25l-4.5 4.5M3.3 20.7l3.45-3.45M20.7 20.7l-3.45-3.45"
+        stroke-width="2.4"
       />
-    </template>
-    <template v-else-if="name === 'chance'">
-      <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2.2" />
-      <circle v-if="share >= 1" cx="12" cy="12" :r="WEDGE" fill="currentColor" />
-      <path v-else-if="share > 0" :d="wedge" fill="currentColor" />
-    </template>
+    </g>
     <template v-else-if="name === 'lock'">
       <rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor" />
       <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2" />

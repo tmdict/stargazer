@@ -1,5 +1,5 @@
 {
-  "en": "Each map is counted on its own. This set's chance to win:",
-  "zh": "每张地图分开计算。这套阵容获胜的几率：",
-  "ko": "맵은 하나씩 따로 계산합니다. 이 세트가 이길 확률은 다음과 같습니다."
+  "en": "Each map is counted on its own, then added up for the match:",
+  "zh": "每张地图分开计算，再合起来算整场比赛：",
+  "ko": "맵은 하나씩 따로 계산한 뒤 매치 전체로 합칩니다."
 }

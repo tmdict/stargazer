@@ -405,9 +405,10 @@ const SKILL = {
           세트를 그곳의 아군 쪽에 다시 놓습니다.
         </li>
         <li>
-          각 맵 아래의 <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의
-          조합을 쓴 플레이어 수이고, <SlIcon name="record" class="help-inline-icon" /> 옆에는 그
-          맵에서 이 조합의 승패가 나옵니다.
+          각 맵 아래의 막대 네 개는 이 팀 뒤에 기록된 전투가 얼마나 있는지 보여 주고,
+          <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의 조합을 쓴
+          플레이어 수, <SlIcon name="games" class="help-inline-icon" /> 숫자는 그 맵에서 기록된 이
+          조합의 전투 수입니다.
         </li>
         <li>
           <SlIcon name="check" class="help-inline-icon" /> 표시가 있는 보드는 플레이어가 기록된
@@ -421,8 +422,8 @@ const SKILL = {
           오른쪽의 아무 후보로 바꿀 수 있으며 더 좋은 후보부터 표시됩니다.
         </li>
         <li>
-          <b>매치 승리 확률</b>은 보통 수준의 상대 기준이며, 다음 매치를 예측한 값이 아닙니다.
-          세트끼리 비교하는 데 쓰세요. <b>작동 방식</b>에서 어떻게 계산하는지 볼 수 있습니다.
+          <b>작동 방식</b>에서 세트를 기록에서 어떻게 고르는지, 승리 확률을 어떻게 계산하는지 볼 수
+          있습니다.
         </li>
         <li>
           페이지 제목 옆의 <b>데이터 안내</b>에서 팀이 어느 시즌 기록에서 나왔고 몇 판의 전투를

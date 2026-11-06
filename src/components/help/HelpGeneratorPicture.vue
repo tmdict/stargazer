@@ -2,6 +2,7 @@
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import SlFormationSwitch from '@/components/guide/sl/SlFormationSwitch.vue'
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
+import SlMeter from '@/components/guide/sl/SlMeter.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
 import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
@@ -82,11 +83,9 @@ const characterId = (slug: string): number =>
         <div class="help-sl-aside">
           <span />
           <span class="help-sl-stats">
+            <SlMeter :games="28" />
             <span><SlIcon name="players" class="help-sl-small" /><b>14</b></span>
-            <span>
-              <SlIcon name="record" class="help-sl-small" /><b class="good">68%</b>
-              <small>19–9</small>
-            </span>
+            <span><SlIcon name="games" class="help-sl-small" /><b>28</b></span>
           </span>
           <SlIcon name="lock" class="help-sl-label" />
           <span class="help-sl-faces">
@@ -135,6 +134,7 @@ const characterId = (slug: string): number =>
 
 .help-sl-stats {
   display: inline-flex;
+  align-items: center;
   gap: 12px;
   font-size: 0.9rem;
 }
@@ -143,14 +143,6 @@ const characterId = (slug: string): number =>
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.help-sl-stats small {
-  color: var(--color-text-secondary);
-}
-
-.help-sl-stats .good {
-  color: var(--color-success);
 }
 
 .help-sl-small {

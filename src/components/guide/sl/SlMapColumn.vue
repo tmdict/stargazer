@@ -1,13 +1,12 @@
 <script setup lang="ts">
 /* One map of the set: the board, its artifact on its cell, the switch between
    the formation of a recorded game and the engine's on a board that has one,
-   then the comp's record on the map, the team's chance to win the map, the core
-   heroes to keep and the swaps recorded in place of one hero or two. A win rate
-   shows from eight decided games, green from 60% and red to 40%, as the report
-   colours one. Its host sizes it: --pt for the portraits, and --sl-unit, the
-   length of one of the generator page's pixels, for the gaps and icons of the
-   core and swap rows (1px there, a share of its column's width on the guide
-   index's card, which shows no record). */
+   then how many players and games of the comp the map has, the core heroes to
+   keep and the swaps recorded in place of one hero or two. Its host sizes it:
+   --pt for the portraits, and --sl-unit, the length of one of the generator
+   page's pixels, for the gaps and icons of the core and swap rows (1px there, a
+   share of its column's width on the guide index's card, which shows no
+   counts). */
 
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
@@ -15,6 +14,7 @@ import SlCard from './SlCard.vue'
 import SlFormationSwitch from './SlFormationSwitch.vue'
 import SlIcon from './SlIcon.vue'
 import SlMapBoard from './SlMapBoard.vue'
+import SlMeter from './SlMeter.vue'
 import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
 import SlSwapCard from './SlSwapCard.vue'
@@ -24,25 +24,22 @@ import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
-import { slPercent, useSlNames } from './useSlNames'
+import { useSlNames } from './useSlNames'
 
 const {
   team,
   engineOn = false,
-  hideChance = false,
+  counts = true,
 } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
-    Partial<Pick<SlShownTeam, 'chance' | 'trySwap' | 'played' | 'engine'>>
+    Partial<Pick<SlShownTeam, 'trySwap' | 'played' | 'engine'>>
   board: PreviewBoard | undefined
   why?: PlacementExplanation | null
   engineOn?: boolean
-  // The set's own heading gives the chance of a one-board set.
-  hideChance?: boolean
+  counts?: boolean
 }>()
 
 const emit = defineEmits<{ switch: [engineOn: boolean] }>()
-
-const TONE_GAMES = 8
 
 const i18n = useI18nStore()
 const { cardNames } = useSlNames()
@@ -75,7 +72,7 @@ const boardView = useTemplateRef<InstanceType<typeof SlMapBoard>>('board')
 const boardBox = {
   getBoundingClientRect: (): DOMRect => boardView.value?.box() ?? new DOMRect(),
 }
-const canTry = computed(() => !!team.trySwap && team.chance !== undefined)
+const canTry = computed(() => !!team.trySwap)
 
 // What a stat or a row's icon means, or which heroes a row's portraits are.
 const infoTip = useInfoTip<{ text: string } | { title: TextPart[] }>()
@@ -98,21 +95,9 @@ watch(tried, async (swap) => {
   if (tried.value === swap) preview.value = found
 })
 
-const record = computed(() => {
-  if (!team.comp) return null
-  const [players, wins, losses] = team.comp
-  const decided = wins + losses
-  const rate = decided ? wins / decided : 0
-  return {
-    players,
-    wins,
-    losses,
-    rate: decided >= TONE_GAMES ? Math.round(rate * 100) : null,
-    tone: decided < TONE_GAMES ? '' : rate >= 0.6 ? 'good' : rate <= 0.4 ? 'bad' : '',
-  }
-})
-const chance = computed(() => (hideChance ? undefined : team.chance))
-const stats = computed(() => !!record.value || chance.value !== undefined)
+// A team outside every group, or on a map with no records, has no games there.
+const players = computed(() => team.comp?.[0] ?? 0)
+const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
 </script>
 
 <template>
@@ -126,14 +111,7 @@ const stats = computed(() => !!record.value || chance.value !== undefined)
       :moved="team.played.moved"
       @switch="emit('switch', $event)"
     />
-    <SlSwapCard
-      v-if="anchor && tried && preview && team.chance !== undefined"
-      :anchor
-      :clear-of="boardBox"
-      :into="tried.into"
-      :before="team.chance"
-      :after="preview.chance"
-    />
+    <SlSwapCard v-if="anchor && tried && preview" :anchor :clear-of="boardBox" :into="tried.into" />
     <SlCard
       v-if="infoAnchor && info"
       :anchor="infoAnchor"
@@ -144,34 +122,27 @@ const stats = computed(() => !!record.value || chance.value !== undefined)
     <!-- Two columns, the icons and what they lead. -->
     <div class="sl-aside">
       <div class="sl-aside-in">
-        <template v-if="record">
+        <template v-if="counts">
           <span />
           <span class="sl-stats">
+            <span class="sl-stat" v-on="sayOn('app.sl-meter-tip')">
+              <SlMeter :games />
+            </span>
             <span class="sl-stat" v-on="sayOn('app.sl-players-tip')">
               <SlIcon name="players" class="sl-small-icon" />
-              <b>{{ record.players }}</b>
+              <b>{{ players }}</b>
             </span>
-            <span class="sl-stat" v-on="sayOn('app.sl-record-tip')">
-              <SlIcon name="record" class="sl-small-icon" />
-              <b v-if="record.rate !== null" :class="record.tone">{{ record.rate }}%</b>
-              <small>{{ record.wins }}–{{ record.losses }}</small>
-            </span>
-          </span>
-        </template>
-        <template v-if="chance !== undefined">
-          <span />
-          <span class="sl-stats">
-            <span class="sl-stat" v-on="sayOn('app.sl-map-chance-tip')">
-              <SlIcon name="chance" :share="chance" class="sl-small-icon" />
-              <b>{{ slPercent(chance) }}</b>
+            <span class="sl-stat" v-on="sayOn('app.sl-games-tip')">
+              <SlIcon name="games" class="sl-small-icon" />
+              <b>{{ games }}</b>
             </span>
           </span>
         </template>
         <template v-if="team.core.length">
-          <span class="sl-label" :class="{ start: stats }" v-on="sayOn('app.sl-core-tip')">
+          <span class="sl-label" :class="{ start: counts }" v-on="sayOn('app.sl-core-tip')">
             <SlIcon name="lock" :label="i18n.t('app.sl-core')" />
           </span>
-          <span class="sl-faces" :class="{ start: stats }">
+          <span class="sl-faces" :class="{ start: counts }">
             <SlPortrait
               v-for="id in team.core"
               :key="id"
@@ -186,14 +157,14 @@ const stats = computed(() => !!record.value || chance.value !== undefined)
           <span
             v-else
             class="sl-label"
-            :class="{ start: stats || team.core.length, top: swap.out.length > 1 }"
+            :class="{ start: counts || team.core.length, top: swap.out.length > 1 }"
             v-on="sayOn('app.sl-swaps-tip')"
           >
             <SlIcon name="swap" :label="i18n.t('app.sl-swaps')" />
           </span>
           <span
             class="sl-swap"
-            :class="{ start: !index && (stats || team.core.length), top: swap.out.length > 1 }"
+            :class="{ start: !index && (counts || team.core.length), top: swap.out.length > 1 }"
           >
             <span class="sl-from">
               <span class="sl-pair" v-on="heroesOn('app.sl-flex-heroes', swap.out)">
@@ -267,25 +238,8 @@ const stats = computed(() => !!record.value || chance.value !== undefined)
   white-space: nowrap;
 }
 
-.sl-stat:first-child {
-  min-width: 3.4em;
-}
-
 .sl-stat b {
   font-weight: 700;
-}
-
-.sl-stat small {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.sl-stat .good {
-  color: var(--color-success);
-}
-
-.sl-stat .bad {
-  color: var(--color-danger-text);
 }
 
 .sl-small-icon {

@@ -115,7 +115,7 @@ scope.addEventListener('message', async (event) => {
       const formation = engineFormation(data, msg.team, msg.board)
       scope.postMessage({ type: 'placedEngine', id: msg.id, formation })
     } else if (msg.type === 'swap') {
-      const preview = previewSwap(data, reader, fit, counts, msg.swap)
+      const preview = previewSwap(data, msg.swap)
       scope.postMessage({ type: 'swapped', id: msg.id, preview })
     } else {
       const panel = wwwPanel(data, reader, msg.teams, counts)

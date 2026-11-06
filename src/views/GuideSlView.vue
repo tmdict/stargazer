@@ -27,7 +27,6 @@ import SlHead from '@/components/guide/sl/SlHead.vue'
 import SlResult, { type SlShown, type SlShownTeam } from '@/components/guide/sl/SlResult.vue'
 import RosterEditor from '@/components/RosterEditor.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
-import { slPercent } from '@/components/guide/sl/useSlNames'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readSavedBoards, readTeamsSlot } from '@/composables/useGridPersistence'
 import { useSlEngine } from '@/composables/useSlEngine'
@@ -234,7 +233,7 @@ const generate = async (): Promise<void> => {
             const units = shownFormation(teams[index]!, engineOn).units.map(
               ([hexId, unit]): [number, number] => [hexId, unit],
             )
-            const swap = { board, team: t, units, out: [...out], into: [...into], picks }
+            const swap = { board, team: t, units, out: [...out], into: [...into] }
             found = previewSwap(swap).catch(() => null)
             tried.set(key, found)
           }
@@ -292,11 +291,14 @@ const save = (): void => {
     show(i18n.t('app.sl-save-replaces', { mode }), 'info')
     return
   }
-  const chance = slPercent(shown.value.chance)
+  const now = new Date()
+  const date = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join('-')
   const name =
     shown.value.variant === 'sl'
-      ? i18n.t('app.sl-team-name', { chance })
-      : i18n.t('app.sl-team-name-mode', { mode, chance })
+      ? i18n.t('app.sl-team-name', { date })
+      : i18n.t('app.sl-team-name-mode', { mode, date })
   const team = library.saveAsNew(mode, drawn.value!, name)
   if (!team) {
     // The library re-reads storage first, so another tab may have filled it.
