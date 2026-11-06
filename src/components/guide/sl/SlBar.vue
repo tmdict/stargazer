@@ -139,6 +139,10 @@ const save = (): void => {
   column-gap: var(--spacing-lg);
 }
 
+.generate-sparkle {
+  margin-left: -3px;
+}
+
 @media (max-width: 768px) {
   .sl-bar-roster {
     flex: 1;
