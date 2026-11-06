@@ -30,7 +30,6 @@ const i18n = useI18nStore()
 const { cardNames } = useSlNames()
 const { anchor, payload: half, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Half>()
 
-// The halves' elements, which the tips anchor on.
 const halfEl: Partial<Record<Half, Element>> = {}
 
 const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string; tip: string }[] = [
@@ -52,7 +51,8 @@ const shown = computed((): Half => (engineOn ? 'engine' : 'played'))
 const canSwitch = computed(() => engineOn || ready)
 
 const halfAt = (target: EventTarget | null): Half =>
-  HALVES.find(({ half }) => halfEl[half]?.contains(target as Node))?.half ?? shown.value
+  HALVES.find(({ half }) => target instanceof Node && halfEl[half]?.contains(target))?.half ??
+  shown.value
 
 const press = (event: MouseEvent): void => {
   if (!canSwitch.value) {
@@ -60,8 +60,8 @@ const press = (event: MouseEvent): void => {
     toggle(halfEl[pressed]!, pressed)
     return
   }
-  emit('switch', !engineOn)
   const next: Half = engineOn ? 'played' : 'engine'
+  emit('switch', next === 'engine')
   // Open, never close: hover has often opened that half's tip already.
   if (anchor.value !== halfEl[next]) toggle(halfEl[next]!, next)
 }

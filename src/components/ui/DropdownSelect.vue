@@ -329,7 +329,7 @@ const pressSegment = (): void => {
               v-if="item.deletable || item.renamable"
               class="item-wrap"
               :class="{ selected: item.selected }"
-              :style="{ '--item-actions': Number(!!item.deletable) + Number(!!item.renamable) }"
+              :style="{ '--item-actions': [item.deletable, item.renamable].filter(Boolean).length }"
             >
               <input
                 v-if="editingKey === item.key"
