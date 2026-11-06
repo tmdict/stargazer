@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import TooltipPopup from './TooltipPopup.vue'
-import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { CLASS_ORDER, compareByOrder, FACTION_ORDER } from '@/lib/filterOrder'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -14,13 +12,11 @@ const {
   options,
   iconPrefix,
   size = 36,
-  showTooltip = true,
   activeBorderColor = 'var(--color-bg-raised)',
 } = defineProps<{
   options: string[]
   iconPrefix: string // 'class' or 'faction'
   size?: number // button size in px
-  showTooltip?: boolean
   activeBorderColor?: string // CSS color for the selected icon's border
 }>()
 const modelValue = defineModel<string>({ required: true })
@@ -43,21 +39,6 @@ const orderedOptions = computed(() => {
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
   return gameDataStore.getIcon(iconKey)
-}
-
-// Filter buttons are action triggers: hover-only labels, suppressed on touch
-// (the tap toggles the filter).
-const {
-  anchor: hoveredElement,
-  payload: hoveredOption,
-  onMouseEnter,
-  onMouseLeave: handleMouseLeave,
-  onTouchStart,
-} = useHoverTooltip<string>()
-
-const handleMouseEnter = (option: string, event: MouseEvent) => {
-  if (!showTooltip) return
-  onMouseEnter(event, option)
 }
 </script>
 
@@ -90,14 +71,13 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
           borderWidth: `${borderWidth}px`,
           '--active-border-color': activeBorderColor,
         }"
+        :aria-label="i18n.t(`game.${option}`)"
+        :aria-pressed="modelValue === option"
         @click="modelValue = modelValue === option ? '' : option"
-        @mouseenter="handleMouseEnter(option, $event)"
-        @mouseleave="handleMouseLeave"
-        @touchstart.passive="onTouchStart"
       >
         <img
           :src="getIconPath(iconPrefix, option)"
-          :alt="option"
+          alt=""
           class="filter-icon"
           :style="{
             width: `${iconPrefix === 'faction' ? factionIconSize : iconSize}px`,
@@ -106,17 +86,6 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
         />
       </button>
     </div>
-
-    <!-- Tooltip -->
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="hoveredOption && hoveredElement"
-        :target-element="hoveredElement"
-        variant="simple"
-      >
-        <template #content>{{ i18n.t(`game.${hoveredOption}`) }}</template>
-      </TooltipPopup>
-    </Teleport>
   </div>
 </template>
 

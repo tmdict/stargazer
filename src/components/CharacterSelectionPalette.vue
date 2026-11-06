@@ -111,7 +111,6 @@ function handleEnter(event: KeyboardEvent) {
       icon-prefix="faction"
       :options="factionOptions"
       :size="28"
-      :show-tooltip="false"
     />
   </div>
   <div v-if="pinnedRow.length" class="characters-grid pinned-row">
