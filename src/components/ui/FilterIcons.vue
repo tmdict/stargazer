@@ -53,6 +53,7 @@ const getIconPath = (iconPrefix: string, option: string): string => {
           height: `${size}px`,
           '--active-border-color': activeBorderColor,
         }"
+        :aria-pressed="modelValue === ''"
         @click="modelValue = ''"
       >
         <span class="clear-label" :style="{ fontSize: `${Math.round(size * 0.39)}px` }">{{
