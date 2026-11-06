@@ -53,7 +53,7 @@
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
-.sl-page .sl-action:disabled {
+.sl-page .sl-action:disabled:not([aria-busy='true']) {
   opacity: 0.5;
   cursor: default;
 }

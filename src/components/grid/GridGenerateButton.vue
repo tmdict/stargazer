@@ -59,14 +59,9 @@ const tipText = computed((): string => {
 })
 
 const busy = ref(false)
-// The working look waits this long, so a quick press does not flash it.
-const SLOW_MS = 300
-const slow = ref(false)
-let slowTimer: ReturnType<typeof setTimeout> | undefined
 let live = true
 onScopeDispose(() => {
   live = false
-  clearTimeout(slowTimer)
 })
 
 const boardLayouts = (): MapLayout[] => grids.contexts.map((ctx) => gridLayout(ctx.grid))
@@ -87,7 +82,6 @@ const generate = async (): Promise<void> => {
   if (busy.value) return
   if (grids.sideHasContent(Team.ALLY, 'all') && !confirm('generate')) return
   busy.value = true
-  slowTimer = setTimeout(() => (slow.value = true), SLOW_MS)
   const layouts = boardLayouts()
   const pressed = boardsKey()
   const roster = rosters.active
@@ -121,9 +115,7 @@ const generate = async (): Promise<void> => {
   } catch {
     if (live) error(i18n.t('app.sl-load-failed'))
   } finally {
-    clearTimeout(slowTimer)
     busy.value = false
-    slow.value = false
   }
 }
 </script>
@@ -133,7 +125,7 @@ const generate = async (): Promise<void> => {
     <button
       type="button"
       class="control-btn generate-btn generate-main"
-      :class="{ 'confirm-armed': armed !== null, busy: slow }"
+      :class="{ 'confirm-armed': armed !== null }"
       :aria-busy="busy"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
       @click="generate"
@@ -174,11 +166,6 @@ const generate = async (): Promise<void> => {
 .generate-main {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-}
-
-.generate-main.busy {
-  opacity: 0.75;
-  cursor: progress;
 }
 
 .generate-open {
