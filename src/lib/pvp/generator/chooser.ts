@@ -23,6 +23,10 @@ import type { SlChoice, SlPick } from './types'
 const MARGIN = 1e-6
 const meets = (count: number, minimum: number): boolean => count + MARGIN >= minimum
 
+// Far above the rounding of a match chance summed in another order, far below
+// any difference between two sets.
+const ROUNDING = 1e-12
+
 interface Option {
   // Where it comes from, as SlChoiceTeam says.
   source: number | null
@@ -80,6 +84,16 @@ function searcher(
     let sum = 0
     for (let k = needed; k < odds.length; k++) sum += odds[k]!
     return sum
+  }
+
+  // A press's rounds reach the same sets again, and handing out a set's
+  // artifacts tries every way to give out their own.
+  const handOuts = new Map<string, (number | null)[]>()
+  const handOut = (teams: readonly Option[]): (number | null)[] => {
+    const key = teams.map((t) => `${t.source}:${t.team}`).join()
+    let handed = handOuts.get(key)
+    if (!handed) handOuts.set(key, (handed = handOutArtifacts(teams.map((t) => t.claim))))
+    return handed
   }
 
   // Each board's teams the selection allows with the evidence asked, the best
@@ -187,7 +201,9 @@ function searcher(
   // team that still fits. A board's teams come best first, so once one falls
   // short, the rest of that board's teams do too. Boards sharing a pool take
   // its teams in pool order, so the same teams are never tried again in
-  // another order; on such boards an artifact tie goes to the better team.
+  // another order, and an open board's first team comes after that of the
+  // open board above it with the same pool; on such boards an artifact tie
+  // goes to the better team.
   // Teams from the rows of every map then trade boards, keeping their
   // artifacts, where that raises the match chance.
   const bestSet = (pools: Option[][], unrecorded: readonly number[]): Found | null => {
@@ -202,11 +218,28 @@ function searcher(
     // One spread over every pool's heroes passes tens of thousands of arguments
     // once five boards share the rows of every map, near Safari's limit for a call.
     const top = pools.reduce((m, pool) => pool.reduce((n, t) => Math.max(n, ...t.heroes), m), 0)
-    const used = new Uint8Array(top + 1)
-    const fits = (t: Option): boolean => !t.heroes.some((h) => used[h])
+    // Each team's heroes as bits, `words` to a team, so a team fits beside the
+    // chosen ones when none of its words meets `used`.
+    const words = (top >> 5) + 1
+    const used = new Int32Array(words)
+    const bits = new Map<Option[], Int32Array>()
+    for (const pool of pools) {
+      if (bits.has(pool)) continue
+      const row = new Int32Array(pool.length * words)
+      pool.forEach((t, k) => {
+        for (const h of t.heroes) row[k * words + (h >> 5)] |= 1 << (h & 31)
+      })
+      bits.set(pool, row)
+    }
+    const bitsByDepth = byDepth.map((pool) => bits.get(pool)!)
+    const fits = (row: Int32Array, k: number): boolean => {
+      for (let w = 0, at = k * words; w < words; w++, at++) if (row[at]! & used[w]!) return false
+      return true
+    }
     // first[d][j]: the first team of depth j's pool that fits beside the teams
-    // chosen above depth d, and comes after those its pool gave them. Teams
-    // only join on the way down, so it only moves forward.
+    // chosen above depth d, and comes after those its pool gave them and after
+    // first[d] of the nearest depth above j with the same pool, which takes an
+    // earlier team. Teams only join on the way down, so it only moves forward.
     const first = Array.from({ length: n + 1 }, () => new Int32Array(n))
     const bound = new Float64Array(n)
     // The depth above with the same pool (-1 for none), and the team taken at
@@ -218,11 +251,21 @@ function searcher(
       return matchChance(bound)
     }
     const settle = (): void => {
-      const handed = handOutArtifacts(chosen.map((t) => t.claim))
-      const alike = unrecorded.every((i) => {
-        const here = chosen[i]!.chanceOn(i, handed[i] ?? null)
-        return unrecorded.every((j) => chosen[i]!.chanceOn(j, handed[i] ?? null) === here)
-      })
+      const handed = handOut(chosen)
+      // Each traded team's chance on each board it can trade to.
+      const across = unrecorded.map((i) =>
+        unrecorded.map((j) => chosen[i]!.chanceOn(j, handed[i] ?? null)),
+      )
+      const alike = across.every((chances, a) => chances.every((c) => c === chances[a]))
+      if (trades && !alike && best) {
+        // No order beats every team on its best board, as a team keeps its
+        // artifact when it trades.
+        const top = chosen.map((t, i) => {
+          const a = unrecorded.indexOf(i)
+          return a < 0 ? t.chanceOn(i, handed[i] ?? null) : Math.max(...across[a]!)
+        })
+        if (matchChance(top) + ROUNDING < best.chance) return
+      }
       for (const order of !trades || alike ? [null] : reorders) {
         const teams = [...chosen]
         const artifacts = [...handed]
@@ -239,20 +282,22 @@ function searcher(
     const walk = (d: number): void => {
       if (d === n) return settle()
       const pool = byDepth[d]!
+      const row = bitsByDepth[d]!
       const here = first[d]!
       const next = first[d + 1]!
       const after = twin[d]! < 0 ? 0 : taken[twin[d]!]! + 1
       for (let k = Math.max(here[d]!, after); k < pool.length; k++) {
+        if (!fits(row, k)) continue
         const t = pool[k]!
-        if (!fits(t)) continue
         bound[d] = t.best
         if (best && boundFrom(d, here) <= best.chance) break
-        for (const h of t.heroes) used[h] = 1
+        for (let w = 0; w < words; w++) used[w] |= row[k * words + w]!
         let open = true
         for (let j = d + 1; j < n && open; j++) {
           const later = byDepth[j]!
-          let i = later === pool ? Math.max(here[j]!, k + 1) : here[j]!
-          while (i < later.length && !fits(later[i]!)) i++
+          const above = twin[j]!
+          let i = Math.max(here[j]!, above > d ? next[above]! + 1 : above === d ? k + 1 : 0)
+          while (i < later.length && !fits(bitsByDepth[j]!, i)) i++
           next[j] = i
           open = i < later.length
         }
@@ -261,7 +306,7 @@ function searcher(
           chosen[order[d]!] = t
           walk(d + 1)
         }
-        for (const h of t.heroes) used[h] = 0
+        for (let w = 0; w < words; w++) used[w] &= ~row[k * words + w]!
       }
     }
     walk(0)
