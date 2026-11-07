@@ -7,13 +7,13 @@
  * content. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
+import { setCharacterOnTile } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
 import { DEFAULT_MAP_KEY, getMapByKey } from '@/lib/maps'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_MODE_ORDER, TEAM_MODES } from '@/lib/teams/modes'
 import { FULL_GRID } from '@/lib/types/grid'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
@@ -58,13 +58,9 @@ export function slTeamData(
   const drawn = set.teams.map((choice, index): BoardInput => {
     const { layout } = boards[index]!
     const grid = new Grid(FULL_GRID, layout.config)
-    const place = (hexId: number, unitId: number): void => {
-      const tile = grid.getTileById(hexId)
-      tile.characterId = unitId
-      tile.team = Team.ALLY
-      tile.state = State.OCCUPIED_ALLY
+    for (const [hexId, unitId] of formations[index]!.units) {
+      setCharacterOnTile(grid.getTileById(hexId), unitId, Team.ALLY)
     }
-    for (const [hexId, unitId] of formations[index]!.units) place(hexId, unitId)
     const artifact = choice.artifact
     return {
       tiles: grid.getAllTiles(),

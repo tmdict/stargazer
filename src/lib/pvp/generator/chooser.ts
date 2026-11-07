@@ -23,8 +23,7 @@ import type { SlChoice, SlPick } from './types'
 const MARGIN = 1e-6
 const meets = (count: number, minimum: number): boolean => count + MARGIN >= minimum
 
-// Far above the rounding of a match chance summed in another order, far below
-// any difference between two sets.
+// Far above the rounding of a match chance summed in another order.
 const ROUNDING = 1e-12
 
 interface Option {
@@ -88,8 +87,8 @@ function searcher(
 
   // A press's rounds reach the same sets again, and handing out a set's
   // artifacts tries every way to give out their own.
-  const handOuts = new Map<string, (number | null)[]>()
-  const handOut = (teams: readonly Option[]): (number | null)[] => {
+  const handOuts = new Map<string, readonly (number | null)[]>()
+  const handOut = (teams: readonly Option[]): readonly (number | null)[] => {
     const key = teams.map((t) => `${t.source}:${t.team}`).join()
     let handed = handOuts.get(key)
     if (!handed) handOuts.set(key, (handed = handOutArtifacts(teams.map((t) => t.claim))))
@@ -237,9 +236,10 @@ function searcher(
       return true
     }
     // first[d][j]: the first team of depth j's pool that fits beside the teams
-    // chosen above depth d, and comes after those its pool gave them and after
-    // first[d] of the nearest depth above j with the same pool, which takes an
-    // earlier team. Teams only join on the way down, so it only moves forward.
+    // chosen above depth d, and comes after those its pool gave them and, below
+    // the top row (all zeros), after first[d] of the nearest depth above j with
+    // the same pool, which takes an earlier team. Teams only join on the way
+    // down, so it only moves forward.
     const first = Array.from({ length: n + 1 }, () => new Int32Array(n))
     const bound = new Float64Array(n)
     // The depth above with the same pool (-1 for none), and the team taken at
@@ -260,11 +260,11 @@ function searcher(
       if (trades && !alike && best) {
         // No order beats every team on its best board, as a team keeps its
         // artifact when it trades.
-        const top = chosen.map((t, i) => {
+        const ceiling = chosen.map((t, i) => {
           const a = unrecorded.indexOf(i)
           return a < 0 ? t.chanceOn(i, handed[i] ?? null) : Math.max(...across[a]!)
         })
-        if (matchChance(top) + ROUNDING < best.chance) return
+        if (matchChance(ceiling) + ROUNDING < best.chance) return
       }
       for (const order of !trades || alike ? [null] : reorders) {
         const teams = [...chosen]

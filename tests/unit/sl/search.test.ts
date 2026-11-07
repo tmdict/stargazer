@@ -405,23 +405,26 @@ describe('the search', () => {
     expect(set?.teams.flatMap((t) => t.heroes).includes(11)).toBe(true)
   })
 
-  // Every map's teams share one pool there, so this checks that the teams a
-  // set settles on and the boards they trade to are the best of every way of
-  // standing them, where a team's fit and whether it stands differ by map.
-  it.each([3, 5, 8])(
-    'finds the best set trying every set finds on maps with no records (season %i)',
-    (seed) => {
+  // On maps with no records the boards take the rows of every map in the
+  // search's order, best chance first, which decides who is handed which
+  // artifact, and then trade, each team keeping its artifact. This checks the
+  // set against every set and trade, with some fits remembered and the rest
+  // measured, beside a board with records or not.
+  it.each([
+    [3, false],
+    [5, false],
+    [8, false],
+    [3, true],
+    [5, true],
+    [8, true],
+  ])(
+    'finds the best set and trade on maps with no records (season %i, a board with records %s)',
+    (seed, recorded) => {
       const next = seededRandom(seed)
-      const season = randomSeason(next, true)
-      // With no artifact to hand out, which board a team stands on changes only
-      // its fit.
-      const data: SlData = {
-        ...season,
-        everyMap: season.everyMap.map((t) => ({ ...t, artifacts: [] })),
-        fallback: [[], [], []],
-      }
+      const data = randomSeason(next, true)
       const reader = readSlFile(data)
-      const layouts = ['new-0', 'new-1', 'new-2']
+      const layouts = [recorded ? data.maps[0]!.key : 'new-0', 'new-1', 'new-2']
+      const open = recorded ? [1, 2] : [0, 1, 2]
       const fits = new Map(
         data.everyMap.flatMap((t) =>
           layouts.map((layout) => [
@@ -430,15 +433,31 @@ describe('the search', () => {
           ]),
         ),
       )
-      const fitOf = (layout: string, heroes: number[]) =>
-        fits.get(`${layout}|${lineupKey(heroes)}`)!
+      const remembered = new Set([...fits.keys()].filter(() => next() < 0.5))
+      const keyOn = (board: number, heroes: number[]) => `${layouts[board]}|${lineupKey(heroes)}`
+      const shareOn = (board: number, heroes: number[]): number | null =>
+        open.includes(board) ? fits.get(keyOn(board, heroes))! : 1
+      const boards: SlBoard[] = layouts.map((key, map) => ({
+        layout: layoutOf(key),
+        map,
+        source: open.includes(map) ? null : 0,
+      }))
       const fit: SlFit = {
-        stands: (board, heroes) => fitOf(board.layout.key, heroes) !== null,
-        known: () => undefined,
-        measure: (board, heroes) => fitOf(board.layout.key, heroes)!,
+        stands: (board, heroes) => shareOn(board.map, heroes) !== null,
+        known: (board, heroes) =>
+          open.includes(board.map) && !remembered.has(keyOn(board.map, heroes))
+            ? undefined
+            : shareOn(board.map, heroes)!,
+        measure: (board, heroes) => shareOn(board.map, heroes)!,
       }
-      const boards = layouts.map((key, map) => ({ layout: layoutOf(key), map, source: null }))
-      for (let i = 0; i < 12; i++) {
+      const claimOf = artifactClaims(data)
+      const orders = (ids: number[]): number[][] =>
+        ids.length < 2
+          ? [ids]
+          : ids.flatMap((id, i) =>
+              orders(ids.filter((_, j) => j !== i)).map((rest) => [id, ...rest]),
+            )
+      for (let i = 0; i < 8; i++) {
         const picks: SlPick[] = data.order
           .filter(() => next() < 0.95)
           .map((id) => ({
@@ -448,31 +467,49 @@ describe('the search', () => {
             refinement: Math.floor(next() * 5),
           }))
         const picked = new Map(picks.map((p) => [p.id, p]))
-        const teams = data.everyMap.filter(
-          (t) => t.decided > 0 && t.heroes.every((h) => picked.has(h)),
-        )
-        const chanceOf = (t: SlTeam, layout: string): number | null => {
-          const share = fitOf(layout, t.heroes)
+        const chanceOf = (t: SlTeam, board: number, artifact: number | null): number | null => {
+          const share = shareOn(board, t.heroes)
           if (share === null) return null
           const gap = -t.heroes.reduce((n, h) => n + shortfall(data.prices, picked.get(h)!), 0)
-          const side = { heroes: t.heroes, kind: t.family, artifact: null }
+          const side = { heroes: t.heroes, kind: t.family, artifact }
           return sigmoid(reader.model.againstTypical(side, gap) + Math.log(share))
         }
+        const allowed = (t: SlTeam): boolean =>
+          t.decided > 0 && t.heroes.every((h) => picked.has(h))
+        const bestOf = (t: SlTeam): number => {
+          const claim = claimOf(t)
+          const reachable: (number | null)[] = [
+            ...claim.own.map((o) => o.id),
+            ...claim.fallback.slice(0, layouts.length),
+          ]
+          if (reachable.length < layouts.length) reachable.push(null)
+          return Math.max(...open.flatMap((b) => reachable.map((a) => chanceOf(t, b, a) ?? -1)))
+        }
+        const rows = data.everyMap
+          .filter((t) => allowed(t) && open.some((b) => shareOn(b, t.heroes) !== null))
+          .sort((a, b) => bestOf(b) - bestOf(a) || a.rank - b.rank)
         let expected = 0
-        for (const a of teams) {
-          for (const b of teams) {
-            for (const c of teams) {
-              const heroes = [...a.heroes, ...b.heroes, ...c.heroes]
-              if (new Set(heroes).size < heroes.length) continue
-              const chances = [a, b, c].map((t, k) => chanceOf(t, layouts[k]!))
+        const tryEach = (chosen: SlTeam[], from: number): void => {
+          if (chosen.length === layouts.length) {
+            const heroes = chosen.flatMap((t) => t.heroes)
+            if (new Set(heroes).size < heroes.length) return
+            const handed = handOutArtifacts(chosen.map(claimOf))
+            for (const order of orders(open)) {
+              const at = [0, 1, 2]
+              open.forEach((b, k) => (at[b] = order[k]!))
+              const chances = at.map((k, b) => chanceOf(chosen[k]!, b, handed[k] ?? null))
               if (chances.some((chance) => chance === null)) continue
               expected = Math.max(expected, winningMost(chances as number[]))
             }
+            return
           }
+          for (let k = from; k < rows.length; k++) tryEach([...chosen, rows[k]!], k + 1)
         }
+        const starts = recorded ? data.maps[0]!.teams.filter(allowed).map((t) => [t]) : [[]]
+        for (const start of starts) tryEach(start, 0)
         const set = chooseSlSet(data, reader, picks, () => true, boards, fit)
         expect(set?.chance ?? 0).toBeCloseTo(expected, 12)
-        set?.teams.forEach((t, k) => expect(fitOf(layouts[k]!, t.heroes)).not.toBeNull())
+        set?.teams.forEach((t, k) => expect(shareOn(k, t.heroes)).not.toBeNull())
       }
     },
   )
