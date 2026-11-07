@@ -5,9 +5,8 @@
    energy ramp; the other stat groups differ by a couple of percent. */
 
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
 
-import IconChevronRight from '@/components/ui/IconChevronRight.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import UpgradeLevelPill from '@/components/ui/UpgradeLevelPill.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import {
@@ -70,11 +69,8 @@ const bands = computed((): Band[] => [
 
 <template>
   <article class="container page-panel guide-panel">
-    <div class="content guide-link">
-      <RouterLink class="guide-title" :to="guidePath('upgrades')">
-        <h2>{{ label('upgrades') }}</h2>
-        <IconChevronRight :size="18" />
-      </RouterLink>
+    <div class="content link-area">
+      <LinkHeading :to="guidePath('upgrades')">{{ label('upgrades') }}</LinkHeading>
       <p class="guide-blurb">{{ label('guide-upgrades-blurb') }}</p>
       <div class="bands">
         <div v-for="band in bands" :key="band.key" class="band" :class="band.kind">

@@ -4,12 +4,11 @@
    map column. Each map keeps its first swap and two heroes to swap in, so the
    three fit a phone. */
 
-import { RouterLink } from 'vue-router'
 import preview from 'virtual:sl-preview'
 
 import SlBeta from './SlBeta.vue'
 import SlMapColumn from './SlMapColumn.vue'
-import IconChevronRight from '@/components/ui/IconChevronRight.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import type { AppLocale } from '@/lib/types/i18n'
@@ -39,11 +38,10 @@ const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
 
 <template>
   <article class="container page-panel guide-panel">
-    <section class="content guide-link">
-      <RouterLink class="guide-title" :to="SL_GENERATOR_PATH">
-        <h2>{{ appLabel('sl-title', lang) }}<SlBeta in-link /></h2>
-        <IconChevronRight :size="18" />
-      </RouterLink>
+    <section class="content link-area">
+      <LinkHeading :to="SL_GENERATOR_PATH">
+        {{ appLabel('sl-title', lang) }}<SlBeta in-link />
+      </LinkHeading>
       <p class="guide-blurb">{{ appLabel('sl-blurb', lang) }}</p>
       <!-- In the generator's board colours, which its page keeps in both looks. -->
       <div v-if="maps.length" class="maps" data-theme="dark">

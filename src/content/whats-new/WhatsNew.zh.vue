@@ -2,6 +2,7 @@
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -13,16 +14,15 @@ import { pvpReportHref } from '@/lib/pvp/summary'
 
 <template>
   <article>
-    <h1>11月新功能</h1>
+    <h1>10月20日以来的新功能</h1>
 
-    <section class="whats-new-entry">
-      <h2>PvP阵容生成器</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="SL_GENERATOR_PATH">PvP阵容生成器</LinkHeading>
       <WhatsNewPicture><HelpGeneratorPicture /></WhatsNewPicture>
       <p>
         用你自己的英雄，为 1v1、3v3 或 5v5
         比赛（包括巅峰联赛和公会征锋）的每张地图各配一支队伍，队伍都选自玩家记录的对局。竞技场和「阵容」页面上的<HelpGenerateButton />会用你的英雄池一键填好友方的棋盘。
       </p>
-      <p><RouterLink :to="SL_GENERATOR_PATH">打开</RouterLink></p>
     </section>
 
     <section class="whats-new-entry">
@@ -41,19 +41,17 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       </p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>谁会赢？</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="WWW_PATH">谁会赢？</LinkHeading>
       <WhatsNewPicture><HelpWwwPicture /></WhatsNewPicture>
       <p>
         组好两支巅峰联赛队伍，看看哪一方更可能获胜，以及原因。<b>整场</b>会排一场巅峰联赛的全部五局。
       </p>
-      <p><RouterLink :to="WWW_PATH">打开</RouterLink></p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>第8赛季 PvP 报告</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :href="pvpReportHref(8, 'zh')">第8赛季 PvP 报告</LinkHeading>
       <p>这份报告收录巅峰联赛的阵容、克制关系与地图数据，现在也包括第二届巅峰联赛的对局。</p>
-      <p><a :href="pvpReportHref(8, 'zh')">打开</a></p>
     </section>
 
     <section class="whats-new-entry">

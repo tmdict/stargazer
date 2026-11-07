@@ -5,7 +5,7 @@
 import { computed } from 'vue'
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import IconChevronRight from '@/components/ui/IconChevronRight.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import { mostPlayedTeams, pvpReportHref, reportReadsIn } from '@/lib/pvp/summary'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpSeasonSummary } from '@/lib/types/pvp'
@@ -27,15 +27,12 @@ const title = computed(() => {
 
 <template>
   <article class="container page-panel guide-panel">
-    <section class="content guide-link">
-      <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
-        <h2>
-          {{ title }}
-          <span v-if="summary.live" class="badge current">{{ label('current-season') }}</span>
-          <span v-if="!reportReadsIn(summary, lang)" class="badge">{{ label('english') }}</span>
-        </h2>
-        <IconChevronRight :size="18" />
-      </a>
+    <section class="content link-area">
+      <LinkHeading :href="pvpReportHref(summary.season, lang)">
+        {{ title }}
+        <span v-if="summary.live" class="badge current">{{ label('current-season') }}</span>
+        <span v-if="!reportReadsIn(summary, lang)" class="badge">{{ label('english') }}</span>
+      </LinkHeading>
       <p class="guide-blurb">{{ label('pvp-report-blurb') }}</p>
       <div class="chips">
         <a

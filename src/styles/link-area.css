@@ -1,0 +1,57 @@
+.content .link-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border-primary);
+  color: #fff;
+  text-decoration: none;
+}
+
+.content .link-heading h2 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: var(--reading-heading-size);
+  font-weight: 600;
+  color: #fff;
+}
+
+.content .link-heading:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.content .link-heading svg {
+  flex: none;
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.1s;
+}
+
+/* `.link-area` is the hit area, covered by the heading link's stretched
+   pseudo-element, which sits above the area's positioned decorations at
+   z-index 1. Links inside the area raise themselves above it with
+   `position: relative; z-index: 2`. */
+.link-area {
+  position: relative;
+  cursor: pointer;
+}
+
+.link-area .link-heading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.link-area:hover .link-heading h2,
+.content .link-heading:hover h2 {
+  color: var(--color-accent);
+}
+
+.link-area:hover .link-heading svg,
+.content .link-heading:hover svg {
+  color: var(--color-accent);
+  transform: translateX(3px);
+}

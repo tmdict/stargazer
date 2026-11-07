@@ -391,10 +391,10 @@ nav ul li {
 
 .nav-dot {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-danger);
 }

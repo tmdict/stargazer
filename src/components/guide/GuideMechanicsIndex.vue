@@ -5,7 +5,7 @@
 import { RouterLink } from 'vue-router'
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import IconChevronRight from '@/components/ui/IconChevronRight.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import { guidePath } from '@/lib/guide'
 import {
   ENERGY_DEFAULT,
@@ -48,11 +48,8 @@ const tiles = loadMechanicGroups().map((group) => {
 
 <template>
   <article class="container page-panel guide-panel">
-    <div class="content guide-link">
-      <RouterLink class="guide-title" :to="page">
-        <h2>{{ label('mechanics') }}</h2>
-        <IconChevronRight :size="18" />
-      </RouterLink>
+    <div class="content link-area">
+      <LinkHeading :to="page">{{ label('mechanics') }}</LinkHeading>
       <p class="guide-blurb">{{ label('guide-mechanics-blurb') }}</p>
       <div class="tiles">
         <RouterLink

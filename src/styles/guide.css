@@ -4,66 +4,8 @@
   container-type: inline-size;
 }
 
-.content .guide-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--color-border-primary);
-  color: #fff;
-  text-decoration: none;
-}
-
-.content .guide-title h2 {
-  margin: 0;
-  padding: 0;
-  border: none;
-  font-size: var(--reading-heading-size);
-  font-weight: 600;
-  color: #fff;
-}
-
-.content .guide-title:hover {
-  color: #fff;
-  text-decoration: none;
-}
-
-.content .guide-title svg {
-  flex: none;
-  color: rgba(255, 255, 255, 0.4);
-  transition: transform 0.1s;
-}
-
-/* `.guide-link` is the hit area, covered by the title link's stretched
-   pseudo-element, which sits above the area's positioned decorations (the
-   upgrade track bars) at z-index 1. Links inside the area (chips, tiles)
-   raise themselves above it with `position: relative; z-index: 2`. */
-.guide-link {
-  position: relative;
-  cursor: pointer;
-}
-
-.guide-link .guide-title::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.guide-panel:has(.guide-link:hover) {
+.guide-panel:has(.link-area:hover) {
   border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
-}
-
-.guide-link:hover .guide-title h2,
-.content .guide-title:hover h2 {
-  color: var(--color-accent);
-}
-
-.guide-link:hover .guide-title svg,
-.content .guide-title:hover svg {
-  color: var(--color-accent);
-  transform: translateX(3px);
 }
 
 .content .guide-blurb {

@@ -2,6 +2,7 @@
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -13,10 +14,10 @@ import { pvpReportHref } from '@/lib/pvp/summary'
 
 <template>
   <article>
-    <h1>11월 새 기능</h1>
+    <h1>10월 20일 이후 새 기능</h1>
 
-    <section class="whats-new-entry">
-      <h2>PvP 조합 생성기</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="SL_GENERATOR_PATH">PvP 조합 생성기</LinkHeading>
       <WhatsNewPicture><HelpGeneratorPicture /></WhatsNewPicture>
       <p>
         내 영웅으로 1v1, 3v3, 5v5 매치(최강자 리그와 길드 격돌 포함)의 각 맵에 팀을 하나씩 짜
@@ -24,7 +25,6 @@ import { pvpReportHref } from '@/lib/pvp/summary'
         <HelpGenerateButton />
         버튼은 로스터로 아군 보드를 한 번에 채웁니다.
       </p>
-      <p><RouterLink :to="SL_GENERATOR_PATH">열기</RouterLink></p>
     </section>
 
     <section class="whats-new-entry">
@@ -47,23 +47,21 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       </p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>누가 이길까?</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="WWW_PATH">누가 이길까?</LinkHeading>
       <WhatsNewPicture><HelpWwwPicture /></WhatsNewPicture>
       <p>
         최강자 리그 팀 두 개를 구성하면 어느 쪽이 이길지, 그 이유와 함께 알려 줍니다.
         <b>매치</b>는 최강자 리그 매치의 다섯 경기를 모두 다룹니다.
       </p>
-      <p><RouterLink :to="WWW_PATH">열기</RouterLink></p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>시즌 8 PvP 리포트</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :href="pvpReportHref(8, 'ko')">시즌 8 PvP 리포트</LinkHeading>
       <p>
         최강자 리그의 진형, 상성, 맵 데이터를 모은 리포트에 이제 두 번째 최강자 리그의 전투도
         들어갑니다.
       </p>
-      <p><a :href="pvpReportHref(8, 'ko')">열기</a></p>
     </section>
 
     <section class="whats-new-entry">

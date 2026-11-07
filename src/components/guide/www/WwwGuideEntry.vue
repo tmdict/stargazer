@@ -1,11 +1,9 @@
 <script setup lang="ts">
 /* Who Would Win?'s card on the guide index. */
 
-import { RouterLink } from 'vue-router'
-
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import SlBeta from '@/components/guide/sl/SlBeta.vue'
-import IconChevronRight from '@/components/ui/IconChevronRight.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import { WWW_PATH } from '@/lib/guide'
 import type { AppLocale } from '@/lib/types/i18n'
 import { appLabel } from '@/utils/skillLabels'
@@ -20,11 +18,10 @@ const TEAMS = {
 
 <template>
   <article class="container page-panel guide-panel">
-    <section class="content guide-link">
-      <RouterLink class="guide-title" :to="WWW_PATH">
-        <h2>{{ appLabel('www-title', lang) }}<SlBeta in-link /></h2>
-        <IconChevronRight :size="18" />
-      </RouterLink>
+    <section class="content link-area">
+      <LinkHeading :to="WWW_PATH">
+        {{ appLabel('www-title', lang) }}<SlBeta in-link />
+      </LinkHeading>
       <p class="guide-blurb">{{ appLabel('www-blurb', lang) }}</p>
       <!-- In the page's team shades, which it keeps in both looks. -->
       <div class="face-off" data-theme="dark" aria-hidden="true">

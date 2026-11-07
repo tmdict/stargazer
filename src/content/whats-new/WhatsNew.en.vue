@@ -2,6 +2,7 @@
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import LinkHeading from '@/components/ui/LinkHeading.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -13,10 +14,10 @@ import { pvpReportHref } from '@/lib/pvp/summary'
 
 <template>
   <article>
-    <h1>What's new in November</h1>
+    <h1>What's new since October 20</h1>
 
-    <section class="whats-new-entry">
-      <h2>PvP team generator</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="SL_GENERATOR_PATH">PvP team generator</LinkHeading>
       <WhatsNewPicture><HelpGeneratorPicture /></WhatsNewPicture>
       <p>
         Get a team for each map of a 1v1, 3v3 or 5v5 match, Supreme League and Guild Duel included,
@@ -25,7 +26,6 @@ import { pvpReportHref } from '@/lib/pvp/summary'
         <HelpGenerateButton />
         fills your side of the grids from your roster in one press.
       </p>
-      <p><RouterLink :to="SL_GENERATOR_PATH">Open</RouterLink></p>
     </section>
 
     <section class="whats-new-entry">
@@ -48,23 +48,21 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       </p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>Who Would Win?</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="WWW_PATH">Who Would Win?</LinkHeading>
       <WhatsNewPicture><HelpWwwPicture /></WhatsNewPicture>
       <p>
         Set up two Supreme League teams and see which should win, and why. <b>Match</b> plays out
         the five games of a Supreme League match.
       </p>
-      <p><RouterLink :to="WWW_PATH">Open</RouterLink></p>
     </section>
 
-    <section class="whats-new-entry">
-      <h2>Season 8 PvP report</h2>
+    <section class="whats-new-entry link-area">
+      <LinkHeading :href="pvpReportHref(8, 'en')">Season 8 PvP report</LinkHeading>
       <p>
         The report, with Supreme League's teams, counters and map data, now includes the games of
         the second Supreme League.
       </p>
-      <p><a :href="pvpReportHref(8, 'en')">Open</a></p>
     </section>
 
     <section class="whats-new-entry">

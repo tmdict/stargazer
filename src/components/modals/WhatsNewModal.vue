@@ -52,7 +52,7 @@ watch(
   margin-top: 40px;
 }
 
-.whats-new :deep(.whats-new-entry > h2) {
+.whats-new :deep(.whats-new-entry > :is(h2, .link-heading)) {
   margin: 0 0 16px;
 }
 
