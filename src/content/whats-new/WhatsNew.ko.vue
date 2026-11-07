@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -21,9 +21,7 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       <p>
         내 영웅으로 1v1, 3v3, 5v5 매치(최강자 리그와 길드 격돌 포함)의 각 맵에 팀을 하나씩 짜
         줍니다. 팀은 플레이어들이 기록한 전투에서 골라냅니다. 아레나와 진형 페이지의
-        <span class="control-btn generate-btn whats-new-generate"
-          ><IconSparkle :size="24" class="generate-sparkle"
-        /></span>
+        <HelpGenerateButton />
         버튼은 로스터로 아군 보드를 한 번에 채웁니다.
       </p>
       <p><RouterLink :to="SL_GENERATOR_PATH">열기</RouterLink></p>

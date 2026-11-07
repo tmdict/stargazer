@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
@@ -20,7 +21,6 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -139,13 +139,15 @@ const SKILL = {
             <span> <b>载入</b>可以把已保存阵容的一方放回棋盘，敌我两边都行。 </span>
           </li>
           <li>
-            <span> 在<b>阵容</b>标签页的搜索框里输入英雄名，就能找出用到这位英雄的阵容。 </span>
+            <span> 在<b>阵容</b>标签页的搜索框里输入英雄或神器的名字，就能找出用到它的阵容。 </span>
           </li>
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
         <li>在<b>阵容</b>标签页里，点阵容名称即可重命名。</li>
-        <li>从搜索框下方的列表里选中英雄，就只显示把他们放在同一方的阵容。也可以搜阵容名称。</li>
+        <li>
+          从搜索框下方的列表里选中英雄或神器，就只显示把它们放在同一方的阵容。也可以搜阵容名称。
+        </li>
         <li>
           <span class="help-inline-btn"><IconImagePlus :size="13" /></span>
           可以从对战截图导入整场对局，详见<a href="#import">从截图导入</a>。
@@ -244,6 +246,7 @@ const SKILL = {
           <li><a href="#www">谁会赢？</a>也能导入截图，读取的是巅峰联赛淘汰赛对阵界面。</li>
           <li>可以在导入窗口的任意位置粘贴截图。</li>
           <li>裁剪过的截图和完整的手机截屏都能识别。</li>
+          <li>截图宽度至少需要 400 像素。</li>
           <li>截图不会离开你的设备。</li>
           <li>
             你修正过的英雄，导入工具会记住，仅保存在此设备上。核对区下方的清除链接可以删掉这些记录。
@@ -335,8 +338,7 @@ const SKILL = {
       </div>
       <ul class="help-notes reading-secondary">
         <li>
-          竞技场和「阵容」页面上的<span class="help-inline-btn"><IconSparkle :size="13" /></span
-          >会用你的英雄池一键填好友方的棋盘。旁边的
+          竞技场和「阵容」页面上的<HelpGenerateButton />会用你的英雄池一键填好友方的棋盘。旁边的
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>
           会在本页打开同样的棋盘（地图编辑里的地图也可以），<b>在竞技场中打开</b>或<b>在阵容中打开</b>则把这套阵容放回那里的友方。
         </li>
@@ -441,7 +443,7 @@ const SKILL = {
           <HelpToggle label="己方" />
           <p>隐藏敌方，方便截图</p>
           <HelpToggle label="地图信息" split />
-          <p>在棋盘上显示英雄卡片和等级</p>
+          <p>在棋盘上显示格子编号、英雄卡片和等级、站位提示等</p>
           <HelpToggle label="协同" />
           <p>加入好友的英雄作为助战</p>
         </div>
@@ -497,6 +499,14 @@ const SKILL = {
     <ul class="help-grid help-tips">
       <li>
         <IconSearch :size="18" /><span>鼠标停在英雄上，可以看到阵营、职业、射程和能量。</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" /><span
+          >打开<b>地图信息</b>并在菜单里勾选<b>站位提示</b>后，<span class="help-mouse"
+            >把鼠标停在你的英雄上</span
+          ><span class="help-touch">点一下你的英雄</span
+          >，就能看到它为什么适合站在这里：它的技能给谁带来什么、它偏向站在哪一侧，以及更适合它的格子（用绿色框出）。</span
+        >
       </li>
       <li>
         <IconChevronRight :size="18" /><span

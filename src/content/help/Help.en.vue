@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
@@ -20,7 +21,6 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -154,7 +154,9 @@ const SKILL = {
             </span>
           </li>
           <li>
-            <span> In <b>Saved</b>, type a hero's name to find the teams that use that hero. </span>
+            <span>
+              In <b>Saved</b>, type a hero's or artifact's name to find the teams that use it.
+            </span>
           </li>
         </ol>
       </div>
@@ -164,8 +166,8 @@ const SKILL = {
           ><span class="help-touch">tap</span> a team's name to rename it.
         </li>
         <li>
-          Pick heroes from the list under the search box to see only the teams that field them
-          together. A team's name works too.
+          Pick heroes or artifacts from the list under the search box to see only the teams that
+          field them together. A team's name works too.
         </li>
         <li>
           <span class="help-inline-btn"><IconImagePlus :size="13" /></span> imports a match from
@@ -294,6 +296,7 @@ const SKILL = {
           </li>
           <li>You can paste a screenshot anywhere in the import window.</li>
           <li>Cropped screenshots and whole phone screens both work.</li>
+          <li>Screenshots need to be at least 400 pixels wide.</li>
           <li>Screenshots stay on your device.</li>
           <li>
             When you correct a hero, the importer remembers that hero on this device. A reset link
@@ -399,8 +402,7 @@ const SKILL = {
       <ul class="help-notes reading-secondary">
         <li>
           On the Arena and Teams pages,
-          <span class="help-inline-btn"><IconSparkle :size="13" /></span> fills your side of the
-          grids from your roster in one press.
+          <HelpGenerateButton /> fills your side of the grids from your roster in one press.
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span> next to it opens this
           page on those grids, Map editor maps included, and <b>Open in Arena</b> or
           <b>Open in Teams</b> puts the set back on your side there.
@@ -519,7 +521,7 @@ const SKILL = {
           <HelpToggle label="Team" />
           <p>Hide the enemy side, handy for screenshots</p>
           <HelpToggle label="Grid Info" split />
-          <p>Show hero cards and levels on the grid</p>
+          <p>Show tile numbers, hero cards and levels, Placement tips and more on the grid</p>
           <HelpToggle label="Syn" />
           <p>Add a friend's hero as your assist</p>
         </div>
@@ -583,6 +585,15 @@ const SKILL = {
       <li>
         <IconSearch :size="18" />
         <span>Hover over a hero to see its faction, class, range and energy.</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          With <b>Grid Info</b> on and <b>Placement tips</b> ticked in its menu,
+          <span class="help-mouse">hover over</span><span class="help-touch">tap</span> one of your
+          heroes to see why it stands well where it is: what its skills give and to whom, the side
+          it leans to, and any tile that would suit it better, outlined in green.
+        </span>
       </li>
       <li>
         <IconChevronRight :size="18" />

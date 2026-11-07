@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -20,10 +20,7 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       <WhatsNewPicture><HelpGeneratorPicture /></WhatsNewPicture>
       <p>
         用你自己的英雄，为 1v1、3v3 或 5v5
-        比赛（包括巅峰联赛和公会征锋）的每张地图各配一支队伍，队伍都选自玩家记录的对局。竞技场和「阵容」页面上的<span
-          class="control-btn generate-btn whats-new-generate"
-          ><IconSparkle :size="24" class="generate-sparkle" /></span
-        >会用你的英雄池一键填好友方的棋盘。
+        比赛（包括巅峰联赛和公会征锋）的每张地图各配一支队伍，队伍都选自玩家记录的对局。竞技场和「阵容」页面上的<HelpGenerateButton />会用你的英雄池一键填好友方的棋盘。
       </p>
       <p><RouterLink :to="SL_GENERATOR_PATH">打开</RouterLink></p>
     </section>

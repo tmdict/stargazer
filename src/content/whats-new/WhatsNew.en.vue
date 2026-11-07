@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
@@ -22,9 +22,7 @@ import { pvpReportHref } from '@/lib/pvp/summary'
         Get a team for each map of a 1v1, 3v3 or 5v5 match, Supreme League and Guild Duel included,
         made from your own heroes and picked from games players recorded. On the Arena and Teams
         pages,
-        <span class="control-btn generate-btn whats-new-generate"
-          ><IconSparkle :size="24" class="generate-sparkle"
-        /></span>
+        <HelpGenerateButton />
         fills your side of the grids from your roster in one press.
       </p>
       <p><RouterLink :to="SL_GENERATOR_PATH">Open</RouterLink></p>

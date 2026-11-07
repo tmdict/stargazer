@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
@@ -20,7 +21,6 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
@@ -155,7 +155,8 @@ const SKILL = {
           </li>
           <li>
             <span>
-              <b>저장 목록</b>에서 영웅 이름을 입력하면 그 영웅을 쓰는 진형을 찾을 수 있습니다.
+              <b>저장 목록</b>에서 영웅이나 메아리 이름을 입력하면 그것을 쓰는 진형을 찾을 수
+              있습니다.
             </span>
           </li>
         </ol>
@@ -166,7 +167,7 @@ const SKILL = {
           ><span class="help-touch">누르면</span> 이름을 바꿀 수 있습니다.
         </li>
         <li>
-          검색창 아래 목록에서 영웅을 선택하면 그 영웅들을 같은 진영에 함께 배치한 진형만
+          검색창 아래 목록에서 영웅이나 메아리를 선택하면 그것들을 같은 진영에 함께 쓴 진형만
           표시됩니다. 진형 이름으로도 검색할 수 있습니다.
         </li>
         <li>
@@ -297,6 +298,7 @@ const SKILL = {
           </li>
           <li>가져오기 창 어디에나 스크린샷을 붙여 넣을 수 있습니다.</li>
           <li>잘라낸 스크린샷도, 휴대폰 화면 전체를 찍은 스크린샷도 인식됩니다.</li>
+          <li>스크린샷은 가로 400픽셀 이상이어야 합니다.</li>
           <li>스크린샷은 기기 밖으로 나가지 않습니다.</li>
           <li>
             영웅을 수정하면 가져오기 기능이 이 기기에서 그 영웅을 기억합니다. 확인 영역 아래의
@@ -401,8 +403,7 @@ const SKILL = {
       <ul class="help-notes reading-secondary">
         <li>
           아레나와 진형 페이지의
-          <span class="help-inline-btn"><IconSparkle :size="13" /></span> 버튼은 로스터로 아군
-          보드를 한 번에 채웁니다. 옆의
+          <HelpGenerateButton /> 버튼은 로스터로 아군 보드를 한 번에 채웁니다. 옆의
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span>은 같은 보드(맵
           에디터의 맵 포함)로 이 페이지를 열고, <b>아레나에서 열기</b> 또는 <b>진형에서 열기</b>는
           세트를 그곳의 아군 쪽에 다시 놓습니다.
@@ -522,7 +523,7 @@ const SKILL = {
           <HelpToggle label="아군" />
           <p>적군 진영을 숨깁니다. 스크린샷을 찍을 때 유용합니다</p>
           <HelpToggle label="맵 정보" split />
-          <p>맵에 영웅 카드와 레벨을 표시합니다</p>
+          <p>맵에 타일 번호, 영웅 카드와 레벨, 배치 팁 등을 표시합니다</p>
           <HelpToggle label="협력" />
           <p>친구의 영웅을 협력 영웅으로 추가합니다</p>
         </div>
@@ -589,6 +590,16 @@ const SKILL = {
       <li>
         <IconSearch :size="18" />
         <span>영웅에 마우스를 올리면 진영, 직업, 사정거리, 에너지가 표시됩니다.</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          <b>맵 정보</b>를 켜고 메뉴에서 <b>배치 팁</b>을 체크한 뒤
+          <span class="help-mouse">내 영웅에 마우스를 올리면</span
+          ><span class="help-touch">내 영웅을 누르면</span> 그 자리가 왜 좋은지 알려 줍니다. 스킬이
+          누구에게 무엇을 주는지, 앞과 뒤 중 어느 쪽에 서려 하는지, 더 잘 맞는 타일이 있다면 초록색
+          테두리로 보여 줍니다.
+        </span>
       </li>
       <li>
         <IconChevronRight :size="18" />

@@ -60,14 +60,6 @@ watch(
   margin: 14px 0 0;
 }
 
-.whats-new :deep(.whats-new-generate) {
-  vertical-align: middle;
-  min-height: 0;
-  padding: 0 4px;
-  border-width: 1px;
-  pointer-events: none;
-}
-
 .whats-new :deep(.whats-new-also) {
   margin-top: 44px;
 }
