@@ -603,6 +603,11 @@ defineExpose({ zoneBox })
   cursor: pointer;
 }
 
+.ring,
+.ring-edge {
+  pointer-events: none;
+}
+
 .ring {
   stroke: var(--color-warning);
 }
