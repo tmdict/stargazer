@@ -103,7 +103,7 @@ export const TEAM_MODE_ORDER: TeamModeKey[] = ['1v1', '3v3', '5v5']
 
 export const DEFAULT_TEAM_MODE: TeamModeKey = '5v5'
 
-export const MAX_SAVED_TEAMS = 1000
+export const MAX_SAVED_TEAMS = 500
 
 export const DEFAULT_VARIANT = 'default' as const
 // What a picker, a filter, or a rebuild can name.
