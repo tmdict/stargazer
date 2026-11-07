@@ -13,7 +13,7 @@ import { oddsInto, winsNeeded } from '../model/odds'
 import type { SlReader } from '../model/reader'
 import { artifactClaims, handOutArtifacts, type ArtifactClaim } from './artifacts'
 import { boardChance, levelGap } from './chance'
-import { slFit, type SlFit } from './fit'
+import { slFit, type SlFit, type SlFitRequest } from './fit'
 import type { SlBoard } from './setType'
 import { swapsOf } from './swaps'
 import type { SlChoice, SlPick } from './types'
@@ -37,6 +37,8 @@ interface Option {
   // The best chance any artifact it can end up with gives it on any board
   // its pool serves.
   best: number
+  // What measuring its fit on the board at that index needs, if not known yet.
+  pending: (board: number) => SlFitRequest[]
   // Measures the team's fit on the board at that index once, and says whether
   // that lowered its chance there.
   refit: (board: number) => boolean
@@ -156,6 +158,10 @@ function searcher(
               return shares.has(layout) ? chanceAt(shares.get(layout), artifact) : -1
             },
             best: bestNow(),
+            pending: (i) =>
+              shares.get(boards[i]!.layout.key) === undefined
+                ? [{ board: boards[i]!, heroes: t.heroes, from: home }]
+                : [],
             refit: (i) => {
               const layout = boards[i]!.layout.key
               if (shares.get(layout) !== undefined) return false
@@ -318,15 +324,19 @@ function searcher(
   // The best set with the strict rule, else the relaxed one, every chance
   // counting the fit of a team not yet measured at its most, so once a set's
   // teams are all measured, no other set can beat it. Placing a team is slow,
-  // so only the teams a search picks are measured.
+  // so only the teams a search picks are measured. Each round first yields
+  // the fits it is about to measure.
   return {
     optionsFor,
-    choose(reads: readonly (number | null)[]): SlChoice | null {
+    *choose(reads: readonly (number | null)[]): Steps {
       const unrecorded = reads.flatMap((read, i) => (read === null ? [i] : []))
       for (const proof of data.evidence) {
         const pools = optionsFor(proof, reads)
         let set = bestSet(pools, unrecorded)
-        while (set?.teams.map((t, i) => t.refit(i)).some(Boolean)) {
+        while (set) {
+          const pending = set.teams.flatMap((t, i) => t.pending(i))
+          if (pending.length) yield pending
+          if (!set.teams.map((t, i) => t.refit(i)).some(Boolean)) break
           for (const pool of new Set(pools)) pool.sort(byBest)
           set = bestSet(pools, unrecorded)
         }
@@ -335,6 +345,33 @@ function searcher(
       return null
     },
   }
+}
+
+type Steps = Generator<SlFitRequest[], SlChoice | null, void>
+
+function* steps(
+  data: SlData,
+  reader: SlReader,
+  picks: readonly SlPick[],
+  counts: (artifact: number) => boolean,
+  boards: readonly SlBoard[],
+  fit: SlFit,
+): Steps {
+  const picked = new Map(picks.map((pick) => [pick.id, pick]))
+  const search = searcher(data, reader, picked, counts, boards, fit)
+  const own = boards.map((board) => board.source)
+  const tried = new Set<string>()
+  function* attempt(reads: (number | null)[]): Steps {
+    const key = reads.join()
+    if (tried.has(key)) return null
+    tried.add(key)
+    return yield* search.choose(reads)
+  }
+  const thin = (): (number | null)[] => {
+    const pools = search.optionsFor(data.evidence.at(-1)!, own)
+    return own.map((source, i) => (pools[i]!.length ? source : null))
+  }
+  return (yield* attempt(own)) ?? (yield* attempt(thin())) ?? (yield* attempt(own.map(() => null)))
 }
 
 /* The set for `picks`, or null when none can be made, on `boards` as slBoards
@@ -353,19 +390,29 @@ export function chooseSlSet(
   boards: readonly SlBoard[],
   fit: SlFit = slFit(data),
 ): SlChoice | null {
-  const picked = new Map(picks.map((pick) => [pick.id, pick]))
-  const search = searcher(data, reader, picked, counts, boards, fit)
-  const own = boards.map((board) => board.source)
-  const tried = new Set<string>()
-  const attempt = (reads: (number | null)[]): SlChoice | null => {
-    const key = reads.join()
-    if (tried.has(key)) return null
-    tried.add(key)
-    return search.choose(reads)
+  const run = steps(data, reader, picks, counts, boards, fit)
+  let step = run.next()
+  while (!step.done) step = run.next()
+  return step.value
+}
+
+/* chooseSlSet for a caller that works each round's fits out before the round
+ * measures them, such as in helpers side by side: `prepare` gets the round's
+ * teams not measured yet, and stores their fits where `fit` reads them. */
+export async function chooseSlSetAsync(
+  data: SlData,
+  reader: SlReader,
+  picks: readonly SlPick[],
+  counts: (artifact: number) => boolean,
+  boards: readonly SlBoard[],
+  fit: SlFit,
+  prepare: (requests: SlFitRequest[]) => Promise<void>,
+): Promise<SlChoice | null> {
+  const run = steps(data, reader, picks, counts, boards, fit)
+  let step = run.next()
+  while (!step.done) {
+    await prepare(step.value)
+    step = run.next()
   }
-  const thin = (): (number | null)[] => {
-    const pools = search.optionsFor(data.evidence.at(-1)!, own)
-    return own.map((source, i) => (pools[i]!.length ? source : null))
-  }
-  return attempt(own) ?? attempt(thin()) ?? attempt(own.map(() => null))
+  return step.value
 }

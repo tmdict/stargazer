@@ -9,7 +9,7 @@ import { configTiles } from '@/lib/maps'
 import { decodeSlData, loadSlData } from '@/lib/pvp/data/codec'
 import type { SlData, SlTeam, SlUnit } from '@/lib/pvp/data/types'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
-import { slFit } from '@/lib/pvp/generator/fit'
+import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
 import { slBoards } from '@/lib/pvp/generator/setType'
 import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
@@ -32,7 +32,7 @@ const reader = readSlFile(data)
 const boards = slBoards(data, TEAM_VARIANTS.sl.maps)
 // One store of measured fits for every call, as the worker keeps for a visit.
 const fit = slFit(data)
-const choose = (picks: SlPick[], on = boards, measured = fit) =>
+const choose = (picks: SlPick[], on = boards, measured: SlFit = fit) =>
   chooseSlSet(data, reader, picks, () => true, on, measured)
 const heroes = new Map(
   loadCharacters()

@@ -118,7 +118,7 @@ function phantimalGoals(
 // Supreme League plays without Spirit Marks, so a set on its maps keeps every
 // recorded formation as recorded. Guild Duel shares two of its maps, so the
 // whole set decides, not a board's map.
-const marksCount = (boards: readonly SlBoard[]): boolean =>
+export const marksCount = (boards: readonly SlBoard[]): boolean =>
   matchVariant(
     '5v5',
     boards.map((board) => board.layout.key),
@@ -200,15 +200,22 @@ export function engineFormation(
   }
 }
 
-// One entry per board, in board order: the recorded game's formation where
-// there is one, the engine's elsewhere.
+// The recorded game's formation where there is one, the engine's elsewhere;
+// `marks` is marksCount of the whole set's boards.
+export function boardDraw(
+  data: SlData,
+  choice: SlChoiceTeam,
+  board: SlBoard,
+  marks: boolean,
+): BoardDraw {
+  const played = playedFormation(data, choice, board, marks)
+  return { played, engine: played ? null : engineFormation(data, choice, board) }
+}
+
+// One entry per board, in board order.
 export function boardDraws(data: SlData, set: SlChoice, boards: readonly SlBoard[]): BoardDraw[] {
   const marks = marksCount(boards)
-  return set.teams.map((choice, index) => {
-    const board = boards[index]!
-    const played = playedFormation(data, choice, board, marks)
-    return { played, engine: played ? null : engineFormation(data, choice, board) }
-  })
+  return set.teams.map((choice, index) => boardDraw(data, choice, boards[index]!, marks))
 }
 
 /**
