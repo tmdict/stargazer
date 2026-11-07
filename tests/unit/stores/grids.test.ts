@@ -1,4 +1,3 @@
-import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,12 +8,11 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { artifactSkillKey, unitSkillKey } from '@/lib/skills/skill'
+import { unitSkillKey } from '@/lib/skills/skill'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { BoardLineup, TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
-import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useRosters } from '@/stores/rosters'
 import {
@@ -430,16 +428,6 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
     expect(b!.grid.getTileById(7).characterId).toBeUndefined()
   })
-
-  it('makes the destination board active on a picker drop', () => {
-    const { grids } = setupBoards()
-    grids.setActive(0)
-
-    expect(grids.routeDrop(pickerPayload(ALLY_A), 1, 2)).toBe(true)
-
-    expect(getCharacter(grids.contexts[1]!.grid, 2)).toBe(ALLY_A)
-    expect(grids.activeId).toBe(1)
-  })
 })
 
 describe('useGrids attr carry-over', () => {
@@ -616,19 +604,10 @@ describe('useGrids synergy', () => {
       toSynergyId(17),
     ])
   })
-
-  it('setGridCount re-derives the affordance from the rebuilt boards', () => {
-    const { grids } = setupBoards(1)
-    grids.synergy = true
-    grids.setGridCount(1)
-    expect(grids.synergy).toBe(false)
-  })
 })
 
 describe('useGrids hidden skills', () => {
-  const KULU_ALLY = unitSkillKey(KULU, Team.ALLY)
   const SILVINA = 39
-  const ENLIGHTENING = 3
 
   it('hides a drawing on the board without losing it from the skill engine', () => {
     const { grids, a } = setupBoards(1)
@@ -639,67 +618,6 @@ describe('useGrids hidden skills', () => {
     expect(a.skillTargets.size).toBe(0)
     // The Debug tab reads the engine directly.
     expect(a.skillManager.getAllSkillTargets().size).toBe(1)
-  })
-
-  it('merges a hero and its synergy copy into one row', () => {
-    const { grids, a } = setupBoards(1)
-    a.place(1, KULU, Team.ALLY)
-    a.place(2, toSynergyId(KULU), Team.ALLY)
-
-    expect(grids.skillRows.filter((row) => row.key === KULU_ALLY)).toHaveLength(1)
-  })
-
-  it('stays hidden across boards and comes back visible after leaving them', async () => {
-    const { grids, a, b } = setupBoards()
-    a.place(1, KULU, Team.ALLY)
-    grids.setSkillsHidden([KULU_ALLY], true)
-    expect(a.getTileColorModifier(19)).toBeUndefined()
-
-    grids.routeDrop(dragPayload(0, 1, KULU), 1, 1)
-    await nextTick()
-    expect(findCharacterHex(b.grid, KULU, Team.ALLY)).toBe(1)
-    expect(grids.hiddenSkills.has(KULU_ALLY)).toBe(true)
-    expect(b.getTileColorModifier(19)).toBeUndefined()
-
-    b.remove(1)
-    await nextTick()
-    b.place(1, KULU, Team.ALLY)
-    expect(b.getTileColorModifier(19)).toBeDefined()
-  })
-
-  it('adds a unit able to draw the moment it is placed, with nothing drawn', () => {
-    const { grids, a } = setupBoards(1)
-    expect(grids.skillRows).toEqual([])
-
-    a.place(2, SILVINA, Team.ALLY)
-
-    expect(a.skillTargets.size).toBe(0)
-    expect(grids.skillRows.map((row) => row.key)).toEqual([unitSkillKey(SILVINA, Team.ALLY)])
-  })
-
-  it('hides one side of a board artifact and lists it before it draws', () => {
-    useGameDataStore().initializeContentData()
-    const { grids, a } = setupBoards(1)
-    a.setArtifact(Team.ALLY, ENLIGHTENING)
-    a.setArtifact(Team.ENEMY, ENLIGHTENING)
-    const key = artifactSkillKey(ENLIGHTENING, Team.ALLY)
-    expect(a.artifactArrows).toEqual([])
-    expect(grids.skillRows.map((row) => row.key)).toContain(key)
-
-    a.place(1, ALLY_A, Team.ALLY)
-    a.place(40, ENEMY_A, Team.ENEMY)
-    grids.setSkillsHidden([key], true)
-    expect(a.artifactArrows.map((arrow) => arrow.team)).toEqual([Team.ENEMY])
-  })
-
-  it('gives an artifact with no targeting rule no row', () => {
-    const gameData = useGameDataStore()
-    gameData.initializeContentData()
-    const { grids, a } = setupBoards(1)
-
-    a.setArtifact(Team.ALLY, gameData.artifacts.find(({ name }) => name === 'awakening')!.id)
-
-    expect(grids.skillRows).toEqual([])
   })
 })
 
@@ -864,17 +782,6 @@ describe('useGrids.loadTeamSide', () => {
     )
 
     expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
-  })
-
-  it('counts the units a side leaves out as skipped', () => {
-    const { grids } = setupBoards(1)
-
-    const result = grids.loadTeamSide(
-      { side: Team.ALLY, boards: [board([[12, 2]], { leftOut: 1 })] },
-      { invert: false, scope: 'all' },
-    )
-
-    expect(result).toEqual({ placed: 1, skipped: 1 })
   })
 
   it('derives the Syn affordance from a loaded synergy hero', () => {

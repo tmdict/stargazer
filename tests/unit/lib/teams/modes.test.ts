@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import {
-  DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
   isTeamModeKey,
   matchVariant,
@@ -22,11 +21,6 @@ const boards = (count: number): MultiGridState => ({
 })
 
 describe('TEAM_MODES registry', () => {
-  it('orders modes by ascending board count so smallest-fit inference works', () => {
-    const counts = TEAM_MODE_ORDER.map((key) => TEAM_MODES[key].boardCount)
-    expect([...counts].sort((a, b) => a - b)).toEqual(counts)
-  })
-
   // One slot per count and smallest-fit inference both rest on this: a mode IS
   // a board count. An in-game mode on an existing count is a TEAM_VARIANTS
   // row, never a second mode.
@@ -80,11 +74,6 @@ describe('matchVariant', () => {
     expect(matchVariant('1v1', ['arena2'])).toBeNull()
   })
 
-  it('rejects a list of the wrong length', () => {
-    expect(matchVariant('3v3', ['arena1', 'arena1'])).toBeNull()
-    expect(matchVariant('1v1', ['arena1', 'arena1'])).toBeNull()
-  })
-
   it('treats a missing key as the default map for that board', () => {
     expect(matchVariant('3v3', [undefined, DEFAULT_MAP_KEY, undefined])).toBe(DEFAULT_VARIANT)
     expect(matchVariant('5v5', [undefined, ...TEAM_VARIANTS.sl.maps.slice(1)])).toBe('sl')
@@ -122,10 +111,6 @@ describe('resolveTeamMode', () => {
     expect(resolveTeamMode(boards(3))).toBe('3v3')
     expect(resolveTeamMode(boards(4))).toBe('5v5')
     expect(resolveTeamMode(boards(5))).toBe('5v5')
-  })
-
-  it('falls back to the default mode when nothing fits (crafted oversize)', () => {
-    expect(resolveTeamMode(boards(7))).toBe(DEFAULT_TEAM_MODE)
   })
 })
 

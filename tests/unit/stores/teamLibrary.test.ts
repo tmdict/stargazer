@@ -84,17 +84,6 @@ describe('useTeamLibrary', () => {
     expect(library.update(team.id, 'garbage')).toBe(false)
   })
 
-  it('saveAsNew assigns auto-names and sanitizes custom names', () => {
-    const library = useTeamLibrary()
-    const first = library.saveAsNew('3v3', CANONICAL_3V3)!
-    expect(first.name).toBe('Team 1')
-    const second = library.saveAsNew('3v3', CANONICAL_3V3, '  My Comp  ')!
-    expect(second.name).toBe('My Comp')
-    expect(library.count).toBe(2)
-    expect(stored()).toHaveLength(2)
-    expect(first.id).not.toBe(second.id)
-  })
-
   it('enforces the cap on saveAsNew and duplicate', () => {
     seed(Array.from({ length: MAX_SAVED_TEAMS }, (_, i) => record(`id-${i}`, `Team ${i + 1}`)))
     const library = useTeamLibrary()

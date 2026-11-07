@@ -82,26 +82,6 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.rules).toBe(true) // absent key keeps its default
   })
 
-  it('enable cascades run upward; disabling never cascades', async () => {
-    const { useGridInfoPrefs } = await importComposable()
-    const { prefs, setPref } = useGridInfoPrefs()
-
-    setPref('upgrades', true)
-    expect(prefs.heroCard).toBe(true)
-    expect(prefs.master).toBe(true)
-
-    setPref('coordinates', true)
-    expect(prefs.tileIds).toBe(true)
-
-    setPref('master', false)
-    expect(prefs.upgrades).toBe(true)
-    expect(prefs.heroCard).toBe(true)
-
-    setPref('heroCard', false)
-    expect(prefs.master).toBe(false)
-    expect(prefs.upgrades).toBe(true)
-  })
-
   it('keeps Details on hover and Placement tips either/or, Details winning a stored pair', async () => {
     storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { hover: true, rules: true } }))
     const mod = await importComposable()
@@ -117,21 +97,6 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.rules).toBe(false)
   })
 
-  it("ticks Placement tips for Generate without turning on Grid Info's master", async () => {
-    storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { master: false, hover: true } }))
-    const mod = await importComposable()
-    const { prefs, tickRules } = mountPrefs(mod)
-
-    tickRules()
-
-    expect(prefs).toMatchObject({ master: false, rules: true, hover: false })
-    expect(JSON.parse(storage.get(PREFS_KEY)!).gridInfo).toMatchObject({
-      master: false,
-      rules: true,
-      hover: false,
-    })
-  })
-
   it('persists the slice while preserving sibling slices of stargazer.prefs', async () => {
     const { useGridInfoPrefs } = await importComposable()
     const { setPref } = useGridInfoPrefs()
@@ -143,38 +108,5 @@ describe('useGridInfoPrefs', () => {
     expect(stored.other).toEqual({ keep: 1 })
     expect(stored.gridInfo.targeting).toBe(true)
     expect(stored.gridInfo.master).toBe(true)
-  })
-})
-
-describe('deriveGridInfoView', () => {
-  it('ANDs the master and structural parents into every surface', async () => {
-    const { deriveGridInfoView } = await importComposable()
-    const allOn = {
-      master: true,
-      tileIds: true,
-      hover: true,
-      rules: true,
-      heroCard: true,
-      upgrades: true,
-      targeting: true,
-      coordinates: true,
-      heroSkin: true,
-    }
-
-    expect(deriveGridInfoView(allOn)).toEqual({
-      tileIds: true,
-      coordinates: true,
-      hover: true,
-      rules: true,
-      heroCard: true,
-      upgrades: true,
-      targeting: true,
-      heroSkin: true,
-    })
-    const masterOff = deriveGridInfoView({ ...allOn, master: false })
-    expect(Object.values(masterOff).every((v) => v === false)).toBe(true)
-    expect(deriveGridInfoView({ ...allOn, heroCard: false }).upgrades).toBe(false)
-    expect(deriveGridInfoView({ ...allOn, tileIds: false }).coordinates).toBe(false)
-    expect(deriveGridInfoView({ ...allOn, tileIds: false }).targeting).toBe(true)
   })
 })

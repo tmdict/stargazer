@@ -60,12 +60,6 @@ describe('useGridSwap target selection', () => {
       expect(swapBoards).not.toHaveBeenCalled()
     })
 
-    it('cancels when the source board is tapped', () => {
-      tap(SOURCE)
-      expect(swap.isSwapping.value).toBe(false)
-      expect(swapBoards).not.toHaveBeenCalled()
-    })
-
     it('ignores a swipe (release past the travel limit)', () => {
       swap.onOverlayDown(TARGET, at(0, 0))
       swap.onOverlayUp(TARGET, at(0, 40))

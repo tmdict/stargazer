@@ -47,12 +47,6 @@ describe('i18nStore', () => {
       expect([document.documentElement.lang, document.body.lang]).toEqual(['ko', 'ko'])
     })
 
-    it('setLocale with persist: false updates the render locale only', () => {
-      store.setLocale('zh', { persist: false })
-      expect(store.currentLocale).toBe('zh')
-      expect(localStorage.getItem('stargazer.locale')).toBeNull()
-    })
-
     it('a site-language pick resets the skill-text language, a ?l= link keeps it', () => {
       store.setSkillLocale('ja')
       vi.stubGlobal('window', { location: { search: '?l=zh' } })

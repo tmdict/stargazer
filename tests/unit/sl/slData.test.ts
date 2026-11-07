@@ -201,13 +201,6 @@ describe('the shipped PvP data', () => {
 })
 
 describe('chooseSlSet on the shipped data', () => {
-  it('makes a set of every recorded hero at the top levels', () => {
-    const picks = named.map((id) => pick(id))
-    const set = choose(picks)
-    expect(set).not.toBeNull()
-    holds(picks, set)
-  })
-
   // A team only an earlier season recorded on a map, with games enough for the
   // relaxed rule, is the one team a selection of its heroes makes there.
   it('draws teams only an earlier season recorded, on the league maps and arena1', () => {

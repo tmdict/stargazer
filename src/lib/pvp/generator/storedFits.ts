@@ -15,7 +15,7 @@ export interface StoredFits {
 }
 
 export const FITS_KEY = 'stargazer.fits'
-export const FITS_CAP = 2000
+const FITS_CAP = 2000
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -42,11 +42,7 @@ export function parseStoredFits(text: string | null): StoredFits | null {
 // The stored points with those gained added, each map that gained some moved
 // last. Past the cap, the maps that gained points longest ago go whole, since
 // the order is kept per map; the one that gained last always stays.
-export function mergeFits(
-  stored: StoredPoints,
-  gained: StoredPoints,
-  cap: number = FITS_CAP,
-): StoredPoints {
+export function mergeFits(stored: StoredPoints, gained: StoredPoints): StoredPoints {
   const maps: [string, Record<string, number>][] = [
     ...Object.entries(stored).filter(([map]) => !(map in gained)),
     ...Object.entries(gained).map(([map, lineups]): [string, Record<string, number>] => [
@@ -56,6 +52,6 @@ export function mergeFits(
   ]
   let size = maps.reduce((n, [, lineups]) => n + Object.keys(lineups).length, 0)
   let first = 0
-  while (size > cap && first < maps.length - 1) size -= Object.keys(maps[first++]![1]).length
+  while (size > FITS_CAP && first < maps.length - 1) size -= Object.keys(maps[first++]![1]).length
   return Object.fromEntries(maps.slice(first))
 }

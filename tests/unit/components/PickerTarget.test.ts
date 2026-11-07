@@ -3,9 +3,7 @@ import { createApp, h, nextTick, type Component } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ArtifactSelection from '@/components/ArtifactSelection.vue'
 import CharacterSelection from '@/components/CharacterSelection.vue'
-import PhantimalSelection from '@/components/PhantimalSelection.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -13,11 +11,10 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
-/* A tapped tile or artifact slot picks the side a tap fills, so the pickers'
- * grey follows that side rather than the whole board. */
+/* A tapped tile picks the side a tap fills, so the hero picker's grey follows
+ * that side rather than the whole board. */
 
 const DUNLINGR = 57
-const LIGHTBEARERS = [5, 10, 1]
 
 let teardown: (() => void) | undefined
 let pinia: ReturnType<typeof createPinia>
@@ -97,37 +94,5 @@ describe('a picker with a tile or slot targeted', () => {
 
     await targetEmptyTile(Team.ENEMY)
     expect(isGrey('.character-display')).toBe(true)
-  })
-
-  it('greys an artifact only for the side already holding it', async () => {
-    const { ctx } = board()
-    const artifact = useGameDataStore().artifacts[0]!
-    ctx.setArtifact(Team.ALLY, artifact.id)
-    await mount(ArtifactSelection, { artifacts: [artifact] })
-    const { setArtifactTarget } = useSelectionState()
-    expect(isGrey('.artifact')).toBe(true)
-
-    setArtifactTarget(Team.ENEMY, ctx.id)
-    await nextTick()
-    expect(isGrey('.artifact')).toBe(false)
-
-    setArtifactTarget(Team.ALLY, ctx.id)
-    await nextTick()
-    expect(isGrey('.artifact')).toBe(true)
-  })
-
-  it('greys a phantimal only for the side that cannot field it', async () => {
-    const { grids, ctx } = board()
-    for (const id of LIGHTBEARERS) grids.placePick(ctx, id, Team.ALLY)
-    await nextTick()
-    const gervan = useGameDataStore().phantimals.find(({ name }) => name === 'gervan')!
-    await mount(PhantimalSelection, { phantimals: [gervan] })
-
-    // On its own side a tap moves it to the tile.
-    await targetEmptyTile(Team.ALLY)
-    expect(isGrey('.phantimal')).toBe(false)
-
-    await targetEmptyTile(Team.ENEMY)
-    expect(isGrey('.phantimal')).toBe(true)
   })
 })

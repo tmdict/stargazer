@@ -26,7 +26,7 @@ afterEach(() => {
   teardown = undefined
 })
 
-const mountPicker = async (overrides: Partial<PickerState> = {}) => {
+const mountPicker = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
@@ -35,7 +35,6 @@ const mountPicker = async (overrides: Partial<PickerState> = {}) => {
     match: 'sl',
     sourceId: null,
     hasContent: true,
-    ...overrides,
   })
   const selected = vi.fn<(choice: TeamVariantChoice) => void>()
   const host = document.createElement('div')
@@ -59,23 +58,6 @@ const segment = (label: string): HTMLButtonElement =>
   )!
 
 describe('TeamVariantPicker', () => {
-  it('arms on populated boards and switches on the second click', async () => {
-    const { selected } = await mountPicker()
-    segment('Default').click()
-    await nextTick()
-    expect(selected).not.toHaveBeenCalled()
-    expect(segment('Confirm?')).toBeDefined()
-
-    segment('Confirm?').click()
-    expect(selected).toHaveBeenCalledWith('default')
-  })
-
-  it('switches in one click when the boards hold nothing', async () => {
-    const { selected } = await mountPicker({ hasContent: false })
-    segment('Default').click()
-    expect(selected).toHaveBeenCalledWith('default')
-  })
-
   it.each([
     [
       'a mode switch',

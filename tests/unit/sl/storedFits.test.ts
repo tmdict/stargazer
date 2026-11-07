@@ -12,18 +12,20 @@ const layoutOf = (key: string): MapLayout => ({
   buffTiles: [],
 })
 
+const lineups = (count: number): Record<string, number> =>
+  Object.fromEntries(Array.from({ length: count }, (_, i) => [String(i), i]))
+
 describe('kept fits', () => {
   it('moves a map that gains points last and drops the oldest maps whole past the cap', () => {
     const stored = { a: { '1': 1, '2': 2 }, b: { '1': 3 }, c: { '1': 4, '2': 5 } }
-    expect(Object.entries(mergeFits(stored, { a: { '3': 6 } }, 10))).toEqual([
+    expect(Object.entries(mergeFits(stored, { a: { '3': 6 } }))).toEqual([
       ['b', { '1': 3 }],
       ['c', { '1': 4, '2': 5 }],
       ['a', { '1': 1, '2': 2, '3': 6 }],
     ])
-    expect(mergeFits(stored, { d: { '1': 7 } }, 3)).toEqual({ c: stored.c, d: { '1': 7 } })
-    expect(mergeFits(stored, { d: { '1': 1, '2': 2, '3': 3 } }, 2)).toEqual({
-      d: { '1': 1, '2': 2, '3': 3 },
-    })
+    const big = { a: lineups(1500), b: lineups(500) }
+    expect(Object.keys(mergeFits(big, { c: lineups(1) }))).toEqual(['b', 'c'])
+    expect(Object.keys(mergeFits(big, { d: lineups(2500) }))).toEqual(['d'])
   })
 
   it('reads back only the shape it writes', () => {

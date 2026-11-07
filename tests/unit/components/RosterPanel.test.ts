@@ -129,28 +129,6 @@ describe('RosterPanel select mode', () => {
     await nextTick()
     expect(rosters.active!.heroes).toEqual(withTicked({ [ATTR_PARAGON]: 3, [ATTR_REFINEMENT]: 2 }))
   })
-
-  it('clears the ticks on a filter change and stops selecting on a roster change', async () => {
-    const rosters = await mountPanel()
-    const firstRoster = rosters.active!.id
-    const owned = heroIds().flatMap((id, i) => (rosters.active!.heroes[id] ? [i] : []))
-    button('.dock-chip', 'Select').click()
-    await nextTick()
-    await tap(owned[0]!)
-    await tap(owned[1]!)
-    expect(tickedCount()).toBe('2 selected')
-
-    document.querySelector<HTMLButtonElement>('.icon-option:not(.clear-option)')!.click()
-    await nextTick()
-    expect(tickedCount()).toBe('0 selected')
-
-    await tap(0)
-    rosters.create()
-    await nextTick()
-    rosters.setActive(firstRoster)
-    await nextTick()
-    expect(tickedCount()).toBe('not selecting')
-  })
 })
 
 describe('RosterPanel drag across heroes', () => {

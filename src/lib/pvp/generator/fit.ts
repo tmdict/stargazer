@@ -116,9 +116,10 @@ export function slFit(data: SlData): SlFitStore {
   const jobs = (requests: readonly SlFitRequest[]): FitJob[] => {
     const found = new Map<string, FitJob>()
     for (const { board, heroes, from } of requests) {
-      const key = `${board.layout.key}|${lineupOf(heroes)}`
+      const lineup = lineupOf(heroes)
+      const key = `${board.layout.key}|${lineup}`
       if (found.has(key) || known(board, heroes, from) !== undefined) continue
-      const home = pointsOn(homeOf(from), lineupOf(heroes))
+      const home = pointsOn(homeOf(from), lineup)
       found.set(key, { heroes, from, home, board: board.layout })
     }
     return [...found.values()]

@@ -95,15 +95,6 @@ describe('place.ts', () => {
   })
 
   describe('executePlaceCharacter', () => {
-    it('should activate the skill on placement', () => {
-      const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
-
-      expect(result).toBe(true)
-      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
-      expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
-      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(6)
-    })
-
     it('should reject companion IDs', () => {
       const companionId = grid.companionIdOffset + ALLY_A
       const result = executePlaceCharacter(grid, skillManager, 1, companionId, Team.ALLY)

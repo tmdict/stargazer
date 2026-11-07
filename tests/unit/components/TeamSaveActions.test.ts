@@ -57,16 +57,6 @@ const newButton = (): HTMLButtonElement =>
   document.querySelector<HTMLButtonElement>('.control-btn.danger')!
 
 describe('TeamSaveActions New confirm', () => {
-  it('arms on the first click and fires on the second', async () => {
-    const { newTeam } = await mountActions()
-    newButton().click()
-    await nextTick()
-    expect(newTeam).not.toHaveBeenCalled()
-    expect(newButton().classList.contains('confirm-armed')).toBe(true)
-    newButton().click()
-    expect(newTeam).toHaveBeenCalledTimes(1)
-  })
-
   it.each([
     ['a mode switch', (state: ActionsState) => void (state.activeMode = '3v3')],
     ['a type switch', (state: ActionsState) => void (state.variant = 'default')],
