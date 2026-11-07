@@ -50,13 +50,7 @@ onBeforeUnmount(() => {
       @click.stop="emit('close')"
       @keydown.esc.stop.prevent="emit('close')"
     >
-      <img
-        class="lightbox-image"
-        :class="{ natural }"
-        :src="src"
-        :alt="alt"
-        @click.stop="natural = !natural"
-      />
+      <img class="lightbox-image" :class="{ natural }" :src :alt @click.stop="natural = !natural" />
       <button
         type="button"
         class="lightbox-close"

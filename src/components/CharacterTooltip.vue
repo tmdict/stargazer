@@ -51,7 +51,7 @@ const rows = computed(() => [
 
 <template>
   <Teleport to="body">
-    <TooltipPopup :target-element="targetElement" :variant="variant">
+    <TooltipPopup :target-element :variant>
       <template #content>
         <!-- Placeholders have no stats; name-only regardless of variant. -->
         <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">

@@ -367,7 +367,7 @@ defineExpose({ zoneBox })
       <clipPath v-for="unit in placedUnits" :id="`${uid}-u-${unit.hexId}`" :key="unit.hexId">
         <polygon :points="crisp ? unit.inner : unit.corners" />
       </clipPath>
-      <TileHatchPatterns v-if="hatchedTiles.length" :id="uid" :hex-size="hexSize" />
+      <TileHatchPatterns v-if="hatchedTiles.length" :id="uid" :hex-size />
       <clipPath v-for="art in placedArtifacts" :id="`${uid}-a-${art.side}`" :key="art.side">
         <circle :cx="art.center.x" :cy="art.center.y" :r="art.radius" />
       </clipPath>

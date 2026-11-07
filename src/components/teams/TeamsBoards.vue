@@ -209,10 +209,10 @@ const {
         v-for="ctx in grids.contexts"
         :key="ctx.id"
         :context="ctx"
-        :characters="characters"
+        :characters
         :info
-        :show-skills="showSkills"
-        :tap-mode="tapMode"
+        :show-skills
+        :tap-mode
       />
     </BoardsRow>
 

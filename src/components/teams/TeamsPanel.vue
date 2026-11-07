@@ -92,17 +92,12 @@ const handleArenaSelected = (mapKey: string) => {
 
 <template>
   <BottomSheet v-model:expanded="sheetExpanded" :desktop-rail="false" @dismiss="clearTargets">
-    <TabView v-model="activeTab" :tabs="tabs" fill eager>
+    <TabView v-model="activeTab" :tabs fill eager>
       <template #characters>
-        <CharacterSelection :characters="characters" :is-draggable="true" :scrollable="false" />
+        <CharacterSelection :characters :is-draggable="true" :scrollable="false" />
       </template>
       <template #seasonal>
-        <SeasonalSelection
-          :artifacts="artifacts"
-          :phantimals="phantimals"
-          :is-draggable="true"
-          :scrollable="false"
-        />
+        <SeasonalSelection :artifacts :phantimals :is-draggable="true" :scrollable="false" />
       </template>
       <template #maps>
         <div class="maps-tab">

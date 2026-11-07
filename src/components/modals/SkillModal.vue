@@ -37,7 +37,7 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
 
 <template>
   <BaseModal
-    :show="show"
+    :show
     :label
     :link-param="skillName"
     :locale-override="selected"

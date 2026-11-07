@@ -44,7 +44,7 @@ const skills = computed(() =>
 </script>
 
 <template>
-  <BaseModal :show="show" :label="title" :locale-override="selected" @close="emit('close')">
+  <BaseModal :show :label="title" :locale-override="selected" @close="emit('close')">
     <template #header-buttons>
       <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>

@@ -77,7 +77,7 @@ const dash = computed(() => {
       class="line-core"
       :d="pathData"
       :style="{ stroke: color }"
-      :stroke-width="strokeWidth"
+      :stroke-width
       v-bind="dash"
       fill="none"
       stroke-linecap="round"

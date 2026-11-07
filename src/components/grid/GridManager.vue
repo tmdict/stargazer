@@ -253,9 +253,9 @@ defineExpose({
       :layout="ctx.layout"
       :show-tile-ids="info.tileIds"
       :show-coordinates="info.coordinates"
-      :is-map-editor-mode="isMapEditorMode"
-      :selected-map-editor-state="selectedMapEditorState"
-      :show-skills="showSkills"
+      :is-map-editor-mode
+      :selected-map-editor-state
+      :show-skills
       :readonly
       :rules="rulesCard"
     />
@@ -268,7 +268,7 @@ defineExpose({
       :show-hover="info.hover"
       :show-rules="info.rules"
       :rules-mark="rulesArtifactMark"
-      :is-map-editor-mode="isMapEditorMode"
+      :is-map-editor-mode
       :readonly
       :tap-mode
     />
@@ -282,7 +282,7 @@ defineExpose({
       :faded="rulesFaded"
       :show-skin="info.heroSkin"
       :show-skills
-      :is-map-editor-mode="isMapEditorMode"
+      :is-map-editor-mode
       :readonly
       :tap-mode
     />

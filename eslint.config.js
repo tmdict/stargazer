@@ -62,12 +62,13 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    // Template conventions: kebab-case props and events on components, and the
-    // `#` shorthand on slot templates with `v-slot` on a component's own tag
+    // Template conventions from AGENTS.md: kebab-case props and events on
+    // components, the same-name shorthand (`:count`), and the slot forms
     files: ['**/*.vue'],
     rules: {
       'vue/attribute-hyphenation': ['error', 'always'],
       'vue/v-on-event-hyphenation': ['error', 'always', { autofix: true }],
+      'vue/v-bind-style': ['error', 'shorthand', { sameNameShorthand: 'always' }],
       'vue/v-slot-style': 'error',
     },
   },

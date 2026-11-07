@@ -115,7 +115,7 @@ const pathData = computed(() =>
       class="arrow-line"
       :d="pathData"
       :style="{ stroke: color }"
-      :stroke-width="strokeWidth"
+      :stroke-width
       fill="none"
       :marker-end="`url(#${markerId})`"
       :stroke-dasharray="dashArray"

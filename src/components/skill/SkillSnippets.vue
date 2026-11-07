@@ -22,7 +22,7 @@ const ordered = computed(() =>
 
 <template>
   <template v-if="anchors">
-    <template v-for="key in present" :key="key">
+    <template v-for="key in present" :key>
       <!-- Skip when the anchor is missing (section filtered out / not in kit). -->
       <Teleport v-if="anchors[key].value" :to="anchors[key].value">
         <slot :name="key" />
@@ -30,6 +30,6 @@ const ordered = computed(() =>
     </template>
   </template>
   <template v-else>
-    <slot v-for="key in ordered" :key="key" :name="key" />
+    <slot v-for="key in ordered" :key :name="key" />
   </template>
 </template>

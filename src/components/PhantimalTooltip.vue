@@ -35,7 +35,7 @@ const rows = computed(() => [
 
 <template>
   <Teleport to="body">
-    <TooltipPopup :target-element="targetElement" variant="detailed">
+    <TooltipPopup :target-element variant="detailed">
       <template #content>
         <TooltipCard :name :rows :hint />
       </template>

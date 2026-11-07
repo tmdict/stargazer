@@ -292,10 +292,10 @@ const handleResetMap = () => {
             :context="activeContext"
             :characters="gameDataStore.characters"
             :info
-            :show-debug="showDebug"
-            :show-skills="showSkills"
+            :show-debug
+            :show-skills
             :is-map-editor-mode="mapEditorActive"
-            :selected-map-editor-state="selectedMapEditorState"
+            :selected-map-editor-state
             :debug-panel-ref
             :tap-mode="isNarrowBreakpoint(currentBreakpoint)"
           />
@@ -320,13 +320,7 @@ const handleResetMap = () => {
 
         <!-- Side panel (a pull-up bottom sheet over the grid on mobile). -->
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargets">
-          <TabView
-            :tabs="tabs"
-            :model-value="activeTab"
-            fill
-            eager
-            @update:model-value="handleTabChange"
-          >
+          <TabView :tabs :model-value="activeTab" fill eager @update:model-value="handleTabChange">
             <template #characters>
               <CharacterSelection :characters="gameDataStore.characters" :is-draggable="true" />
             </template>

@@ -297,7 +297,7 @@ const handleCopyLink = () => {
           <!-- eager: keep the boards panel mounted across tab switches (board state
                lives in the store, but this avoids remount churn + keeps the export
                target rendered). -->
-          <TabView v-model="activeTab" :tabs="tabs" eager>
+          <TabView v-model="activeTab" :tabs eager>
             <template #teams>
               <SeasonNotice />
               <TeamsBoards
@@ -305,17 +305,17 @@ const handleCopyLink = () => {
                 v-model:show-skills="showSkills"
                 v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
-                :active-mode="activeMode"
+                :active-mode
                 :variant
                 :boards-have-content
                 :info
                 :source-id="teamsRestore.sourceId.value"
                 :source-name="sourceTeam?.name ?? null"
-                :dirty="dirty"
-                :suggested-name="suggestedName"
+                :dirty
+                :suggested-name
                 :pending-name
                 :tap-mode="isSheet"
-                :can-wrap="canWrap"
+                :can-wrap
                 @switch-mode="handleSwitchMode"
                 @select-variant="teamsRestore.switchVariant"
                 @new-team="handleNewTeam"
