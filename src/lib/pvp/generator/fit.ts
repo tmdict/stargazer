@@ -6,7 +6,12 @@
  * board's map, as a share of those on its own map (for a row of every map,
  * its home), at most all of them. A team on its own map, or one whose goals
  * earn nothing there, keeps all of them. Both placements leave out the
- * artifact and the enemy units' rules, so the share is the team's alone. */
+ * artifact and the enemy units' rules, so the share is the team's alone.
+ * The search on the board's map stops once its best placement keeps all of
+ * them, since the share is capped there. A later start could still find a
+ * placement the engine rates higher that keeps fewer, so a stopped search can
+ * only rate a team higher than the full one would; it never did in any case
+ * measured. */
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { configTiles, presetLayout, type MapLayout } from '@/lib/maps'
@@ -64,15 +69,15 @@ export function slFit(data: SlData): SlFit {
       const share = known(board, heroes, from)
       if (share !== undefined) return share
       const team = teamOf(heroes)
-      const points = (layout: MapLayout): number =>
-        effectPoints(team, layout, placement, PLACEMENT_LOOKUPS)
+      const points = (layout: MapLayout, enough?: number): number =>
+        effectPoints(team, layout, placement, PLACEMENT_LOOKUPS, enough)
       const home = `${from}|${heroes.join(',')}`
       let before = atHome.get(home)
       if (before === undefined) {
         before = points(presetLayout(data.maps[from]!.key)!)
         atHome.set(home, before)
       }
-      const kept = before > 0 ? Math.min(1, Math.max(0, points(board.layout) / before)) : 1
+      const kept = before > 0 ? Math.min(1, Math.max(0, points(board.layout, before) / before)) : 1
       measured.set(keyOf(board, heroes, from), kept)
       return kept
     },

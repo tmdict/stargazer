@@ -231,6 +231,7 @@ function searched(
   data: PlacementData,
   lookups: PlacementLookups,
   options: PlacementOptions,
+  enough?: number,
 ): { board: PlacementBoard; scorer: PlacementScorer; search: Search } {
   const board = new PlacementBoard(team, layout, lookups)
   const scorer = new PlacementScorer(board, team, data)
@@ -254,6 +255,10 @@ function searched(
         ;[tiles[i], tiles[j]] = [tiles[j]!, tiles[i]!]
       }
       search.climb(fill(tiles))
+      if (enough !== undefined) {
+        board.place(positionsOf(search.bestKey()))
+        if (scorer.effectPoints() >= enough - EPS) break
+      }
     }
   }
   return { board, scorer, search }
@@ -322,15 +327,17 @@ export function placeTeam(
 
 /**
  * The points a team's own goals earn in the best placement the search finds on
- * a map, the buff tile's left out.
+ * a map, the buff tile's left out. With `enough`, the search stops once its
+ * best placement earns that many.
  */
 export function effectPoints(
   team: PlacementTeam,
   layout: MapLayout,
   data: PlacementData,
   lookups: PlacementLookups,
+  enough?: number,
 ): number {
-  const { board, scorer, search } = searched(team, layout, data, lookups, {})
+  const { board, scorer, search } = searched(team, layout, data, lookups, {}, enough)
   board.place(positionsOf(search.bestKey()))
   return scorer.effectPoints()
 }
