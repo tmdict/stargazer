@@ -8,13 +8,17 @@ import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
 import WhatsNewSkillsPicture from '@/components/whats-new/WhatsNewSkillsPicture.vue'
 import WhatsNewThemePicture from '@/components/whats-new/WhatsNewThemePicture.vue'
+import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
+
+const updated = whatsNewEditionDate('zh')
 </script>
 
 <template>
   <article>
-    <h1>10月20日以来的更新</h1>
+    <h1>最近更新</h1>
+    <p class="whats-new-updated reading-meta">更新于{{ updated }}</p>
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="SL_GENERATOR_PATH">PvP阵容生成器</LinkHeading>

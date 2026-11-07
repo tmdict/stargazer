@@ -59,6 +59,15 @@ watch(
   container: help / inline-size;
 }
 
+.whats-new :deep(h1) {
+  margin-bottom: 4px;
+}
+
+.whats-new :deep(.whats-new-updated) {
+  margin: 0;
+  text-align: center;
+}
+
 .whats-new :deep(.whats-new-entry) {
   margin-top: 40px;
 }

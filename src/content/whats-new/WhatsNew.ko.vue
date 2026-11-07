@@ -8,13 +8,17 @@ import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
 import WhatsNewSkillsPicture from '@/components/whats-new/WhatsNewSkillsPicture.vue'
 import WhatsNewThemePicture from '@/components/whats-new/WhatsNewThemePicture.vue'
+import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
+
+const updated = whatsNewEditionDate('ko')
 </script>
 
 <template>
   <article>
-    <h1>10월 20일 이후 새 기능</h1>
+    <h1>새 기능</h1>
+    <p class="whats-new-updated reading-meta">{{ updated }} 업데이트</p>
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="SL_GENERATOR_PATH">PvP 조합 생성기</LinkHeading>

@@ -8,13 +8,17 @@ import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
 import WhatsNewSkillsPicture from '@/components/whats-new/WhatsNewSkillsPicture.vue'
 import WhatsNewThemePicture from '@/components/whats-new/WhatsNewThemePicture.vue'
+import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
+
+const updated = whatsNewEditionDate('en')
 </script>
 
 <template>
   <article>
-    <h1>What's new since October 20</h1>
+    <h1>What's New</h1>
+    <p class="whats-new-updated reading-meta">Updated {{ updated }}</p>
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="SL_GENERATOR_PATH">PvP team generator</LinkHeading>
