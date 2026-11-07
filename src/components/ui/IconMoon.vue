@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { useId } from 'vue'
+
 const { size = 24 } = defineProps<{
   size?: number
 }>()
+
+const id = useId()
 </script>
 
 <template>
@@ -13,11 +17,11 @@ const { size = 24 } = defineProps<{
     xmlns="http://www.w3.org/2000/svg"
   >
     <defs>
-      <mask id="moon-mask">
+      <mask :id>
         <rect x="0" y="0" width="24" height="24" fill="white" />
         <circle cx="16.5" cy="7.5" r="7.4" fill="black" />
       </mask>
     </defs>
-    <circle cx="12" cy="12" r="9.5" mask="url(#moon-mask)" />
+    <circle cx="12" cy="12" r="9.5" :mask="`url(#${id})`" />
   </svg>
 </template>

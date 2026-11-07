@@ -3,7 +3,7 @@ import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import type { CellState, ReviewPart } from '@/lib/import/review'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -11,7 +11,7 @@ import { appLabel } from '@/utils/skillLabels'
 
 import '@/styles/import.css'
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 const i18n = useI18nStore()
 const gameData = useGameDataStore()

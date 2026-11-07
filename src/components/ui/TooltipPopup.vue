@@ -11,15 +11,19 @@ const {
   offset = 10,
   maxWidth = '300px',
   clearOf,
+  inline = false,
 } = defineProps<{
   // Only read via getBoundingClientRect, so SVG triggers (icon components) and
-  // a box worked out on each read anchor as well as HTML ones.
-  targetElement: Pick<Element, 'getBoundingClientRect'>
+  // a box worked out on each read anchor as well as HTML ones. Needed unless
+  // `inline`.
+  targetElement?: Pick<Element, 'getBoundingClientRect'>
   variant: 'simple' | 'detailed'
   offset?: number
   maxWidth?: string
   // A box a tooltip above its trigger stays clear of, like the window's top.
   clearOf?: Pick<Element, 'getBoundingClientRect'>
+  // Drawn where it is placed instead of beside a trigger, for a picture of it.
+  inline?: boolean
 }>()
 
 const VIEWPORT_MARGIN = 10
@@ -58,6 +62,7 @@ watch(() => targetElement, updatePosition, { flush: 'post' })
 let contentObserver: ResizeObserver | null = null
 
 onMounted(() => {
+  if (inline) return
   updatePosition()
   // Capture phase: scroll events don't bubble, so this is the only way to
   // hear scrolls inside nested containers (e.g. the side panel) and keep
@@ -80,12 +85,8 @@ onUnmounted(() => {
 <template>
   <div
     ref="tooltipRef"
-    :class="['tooltip', `tooltip-${variant}`]"
-    :style="{
-      left: `${position.x}px`,
-      top: `${position.y}px`,
-      maxWidth: maxWidth,
-    }"
+    :class="['tooltip', `tooltip-${variant}`, { 'tooltip-inline': inline }]"
+    :style="inline ? { maxWidth } : { left: `${position.x}px`, top: `${position.y}px`, maxWidth }"
   >
     <slot name="content" />
   </div>
@@ -107,6 +108,11 @@ onUnmounted(() => {
   line-height: 1.4;
   --tooltip-muted: rgba(255, 255, 255, 0.7);
   --tooltip-divider: rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-inline {
+  position: relative;
+  z-index: auto;
 }
 
 /* Undoes base.css element colours; :where keeps it below callers' classes. */

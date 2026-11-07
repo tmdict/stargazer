@@ -17,11 +17,14 @@ import {
 
 type Cell = readonly [row: number, col: number]
 
+// 'target' is the Skills toggle's arrow; 'move' is a drag or tap path.
+type ArrowKind = 'target' | 'move'
+
 const {
   tokens = [],
   paint = [],
   highlight,
-  arrow,
+  arrows = [],
   origin,
   ring,
 } = defineProps<{
@@ -29,8 +32,7 @@ const {
   // Map editor tiles, in place of the row's usual fill.
   paint?: readonly { at: Cell; state: State }[]
   highlight?: Cell
-  // 'target' is the Skills toggle's arrow; 'move' is a drag or tap path.
-  arrow?: { from: Cell; to: Cell; kind: 'target' | 'move' }
+  arrows?: readonly { from: Cell; to: Cell; kind: ArrowKind }[]
   // Where a moved hero came from.
   origin?: Cell
   // The hero a saved-team search picked: ringed, with the board's other heroes
@@ -112,10 +114,9 @@ const originCenter = computed(() => (origin ? center(origin) : null))
 
 // Both ends stop at the token rings; the bend keeps it from reading as a tile
 // edge.
-const arrowPath = computed(() => {
-  if (!arrow) return null
-  const a = center(arrow.from)
-  const b = center(arrow.to)
+const arrowPath = (from: Cell, to: Cell): string => {
+  const a = center(from)
+  const b = center(to)
   const len = Math.hypot(b.x - a.x, b.y - a.y)
   const ux = (b.x - a.x) / len
   const uy = (b.y - a.y) / len
@@ -126,7 +127,17 @@ const arrowPath = computed(() => {
   const cx = (sx + ex) / 2 + uy * 4
   const cy = (sy + ey) / 2 - ux * 4
   return `M${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`
-})
+}
+
+const arrowPaths = computed(() =>
+  arrows.map(({ from, to, kind }) => ({
+    key: `${from.join()}-${to.join()}`,
+    d: arrowPath(from, to),
+    kind,
+  })),
+)
+
+const arrowKinds = computed(() => [...new Set(arrows.map((a) => a.kind))])
 </script>
 
 <template>
@@ -149,7 +160,9 @@ const arrowPath = computed(() => {
         <feGaussianBlur stdDeviation="0.9" />
       </filter>
       <marker
-        :id="`${id}-head`"
+        v-for="kind in arrowKinds"
+        :id="`${id}-head-${kind}`"
+        :key="kind"
         viewBox="0 0 10 10"
         refX="7"
         refY="5"
@@ -158,7 +171,7 @@ const arrowPath = computed(() => {
         markerHeight="6"
         orient="auto"
       >
-        <path d="M0,0 L10,5 L0,10z" :class="`help-arrow-${arrow?.kind ?? 'move'}`" />
+        <path d="M0,0 L10,5 L0,10z" :class="`help-arrow-${kind}`" />
       </marker>
       <TileHatchPatterns :id :hex-size="R" board />
     </defs>
@@ -234,13 +247,14 @@ const arrowPath = computed(() => {
       <circle :cx="token.x" :cy="token.y" :r="RING + 0.4" class="help-board-ring" />
     </template>
     <path
-      v-if="arrowPath && arrow"
-      :d="arrowPath"
+      v-for="arrow in arrowPaths"
+      :key="arrow.key"
+      :d="arrow.d"
       fill="none"
       stroke-width="2"
       stroke-linecap="round"
       :class="`help-arrow-${arrow.kind}`"
-      :marker-end="`url(#${id}-head)`"
+      :marker-end="`url(#${id}-head-${arrow.kind})`"
     />
   </svg>
 </template>

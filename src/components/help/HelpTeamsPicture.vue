@@ -16,10 +16,10 @@ import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import { appLabel, curatedHeroName } from '@/utils/skillLabels'
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 
 const TEAM_NAME = 'Team 1'

@@ -90,6 +90,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.tags.expanded`                                                          | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)             |
 | `stargazer.prefs`                                                                  | device preferences                                                      | below                                                    |
 | `stargazer.locale`                                                                 | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
+| `stargazer.whatsNewSeen`                                                           | the What's New edition last opened                                      | below                                                    |
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 
@@ -112,13 +113,15 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
 }
 ```
 
+`stargazer.whatsNewSeen` holds the date of the What's New edition last opened, as plain text such as `2026-11-06`, and is written when the popup opens. While it is missing or holds any other date, the top bar's What's New tab shows a dot, so a new edition, which carries a new date, brings the dot back.
+
 Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change.
 
 ## Rules that apply everywhere
 
 Window size is read only through `src/utils/viewport.ts`. ESLint bans `window.innerWidth` and `innerHeight` elsewhere, because they include classic scrollbars that fixed overlays are not laid out against.
 
-The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs` or else the device's setting, and `useTheme` takes it over after mount. An element carrying `data-theme="dark"` stays dark inside it whatever the site's look, and a dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
+The light and dark looks are colour tokens in `src/styles/variables.css`, with light values on `:root` and dark values under `[data-theme='dark']`. A script in the head of `index.html` sets `data-theme` on `<html>` before the first paint, from `theme` in `stargazer.prefs` or else the device's setting, and `useTheme` takes it over after mount. An element carrying `data-theme="dark"` stays dark inside it whatever the site's look, and one carrying `data-theme="light"` takes the light tokens inside a dark page, though the few rules written against a dark ancestor (tile bevels and hatching, the top bar's light and dark button) still follow the page. A dropdown's list floated onto `<body>` copies its region's value. A token defined from another token takes its value where it is defined, so the dark block declares such tokens again.
 
 Every modal uses `useScrollLock`, `useFocusTrap` and `useOverlay` through `BaseModal`: page scrolling locks while it is open, focus stays inside and returns to the opener, and Escape or a click outside closes it.
 

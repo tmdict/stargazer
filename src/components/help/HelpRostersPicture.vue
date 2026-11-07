@@ -14,13 +14,13 @@ import UpgradeDockChip from '@/components/ui/UpgradeDockChip.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
-import { useRouteLocale } from '@/composables/useRouteLocale'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { useGameDataStore } from '@/stores/gameData'
 import { appLabel } from '@/utils/skillLabels'
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 const gameData = useGameDataStore()
 // The real filter has no + on phones.

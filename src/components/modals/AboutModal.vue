@@ -22,17 +22,10 @@ const CONTENT: Record<AppLocale, Component> = { en: AboutEn, zh: AboutZh, ko: Ab
 const i18n = useI18nStore()
 
 const content = computed(() => CONTENT[i18n.currentLocale])
-
-// App closes the popup on route change, but the Help link clicked from Help
-// changes no route. Modifier clicks open a new tab, so the popup stays.
-const closeOnLink = (event: MouseEvent): void => {
-  if (event.metaKey || event.ctrlKey || event.shiftKey) return
-  if (event.target instanceof Element && event.target.closest('a')) emit('close')
-}
 </script>
 
 <template>
-  <BaseModal :show="show" :label="i18n.t('app.about')" @close="emit('close')">
-    <component :is="content" @click="closeOnLink" />
+  <BaseModal :show="show" :label="i18n.t('app.about')" close-on-link @close="emit('close')">
+    <component :is="content" />
   </BaseModal>
 </template>

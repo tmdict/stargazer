@@ -26,9 +26,19 @@ interface Props {
   // Anchor to viewport top instead of centering. Use when content height can
   // change at runtime so the top edge stays put.
   topAnchor?: boolean
+  // Closes when a link inside is followed. App closes popups on a route change,
+  // but a link to the page already open changes no route. Modifier clicks open
+  // a new tab, so the popup stays.
+  closeOnLink?: boolean
 }
 
-const { show, linkParam, localeOverride, topAnchor = false } = defineProps<Props>()
+const {
+  show,
+  linkParam,
+  localeOverride,
+  topAnchor = false,
+  closeOnLink = false,
+} = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
@@ -45,6 +55,11 @@ useOverlay({ elementRef: modalRef, onClose: () => emit('close'), isOpen })
 const { trapTab } = useFocusTrap(modalRef, isOpen)
 // Lock the page behind so it can't scroll while the modal is open.
 useScrollLock(isOpen)
+const onContentClick = (event: MouseEvent): void => {
+  if (!closeOnLink || event.metaKey || event.ctrlKey || event.shiftKey) return
+  if (event.target instanceof Element && event.target.closest('a')) emit('close')
+}
+
 // A long press or right-click opens a modal with no click to close a dropdown
 // left open on the page, which would then sit above the modal.
 watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
@@ -62,7 +77,7 @@ watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
           :aria-label="label"
           tabindex="-1"
           @keydown="trapTab"
-          @click.stop
+          @click.stop="onContentClick"
         >
           <div class="buttons">
             <slot name="header-buttons" />

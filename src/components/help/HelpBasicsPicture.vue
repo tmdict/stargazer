@@ -7,11 +7,13 @@ import HelpToggle from '@/components/help/HelpToggle.vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import FilterChip from '@/components/ui/FilterChip.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
-import { useRouteLocale } from '@/composables/useRouteLocale'
 import { matchesPick } from '@/lib/tags'
 import { appLabel, modifierLabel, tagLabel } from '@/utils/skillLabels'
 import { loadMechanicGroups } from '@/utils/tagData'
+
+import '@/styles/help.css'
 
 defineProps<{
   kind: 'add' | 'skills' | 'move' | 'remove' | 'target' | 'mechanics'
@@ -20,7 +22,7 @@ defineProps<{
   skill?: { hero: string; heroName: string; title: string; meta: string; text: string }
 }>()
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 
 const POPUP_HEROES = ['frieren', 'alna', 'rhys', 'gerda', 'thoran']
@@ -96,7 +98,7 @@ const narrow = useNarrowViewport()
       class="help-pic-board wide"
       :tokens="[{ slug: 'frieren', at: [1, 3] }]"
       :origin="[2, 1]"
-      :arrow="{ from: [2, 1], to: [1, 3], kind: 'move' }"
+      :arrows="[{ from: [2, 1], to: [1, 3], kind: 'move' }]"
     />
 
     <template v-else-if="kind === 'remove'">
@@ -117,7 +119,7 @@ const narrow = useNarrowViewport()
             { slug: 'frieren', at: [2, 1] },
             { slug: 'thoran', at: [0, 3] },
           ]"
-          :arrow="{ from: [2, 1], to: [0, 3], kind: 'target' }"
+          :arrows="[{ from: [2, 1], to: [0, 3], kind: 'target' }]"
         />
       </span>
     </template>

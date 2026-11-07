@@ -9,7 +9,8 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { TextPart } from '@/utils/interpolate'
 
 defineProps<{
-  anchor: Pick<Element, 'getBoundingClientRect'>
+  // Needed unless `inline`.
+  anchor?: Pick<Element, 'getBoundingClientRect'>
   clearOf?: Pick<Element, 'getBoundingClientRect'>
   offset?: number
   title?: TextPart[]
@@ -21,15 +22,18 @@ defineProps<{
   // generator's boards are dark in both; the card is teleported, so it cannot
   // read that from the board.
   pageLook?: boolean
+  // Drawn where it is placed, for a picture of the card.
+  inline?: boolean
 }>()
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="inline">
     <TooltipPopup
       :target-element="anchor"
       :clear-of
       :offset
+      :inline
       variant="detailed"
       :class="{ 'page-look': pageLook }"
     >

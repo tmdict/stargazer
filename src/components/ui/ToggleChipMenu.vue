@@ -31,11 +31,17 @@ interface ChipMenuGroup {
   rows: readonly ChipMenuRow[]
 }
 
-const { groups, share = false } = defineProps<{
+const {
+  groups,
+  share = false,
+  pinned = false,
+} = defineProps<{
   label: string
   optionsLabel: string
   groups: readonly ChipMenuGroup[]
   share?: boolean
+  // Holds the panel open, for a picture of the menu.
+  pinned?: boolean
 }>()
 
 const emit = defineEmits<{ toggle: [key: K] }>()
@@ -63,7 +69,7 @@ const {
   onTouchStart,
 } = useDropdown({ rootRef, hover: true })
 
-const panelOpen = computed(() => open.value && (tray.value || !empty.value))
+const panelOpen = computed(() => (open.value || pinned) && (tray.value || !empty.value))
 
 // The tray hangs from the pill's right edge because a phone zooms the page out
 // to fit a panel that starts past the screen's edge, and stays zoomed after the

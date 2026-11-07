@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
@@ -23,6 +23,7 @@ import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
+import { useWhatsNew } from '@/composables/useWhatsNew'
 import { guidePath } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES } from '@/lib/types/i18n'
@@ -33,6 +34,11 @@ import { runSeasonRotationPass } from '@/utils/seasonRotation'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
+const showWhatsNew = ref(false)
+// Loaded on first open, so every page's first download stays small, and kept
+// mounted after, so its leave transition plays.
+const WhatsNewModal = defineAsyncComponent(() => import('@/components/modals/WhatsNewModal.vue'))
+const whatsNewMounted = ref(false)
 const contactOpen = ref(false)
 const contactButton = ref<HTMLElement | null>(null)
 const i18n = useI18nStore()
@@ -41,6 +47,13 @@ const router = useRouter()
 const { target: localeTarget, pick: switchLocale } = useLocaleSwitch()
 const { open: openSearch } = useSearchOverlay()
 useLiftGuard()
+const { unseen: whatsNewUnseen, markSeen: markWhatsNewSeen } = useWhatsNew()
+
+const openWhatsNew = () => {
+  whatsNewMounted.value = true
+  showWhatsNew.value = true
+  markWhatsNewSeen()
+}
 
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
@@ -60,10 +73,14 @@ const syncLocale = (path: string) => {
 }
 watch(() => route.path, syncLocale, { immediate: true })
 
-// About links to Help; the popup must not stay open over the page it opened.
+// About and What's New link to other pages; a popup must not stay open over
+// the page it opened.
 watch(
   () => route.path,
-  () => (showAboutModal.value = false),
+  () => {
+    showAboutModal.value = false
+    showWhatsNew.value = false
+  },
 )
 
 // No skill text ships with the app, so the reader's language is fetched in
@@ -149,6 +166,10 @@ onUnmounted(() => {
             >{{ i18n.t('app.guide') }}</RouterLink
           >
         </GuideMenu>
+        <button type="button" class="nav-text-link nav-whats-new" @click="openWhatsNew">
+          {{ i18n.t('app.whats-new') }}
+          <span v-if="whatsNewUnseen" class="nav-dot" aria-hidden="true" />
+        </button>
       </div>
       <ul class="menu">
         <li class="menu-search">
@@ -226,6 +247,8 @@ onUnmounted(() => {
 
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
+
+  <WhatsNewModal v-if="whatsNewMounted" :show="showWhatsNew" @close="showWhatsNew = false" />
 
   <ContactForm v-model:open="contactOpen" :trigger="contactButton" />
 
@@ -356,6 +379,30 @@ nav ul li {
 
 .nav-text-link.active {
   color: var(--color-header-gold);
+}
+
+.nav-whats-new {
+  position: relative;
+  font-family: inherit;
+  line-height: inherit;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+@media (max-width: 1100px) {
+  .nav-whats-new {
+    display: none;
+  }
 }
 
 .icon-link {

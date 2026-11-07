@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import IconArrowRight from '@/components/ui/IconArrowRight.vue'
+
+import '@/styles/help.css'
 </script>
 
 <template>

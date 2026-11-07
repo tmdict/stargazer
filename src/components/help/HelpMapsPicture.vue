@@ -5,11 +5,11 @@ import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import IconFill from '@/components/ui/IconFill.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import { State } from '@/lib/types/state'
 import { appLabel } from '@/utils/skillLabels'
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 
 const TILE_TYPES = [

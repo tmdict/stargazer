@@ -12,12 +12,12 @@ import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
+import { useHelpLocale } from '@/composables/useHelpLocale'
 import { useGameDataStore } from '@/stores/gameData'
 import { interpolate } from '@/utils/interpolate'
 import { appLabel } from '@/utils/skillLabels'
 
-const lang = useRouteLocale()
+const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 const gameData = useGameDataStore()
 

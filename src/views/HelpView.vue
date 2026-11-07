@@ -4,6 +4,7 @@ import { computed, onMounted, type Component } from 'vue'
 import HelpEn from '@/content/help/Help.en.vue'
 import HelpKo from '@/content/help/Help.ko.vue'
 import HelpZh from '@/content/help/Help.zh.vue'
+import { provideHelpLocale } from '@/composables/useHelpLocale'
 import { provideHelpTouch } from '@/composables/useHelpTouch'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import type { AppLocale } from '@/lib/types/i18n'
@@ -16,6 +17,7 @@ const CONTENT: Record<AppLocale, Component> = { en: HelpEn, zh: HelpZh, ko: Help
 
 const lang = useRouteLocale()
 setupHelpContentMeta(lang)
+provideHelpLocale(lang)
 
 // Loads eagerly so the portraits are in the prerendered HTML.
 useGameDataStore().initializeContentData()
@@ -59,47 +61,6 @@ onMounted(() => {
   font-family: var(--font-ui);
 }
 
-.help :deep(.disc.placed) {
-  filter: var(--placed-filter);
-}
-
-.help :deep(.disc.placed::after) {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--placed-overlay);
-}
-
-.help :deep(.help-heroes) {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-}
-
-.help :deep(.help-hero) {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.help :deep(.help-hero .upill) {
-  position: relative;
-  z-index: 3;
-  margin-top: -2px;
-}
-
-/* The Supreme League pages' action buttons, whose rule applies only under
-   their page root. */
-.help :deep(.help-sl-action) {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
 .help :deep(kbd) {
   display: inline-block;
   min-width: 1.6em;
@@ -114,27 +75,6 @@ onMounted(() => {
   border: 1px solid var(--color-border-primary);
   border-bottom-width: 2px;
   border-radius: 5px;
-}
-
-.help :deep(.help-inline-btn) {
-  display: inline-grid;
-  place-items: center;
-  vertical-align: middle;
-  width: 24px;
-  height: 22px;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-primary);
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-}
-
-.help :deep(.help-inline-btn.round) {
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: #fff;
 }
 
 .help :deep(.help-inline-icon) {
