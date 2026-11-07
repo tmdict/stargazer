@@ -12,6 +12,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { setupHelpContentMeta } from '@/utils/contentMeta'
 
 import '@/styles/content.css'
+import '@/styles/help.css'
 
 const CONTENT: Record<AppLocale, Component> = { en: HelpEn, zh: HelpZh, ko: HelpKo }
 
@@ -46,13 +47,6 @@ onMounted(() => {
 .help {
   container: help / inline-size;
   max-width: 1180px;
-}
-
-/* ---- Mouse / Touch wording ---- */
-
-.help:not(.touch) :deep(.help-touch),
-.help.touch :deep(.help-mouse) {
-  display: none;
 }
 
 /* ---- Copies of app controls ---- */

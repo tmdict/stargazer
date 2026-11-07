@@ -31,10 +31,11 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       <h2>배치 팁</h2>
       <WhatsNewPicture><WhatsNewPlacementPicture /></WhatsNewPicture>
       <p>
-        아레나나 진형 페이지에서 내 영웅 위에 마우스를 올리면 그 자리가 왜 좋은지 알려 줍니다.
-        스킬이 누구에게 무엇을 주는지, 앞과 뒤 중 어느 쪽에 서려 하는지, 더 잘 맞는 타일이 있다면
-        초록색 테두리로 보여 줍니다. <b>맵 정보</b>를 켜면 볼 수 있으며, 메뉴에는 <b>배치 팁</b>이
-        처음부터 체크되어 있습니다.
+        아레나나 진형 페이지에서 <span class="help-mouse">내 영웅 위에 마우스를 올리면</span
+        ><span class="help-touch">내 영웅을 누르면</span> 그 자리가 왜 좋은지 알려 줍니다. 스킬이
+        누구에게 무엇을 주는지, 앞과 뒤 중 어느 쪽에 서려 하는지, 더 잘 맞는 타일이 있다면 초록색
+        테두리로 보여 줍니다. <b>맵 정보</b>를 켜면 볼 수 있으며, 메뉴에는 <b>배치 팁</b>이 처음부터
+        체크되어 있습니다.
       </p>
     </section>
 

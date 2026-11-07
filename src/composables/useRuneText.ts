@@ -65,12 +65,19 @@ export function useRuneText(root: Readonly<Ref<HTMLElement | null | undefined>>)
   }
 
   const sync = (el: HTMLElement, records: readonly MutationRecord[] = []): void => {
+    // Each edited node is judged once, by its final text, since Vue may write
+    // to it more than once before the records arrive. Only Vue writes into a
+    // node already emptied here (old value ''), so a node left empty after
+    // such a write is one Vue emptied.
+    const edited = new Map<Text, boolean>()
     for (const record of records) {
       const node = record.target
       if (record.type !== 'characterData' || !(node instanceof Text) || !drawn.has(node)) continue
-      // Only Vue writes into a node already emptied here.
+      edited.set(node, edited.get(node) === true || record.oldValue === '')
+    }
+    for (const [node, writtenByVue] of edited) {
       if (node.data !== '') draw(node)
-      else if (record.oldValue === '') forget(node)
+      else if (writtenByVue) forget(node)
     }
     for (const [node, span] of drawn) {
       if (!el.contains(node)) forget(node)

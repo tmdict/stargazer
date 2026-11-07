@@ -19,6 +19,13 @@
   --color-accent-active: #3a8a83;
   --color-accent-text: #cdeeea;
 
+  /* Top bar pills */
+  --nav-pill-font-size: 0.85rem;
+  --nav-pill-padding-block: 4px;
+  --nav-pill-radius: 10px;
+  --nav-pill-bg: rgba(255, 255, 255, 0.1);
+  --nav-pill-bg-hover: rgba(255, 255, 255, 0.18);
+
   /* Progression ramp */
   --color-tier-1: #b995e2;
   --color-tier-2: #dd9c60;

@@ -32,10 +32,11 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       <h2>Placement tips</h2>
       <WhatsNewPicture><WhatsNewPlacementPicture /></WhatsNewPicture>
       <p>
-        Rest the mouse on one of your heroes on the Arena or Teams page to see why it stands well
-        where it is: what its skills give and to whom, the side it leans to, and any tile that would
-        suit it better, outlined in green. Turn on <b>Grid Info</b> to see them.
-        <b>Placement tips</b> is already ticked in its menu.
+        <span class="help-mouse">Rest the mouse on</span><span class="help-touch">Tap</span> one of
+        your heroes on the Arena or Teams page to see why it stands well where it is: what its
+        skills give and to whom, the side it leans to, and any tile that would suit it better,
+        outlined in green. Turn on <b>Grid Info</b> to see them. <b>Placement tips</b> is already
+        ticked in its menu.
       </p>
     </section>
 

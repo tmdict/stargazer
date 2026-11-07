@@ -62,7 +62,7 @@ vite-ssg creates its own unhead instance on the server and the client, and `src/
 
 ## Chunk error recovery
 
-A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop. `reloadOntoCurrentBuild` does the reloading, and the Supreme League pages call it too when their data file, a hashed asset of the same build, fails to load.
+A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop. `reloadOntoCurrentBuild` does the reloading. Components fetched on first use through `defineLazyComponent` (popups such as What's New and the screenshot imports, and the skill pages' essays) call it with the page's own address when their file fails to load, and the Supreme League pages call it too when their data file, a hashed asset of the same build, fails to load.
 
 ## PvP reports
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, inject, provide, ref, type Component } from 'vue'
+import { computed, inject, provide, ref, type Component } from 'vue'
 
 import SkillCharmSection from './SkillCharmSection.vue'
 import SkillKeywordTooltip from './SkillKeywordTooltip.vue'
@@ -27,6 +27,7 @@ import {
   getSkillNumbers,
   loadCharacters,
 } from '@/utils/dataLoader'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 import { formatToCamelCase } from '@/utils/nameFormatting'
 import { appLabel, headingFor, heroDisplayName, tagPickLabel } from '@/utils/skillLabels'
 import { loadTagVocabulary } from '@/utils/tagData'
@@ -154,7 +155,7 @@ const snippetComp = computed(() => {
   if (!l) return null
   const loader = snippetModules[snippetPath(l)]
   if (!loader) return null
-  return defineAsyncComponent(async () => (await loader()).default)
+  return defineLazyComponent(async () => (await loader()).default)
 })
 
 // Snippets resolve their strings from app locales, so they receive the locale

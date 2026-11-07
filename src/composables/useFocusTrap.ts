@@ -15,24 +15,34 @@ const FOCUSABLE =
 export function useFocusTrap(surface: Ref<HTMLElement | undefined>, isOpen: Ref<boolean>) {
   let opener: HTMLElement | null = null
 
-  watch(isOpen, (open) => {
-    if (open) {
-      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      // The surface renders on the tick after `isOpen` flips; focusing one
-      // taller than the viewport would scroll its top gap away.
-      void nextTick(() => surface.value?.focus({ preventScroll: true }))
-    } else {
-      // A long press leaves focus on an earlier control, which may have
-      // scrolled off screen; the page must not jump back to it.
-      if (opener?.isConnected) opener.focus({ preventScroll: true })
-      opener = null
-    }
-  })
+  watch(
+    isOpen,
+    (open) => {
+      if (import.meta.env.SSR) return
+      if (open) {
+        opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+        // The surface renders on the tick after `isOpen` flips; focusing one
+        // taller than the viewport would scroll its top gap away.
+        void nextTick(() => surface.value?.focus({ preventScroll: true }))
+      } else {
+        // A long press leaves focus on an earlier control, which may have
+        // scrolled off screen; the page must not jump back to it.
+        if (opener?.isConnected) opener.focus({ preventScroll: true })
+        opener = null
+      }
+    },
+    // A dialog mounted on first use is open from its first render.
+    { immediate: true },
+  )
 
   const trapTab = (e: KeyboardEvent): void => {
     const el = surface.value
     if (e.key !== 'Tab' || !el) return
-    const focusable = el.querySelectorAll<HTMLElement>(FOCUSABLE)
+    // Controls drawn in a picture (inert, or out of the Tab order) take no
+    // focus, so they cannot be the cycle's ends.
+    const focusable = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      (node) => node.tabIndex >= 0 && !node.closest('[inert]'),
+    )
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
     if (!first || !last) {

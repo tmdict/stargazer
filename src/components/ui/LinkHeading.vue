@@ -1,6 +1,8 @@
 <script setup lang="ts">
-/* A section heading that links to a page, with an arrow; inside a `.link-area`
-   the whole area opens it. */
+/* A section heading that links to a page, with an arrow. Inside a `.link-area`
+   the whole area opens it, through a pseudo-element stretched over the area at
+   z-index 1; a link inside the area takes `position: relative; z-index: 2` to
+   stay clickable. */
 
 import { RouterLink } from 'vue-router'
 

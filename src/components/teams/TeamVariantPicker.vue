@@ -20,7 +20,9 @@ import {
   type TeamVariantChoice,
   type VariantMatch,
 } from '@/lib/teams/modes'
+import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
+import { appKeyLabel } from '@/utils/skillLabels'
 
 const {
   activeMode,
@@ -28,6 +30,7 @@ const {
   sourceId,
   hasContent,
   custom = [],
+  lang,
 } = defineProps<{
   activeMode: TeamModeKey
   // The live boards' type; null = custom maps, no list lit.
@@ -37,6 +40,8 @@ const {
   // Whether any board holds anything, gating the confirm.
   hasContent: boolean
   custom?: readonly Segment[]
+  // A picture of the picker names its options in the picture's language.
+  lang?: AppLocale
 }>()
 
 const emit = defineEmits<{
@@ -45,12 +50,13 @@ const emit = defineEmits<{
 }>()
 
 const i18n = useI18nStore()
+const label = (key: string): string => (lang ? appKeyLabel(key, lang) : i18n.t(key))
 
 const variants = computed((): { key: TeamVariantChoice; label: string }[] => [
-  { key: DEFAULT_VARIANT, label: i18n.t('app.default') },
+  { key: DEFAULT_VARIANT, label: label('app.default') },
   ...variantsForMode(activeMode).map((variant) => ({
     key: variant.key,
-    label: i18n.t(variant.labelKey),
+    label: label(variant.labelKey),
   })),
 ])
 

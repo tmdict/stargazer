@@ -3,13 +3,14 @@
    use, so the page's chunk stays small) and hands the five games it fills to
    the page. */
 
-import { defineAsyncComponent, ref } from 'vue'
+import { ref } from 'vue'
 
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import type { WwwGame } from '@/lib/pvp/www/match'
 import { useI18nStore } from '@/stores/i18n'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 
-const WwwImportModal = defineAsyncComponent(() => import('@/components/modals/WwwImportModal.vue'))
+const WwwImportModal = defineLazyComponent(() => import('@/components/modals/WwwImportModal.vue'))
 
 const emit = defineEmits<{ fill: [games: (WwwGame | null)[]] }>()
 

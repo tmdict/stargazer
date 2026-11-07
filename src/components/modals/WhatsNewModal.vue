@@ -10,9 +10,12 @@ import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
+import '@/styles/help.css'
+
 const { show } = defineProps<{ show: boolean }>()
 const emit = defineEmits<{
   close: []
+  shown: []
 }>()
 
 const CONTENT: Record<AppLocale, Component> = { en: WhatsNewEn, zh: WhatsNewZh, ko: WhatsNewKo }
@@ -22,6 +25,10 @@ const gameData = useGameDataStore()
 
 const content = computed(() => CONTENT[i18n.currentLocale])
 
+// Never pre-rendered (it mounts on first open), so the pointer type can be read
+// during setup.
+const touch = window.matchMedia('(pointer: coarse)').matches
+
 // The pictures draw English, so their rune shapes come out the same in every
 // site language.
 provideHelpLocale(ref('en'))
@@ -30,14 +37,18 @@ provideHelpLocale(ref('en'))
 // loads.
 watch(
   () => show,
-  (open) => open && gameData.initializeContentData(),
+  (open) => {
+    if (!open) return
+    gameData.initializeContentData()
+    emit('shown')
+  },
   { immediate: true },
 )
 </script>
 
 <template>
   <BaseModal :show :label="i18n.t('app.whats-new')" close-on-link @close="emit('close')">
-    <div class="whats-new">
+    <div class="whats-new" :class="{ touch }">
       <component :is="content" />
     </div>
   </BaseModal>

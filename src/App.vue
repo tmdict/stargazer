@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
@@ -29,6 +29,7 @@ import { helpPath } from '@/lib/help'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
 
@@ -37,7 +38,7 @@ const showAboutModal = ref(false)
 const showWhatsNew = ref(false)
 // Loaded on first open, so every page's first download stays small, and kept
 // mounted after, so its leave transition plays.
-const WhatsNewModal = defineAsyncComponent(() => import('@/components/modals/WhatsNewModal.vue'))
+const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/WhatsNewModal.vue'))
 const whatsNewMounted = ref(false)
 const contactOpen = ref(false)
 const contactButton = ref<HTMLElement | null>(null)
@@ -52,7 +53,6 @@ const { unseen: whatsNewUnseen, markSeen: markWhatsNewSeen } = useWhatsNew()
 const openWhatsNew = () => {
   whatsNewMounted.value = true
   showWhatsNew.value = true
-  markWhatsNewSeen()
 }
 
 // Header renders on every route; init here so SSG-only routes whose views
@@ -250,7 +250,12 @@ onUnmounted(() => {
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
 
-  <WhatsNewModal v-if="whatsNewMounted" :show="showWhatsNew" @close="showWhatsNew = false" />
+  <WhatsNewModal
+    v-if="whatsNewMounted"
+    :show="showWhatsNew"
+    @close="showWhatsNew = false"
+    @shown="markWhatsNewSeen"
+  />
 
   <ContactForm v-model:open="contactOpen" :trigger="contactButton" />
 
@@ -361,19 +366,19 @@ nav {
 }
 
 .nav-text-link {
-  font-size: 0.85rem;
+  font-size: var(--nav-pill-font-size);
   font-weight: 600;
   color: #ddd;
   text-decoration: none;
   letter-spacing: 0.05em;
-  padding: 4px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  padding: var(--nav-pill-padding-block) 10px;
+  border-radius: var(--nav-pill-radius);
+  background: var(--nav-pill-bg);
 }
 
 .nav-text-link:hover {
   color: var(--color-header-gold);
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--nav-pill-bg-hover);
 }
 
 .nav-text-link.active {

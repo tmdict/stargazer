@@ -29,13 +29,13 @@ const shortcut = useShortcutLabel()
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px 4px 9px;
+  padding: var(--nav-pill-padding-block) 10px var(--nav-pill-padding-block) 9px;
   border: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--nav-pill-radius);
+  background: var(--nav-pill-bg);
   color: #9ba3af;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--nav-pill-font-size);
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -46,7 +46,7 @@ const shortcut = useShortcutLabel()
 }
 
 .header-search:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--nav-pill-bg-hover);
   color: var(--color-header-gold);
 }
 

@@ -1,7 +1,6 @@
 /* The language Help's pictures draw their labels in, set by the page that
    shows them: Help passes its address language, and What's New passes English,
-   which it turns into rune shapes. Pages without a language in the address
-   would otherwise draw English labels for every reader. */
+   which it turns into rune shapes. */
 
 import { inject, provide, ref, type InjectionKey, type Ref } from 'vue'
 

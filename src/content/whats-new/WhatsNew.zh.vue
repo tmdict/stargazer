@@ -14,7 +14,7 @@ import { pvpReportHref } from '@/lib/pvp/summary'
 
 <template>
   <article>
-    <h1>10月20日以来的新功能</h1>
+    <h1>10月20日以来的更新</h1>
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="SL_GENERATOR_PATH">PvP阵容生成器</LinkHeading>
@@ -29,7 +29,9 @@ import { pvpReportHref } from '@/lib/pvp/summary'
       <h2>站位提示</h2>
       <WhatsNewPicture><WhatsNewPlacementPicture /></WhatsNewPicture>
       <p>
-        在竞技场或「阵容」页面上，把鼠标停在你的英雄上，就能看到它为什么适合站在这里：它的技能给谁带来什么、它偏向站在哪一侧，以及更适合它的格子（用绿色框出）。打开<b>地图信息</b>即可看到，它的菜单里默认已勾选<b>站位提示</b>。
+        在竞技场或「阵容」页面上，<span class="help-mouse">把鼠标停在你的英雄上</span
+        ><span class="help-touch">点一下你的英雄</span
+        >，就能看到它为什么适合站在这里：它的技能给谁带来什么、它偏向站在哪一侧，以及更适合它的格子（用绿色框出）。打开<b>地图信息</b>即可看到，它的菜单里默认已勾选<b>站位提示</b>。
       </p>
     </section>
 

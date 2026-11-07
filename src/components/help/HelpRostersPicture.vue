@@ -73,7 +73,12 @@ const HEROES = [
         </UpgradeDock>
         <div class="help-heroes">
           <span v-for="hero in HEROES" :key="hero.slug" class="help-hero">
-            <GuidePortrait :slug="hero.slug" :lang :size="34" :class="{ placed: !hero.owned }" />
+            <GuidePortrait
+              :slug="hero.slug"
+              :lang
+              :size="34"
+              :class="{ 'greyed-out': !hero.owned }"
+            />
             <UpgradePill
               :paragon="hero.paragon"
               :refinement="hero.refinement"

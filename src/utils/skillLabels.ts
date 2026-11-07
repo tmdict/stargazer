@@ -16,6 +16,11 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
+/** The label of an `app.<key>` translation key in `lang`, for a control drawn
+ * in a language other than the site's. */
+export const appKeyLabel = (key: string, lang: AppLocale): string =>
+  appLabel(key.replace(/^app\./, ''), lang)
+
 // Chinese sets words and sentences side by side with no space between them.
 export const textGap = (lang: AppLocale): string => (lang === 'zh' ? '' : ' ')
 

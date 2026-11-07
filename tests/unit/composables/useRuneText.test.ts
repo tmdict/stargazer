@@ -43,9 +43,10 @@ describe('useRuneText', () => {
     expect(seen(host)).toBe("### 1 ##'# 1v1 ##")
   })
 
+  // Beside an element, Vue edits the text node in place rather than replacing it.
   it('redraws a text Vue changes and drops the shapes of one it empties', async () => {
     const label = ref('Map')
-    const host = mount(() => h('span', label.value))
+    const host = mount(() => h('span', [h('i'), label.value]))
     expect(seen(host)).toBe('###')
 
     label.value = 'Maps 2'
@@ -59,6 +60,25 @@ describe('useRuneText', () => {
     label.value = 'Go'
     await settle()
     expect(seen(host)).toBe('##')
+  })
+
+  it('keeps a text written twice before its records arrive', async () => {
+    const host = mount(() => h('span', [h('i'), 'Map']))
+    const node = [...host.querySelector('span')!.childNodes].find((n) => n instanceof Text) as Text
+    node.data = ''
+    node.data = 'Go'
+    await settle()
+    expect(seen(host)).toBe('##')
+  })
+
+  it('keeps the shapes in front of their text when Vue inserts an element before it', async () => {
+    const shown = ref(false)
+    const host = mount(() => h('span', [shown.value ? h('b', '1') : null, 'Map']))
+    expect(seen(host)).toBe('###')
+
+    shown.value = true
+    await settle()
+    expect(seen(host)).toBe('1###')
   })
 
   it('follows elements Vue adds, removes and reorders', async () => {

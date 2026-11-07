@@ -57,16 +57,19 @@ async function warmSkillLocale(
 const CHUNK_ERROR_RE =
   /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
 
+export const isChunkLoadError = (error: unknown): boolean =>
+  error instanceof Error && CHUNK_ERROR_RE.test(error.message)
+
 // A deploy purges the previous build's hashed chunks, so a stale tab's next
 // lazy route import fails (the SPA rewrite answers the miss with index.html)
 // and vue-router would swallow the aborted navigation: header clicks die
 // until a hard refresh. Recover by completing the click as a full navigation
 // onto the new build. Remembering the last recovered URL keeps a persistent
 // failure (offline, a blocked chunk) from looping: its second failure stays
-// a dead click. Route chunks are the only unhandled dynamic imports (skill
-// locales recover in warmSkillLocale, html-to-image failures toast), so no
-// vite:preloadError backstop: it would fire first, and preventing its
-// rethrow starves this handler of the destination.
+// a dead click. Every other dynamic import recovers where it is made
+// (components through defineLazyComponent, skill locales in warmSkillLocale)
+// or toasts (html-to-image), so no vite:preloadError backstop: it would fire
+// first, and preventing its rethrow starves this handler of the destination.
 const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
 
 /* Loads `fullPath` afresh from the current build, once per URL: false when
@@ -80,15 +83,21 @@ export function reloadOntoCurrentBuild(fullPath: string): boolean {
   } catch {
     return false
   }
-  window.location.assign(fullPath)
+  // Assigning the page already shown, when its address has a #fragment, only
+  // scrolls to the fragment.
+  const target = new URL(fullPath, window.location.href)
+  if (target.pathname + target.search === window.location.pathname + window.location.search) {
+    window.location.reload()
+  } else {
+    window.location.assign(target)
+  }
   return true
 }
 
 function installChunkErrorRecovery(router: Router): void {
   if (import.meta.env.SSR) return
   router.onError((error, to) => {
-    if (!(error instanceof Error) || !CHUNK_ERROR_RE.test(error.message)) return
-    reloadOntoCurrentBuild(to.fullPath)
+    if (isChunkLoadError(error)) reloadOntoCurrentBuild(to.fullPath)
   })
 }
 

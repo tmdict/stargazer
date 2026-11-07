@@ -105,7 +105,7 @@ const narrow = useNarrowViewport()
       <HelpBoard class="help-pic-board small" :tokens="[{ slug: 'rhys', at: [2, 2] }]" />
       <span class="help-pic-list">
         <GuidePortrait slug="gerda" :lang :size="30" />
-        <GuidePortrait slug="rhys" :lang :size="30" class="placed" />
+        <GuidePortrait slug="rhys" :lang :size="30" class="greyed-out" />
         <GuidePortrait slug="thoran" :lang :size="30" />
       </span>
     </template>

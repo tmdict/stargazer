@@ -57,13 +57,24 @@ const characterId = (slug: string): number =>
           <DropdownSelect :label="ROSTER_NAME" lit />
         </div>
         <div class="help-mock-bar help-sl-choices">
-          <TeamModePicker active-mode="5v5" />
-          <TeamVariantPicker active-mode="5v5" match="sl" :source-id="null" :has-content="false" />
+          <TeamModePicker active-mode="5v5" :lang />
+          <TeamVariantPicker
+            active-mode="5v5"
+            match="sl"
+            :source-id="null"
+            :has-content="false"
+            :lang
+          />
           <span class="solid-btn help-sl-action">{{ label('sl-generate') }}</span>
         </div>
         <div class="help-heroes">
           <span v-for="hero in HEROES" :key="hero.slug" class="help-hero">
-            <GuidePortrait :slug="hero.slug" :lang :size="34" :class="{ placed: !hero.owned }" />
+            <GuidePortrait
+              :slug="hero.slug"
+              :lang
+              :size="34"
+              :class="{ 'greyed-out': !hero.owned }"
+            />
             <UpgradePill
               :paragon="hero.paragon"
               :refinement="hero.refinement"

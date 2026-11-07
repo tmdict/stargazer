@@ -4,7 +4,7 @@
    import modal (loaded on first use, so the Teams chunk stays small) and
    passes the finished plan upward. */
 
-import { defineAsyncComponent, ref } from 'vue'
+import { ref } from 'vue'
 
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
@@ -12,10 +12,9 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 
-const TeamImportModal = defineAsyncComponent(
-  () => import('@/components/modals/TeamImportModal.vue'),
-)
+const TeamImportModal = defineLazyComponent(() => import('@/components/modals/TeamImportModal.vue'))
 
 defineProps<{ activeMode: TeamModeKey; variant: VariantMatch }>()
 

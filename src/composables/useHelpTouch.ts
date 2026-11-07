@@ -1,5 +1,5 @@
 /* Help page's Mouse / Touch choice. HelpView sets it as `.touch` on the page
-   root, where its styles swap the .help-mouse and .help-touch spans. */
+   root, where help.css swaps the .help-mouse and .help-touch spans. */
 
 import { inject, provide, ref, type InjectionKey, type Ref } from 'vue'
 

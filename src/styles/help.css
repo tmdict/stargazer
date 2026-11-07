@@ -1,15 +1,3 @@
-:is(.help-scene, .help-pic) .disc.placed {
-  filter: var(--placed-filter);
-}
-
-:is(.help-scene, .help-pic) .disc.placed::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--placed-overlay);
-}
-
 :is(.help-scene, .help-pic) .help-heroes {
   display: flex;
   flex-wrap: wrap;
@@ -29,12 +17,15 @@
   margin-top: -2px;
 }
 
-/* The Supreme League pages' action buttons, whose rule applies only under
-   their page root. */
 :is(.help-scene, .help-pic) .help-sl-action {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+:is(.help, .whats-new):not(.touch) .help-touch,
+:is(.help, .whats-new).touch .help-mouse {
+  display: none;
 }

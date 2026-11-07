@@ -5,7 +5,7 @@
    roster limit leaves the modal open with its review. Attributes go to the
    button, so RosterTransferActions' tooltip handlers reach it. */
 
-import { defineAsyncComponent, ref } from 'vue'
+import { ref } from 'vue'
 
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import { useRosterFeedback } from '@/composables/useRosterFeedback'
@@ -13,10 +13,11 @@ import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 
 defineOptions({ inheritAttrs: false })
 
-const RosterImportModal = defineAsyncComponent(
+const RosterImportModal = defineLazyComponent(
   () => import('@/components/modals/RosterImportModal.vue'),
 )
 

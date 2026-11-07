@@ -45,8 +45,14 @@ const searchPicks = computed(() => [
       <HelpMock :caption="label('teams')">
         <div class="help-mock-title">{{ TEAM_NAME }}</div>
         <div class="help-mock-bar centered">
-          <TeamModePicker active-mode="5v5" />
-          <TeamVariantPicker active-mode="5v5" match="sl" :source-id="null" :has-content="false" />
+          <TeamModePicker active-mode="5v5" :lang />
+          <TeamVariantPicker
+            active-mode="5v5"
+            match="sl"
+            :source-id="null"
+            :has-content="false"
+            :lang
+          />
         </div>
         <div class="help-mock-bar centered">
           <span class="control-btn danger">
