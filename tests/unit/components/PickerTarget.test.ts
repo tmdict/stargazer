@@ -69,7 +69,7 @@ const targetEmptyTile = async (team: Team): Promise<void> => {
 const isGrey = (selector: string): boolean =>
   document.querySelector(selector)!.classList.contains('greyed-out')
 
-describe('a picker with a tile or slot targeted', () => {
+describe('a picker with a tile targeted', () => {
   it('greys a hero only for the side that cannot take it', async () => {
     const { grids, ctx } = board()
     grids.placePick(ctx, DUNLINGR, Team.ALLY)

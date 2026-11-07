@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 
 describe('useAttrLayerSelection', () => {
-  // The choice is one module-level value, so it outlives a test.
-  beforeEach(() => {
-    useAttrLayerSelection().select(ATTR_PARAGON)
-  })
-
   it('edits only visible layers, falling back to visible when the choice is hidden', () => {
     const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
     select('all')

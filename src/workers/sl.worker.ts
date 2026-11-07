@@ -36,7 +36,7 @@ import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
 import { startSlHelpers, type SlHelpers } from './slHelpers'
 
-// `fits`: the points the page kept, with the visit's first press.
+// `fits`: the points the page kept, with the worker's first press.
 export type SlRequest =
   | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[]; fits: StoredFits | null }
   // A roster's levels, or null for every hero at the top levels.

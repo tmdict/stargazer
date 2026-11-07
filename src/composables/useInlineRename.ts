@@ -2,10 +2,10 @@ import { nextTick, ref } from 'vue'
 
 import { sanitizeName } from '@/lib/names'
 
-/* Inline rename edit state shared by the boards title, the saved-team cards
- * and the roster name: one input at a time, focused and pre-selected on entry; Enter/blur
- * commit, Esc cancels. `key` distinguishes sibling targets sharing an instance
- * (e.g. one per card); a single-target caller passes any constant. */
+/* Inline rename edit state: one input at a time, focused and pre-selected on
+ * entry; Enter/blur commit, Esc cancels. `key` distinguishes sibling targets
+ * sharing an instance (e.g. one per card); a single-target caller passes any
+ * constant. */
 export function useInlineRename(options: {
   // Returns the persisted name: an unchanged name skips the write, so a blur
   // with no edit costs no storage round-trip.

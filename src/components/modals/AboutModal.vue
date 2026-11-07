@@ -25,7 +25,7 @@ const content = computed(() => CONTENT[i18n.currentLocale])
 </script>
 
 <template>
-  <BaseModal :show="show" :label="i18n.t('app.about')" close-on-link @close="emit('close')">
+  <BaseModal :show :label="i18n.t('app.about')" close-on-link @close="emit('close')">
     <component :is="content" />
   </BaseModal>
 </template>

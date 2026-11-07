@@ -11,7 +11,7 @@ import { runeRuns } from '@/utils/runeText'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
-// A shape's height, as a share of the font size: about a capital letter's.
+// About a capital letter's height.
 const GLYPH_HEIGHT_EM = 0.68
 
 const LETTER = /\p{L}/u

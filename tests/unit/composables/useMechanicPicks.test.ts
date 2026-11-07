@@ -1,17 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { useEnergyValue } from '@/composables/useEnergyValue'
 import { useMechanicPicks } from '@/composables/useMechanicPicks'
-import { ENERGY_DEFAULT, ENERGY_KEY } from '@/lib/mechanics'
+import { ENERGY_KEY } from '@/lib/mechanics'
 import { tagVocabulary } from '@/lib/tags'
 
 describe('useMechanicPicks', () => {
   const vocabulary = tagVocabulary([{ tags: { 'temp-buff': [{ ultimate: 1 }] } }], () => false)
-
-  // The energy value is shared by every instance.
-  beforeEach(() => {
-    useEnergyValue().value = ENERGY_DEFAULT
-  })
 
   it('holds the energy filter beside tags, and a hero has to satisfy both', () => {
     const { picks, toggle, setEnergy, matches } = useMechanicPicks(vocabulary)

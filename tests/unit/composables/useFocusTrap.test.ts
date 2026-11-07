@@ -5,13 +5,13 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 
 // A dialog surface like BaseModal's, with a picture whose controls are inert.
-const mount = (open: boolean) => {
+const mount = () => {
   const host = document.createElement('div')
   document.body.append(host)
   const opener = document.createElement('button')
   document.body.append(opener)
   opener.focus()
-  const isOpen = ref(open)
+  const isOpen = ref(true)
   createApp(
     defineComponent({
       setup() {
@@ -43,7 +43,7 @@ afterEach(() => {
 
 describe('useFocusTrap', () => {
   it('takes focus for a dialog that mounts open, and gives it back on close', async () => {
-    const { isOpen, opener } = mount(true)
+    const { isOpen, opener } = mount()
     await nextTick()
     expect(document.activeElement?.getAttribute('tabindex')).toBe('-1')
 
@@ -53,7 +53,7 @@ describe('useFocusTrap', () => {
   })
 
   it('cycles between the ends a reader can focus, past an inert picture', async () => {
-    mount(true)
+    mount()
     await nextTick()
     document.querySelector<HTMLElement>('[tabindex="-1"]')?.focus()
 

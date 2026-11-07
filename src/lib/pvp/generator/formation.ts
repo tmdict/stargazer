@@ -212,7 +212,6 @@ export function boardDraw(
   return { played, engine: played ? null : engineFormation(data, choice, board) }
 }
 
-// One entry per board, in board order.
 export function boardDraws(data: SlData, set: SlChoice, boards: readonly SlBoard[]): BoardDraw[] {
   const marks = marksCount(boards)
   return set.teams.map((choice, index) => boardDraw(data, choice, boards[index]!, marks))

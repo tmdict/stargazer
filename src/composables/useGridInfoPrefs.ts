@@ -63,7 +63,7 @@ const PREF_KEYS = Object.keys(GRID_INFO_DEFAULTS) as GridInfoKey[]
 /* Structural parents beyond the master, encoded once: the enable cascade, the
  * effective derivation, and the checklist's indentation/dimming all read this
  * map, so a future nested child cannot ship with the three out of sync. */
-export const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
+const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
   upgrades: ['heroCard'],
   coordinates: ['tileIds'],
 }
@@ -84,7 +84,6 @@ const MENU_ROWS: readonly { key: GridInfoKey; label: string }[] = [
 /** The Grid Info menu's rows for these prefs, each label key read through `label`. */
 export function gridInfoMenuRows(prefs: GridInfoPrefs, label: (key: string) => string) {
   const parentsOf = (key: GridInfoKey): GridInfoKey[] => GRID_INFO_PARENTS[key] ?? []
-  // A row whose surface can't show (master or a parent off) dims but keeps its tick.
   return MENU_ROWS.map(({ key, label: labelKey }) => ({
     key,
     label: label(labelKey),

@@ -7,7 +7,6 @@ import { onMounted, readonly, ref } from 'vue'
 
 import { readStorage, writeStorage } from '@/utils/storage'
 
-// The day the edition on show went up; a new edition gets a new date.
 const WHATS_NEW_EDITION = '2026-11-06'
 
 const SEEN_KEY = 'stargazer.whatsNewSeen'

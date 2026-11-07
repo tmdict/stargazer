@@ -1,7 +1,7 @@
-/* Rune shapes for the What's New pictures: one solid shape per letter, in the
-   style of the game's preview videos, so a picture reads the same in every
-   site language. Each shape sits in a box 10 units high and is inset 0.4 units,
-   so the stroke that softens its corners stays inside the box. */
+/* Rune shapes for the What's New pictures: one solid shape per letter, so a
+   picture reads the same in every site language. Each shape sits in a box 10
+   units high and is inset 0.4 units, so the stroke that softens its corners
+   stays inside the box. */
 
 export type RuneGlyph = readonly [width: number, path: string]
 
@@ -37,8 +37,6 @@ const SHAPES = {
   ],
 } as const satisfies Record<string, RuneGlyph>
 
-// The most common letters keep the plain shapes, and several others take the
-// outline of the rune with the same sound (t, b, d, k, g, i, o, s, w, z).
 const LETTER_SHAPES: Record<string, keyof typeof SHAPES> = {
   a: 'right',
   b: 'berkana',
@@ -70,9 +68,6 @@ const LETTER_SHAPES: Record<string, keyof typeof SHAPES> = {
 
 const LETTERS = Object.keys(LETTER_SHAPES)
 
-// A letter outside a to z (accented, Chinese, Korean) takes a shape from its
-// code point, so labels a picture's own controls draw in the site language
-// turn into shapes too.
 const glyphOf = (letter: string): RuneGlyph => {
   const lower = letter.toLowerCase()
   const key = LETTER_SHAPES[lower] ? lower : LETTERS[letter.codePointAt(0)! % LETTERS.length]!

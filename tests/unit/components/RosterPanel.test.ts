@@ -10,8 +10,8 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
-/* Select mode on the Rosters tab: which heroes a level chip reaches, and when
- * the ticks reset. Dragging across heroes: which heroes a stroke changes. */
+/* Select mode on the Rosters tab: which heroes a level chip reaches. Dragging
+ * across heroes: which heroes a stroke changes. */
 
 // jsdom has no matchMedia, which useNarrowViewport reads.
 beforeAll(() => {
@@ -96,8 +96,8 @@ const drag = async (indices: number[]): Promise<void> => {
   await nextTick()
 }
 
-const tickedCount = (): string =>
-  document.querySelector('.tick-count')?.textContent?.trim() ?? 'not selecting'
+const tickedCount = (): string | undefined =>
+  document.querySelector('.tick-count')?.textContent?.trim()
 
 describe('RosterPanel select mode', () => {
   it('sets a level on the ticked heroes only, with Shift ticking a range', async () => {
