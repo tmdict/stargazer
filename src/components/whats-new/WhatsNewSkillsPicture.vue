@@ -54,15 +54,13 @@ const arrows = [
   <HelpScene>
     <template #from>
       <HelpMock :caption="label('skills')">
-        <div class="whats-new-skills-menu">
-          <ToggleChipMenu
-            :model-value="true"
-            :label="label('skills')"
-            :options-label="label('skills-options')"
-            :groups
-            pinned
-          />
-        </div>
+        <ToggleChipMenu
+          :model-value="true"
+          :label="label('skills')"
+          :options-label="label('skills-options')"
+          :groups
+          pinned
+        />
       </HelpMock>
     </template>
 
@@ -77,10 +75,6 @@ const arrows = [
 </template>
 
 <style scoped>
-.whats-new-skills-menu {
-  height: 180px;
-}
-
 .whats-new-skills-board {
   width: 250px;
   margin: 12px auto 0;

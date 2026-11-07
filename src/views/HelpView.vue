@@ -77,6 +77,27 @@ onMounted(() => {
   border-radius: 5px;
 }
 
+.help :deep(.help-inline-btn) {
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+  width: 24px;
+  height: 22px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-primary);
+  border: 1.5px solid var(--color-border-primary);
+  border-radius: var(--radius-medium);
+}
+
+.help :deep(.help-inline-btn.round) {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+}
+
 .help :deep(.help-inline-icon) {
   width: 1.15em;
   height: 1.15em;

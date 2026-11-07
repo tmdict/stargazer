@@ -48,11 +48,6 @@ watch(
   container: help / inline-size;
 }
 
-.whats-new :deep(.whats-new-intro) {
-  margin: -8px 0 0;
-  color: var(--reading-muted);
-}
-
 .whats-new :deep(.whats-new-entry) {
   margin-top: 40px;
 }
@@ -65,10 +60,12 @@ watch(
   margin: 14px 0 0;
 }
 
-.whats-new :deep(.whats-new-links) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 20px;
+.whats-new :deep(.whats-new-generate) {
+  vertical-align: middle;
+  min-height: 0;
+  padding: 0 4px;
+  border-width: 1px;
+  pointer-events: none;
 }
 
 .whats-new :deep(.whats-new-also) {

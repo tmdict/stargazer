@@ -40,7 +40,8 @@ const {
   optionsLabel: string
   groups: readonly ChipMenuGroup[]
   share?: boolean
-  // Holds the panel open, for a picture of the menu.
+  // Holds the panel open below the chip, in the page's flow, for a picture of
+  // the menu.
   pinned?: boolean
 }>()
 
@@ -86,7 +87,7 @@ const panelShift = usePanelClamp(
   <div
     ref="rootRef"
     class="toggle-chip-menu"
-    :class="{ share }"
+    :class="{ share, pinned }"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
     @touchstart.passive="onTouchStart"
@@ -205,6 +206,17 @@ const panelShift = usePanelClamp(
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
+}
+
+.toggle-chip-menu.pinned {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.toggle-chip-menu.pinned .panel {
+  position: static;
+  margin-top: 4px;
+  transform: none;
 }
 
 .chip-caret {

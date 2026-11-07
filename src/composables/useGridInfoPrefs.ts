@@ -46,7 +46,7 @@ export interface GridInfoView {
   heroSkin: boolean
 }
 
-const DEFAULTS: GridInfoPrefs = {
+export const GRID_INFO_DEFAULTS: Readonly<GridInfoPrefs> = {
   master: false,
   tileIds: true,
   hover: false,
@@ -58,7 +58,7 @@ const DEFAULTS: GridInfoPrefs = {
   heroSkin: false,
 }
 
-const PREF_KEYS = Object.keys(DEFAULTS) as GridInfoKey[]
+const PREF_KEYS = Object.keys(GRID_INFO_DEFAULTS) as GridInfoKey[]
 
 /* Structural parents beyond the master, encoded once: the enable cascade, the
  * effective derivation, and the checklist's indentation/dimming all read this
@@ -69,6 +69,30 @@ export const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
 }
 
 const EITHER_OR: Partial<Record<GridInfoKey, GridInfoKey>> = { hover: 'rules', rules: 'hover' }
+
+const MENU_ROWS: readonly { key: GridInfoKey; label: string }[] = [
+  { key: 'tileIds', label: 'tile-ids' },
+  { key: 'coordinates', label: 'coordinates' },
+  { key: 'hover', label: 'details-on-hover' },
+  { key: 'rules', label: 'placement-tips' },
+  { key: 'targeting', label: 'targeting' },
+  { key: 'heroCard', label: 'hero-card' },
+  { key: 'upgrades', label: 'upgrades' },
+  { key: 'heroSkin', label: 'hero-skin' },
+]
+
+/** The Grid Info menu's rows for these prefs, each label key read through `label`. */
+export function gridInfoMenuRows(prefs: GridInfoPrefs, label: (key: string) => string) {
+  const parentsOf = (key: GridInfoKey): GridInfoKey[] => GRID_INFO_PARENTS[key] ?? []
+  // A row whose surface can't show (master or a parent off) dims but keeps its tick.
+  return MENU_ROWS.map(({ key, label: labelKey }) => ({
+    key,
+    label: label(labelKey),
+    checked: prefs[key],
+    sub: parentsOf(key).length > 0,
+    dim: !prefs.master || parentsOf(key).some((parent) => !prefs[parent]),
+  }))
+}
 
 export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
   const effective = (key: Exclude<GridInfoKey, 'master'>): boolean =>
@@ -100,7 +124,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
 // The stored slice merged over the defaults (booleans only, so a wrong-typed
 // value can't leak into the pref state).
 const sliceFrom = (slice: object): GridInfoPrefs => {
-  const merged = { ...DEFAULTS }
+  const merged = { ...GRID_INFO_DEFAULTS }
   for (const key of PREF_KEYS) {
     const value = (slice as Record<string, unknown>)[key]
     if (typeof value === 'boolean') merged[key] = value
@@ -114,8 +138,8 @@ const sliceFrom = (slice: object): GridInfoPrefs => {
 const initStorage = (): GridInfoPrefs => {
   const slice = readPrefs()?.gridInfo
   if (!slice || typeof slice !== 'object') {
-    writePref('gridInfo', DEFAULTS)
-    return { ...DEFAULTS }
+    writePref('gridInfo', GRID_INFO_DEFAULTS)
+    return { ...GRID_INFO_DEFAULTS }
   }
   return sliceFrom(slice)
 }
@@ -130,7 +154,7 @@ export function useGridInfoPrefs(): {
   tickRules: () => void
 } {
   if (!prefs) {
-    prefs = reactive({ ...DEFAULTS })
+    prefs = reactive({ ...GRID_INFO_DEFAULTS })
     storedAtInit = initStorage()
   }
   const state = prefs

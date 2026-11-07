@@ -396,7 +396,7 @@ nav ul li {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-danger);
 }
 
 @media (max-width: 1100px) {

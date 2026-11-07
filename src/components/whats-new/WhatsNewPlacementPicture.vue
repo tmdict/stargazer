@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* Placement tips on a board: the hovered hero and the heroes its card names
-   ringed, a better tile in green, and the card itself. */
+/* Placement tips on a board: Grid Info's menu with the tips ticked, the hovered
+   hero and the heroes its card names ringed, a better tile in green, and the
+   card itself. */
 
 import { computed } from 'vue'
 
@@ -8,6 +9,8 @@ import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumb
 import SlCard from '@/components/guide/sl/SlCard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
+import ToggleChipMenu from '@/components/ui/ToggleChipMenu.vue'
+import { GRID_INFO_DEFAULTS, gridInfoMenuRows } from '@/composables/useGridInfoPrefs'
 import { useHelpLocale } from '@/composables/useHelpLocale'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -43,6 +46,10 @@ const units = computed<ThumbnailUnit[]>(() =>
   })),
 )
 
+const gridInfo = computed(() => [
+  { rows: gridInfoMenuRows({ ...GRID_INFO_DEFAULTS, master: true }, label) },
+])
+
 const named = (slug: string): TextPart[] => [
   { text: curatedHeroName(slug, lang.value), marked: true },
 ]
@@ -70,12 +77,21 @@ const lines = computed(() => [
   <HelpScene>
     <template #from>
       <HelpMock :caption="label('arena')">
-        <BoardThumbnail
-          class="whats-new-placement-board"
-          :map-key="MAP_KEY"
-          :units
-          :better="BETTER"
-        />
+        <div class="whats-new-placement-from">
+          <ToggleChipMenu
+            :model-value="true"
+            :label="label('grid-info')"
+            :options-label="label('grid-info-options')"
+            :groups="gridInfo"
+            pinned
+          />
+          <BoardThumbnail
+            class="whats-new-placement-board"
+            :map-key="MAP_KEY"
+            :units
+            :better="BETTER"
+          />
+        </div>
       </HelpMock>
     </template>
 
@@ -90,10 +106,16 @@ const lines = computed(() => [
 </template>
 
 <style scoped>
+.whats-new-placement-from {
+  display: flex;
+  gap: 12px;
+}
+
 .whats-new-placement-board {
   display: block;
-  width: 230px;
-  margin: 0 auto;
+  flex: 1;
+  min-width: 0;
+  max-width: 230px;
 }
 
 .whats-new-placement-card {
