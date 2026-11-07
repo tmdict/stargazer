@@ -2,8 +2,10 @@
  * the boards' formations, the swaps tried on them, Generate and Placement tips
  * on the Arena and Teams and Who Would Win?, so neither the search, the
  * placing nor a prediction holds up the page. A press's fit checks and its
- * set's boards go to helpers (slHelpers.ts), started on the visit's first fit
- * checks, so a press that needs none never starts them. */
+ * set's boards go to helpers (slHelpers.ts), started by the visit's first
+ * press that has a board without records or needs fit checks. A press takes
+ * the points the page kept from earlier visits (storedFits.ts) and answers
+ * with those it measured. */
 
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
@@ -24,6 +26,7 @@ import {
 } from '@/lib/pvp/generator/formation'
 import { slPicks } from '@/lib/pvp/generator/picks'
 import { layoutBoards, type SlBoard } from '@/lib/pvp/generator/setType'
+import type { StoredFits, StoredPoints } from '@/lib/pvp/generator/storedFits'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/generator/swapPreview'
 import { slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
@@ -33,14 +36,16 @@ import { artifactSurvives } from '@/lib/seasonal'
 import { loadCharacters } from '@/utils/dataLoader'
 import { startSlHelpers, type SlHelpers } from './slHelpers'
 
+// `fits`: the points the page kept, with the visit's first press.
 export type SlRequest =
-  | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[] }
+  | { type: 'generate'; id: number; picks: SlPick[]; boards: SlBoard[]; fits: StoredFits | null }
   // A roster's levels, or null for every hero at the top levels.
   | {
       type: 'fill'
       id: number
       levels: Record<string, AttrRecord> | null
       layouts: MapLayout[]
+      fits: StoredFits | null
     }
   | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[] }
   // A side of a board as it stands, its units on their tiles.
@@ -58,10 +63,11 @@ export type SlRequest =
 export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
-  | { type: 'generated'; id: number; set: SlChoice | null }
+  // `gained`: the points the press measured, null where nothing is kept.
+  | { type: 'generated'; id: number; set: SlChoice | null; gained: StoredFits | null }
   // The set as a saved team, each board in the formation the generator page
   // draws first; null when no set can be made.
-  | { type: 'filled'; id: number; team: string | null }
+  | { type: 'filled'; id: number; team: string | null; gained: StoredFits | null }
   | { type: 'placed'; id: number; boards: BoardDraw[] }
   | { type: 'explained'; id: number; why: PlacementExplanation | null }
   | { type: 'placedEngine'; id: number; formation: BoardFormation }
@@ -84,16 +90,25 @@ const engine = loadSlData().then((data) => ({
   data,
   reader: readSlFile(data),
   fit: slFit(data),
+  counts: (id: number): boolean => artifactSurvives(data.season, id),
 }))
+type Engine = Awaited<typeof engine>
 
 engine.then(
   () => scope.postMessage({ type: 'ready' }),
   () => scope.postMessage({ type: 'failed' }),
 )
 
-// Undefined until the visit's first fit checks; null where the worker works
+// The worker's file name, whose hash changes with the code and the data file;
+// the development server's has none, so nothing is kept there.
+const build = import.meta.env.DEV ? null : (self.location.pathname.split('/').at(-1) ?? null)
+
+// Undefined until a press first needs them; null where the worker works
 // alone, on a device with too few cores or once a helper fails.
 let helpers: SlHelpers | null | undefined
+const startHelpers = (): void => {
+  if (helpers === undefined) helpers = startSlHelpers()
+}
 
 async function aside<T>(work: (pool: SlHelpers) => Promise<T>, alone: () => T): Promise<T> {
   if (helpers) {
@@ -107,17 +122,43 @@ async function aside<T>(work: (pool: SlHelpers) => Promise<T>, alone: () => T): 
 }
 
 const fitsFor =
-  (data: SlData, fit: SlFitStore) =>
+  (data: SlData, fit: SlFitStore, gained: StoredPoints) =>
   async (requests: SlFitRequest[]): Promise<void> => {
     const jobs = fit.jobs(requests)
     if (!jobs.length) return
-    if (helpers === undefined) helpers = startSlHelpers()
+    startHelpers()
     const found = await aside(
       (pool) => pool.fit(jobs),
       () => jobs.map((job) => fitPoints(data, job)),
     )
-    jobs.forEach((job, index) => fit.record(job, found[index]!))
+    jobs.forEach((job, index) => {
+      for (const [map, lineups] of Object.entries(fit.record(job, found[index]!)))
+        Object.assign((gained[map] ??= {}), lineups)
+    })
   }
+
+// Chooses the set with the points the page kept, when they come from this
+// build, and gives back the points measured for it.
+async function press(
+  { data, reader, fit, counts }: Engine,
+  picks: readonly SlPick[],
+  boards: readonly SlBoard[],
+  fits: StoredFits | null,
+): Promise<{ set: SlChoice | null; gained: StoredFits | null }> {
+  if (build !== null && fits?.build === build) fit.seed(fits.maps)
+  if (boards.some((board) => board.source === null)) startHelpers()
+  const gained: StoredPoints = {}
+  const set = await chooseSlSetAsync(
+    data,
+    reader,
+    picks,
+    counts,
+    boards,
+    fit,
+    fitsFor(data, fit, gained),
+  )
+  return { set, gained: build === null ? null : { build, maps: gained } }
+}
 
 const draws = (data: SlData, set: SlChoice, boards: readonly SlBoard[]): Promise<BoardDraw[]> => {
   const marks = marksCount(boards)
@@ -131,37 +172,21 @@ const draws = (data: SlData, set: SlChoice, boards: readonly SlBoard[]): Promise
 scope.addEventListener('message', async (event) => {
   const msg = event.data
   try {
-    const { data, reader, fit } = await engine
-    const counts = (id: number): boolean => artifactSurvives(data.season, id)
+    const loaded = await engine
+    const { data, reader, counts } = loaded
     if (msg.type === 'generate') {
-      const set = await chooseSlSetAsync(
-        data,
-        reader,
-        msg.picks,
-        counts,
-        msg.boards,
-        fit,
-        fitsFor(data, fit),
-      )
-      scope.postMessage({ type: 'generated', id: msg.id, set })
+      const { set, gained } = await press(loaded, msg.picks, msg.boards, msg.fits)
+      scope.postMessage({ type: 'generated', id: msg.id, set, gained })
     } else if (msg.type === 'fill') {
       const levels = msg.levels ?? Object.fromEntries(heroes.map((c) => [c.id, TOP_LEVELS]))
       const picks = slPicks(levels, (id) => factions.get(id), withheld)
       const boards = layoutBoards(data, msg.layouts)
-      const set = await chooseSlSetAsync(
-        data,
-        reader,
-        picks,
-        counts,
-        boards,
-        fit,
-        fitsFor(data, fit),
-      )
+      const { set, gained } = await press(loaded, picks, boards, msg.fits)
       const formations = set
         ? (await draws(data, set, boards)).map((draw) => shownFormation(draw, false))
         : []
       const team = set && slTeamData(data, set, picks, boards, formations)
-      scope.postMessage({ type: 'filled', id: msg.id, team })
+      scope.postMessage({ type: 'filled', id: msg.id, team, gained })
     } else if (msg.type === 'explain') {
       const why = sideExplanation(data, msg.layout, msg.units, msg.artifact)
       scope.postMessage({ type: 'explained', id: msg.id, why })

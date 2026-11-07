@@ -26,6 +26,7 @@ import { Team } from '@/lib/types/team'
 import type { SlData } from '../data/types'
 import { summonedPhantimal } from './formation'
 import type { SlBoard } from './setType'
+import type { StoredPoints } from './storedFits'
 
 export interface SlFitRequest {
   board: SlBoard
@@ -61,10 +62,12 @@ export interface SlFit {
 
 // The store the worker keeps for the visit, which fit checks run elsewhere
 // can fill: `jobs` gives the checks a set of requests still needs, and
-// `record` keeps what each found.
+// `record` keeps what each found, returning the points it did not hold yet.
+// `seed` adds points kept from an earlier visit.
 export interface SlFitStore extends SlFit {
   jobs(requests: readonly SlFitRequest[]): FitJob[]
-  record(job: FitJob, points: FitPoints): void
+  record(job: FitJob, points: FitPoints): StoredPoints
+  seed(points: StoredPoints): void
 }
 
 const teamOf = (data: SlData, heroes: number[]): PlacementTeam => ({
@@ -94,37 +97,47 @@ export function slFit(data: SlData): SlFitStore {
   const points = new Map<string, Map<string, number>>()
   const room = new Map<string, boolean>()
   const homeOf = (from: number): string => data.maps[from]!.key
-  const pointsOn = (map: string, heroes: number[]): number | undefined =>
-    points.get(map)?.get(heroes.join(','))
-  const keep = (map: string, heroes: number[], value: number): void => {
+  const lineupOf = (heroes: number[]): string => heroes.join(',')
+  const pointsOn = (map: string, lineup: string): number | undefined => points.get(map)?.get(lineup)
+  const keep = (map: string, lineup: string, value: number): void => {
     let lineups = points.get(map)
     if (!lineups) points.set(map, (lineups = new Map()))
-    lineups.set(heroes.join(','), value)
+    lineups.set(lineup, value)
   }
   const known = (board: SlBoard, heroes: number[], from: number): number | undefined => {
     if (from === board.source) return 1
-    const home = pointsOn(homeOf(from), heroes)
+    const lineup = lineupOf(heroes)
+    const home = pointsOn(homeOf(from), lineup)
     if (home === undefined) return undefined
     if (home <= 0) return 1
-    const kept = pointsOn(board.layout.key, heroes)
+    const kept = pointsOn(board.layout.key, lineup)
     return kept === undefined ? undefined : Math.min(1, Math.max(0, kept / home))
   }
   const jobs = (requests: readonly SlFitRequest[]): FitJob[] => {
     const found = new Map<string, FitJob>()
     for (const { board, heroes, from } of requests) {
-      const key = `${board.layout.key}|${heroes.join(',')}`
+      const key = `${board.layout.key}|${lineupOf(heroes)}`
       if (found.has(key) || known(board, heroes, from) !== undefined) continue
-      found.set(key, { heroes, from, home: pointsOn(homeOf(from), heroes), board: board.layout })
+      const home = pointsOn(homeOf(from), lineupOf(heroes))
+      found.set(key, { heroes, from, home, board: board.layout })
     }
     return [...found.values()]
   }
-  const record = (job: FitJob, found: FitPoints): void => {
-    keep(homeOf(job.from), job.heroes, found.home)
-    if (found.board !== null) keep(job.board.key, job.heroes, found.board)
+  const record = (job: FitJob, found: FitPoints): StoredPoints => {
+    const lineup = lineupOf(job.heroes)
+    const added: StoredPoints = {}
+    const add = (map: string, value: number): void => {
+      if (pointsOn(map, lineup) !== undefined) return
+      keep(map, lineup, value)
+      ;(added[map] ??= {})[lineup] = value
+    }
+    add(homeOf(job.from), found.home)
+    if (found.board !== null) add(job.board.key, found.board)
+    return added
   }
   return {
     stands(board, heroes) {
-      const key = `${board.layout.key}|${heroes.join(',')}`
+      const key = `${board.layout.key}|${lineupOf(heroes)}`
       if (!room.has(key)) {
         const tiles = configTiles(board.layout.config, Team.ALLY).size
         room.set(key, tilesTaken(teamOf(data, heroes)) <= tiles)
@@ -140,5 +153,9 @@ export function slFit(data: SlData): SlFitStore {
     },
     jobs,
     record,
+    seed(stored) {
+      for (const [map, lineups] of Object.entries(stored))
+        for (const [lineup, value] of Object.entries(lineups)) keep(map, lineup, value)
+    },
   }
 }

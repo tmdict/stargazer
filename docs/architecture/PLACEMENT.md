@@ -49,3 +49,29 @@ Equally good placements are those with the best placement's `broken` and `goals`
 `explainPlacement` (`explain.ts`) gives the reasons for a placement `placeTeam` picked or held, which the PvP team generator shows in a card on each unit of a board, recorded or placed by the engine, and for an ally side placed by hand on the Arena or Teams, which Placement tips shows (`sideExplanation` in `formation.ts`, run in the Supreme League worker). A side with a unit the engine would not place there, such as a synergy copy, gets no card. A unit's reasons are the effects it gives or reaches, naming every ally a `target` goal's effect lands on and the heroes any other goal counts as met on, and those it receives where its goal counts it; the buff tile; the formation rules it keeps; and the side its hero leans to, when no hero or other body stands on a row ahead of it (behind, for the back) nor nearer the enemy walking round the walls, as its lean is scored, and no rule says how far front or back it stands. A unit's other tiles are the free tiles the engine itself would pick for it moved alone: the fewest broken rules, goals within the margin of the best, then the highest total. Each is measured against the best score the search found, or against the placement's own score when none is given, as for a side placed by hand: one where the placement would be better by more than the margin (`beats`: fewer broken rules, or more goals) is drawn green, and one where it stays as good (`asGoodAs`, as the search counts equally good) dashed. The enemy units' rules give no reasons, since they only choose among placements as good.
 
 A reason names units by id and an effect by the data file its rule sits in: the hero's or phantimal's name, the charm's id or the artifact's name. The card words a `target`, `include` or `exactly` goal by `placement-gives-<file>` (`{heroes}`) and `placement-receives-<file>` (`{giver}`), and a `most` or `companion` goal by `placement-reaches-<file>`, in `src/locales/app/placement/effects/`. An effect a unit's other body gives (`from: 'companion'`) takes `<file>-companion` as its file. A goal about enemy heroes gives no line. The rules test fails when a weighted rule has no words, or words name no rule.
+
+## Fits kept between visits
+
+The browser keeps the points fit checks find under `stargazer.fits`, so a later visit checks only the fits it has not met. The page hands the stored value to the Supreme League worker with the worker's first press, and the worker uses it only when its `build` is the worker's own file name, whose hash changes with the code and the data file. Each press answers with the points it measured, stamped with that name, and the page adds them and saves (`src/lib/pvp/generator/storedFits.ts`). A save over a value of another build replaces it, and a value that does not parse is removed when read. Past 2,000 entries a save removes whole maps, the one that gained points longest ago first; the map that gained points last always stays. A save the browser refuses removes the value. The development server's worker has no hash in its file name, so nothing is kept there.
+
+```json
+{
+  "build": "sl.worker-B7x2kQ9a.js",
+  "maps": {
+    "arena1": {
+      "68,74,94,116,121": 21.5,
+      "54,68,104,106,109": 33
+    },
+    "arena4": {
+      "68,74,94,116,121": 16.125,
+      "54,68,104,106,109": 23
+    }
+  }
+}
+```
+
+| Field               | Type   | Rule                                                                                                                                                                                                                         |
+| ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build`             | string | The file name of the worker that measured the points. A value with another name is never used.                                                                                                                               |
+| `maps`              | object | One object per map checked, under the map's layout key: a preset's key such as `arena4`, or `edited:` and the map's tiles for a Map Editor map. Maps are in the order they last gained points, the oldest first.             |
+| `maps[map][lineup]` | number | The points the lineup's own goals earn in the fit check's placement on that map, at full precision, so a fit worked out from them equals the one measured. The lineup is its hero ids in the team's order, joined by commas. |

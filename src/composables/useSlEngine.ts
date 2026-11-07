@@ -3,7 +3,8 @@
  * it only now and then (Generate, Placement tips), and kept until the tab
  * reloads, so a visit that opens more than one such page reads the file once.
  * A worker that fails is dropped, and the next page to mount or request starts
- * another. */
+ * another. Each worker's first press takes the fits kept from earlier visits,
+ * and every press's new ones are kept (storedFits.ts). */
 
 import { onMounted, readonly, ref } from 'vue'
 
@@ -13,15 +14,23 @@ import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SlUnit } from '@/lib/pvp/data/types'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/generator/formation'
 import type { SlBoard } from '@/lib/pvp/generator/setType'
+import {
+  FITS_KEY,
+  mergeFits,
+  parseStoredFits,
+  type StoredFits,
+} from '@/lib/pvp/generator/storedFits'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/generator/swapPreview'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/www/panel'
+import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
 
 type SlEngineStatus = 'loading' | 'ready' | 'failed'
 
 const status = ref<SlEngineStatus>('loading')
 let worker: Worker | null = null
+let seeded = false
 let nextId = 0
 type Answer = Extract<
   SlResponse,
@@ -42,6 +51,7 @@ const fail = (): void => {
 const start = (): void => {
   if (worker) return
   status.value = 'loading'
+  seeded = false
   worker = new Worker(new URL('../workers/sl.worker.ts', import.meta.url), { type: 'module' })
   worker.onmessage = (event: MessageEvent<SlResponse>) => {
     const msg = event.data
@@ -55,6 +65,36 @@ const start = (): void => {
     }
   }
   worker.onerror = fail
+}
+
+const storedFits = (): StoredFits | null => {
+  const text = readStorage(FITS_KEY)
+  const fits = parseStoredFits(text)
+  if (text !== null && !fits) removeStorage(FITS_KEY)
+  return fits
+}
+
+// The fits for the worker's first press; the worker leaves out those of
+// another build.
+const seed = (): StoredFits | null => {
+  if (seeded) return null
+  seeded = true
+  return storedFits()
+}
+
+// A value from another build is replaced. A save the browser refuses removes
+// the value, so it never holds room that saved teams need.
+const keep = (gained: StoredFits | null): void => {
+  if (!gained) return
+  const stored = storedFits()
+  const same = stored?.build === gained.build
+  if (!Object.keys(gained.maps).length) {
+    if (stored && !same) removeStorage(FITS_KEY)
+    return
+  }
+  const maps = mergeFits(same ? stored.maps : {}, gained.maps)
+  if (!writeStorage(FITS_KEY, JSON.stringify({ build: gained.build, maps })))
+    removeStorage(FITS_KEY)
 }
 
 export function useSlEngine({ startOnMount = true } = {}) {
@@ -71,8 +111,9 @@ export function useSlEngine({ startOnMount = true } = {}) {
     })
 
   const generate = async (picks: SlPick[], boards: SlBoard[]): Promise<SlChoice | null> => {
-    const answer = await ask((id) => ({ type: 'generate', id, picks, boards }))
+    const answer = await ask((id) => ({ type: 'generate', id, picks, boards, fits: seed() }))
     if (answer.type !== 'generated') throw new Error('The worker answered another request')
+    keep(answer.gained)
     return answer.set
   }
 
@@ -81,8 +122,9 @@ export function useSlEngine({ startOnMount = true } = {}) {
     levels: Record<string, AttrRecord> | null,
     layouts: MapLayout[],
   ): Promise<string | null> => {
-    const answer = await ask((id) => ({ type: 'fill', id, levels, layouts }))
+    const answer = await ask((id) => ({ type: 'fill', id, levels, layouts, fits: seed() }))
     if (answer.type !== 'filled') throw new Error('The worker answered another request')
+    keep(answer.gained)
     return answer.team
   }
 
