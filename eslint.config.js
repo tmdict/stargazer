@@ -62,8 +62,7 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    // Template conventions from AGENTS.md: kebab-case props and events on
-    // components, the same-name shorthand (`:count`), and the slot forms
+    // The template conventions in AGENTS.md
     files: ['**/*.vue'],
     rules: {
       'vue/attribute-hyphenation': ['error', 'always'],

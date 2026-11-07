@@ -1,7 +1,7 @@
 {
   "name": "Stargazer",
   "short_name": "Stargazer",
-  "description": "AFK Journey arena simulator, skills database, and team builder.",
+  "description": "AFK Journey team builder and PvP helper.",
   "id": "/",
   "start_url": "/",
   "display": "standalone",

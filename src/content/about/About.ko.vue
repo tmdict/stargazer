@@ -1,26 +1,40 @@
 <script setup lang="ts">
+import { guidePath, SL_GENERATOR_PATH } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 </script>
 
 <template>
   <article>
-    <h1>AFK: 새로운 여정 아레나 시뮬레이터</h1>
+    <h1>AFK: 새로운 여정 진형 빌더와 PvP 도우미</h1>
     <p>
-      Stargazer는 AFK: 새로운 여정의 아레나 시뮬레이터이자 진형 구상 도구이며, 몇 가지 보조 기능도
-      함께 제공합니다. 실제 게임의 아레나처럼 육각형 맵 위에서 영웅 배치와 팀 구성을 자유롭게 시험해
-      볼 수 있습니다.
+      Stargazer는 AFK: 새로운 여정의 진형 빌더이자 PvP 도우미입니다. 아레나 맵에서 다양한 영웅
+      조합을 시도하고, 배치가 영웅 스킬에 어떤 영향을 주는지 확인할 수 있습니다. 친구나 길드원과
+      진형을 공유하며 전술을 의논할 수도 있습니다. 다음 기능도 이용할 수 있습니다.
     </p>
-    <p>
-      이 도구는 다양한 아레나 진형에서 스킬 메커니즘을 빠르게 확인하고, 공격 범위를 눈으로 살펴보며,
-      친구나 길드원과 진형을 공유해 전술을 논의할 수 있도록 만들었습니다. 모든 기능을 갖춘 본격적인
-      진형 편성에는 <a href="https://www.yaphalla.com/editor">Yaphalla의 빌더</a>를 추천합니다.
-    </p>
+    <ul>
+      <li>
+        <RouterLink :to="SL_GENERATOR_PATH">PvP 조합 생성기</RouterLink>로 내 로스터에 있는 영웅
+        중에서 맵별 추천 조합을 찾을 수 있습니다.
+      </li>
+      <li>
+        <RouterLink :to="guidePath('index')">PvP 리포트</RouterLink>에서 최강자 리그 시즌별 진형,
+        상성, 맵 데이터를 확인할 수 있습니다.
+      </li>
+      <li>
+        <RouterLink to="/teams">진형</RouterLink> 페이지에서 로스터를 관리하고 맵 1개, 3개 또는
+        5개에 쓸 진형을 저장할 수 있습니다.
+      </li>
+      <li>
+        <RouterLink to="/skills">스킬 데이터베이스</RouterLink>에서 스킬 메커니즘으로 영웅을 찾을 수
+        있습니다.
+      </li>
+    </ul>
     <p>
       각 기능의 사용법은
       <RouterLink :to="helpPath('ko')">Stargazer 사용법</RouterLink>에서 확인할 수 있습니다.
     </p>
 
-    <h2>유용한 링크와 자료</h2>
+    <h2>링크와 크레딧</h2>
     <ul>
       <li>
         <a href="https://www.yaphalla.com/">Yaphalla</a>: 진형 빌더, 우선순위 목록 빌더,
@@ -30,10 +44,14 @@ import { helpPath } from '@/lib/help'
         <a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ 데이터베이스와 가이드.
       </li>
       <li>
-        이미지 자료 제공: <a href="https://www.yaphalla.com/">Yaphalla</a>,
+        영웅 정보와 여러 스킬 테스트에 도움을 준 Yaphalla, Toto's Honor Duel Archive 등 AFKJ
+        커뮤니티에 감사드립니다.
+      </li>
+      <li>
+        이미지 및 기타 자료 제공: Yaphalla,
         <a href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"
           >AFKJ UGC Asset Library</a
-        >.
+        >, <a href="https://afk-journey.fandom.com/wiki/AFK_Journey_Wiki">AFK Journey Wiki</a>.
       </li>
     </ul>
   </article>

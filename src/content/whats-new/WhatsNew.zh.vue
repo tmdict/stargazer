@@ -12,13 +12,12 @@ import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
 
-const updated = whatsNewEditionDate('zh')
+const editionDate = whatsNewEditionDate('zh')
 </script>
 
 <template>
   <article>
-    <h1>最近更新</h1>
-    <p class="whats-new-updated reading-meta">更新于{{ updated }}</p>
+    <h1>最近更新 · {{ editionDate }}</h1>
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="SL_GENERATOR_PATH">PvP阵容生成器</LinkHeading>

@@ -1,7 +1,7 @@
-/* What's New: the edition on show, whose date heads the popup, and whether this
-   browser has opened it. The stored value is the date of the last edition
-   opened, so a new edition brings the tab's dot back. Read after mount, so the
-   first render matches the pre-rendered page, which has no dot. */
+/* What's New: the edition on show, whose date is in the popup's title, and
+   whether this browser has opened it. The stored value is the date of the last
+   edition opened, so a new edition brings the tab's dot back. Read after mount,
+   so the first render matches the pre-rendered page, which has no dot. */
 
 import { onMounted, readonly, ref } from 'vue'
 
@@ -12,7 +12,7 @@ const WHATS_NEW_EDITION = '2026-11-06'
 
 const SEEN_KEY = 'stargazer.whatsNewSeen'
 
-/** The edition's date as the popup's "Updated" line shows it. */
+/** The edition's date as the popup's title shows it. */
 export function whatsNewEditionDate(locale: AppLocale): string {
   // The plain date parses as midnight UTC, so a local time zone west of UTC
   // would show the day before.
