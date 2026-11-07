@@ -17,8 +17,8 @@ export const BASE_TEAM_SIZE = 5
 export interface GridTile {
   hex: Hex
   state: State
-  characterId?: number
-  team?: Team
+  characterId: number | undefined
+  team: Team | undefined
 }
 
 export class Grid {
@@ -46,7 +46,7 @@ export class Grid {
   constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
     this.storage = new Map()
     presetHexes(layout).forEach((hex) => {
-      const tile: GridTile = { hex, state: State.DEFAULT }
+      const tile: GridTile = { hex, state: State.DEFAULT, characterId: undefined, team: undefined }
       this.storage.set(Grid.key(hex), tile)
       this.hexById.set(hex.getId(), hex)
       this.tileById.set(hex.getId(), tile)

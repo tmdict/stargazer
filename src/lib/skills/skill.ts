@@ -473,7 +473,13 @@ export class SkillManager {
       try {
         const skill = getCharacterSkill(info.characterId)
 
-        const currentHexId = findCharacterHex(grid, info.characterId, info.team)
+        // A unit with a skill stands on one tile, so finding it still on its
+        // last one settles where it is without a search of the board.
+        const last = grid.getTileById(info.hexId)
+        const currentHexId =
+          last.characterId === info.characterId && last.team === info.team
+            ? info.hexId
+            : findCharacterHex(grid, info.characterId, info.team)
         if (currentHexId === null) {
           // Character vanished without going through removal, so run full
           // deactivation so modifiers, companions, and team-size changes are

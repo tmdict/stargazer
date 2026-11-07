@@ -1,10 +1,15 @@
-import { findCharacterHex, getTilesWithCharactersByTeam } from '../characters/character'
-import { executePlaceCharacter, performPlace } from '../characters/place'
-import { performRemove } from '../characters/remove'
+import {
+  clearCharacterFromTile,
+  findCharacterHex,
+  getTilesWithCharactersByTeam,
+  setCharacterOnTile,
+} from '../characters/character'
+import { executePlaceCharacter } from '../characters/place'
 import { Grid } from '../grid'
 import { configTiles, type MapLayout } from '../maps'
 import { SkillManager } from '../skills/skill'
 import { FULL_GRID } from '../types/grid'
+import { State } from '../types/state'
 import { Team } from '../types/team'
 import type { PlacementLookups, PlacementTeam } from './types'
 
@@ -71,11 +76,15 @@ export class PlacementBoard {
     const moving: number[] = []
     for (let i = 0; i < this.units.length; i++) if (positions[i] !== this.at[i]) moving.push(i)
     if (!moving.length) return
-    for (const i of moving) performRemove(this.grid, this.at[i]!)
+    // The same units trade tiles, so the team's size and duplicates cannot
+    // change, and only each tile needs checking.
+    for (const i of moving) clearCharacterFromTile(this.grid.getTileById(this.at[i]!))
     for (const i of moving) {
-      if (!performPlace(this.grid, positions[i]!, this.units[i]!, Team.ALLY)) {
+      const tile = this.grid.getTileById(positions[i]!)
+      if (tile.state !== State.AVAILABLE_ALLY) {
         throw new Error(`placement: could not move unit ${this.units[i]} to ${positions[i]}`)
       }
+      setCharacterOnTile(tile, this.units[i]!, Team.ALLY)
     }
     this.at = [...positions]
     this.manager.updateActiveSkills(this.grid)

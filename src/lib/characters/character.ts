@@ -217,11 +217,19 @@ export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] 
     )
 }
 
+export function setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
+  tile.characterId = characterId
+  tile.team = team
+  tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+}
+
 export function clearCharacterFromTile(tile: GridTile): void {
   const currentState = tile.state
 
-  delete tile.characterId
-  delete tile.team
+  // Emptied, never deleted: JavaScript engines read objects whose fields come
+  // and go on a slow path, and every skill update reads tiles throughout.
+  tile.characterId = undefined
+  tile.team = undefined
 
   // Only occupied states revert; anything else (blocked, default) is left as is.
   if (currentState === State.OCCUPIED_ALLY) {

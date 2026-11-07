@@ -18,7 +18,7 @@ The engine imports from `src/lib` alone, and its lookups from the data loader, s
 
 ## The board
 
-`PlacementBoard` (`board.ts`) holds one team on one map in a `Grid` with its own `SkillManager`. It places each unit once with `executePlaceCharacter`, so each skill spawns its companions, and from then on lifts the units that move and puts them down with the low-level `performPlace`, every skill updated once after the move, as a board does after a drag. The units are the heroes in the team's order, then the phantimal and the companions skills spawned, so a companion with a tile of its own, such as Lailah, is placed like a hero.
+`PlacementBoard` (`board.ts`) holds one team on one map in a `Grid` with its own `SkillManager`. It places each unit once with `executePlaceCharacter`, so each skill spawns its companions, and from then on lifts the units that move and writes them onto their new tiles with `setCharacterOnTile`, the step `performPlace` ends with, every skill updated once after the move, as a board does after a drag. It checks only that each new tile is free for an ally: the same units trading tiles cannot change the team's size or its duplicates. The units are the heroes in the team's order, then the phantimal and the companions skills spawned, so a companion with a tile of its own, such as Lailah, is placed like a hero.
 
 ## Scoring
 

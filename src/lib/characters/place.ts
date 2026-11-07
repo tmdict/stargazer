@@ -1,6 +1,5 @@
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
-import { State } from '../types/state'
 import { Team } from '../types/team'
 import {
   canPlaceCharacterOnTeam,
@@ -13,6 +12,7 @@ import {
   hasCharacter,
   isCharacterOnTeam,
   resolvePlacement,
+  setCharacterOnTile,
   synergySlotFree,
 } from './character'
 import {
@@ -234,9 +234,7 @@ export function performPlace(
   // skill-aware composite in executePlaceCharacter, swaps clear both tiles first
   if (tile.characterId) return false
 
-  tile.characterId = characterId
-  tile.team = team
-  tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+  setCharacterOnTile(tile, characterId, team)
 
   return true
 }
