@@ -86,7 +86,7 @@ const confirm = (part: ReviewPart): void => {
           @confirm="confirm(part)"
         />
         <ImportCellState state="review" class="confirm-card" @confirm="doubtful.forEach(confirm)">
-          <template #default>{{ i18n.t('app.import-confirm-card') }}</template>
+          {{ i18n.t('app.import-confirm-card') }}
         </ImportCellState>
       </div>
     </template>

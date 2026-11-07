@@ -180,9 +180,7 @@ const closePicker = (event: MouseEvent): void => {
           state="review"
           @confirm="emit('confirmAll')"
         >
-          <template #default>
-            {{ i18n.t('app.roster-import-confirm-all', { count: plan.confirmable.length }) }}
-          </template>
+          {{ i18n.t('app.roster-import-confirm-all', { count: plan.confirmable.length }) }}
         </ImportCellState>
       </div>
       <ul v-if="legend.length" class="legend">

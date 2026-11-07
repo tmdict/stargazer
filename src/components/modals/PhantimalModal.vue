@@ -49,23 +49,25 @@ const skills = computed(() =>
       <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
 
-    <h1 class="detail-title">{{ title }}</h1>
-    <div class="meta-chips" :lang="i18n.currentLocale">
-      <span class="meta-chip">{{ gameLabel(phantimal.faction, i18n.currentLocale) }}</span>
-      <span class="meta-chip">{{ gameLabel(phantimal.class, i18n.currentLocale) }}</span>
-    </div>
+    <template #default>
+      <h1 class="detail-title">{{ title }}</h1>
+      <div class="meta-chips" :lang="i18n.currentLocale">
+        <span class="meta-chip">{{ gameLabel(phantimal.faction, i18n.currentLocale) }}</span>
+        <span class="meta-chip">{{ gameLabel(phantimal.class, i18n.currentLocale) }}</span>
+      </div>
 
-    <template v-if="applied || failed">
-      <SkillSection
-        v-for="(skill, i) in skills"
-        :key="i"
-        :heading="skill.heading"
-        :levels="skill.levels"
-      />
-      <!-- A season can ship before the data pack carries its text. -->
-      <p v-if="!skills.length" class="details-pending" :lang="i18n.currentLocale">
-        {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
-      </p>
+      <template v-if="applied || failed">
+        <SkillSection
+          v-for="(skill, i) in skills"
+          :key="i"
+          :heading="skill.heading"
+          :levels="skill.levels"
+        />
+        <!-- A season can ship before the data pack carries its text. -->
+        <p v-if="!skills.length" class="details-pending" :lang="i18n.currentLocale">
+          {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
+        </p>
+      </template>
     </template>
   </BaseModal>
 </template>

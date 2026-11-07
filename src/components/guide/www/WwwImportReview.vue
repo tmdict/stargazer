@@ -172,9 +172,7 @@ const closePickers = (event: MouseEvent): void => {
     <p v-if="plan.otherMatch" class="note error">{{ i18n.t('app.www-import-other-match') }}</p>
     <div v-if="plan.confirmable.length" class="group-head">
       <ImportCellState state="review" @confirm="emit('confirmAll')">
-        <template #default>
-          {{ i18n.t('app.roster-import-confirm-all', { count: plan.confirmable.length }) }}
-        </template>
+        {{ i18n.t('app.roster-import-confirm-all', { count: plan.confirmable.length }) }}
       </ImportCellState>
     </div>
     <ul v-if="legend.length" class="legend">
@@ -190,41 +188,39 @@ const closePickers = (event: MouseEvent): void => {
       <template v-else>
         <div v-for="side in SIDES" :key="side" class="side" :class="side">
           <ImportSideHead :label="i18n.t(SIDE_LABEL[side])">
-            <template #default>
-              <span class="artifact">
-                <img
-                  v-if="game[side].badges[0]"
-                  class="artifact-card"
-                  :src="image(game[side].badges[0], 'badges')"
-                  alt=""
-                />
-                <button
-                  type="button"
-                  class="artifact-btn"
-                  :class="{
-                    unrecognised: artifacts[g]![side].unrecognised,
-                    open: artifactTeam === game[side],
-                  }"
-                  :title="artifacts[g]![side].name"
-                  @click="toggleArtifactPicker(game[side], $event)"
-                >
-                  <span class="artifact-icon" :class="{ empty: !artifacts[g]![side].artifact }">
-                    <ArtifactImage
-                      v-if="artifacts[g]![side].artifact"
-                      :artifact="artifacts[g]![side].artifact!"
-                    />
-                  </span>
-                  <span class="artifact-name">{{ artifacts[g]![side].name }}</span>
-                </button>
-                <span v-for="issue in game[side].artifactIssues" :key="issue" class="tag">
-                  {{ i18n.t(ISSUE_TAG[issue]) }}
+            <span class="artifact">
+              <img
+                v-if="game[side].badges[0]"
+                class="artifact-card"
+                :src="image(game[side].badges[0], 'badges')"
+                alt=""
+              />
+              <button
+                type="button"
+                class="artifact-btn"
+                :class="{
+                  unrecognised: artifacts[g]![side].unrecognised,
+                  open: artifactTeam === game[side],
+                }"
+                :title="artifacts[g]![side].name"
+                @click="toggleArtifactPicker(game[side], $event)"
+              >
+                <span class="artifact-icon" :class="{ empty: !artifacts[g]![side].artifact }">
+                  <ArtifactImage
+                    v-if="artifacts[g]![side].artifact"
+                    :artifact="artifacts[g]![side].artifact!"
+                  />
                 </span>
-                <ImportCellState
-                  v-if="game[side].artifactEdited && !game[side].artifactIssues.length"
-                  state="edited"
-                />
+                <span class="artifact-name">{{ artifacts[g]![side].name }}</span>
+              </button>
+              <span v-for="issue in game[side].artifactIssues" :key="issue" class="tag">
+                {{ i18n.t(ISSUE_TAG[issue]) }}
               </span>
-            </template>
+              <ImportCellState
+                v-if="game[side].artifactEdited && !game[side].artifactIssues.length"
+                state="edited"
+              />
+            </span>
           </ImportSideHead>
           <ImportCellGrid>
             <div v-for="(slot, k) in game[side].slots" :key="k" class="placed">

@@ -62,11 +62,13 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    // Template casing convention: kebab-case for props and events on components
+    // Template conventions: kebab-case props and events on components, and the
+    // `#` shorthand on slot templates with `v-slot` on a component's own tag
     files: ['**/*.vue'],
     rules: {
       'vue/attribute-hyphenation': ['error', 'always'],
       'vue/v-on-event-hyphenation': ['error', 'always', { autofix: true }],
+      'vue/v-slot-style': 'error',
     },
   },
 )

@@ -29,35 +29,33 @@ const mutual = (allyHexId: number, enemyHexId: number): boolean =>
        the crop edge (from sprites that are not even rendered, on the enemy
        side). -->
   <GridArrowLayer v-if="!ctx.teamView">
-    <template #default>
-      <GridArrow
-        v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"
-        :id="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
-        :key="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
-        :start-hex="ctx.grid.getHexById(allyHexId)"
-        :end-hex="ctx.grid.getHexById(enemyInfo.enemyHexId!)"
-        :color="TEAM_COLORS[Team.ALLY]"
-        :stroke-width="arrowStyle.strokeWidth"
-        :arrowhead-size="arrowStyle.arrowheadSize"
-        :curve-scale="ALLY_CURVE_SCALE"
-        :arc="!mutual(allyHexId, enemyInfo.enemyHexId!)"
-        dashed
-      />
+    <GridArrow
+      v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"
+      :id="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
+      :key="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
+      :start-hex="ctx.grid.getHexById(allyHexId)"
+      :end-hex="ctx.grid.getHexById(enemyInfo.enemyHexId!)"
+      :color="TEAM_COLORS[Team.ALLY]"
+      :stroke-width="arrowStyle.strokeWidth"
+      :arrowhead-size="arrowStyle.arrowheadSize"
+      :curve-scale="ALLY_CURVE_SCALE"
+      :arc="!mutual(allyHexId, enemyInfo.enemyHexId!)"
+      dashed
+    />
 
-      <GridArrow
-        v-for="[enemyHexId, allyInfo] in ctx.closestAllyMap"
-        :id="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
-        :key="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
-        :start-hex="ctx.grid.getHexById(enemyHexId)"
-        :end-hex="ctx.grid.getHexById(allyInfo.allyHexId!)"
-        :color="TEAM_COLORS[Team.ENEMY]"
-        :stroke-width="arrowStyle.strokeWidth"
-        :arrowhead-size="arrowStyle.arrowheadSize"
-        :invert-curve="true"
-        :curve-scale="ENEMY_CURVE_SCALE"
-        :arc="!mutual(allyInfo.allyHexId!, enemyHexId)"
-        dashed
-      />
-    </template>
+    <GridArrow
+      v-for="[enemyHexId, allyInfo] in ctx.closestAllyMap"
+      :id="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
+      :key="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
+      :start-hex="ctx.grid.getHexById(enemyHexId)"
+      :end-hex="ctx.grid.getHexById(allyInfo.allyHexId!)"
+      :color="TEAM_COLORS[Team.ENEMY]"
+      :stroke-width="arrowStyle.strokeWidth"
+      :arrowhead-size="arrowStyle.arrowheadSize"
+      :invert-curve="true"
+      :curve-scale="ENEMY_CURVE_SCALE"
+      :arc="!mutual(allyInfo.allyHexId!, enemyHexId)"
+      dashed
+    />
   </GridArrowLayer>
 </template>

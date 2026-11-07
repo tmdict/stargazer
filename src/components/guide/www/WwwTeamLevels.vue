@@ -40,19 +40,17 @@ const sharedLevel = (attr: WwwLevelAttr): number | null => {
 <template>
   <div class="www-team-levels" role="group" :aria-label="i18n.t(sideLabelKey(side))">
     <DropdownSelect :label="i18n.t('app.upgrades')" floating>
-      <template #default>
-        <div class="www-levels">
-          <template v-for="{ attr, id } in LEVEL_ATTRS" :key="attr">
-            <span class="www-levels-label">{{ i18n.t(`app.${attr}`) }}</span>
-            <UpgradeLevelChips
-              :attr-id="id"
-              :lit="sharedLevel(attr)"
-              :disabled="!heroes.length"
-              @pick="emit('level', attr, $event)"
-            />
-          </template>
-        </div>
-      </template>
+      <div class="www-levels">
+        <template v-for="{ attr, id } in LEVEL_ATTRS" :key="attr">
+          <span class="www-levels-label">{{ i18n.t(`app.${attr}`) }}</span>
+          <UpgradeLevelChips
+            :attr-id="id"
+            :lit="sharedLevel(attr)"
+            :disabled="!heroes.length"
+            @pick="emit('level', attr, $event)"
+          />
+        </template>
+      </div>
     </DropdownSelect>
   </div>
 </template>

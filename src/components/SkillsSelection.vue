@@ -56,9 +56,7 @@ watch(mechanicFilter, (pick) => {
 <template>
   <div v-scroll-chain class="skills-selection panel-min-height panel-fill">
     <PickerSearchRow>
-      <template #default>
-        <SkillSearchTrigger />
-      </template>
+      <SkillSearchTrigger />
     </PickerSearchRow>
 
     <CharacterFilterStrip

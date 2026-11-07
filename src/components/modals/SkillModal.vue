@@ -47,12 +47,14 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
     <template #header-buttons>
       <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
-    <SkillSections
-      v-if="hasLocaleData && (applied || failed)"
-      :slug="skillName"
-      :lang="applied ?? selected"
-      :initial-chips
-    />
-    <div v-else-if="!hasLocaleData">Content not found for skill: {{ skillName }}</div>
+    <template #default>
+      <SkillSections
+        v-if="hasLocaleData && (applied || failed)"
+        :slug="skillName"
+        :lang="applied ?? selected"
+        :initial-chips
+      />
+      <div v-else-if="!hasLocaleData">Content not found for skill: {{ skillName }}</div>
+    </template>
   </BaseModal>
 </template>

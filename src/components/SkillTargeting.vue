@@ -115,39 +115,37 @@ const linesToRender = computed(() =>
     v-if="arrowsToRender.length || artifactArrowsToRender.length || linesToRender.length"
     class="skill-arrow-layer"
   >
-    <template #default>
-      <GridLine
-        v-for="(line, idx) in linesToRender"
-        :key="`line-${idx}`"
-        :start-hex="line.fromHex"
-        :end-hex="line.toHex"
-        :color="line.color"
-        :stroke-width="arrowStyle.strokeWidth"
-      />
-      <GridArrow
-        v-for="arrow in arrowsToRender"
-        :id="arrow.key"
-        :key="arrow.key"
-        :start-hex="arrow.fromHex"
-        :end-hex="arrow.toHex"
-        :color="arrow.color"
-        :stroke-width="arrowStyle.strokeWidth"
-        :arrowhead-size="arrowStyle.arrowheadSize"
-        :arc="!arrow.mutual"
-      />
-      <GridArrow
-        v-for="arrow in artifactArrowsToRender"
-        :id="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
-        :key="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
-        :start-hex="arrow.fromHex"
-        :end-hex="arrow.toHex"
-        :color="TEAM_COLORS[arrow.team]"
-        :stroke-width="arrowStyle.strokeWidth"
-        :arrowhead-size="arrowStyle.arrowheadSize"
-        :start-radius="ARTIFACT_RADIUS"
-        :arc="false"
-      />
-    </template>
+    <GridLine
+      v-for="(line, idx) in linesToRender"
+      :key="`line-${idx}`"
+      :start-hex="line.fromHex"
+      :end-hex="line.toHex"
+      :color="line.color"
+      :stroke-width="arrowStyle.strokeWidth"
+    />
+    <GridArrow
+      v-for="arrow in arrowsToRender"
+      :id="arrow.key"
+      :key="arrow.key"
+      :start-hex="arrow.fromHex"
+      :end-hex="arrow.toHex"
+      :color="arrow.color"
+      :stroke-width="arrowStyle.strokeWidth"
+      :arrowhead-size="arrowStyle.arrowheadSize"
+      :arc="!arrow.mutual"
+    />
+    <GridArrow
+      v-for="arrow in artifactArrowsToRender"
+      :id="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
+      :key="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
+      :start-hex="arrow.fromHex"
+      :end-hex="arrow.toHex"
+      :color="TEAM_COLORS[arrow.team]"
+      :stroke-width="arrowStyle.strokeWidth"
+      :arrowhead-size="arrowStyle.arrowheadSize"
+      :start-radius="ARTIFACT_RADIUS"
+      :arc="false"
+    />
   </GridArrowLayer>
 </template>
 

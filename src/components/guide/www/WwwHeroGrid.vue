@@ -40,9 +40,7 @@ const pickBySlug = (slug: string): void => {
   <div v-scroll-chain class="www-grid">
     <p class="www-grid-hint">{{ i18n.t('app.www-pick-hint') }}</p>
     <PickerSearchRow>
-      <template #default>
-        <SkillSearchTrigger :select="pickBySlug" />
-      </template>
+      <SkillSearchTrigger :select="pickBySlug" />
     </PickerSearchRow>
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"

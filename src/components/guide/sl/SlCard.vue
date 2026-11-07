@@ -39,27 +39,25 @@ defineProps<{
     >
       <template #content>
         <TooltipCard>
-          <template #default>
-            <div v-if="title" class="sl-card-title">
-              <span v-for="(part, i) in title" :key="i" :class="{ 'sl-card-name': part.marked }">{{
-                part.text
-              }}</span>
-            </div>
-            <div v-if="text">{{ text }}</div>
-            <ul v-if="lines?.length" class="sl-card-lines" :class="{ plain }">
-              <li v-for="(line, index) in lines" :key="index" :class="{ better: line.better }">
-                <template v-if="line.lead"
-                  ><b>{{ line.lead }}</b
-                  >{{ ' ' }}</template
-                ><span
-                  v-for="(part, i) in line.parts"
-                  :key="i"
-                  :class="{ 'sl-card-name': part.marked }"
-                  >{{ part.text }}</span
-                >
-              </li>
-            </ul>
-          </template>
+          <div v-if="title" class="sl-card-title">
+            <span v-for="(part, i) in title" :key="i" :class="{ 'sl-card-name': part.marked }">{{
+              part.text
+            }}</span>
+          </div>
+          <div v-if="text">{{ text }}</div>
+          <ul v-if="lines?.length" class="sl-card-lines" :class="{ plain }">
+            <li v-for="(line, index) in lines" :key="index" :class="{ better: line.better }">
+              <template v-if="line.lead"
+                ><b>{{ line.lead }}</b
+                >{{ ' ' }}</template
+              ><span
+                v-for="(part, i) in line.parts"
+                :key="i"
+                :class="{ 'sl-card-name': part.marked }"
+                >{{ part.text }}</span
+              >
+            </li>
+          </ul>
         </TooltipCard>
       </template>
     </TooltipPopup>

@@ -38,6 +38,6 @@ const stepLabel = (key: string): string => interpolate(appLabel(key, lang), { n:
     :lower-label="stepLabel('energy-lower')"
     :raise-label="stepLabel('energy-raise')"
   >
-    <template #default>{{ energyAboveLabel(model) }}</template>
+    {{ energyAboveLabel(model) }}
   </FilterStepper>
 </template>

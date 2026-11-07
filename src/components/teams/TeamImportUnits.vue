@@ -351,9 +351,7 @@ const tileBoxes = (): HTMLInputElement[] => [
 <template>
   <div v-if="unitViews.length || missingRows.length" ref="sectionEl" class="side">
     <ImportSideHead :label="i18n.t('app.import-units')">
-      <template #default>
-        <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
-      </template>
+      <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
     </ImportSideHead>
     <div class="boards">
       <figure v-if="shotBoard" class="board">
@@ -475,77 +473,75 @@ const tileBoxes = (): HTMLInputElement[] => [
     </div>
     <p v-if="missingRows.length" class="units-note">{{ i18n.t('app.import-place-missing') }}</p>
     <ImportCellGrid :class="sideClass">
-      <template #default>
+      <ImportCell
+        v-for="view in unitViews"
+        :key="view.index"
+        class="unit"
+        :class="view.state"
+        :card="view.card"
+        :portrait="view.unitId === null ? null : unitImage(view.unitId)"
+        @mouseenter="hovered = view.index"
+        @mouseleave="hovered = null"
+        @focusin="hovered = view.index"
+        @focusout="hovered = null"
+      >
+        <template #name>
+          <DropdownSelect
+            :label="unitName(view.unitId)"
+            :items="view.items"
+            variant="dark"
+            floating
+            click-only
+            class="unit-pick"
+            @select="pickUnit(view.index, $event)"
+          />
+        </template>
+        <template #meta>
+          <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
+          <ImportCellState
+            v-if="view.state === 'review' && view.unitId !== null"
+            state="review"
+            :reading="unitName(view.unitId)"
+            @confirm="emit('setUnit', shot.id, view.index, view.unitId)"
+          />
+          <ImportCellState v-else-if="view.state === 'none'" state="none" />
+          <ImportCellState v-else-if="view.edited" state="edited" />
+        </template>
+      </ImportCell>
+      <template v-if="shotTeam !== null">
         <ImportCell
-          v-for="view in unitViews"
-          :key="view.index"
-          class="unit"
-          :class="view.state"
-          :card="view.card"
-          :portrait="view.unitId === null ? null : unitImage(view.unitId)"
-          @mouseenter="hovered = view.index"
-          @mouseleave="hovered = null"
-          @focusin="hovered = view.index"
-          @focusout="hovered = null"
+          v-for="row in missingRows"
+          :key="row.unitId"
+          class="unit missing"
+          :class="{ next: nextUnits[shotTeam] === row.unitId, unplaced: row.tile === null }"
+          card=""
+          :portrait="unitImage(row.unitId)"
+          @mouseenter="pointedMissing = row.unitId"
+          @mouseleave="pointedMissing = null"
         >
           <template #name>
-            <DropdownSelect
-              :label="unitName(view.unitId)"
-              :items="view.items"
-              variant="dark"
-              floating
-              click-only
-              class="unit-pick"
-              @select="pickUnit(view.index, $event)"
-            />
+            <button
+              type="button"
+              class="cell-name"
+              :aria-pressed="nextUnits[shotTeam] === row.unitId"
+              :title="unitName(row.unitId)"
+              @click="choose(shotTeam, row.unitId)"
+            >
+              {{ unitName(row.unitId) }}
+            </button>
           </template>
           <template #meta>
-            <span class="unit-tile">{{ i18n.t('app.import-tile', { tile: view.tile }) }}</span>
-            <ImportCellState
-              v-if="view.state === 'review' && view.unitId !== null"
-              state="review"
-              :reading="unitName(view.unitId)"
-              @confirm="emit('setUnit', shot.id, view.index, view.unitId)"
+            <TeamImportTileBox
+              :tile="row.tile"
+              :label="i18n.t('app.import-tile-for', { name: unitName(row.unitId) })"
+              @focus="pointedMissing = row.unitId"
+              @blur="pointedMissing = null"
+              @change="typeTile(shotTeam, row.unitId, $event.target as HTMLInputElement)"
+              @keydown.enter.prevent="typeTileAndNext(shotTeam, row.unitId, $event, tileBoxes())"
             />
-            <ImportCellState v-else-if="view.state === 'none'" state="none" />
-            <ImportCellState v-else-if="view.edited" state="edited" />
+            <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
           </template>
         </ImportCell>
-        <template v-if="shotTeam !== null">
-          <ImportCell
-            v-for="row in missingRows"
-            :key="row.unitId"
-            class="unit missing"
-            :class="{ next: nextUnits[shotTeam] === row.unitId, unplaced: row.tile === null }"
-            card=""
-            :portrait="unitImage(row.unitId)"
-            @mouseenter="pointedMissing = row.unitId"
-            @mouseleave="pointedMissing = null"
-          >
-            <template #name>
-              <button
-                type="button"
-                class="cell-name"
-                :aria-pressed="nextUnits[shotTeam] === row.unitId"
-                :title="unitName(row.unitId)"
-                @click="choose(shotTeam, row.unitId)"
-              >
-                {{ unitName(row.unitId) }}
-              </button>
-            </template>
-            <template #meta>
-              <TeamImportTileBox
-                :tile="row.tile"
-                :label="i18n.t('app.import-tile-for', { name: unitName(row.unitId) })"
-                @focus="pointedMissing = row.unitId"
-                @blur="pointedMissing = null"
-                @change="typeTile(shotTeam, row.unitId, $event.target as HTMLInputElement)"
-                @keydown.enter.prevent="typeTileAndNext(shotTeam, row.unitId, $event, tileBoxes())"
-              />
-              <TeamImportNextBadge v-if="nextUnits[shotTeam] === row.unitId" :side="shotTeam" />
-            </template>
-          </ImportCell>
-        </template>
       </template>
     </ImportCellGrid>
     <p v-if="typeError" class="type-error" role="alert">{{ typeError }}</p>

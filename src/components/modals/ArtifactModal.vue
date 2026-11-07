@@ -50,22 +50,24 @@ const effectLevels = computed(() =>
       <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
 
-    <h1 class="detail-title">{{ title }}</h1>
-    <div class="artifact-stats meta-chips" :lang="i18n.currentLocale">
-      <span class="meta-chip stat-chip">
-        {{ gameLabel('season', i18n.currentLocale) }} {{ artifact.season }}
-      </span>
-      <span v-for="stat in stats" :key="stat.key" class="meta-chip stat-chip">
-        {{ stat.label }} <strong>{{ stat.value }}</strong>
-      </span>
-    </div>
+    <template #default>
+      <h1 class="detail-title">{{ title }}</h1>
+      <div class="artifact-stats meta-chips" :lang="i18n.currentLocale">
+        <span class="meta-chip stat-chip">
+          {{ gameLabel('season', i18n.currentLocale) }} {{ artifact.season }}
+        </span>
+        <span v-for="stat in stats" :key="stat.key" class="meta-chip stat-chip">
+          {{ stat.label }} <strong>{{ stat.value }}</strong>
+        </span>
+      </div>
 
-    <template v-if="applied || failed">
-      <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
-      <!-- A season can ship before the data pack carries its text. -->
-      <p v-else class="details-pending" :lang="i18n.currentLocale">
-        {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
-      </p>
+      <template v-if="applied || failed">
+        <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
+        <!-- A season can ship before the data pack carries its text. -->
+        <p v-else class="details-pending" :lang="i18n.currentLocale">
+          {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
+        </p>
+      </template>
     </template>
   </BaseModal>
 </template>

@@ -92,10 +92,9 @@ const select = (key: string): void => {
     v-if="segments.length > 1"
     :segments
     :aria-label="i18n.t('app.type')"
+    v-slot="{ segment }"
     @select="select"
   >
-    <template #default="{ segment }">
-      <ConfirmLabel :armed="segment.armed" :label="segment.label" />
-    </template>
+    <ConfirmLabel :armed="segment.armed" :label="segment.label" />
   </SegmentedPicker>
 </template>

@@ -81,8 +81,9 @@ System docs:
 - ALWAYS use camelCase in JS for props and emits, even if they are kebab-case in templates
 - ALWAYS use kebab-case in templates for props and emits
 - ALWAYS use the prop shorthand if possible: `<MyComponent :count />` instead of `<MyComponent :count="count" />` (value has the same name as the prop)
-- ALWAYS Use the shorthand for slots: `<template #default>` instead of `<template v-slot:default>`
-- ALWAYS use explicit `<template>` tags for ALL used slots
+- ALWAYS use the `#` shorthand on a slot template: `<template #header>`, not `<template v-slot:header>`
+- Pass content for a component's default slot alone directly between its tags, without a `<template #default>`; slot props go on the component's own tag as `v-slot="{ segment }"`
+- When a component also gets a named slot, give each slot its own `<template>`, the default one as `<template #default>`
 - ALWAYS use `defineModel<type>({ required, get, set, default })` to define allowed v-model bindings in components. This avoids defining `modelValue` prop and `update:modelValue` event manually
 
 ## Import Ordering Convention

@@ -136,9 +136,7 @@ const handleResultSelect = (slug: string) => {
     :class="{ 'panel-fill': scrollable }"
   >
     <PickerSearchRow>
-      <template #default>
-        <SkillSearchTrigger :select="handleResultSelect" />
-      </template>
+      <SkillSearchTrigger :select="handleResultSelect" />
     </PickerSearchRow>
 
     <CharacterFilterStrip

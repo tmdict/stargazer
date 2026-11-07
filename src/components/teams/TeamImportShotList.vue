@@ -120,68 +120,66 @@ const status = (shot: ImportShot): ShotStatusView => {
       @select="selectedId = shot.id"
       @remove="emit('remove', shot.id)"
     >
-      <template #default>
-        <div class="shot-row">
-          <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
-          <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
-            <button
-              v-for="i in mapCount"
-              :key="i"
-              type="button"
-              class="seg-btn"
-              :class="{
-                on: mapIndexOf(shot) === i - 1,
-                dup: mapIndexOf(shot) === i - 1 && duplicated(shot),
-              }"
-              :aria-pressed="mapIndexOf(shot) === i - 1"
-              @click.stop="emit('setMap', shot.id, mapIndexOf(shot) === i - 1 ? null : i - 1)"
-            >
-              {{ i }}
-            </button>
-          </div>
+      <div class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
+          <button
+            v-for="i in mapCount"
+            :key="i"
+            type="button"
+            class="seg-btn"
+            :class="{
+              on: mapIndexOf(shot) === i - 1,
+              dup: mapIndexOf(shot) === i - 1 && duplicated(shot),
+            }"
+            :aria-pressed="mapIndexOf(shot) === i - 1"
+            @click.stop="emit('setMap', shot.id, mapIndexOf(shot) === i - 1 ? null : i - 1)"
+          >
+            {{ i }}
+          </button>
         </div>
-        <div v-if="formation" class="shot-row">
-          <span class="shot-label">{{ i18n.t('app.import-team') }}</span>
-          <div class="seg" role="group" :aria-label="i18n.t('app.import-team')">
-            <button
-              v-for="team in SIDES"
-              :key="team"
-              type="button"
-              class="seg-btn side"
-              :class="{
-                on: shownTeam(shot) === team,
-                ally: team === Team.ALLY,
-                enemy: team === Team.ENEMY,
-              }"
-              :aria-pressed="shownTeam(shot) === team"
-              disabled
-            >
-              {{ i18n.t(teamLabelKey(team)) }}
-            </button>
-          </div>
+      </div>
+      <div v-if="formation" class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-team') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-team')">
+          <button
+            v-for="team in SIDES"
+            :key="team"
+            type="button"
+            class="seg-btn side"
+            :class="{
+              on: shownTeam(shot) === team,
+              ally: team === Team.ALLY,
+              enemy: team === Team.ENEMY,
+            }"
+            :aria-pressed="shownTeam(shot) === team"
+            disabled
+          >
+            {{ i18n.t(teamLabelKey(team)) }}
+          </button>
         </div>
-        <div v-else-if="!replay" class="shot-row">
-          <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
-          <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
-            <button
-              v-for="team in SIDES"
-              :key="team"
-              type="button"
-              class="seg-btn side"
-              :class="{
-                on: shotWinner(shot) === team,
-                ally: team === Team.ALLY,
-                enemy: team === Team.ENEMY,
-              }"
-              :aria-pressed="shotWinner(shot) === team"
-              :disabled="shot.status !== 'ready'"
-              @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
-            >
-              {{ i18n.t(teamLabelKey(team)) }}
-            </button>
-          </div>
+      </div>
+      <div v-else-if="!replay" class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
+          <button
+            v-for="team in SIDES"
+            :key="team"
+            type="button"
+            class="seg-btn side"
+            :class="{
+              on: shotWinner(shot) === team,
+              ally: team === Team.ALLY,
+              enemy: team === Team.ENEMY,
+            }"
+            :aria-pressed="shotWinner(shot) === team"
+            :disabled="shot.status !== 'ready'"
+            @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
+          >
+            {{ i18n.t(teamLabelKey(team)) }}
+          </button>
         </div>
-      </template>
+      </div>
     </ImportShotCard>
   </div>
 </template>
