@@ -6,14 +6,13 @@ import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
 import { useHelpLocale } from '@/composables/useHelpLocale'
 import type { CellState, ReviewPart } from '@/lib/import/review'
 import { useGameDataStore } from '@/stores/gameData'
-import { useI18nStore } from '@/stores/i18n'
+import { interpolate } from '@/utils/interpolate'
 import { appLabel } from '@/utils/skillLabels'
 
 import '@/styles/import.css'
 
 const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
-const i18n = useI18nStore()
 const gameData = useGameDataStore()
 
 const MAPS = 3
@@ -107,7 +106,7 @@ const doubtful = (state: CellState): ReviewPart[] => (state === 'review' ? ['her
         <div class="import help-import-footer">
           <div class="footer">
             <span class="footer-btn danger">
-              {{ i18n.t('app.import-save-as-new', { count: MAPS }) }}
+              {{ interpolate(label('import-save-as-new'), { count: MAPS }) }}
             </span>
           </div>
         </div>
