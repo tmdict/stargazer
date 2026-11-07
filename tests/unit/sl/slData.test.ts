@@ -226,7 +226,7 @@ describe('chooseSlSet on the shipped data', () => {
     expect(checked.length).toBeGreaterThan(0)
   })
 
-  // The file gives such a team its own record once the pack holds it.
+  // Only a team outside every group carries a record, and a pack may hold none.
   it.runIf(mapTeams.some((t) => t.record))(
     'shows a team outside every group its own record under its board',
     () => {
