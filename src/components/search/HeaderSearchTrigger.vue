@@ -29,7 +29,6 @@ const shortcut = useShortcutLabel()
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 0.2rem;
   padding: 4px 10px 4px 9px;
   border: none;
   border-radius: 10px;

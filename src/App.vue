@@ -140,103 +140,105 @@ onUnmounted(() => {
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
       </RouterLink>
 
-      <HeaderSearchTrigger class="nav-search" />
+      <div class="nav-bar">
+        <HeaderSearchTrigger class="nav-search" />
 
-      <div class="nav-tabs">
-        <RouterLink to="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
-          i18n.t('app.arena')
-        }}</RouterLink>
-        <RouterLink
-          to="/teams"
-          class="nav-text-link"
-          :class="{ active: route.path === '/teams' }"
-          >{{ i18n.t('app.teams') }}</RouterLink
-        >
-        <RouterLink
-          to="/skills"
-          class="nav-text-link"
-          :class="{ active: route.path === '/skills' }"
-          >{{ i18n.t('app.skills') }}</RouterLink
-        >
-        <GuideMenu class="nav-guide">
+        <div class="nav-tabs">
+          <RouterLink to="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
+            i18n.t('app.arena')
+          }}</RouterLink>
           <RouterLink
-            :to="guidePath('index')"
+            to="/teams"
             class="nav-text-link"
-            :class="{ active: route.path.includes('/guide') }"
-            >{{ i18n.t('app.guide') }}</RouterLink
+            :class="{ active: route.path === '/teams' }"
+            >{{ i18n.t('app.teams') }}</RouterLink
           >
-        </GuideMenu>
-        <button type="button" class="nav-text-link nav-whats-new" @click="openWhatsNew">
-          {{ i18n.t('app.whats-new') }}
-          <span v-if="whatsNewUnseen" class="nav-dot" aria-hidden="true" />
-        </button>
-      </div>
-      <ul class="menu">
-        <li class="menu-search">
-          <button
-            type="button"
-            class="icon-link icon-button"
-            aria-haspopup="dialog"
-            :aria-label="i18n.t('app.skill-search-placeholder')"
-            :title="i18n.t('app.skill-search-placeholder')"
-            @click="openSearch"
-          >
-            <IconSearch :size="22" />
-          </button>
-        </li>
-        <li>
-          <button
-            @click="showAboutModal = true"
-            class="icon-link icon-button"
-            :title="i18n.t('app.about')"
-          >
-            <IconInfo />
-          </button>
-        </li>
-        <li>
           <RouterLink
-            :to="helpPath(i18n.currentLocale)"
-            class="icon-link"
-            :title="i18n.t('app.help')"
-            :aria-label="i18n.t('app.help')"
+            to="/skills"
+            class="nav-text-link"
+            :class="{ active: route.path === '/skills' }"
+            >{{ i18n.t('app.skills') }}</RouterLink
           >
-            <IconHelp aria-hidden="true" />
-          </RouterLink>
-        </li>
-        <li>
-          <a
-            href="https://github.com/tmdict/stargazer/"
-            class="icon-link"
-            :title="i18n.t('app.code')"
-            :aria-label="i18n.t('app.code')"
-          >
-            <IconGitHub aria-hidden="true" />
-          </a>
-        </li>
-        <li>
-          <button
-            ref="contactButton"
-            type="button"
-            class="icon-link icon-button"
-            :title="i18n.t('app.contact')"
-            :aria-label="i18n.t('app.contact')"
-            :aria-expanded="contactOpen"
-            @click="contactOpen = !contactOpen"
-          >
-            <IconMail />
+          <GuideMenu class="nav-guide">
+            <RouterLink
+              :to="guidePath('index')"
+              class="nav-text-link"
+              :class="{ active: route.path.includes('/guide') }"
+              >{{ i18n.t('app.guide') }}</RouterLink
+            >
+          </GuideMenu>
+          <button type="button" class="nav-text-link nav-whats-new" @click="openWhatsNew">
+            {{ i18n.t('app.whats-new') }}
+            <span v-if="whatsNewUnseen" class="nav-dot" aria-hidden="true" />
           </button>
-        </li>
-        <li class="menu-locale">
-          <LocaleMenu
-            :current="i18n.currentLocale"
-            :link-to="localeTarget"
-            @select="i18n.pickLocale"
-          />
-        </li>
-        <li>
-          <ThemeToggle class="icon-link icon-button" />
-        </li>
-      </ul>
+        </div>
+        <ul class="menu">
+          <li class="menu-search">
+            <button
+              type="button"
+              class="icon-link icon-button"
+              aria-haspopup="dialog"
+              :aria-label="i18n.t('app.skill-search-placeholder')"
+              :title="i18n.t('app.skill-search-placeholder')"
+              @click="openSearch"
+            >
+              <IconSearch :size="22" />
+            </button>
+          </li>
+          <li>
+            <button
+              @click="showAboutModal = true"
+              class="icon-link icon-button"
+              :title="i18n.t('app.about')"
+            >
+              <IconInfo />
+            </button>
+          </li>
+          <li>
+            <RouterLink
+              :to="helpPath(i18n.currentLocale)"
+              class="icon-link"
+              :title="i18n.t('app.help')"
+              :aria-label="i18n.t('app.help')"
+            >
+              <IconHelp aria-hidden="true" />
+            </RouterLink>
+          </li>
+          <li>
+            <a
+              href="https://github.com/tmdict/stargazer/"
+              class="icon-link"
+              :title="i18n.t('app.code')"
+              :aria-label="i18n.t('app.code')"
+            >
+              <IconGitHub aria-hidden="true" />
+            </a>
+          </li>
+          <li>
+            <button
+              ref="contactButton"
+              type="button"
+              class="icon-link icon-button"
+              :title="i18n.t('app.contact')"
+              :aria-label="i18n.t('app.contact')"
+              :aria-expanded="contactOpen"
+              @click="contactOpen = !contactOpen"
+            >
+              <IconMail />
+            </button>
+          </li>
+          <li class="menu-locale">
+            <LocaleMenu
+              :current="i18n.currentLocale"
+              :link-to="localeTarget"
+              @select="i18n.pickLocale"
+            />
+          </li>
+          <li>
+            <ThemeToggle class="icon-link icon-button" />
+          </li>
+        </ul>
+      </div>
     </nav>
   </header>
 
@@ -278,14 +280,6 @@ nav {
   padding: 0 2.5em 0 2em;
 }
 
-nav ul {
-  margin-bottom: 0;
-}
-
-nav ul li {
-  margin-bottom: 0;
-}
-
 .logo-link {
   display: inline-block;
   line-height: 0;
@@ -301,12 +295,27 @@ nav ul li {
   transform: scale(1.25);
 }
 
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+  padding-bottom: 0.2rem;
+}
+
 .menu {
   display: flex;
   list-style: none;
   align-items: center;
   gap: 1.5rem;
-  margin-left: 1.5rem;
+  margin: 0;
+}
+
+/* base.css's li margins and line height would otherwise set the icons off the
+   row's centre. */
+.menu > li {
+  margin: 0;
+  display: flex;
 }
 
 .menu a,
@@ -329,29 +338,20 @@ nav ul li {
   color: var(--color-header-gold);
 }
 
-.nav-search {
-  margin-left: auto;
-}
-
 .nav-tabs {
   display: flex;
   align-items: flex-end;
   gap: 1.5rem;
-  margin-left: 1.5rem;
 }
 
 @media (max-width: 920px) {
   .nav-search {
     display: none;
   }
-
-  .nav-tabs {
-    margin-left: auto;
-  }
 }
 
 @media (min-width: 921px) {
-  .menu-search {
+  .menu > .menu-search {
     display: none;
   }
 }
@@ -367,7 +367,6 @@ nav ul li {
   text-decoration: none;
   letter-spacing: 0.05em;
   padding: 4px 10px;
-  margin-bottom: 0.2rem;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
 }
@@ -430,17 +429,14 @@ nav ul li {
     height: 50px;
   }
 
+  .nav-bar {
+    display: contents;
+  }
+
   .menu {
     order: 1;
     margin-left: auto;
     gap: 1rem;
-  }
-
-  /* base.css's li top margin and 1.6 line-height would otherwise sink the
-     icons below the row's center. */
-  .menu li {
-    margin: 0;
-    display: flex;
   }
 
   .nav-tabs {
@@ -449,7 +445,6 @@ nav ul li {
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
-    margin-left: 0;
     gap: 0.5rem;
     padding-bottom: 0.3rem;
   }
@@ -459,7 +454,6 @@ nav ul li {
     text-align: center;
     font-size: 0.8rem;
     padding: 6px 8px;
-    margin-bottom: 0;
     white-space: nowrap;
     background: rgba(255, 255, 255, 0.08);
   }
