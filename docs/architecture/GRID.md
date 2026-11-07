@@ -36,6 +36,8 @@ Two things make it hard. Many kinds of unit share one tile slot (heroes, placeho
 
 Every hex is a cube coordinate `(q, r, s)` with `q + r + s = 0`, which the `Hex` constructor enforces. The game's tile number is a separate id. Every map paints its tile states over the same fixed preset (`FULL_GRID`, whose rows are in `src/data/grid.json`), so all maps share one hex id space.
 
+A tile (`GridTile`) has its `characterId` and `team` fields from the moment it is made, undefined while it is empty, and emptying a tile sets them back to undefined instead of deleting them. JavaScript engines read objects whose fields come and go on a slow path, and every skill update reads the board's tiles.
+
 ## Boards
 
 `createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, perspective, Syn and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
