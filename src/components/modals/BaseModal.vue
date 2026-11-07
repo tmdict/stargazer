@@ -67,7 +67,7 @@ watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
 
 <template>
   <Teleport to="body">
-    <Transition name="modal">
+    <Transition name="modal" appear>
       <div v-if="show" class="overlay is-modal" :class="{ 'is-top-anchored': topAnchor }">
         <div
           ref="modalRef"
