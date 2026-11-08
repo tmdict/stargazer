@@ -11,5 +11,13 @@
   "tags": {
     "cheat-death": [{ "ex": 3, "mods": ["self"] }],
     "debuff": [{ "ultimate": 1, "mods": ["eryndor", "single"] }]
-  }
+  },
+  "rules": [
+    {
+      "team": "ally",
+      "goal": "back",
+      "weight": "aim",
+      "note": "Senea is fragile and fights from the back half, out of the enemy's reach."
+    }
+  ]
 }

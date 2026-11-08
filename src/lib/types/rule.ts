@@ -1,7 +1,7 @@
 // A placement rule: what the placement engine wants from one effect of the unit
-// whose data file holds it, when the battle starts. Where the effect lands is
-// the unit's skill's to say, so a rule names only the aim, and the lists and
-// weights it names are valued outside it. An effect Stargazer draws no skill
+// whose data file holds it, or from where the unit stands, when the battle
+// starts. Where the effect lands is the unit's skill's to say, so a rule names
+// only the aim, and the lists and weights it names are valued outside it. An effect Stargazer draws no skill
 // for, such as a charm's, names its tile instead.
 export type RuleTeam = 'ally' | 'enemy'
 
@@ -24,6 +24,9 @@ export type RuleGoal =
   | { most: 'walls' | 'allies' }
   // The holder's own other body, such as Phraesto's Illusion, on the tiles.
   | 'companion'
+  // The holder in the back half of the ally tiles, as a lean measures them. It
+  // reads no effect, so it needs no skill.
+  | 'back'
   | 'none'
 
 export interface Rule {

@@ -26,7 +26,7 @@ const DATA: PlacementData = {
   lists: { damage: [ORION, SYLPHIRA, DIONEL], gunnar: [GWYNETH] },
   leans: { front: [], back: [] },
   formationRules: [],
-  weights: { aim: 10, buff: 3, lean: 0.2, margin: 1 },
+  weights: { aim: 10, gunnar: 20, buff: 3, lean: 0.2, margin: 1 },
   pickRates: {},
 }
 
@@ -70,6 +70,16 @@ describe('placement explanation', () => {
     ])
     expect(of(ORION).reasons).toEqual([{ verb: 'receives', effect: objectives, to: [] }])
     expect(of(PERSEUS).reasons).toEqual([])
+  })
+
+  // Senea's rule asks for the back half. Tile 6 is in it, walking round the
+  // walls, with Dionel behind her on 1; on tile 3 nobody stands behind her.
+  it('says a unit stands in the back half, unless it says it stands at the back', () => {
+    const data = { ...DATA, leans: { front: [], back: [SENEA] } }
+    const half = explained({ [SENEA]: 6, [DIONEL]: 1, [ORION]: 4, [PERSEUS]: 13 }, data)
+    expect(half(SENEA).reasons).toEqual([{ verb: 'stands', place: 'back-half' }])
+    const back = explained({ [SENEA]: 3, [DIONEL]: 4, [ORION]: 5, [PERSEUS]: 13 }, data)
+    expect(back(SENEA).reasons).toEqual([{ verb: 'stands', place: 'back' }])
   })
 
   // On the same board, Sylphira moved behind Orion or Perseus moved up past her

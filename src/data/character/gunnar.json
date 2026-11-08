@@ -23,7 +23,7 @@
     {
       "team": "ally",
       "goal": { "target": "gunnar" },
-      "weight": "aim",
+      "weight": "gunnar",
       "note": "Gunnar's Doomfield goes to the ally behind him, the teammate his list ranks first."
     }
   ]

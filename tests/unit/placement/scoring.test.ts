@@ -167,6 +167,17 @@ describe('placement scoring', () => {
     expect(wedgesMet(at, 4, { front: [ALNA], back: [] })).toBe(0.5)
   })
 
+  // Walking round arena2's walls, tile 6 is in the back half of the ally tiles,
+  // tile 4 in the middle and tile 7 in the front half. Senea's skill draws
+  // nothing, so a rule needing one would be left out and have no goal here.
+  it('meets a back goal with its holder in the back half or the middle', () => {
+    const backMet = (tile: number) =>
+      metOf(scoredAt({ [SENEA]: tile, [ORION]: 1, [PERSEUS]: 13 }), SENEA)
+    expect(backMet(6)).toBe(1)
+    expect(backMet(4)).toBe(1)
+    expect(backMet(7)).toBe(0)
+  })
+
   // Tile 7 touches tiles 2, 4, 5, 10 and 13, and tile 8 only tiles 3 and 6, so
   // the most allies next to Ludovic is the rest of the team, up to five.
   it('scores the allies next to a unit out of the most that can stand next to it', () => {

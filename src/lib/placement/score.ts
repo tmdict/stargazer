@@ -203,13 +203,17 @@ export class PlacementScorer {
     const units = team.phantimal === undefined ? team.heroes : [...team.heroes, team.phantimal]
     for (const unit of units) {
       const rules = lookups.rulesOf(unit)
-      if (rules.some((rule) => rule.team === 'ally' && !rule.tile) && !getCharacterSkill(unit)) {
+      const fromSkill = rules.some(
+        (rule) => rule.team === 'ally' && !rule.tile && rule.goal !== 'back',
+      )
+      if (fromSkill && !getCharacterSkill(unit)) {
         this.skipped.push({ owner: unit, reason: 'no skill' })
         continue
       }
       for (const rule of rules) {
         const { tile } = rule
         this.addEffect('unit', unit, unit, rule, (b) => {
+          if (rule.goal === 'back') return [{ landed: [], marked: [] }]
           if (!tile) return [skillReach(b.manager, unit, Team.ALLY)]
           const from =
             rule.from === 'companion'
@@ -507,6 +511,8 @@ export class PlacementScorer {
     const self = holder === undefined ? undefined : ruleUnit(holder)
 
     if (goal === 'none') return null
+    // The middle of the ally tiles is in both halves, as for a lean.
+    if (goal === 'back') return this.depth.get(this.board.tileOf(holder!))! <= 0.5 ? 1 : 0
     if (goal === 'companion') {
       const bodies = this.board.units.filter((unit) => unit !== holder && ruleUnit(unit) === self)
       if (!bodies.length) return null

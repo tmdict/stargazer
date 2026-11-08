@@ -25,6 +25,7 @@ type Standing =
   | 'buff'
   | 'front'
   | 'back'
+  | 'back-half'
   | 'frontmost'
   | 'front-two'
   | 'rearmost'
@@ -66,6 +67,8 @@ function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
     return 'gives'
   return undefined
 }
+
+const BACK_PLACES = new Set<Standing>(['back', 'rearmost', 'back-two'])
 
 const RANKS: Partial<Record<FormationRule['relation'], Standing>> = {
   frontmost: 'frontmost',
@@ -200,6 +203,15 @@ export function explainPlacement(
     if (lean && onEdge(unit, lean) && !kept.some((rule) => RANKS[rule.relation])) {
       reasons.push({ verb: 'stands', place: lean })
     }
+    const backHalf = goals.some(
+      ({ rule, met, holder }) => rule.goal === 'back' && met && holder === unit,
+    )
+    // A line saying the unit stands at the back, or among the rearmost, says
+    // more than the back half.
+    const atBack = reasons.some(
+      (reason) => reason.verb === 'stands' && BACK_PLACES.has(reason.place),
+    )
+    if (backHalf && !atBack) reasons.push({ verb: 'stands', place: 'back-half' })
     return { unit, tile: positions[index]!, reasons, ...movesFor[index]! }
   })
 

@@ -1,8 +1,8 @@
 // Placement rule data integrity: every rule in the hero, artifact, phantimal
 // and charm files keeps the rule contract's fields and words, and sits on a
-// unit whose skill says where its effect lands, or names the tile for an effect
-// Stargazer does not draw, as every charm's is. The placement engine reads
-// these files with no checks of its own.
+// unit whose skill says where its effect lands, names the tile for an effect
+// Stargazer does not draw, as every charm's is, or asks only where its unit
+// stands. The placement engine reads these files with no checks of its own.
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
@@ -27,7 +27,7 @@ const MOST_KINDS = new Set(['walls', 'allies'])
 const TILE_WORDS = new Set(['behind', 'front', 'around', 'row'])
 
 function goalProblem(goal: unknown): string | null {
-  if (goal === 'most' || goal === 'none' || goal === 'companion') return null
+  if (goal === 'most' || goal === 'none' || goal === 'companion' || goal === 'back') return null
   if (typeof goal !== 'object' || goal === null) return `the goal ${JSON.stringify(goal)}`
   const { sameFaction, nonHero, ...words } = goal as Record<string, unknown>
   const entries = Object.entries(words)
@@ -73,6 +73,11 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
       if (!TILE_WORDS.has(rule.tile)) problems.push(`the tile word ${rule.tile}`)
       if (rule.team !== 'ally') problems.push('a tile word on an enemy rule')
     }
+    if (
+      rule.goal === 'back' &&
+      (rule.team !== 'ally' || rule.tile !== undefined || tile === 'never')
+    )
+      problems.push('a back goal on an enemy, tile or artifact rule')
     if (rule.from !== undefined && (rule.from !== 'companion' || rule.tile === undefined))
       problems.push(`from ${rule.from} off a companion tile rule`)
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {
@@ -92,12 +97,15 @@ function artifactLands(name: string): boolean {
   return [Team.ALLY, Team.ENEMY].some((team) => artifactTargetArrows(grid, team, name).length > 0)
 }
 
+// A rule that needs no skill: one naming its tile, or asking where its unit stands.
+const standsAlone = (rule: Rule): boolean => rule.tile !== undefined || rule.goal === 'back'
+
 const units = [
   ...loadCharacters().map((hero) => ({
     name: hero.name,
     tile: 'may' as const,
     rules: hero.rules,
-    lands: hasSkill(hero.id) || !!hero.rules?.every((rule) => rule.tile),
+    lands: hasSkill(hero.id) || !!hero.rules?.every(standsAlone),
   })),
   ...loadArtifacts().map((artifact) => ({
     name: artifact.name,
@@ -109,7 +117,7 @@ const units = [
     name: phantimal.name,
     tile: 'may' as const,
     rules: phantimal.rules,
-    lands: hasSkill(toPhantimalId(phantimal.id)) || !!phantimal.rules?.every((rule) => rule.tile),
+    lands: hasSkill(toPhantimalId(phantimal.id)) || !!phantimal.rules?.every(standsAlone),
   })),
 ].filter((unit) => unit.rules)
 
