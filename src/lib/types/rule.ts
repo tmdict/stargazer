@@ -1,8 +1,9 @@
 // A placement rule: what the placement engine wants from one effect of the unit
 // whose data file holds it, or from where the unit stands, when the battle
 // starts. Where the effect lands is the unit's skill's to say, so a rule names
-// only the aim, and the lists and weights it names are valued outside it. An effect Stargazer draws no skill
-// for, such as a charm's, names its tile instead.
+// only the aim, and the lists and weights it names are valued outside it. An
+// effect Stargazer draws no skill for, such as a charm's, names its tile
+// instead.
 export type RuleTeam = 'ally' | 'enemy'
 
 // Where an effect with no skill code acts: on the unit behind or in front of

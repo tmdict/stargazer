@@ -172,16 +172,6 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
   return { mains, companions, phantimal, artifact, ...(leftOut > 0 ? { leftOut } : {}) }
 }
 
-// Whether loading a one-sided team onto `side` would clear anything on these
-// saved boards: a unit or the side's artifact (grids.sideHasContent's mirror).
-export const boardsHoldSide = (boards: readonly GridState[], side: Team): boolean =>
-  boards.some(
-    (board) =>
-      [...(board.c ?? []), ...(board.s ?? []), ...(board.y ?? [])].some(
-        (entry) => entry[2] === side,
-      ) || ((side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null) !== null,
-  )
-
 /* Null when the record isn't a one-sided team. The synergy hero and its
  * companions are included only when the destination mode offers the Syn
  * affordance; otherwise the hero is left out and counted. */
