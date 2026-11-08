@@ -86,7 +86,7 @@ const shot = (
   artifactOverrides: {},
 })
 
-const NAMES = { prefix: 'S7 SL5 Group', left: 'GNX', right: '10' }
+const NAMES = { prefix: 'S7 SL5 Group', left: 'A', right: 'B' }
 
 // A cell's review state, as the review grid reads it.
 const stateOf = (cell: HeroReading, override?: CellOverride): CellState => {
@@ -118,12 +118,12 @@ describe('record name', () => {
 
   it("formats the match's record name", () => {
     const results = [Team.ALLY, Team.ENEMY, Team.ALLY, Team.ALLY, Team.ALLY]
-    expect(nameOf(NAMES, results)).toBe('S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)')
+    expect(nameOf(NAMES, results)).toBe('S7 SL5 Group - A > B (1,3,4,5 > 2)')
     expect(nameOf(NAMES, [Team.ENEMY, Team.ENEMY, Team.ALLY])).toBe(
-      'S7 SL5 Group - GNX < 10 (3 < 1,2)',
+      'S7 SL5 Group - A < B (3 < 1,2)',
     )
-    expect(nameOf({ ...NAMES, prefix: '' }, [null, Team.ALLY])).toBe('GNX > 10 (2 > )')
-    expect(nameOf(NAMES, [Team.ENEMY])).toBe('S7 SL5 Group - GNX < 10')
+    expect(nameOf({ ...NAMES, prefix: '' }, [null, Team.ALLY])).toBe('A > B (2 > )')
+    expect(nameOf(NAMES, [Team.ENEMY])).toBe('S7 SL5 Group - A < B')
   })
 })
 
@@ -137,12 +137,12 @@ describe('map results', () => {
       2,
       reading([], [], { winner: Team.ALLY, mapResults: [Team.ALLY, Team.ALLY, Team.ALLY] }),
     )
-    expect(planOf([a, b], '3v3', NAMES).suggestedName).toBe('S7 SL5 Group - GNX > 10 (2,3 > 1)')
+    expect(planOf([a, b], '3v3', NAMES).suggestedName).toBe('S7 SL5 Group - A > B (2,3 > 1)')
   })
 
   it('takes the reviewed winner over the reading', () => {
     const a = { ...shot(0, reading([], [], { winner: Team.ALLY })), winner: Team.ENEMY }
-    expect(planOf([a], '1v1', NAMES).suggestedName).toBe('S7 SL5 Group - GNX < 10')
+    expect(planOf([a], '1v1', NAMES).suggestedName).toBe('S7 SL5 Group - A < B')
   })
 })
 
@@ -280,12 +280,12 @@ describe('buildTeamImportPlan', () => {
     })
     // The name reads by board half: the Ally column's player fills the enemy
     // half here, so they are listed second, with their map wins.
-    expect(plan.suggestedName).toBe('S7 SL5 Group - 10 < GNX ( < 1,2)')
+    expect(plan.suggestedName).toBe('S7 SL5 Group - B < A ( < 1,2)')
   })
 
   it('says when the map wins are equal or unread instead of claiming a winner', () => {
     const unread = planOf([shot(0, reading([1], [2], { winner: null }))], '1v1', NAMES)
-    expect(unread.suggestedName).toBe('S7 SL5 Group - GNX > 10')
+    expect(unread.suggestedName).toBe('S7 SL5 Group - A > B')
     expect(unread.issues).toEqual([{ kind: 'result-undecided' }])
     expect(isBlockingIssue({ kind: 'result-undecided' })).toBe(false)
 

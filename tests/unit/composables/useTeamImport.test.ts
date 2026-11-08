@@ -300,12 +300,12 @@ describe('clearing an import', () => {
     vi.stubEnv('SSR', false)
     stubLocalStorage()
     const api = hold()
-    api.names.left = 'unii'
+    api.names.left = 'A'
     api.saveNames()
     api.names.left = 'typo'
-    api.names.right = 'BTrickz'
+    api.names.right = 'B'
     api.clearImport()
-    expect(api.names.left).toBe('unii')
+    expect(api.names.left).toBe('A')
     expect(api.names.right).toBe('')
   })
 

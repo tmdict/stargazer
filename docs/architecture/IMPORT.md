@@ -114,15 +114,15 @@ An account that cannot save a match's formations can place a 5v5 Supreme League 
 
 ### Record names and save
 
-Player names are optional. With both, the record name takes the form `S7 - GNX > 10 (1,3,4,5 > 2)`: the prefix, the player on the ally half first, `<` when the other player won more maps and `>` otherwise, then each player's map numbers. Without both, the library picks its automatic name. A name typed in the review replaces the built one for that import only.
+Player names are optional. With both, the record name takes the form `S7 - A > B (1,3,4,5 > 2)`: the prefix, the player on the ally half first, `<` when the other player won more maps and `>` otherwise, then each player's map numbers. Without both, the library picks its automatic name. A name typed in the review replaces the built one for that import only.
 
 The prefix and names persist in `stargazer.import.names`: `prefix`, then `left` for the player of the result screenshots' Ally tab and `right` for the player of their Enemy tab. A missing or non-string field takes its default: the current season as `S<season>`, and empty names.
 
 ```json
 {
   "prefix": "S8",
-  "left": "GNX",
-  "right": "10"
+  "left": "A",
+  "right": "B"
 }
 ```
 
