@@ -82,6 +82,11 @@ const openLabel = computed(
       page: i18n.t(shown.from === 'arena' ? 'app.arena' : 'app.teams'),
     }),
 )
+const openWarning = computed(() =>
+  shown.from === 'arena'
+    ? i18n.t('app.confirm-replace-ally')
+    : i18n.t('app.sl-open-replaces', { mode: shown.mode }),
+)
 </script>
 
 <template>
@@ -107,7 +112,7 @@ const openLabel = computed(
           type="button"
           class="solid-btn sl-action"
           :class="{ 'confirm-armed': openArmed }"
-          :title="openArmed ? i18n.t('app.confirm-replace-ally') : undefined"
+          :title="openArmed ? openWarning : undefined"
           @click="emit('open')"
         >
           <IconArrowUpRight :size="14" />

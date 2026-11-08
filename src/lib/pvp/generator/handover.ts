@@ -3,7 +3,8 @@
  * stored and in no link, so a reload keeps it and a shared address does not.
  * Generate's ↗ leaves `generatorFrom`, the page it came from, whose saved
  * boards the generator then reads; Open in Arena or Teams leaves
- * `generatedSide`, the set as shown, for that page to put on your side. */
+ * `generatedSide`, the set as shown, which the Arena puts on your side and
+ * the Teams page opens as a new team. */
 
 import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
 

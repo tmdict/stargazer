@@ -320,17 +320,25 @@ const save = (): void => {
   })
 }
 
-// Open in Arena or Teams replaces your side of that page's boards, so a side
-// holding something there takes a second press.
+// Open in Arena replaces your side of the Arena's board, and Open in Teams
+// replaces that mode's boards with a new team, so a press that would lose
+// something there takes a second one.
 const openKey = (from: GeneratorFrom): string => `open:${from}`
 const openArmed = computed(
   () => !!shown.value?.from && armedConfirm.armed.value === openKey(shown.value.from),
 )
+const openReplaces = (from: GeneratorFrom): boolean => {
+  if (from !== 'arena') return replacesWork(from)
+  const saved = readSavedBoards(from)
+  return !!saved && boardsHoldSide(saved, Team.ALLY)
+}
 const open = (): void => {
   const from = shown.value?.from
   if (!from || !drawn.value) return
-  const saved = readSavedBoards(from)
-  if (saved && boardsHoldSide(saved, Team.ALLY) && !armedConfirm.confirm(openKey(from))) return
+  if (openReplaces(from) && !armedConfirm.confirm(openKey(from))) {
+    if (from !== 'arena') show(i18n.t('app.sl-open-replaces', { mode: from }), 'info')
+    return
+  }
   void router.push({ path: generatorPagePath(from), state: { generatedSide: drawn.value } })
 }
 
