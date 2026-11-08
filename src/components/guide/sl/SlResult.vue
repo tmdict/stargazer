@@ -1,7 +1,6 @@
 <script lang="ts">
 import type { SlFamily } from '@/lib/pvp/data/types'
 import type { BoardDraw, BoardFormation } from '@/lib/pvp/generator/formation'
-import type { GeneratorFrom } from '@/lib/pvp/generator/handover'
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
@@ -23,21 +22,18 @@ export interface SlShown {
   // Arena or Teams page.
   mode: TeamModeKey
   variant: VariantMatch
-  // The page whose boards the set was drawn on, which Open in takes it back to.
-  from: GeneratorFrom | null
   chance: number
   // The chance of winning each number of maps, from none to all.
   odds: number[]
   teams: SlShownTeam[]
   // The set as one encoded team with each board in the formation given, as
-  // the page draws it and Save as team stores it.
+  // the page draws it and Open in Teams opens it.
   encode: (formations: readonly Pick<BoardFormation, 'units'>[]) => string
 }
 </script>
 
 <script setup lang="ts">
-/* The chosen set: the explanation, Save as team, Open in Arena or Teams for a
-   set drawn on that page's boards, and one column per board. */
+/* The chosen set: the explanation, Open in Teams and one column per board. */
 
 import { computed, ref } from 'vue'
 
@@ -46,20 +42,18 @@ import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
-import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import { shownFormation } from '@/lib/pvp/generator/formation'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
 // data: the set encoded with each board as drawn.
-const { shown, data, saveArmed, openArmed } = defineProps<{
+const { shown, data, openArmed } = defineProps<{
   shown: SlShown
   data: string
-  saveArmed: boolean
   openArmed: boolean
 }>()
 
-const emit = defineEmits<{ save: []; open: [] }>()
+const emit = defineEmits<{ open: [] }>()
 
 const engineOn = defineModel<boolean[]>('engineOn', { required: true })
 
@@ -75,18 +69,6 @@ const switchBoard = (index: number, on: boolean): void => {
 }
 const explaining = ref(false)
 const oneBoard = computed(() => shown.teams.length === 1)
-const openLabel = computed(
-  () =>
-    shown.from &&
-    i18n.t('app.sl-open-in', {
-      page: i18n.t(shown.from === 'arena' ? 'app.arena' : 'app.teams'),
-    }),
-)
-const openWarning = computed(() =>
-  shown.from === 'arena'
-    ? i18n.t('app.confirm-replace-ally')
-    : i18n.t('app.sl-open-replaces', { mode: shown.mode }),
-)
 </script>
 
 <template>
@@ -100,23 +82,15 @@ const openWarning = computed(() =>
         <button
           type="button"
           class="solid-btn sl-action"
-          :class="{ 'confirm-armed': saveArmed }"
-          :title="saveArmed ? i18n.t('app.sl-save-replaces', { mode: shown.mode }) : undefined"
-          @click="emit('save')"
-        >
-          <IconSavePlus :size="14" />
-          <ConfirmLabel :armed="saveArmed" :label="i18n.t('app.sl-save')" />
-        </button>
-        <button
-          v-if="openLabel"
-          type="button"
-          class="solid-btn sl-action"
           :class="{ 'confirm-armed': openArmed }"
-          :title="openArmed ? openWarning : undefined"
+          :title="openArmed ? i18n.t('app.sl-open-replaces', { mode: shown.mode }) : undefined"
           @click="emit('open')"
         >
           <IconArrowUpRight :size="14" />
-          <ConfirmLabel :armed="openArmed" :label="openLabel" />
+          <ConfirmLabel
+            :armed="openArmed"
+            :label="i18n.t('app.sl-open-in', { page: i18n.t('app.teams') })"
+          />
         </button>
       </span>
     </div>

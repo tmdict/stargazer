@@ -1,6 +1,6 @@
 /* A chosen set as one encoded team, the same data a saved team holds: the page
- * draws its boards from it and Save as team stores it, so a saved set opens on
- * the Teams page as the page drew it. Only the ally side is filled, with the
+ * draws its boards from it and Open in Teams hands it over, so the set opens
+ * on the Teams page as the page drew it. Only the ally side is filled, with the
  * selection's levels, in each board's formation (formation.ts). A file from
  * another season than Stargazer's (the gap after a cutover) has its seasonal
  * artifacts and phantimals left out, since their ids name the new season's

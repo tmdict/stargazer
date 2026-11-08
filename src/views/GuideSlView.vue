@@ -4,16 +4,15 @@
    win a match (lib/pvp), chosen in the Supreme League worker (useSlEngine)
    so the page stays responsive. The boards are a Teams mode on one of its map
    lists, picked as on the Teams page, or the boards of the Arena or Teams page
-   where they match no list. A set drawn on a page's boards is offered back
-   with Open in Arena or Teams, and the boards of the page Generate's ↗ opened
-   this one from (lib/pvp/generator/handover) are drawn on arrival. The picker
+   where they match no list. Open in Teams opens the set there as a new team,
+   and the boards of the page Generate's ↗ opened this one from
+   (lib/pvp/generator/handover) are drawn on arrival. The picker
    edits the active roster, or under All heroes a draft (useSlRoster). The set
    is chosen only on Generate and stays as it is while the selection, the mode
    or the maps change. A board draws the formation of its team's recorded game
    where the team was recorded on its map, and the engine's elsewhere; the
    engine's formations of the recorded boards, which their switches show, are
-   worked out in the worker once the set is drawn. Save as team opens the set
-   on the Teams page as drawn.
+   worked out in the worker once the set is drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */
@@ -36,12 +35,7 @@ import type { AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
 import type { SlData } from '@/lib/pvp/data/types'
 import { shownFormation, type BoardFormation } from '@/lib/pvp/generator/formation'
-import {
-  generatorMode,
-  generatorPagePath,
-  isGeneratorFrom,
-  type GeneratorFrom,
-} from '@/lib/pvp/generator/handover'
+import { generatorMode, isGeneratorFrom, type GeneratorFrom } from '@/lib/pvp/generator/handover'
 import { slPicks } from '@/lib/pvp/generator/picks'
 import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
@@ -51,7 +45,6 @@ import {
   DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
   matchVariant,
-  MAX_SAVED_TEAMS,
   TEAM_MODE_ORDER,
   TEAM_MODES,
   variantMaps,
@@ -59,8 +52,6 @@ import {
   type VariantMatch,
 } from '@/lib/teams/modes'
 import { holdsUnsavedWork } from '@/lib/teams/savedTeam'
-import { boardsHoldSide } from '@/lib/teams/sideLoad'
-import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -77,7 +68,7 @@ gameData.initializeData()
 const rosters = useRosters()
 const library = useTeamLibrary()
 const router = useRouter()
-const { error, success, show } = useToast()
+const { show } = useToast()
 const {
   status: engineStatus,
   generate: generateSet,
@@ -145,21 +136,6 @@ const boardsFor = (file: SlData): SlBoard[] => {
     : slBoards(file, variantMaps(mode.value, variant.value ?? DEFAULT_VARIANT))
 }
 
-// The page a set can go back to: one whose boards it is drawn on, the chosen
-// page or the one Generate's ↗ came from first, as the Arena and the Teams
-// page's 1v1 can share a map.
-const backTo = (boards: readonly SlBoard[]): GeneratorFrom | null => {
-  const keys = (layouts: readonly MapLayout[]): string => layouts.map((l) => l.key).join(' ')
-  const drawnOn = keys(boards.map((board) => board.layout))
-  const fits = pageBoards.value.flatMap((own) => (keys(own.layouts) === drawnOn ? [own.page] : []))
-  return (
-    fits.find((page) => page === maps.value) ??
-    fits.find((page) => page === arrived) ??
-    fits[0] ??
-    null
-  )
-}
-
 const shown = ref<SlShown | null>(null)
 // The boards switched to the engine's formation, by index.
 const engineOn = ref<boolean[]>([])
@@ -210,7 +186,6 @@ const generate = async (): Promise<void> => {
     const picks = picksOf(levels.value)
     const chosenFor = { mode: mode.value, variant: variant.value }
     const boards = boardsFor(file)
-    const from = backTo(boards)
     const set = await generateSet(picks, boards)
     const draws = set ? await placeSet(set, boards) : []
     // Each swap is tried once per set and formation, when first shown.
@@ -246,7 +221,6 @@ const generate = async (): Promise<void> => {
     engineOn.value = []
     shown.value = set && {
       ...chosenFor,
-      from,
       chance: set.chance,
       odds: set.odds,
       teams,
@@ -268,78 +242,24 @@ const generate = async (): Promise<void> => {
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-// Save as team replaces the Teams page's boards of the set's mode, so boards
-// there holding work no saved team keeps take a second press.
-const replacesWork = (mode: TeamModeKey): boolean => {
-  const slot = readTeamsSlot(mode)
-  return slot !== null && holdsUnsavedWork(slot.data, library.get(slot.sourceId))
-}
+// Open in Teams replaces the Teams page's boards of the set's mode with a new
+// team, so boards there holding work no saved team keeps take a second press.
 // Scoped to the mode, so a press armed for one mode's boards can never confirm
 // another's.
-const saveKey = (mode: TeamModeKey): string => `save-team:${mode}`
-const saveArmed = computed(
-  () => !!shown.value && armedConfirm.armed.value === saveKey(shown.value.mode),
-)
-
-// The saved team holds the levels the set was chosen with, not the levels
-// shown since. A team kept only in memory still opens on the Teams page. A
-// second press while that page loads saves nothing more.
-let saving = false
-const save = (): void => {
-  if (!shown.value || saving) return
-  const { mode } = shown.value
-  const replacing = replacesWork(mode)
-  if (replacing && !armedConfirm.confirm(saveKey(mode))) {
-    show(i18n.t('app.sl-save-replaces', { mode }), 'info')
-    return
-  }
-  const now = new Date()
-  const date = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
-    .map((n) => String(n).padStart(2, '0'))
-    .join('-')
-  const name =
-    shown.value.variant === 'sl'
-      ? i18n.t('app.sl-team-name', { date })
-      : i18n.t('app.sl-team-name-mode', { mode, date })
-  const team = library.saveAsNew(mode, drawn.value!, name)
-  if (!team) {
-    // The library re-reads storage first, so another tab may have filled it.
-    error(
-      library.teams.length >= MAX_SAVED_TEAMS
-        ? i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS })
-        : i18n.t('app.team-unreadable'),
-    )
-    return
-  }
-  const message = replacing ? 'app.sl-saved-replaced' : 'app.team-saved'
-  if (!library.persisted) error(i18n.t('app.team-not-stored'))
-  else success(i18n.t(message, { name: team.name, mode }))
-  saving = true
-  void router.push({ path: '/teams', state: { openTeam: team.id } }).finally(() => {
-    saving = false
-  })
-}
-
-// Open in Arena replaces your side of the Arena's board, and Open in Teams
-// replaces that mode's boards with a new team, so a press that would lose
-// something there takes a second one.
-const openKey = (from: GeneratorFrom): string => `open:${from}`
+const openKey = (mode: TeamModeKey): string => `open:${mode}`
 const openArmed = computed(
-  () => !!shown.value?.from && armedConfirm.armed.value === openKey(shown.value.from),
+  () => !!shown.value && armedConfirm.armed.value === openKey(shown.value.mode),
 )
-const openReplaces = (from: GeneratorFrom): boolean => {
-  if (from !== 'arena') return replacesWork(from)
-  const saved = readSavedBoards(from)
-  return !!saved && boardsHoldSide(saved, Team.ALLY)
-}
 const open = (): void => {
-  const from = shown.value?.from
-  if (!from || !drawn.value) return
-  if (openReplaces(from) && !armedConfirm.confirm(openKey(from))) {
-    if (from !== 'arena') show(i18n.t('app.sl-open-replaces', { mode: from }), 'info')
+  if (!shown.value || !drawn.value) return
+  const { mode } = shown.value
+  const slot = readTeamsSlot(mode)
+  const replacing = slot !== null && holdsUnsavedWork(slot.data, library.get(slot.sourceId))
+  if (replacing && !armedConfirm.confirm(openKey(mode))) {
+    show(i18n.t('app.sl-open-replaces', { mode }), 'info')
     return
   }
-  void router.push({ path: generatorPagePath(from), state: { generatedSide: drawn.value } })
+  void router.push({ path: '/teams', state: { generatedSide: drawn.value } })
 }
 
 // Opened through Generate's ↗: the page opens on that page's mode and boards
@@ -388,9 +308,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
         v-model:engine-on="engineOn"
         :shown
         :data="drawn"
-        :save-armed
         :open-armed
-        @save="save"
         @open="open"
       />
       <p v-else-if="noSet" class="sl-line">

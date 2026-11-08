@@ -1,8 +1,8 @@
-/* A generated set put on your side of the page's boards: by Generate on the
- * Arena and Teams, and by the set the generator page's Open in Arena hands
- * over (lib/pvp/generator/handover). The Load menu's one-side loader does it,
- * so the enemy side, the maps and the display switches stay. Open in Teams
- * opens its set as a new team instead (TeamsView). */
+/* A generated set put on your side of the page's boards by Generate on the
+ * Arena and Teams. The Load menu's one-side loader does it, so the enemy side,
+ * the maps and the display switches stay. The set the generator page's Open
+ * in Teams hands over (lib/pvp/generator/handover) opens as a new team
+ * instead (TeamsView). */
 
 import { useSelectionState } from '@/composables/useSelectionState'
 import { buildSideLoadPlan } from '@/lib/teams/sideLoad'

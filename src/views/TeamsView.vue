@@ -236,14 +236,6 @@ if (gameDataStore.dataLoaded) {
   const { linkLoaded, linkFailed } = teamsRestore.initialize(getEncodedStateFromUrl())
   if (linkLoaded) success(i18n.t('app.grid-loaded'))
   else if (linkFailed) error(i18n.t('app.invalid-url'))
-  // The PvP team generator's Save as team puts the saved team's id in
-  // the history entry, and that team opens as Load opens it. The id is cleared
-  // once used, so a reload keeps the edits made since.
-  const opened = teamLibrary.get(history.state?.openTeam ?? null)
-  if (opened) {
-    teamsRestore.applyTeamData(opened.mode, opened.data, opened.id)
-    history.replaceState({ ...history.state, openTeam: null }, '')
-  }
   // The generator page's Open in Teams opens its set as a new team, so Save
   // can never overwrite the saved team the boards held.
   const generated = takeGeneratedSide()

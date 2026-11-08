@@ -394,7 +394,8 @@ const SKILL = {
           <li>
             <span>
               The set shows above your heroes: one team on each map, each with its own artifact, and
-              no hero used twice. <b>Save as team</b> saves it and opens it on the Teams page.
+              no hero used twice. <b>Open in Teams</b> opens it on the Teams page as a new team,
+              ready to save.
             </span>
           </li>
         </ol>
@@ -404,8 +405,7 @@ const SKILL = {
           On the Arena and Teams pages,
           <HelpGenerateButton /> fills your side of the grids from your roster in one press.
           <span class="help-inline-btn"><IconArrowUpRight :size="13" /></span> next to it opens this
-          page on those grids, Map editor maps included, and <b>Open in Arena</b> or
-          <b>Open in Teams</b> puts the set back on your side there.
+          page on those grids, Map editor maps included.
         </li>
         <li>
           Under each map, the four bars show how many games stand behind the team,
