@@ -15,7 +15,7 @@ import { slTeamData } from './team'
 import type { SlChoiceTeam, SlPick } from './types'
 
 export interface SlDefaultSet {
-  // The set as one encoded 5v5 team, as Open in Teams hands it over.
+  // The set as one encoded 5v5 team.
   data: string
   teams: (Pick<SlChoiceTeam, 'core' | 'flex' | 'pairs'> & {
     // The map's place in the Supreme League list.

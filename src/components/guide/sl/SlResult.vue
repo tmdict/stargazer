@@ -87,10 +87,7 @@ const oneBoard = computed(() => shown.teams.length === 1)
           @click="emit('open')"
         >
           <IconArrowUpRight :size="14" />
-          <ConfirmLabel
-            :armed="openArmed"
-            :label="i18n.t('app.sl-open-in', { page: i18n.t('app.teams') })"
-          />
+          <ConfirmLabel :armed="openArmed" :label="i18n.t('app.sl-open-in')" />
         </button>
       </span>
     </div>
