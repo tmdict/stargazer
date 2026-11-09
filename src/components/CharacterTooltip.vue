@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* Hover tooltip for a character, shared by the picker icon (CharacterIcon) and the
    placed grid icons (GridCharacters). The caller decides when to show it and supplies
-   the anchor element; this owns the popup body (name only, or the full stat card). */
+   the anchor element; this owns the popup body (name only, or the full stat card,
+   with any lines the caller adds under its rows). */
 
 import { computed } from 'vue'
 
@@ -58,7 +59,9 @@ const rows = computed(() => [
           {{ formattedName }}
           <div v-if="note" class="simple-tooltip-note">{{ note }}</div>
         </div>
-        <TooltipCard v-else :name="formattedName" :rows :hint />
+        <TooltipCard v-else :name="formattedName" :rows :hint>
+          <slot />
+        </TooltipCard>
       </template>
     </TooltipPopup>
   </Teleport>

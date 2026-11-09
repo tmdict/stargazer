@@ -110,7 +110,8 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
     "upgrades": false,
     "targeting": false,
     "coordinates": false,
-    "heroSkin": false
+    "heroSkin": false,
+    "buffTiles": true
   },
   "theme": "dark"
 }

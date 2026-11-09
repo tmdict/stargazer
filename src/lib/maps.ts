@@ -142,6 +142,9 @@ export const modeBuffs = (mode: ModeListKey, mapKey: string): readonly TileBuff[
 export const buffTilesOf = (buffs: readonly TileBuff[]): number[] =>
   buffs.flatMap((buff) => buff.tiles)
 
+export const buffAt = (buffs: readonly TileBuff[], hexId: number): string | undefined =>
+  buffs.find((buff) => buff.tiles.includes(hexId))?.id
+
 // Keyed by filename under src/data/arena/; the key is what `m` sections and
 // TEAM_MODES default lists reference.
 export const MAPS: Record<string, MapConfig> = Object.fromEntries(

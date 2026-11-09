@@ -261,6 +261,7 @@ let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let phantimalLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
+let buffLocalesCache: Record<string, LocaleData> | null = null
 
 // import.meta.glob needs a literal pattern, so each loader globs its own directory
 // and passes the modules in rather than this helper globbing them.
@@ -431,11 +432,21 @@ export function loadGameLocales(): Record<string, LocaleData> {
   return gameLocalesCache
 }
 
+// A buff's sentence, in the skill text's markup, by the id the mode map lists give it.
+function loadBuffLocales(): Record<string, LocaleData> {
+  if (buffLocalesCache) return buffLocalesCache
+  buffLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/buff/*.json', { eager: true, import: 'default' }),
+  )
+  return buffLocalesCache
+}
+
 export function loadAllLocales(): LocaleDictionary {
   return {
     app: loadAppLocales(),
     character: loadCharacterLocales(),
     artifact: loadArtifactLocales(),
     game: loadGameLocales(),
+    buff: loadBuffLocales(),
   }
 }

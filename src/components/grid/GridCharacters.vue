@@ -6,6 +6,8 @@ import PhantimalTooltip from '../PhantimalTooltip.vue'
 import HoldRing from '../ui/HoldRing.vue'
 import IconInfo from '../ui/IconInfo.vue'
 import TooltipPopup from '../ui/TooltipPopup.vue'
+import BuffTileText from './BuffTileText.vue'
+import BuffTileTooltip from './BuffTileTooltip.vue'
 import GridPointer from './GridPointer.vue'
 import UnitBadge from './UnitBadge.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
@@ -26,6 +28,7 @@ import {
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
+import { buffAt } from '@/lib/maps'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -47,6 +50,7 @@ interface Props {
   faded?: ReadonlySet<number> | null
   showSkin: boolean
   showSkills: boolean
+  showBuffTiles?: boolean
   isMapEditorMode: boolean
   readonly?: boolean
   // The sheet layout's tap-to-lift instead of desktop click-to-remove.
@@ -68,7 +72,9 @@ const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelection
 // any placement change, since an icon removed/swapped from under a still cursor
 // fires no mouseleave.
 type HoverCard =
-  { kind: 'hero'; hero: CharacterType } | { kind: 'phantimal'; phantimal: PhantimalType }
+  | { kind: 'hero'; hero: CharacterType; buff?: string }
+  | { kind: 'phantimal'; phantimal: PhantimalType; buff?: string }
+  | { kind: 'buff'; buff: string }
 const {
   hoveredEl,
   hovered: hoveredCard,
@@ -114,7 +120,8 @@ const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number
 
 const hoverHint = computed(() => {
   const card = hoveredCard.value
-  const inspectable = card?.kind === 'phantimal' || (card && heroInspectTarget(card.hero))
+  const inspectable =
+    card?.kind === 'phantimal' || (card?.kind === 'hero' && heroInspectTarget(card.hero))
   // The two rows are never both on, so the one on is the one showing this card.
   const off = props.showHover ? 'app.turn-off-hover-details' : 'app.turn-off-placement-tips'
   return [...(inspectable ? [i18n.t('app.hold-for-skills')] : []), i18n.t(off)]
@@ -321,10 +328,21 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 // Hover runs on readonly boards too: the card is pure information gated by
 // the pref alone, and the event-bus emits just report the pointer; listeners
 // own their interactivity policy (GridTiles ignores these on readonly).
+// A unit's own card names the buff tile it stands on. A unit with no card of
+// its own shows the buff's card, unless it is an ally whose card is Placement
+// tips', which already names the tile.
+const hoverCardAt = (hexId: number, characterId: number): HoverCard | undefined => {
+  const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
+  const buff = props.showBuffTiles ? buffAt(ctx.buffs, hexId) : undefined
+  const own = props.showHover || (props.showRules && enemy) ? cardAt(characterId) : undefined
+  if (buff === undefined) return own
+  if (own) return { ...own, buff }
+  return props.showRules && !enemy ? undefined : { kind: 'buff', buff }
+}
+
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
   gridEvents.emit('character:mouseenter', hexId)
-  const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
-  if (props.showHover || (props.showRules && enemy)) show(event, cardAt(characterId))
+  show(event, hoverCardAt(hexId, characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
@@ -543,12 +561,21 @@ const liftedMode = computed(() =>
       :target-element="hoveredEl"
       variant="detailed"
       :hint="hoverHint"
-    />
+    >
+      <BuffTileText v-if="hoveredCard.buff" :buff="hoveredCard.buff" heading />
+    </CharacterTooltip>
     <PhantimalTooltip
       v-else-if="hoveredEl && hoveredCard?.kind === 'phantimal'"
       :phantimal="hoveredCard.phantimal"
       :target-element="hoveredEl"
       :hint="hoverHint"
+    >
+      <BuffTileText v-if="hoveredCard.buff" :buff="hoveredCard.buff" heading />
+    </PhantimalTooltip>
+    <BuffTileTooltip
+      v-else-if="hoveredEl && hoveredCard?.kind === 'buff'"
+      :buff="hoveredCard.buff"
+      :target-element="hoveredEl"
     />
   </div>
 </template>

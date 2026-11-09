@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
+import BuffTileTooltip from './BuffTileTooltip.vue'
 import GridArrows from './GridArrows.vue'
 import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
@@ -13,12 +14,14 @@ import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
+import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { usePlacementTips } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { teamHasOpenSlot } from '@/lib/characters/character'
+import { hasCharacter, teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import { BOARD_SIZE } from '@/lib/layout'
+import { buffAt } from '@/lib/maps'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
@@ -75,6 +78,20 @@ const {
   () => gridCharactersRef.value?.liftActionsEl,
 )
 const rulesArtifactMark = computed(() => rulesCard.value && (rulesCard.value.artifact ?? 'faded'))
+
+// An empty buff tile's card; a unit's card names the tile it stands on.
+const {
+  hoveredEl: buffTileEl,
+  hovered: buffTileCard,
+  show: showBuffTileCard,
+  hide: hideBuffTileCard,
+} = useGridHoverTooltip<string, Element>(() => ctx.placements)
+
+const handleTileEnter = (event: MouseEvent, hexId: number) => {
+  if (props.info.buffTiles && !hasCharacter(ctx.grid, hexId)) {
+    showBuffTileCard(event, buffAt(ctx.buffs, hexId))
+  }
+}
 
 const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
@@ -260,6 +277,9 @@ defineExpose({
       :show-skills
       :readonly
       :rules="rulesCard"
+      :show-buff-tiles="info.buffTiles"
+      @tile-enter="handleTileEnter"
+      @tile-leave="hideBuffTileCard"
     />
 
     <!-- Artifact layer (behind characters). Team-view hiding and invert-aware
@@ -284,6 +304,7 @@ defineExpose({
       :faded="rulesFaded"
       :show-skin="info.heroSkin"
       :show-skills
+      :show-buff-tiles="info.buffTiles"
       :is-map-editor-mode
       :readonly
       :tap-mode
@@ -317,6 +338,12 @@ defineExpose({
     :better="rulesCard.better.length > 0"
     page-look
     :hint="i18n.t('app.turn-off-placement-tips')"
+  />
+
+  <BuffTileTooltip
+    v-if="buffTileEl && buffTileCard"
+    :buff="buffTileCard"
+    :target-element="buffTileEl"
   />
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

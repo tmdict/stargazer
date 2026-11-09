@@ -12,7 +12,7 @@ import type { PlacementTip } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
-import { BOARD_SIZE, type Layout } from '@/lib/layout'
+import { BOARD_SIZE, type Layout, type Point } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -34,9 +34,16 @@ interface Props {
   showSkills: boolean
   readonly?: boolean
   rules?: PlacementTip | null
+  showBuffTiles?: boolean
 }
 
 const props = defineProps<Props>()
+
+// Every board hovers its tiles, a readonly one too, for the cards GridManager draws.
+const emit = defineEmits<{
+  tileEnter: [event: MouseEvent, hexId: number]
+  tileLeave: []
+}>()
 
 // Base (unscaled) render constants
 const BASE_STROKE_WIDTH = 2
@@ -131,14 +138,19 @@ const scaledStrokeWidth = computed(() => {
 // Inside the tile's border and bevel, which would hide the dashes.
 const OUTLINE_SCALE = 0.75
 
-const cornerPoints = (hexId: number, scale = 1): string => {
+const scaledCorners = (hexId: number, scale = 1): Point[] => {
   const hex = ctx.grid.getHexById(hexId)
   const center = ctx.layout.hexToPixel(hex)
-  return ctx.layout
-    .polygonCorners(hex)
-    .map((p) => `${center.x + (p.x - center.x) * scale},${center.y + (p.y - center.y) * scale}`)
-    .join(' ')
+  return ctx.layout.polygonCorners(hex).map((p) => ({
+    x: center.x + (p.x - center.x) * scale,
+    y: center.y + (p.y - center.y) * scale,
+  }))
 }
+
+const cornerPoints = (hexId: number, scale = 1): string =>
+  scaledCorners(hexId, scale)
+    .map((p) => `${p.x},${p.y}`)
+    .join(' ')
 
 const rulesMarks = computed(() => {
   const rules = props.rules
@@ -162,6 +174,31 @@ const rulesMarks = computed(() => {
     outline: 2.4 * scale,
     ring: 3.2 * scale,
   }
+})
+
+// A buff tile's marks: a stroke at each corner of an outline inside the tile's
+// border, running this share of the way along both edges.
+const BUFF_MARK_SCALE = 0.88
+const BUFF_MARK_REACH = 0.24
+
+const toward = (from: Point, to: Point): string =>
+  `${from.x + (to.x - from.x) * BUFF_MARK_REACH},${from.y + (to.y - from.y) * BUFF_MARK_REACH}`
+
+const buffMarks = computed(() => {
+  if (!props.showBuffTiles) return []
+  const shown = new Set(props.hexes.map((hex) => hex.getId()))
+  return ctx.buffTiles
+    .filter((hexId) => shown.has(hexId))
+    .map((hexId) => ({
+      hexId,
+      tile: cornerPoints(hexId),
+      strokes: scaledCorners(hexId, BUFF_MARK_SCALE)
+        .map((p, i, all) => {
+          const [before, after] = [all.at(i - 1)!, all[(i + 1) % all.length]!]
+          return `M${toward(p, before)} L${p.x},${p.y} L${toward(p, after)}`
+        })
+        .join(' '),
+    }))
 })
 
 let blockHoverTimeout: number | null = null
@@ -208,6 +245,16 @@ const handleHexMouseLeave = (hex: Hex) => {
   if (hoveredHex.value === hex.getId()) {
     hoveredHex.value = null
   }
+}
+
+const handleTileEnter = (event: MouseEvent, hex: Hex) => {
+  if (!props.readonly) handleHexMouseEnter(hex)
+  emit('tileEnter', event, hex.getId())
+}
+
+const handleTileLeave = (hex: Hex) => {
+  if (!props.readonly) handleHexMouseLeave(hex)
+  emit('tileLeave')
 }
 
 const handleMapEditorMouseDown = () => {
@@ -526,6 +573,21 @@ onUnmounted(() => {
         <!-- Skill zone outlines and lane boundaries: on the tiles, so under the portraits -->
         <SkillCornerLines v-if="showSkills" />
 
+        <!-- Board information like the tile numbers, so it stays in exported images.
+             The image keeps a shape's own attributes, not its stylesheet's caps. -->
+        <g v-if="buffMarks.length" class="buff-marks">
+          <template v-for="mark in buffMarks" :key="`buff-${mark.hexId}`">
+            <polygon class="buff-fill" :points="mark.tile" />
+            <path
+              class="buff-corners"
+              :d="mark.strokes"
+              :stroke-width="3 * ctx.hexScale"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </template>
+        </g>
+
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
         <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
@@ -577,8 +639,8 @@ onUnmounted(() => {
             stroke="transparent"
             stroke-width="0"
             @click="!readonly && gridEvents.emit('hex:click', hex, $event)"
-            @mouseenter="!readonly && handleHexMouseEnter(hex)"
-            @mouseleave="!readonly && handleHexMouseLeave(hex)"
+            @mouseenter="handleTileEnter($event, hex)"
+            @mouseleave="handleTileLeave(hex)"
             @dragover="!readonly && handleHexDragOver($event, hex)"
             @dragleave="!readonly && handleHexDragLeave($event, hex)"
             @drop="!readonly && handleHexDrop($event, hex)"
@@ -661,6 +723,19 @@ onUnmounted(() => {
 
 .rules-ring.focus {
   stroke: var(--placement-ring-focus);
+}
+
+.buff-marks {
+  pointer-events: none;
+}
+
+.buff-fill {
+  fill: var(--buff-tile-fill);
+}
+
+.buff-corners {
+  fill: none;
+  stroke: var(--buff-tile);
 }
 
 .tile-id {

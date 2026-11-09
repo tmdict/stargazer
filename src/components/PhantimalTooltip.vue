@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /* Hover card for a phantimal, shared by the phantimal picker and the placed
    grid icons (GridCharacters). The caller decides when to show it, supplies the
-   anchor element, and adds any rows of its own after the phantimal's. */
+   anchor element, and adds any rows of its own after the phantimal's and any
+   lines under them. */
 
 import { computed } from 'vue'
 
@@ -37,7 +38,9 @@ const rows = computed(() => [
   <Teleport to="body">
     <TooltipPopup :target-element variant="detailed">
       <template #content>
-        <TooltipCard :name :rows :hint />
+        <TooltipCard :name :rows :hint>
+          <slot />
+        </TooltipCard>
       </template>
     </TooltipPopup>
   </Teleport>

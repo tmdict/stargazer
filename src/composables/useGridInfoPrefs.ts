@@ -28,6 +28,7 @@ export interface GridInfoPrefs {
   targeting: boolean
   coordinates: boolean
   heroSkin: boolean
+  buffTiles: boolean
 }
 
 export type GridInfoKey = keyof GridInfoPrefs
@@ -43,6 +44,7 @@ export interface GridInfoView {
   upgrades: boolean
   targeting: boolean
   heroSkin: boolean
+  buffTiles: boolean
 }
 
 export const GRID_INFO_DEFAULTS: Readonly<GridInfoPrefs> = {
@@ -55,6 +57,7 @@ export const GRID_INFO_DEFAULTS: Readonly<GridInfoPrefs> = {
   targeting: false,
   coordinates: false,
   heroSkin: false,
+  buffTiles: true,
 }
 
 const PREF_KEYS = Object.keys(GRID_INFO_DEFAULTS) as GridInfoKey[]
@@ -72,6 +75,7 @@ const EITHER_OR: Partial<Record<GridInfoKey, GridInfoKey>> = { hover: 'rules', r
 const MENU_ROWS: readonly { key: GridInfoKey; label: string }[] = [
   { key: 'tileIds', label: 'tile-ids' },
   { key: 'coordinates', label: 'coordinates' },
+  { key: 'buffTiles', label: 'buff-tiles' },
   { key: 'hover', label: 'hover-details' },
   { key: 'rules', label: 'placement-tips' },
   { key: 'targeting', label: 'targeting' },
@@ -104,6 +108,7 @@ export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
     upgrades: effective('upgrades'),
     targeting: effective('targeting'),
     heroSkin: effective('heroSkin'),
+    buffTiles: effective('buffTiles'),
   }
 }
 
@@ -117,6 +122,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
   upgrades: false,
   targeting: false,
   heroSkin: false,
+  buffTiles: false,
 })
 
 // The stored slice merged over the defaults (booleans only, so a wrong-typed

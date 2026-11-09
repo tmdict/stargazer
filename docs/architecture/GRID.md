@@ -155,6 +155,8 @@ Links and saved boards store every non-default tile, so an edited map round-trip
 
 The map dropdown in the Arena's tab bar, shown at 1,320 px and wider, lists every board of the Supreme League and Guild Duel lists ("SL Arena 3", "GD Arena 2"). A pick moves the board onto that map with the buffs it has on that mode's list ([Teams](./TEAMS.md#modes-and-types)), and the dropdown names the row picked. The Arena's saved board and its links carry no map key, so the pick is kept apart from them under `stargazer.arena.variant`, as plain text: the mode of the row picked, `sl` or `gd`, such as `gd`. A map is on a mode's list at most once, so the mode and the board's map give the row. The key is written on a pick and removed when the board becomes a plain map: a pick in the Maps tab, a tile edit, an opened link, or a saved team loaded onto another map. On load the pick holds only when the board's map is on that mode's list, and anything else reads as no pick. A plain map carries no buffs, and the dropdown then shows "Arena".
 
+With Grid Info's Buff tiles row on, `GridTiles` draws gold corner marks on the board's buff tiles, under the portraits. They are board information like the tile numbers, so image exports keep them, while Placement tips' marks stay out. Hovering an empty buff tile opens a Buff Tile card with the buff's text. A unit on one adds that text to its own card, or shows the Buff Tile card when it has no card of its own, except an ally under Placement tips, whose card already names the tile. Touch screens show the marks and no card.
+
 ## Related documentation
 
 - [Companion Skills](./skills/COMPANION.md): companion spawn, rollback and removal
