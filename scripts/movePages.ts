@@ -121,7 +121,7 @@ const recoveryScript = (strings: Record<string, Record<string, string>>): string
   add('h1', t.title)
 
   var bring = new URLSearchParams(location.search).get('bring')
-  // Off the old address there is nothing of the old address's to send.
+  // Only the old address holds data to send.
   if (bring !== null && location.hostname === ${text(OLD_HOST)}) {
     var page = /^\\/(?![\\/\\\\])/.test(bring) ? bring.split('#')[0] : '/'
     var status = add('p', t.working)
@@ -206,7 +206,9 @@ export function movePages(): Plugin[] {
           if (MOVE_STAGE !== 1) return html
           // The app waits forever on the old address, so a page without the
           // script would never leave it.
-          if (!html.includes('<title>')) throw new Error('index.html has no <title> to put the sender before')
+          if (!html.includes('<title>')) {
+            throw new Error('index.html has no <title> to put the sender before')
+          }
           return html.replace('<title>', () => `<script>${SENDER}</script>\n    <title>`)
         },
       },
@@ -232,7 +234,9 @@ export function movePages(): Plugin[] {
         }
         // The host takes the first rule that matches.
         if (backup === -1 || (all !== -1 && all < backup)) {
-          this.error(`public/_redirects must serve https://${OLD_HOST}/backup above any rule for https://${OLD_HOST}/*`)
+          this.error(
+            `public/_redirects must serve https://${OLD_HOST}/backup above any rule for https://${OLD_HOST}/*`,
+          )
         }
       },
       generateBundle() {

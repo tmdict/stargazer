@@ -8,7 +8,7 @@ const FLAGS_KEY = 'stargazer.flags'
 
 const FLAG_NAMES = ['whatsNew', 'skillLocaleHint', 'moved'] as const
 
-export type FlagName = (typeof FLAG_NAMES)[number]
+type FlagName = (typeof FLAG_NAMES)[number]
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
