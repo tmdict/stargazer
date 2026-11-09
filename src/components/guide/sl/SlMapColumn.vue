@@ -6,7 +6,7 @@
    --pt for the portraits, and --sl-unit, the length of one of the generator
    page's pixels, for the gaps and icons of the core and swap rows (1px there, a
    share of its column's width on the guide index's card, which shows no
-   counts). */
+   counts). Right-click on a portrait opens the hero's skills. */
 
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
@@ -19,11 +19,14 @@ import SlPortrait from './SlPortrait.vue'
 import type { SlShownTeam } from './SlResult.vue'
 import SlSwapCard from './SlSwapCard.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { unitInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import type { PreviewBoard } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
+import { isTouchClick } from '@/utils/pointer'
 import { useSlNames } from './useSlNames'
 
 const {
@@ -82,6 +85,20 @@ const heroesOn = (key: string, heroes: number[]) =>
   tipOn(infoTip, () => ({ title: interpolateParts(i18n.t(key), { heroes: cardNames(heroes) }) }))
 const optionOn = (out: number[], into: number[]) =>
   canTry.value ? tipOn(swapTip, () => ({ out, into })) : heroesOn('app.sl-swap-heroes', into)
+
+const { inspect } = useInspect()
+const { onContextMenu } = useLongPress<InspectTarget>((target) => {
+  close()
+  infoTip.close()
+  void inspect(target)
+})
+
+// A touch long-press is left to the browser: these portraits have no hold
+// gesture.
+const inspectHero = (event: MouseEvent, id: number): void => {
+  const target = unitInspectTarget(id)
+  if (target && !isTouchClick(event)) onContextMenu(event, target)
+}
 
 // Columns are kept by board when another set is drawn, and a swap is tried on
 // one team in one formation.
@@ -149,6 +166,7 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
               :id
               :titled="false"
               v-on="heroesOn('app.sl-core-heroes', [id])"
+              @contextmenu="inspectHero($event, id)"
             />
           </span>
         </template>
@@ -168,7 +186,13 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
           >
             <span class="sl-from">
               <span class="sl-pair" v-on="heroesOn('app.sl-flex-heroes', swap.out)">
-                <SlPortrait v-for="id in swap.out" :key="id" :id :titled="false" />
+                <SlPortrait
+                  v-for="id in swap.out"
+                  :key="id"
+                  :id
+                  :titled="false"
+                  @contextmenu="inspectHero($event, id)"
+                />
               </span>
               <SlIcon name="arrow" class="sl-arrow" />
             </span>
@@ -180,7 +204,13 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
                 :class="{ 'sl-try': canTry }"
                 v-on="optionOn(swap.out, option)"
               >
-                <SlPortrait v-for="id in option" :key="id" :id :titled="false" />
+                <SlPortrait
+                  v-for="id in option"
+                  :key="id"
+                  :id
+                  :titled="false"
+                  @contextmenu="inspectHero($event, id)"
+                />
               </span>
             </span>
           </span>

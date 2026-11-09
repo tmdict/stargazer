@@ -1,9 +1,12 @@
 import { computed, nextTick, ref, shallowRef } from 'vue'
 
+import { toBaseHeroId } from '@/lib/characters/character'
+import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import type { TagPick } from '@/lib/types/skill'
+import { useGameDataStore } from '@/stores/gameData'
 import { hasSkillLocale } from '@/utils/dataLoader'
 
 /* The inspect gesture's detail popup (long-press, right-click, the lifted
@@ -28,6 +31,18 @@ export const heroInspectTarget = (
   chips?: readonly TagPick[],
 ): InspectTarget | null =>
   !hero.placeholder && hasSkillLocale(hero.name) ? { kind: 'hero', slug: hero.name, chips } : null
+
+// A unit on a board opens its owner: a companion or synergy copy its hero's
+// skills, a phantimal's companion its phantimal's.
+export const unitInspectTarget = (unitId: number): InspectTarget | null => {
+  const gameData = useGameDataStore()
+  if (inPhantimalBand(unitId)) {
+    const phantimal = gameData.getPhantimalById(phantimalOwnerId(unitId))
+    return phantimal ? { kind: 'phantimal', phantimal } : null
+  }
+  const hero = gameData.getCharacterById(toBaseHeroId(unitId))
+  return hero ? heroInspectTarget(hero) : null
+}
 
 export function useInspect() {
   // The target's modal mounts closed and opens a tick later, so its enter

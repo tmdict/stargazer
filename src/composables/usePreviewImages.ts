@@ -1,6 +1,5 @@
 import type { ThumbnailArtifact, ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
-import { toPhantimalId } from '@/lib/characters/phantimal'
-import type { PreviewArtifact, PreviewUnit } from '@/lib/teams/preview'
+import { previewUnitId, type PreviewArtifact, type PreviewUnit } from '@/lib/teams/preview'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -18,8 +17,7 @@ export function usePreviewImages() {
   })
 
   const unitImage = (unit: PreviewUnit): string | undefined => {
-    const unitId =
-      unit.phantimalLocal !== undefined ? toPhantimalId(unit.phantimalLocal) : unit.characterId
+    const unitId = previewUnitId(unit)
     const name = unitId === undefined ? undefined : gameData.getCharacterImageNameById(unitId)
     return (name && gameData.getCharacterImage(name)) || undefined
   }

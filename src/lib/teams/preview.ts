@@ -4,6 +4,7 @@
  * the component layer (it needs the game-data store); this split keeps the
  * mapping unit-testable headless. */
 
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { resolveBoardMap } from '@/lib/maps'
 import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
@@ -31,6 +32,11 @@ export interface PreviewUnit {
 
 // An artifact slot: a resolvable id, a retired seasonal placeholder, or empty.
 export type PreviewArtifact = number | { retiredSeason: number } | null
+
+// The unit id a live board would hold; none for retired seasonal content.
+export function previewUnitId(unit: PreviewUnit): number | undefined {
+  return unit.phantimalLocal !== undefined ? toPhantimalId(unit.phantimalLocal) : unit.characterId
+}
 
 /* A main-lineup hero: not a phantimal, not a companion summon. */
 export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {

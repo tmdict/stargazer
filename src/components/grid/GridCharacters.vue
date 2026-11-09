@@ -13,7 +13,7 @@ import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { heroInspectTarget, unitInspectTarget, useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
@@ -88,24 +88,14 @@ const cardAt = (characterId: number): HoverCard | undefined => {
   return hero && { kind: 'hero', hero }
 }
 
-// Inspect (long-press, right-click, the lifted unit's Skills button).
-// Companions and synergy copies open their owner hero's skills; a phantimal's
-// companion opens its phantimal's. Units with no page (placeholders, heroes
-// without skill text, retired phantimals) have no inspect gesture at all.
+// Inspect (long-press, right-click, the lifted unit's Skills button). Units
+// with no page (placeholders, heroes without skill text, retired phantimals)
+// have no inspect gesture at all.
 const { inspect } = useInspect()
-
-const inspectTargetOf = (unitId: number): InspectTarget | null => {
-  if (inPhantimalBand(unitId)) {
-    const phantimal = gameDataStore.getPhantimalById(phantimalOwnerId(unitId))
-    return phantimal ? { kind: 'phantimal', phantimal } : null
-  }
-  const hero = props.characters.find((c) => c.id === toBaseHeroId(unitId))
-  return hero ? heroInspectTarget(hero) : null
-}
 
 const inspectAt = (hexId: number): void => {
   const unitId = getCharacter(ctx.grid, hexId)
-  const target = unitId === undefined ? null : inspectTargetOf(unitId)
+  const target = unitId === undefined ? null : unitInspectTarget(unitId)
   if (!target) return
   hideTooltip()
   void inspect(target)
@@ -114,12 +104,12 @@ const inspectAt = (hexId: number): void => {
 const { pressing: holdingHexId, start: startHold, onContextMenu } = useLongPress(inspectAt)
 
 const handlePointerDown = (event: PointerEvent, hexId: number, characterId: number) => {
-  if (!props.isMapEditorMode && inspectTargetOf(characterId)) startHold(event, hexId)
+  if (!props.isMapEditorMode && unitInspectTarget(characterId)) startHold(event, hexId)
 }
 
 // A unit with no page keeps the browser's own menu.
 const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number) => {
-  if (!props.isMapEditorMode && inspectTargetOf(characterId)) onContextMenu(event, hexId)
+  if (!props.isMapEditorMode && unitInspectTarget(characterId)) onContextMenu(event, hexId)
 }
 
 const hoverHint = computed(() => {
@@ -155,7 +145,7 @@ const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
   const unitId = getCharacter(ctx.grid, hexId)
-  if (unitId === undefined || !inspectTargetOf(unitId)) return null
+  if (unitId === undefined || !unitInspectTarget(unitId)) return null
   const half = characterDimensions.value.size / 2
   const below = spriteLayerY(hexId, -half - LIFT_PILL_ROOM) < ctx.drawnBounds.y
   const pointer = ctx.perspective ? STANDING_POINTER_HEIGHT : 0

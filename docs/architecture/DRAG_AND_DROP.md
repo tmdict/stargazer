@@ -88,7 +88,7 @@ While Syn is on, a picker click on a hero already placed on a team with a free a
 
 ## Inspecting units
 
-A placed unit opens its details without leaving the board: heroes open the skill modal, phantimals the phantimal modal and artifacts the artifact modal, and companions and synergy copies open their owner's. A unit with no page (a placeholder, a hero without skill text, retired content) has no inspect gesture and keeps the browser's own menu. The pickers and the other hero icons inspect the same way, with two exceptions. The empty-tile popups close when the pointer leaves them, so the modal would close the popup it opened from. The Skills hero list's icons are links, and a right-click there keeps the browser's link menu.
+A placed unit opens its details without leaving the board: heroes open the skill modal, phantimals the phantimal modal and artifacts the artifact modal, and companions and synergy copies open their owner's. A unit with no page (a placeholder, a hero without skill text, retired content) has no inspect gesture and keeps the browser's own menu. The pickers and the other hero icons inspect the same way, with two exceptions. The empty-tile popups close when the pointer leaves them, so the modal would close the popup it opened from. The Skills hero list's icons are links, and a right-click there keeps the browser's link menu. The PvP team generator's boards and their Core and Flex portraits open on a right-click alone and leave a touch long-press to the browser.
 
 Every surface calls `useInspect`, a module-level target that `InspectModals`, mounted once at the app root, renders. The modal for the target's kind mounts closed and opens a tick later, so its enter transition plays.
 

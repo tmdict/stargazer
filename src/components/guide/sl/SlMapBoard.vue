@@ -3,13 +3,16 @@
    why it stands where it does, rings it and the units the card names and
    outlines the free tiles the unit could take as well (dashed) or better
    (green). A swap tried below the board draws its heroes on the tiles they
-   would take and fades the units that leave. */
+   would take and fades the units that leave. Right-click opens a unit's or
+   the artifact's skills. */
 
 import { computed, useTemplateRef } from 'vue'
 
 import SlPlacementCard from './SlPlacementCard.vue'
 import BoardThumbnail from '@/components/grid/BoardThumbnail.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { unitInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import { usePreviewImages } from '@/composables/usePreviewImages'
 import { inPhantimalBand, phantimalBandLocal } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
@@ -20,8 +23,10 @@ import {
   type UnitPlacement,
 } from '@/lib/placement/explain'
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
-import type { PreviewBoard, PreviewUnit } from '@/lib/teams/preview'
+import { previewUnitId, type PreviewBoard, type PreviewUnit } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
+import { isTouchClick } from '@/utils/pointer'
 
 const {
   board,
@@ -36,8 +41,17 @@ const {
 // The artifact's card has no unit and no tiles of its own.
 type Shown = Pick<UnitPlacement, 'reasons' | 'alsoFine' | 'better'> & { unit?: number }
 
+const gameData = useGameDataStore()
 const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
-const { anchor, payload: shown, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Shown>()
+const {
+  anchor,
+  payload: shown,
+  hoverOpen,
+  hoverClose,
+  toggle,
+  onTouchStart,
+  close,
+} = useInfoTip<Shown>()
 const thumbnailView = useTemplateRef<InstanceType<typeof BoardThumbnail>>('thumbnail')
 
 // The unit on a tile, when it has a card.
@@ -65,6 +79,41 @@ const onOver = (event: Event): void => {
 const onClick = (event: Event): void => {
   const found = shownAt(event.target)
   if (found) toggle(...found)
+}
+
+// The unit drawn on each tile, a swap's included.
+const unitIds = computed(() => {
+  const ids = new Map<number, number>()
+  for (const unit of board.units) {
+    const id = previewUnitId(unit)
+    if (id !== undefined) ids.set(unit.hexId, id)
+  }
+  for (const [hexId, unit] of swap?.joined ?? []) ids.set(hexId, unit)
+  return ids
+})
+
+const inspectedAt = (target: EventTarget | null): InspectTarget | null => {
+  if (!(target instanceof Element)) return null
+  const unit = target.closest<SVGElement>('[data-hex]')
+  if (unit) {
+    const id = unitIds.value.get(Number(unit.dataset.hex))
+    return id === undefined ? null : unitInspectTarget(id)
+  }
+  const slot = target.closest('[data-artifact="ally"]') ? board.artifacts.ally : null
+  const artifact = typeof slot === 'number' ? gameData.getArtifactById(slot) : undefined
+  return artifact ? { kind: 'artifact', artifact } : null
+}
+
+const { inspect } = useInspect()
+const { onContextMenu } = useLongPress<InspectTarget>((target) => {
+  close()
+  void inspect(target)
+})
+
+// A touch long-press is left to the browser: this board has no hold gesture.
+const onRightClick = (event: MouseEvent): void => {
+  const target = inspectedAt(event.target)
+  if (target && !isTouchClick(event)) onContextMenu(event, target)
 }
 
 const lit = computed(() =>
@@ -146,6 +195,7 @@ const unitCardAnchor = computed(() => {
     @mouseover="onOver"
     @mouseout="hoverClose"
     @click="onClick"
+    @contextmenu="onRightClick"
     @touchstart.passive="onTouchStart"
   />
   <SlPlacementCard
