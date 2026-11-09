@@ -1,5 +1,5 @@
 {
-  "en": "A {recorded} board shows the formation players used with that team on that map, and the switch in its corner shows the {suggested} one. Other boards show the {suggested} formation, worked out from the heroes' skills, the artifact, the phantimal and how heroes usually stand. On a map with recorded games, where the heroes stand doesn't change the chance.",
-  "zh": "{recorded}棋盘画出玩家在这张地图上用这支队伍时的布阵，点棋盘角上的切换可以改看{suggested}的布阵。其他棋盘都用{suggested}的布阵，根据英雄技能、神器、幻灵和英雄通常的站位算出。在有记录对局的地图上，英雄站在哪里不影响胜率。",
-  "ko": "{recorded} 보드에는 플레이어가 그 맵에서 이 팀으로 쓴 배치가 나오고, 보드 모서리의 전환 버튼을 누르면 {suggested} 배치를 볼 수 있습니다. 다른 보드는 영웅 스킬, 메아리, 팬텀과 영웅이 보통 서는 자리를 바탕으로 정한 {suggested} 배치로 나옵니다. 기록된 전투가 있는 맵에서는 영웅이 서는 자리가 승률을 바꾸지 않습니다."
+  "en": "A {recorded} board shows the formation players used with that team on that map, and the switch in its corner shows the {suggested} one. Other boards show the {suggested} formation, worked out from the heroes' skills, the artifact and the phantimal. On a map with recorded games, where the heroes stand doesn't change the chance.",
+  "zh": "{recorded}棋盘画出玩家在这张地图上用这支队伍时的布阵，点棋盘角上的切换可以改看{suggested}的布阵。其他棋盘都用{suggested}的布阵，根据英雄技能、神器和幻灵算出。在有记录对局的地图上，英雄站在哪里不影响胜率。",
+  "ko": "{recorded} 보드에는 플레이어가 그 맵에서 이 팀으로 쓴 배치가 나오고, 보드 모서리의 전환 버튼을 누르면 {suggested} 배치를 볼 수 있습니다. 다른 보드는 영웅 스킬, 메아리, 팬텀을 바탕으로 정한 {suggested} 배치로 나옵니다. 기록된 전투가 있는 맵에서는 영웅이 서는 자리가 승률을 바꾸지 않습니다."
 }

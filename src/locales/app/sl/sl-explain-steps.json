@@ -1,5 +1,5 @@
 {
-  "en": "Older seasons' games, anything seen in only a few games, and wins with an upgrade advantage or a strong artifact count for less. Wins against strong opponents count for more. A team taken from another map, as on a map with no recorded games yet, gets a lower chance where its skills do less.",
-  "zh": "越早赛季的对局、只在少数对局中出现的情况，以及有强化优势或强力神器时的胜场，都算得更少；战胜强敌的胜场算得更多。队伍取自其他地图时（比如还没有记录对局的地图），如果它的技能在这张地图上效果更差，胜率也会更低。",
-  "ko": "이전 시즌의 전투, 몇 판에서만 보인 결과, 강화가 앞서거나 강한 메아리를 들고 거둔 승리는 낮게 반영하고, 강한 상대를 이긴 승리는 높게 반영합니다. 아직 기록된 전투가 없는 맵처럼 다른 맵에서 가져온 팀은, 이 맵에서 스킬 효과가 덜하면 승률이 낮아집니다."
+  "en": "Older seasons' games, anything seen in only a few games, and wins with an upgrade advantage or a strong artifact count for less. Wins against strong opponents count for more. Any team gets a lower chance on a map where its skills do less, such as a team taken from another map when a map has no recorded games yet.",
+  "zh": "越早赛季的对局、只在少数对局中出现的情况，以及有强化优势或强力神器时的胜场，都算得更少；战胜强敌的胜场算得更多。无论哪支队伍，技能在这张地图上效果更差时，胜率都会更低，比如为还没有记录对局的地图从其他地图取来的队伍。",
+  "ko": "이전 시즌의 전투, 몇 판에서만 보인 결과, 강화가 앞서거나 강한 메아리를 들고 거둔 승리는 낮게 반영하고, 강한 상대를 이긴 승리는 높게 반영합니다. 어느 팀이든 이 맵에서 스킬 효과가 덜하면 승률이 낮아집니다. 아직 기록된 전투가 없는 맵에 다른 맵에서 가져온 팀을 쓸 때가 그런 예입니다."
 }
