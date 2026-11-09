@@ -2,12 +2,12 @@
  * portrait. The in-game card is a head crop of the same painting the app
  * bundles, at a zoom that varies slightly per hero, so each portrait
  * contributes a grid of crop windows and the best window wins. Ranking runs
- * once at the centre alignment against the whole table, then the other
- * offsets and a finer window grid only for the leaders, which keeps a
- * screenshot to about a second. A hero may bring several portraits (its
- * bundled art plus costume references), each with its own window grid, and
- * its best window from any of them counts. Descriptors learned from
- * corrections join the table as extra rows. */
+ * at the centre alignment against the whole table, then re-scores each
+ * hero's best row at the other offsets, and runs a finer window grid only for
+ * the leading portraits, which keeps a screenshot to about a second. A hero
+ * may bring several portraits (its bundled art plus costume references), each
+ * with its own window grid, and its best window from any of them counts.
+ * Descriptors learned from corrections join the table as extra rows. */
 
 import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
@@ -52,7 +52,6 @@ const scaleGrid = (grid: readonly CropWindow[], scale: number): CropWindow[] =>
 const ART_GRID = expandGrid(ART_WINDOWS)
 const COSTUME_GRID = scaleGrid([...ART_GRID, ...expandGrid(CARD_WINDOWS)], COSTUME_SCALE)
 
-const COARSE_KEEP = 60
 const REFINE_KEEP = 15
 const CANDIDATES = 5
 
@@ -173,10 +172,10 @@ interface Lead {
 }
 
 /* Rank the table against a face. `alignments` are descriptors of the same
- * cell at small offsets, centre first: the centre ranks everything, the
- * others re-score the leaders, and the finer window grid re-scores the top
- * few against the stored portrait. Up to `limit` candidates come back, at
- * most every leader. */
+ * cell at small offsets, centre first: the centre picks each hero's best
+ * row, the others re-score it, and the finer window grid re-scores the top
+ * few portraits against the stored portrait. Up to `limit` candidates come
+ * back. */
 export function rankHeroes(
   table: HeroTable,
   alignments: readonly Float32Array[],
@@ -197,22 +196,23 @@ export function rankHeroes(
       best.set(key, { characterId: id, score, learned, costume, row })
     }
   }
-  const leaders = [...best.values()].sort((a, b) => b.score - a.score).slice(0, COARSE_KEEP)
-
-  // Each leader keeps its best score over the offsets: the frame match's
-  // residual error differs per card, and a hero that only fits at one offset
-  // is still that hero.
-  for (const lead of leaders) {
+  // Every lead is re-scored at the offsets, which costs a fraction of the pass
+  // above: a shortlist here would let learned rows push out a portrait that
+  // leads only once its windows are refined. Each lead keeps its best score
+  // over the offsets: the frame match's residual error differs per card, and a
+  // hero that only fits at one offset is still that hero.
+  const leads = [...best.values()]
+  for (const lead of leads) {
     for (let k = 1; k < alignments.length; k++) {
       const s = rowDot(table, lead.row, alignments[k]!)
       if (s > lead.score) lead.score = s
     }
   }
-  leaders.sort((a, b) => b.score - a.score)
+  leads.sort((a, b) => b.score - a.score)
 
   // Learned rows have no windows to refine, so they must not consume the
   // portrait search budget.
-  for (const lead of leaders.filter((lead) => !lead.learned).slice(0, REFINE_KEEP)) {
+  for (const lead of leads.filter((lead) => !lead.learned).slice(0, REFINE_KEEP)) {
     const portrait = portraitOfRow(table, lead.row)
     const coarse = portrait && coarseWindowOfRow(lead.row, table)
     if (!portrait || !coarse) continue
@@ -236,8 +236,8 @@ export function rankHeroes(
       }
     }
   }
-  leaders.sort((a, b) => b.score - a.score)
-  return leaders
+  leads.sort((a, b) => b.score - a.score)
+  return leads
     .slice(0, limit)
     .map(({ characterId, score, learned, costume }) => ({ characterId, score, learned, costume }))
 }

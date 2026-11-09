@@ -139,12 +139,12 @@ describe('hero table', () => {
     expect(ranked[0]!.costume).toBe(true)
   })
 
-  it('keeps a stronger portrait match when learned examples crowd the shortlist', () => {
+  it('keeps a stronger portrait match however many learned examples outrank it before refining', () => {
     const image = portrait(2)
     const portraits = [{ characterId: 2, image }]
     const face = heroDescriptor(image, { x: 44, y: 60, w: 96, h: 72 })
     const baseline = rankHeroes(buildHeroTable(portraits), [face])[0]!
-    const learned = Array.from({ length: 15 }, (_, i) => {
+    const learned = Array.from({ length: 70 }, (_, i) => {
       const example = face.map((value, j) => value + 0.01 * Math.sin((j + 1) * (i + 1)))
       const norm = Math.hypot(...example)
       return {
