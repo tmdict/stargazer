@@ -26,7 +26,6 @@ export interface ListsExportFile {
 export type ListEditNote =
   | { kind: 'gone'; list: string }
   | { kind: 'unreadable'; list: string }
-  | { kind: 'broken'; list: string }
   | { kind: 'heroes'; list: string; count: number }
 
 export type ListProblem = 'lines' | 'every-above' | 'loop'
@@ -66,7 +65,11 @@ function readFilter(value: unknown): HeroFilter | null {
   const filter: HeroFilter = {}
   for (const [key, field] of Object.entries(value)) {
     if (key === 'class') {
-      if (!Array.isArray(field) || !field.every((c) => CLASS_ORDER.includes(c as string)))
+      if (
+        !Array.isArray(field) ||
+        !field.length ||
+        !field.every((c) => CLASS_ORDER.includes(c as string))
+      )
         return null
       filter.class = field as string[]
     } else if (key === 'range') {
@@ -80,25 +83,29 @@ function readFilter(value: unknown): HeroFilter | null {
   return filter
 }
 
-// A list's entries as the app writes them. A hero number the site does not
-// know is dropped; any other entry it cannot read makes the list unreadable.
-export function readEntries(
+// A list's entries as the app writes them. With `known`, a hero number the
+// site does not know is dropped and a list it does not have makes the list
+// unreadable; without it both are kept, for the site's version a list started
+// from, which is only compared with the site's now. Any other entry it cannot
+// read makes the list unreadable.
+function readEntries(
   value: unknown,
-  site: Lists,
-  heroes: ReadonlySet<number>,
+  known?: { site: Lists; heroes: ReadonlySet<number> },
 ): { entries: ListEntry[]; dropped: number } | null {
   if (!Array.isArray(value)) return null
   const entries: ListEntry[] = []
   let dropped = 0
   for (const entry of value) {
     if (typeof entry === 'number') {
-      if (heroes.has(entry)) entries.push(entry)
+      if (!Number.isInteger(entry)) return null
+      if (!known || known.heroes.has(entry)) entries.push(entry)
       else dropped++
       continue
     }
     if (!isRecord(entry) || Object.keys(entry).length !== 1) return null
     if ('list' in entry) {
-      if (typeof entry.list !== 'string' || !(entry.list in site)) return null
+      if (typeof entry.list !== 'string' || (known && !Object.hasOwn(known.site, entry.list)))
+        return null
       entries.push({ list: entry.list })
     } else if ('line' in entry) {
       if (entry.line !== true) return null
@@ -141,8 +148,8 @@ export interface ListEdits {
 }
 
 // The stored value read against the site's lists: a list the site no longer
-// has, a list that cannot be read and a list that breaks a rule each go, the
-// site's version shown in its place.
+// has and a list that cannot be read each go, the site's version shown in its
+// place. A list that breaks a rule stays, so the page can show the problem.
 export function readListEdits(
   text: string | null,
   site: Lists,
@@ -157,24 +164,17 @@ export function readListEdits(
   }
   if (!isRecord(value) || !isRecord(value.lists)) return edits
   for (const [name, stored] of Object.entries(value.lists)) {
-    if (!(name in site)) {
+    if (!Object.hasOwn(site, name)) {
       edits.notes.push({ kind: 'gone', list: name })
       continue
     }
-    const mine = isRecord(stored) ? readEntries(stored.entries, site, heroes) : null
+    const mine = isRecord(stored) ? readEntries(stored.entries, { site, heroes }) : null
     if (!mine) {
       edits.notes.push({ kind: 'unreadable', list: name })
       continue
     }
-    const lists = { ...edits.lists, [name]: mine.entries }
-    if (listProblems(lists, name).length) {
-      edits.notes.push({ kind: 'broken', list: name })
-      continue
-    }
-    edits.lists = lists
-    edits.since[name] = (isRecord(stored) && readEntries(stored.site, site, heroes)?.entries) || [
-      ...site[name]!,
-    ]
+    edits.lists[name] = mine.entries
+    edits.since[name] = (isRecord(stored) && readEntries(stored.site)?.entries) || [...site[name]!]
     if (mine.dropped) edits.notes.push({ kind: 'heroes', list: name, count: mine.dropped })
   }
   return edits

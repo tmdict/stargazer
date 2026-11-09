@@ -192,9 +192,9 @@ export default defineConfig({
     }),
     packModule({
       name: 'formation-rules',
-      entry: 'src/lib/placement/formationRulesData.ts',
+      entry: 'src/lib/pvp/data/formationRulesData.ts',
       run: 'formationRulesData',
-      without: 'the Formation rules page shows no lists, leans or weights',
+      without: 'the Formation engine rules page shows no lists, leans or weights',
     }),
   ],
   resolve: {
@@ -220,8 +220,8 @@ export default defineConfig({
         changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
-        // The share-link shell, not content, and the lists page, which only
-        // the Formation rules page links to.
+        // The share-link shell, not content, and the Hero lists page, which
+        // only the Formation engine rules page links to.
         exclude: ['/share', SL_LISTS_PATH],
         // @ts-expect-error - vite-ssg-sitemap types do not allow disabling lastmod
         lastmod: '',

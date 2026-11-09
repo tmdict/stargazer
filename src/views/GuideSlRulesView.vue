@@ -30,6 +30,7 @@ import { useOverlay } from '@/composables/useOverlay'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupSlRulesContentMeta } from '@/utils/contentMeta'
 
+import '@/styles/columns.css'
 import '@/styles/content.css'
 import '@/components/guide/rules/rules.css'
 
@@ -48,7 +49,7 @@ const VIEWS = new Set<string>([HOW_VIEW, ...SHARED_VIEWS])
 const mounted = ref(false)
 onMounted(() => (mounted.value = true))
 const view = computed(() => {
-  const id = mounted.value ? decodeURIComponent(route.hash.slice(1)) : ''
+  const id = mounted.value ? route.hash.slice(1) : ''
   return VIEWS.has(id) || ruleUnitOf(id) ? id : HOW_VIEW
 })
 const unit = computed(() => ruleUnitOf(view.value))
@@ -58,7 +59,8 @@ const listGroups = computed(() => groupLists(Object.keys(RULE_LISTS)))
 
 const openList = ref<string | null>(null)
 const sheet = ref(false)
-// A unit's view opens with its first list beside it.
+// A unit's view opens with its first list beside it, and a view returned to
+// with the list the visitor opened there, kept in its history entry.
 watch(
   unit,
   (shown) => {
@@ -66,9 +68,16 @@ watch(
   },
   { immediate: true },
 )
+watch([view, mounted], () => {
+  const kept = mounted.value
+    ? (window.history.state as { rulesList?: unknown } | null)?.rulesList
+    : null
+  if (typeof kept === 'string' && Object.hasOwn(RULE_LISTS, kept)) openList.value = kept
+})
 
 function open(name: string): void {
   openList.value = name
+  window.history.replaceState({ ...window.history.state, rulesList: name }, '')
   if (!window.matchMedia('(min-width: 1101px)').matches) sheet.value = true
 }
 
@@ -92,33 +101,33 @@ function go(id: string): void {
 </script>
 
 <template>
-  <main class="rules-page">
-    <header class="rules-head">
+  <main class="columns-page">
+    <header>
       <h1>{{ t('rules-title') }}</h1>
     </header>
 
-    <div class="rules-layout">
+    <div class="columns-layout">
       <button
         ref="toggle"
         type="button"
-        class="nav-toggle"
+        class="columns-toggle"
         :aria-expanded="navOpen"
         @click="navOpen = !navOpen"
       >
-        <span class="current">{{ viewName }}</span>
+        <span class="columns-current">{{ viewName }}</span>
         {{ t('rules-all') }}
         <IconChevronRight :size="14" />
       </button>
       <nav
         ref="nav"
-        class="rules-column rules-nav"
+        class="columns-panel columns-side columns-nav"
         :class="{ open: navOpen }"
         :aria-label="t('rules-title')"
       >
         <RulesNav v-model:query="query" :current="view" @go="go" />
       </nav>
 
-      <article :id="view" class="rules-column rules-main content">
+      <article :id="view" class="columns-panel columns-main content">
         <RulesUnitView v-if="unit" :unit :open-list @open="open" />
         <RulesLeans v-else-if="view === 'leans'" />
         <RulesTexts v-else-if="view === 'map'" view="map" :count="4" />
@@ -133,7 +142,10 @@ function go(id: string): void {
         <RulesHow v-else @open="open" />
       </article>
 
-      <aside class="rules-column rules-aside content" :aria-label="t('rules-row-list')">
+      <aside
+        class="columns-panel columns-side rules-aside content"
+        :aria-label="t('rules-row-list')"
+      >
         <RulesListPanel v-if="openList" :key="openList" :name="openList" @go="go" @open="open" />
         <template v-else>
           <h2>{{ t('rules-lists') }}</h2>
@@ -158,52 +170,6 @@ function go(id: string): void {
 </template>
 
 <style scoped>
-.rules-page {
-  align-items: stretch;
-  gap: 12px;
-  width: 100%;
-  padding: 18px 24px 48px;
-  background: var(--color-bg-page);
-  color: var(--reading-text);
-}
-
-
-h1 {
-  margin: 0;
-  font-size: var(--reading-title-size);
-  font-weight: 600;
-  line-height: 1.3;
-  text-align: left;
-  color: var(--reading-text);
-}
-
-.rules-layout {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) clamp(300px, 20vw, 380px);
-  align-items: start;
-  gap: 16px;
-}
-
-.rules-column {
-  border: 1px solid var(--panel-dark-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-reading);
-  box-shadow: var(--shadow-panel);
-}
-
-.rules-nav,
-.rules-aside {
-  position: sticky;
-  top: 12px;
-  max-height: calc(100vh - 24px);
-  overflow: auto;
-  scrollbar-color: var(--scrollbar-thumb-on-dark) transparent;
-}
-
-.rules-main {
-  min-width: 0;
-}
-
 .rules-aside.content {
   padding: 14px;
 }
@@ -226,60 +192,8 @@ h1 {
   flex: 1;
 }
 
-.nav-toggle {
-  display: none;
-}
-
 @media (max-width: 1100px) {
-  .rules-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-
   .rules-aside {
-    display: none;
-  }
-}
-
-@media (max-width: 700px) {
-  .rules-page {
-    padding: 14px 16px 32px;
-  }
-
-  .rules-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .nav-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--chip-dark-border-color);
-    border-radius: var(--radius-large);
-    background: var(--color-bg-reading);
-    font-family: var(--font-ui);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--reading-text);
-    cursor: pointer;
-  }
-
-  .current {
-    flex: 1;
-    overflow: hidden;
-    text-align: left;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .rules-nav {
-    position: static;
-    max-height: none;
-  }
-
-  .rules-nav:not(.open) {
     display: none;
   }
 }

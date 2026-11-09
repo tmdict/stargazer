@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
-import { noteKey, targetsKey } from '@/lib/placement/formationRules'
+import { ruleUnit } from '@/lib/placement/formationRules'
 import { effectVerb } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
@@ -172,17 +172,19 @@ describe('placement rules', () => {
     expect(named.filter((key) => !needed.has(key))).toEqual([])
   })
 
-  // The Formation rules page shows each rule's note in the site language, and
+  // The Formation engine rules page shows each rule's note in the site language, and
   // for a rule against an enemy hero, which of our units its skill lands on.
   it('each have their note words, the English word for word, and no words outlive one', () => {
     const needed = new Set<string>()
     for (const { name, rules } of owners) {
       for (const rule of rules ?? []) {
-        const key = noteKey(name, rule)
-        expect(needed.has(key), `two of ${name}'s rules are noted by ${key}`).toBe(false)
-        needed.add(key)
-        expect(words[key]?.en, `${key} in English`).toBe(rule.note)
-        if (typeof rule.goal === 'object' && 'avoid' in rule.goal) needed.add(targetsKey(name))
+        const card = ruleUnit('hero', name, [rule], {}).cards[0]!
+        expect(needed.has(card.note), `two of ${name}'s rules are noted by ${card.note}`).toBe(
+          false,
+        )
+        needed.add(card.note)
+        expect(words[card.note]?.en, `${card.note} in English`).toBe(rule.note)
+        if (card.targets) needed.add(card.targets)
       }
     }
     expect([...needed].filter((key) => !words[key])).toEqual([])

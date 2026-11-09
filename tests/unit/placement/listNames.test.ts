@@ -1,6 +1,6 @@
-// The Formation rules page names a list the rules share by its own words, and
-// any other after the one unit whose rule reads it. The lists come with the
-// data pack, so a pack update can add a list neither names.
+// The Formation engine rules page names a list the rules share by its own
+// words, and any other after the one unit whose rule reads it. The lists come
+// with the data pack, so a pack update can add a list neither names.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 

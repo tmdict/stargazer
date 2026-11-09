@@ -24,22 +24,25 @@ describe('Reading a visitor’s stored lists', () => {
     expect(readListEdits('{not json', SITE, HEROES)).toEqual({ lists: SITE, since: {}, notes: [] })
   })
 
-  it('drops a list the site no longer has, one it cannot read and one that breaks a rule', () => {
+  // A list that breaks a rule stays, for the page to show what to fix.
+  it('drops a list the site no longer has and one it cannot read, and keeps one that breaks a rule', () => {
+    const tank = [4, { line: true }, 5, { line: true }]
     const edits = readListEdits(
       stored({
         gone: { entries: [1], site: [1] },
-        buff: { entries: [1, { list: 'nowhere' }], site: SITE.buff },
-        tank: { entries: [4, { line: true }, 5, { line: true }], site: SITE.tank },
+        constructor: { entries: [1], site: [1] },
+        buff: { entries: [1, { list: 'toString' }], site: SITE.buff },
+        tank: { entries: tank, site: SITE.tank },
       }),
       SITE,
       HEROES,
     )
-    expect(edits.lists).toEqual(SITE)
-    expect(edits.since).toEqual({})
+    expect(edits.lists).toEqual({ ...SITE, tank })
+    expect(edits.since).toEqual({ tank: SITE.tank })
     expect(edits.notes).toEqual([
       { kind: 'gone', list: 'gone' },
+      { kind: 'gone', list: 'constructor' },
       { kind: 'unreadable', list: 'buff' },
-      { kind: 'broken', list: 'tank' },
     ])
   })
 
@@ -71,6 +74,15 @@ describe('A list the site changed since the visitor did', () => {
 
   it('stops counting once the visitor’s list matches the site’s', () => {
     expect(siteChanged('buff', SITE, { buff: [1, 2] }, SITE)).toBe(false)
+  })
+
+  it('is told even when the site’s old version brought in a list the site no longer has', () => {
+    const edits = readListEdits(
+      stored({ buff: { entries: [2, 1, 3], site: [1, 2, 3, { list: 'gone' }] } }),
+      SITE,
+      HEROES,
+    )
+    expect(siteChanged('buff', edits.lists, edits.since, SITE)).toBe(true)
   })
 })
 

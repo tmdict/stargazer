@@ -100,10 +100,14 @@ const isModel = (value: unknown): boolean =>
   isRows(value.artifacts, 3) &&
   isRows(value.artifactsOnKind, 3)
 
+const HERO_FILTER_KEYS = new Set(['class', 'range', 'damage'])
+
 const isHeroFilter = (value: unknown): boolean =>
   isObject(value) &&
+  Object.keys(value).every((key) => HERO_FILTER_KEYS.has(key)) &&
   (value.class === undefined ||
     (Array.isArray(value.class) &&
+      value.class.length > 0 &&
       value.class.every((name: unknown) => CLASS_ORDER.includes(name as string)))) &&
   (value.range === undefined || value.range === 'melee' || value.range === 'ranged') &&
   (value.damage === undefined || value.damage === 'physical' || value.damage === 'magic')

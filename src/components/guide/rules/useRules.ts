@@ -101,7 +101,7 @@ export const ruleUnitOf = (id: string): RulesUnit | undefined => unitById.get(id
 
 // A list the rules share has a name of its own; any other is named after the
 // one unit whose rule reads it.
-export const hasListName = (name: string): boolean => !!loadAppLocales()[`rules-list-${name}`]
+const hasListName = (name: string): boolean => !!loadAppLocales()[`rules-list-${name}`]
 
 // A list's first heroes, as its button shows them.
 export const listPeek = (list: RuleList): number[] =>

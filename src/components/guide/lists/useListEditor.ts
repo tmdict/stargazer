@@ -56,14 +56,23 @@ type ListUse = NonNullable<RuleCard['use']>
 interface Snapshot {
   lists: Lists
   since: Lists
+  // The list the change made from this state was on, for Undo and Redo to
+  // show; null for one that changed every list.
+  list: string | null
+}
+
+interface ListEditorEvents {
+  open: (name: string) => void
+  refuse: (problems: ListProblem[]) => void
 }
 
 const isLine = (entry: ListEntry): boolean => typeof entry === 'object' && 'line' in entry
 
-export function createListEditor(current: Readonly<Ref<string>>) {
+export function createListEditor(current: Readonly<Ref<string>>, events: ListEditorEvents) {
   const lists = ref<Lists>(clone(SITE_LISTS))
   const since = ref<Lists>({})
   const notes = ref<ListEditNote[]>([])
+  const saveFailed = ref(false)
   const past = shallowReactive<Snapshot[]>([])
   const future = shallowReactive<Snapshot[]>([])
   // The entry to focus after a change, and an entry already on the list to point out.
@@ -113,8 +122,11 @@ export function createListEditor(current: Readonly<Ref<string>>) {
       else since.value[name] ??= clone(SITE_LISTS[name]!)
     }
     const value = listEditsValue(lists.value, since.value, SITE_LISTS)
-    if (value) writeStorage(LIST_EDITS_KEY, JSON.stringify(value))
-    else removeStorage(LIST_EDITS_KEY)
+    if (value) saveFailed.value = !writeStorage(LIST_EDITS_KEY, JSON.stringify(value))
+    else {
+      removeStorage(LIST_EDITS_KEY)
+      saveFailed.value = false
+    }
   }
 
   function load(): void {
@@ -126,12 +138,31 @@ export function createListEditor(current: Readonly<Ref<string>>) {
     if (read.notes.length) persist()
   }
 
-  const snapshot = (): Snapshot => clone({ lists: lists.value, since: since.value })
+  const snapshot = (list: string | null): Snapshot =>
+    clone({ lists: lists.value, since: since.value, list })
 
-  function step(edit: () => void, focus: string | null = null): void {
-    past.push(snapshot())
-    future.length = 0
+  // A change that would break a rule is not made: only a site update can
+  // leave a list breaking one, for the visitor to fix.
+  function step(
+    edit: () => void,
+    focus: string | null = null,
+    list: string | null = current.value,
+  ): void {
+    const before = snapshot(list)
+    const had = problems.value
     edit()
+    const added = new Set(
+      names.value.flatMap((name) =>
+        listProblems(lists.value, name).filter((problem) => !had[name]!.includes(problem)),
+      ),
+    )
+    if (added.size) {
+      lists.value = before.lists
+      since.value = before.since
+      return events.refuse([...added])
+    }
+    past.push(before)
+    future.length = 0
     persist()
     focusKey.value = focus
   }
@@ -139,10 +170,11 @@ export function createListEditor(current: Readonly<Ref<string>>) {
   function travel(from: Snapshot[], to: Snapshot[]): void {
     const back = from.pop()
     if (!back) return
-    to.push(snapshot())
+    to.push(snapshot(back.list))
     lists.value = back.lists
     since.value = back.since
     persist()
+    if (back.list !== null && back.list !== current.value) events.open(back.list)
   }
   const undo = (): void => travel(past, future)
   const redo = (): void => travel(future, past)
@@ -243,10 +275,14 @@ export function createListEditor(current: Readonly<Ref<string>>) {
     step(() => (lists.value[current.value] = clone(SITE_LISTS[current.value]!)))
 
   function resetAll(): void {
-    step(() => {
-      lists.value = clone(SITE_LISTS)
-      since.value = {}
-    })
+    step(
+      () => {
+        lists.value = clone(SITE_LISTS)
+        since.value = {}
+      },
+      null,
+      null,
+    )
   }
 
   const keepMine = (): void =>
@@ -260,6 +296,7 @@ export function createListEditor(current: Readonly<Ref<string>>) {
     current,
     lists,
     notes,
+    saveFailed,
     past,
     future,
     focusKey,

@@ -3,11 +3,11 @@
  * chance to win most of the boards, for the heroes a visitor selects at their
  * levels. A board takes the teams recorded on its map in every season, and
  * boards on one map share them. A team that never won on its map is taken
- * only when no set can be made without one. A board on a map with no records,
- * or whose map's teams make no set even under the last evidence rule, takes
- * each lineup's record over every map instead. Each team's chance is the
- * model's, against a typical opponent at the top levels, with its odds scaled
- * by the share of its own effects its board's map leaves it (fit.ts). */
+ * only when the map's teams make no set without one. A board on a map with no
+ * records, or whose map's teams make no set even under the last evidence
+ * rule, takes each lineup's record over every map instead. Each team's chance
+ * is the model's, against a typical opponent at the top levels, with its odds
+ * scaled by the share of its own effects its board's map leaves it (fit.ts). */
 
 import type { SlData, SlEvidence, SlRecord, SlTeam } from '../data/types'
 import { oddsInto, winsNeeded } from '../model/odds'

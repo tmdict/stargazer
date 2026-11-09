@@ -40,10 +40,10 @@ const kebab = (word: string): string => word.replace(/[A-Z]/g, (c) => `-${c.toLo
 
 // The words of a rule's note and of an enemy rule's targets, by the file the
 // rule sits in, with -companion for the effect a unit's other body gives.
-export const noteKey = (file: string, rule: Rule): string =>
+const noteKey = (file: string, rule: Rule): string =>
   `placement-note-${file}${rule.from === 'companion' ? '-companion' : ''}-${rule.team}-${kebab(goalWord(rule.goal))}`
 
-export const targetsKey = (file: string): string => `placement-targets-${file}`
+const targetsKey = (file: string): string => `placement-targets-${file}`
 
 function ruleCard(file: string, rule: Rule, weights: PlacementData['weights']): RuleCard {
   const { goal, team } = rule

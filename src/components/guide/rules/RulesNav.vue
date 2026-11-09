@@ -4,10 +4,10 @@
 
 import { computed } from 'vue'
 
+import RulesSearch from './RulesSearch.vue'
 import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconGem from '@/components/ui/IconGem.vue'
-import IconSearch from '@/components/ui/IconSearch.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { RuleUnitKind } from '@/lib/placement/formationRules'
 import { useGameDataStore } from '@/stores/gameData'
@@ -102,16 +102,7 @@ function go(event: MouseEvent, id: string): void {
 
 <template>
   <div class="rules-index">
-    <label class="search">
-      <IconSearch :size="15" />
-      <input
-        v-model="query"
-        type="search"
-        autocomplete="off"
-        :placeholder="t('rules-find')"
-        :aria-label="t('rules-find')"
-      />
-    </label>
+    <RulesSearch v-model="query" class="search" />
     <p class="legend" data-theme="dark">
       <span><i class="dot ally" />{{ t('rules-on-ours') }}</span>
       <span><i class="dot enemy" />{{ t('rules-on-theirs') }}</span>
@@ -180,32 +171,7 @@ function go(event: MouseEvent, id: string): void {
 }
 
 .search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   margin: 2px 2px 6px;
-  padding: 0 10px;
-  border: 1px solid var(--chip-dark-border-color);
-  border-radius: var(--radius-large);
-  background: var(--field-dark-background);
-  color: var(--reading-muted);
-  cursor: text;
-}
-
-.search:focus-within {
-  border-color: var(--color-accent);
-}
-
-.search input {
-  flex: 1;
-  min-width: 0;
-  padding: 7px 0;
-  border: 0;
-  outline: none;
-  background: none;
-  color: var(--reading-text);
-  font: inherit;
-  font-size: max(14px, var(--field-min-font-size));
 }
 
 .legend {

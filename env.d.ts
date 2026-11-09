@@ -8,7 +8,7 @@ declare module 'virtual:sl-preview' {
 
 /** The placement engine's lists, leans and weights (scripts/packModule.ts). */
 declare module 'virtual:formation-rules' {
-  const data: import('@/lib/placement/formationRulesData').FormationRulesData | null
+  const data: import('@/lib/pvp/data/formationRulesData').FormationRulesData | null
   export default data
 }
 

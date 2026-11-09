@@ -26,15 +26,16 @@ import {
 import { useOverlay } from '@/composables/useOverlay'
 import { useToast } from '@/composables/useToast'
 import { SL_RULES_PATH } from '@/lib/guide'
-import { listsExportFile, listsExportText } from '@/lib/placement/listEdits'
+import { listsExportFile, listsExportText, type ListProblem } from '@/lib/placement/listEdits'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupSlListsContentMeta } from '@/utils/contentMeta'
 import { downloadBlob, timestampedName } from '@/utils/download'
 
+import '@/styles/columns.css'
 import '@/styles/content.css'
 import '@/components/guide/lists/lists.css'
 
-const { lang, t, listName, groupLists } = useListWords()
+const { lang, t, listName, groupLists, and } = useListWords()
 setupSlListsContentMeta(lang)
 
 // SSG-safe: the portraits are in the pre-rendered page.
@@ -51,11 +52,16 @@ const first = computed(() => groupLists(Object.keys(SITE_LISTS))[0]?.names[0] ??
 // shows the site's lists, and the first client render has to match it.
 const mounted = ref(false)
 const current = computed(() => {
-  const id = mounted.value ? decodeURIComponent(route.hash.slice(1)) : ''
-  return id in SITE_LISTS ? id : first.value
+  const id = mounted.value ? route.hash.slice(1) : ''
+  return Object.hasOwn(SITE_LISTS, id) ? id : first.value
 })
 
-const editor = createListEditor(current)
+const refuse = (problems: ListProblem[]): void =>
+  void error(
+    t('lists-refused', { problems: and(problems.map((problem) => t(`lists-problem-${problem}`))) }),
+  )
+
+const editor = createListEditor(current, { open: go, refuse })
 provideListEditor(editor)
 const page = useTemplateRef<HTMLElement>('page')
 const drag = useListDrag(page, editor)
@@ -74,21 +80,38 @@ useOverlay({
 const changesOpen = ref(false)
 const compareOpen = ref(false)
 
-// Back returns to the rules page as the visitor left it (the unit they were
-// reading) when they came from it, and opens it fresh otherwise.
-function back(event: MouseEvent): void {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-  const from = (window.history.state as { back?: unknown } | null)?.back
-  if (typeof from !== 'string' || from.split('#')[0] !== SL_RULES_PATH) return
+// The history entry of the rules page the visitor came here from, which each
+// list opened here carries on, so Back can return there past those lists.
+function rulesEntry(): number | null {
+  const state = window.history.state as {
+    back?: unknown
+    position?: unknown
+    rulesAt?: unknown
+  } | null
+  if (typeof state?.rulesAt === 'number') return state.rulesAt
+  return typeof state?.back === 'string' &&
+    state.back.split('#')[0] === SL_RULES_PATH &&
+    typeof state.position === 'number'
+    ? state.position - 1
+    : null
+}
+
+// Back returns to the rules page as the visitor left it when they came from
+// it, and opens it fresh otherwise.
+function back(event: MouseEvent, navigate: (event?: MouseEvent) => unknown): void {
+  const rulesAt = rulesEntry()
+  const position = (window.history.state as { position?: unknown } | null)?.position
+  const plain = !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+  if (!plain || rulesAt === null || typeof position !== 'number') return void navigate(event)
   event.preventDefault()
-  router.back()
+  router.go(rulesAt - position)
 }
 
 function go(name: string): void {
   navOpen.value = false
   changesOpen.value = false
   compareOpen.value = false
-  void router.push({ hash: `#${name}` })
+  void router.push({ hash: `#${name}`, state: { rulesAt: rulesEntry() } })
 }
 
 const sendable = computed(() => editor.sendable.value.length > 0)
@@ -142,12 +165,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <main ref="page" class="lists-page" @pointerdown="drag.onDown" @dragstart.prevent>
-    <header class="lists-head">
+  <main ref="page" class="columns-page lists-page" @pointerdown="drag.onDown" @dragstart.prevent>
+    <header>
       <p class="back">
-        <RouterLink :to="SL_RULES_PATH" @click="back"
-          ><span aria-hidden="true">‹ </span>{{ t('back') }}</RouterLink
-        >
+        <RouterLink v-slot="{ href, navigate }" :to="SL_RULES_PATH" custom>
+          <a :href @click="back($event, navigate)"
+            ><span aria-hidden="true">‹ </span>{{ t('back') }}</a
+          >
+        </RouterLink>
       </p>
       <h1>{{ t('lists-title') }}</h1>
       <p class="intro">{{ t('lists-intro') }}</p>
@@ -185,7 +210,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
       </button>
     </div>
 
-    <div v-if="editor.notes.value.length" class="notes">
+    <div v-if="editor.saveFailed.value || editor.notes.value.length" class="notes">
+      <div v-if="editor.saveFailed.value" class="lists-notice bad">
+        <span>{{ t('lists-save-failed') }}</span>
+      </div>
       <div v-for="(note, index) in editor.notes.value" :key="index" class="lists-notice">
         <span>{{
           t(`lists-note-${note.kind}`, {
@@ -200,30 +228,34 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     </div>
 
     <p v-if="!editor.names.value.length" class="none">{{ t('lists-none') }}</p>
-    <div v-else class="lists-layout">
+    <div v-else class="columns-layout">
       <button
         ref="toggle"
         type="button"
-        class="nav-toggle"
+        class="columns-toggle"
         :aria-expanded="navOpen"
         @click="navOpen = !navOpen"
       >
-        <span class="current">{{ listName(current) }}</span>
+        <span class="columns-current">{{ listName(current) }}</span>
         {{ t('lists-all') }}
         <IconChevronRight :size="14" />
       </button>
       <nav
         ref="nav"
-        class="lists-column lists-nav"
+        class="columns-panel columns-side columns-nav"
         :class="{ open: navOpen }"
         :aria-label="t('lists-title')"
       >
         <ListsNav :current @go="go" />
       </nav>
-      <section :id="current" class="lists-column lists-main">
+      <section :id="current" class="columns-panel columns-main lists-main">
         <ListsEditor @go="go" @compare="compareOpen = true" />
       </section>
-      <aside class="lists-column lists-aside" data-drag="pool" :aria-label="t('lists-add-heroes')">
+      <aside
+        class="columns-panel columns-side lists-aside"
+        data-drag="pool"
+        :aria-label="t('lists-add-heroes')"
+      >
         <ListsPool />
       </aside>
     </div>
@@ -239,12 +271,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 
 <style scoped>
 .lists-page {
-  align-items: stretch;
-  gap: 12px;
-  width: 100%;
-  padding: 18px 24px 48px;
-  background: var(--color-bg-page);
-  color: var(--reading-text);
+  --columns-top: 72px;
+  --columns-height: calc(100vh - 88px);
 }
 
 .back {
@@ -261,15 +289,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 
 .back a:hover {
   color: var(--color-accent);
-}
-
-h1 {
-  margin: 0;
-  font-size: var(--reading-title-size);
-  font-weight: 600;
-  line-height: 1.3;
-  text-align: left;
-  color: var(--reading-text);
 }
 
 .intro {
@@ -319,43 +338,11 @@ h1 {
   color: var(--reading-muted);
 }
 
-.lists-layout {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) clamp(300px, 20vw, 380px);
-  align-items: start;
-  gap: 16px;
-}
-
-.lists-column {
-  border: 1px solid var(--panel-dark-edge);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-reading);
-  box-shadow: var(--shadow-panel);
-}
-
-.lists-nav,
-.lists-aside {
-  position: sticky;
-  top: 72px;
-  max-height: calc(100vh - 88px);
-  overflow: auto;
-  scrollbar-color: var(--scrollbar-thumb-on-dark) transparent;
-}
-
 .lists-main {
-  min-width: 0;
   scroll-margin-top: 72px;
 }
 
-.nav-toggle {
-  display: none;
-}
-
 @media (max-width: 1100px) {
-  .lists-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-
   .lists-aside {
     grid-column: 1 / -1;
     position: static;
@@ -364,50 +351,8 @@ h1 {
 }
 
 @media (max-width: 700px) {
-  .lists-page {
-    padding: 14px 16px 32px;
-  }
-
   .tools {
     position: static;
-  }
-
-  .lists-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .nav-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--chip-dark-border-color);
-    border-radius: var(--radius-large);
-    background: var(--color-bg-reading);
-    font-family: var(--font-ui);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--reading-text);
-    cursor: pointer;
-  }
-
-  .current {
-    flex: 1;
-    overflow: hidden;
-    text-align: left;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .lists-nav {
-    position: static;
-    max-height: none;
-  }
-
-  .lists-nav:not(.open) {
-    display: none;
   }
 
   .lists-main {

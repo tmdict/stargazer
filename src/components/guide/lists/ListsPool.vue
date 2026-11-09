@@ -5,10 +5,10 @@
 
 import { computed, ref } from 'vue'
 
+import RulesSearch from '../rules/RulesSearch.vue'
 import ListsChips from './ListsChips.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
-import IconSearch from '@/components/ui/IconSearch.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { CLASS_ORDER } from '@/lib/filterOrder'
 import { expandList } from '@/lib/placement/lists'
@@ -100,16 +100,7 @@ const listItems = computed<DropdownItem[]>(() =>
   <div class="lists-pool" :class="{ removing: drag.removing.value }">
     <p v-if="drag.removing.value" class="drop">{{ t('lists-drop-remove') }}</p>
     <h2>{{ t('lists-add-heroes') }}</h2>
-    <label class="search">
-      <IconSearch :size="15" />
-      <input
-        v-model="query"
-        type="search"
-        autocomplete="off"
-        :placeholder="t('rules-find')"
-        :aria-label="t('rules-find')"
-      />
-    </label>
+    <RulesSearch v-model="query" />
     <div class="lists-bar">
       <ListsChips v-model="filters" :groups="['range', 'damage', 'class']" />
     </div>
@@ -224,34 +215,6 @@ h2 {
 
 h2:not(:first-of-type) {
   margin-top: 16px;
-}
-
-.search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  border: 1px solid var(--chip-dark-border-color);
-  border-radius: var(--radius-large);
-  background: var(--field-dark-background);
-  color: var(--reading-muted);
-  cursor: text;
-}
-
-.search:focus-within {
-  border-color: var(--color-accent);
-}
-
-.search input {
-  flex: 1;
-  min-width: 0;
-  padding: 6px 0;
-  border: 0;
-  outline: none;
-  background: none;
-  color: var(--reading-text);
-  font: inherit;
-  font-size: max(15px, var(--field-min-font-size));
 }
 
 .lists-bar {

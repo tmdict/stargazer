@@ -36,7 +36,7 @@ The game-data store has two loaders with one body. `initializeContentData()` als
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 
-A page is baked once per path, so nothing from the query string is in its HTML. The tag link on `/skills` and on the Mechanics guide ([Skill Pages](./SKILL_PAGES.md)) therefore applies its filter after mount. The Formation engine rules page likewise bakes on its intro, and shows the unit or part its hash names (`#gunnar`) after mount.
+A page is baked once per path, so nothing from the query string is in its HTML. The tag link on `/skills` and on the Mechanics guide ([Skill Pages](./SKILL_PAGES.md)) therefore applies its filter after mount. The Formation engine rules page likewise bakes on its intro, and shows the unit or part its hash names (`#gunnar`) after mount; the Hero lists page bakes the site's lists, and shows the list its hash names and the visitor's own lists after mount.
 
 ## Two locale axes
 
@@ -76,7 +76,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 Each report comes with a summary, which the guide index shows. The external report generator writes it with the report, owns its format, and documents it where it writes the file, so nothing here derives or edits its numbers. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) finds the summaries newest first, so a new season needs no entry in the code. The data step stops a build on a summary with no report beside it, while a report with no summary yet still gets its page and stays off the index. A summary carries each team's label in the languages its report is written in, and in any other app locale a team is named by its heroes (`pvpTeamName`), so a season needs nothing per app locale beyond the hero names the app already has.
 
-The guide index's card for the PvP team generator (`virtual:sl-preview`) and the Formation engine rules page (`virtual:formation-rules`) show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so both are in the baked HTML and neither page loads the file.
+The guide index's card for the PvP team generator (`virtual:sl-preview`), and the Formation engine rules page and the Hero lists page (`virtual:formation-rules`), show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so they are in the baked HTML and no page loads the file.
 
 ## Hosting
 

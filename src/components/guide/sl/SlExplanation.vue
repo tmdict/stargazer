@@ -75,7 +75,7 @@ const meterLine = computed(() => i18n.t('app.sl-explain-meter').split('{scale}')
     <h2>{{ i18n.t('app.sl-explain-boards-head') }}</h2>
     <p>
       <template v-for="(piece, index) in iconLine" :key="index">
-        <SlIcon v-if="'icon' in piece" :name="piece.icon" class="sl-inline-icon" />
+        <SlIcon v-if="'icon' in piece" :name="piece.icon" class="inline-icon" />
         <template v-else>{{ piece.text }}</template>
       </template>
     </p>
@@ -152,13 +152,6 @@ const meterLine = computed(() => i18n.t('app.sl-explain-meter').split('{scale}')
 </template>
 
 <style scoped>
-.sl-inline-icon {
-  width: 1.15em;
-  height: 1.15em;
-  vertical-align: -0.2em;
-  color: var(--reading-muted);
-}
-
 .sl-inline-meter {
   margin: 0 0.3em 0 0.2em;
   vertical-align: -0.1em;
