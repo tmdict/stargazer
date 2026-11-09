@@ -200,7 +200,7 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
       :phantimal="hovered"
       :target-element="hoveredEl"
       :extra-rows="availability"
-      :hint="i18n.t('app.hold-for-details')"
+      :hint="i18n.t('app.hold-for-skills')"
     />
   </section>
 </template>

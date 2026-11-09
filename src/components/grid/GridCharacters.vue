@@ -124,15 +124,10 @@ const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number
 
 const hoverHint = computed(() => {
   const card = hoveredCard.value
-  const inspect =
-    card?.kind === 'phantimal'
-      ? 'app.hold-for-details'
-      : card && heroInspectTarget(card.hero)
-        ? 'app.hold-for-skills'
-        : null
+  const inspectable = card?.kind === 'phantimal' || (card && heroInspectTarget(card.hero))
   // The two rows are never both on, so the one on is the one showing this card.
   const off = props.showHover ? 'app.turn-off-details-on-hover' : 'app.turn-off-placement-tips'
-  return [...(inspect ? [i18n.t(inspect)] : []), i18n.t(off)]
+  return [...(inspectable ? [i18n.t('app.hold-for-skills')] : []), i18n.t(off)]
 })
 
 // Where a point dy screen pixels below a sprite's center lands on the layer.
