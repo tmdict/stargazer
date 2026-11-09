@@ -149,6 +149,8 @@ export async function applyHandOver(
     }
   }
 
-  if (result.ok) writeFlag('moved')
+  // Records left behind keep the hand-over open: the banner returns, and a
+  // later arrival brings what then fits.
+  if (result.ok && result.teamsLeft + result.rostersLeft === 0) writeFlag('moved')
   return result
 }

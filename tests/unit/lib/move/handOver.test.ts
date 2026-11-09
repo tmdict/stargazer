@@ -185,13 +185,20 @@ describe('applyHandOver', () => {
     expect(JSON.parse(storage.get('stargazer.teams.active.1v1')!)).toMatchObject({ sourceId: null })
   })
 
-  it('stops at the library limit and reports what did not fit', async () => {
+  it('stops at the library limit, reports what did not fit and stays open for the rest', async () => {
     const full = Array.from({ length: MAX_SAVED_TEAMS - 1 }, (_, i) => team(`own${i}`, `Own ${i}`))
     storage.set('stargazer.teams.saved', JSON.stringify(full))
 
     const result = await applyHandOver(await pack(OLD), true, createPinia())
     expect(result).toMatchObject({ ok: true, teams: 1, teamsLeft: 1 })
     expect(savedTeams()).toHaveLength(MAX_SAVED_TEAMS)
+
+    // With room made, the same link brings the rest without being asked for.
+    expect(moved()).toBe(false)
+    storage.set('stargazer.teams.saved', JSON.stringify(savedTeams().slice(1)))
+    const later = await applyHandOver(await pack(OLD), false, createPinia())
+    expect(later).toMatchObject({ ok: true, teams: 1, teamsLeft: 0 })
+    expect(moved()).toBe(true)
   })
 
   it('reports a failure, and records no hand-over, for the mark alone or a broken code', async () => {
