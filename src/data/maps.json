@@ -2,9 +2,9 @@
   "sl": [
     { "map": "arena1" },
     { "map": "arena2" },
-    { "map": "arena3", "buffs": [{ "id": "placeholder", "tiles": [21, 25] }] },
-    { "map": "preset-sr1", "buffs": [{ "id": "placeholder", "tiles": [2, 44] }] },
-    { "map": "preset-sr3", "buffs": [{ "id": "placeholder", "tiles": [14, 32] }] }
+    { "map": "arena3", "buffs": [{ "id": "swift-shadow", "tiles": [21, 25] }] },
+    { "map": "preset-sr1", "buffs": [{ "id": "battle-fervor", "tiles": [2, 44] }] },
+    { "map": "preset-sr3", "buffs": [{ "id": "battle-fervor", "tiles": [14, 32] }] }
   ],
   "gd": [
     { "map": "arena1" },

@@ -39,7 +39,7 @@ The lists also carry the buff tiles, since the game gives a buff to a mode's boa
 {
   "sl": [
     { "map": "arena1" },
-    { "map": "arena3", "buffs": [{ "id": "placeholder", "tiles": [21, 25] }] }
+    { "map": "arena3", "buffs": [{ "id": "swift-shadow", "tiles": [21, 25] }] }
   ],
   "gd": [
     {
