@@ -374,7 +374,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       variant="detailed"
       :hint="[
         i18n.t('app.hold-for-skills'),
-        i18n.t(showHover ? 'app.turn-off-details-on-hover' : 'app.turn-off-placement-tips'),
+        i18n.t(showHover ? 'app.turn-off-hover-details' : 'app.turn-off-placement-tips'),
       ]"
     />
 

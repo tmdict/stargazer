@@ -126,7 +126,7 @@ const hoverHint = computed(() => {
   const card = hoveredCard.value
   const inspectable = card?.kind === 'phantimal' || (card && heroInspectTarget(card.hero))
   // The two rows are never both on, so the one on is the one showing this card.
-  const off = props.showHover ? 'app.turn-off-details-on-hover' : 'app.turn-off-placement-tips'
+  const off = props.showHover ? 'app.turn-off-hover-details' : 'app.turn-off-placement-tips'
   return [...(inspectable ? [i18n.t('app.hold-for-skills')] : []), i18n.t(off)]
 })
 

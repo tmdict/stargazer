@@ -9,9 +9,9 @@
  *
  * Enabling a child auto-enables what it needs to take effect (master; Upgrades
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
- * re-enabled parent restores the children it had. Details on hover and
+ * re-enabled parent restores the children it had. Hover details and
  * Placement tips are either/or: enabling one clears the other, and a stored
- * pair with both on keeps Details.
+ * pair with both on keeps Hover details.
  */
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
@@ -72,7 +72,7 @@ const EITHER_OR: Partial<Record<GridInfoKey, GridInfoKey>> = { hover: 'rules', r
 const MENU_ROWS: readonly { key: GridInfoKey; label: string }[] = [
   { key: 'tileIds', label: 'tile-ids' },
   { key: 'coordinates', label: 'coordinates' },
-  { key: 'hover', label: 'details-on-hover' },
+  { key: 'hover', label: 'hover-details' },
   { key: 'rules', label: 'placement-tips' },
   { key: 'targeting', label: 'targeting' },
   { key: 'heroCard', label: 'hero-card' },
