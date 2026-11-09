@@ -1,5 +1,5 @@
 {
-  "en": "{teams} saved teams and {rosters} rosters came with you, along with your boards and settings.",
-  "zh": "已迁移 {teams} 个保存的阵容和 {rosters} 个英雄池，棋盘和设置也已带上。",
-  "ko": "저장한 진형 {teams}개와 로스터 {rosters}개를 옮겼고, 보드와 설정도 가져왔습니다."
+  "en": "{list} came with you, along with your boards and settings.",
+  "zh": "已迁移 {list}，棋盘和设置也已带上。",
+  "ko": "{list}를 옮겼고, 보드와 설정도 가져왔습니다."
 }

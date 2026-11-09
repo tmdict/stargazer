@@ -20,7 +20,32 @@ const i18n = useI18nStore()
 
 const welcome = computed(() => i18n.t('app.move-welcome').split('{site}'))
 
-const left = computed(() => !!props.result && props.result.teamsLeft + props.result.rostersLeft > 0)
+// "12 saved teams, 3 rosters": a kind with none is left out.
+const counted = (teams: number, rosters: number, joiner: string): string =>
+  [
+    teams ? i18n.t(teams === 1 ? 'app.move-count-team' : 'app.move-count-teams', { n: teams }) : '',
+    rosters
+      ? i18n.t(rosters === 1 ? 'app.move-count-roster' : 'app.move-count-rosters', { n: rosters })
+      : '',
+  ]
+    .filter(Boolean)
+    .join(i18n.t(joiner))
+
+const leftList = computed(() =>
+  props.result
+    ? counted(props.result.teamsLeft, props.result.rostersLeft, 'app.move-list-and')
+    : '',
+)
+const left = computed(() => leftList.value !== '')
+const arrivedList = computed(() =>
+  props.result
+    ? counted(
+        props.result.teams,
+        props.result.rosters,
+        left.value ? 'app.move-list-and' : 'app.move-list-comma',
+      )
+    : '',
+)
 
 // The files are for data a hand-over left behind. Before any hand-over they
 // are offered as a backup only while the old address still serves its pages;
@@ -39,17 +64,11 @@ const filesOffered = computed(() =>
     </p>
 
     <template v-if="result?.ok">
-      <p>
-        {{
-          i18n.t(left ? 'app.move-arrived-part' : 'app.move-arrived', {
-            teams: result.teams,
-            rosters: result.rosters,
-          })
-        }}
+      <p v-if="arrivedList">
+        {{ i18n.t(left ? 'app.move-arrived-part' : 'app.move-arrived', { list: arrivedList }) }}
       </p>
-      <p v-if="left">
-        {{ i18n.t('app.move-left', { teams: result.teamsLeft, rosters: result.rostersLeft }) }}
-      </p>
+      <p v-else-if="!left">{{ i18n.t('app.move-arrived-none') }}</p>
+      <p v-if="left">{{ i18n.t('app.move-left', { list: leftList }) }}</p>
     </template>
     <p v-else-if="result">{{ i18n.t('app.move-failed') }}</p>
     <p v-else-if="MOVE_STAGE === 1">{{ i18n.t('app.move-backup') }}</p>
