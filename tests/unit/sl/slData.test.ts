@@ -48,7 +48,7 @@ const pick = (id: number, paragon = 4, refinement = 4): SlPick => ({
 const mapTeams = data.maps.flatMap((m) => m.teams)
 const named = [...new Set(mapTeams.flatMap((t) => t.heroes))]
 
-// The heroes of the teams in `list` the relaxed rule lets a selection take.
+// The heroes of the teams in `list` the last evidence rule lets a selection take.
 function allowed(list: readonly SlTeam[], picked: ReadonlySet<number>): number[][] {
   const proof = data.evidence.at(-1)!
   const meets = (count: number, minimum: number) => count + 1e-6 >= minimum
@@ -61,6 +61,7 @@ function allowed(list: readonly SlTeam[], picked: ReadonlySet<number>): number[]
         (t.family !== null || proof.oneOffs) &&
         meets(groupGames.get(t.family)!, proof.groupGames) &&
         t.decided >= 1 &&
+        t.wins >= proof.wins &&
         (meets(t.players, proof.players) || meets(t.games, proof.games)),
     )
     .map((t) => t.heroes)
@@ -202,7 +203,7 @@ describe('the shipped PvP data', () => {
 
 describe('chooseSlSet on the shipped data', () => {
   // A team only an earlier season recorded on a map, with games enough for the
-  // relaxed rule, is the one team a selection of its heroes makes there.
+  // last evidence rule, is the one team a selection of its heroes makes there.
   it('draws teams only an earlier season recorded, on the league maps and arena1', () => {
     const checked = [...new Set([...TEAM_VARIANTS.sl.maps, 'arena1'])].filter((key) => {
       const source = data.maps.findIndex((m) => m.key === key)

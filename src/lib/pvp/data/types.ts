@@ -23,8 +23,9 @@ export interface SlTeam {
   family: number | null
   // Tie order among every lineup in the file.
   rank: number
-  // Its games with a winner, whole games from every season.
+  // Its games with a winner, whole games from every season, and those it won.
   decided: number
+  wins: number
   // The same games and the players who fielded it, each at its season's
   // weight, for the evidence rule.
   games: number
@@ -89,6 +90,8 @@ export interface SlEvidence {
   players: number
   games: number
   oneOffs: boolean
+  // The fewest of its games on the map a team must have won.
+  wins: number
 }
 
 export interface SlPrices {
@@ -123,7 +126,9 @@ export interface SlData {
   exportedAt: string
   // Every season the file draws on, the live one first.
   seasons: SlSeason[]
-  // The strict rule first, then the relaxed one.
+  // The rules a set's teams meet, each tried while no set meets the one
+  // before: the strict rule, the relaxed one, then the last resort, which
+  // alone takes a team that never won on its map.
   evidence: SlEvidence[]
   flex: { heroes: number; options: number }
   // Rivalry points by level (the index); the top level is the last.

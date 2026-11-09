@@ -57,7 +57,7 @@ const isTeam = (t: unknown, families: number): t is Record<string, unknown> =>
   isObject(t) &&
   isNumbers(t.heroes, 5) &&
   (t.family === null || isIndex(t.family, families)) &&
-  isNumbers([t.rank, t.decided, t.games, t.players]) &&
+  isNumbers([t.rank, t.decided, t.wins, t.games, t.players]) &&
   Array.isArray(t.artifacts) &&
   t.artifacts.every((row: unknown) => isNumbers(row, 2))
 
@@ -79,6 +79,11 @@ const isMap = (value: unknown, families: number): boolean =>
   value.records.every((record: unknown) => isNumbers(record, 3)) &&
   Array.isArray(value.teams) &&
   value.teams.every((t: unknown) => isMapTeam(t, families))
+
+const isEvidence = (value: unknown): boolean =>
+  isObject(value) &&
+  isNumbers([value.groupGames, value.players, value.games, value.wins]) &&
+  typeof value.oneOffs === 'boolean'
 
 const isRows = (value: unknown, length: number): boolean =>
   isObject(value) && Object.values(value).every((row) => isNumbers(row, length))
@@ -146,6 +151,7 @@ function isSlData(value: unknown): value is SlData {
     isSeasons(value.seasons, value.season) &&
     Array.isArray(value.evidence) &&
     value.evidence.length > 0 &&
+    value.evidence.every(isEvidence) &&
     isObject(value.flex) &&
     isObject(prices) &&
     isNumbers(prices.refinement, attrMax(ATTR_REFINEMENT) + 1) &&

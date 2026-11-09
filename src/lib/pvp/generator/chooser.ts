@@ -2,11 +2,12 @@
  * and no hero twice, each with an artifact by the artifact rule, with the best
  * chance to win most of the boards, for the heroes a visitor selects at their
  * levels. A board takes the teams recorded on its map in every season, and
- * boards on one map share them. A board on a map with no records, or whose
- * map's teams make no set even under the relaxed rule, takes each lineup's
- * record over every map instead. Each team's chance is the model's, against a
- * typical opponent at the top levels, with its odds scaled by the share of its
- * own effects its board's map leaves it (fit.ts). */
+ * boards on one map share them. A team that never won on its map is taken
+ * only when no set can be made without one. A board on a map with no records,
+ * or whose map's teams make no set even under the last evidence rule, takes
+ * each lineup's record over every map instead. Each team's chance is the
+ * model's, against a typical opponent at the top levels, with its odds scaled
+ * by the share of its own effects its board's map leaves it (fit.ts). */
 
 import type { SlData, SlEvidence, SlRecord, SlTeam } from '../data/types'
 import { oddsInto, winsNeeded } from '../model/odds'
@@ -126,7 +127,11 @@ function searcher(
           continue
         for (const team of teams) {
           const t = list[team]!
-          if (t.decided < 1 || !(meets(t.players, proof.players) || meets(t.games, proof.games))) {
+          if (
+            t.decided < 1 ||
+            t.wins < proof.wins ||
+            !(meets(t.players, proof.players) || meets(t.games, proof.games))
+          ) {
             continue
           }
           const shares = new Map<string, number | undefined>()
@@ -365,9 +370,9 @@ function searcher(
     }),
   })
 
-  // The best set with the strict rule, else the relaxed one, every chance
-  // counting the fit of a team not yet measured at its most, so once a set's
-  // teams are all measured, no other set can beat it. Placing a team is slow,
+  // The best set under each evidence rule in turn, every chance counting the
+  // fit of a team not yet measured at its most, so once a set's teams are all
+  // measured, no other set can beat it. Placing a team is slow,
   // so only the teams a search picks are measured. Each round first yields
   // the fits it is about to measure.
   return {
@@ -421,7 +426,7 @@ function* steps(
 /* The set for `picks`, or null when none can be made, on `boards` as slBoards
  * gives them. Each board first takes its own map's teams; where those make no
  * set, a board whose map's teams the selection leaves none of under the
- * relaxed rule takes the rows of every map, and then every board does.
+ * last evidence rule takes the rows of every map, and then every board does.
  * `counts` says whether an artifact counts toward a chance: after a season
  * change the file's seasonal artifacts are out of the game, so the set still
  * hands them out and counts them as typical ones. `fit` keeps the fits it

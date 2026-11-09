@@ -8,10 +8,10 @@ import type { SlData, SlEveryMapTeam, SlModel, SlTeam } from '@/lib/pvp/data/typ
 import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
 import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
 
-// A lineup on map `map`, its games counted whole by a single player.
-export type MadeUpTeam = Pick<SlTeam, 'family' | 'heroes' | 'artifacts' | 'decided'> & {
-  map: number
-}
+// A lineup on map `map`, its games counted whole by a single player, every
+// one won unless `wins` says otherwise.
+export type MadeUpTeam = Pick<SlTeam, 'family' | 'heroes' | 'artifacts' | 'decided'> &
+  Partial<Pick<SlTeam, 'wins'>> & { map: number }
 
 export const seededRandom = (seed: number) => () => {
   seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
@@ -56,6 +56,7 @@ export function madeUpData(teams: MadeUpTeam[], model: SlModel, fallback: number
     family: t.family,
     rank,
     decided: t.decided,
+    wins: t.wins ?? t.decided,
     games: t.decided,
     players: 1,
     artifacts: t.artifacts,
@@ -70,6 +71,7 @@ export function madeUpData(teams: MadeUpTeam[], model: SlModel, fallback: number
     return {
       ...record(teams[list[0]!]!, list[0]!),
       decided,
+      wins: list.reduce((n, i) => n + (teams[i]!.wins ?? teams[i]!.decided), 0),
       games: decided,
       players: list.length,
       home: teams[home]!.map,
@@ -79,7 +81,7 @@ export function madeUpData(teams: MadeUpTeam[], model: SlModel, fallback: number
     season: 8,
     exportedAt: '2026-10-01',
     seasons: [{ season: 8, weight: 1, sample: { matches: 1, games: 1, players: 1 } }],
-    evidence: [{ groupGames: 0, players: 0, games: 1, oneOffs: true }],
+    evidence: [{ groupGames: 0, players: 0, games: 1, oneOffs: true, wins: 0 }],
     flex: { heroes: 2, options: 2 },
     prices: { paragon: { f: [0, 10, 20, 30, 40] }, refinement: [0, 5, 10, 15, 20] },
     order: [...new Set(teams.flatMap((t) => t.heroes))].sort((a, b) => a - b),

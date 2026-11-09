@@ -308,6 +308,44 @@ describe('the search', () => {
     }
   })
 
+  it('takes a team that never won on its map only when no set can be made without one', () => {
+    const next = seededRandom(4)
+    const winless: MadeUpTeam = {
+      map: 0,
+      family: 0,
+      heroes: [1, 2, 3, 4, 5],
+      artifacts: [],
+      decided: 3,
+      wins: 0,
+    }
+    const won: MadeUpTeam = { ...winless, heroes: [6, 7, 8, 9, 10], decided: 1, wins: 1 }
+    const data = madeUpData(
+      [winless, won],
+      madeUpModel({ lineups: { [lineupKey(winless.heroes)]: [2, 1, 1] } }),
+      randomFallback(next, 0),
+    )
+    const rule = { groupGames: 0, players: 0, games: 1, oneOffs: true }
+    data.evidence = [
+      { ...rule, wins: 1 },
+      { ...rule, wins: 0 },
+    ]
+    const picks = (ids: number[]): SlPick[] =>
+      ids.map((id) => ({ id, faction: 'f', paragon: 4, refinement: 4 }))
+    const heroesOf = (ids: number[], evidence = data.evidence) =>
+      chooseSlSet(
+        { ...data, evidence },
+        readSlFile(data),
+        picks(ids),
+        () => true,
+        boardsOn(data, [0]),
+        standing(data),
+      )?.teams.map((t) => t.heroes)
+    const every = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    expect(heroesOf(every, data.evidence.slice(1))).toEqual([winless.heroes])
+    expect(heroesOf(every)).toEqual([won.heroes])
+    expect(heroesOf(winless.heroes)).toEqual([winless.heroes])
+  })
+
   // Each lineup's row adds up its games on every map, so it can meet a
   // minimum its record on any one map would miss.
   it('takes each lineup’s record over every map on a map with no records, its odds scaled by its fit', () => {
@@ -328,7 +366,7 @@ describe('the search', () => {
       randomModel(next, 10, 1),
       randomFallback(next, 1),
     )
-    data.evidence = [{ groupGames: 0, players: 0, games: 4, oneOffs: true }]
+    data.evidence = [{ groupGames: 0, players: 0, games: 4, oneOffs: true, wins: 0 }]
     const picks: SlPick[] = [1, 2, 3, 4, 5].map((id) => ({
       id,
       faction: 'f',
