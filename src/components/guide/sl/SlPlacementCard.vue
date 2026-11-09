@@ -18,6 +18,7 @@ const { reasons, alsoFine, better } = defineProps<{
   alsoFine: boolean
   better: boolean
   pageLook?: boolean
+  hint?: string
 }>()
 
 const i18n = useI18nStore()
@@ -68,5 +69,5 @@ const lines = computed(() => [
 </script>
 
 <template>
-  <SlCard :anchor :lines :page-look />
+  <SlCard :anchor :lines :page-look :hint />
 </template>

@@ -1,13 +1,17 @@
 <script setup lang="ts">
 /* Body of a detailed TooltipPopup for a hero, artifact or phantimal: a name,
-   label/value rows, any extra lines from the slot, and a hint. Text size and
-   colours come from TooltipPopup. */
+   label/value rows, any extra lines from the slot, and a hint of one line or
+   more. Text size and colours come from TooltipPopup. */
 
-defineProps<{
+import { computed } from 'vue'
+
+const { hint } = defineProps<{
   name?: string
   rows?: { label: string; value: string | number; icon?: string; iconClass?: string }[]
-  hint?: string
+  hint?: string | readonly string[]
 }>()
+
+const hintLines = computed(() => (hint === undefined ? [] : [hint].flat()))
 </script>
 
 <template>
@@ -27,7 +31,9 @@ defineProps<{
     </template>
   </div>
   <slot />
-  <div v-if="hint" class="tooltip-card-hint">{{ hint }}</div>
+  <div v-if="hintLines.length" class="tooltip-card-hint">
+    <div v-for="line in hintLines" :key="line">{{ line }}</div>
+  </div>
 </template>
 
 <style scoped>

@@ -22,6 +22,7 @@ import { BOARD_SIZE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { isTouchClick } from '@/utils/pointer'
@@ -50,6 +51,7 @@ const props = defineProps<Props>()
 
 const ctx = useGridContext()
 const grids = useGrids()
+const i18n = useI18nStore()
 const mapEditorStore = useMapEditorStore()
 
 const gridEvents = provideGridEvents()
@@ -314,6 +316,7 @@ defineExpose({
     :also-fine="rulesCard.alsoFine.length > 0"
     :better="rulesCard.better.length > 0"
     page-look
+    :hint="i18n.t('app.toggle-in-grid-info')"
   />
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

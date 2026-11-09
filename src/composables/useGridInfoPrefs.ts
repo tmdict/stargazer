@@ -11,8 +11,7 @@
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
  * re-enabled parent restores the children it had. Details on hover and
  * Placement tips are either/or: enabling one clears the other, and a stored
- * pair with both on keeps Details. Generate ticks Placement tips through
- * tickRules, the one enable that leaves the master as it is.
+ * pair with both on keeps Details.
  */
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
@@ -150,7 +149,6 @@ let adopted = false
 export function useGridInfoPrefs(): {
   prefs: GridInfoPrefs
   setPref: (key: GridInfoKey, value: boolean) => void
-  tickRules: () => void
 } {
   if (!prefs) {
     prefs = reactive({ ...GRID_INFO_DEFAULTS })
@@ -167,12 +165,6 @@ export function useGridInfoPrefs(): {
     })
   }
 
-  const tick = (key: GridInfoKey): void => {
-    state[key] = true
-    const other = EITHER_OR[key]
-    if (other) state[other] = false
-  }
-
   const enableParents = (child: GridInfoKey): void => {
     for (const parent of GRID_INFO_PARENTS[child] ?? []) {
       state[parent] = true
@@ -184,7 +176,9 @@ export function useGridInfoPrefs(): {
     if (!value) {
       state[key] = false
     } else {
-      tick(key)
+      state[key] = true
+      const other = EITHER_OR[key]
+      if (other) state[other] = false
       if (key !== 'master') {
         state.master = true
         enableParents(key)
@@ -193,10 +187,5 @@ export function useGridInfoPrefs(): {
     writePref('gridInfo', { ...state })
   }
 
-  const tickRules = (): void => {
-    tick('rules')
-    writePref('gridInfo', { ...state })
-  }
-
-  return { prefs: state, setPref, tickRules }
+  return { prefs: state, setPref }
 }

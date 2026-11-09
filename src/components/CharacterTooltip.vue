@@ -18,7 +18,7 @@ const { character, variant = 'detailed' } = defineProps<{
   character: CharacterType
   targetElement: HTMLElement
   variant?: 'simple' | 'detailed'
-  hint?: string
+  hint?: string | readonly string[]
   // A line under the name of the simple tooltip.
   note?: string
 }>()

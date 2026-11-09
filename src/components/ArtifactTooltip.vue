@@ -16,7 +16,7 @@ const { artifact, variant = 'detailed' } = defineProps<{
   artifact: ArtifactType
   targetElement: HTMLElement
   variant?: 'simple' | 'detailed'
-  hint?: string
+  hint?: string | readonly string[]
 }>()
 
 const i18n = useI18nStore()

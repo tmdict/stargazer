@@ -124,8 +124,13 @@ const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number
 
 const hoverHint = computed(() => {
   const card = hoveredCard.value
-  if (card?.kind === 'phantimal') return i18n.t('app.hold-for-details')
-  return card && heroInspectTarget(card.hero) ? i18n.t('app.hold-for-skills') : undefined
+  const inspect =
+    card?.kind === 'phantimal'
+      ? 'app.hold-for-details'
+      : card && heroInspectTarget(card.hero)
+        ? 'app.hold-for-skills'
+        : null
+  return [...(inspect ? [i18n.t(inspect)] : []), i18n.t('app.toggle-in-grid-info')]
 })
 
 // Where a point dy screen pixels below a sprite's center lands on the layer.

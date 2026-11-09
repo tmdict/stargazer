@@ -16,7 +16,7 @@ const { phantimal, extraRows = [] } = defineProps<{
   phantimal: PhantimalType
   targetElement: Element
   extraRows?: { label: string; value: string }[]
-  hint?: string
+  hint?: string | readonly string[]
 }>()
 
 const i18n = useI18nStore()

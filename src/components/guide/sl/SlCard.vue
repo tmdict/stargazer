@@ -24,6 +24,7 @@ defineProps<{
   pageLook?: boolean
   // Drawn where it is placed, for a picture of the card.
   inline?: boolean
+  hint?: string
 }>()
 </script>
 
@@ -38,7 +39,7 @@ defineProps<{
       :class="{ 'page-look': pageLook }"
     >
       <template #content>
-        <TooltipCard>
+        <TooltipCard :hint>
           <div v-if="title" class="sl-card-title">
             <span v-for="(part, i) in title" :key="i" :class="{ 'sl-card-name': part.marked }">{{
               part.text

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /* Generate on the Arena and Teams: fills the ally side of every board on the
    page with the set the PvP team generator draws for those boards and the
-   active roster, ticks Placement tips in Grid Info, and links to the
-   generator page on the same boards. */
+   active roster, and links to the generator page on the same boards. */
 
 import { computed, onScopeDispose, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -12,7 +11,6 @@ import IconSparkle from '@/components/ui/IconSparkle.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useFillSide } from '@/composables/useGeneratedSide'
-import { useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
@@ -34,7 +32,6 @@ const i18n = useI18nStore()
 const rosters = useRosters()
 const { show, success, error } = useToast()
 const fillSide = useFillSide()
-const { tickRules } = useGridInfoPrefs()
 const { armed, confirm, disarm } = useArmedConfirm()
 // An armed press confirms only on the boards it was armed for, so a switch of
 // mode, map or boards disarms it.
@@ -108,10 +105,7 @@ const generate = async (): Promise<void> => {
       )
       return
     }
-    if (fillSide(team)) {
-      tickRules()
-      success(i18n.t('app.sl-filled', { roster: rosterName }))
-    }
+    if (fillSide(team)) success(i18n.t('app.sl-filled', { roster: rosterName }))
   } catch {
     if (live) error(i18n.t('app.sl-load-failed'))
   } finally {
