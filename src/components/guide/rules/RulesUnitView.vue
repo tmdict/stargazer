@@ -9,7 +9,7 @@ import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconGem from '@/components/ui/IconGem.vue'
 import { useGameDataStore } from '@/stores/gameData'
-import { LEANS, RULE_HEROES, useRulesNames, type RulesUnit } from './useRules'
+import { leanOf, RULE_HEROES, unitPicture, useRulesNames, type RulesUnit } from './useRules'
 
 const { unit } = defineProps<{ unit: RulesUnit; openList: string | null }>()
 
@@ -21,16 +21,8 @@ const { lang, t, game, heroName, proseName, unitName, unitSub } = useRulesNames(
 const hero = computed(() =>
   unit.kind === 'hero' ? RULE_HEROES.find((h) => h.name === unit.id) : undefined,
 )
-const lean = computed(() => {
-  const id = hero.value?.id
-  if (id === undefined) return null
-  return LEANS.front.has(id) ? 'front' : LEANS.back.has(id) ? 'back' : 'none'
-})
-const picture = computed(() => {
-  if (unit.kind === 'phantimal') return gameData.getCharacterImage(unit.id)
-  if (unit.kind === 'artifact') return gameData.getArtifactImage(unit.id)
-  return null
-})
+const lean = computed(() => (hero.value ? leanOf(hero.value.id) : null))
+const picture = computed(() => unitPicture(unit))
 </script>
 
 <template>

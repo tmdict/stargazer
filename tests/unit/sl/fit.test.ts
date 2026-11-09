@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { MapLayout } from '@/lib/maps'
 import { slFit } from '@/lib/pvp/generator/fit'
 import type { SlBoard } from '@/lib/pvp/generator/setType'
-import { madeUpData, madeUpModel } from '../fixtures/slSeason'
-
-const layoutOf = (key: string): MapLayout => ({
-  key,
-  config: { id: 0, name: '', grid: [] },
-  buffTiles: [],
-})
+import { madeUpData, madeUpLayout, madeUpModel } from '../fixtures/slSeason'
 
 describe('fit', () => {
   // A few games on a map do not show a team's effects work there, so a team
@@ -24,7 +17,7 @@ describe('fit', () => {
       [],
     )
     const heroes = [1, 2, 3, 4, 5]
-    const on = (map: number): SlBoard => ({ layout: layoutOf(`map-${map}`), map, source: map })
+    const on = (map: number): SlBoard => ({ layout: madeUpLayout(`map-${map}`), map, source: map })
     const fit = slFit(data)
     expect(fit.known(on(1), heroes)).toBe(1)
     expect(fit.known(on(0), heroes)).toBeUndefined()

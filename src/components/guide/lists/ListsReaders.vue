@@ -9,8 +9,8 @@ import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconSparkle from '@/components/ui/IconSparkle.vue'
 import { SL_RULES_PATH } from '@/lib/guide'
-import { useGameDataStore } from '@/stores/gameData'
-import { readersOf, useListEditor, useListWords, type ListReader } from './useListEditor'
+import { unitPicture } from '../rules/useRules'
+import { readersOf, useListEditor, useListWords } from './useListEditor'
 
 const { name } = defineProps<{ name: string }>()
 
@@ -18,9 +18,8 @@ const emit = defineEmits<{ go: [name: string] }>()
 
 const open = defineModel<boolean>('open', { required: true })
 
-const gameData = useGameDataStore()
 const editor = useListEditor()
-const { lang, t, proseName, unitName, listName, readersLine } = useListWords()
+const { lang, t, proseName, unitName, listName, cardUse, readersLine } = useListWords()
 
 const readers = computed(() => readersOf(name))
 const parents = computed(() => editor.parentsOf(name))
@@ -32,18 +31,6 @@ const line = computed(() =>
 )
 const hasLine = computed(() => editor.layouts.value[name]!.hasLine)
 const counts = computed(() => editor.usesOf(name).has('every'))
-
-const picture = ({ unit }: ListReader): string | null => {
-  if (unit.kind === 'phantimal') return gameData.getCharacterImage(unit.id)
-  if (unit.kind === 'artifact') return gameData.getArtifactImage(unit.id)
-  return null
-}
-
-const use = ({ card }: ListReader) => {
-  if (!card.use) return null
-  const label = card.use === 'avoid' ? 'keep-away' : card.use === 'every' ? 'counts' : 'goes-to'
-  return { label: t(`rules-row-${label}`), text: t(`rules-use-${card.use}`) }
-}
 
 // The sentence around the link to the list that brings this one in.
 const broughtInto = (parent: { list: string; entry: number; below: boolean }) => {
@@ -71,7 +58,7 @@ const broughtInto = (parent: { list: string; entry: number; below: boolean }) =>
           class="face"
         />
         <span v-else class="face mark">
-          <img v-if="picture(reader)" :src="picture(reader)!" alt="" />
+          <img v-if="unitPicture(reader.unit)" :src="unitPicture(reader.unit)!" alt="" />
           <IconSparkle v-else :size="18" />
         </span>
         <span class="team" data-theme="dark">
@@ -89,9 +76,9 @@ const broughtInto = (parent: { list: string; entry: number; below: boolean }) =>
           <b>{{ t('rules-row-targets') }}</b
           >{{ t(reader.card.targets) }}
         </p>
-        <p v-if="use(reader)" class="how">
-          <b>{{ use(reader)!.label }}</b
-          >{{ use(reader)!.text }}
+        <p v-if="cardUse(reader.card)" class="how">
+          <b>{{ cardUse(reader.card)!.label }}</b
+          >{{ cardUse(reader.card)!.text }}
         </p>
       </li>
       <li v-for="parent in parents" :key="parent.list" class="via">

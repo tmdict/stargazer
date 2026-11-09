@@ -39,7 +39,7 @@ import { listLayout, type ListLayout } from './listLayout'
 export const SITE_LISTS: Lists = formationData?.lists ?? {}
 const HERO_IDS = new Set(RULE_HEROES.map((hero) => hero.id))
 
-export interface ListReader {
+interface ListReader {
   unit: RulesUnit
   card: RuleCard
 }

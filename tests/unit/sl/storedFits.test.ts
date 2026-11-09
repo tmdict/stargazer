@@ -1,16 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { MapLayout } from '@/lib/maps'
 import { slFit } from '@/lib/pvp/generator/fit'
 import type { SlBoard } from '@/lib/pvp/generator/setType'
 import { mergeFits, parseStoredFits } from '@/lib/pvp/generator/storedFits'
-import { madeUpData, madeUpModel } from '../fixtures/slSeason'
-
-const layoutOf = (key: string): MapLayout => ({
-  key,
-  config: { id: 0, name: '', grid: [] },
-  buffTiles: [],
-})
+import { madeUpData, madeUpLayout, madeUpModel } from '../fixtures/slSeason'
 
 const lineups = (count: number): Record<string, number> =>
   Object.fromEntries(Array.from({ length: count }, (_, i) => [String(i), i]))
@@ -53,7 +46,7 @@ describe('kept fits', () => {
       [],
     )
     const heroes = [1, 2, 3, 4, 5]
-    const on = (key: string): SlBoard => ({ layout: layoutOf(key), map: 0, source: null })
+    const on = (key: string): SlBoard => ({ layout: madeUpLayout(key), map: 0, source: null })
     const first = slFit(data)
     const [job] = first.jobs([{ board: on('new'), heroes }])
     const gained = first.record(job!, { home: 8, board: 6 })

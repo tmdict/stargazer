@@ -1,7 +1,7 @@
-/* A visitor's own version of the lists the rules read, for the lists page: kept
- * in the browser under `stargazer.placement.lists` and copied or exported for
- * the owner (docs/architecture/PLACEMENT.md has both shapes). The site always
- * places heroes by its own lists; these only wait to be sent. */
+/* A visitor's own version of the lists the rules read, for the Hero lists
+ * page: kept in the browser under `stargazer.placement.lists` and copied or
+ * exported for the owner (docs/architecture/PLACEMENT.md has both shapes). The
+ * site always places heroes by its own lists; these only wait to be sent. */
 
 import { CLASS_ORDER } from '../filterOrder'
 import { expandList } from './lists'

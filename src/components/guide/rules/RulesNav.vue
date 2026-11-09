@@ -8,14 +8,15 @@ import RulesSearch from './RulesSearch.vue'
 import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconGem from '@/components/ui/IconGem.vue'
+import { opensElsewhere } from '@/composables/useDropdown'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { RuleUnitKind } from '@/lib/placement/formationRules'
-import { useGameDataStore } from '@/stores/gameData'
 import {
   heroOf,
   RULE_LISTS,
   RULE_UNITS,
   SHARED_VIEWS,
+  unitPicture,
   useRulesNames,
   type RulesUnit,
 } from './useRules'
@@ -26,8 +27,7 @@ const emit = defineEmits<{ go: [view: string] }>()
 
 const query = defineModel<string>('query', { required: true })
 
-const gameData = useGameDataStore()
-const { lang, t, game, heroName, unitName, unitSub } = useRulesNames()
+const { lang, t, game, unitName, unitSub } = useRulesNames()
 
 const GROUPS: { kind: RuleUnitKind; label: () => string }[] = [
   { kind: 'hero', label: () => t('heroes') },
@@ -87,14 +87,8 @@ const shared = computed(() =>
 const how = computed(() => shown('how', t('rules-how')))
 const nothing = computed(() => !how.value && !groups.value.length && !shared.value.length)
 
-const picture = (unit: RulesUnit): string | null => {
-  if (unit.kind === 'phantimal') return gameData.getCharacterImage(unit.id)
-  if (unit.kind === 'artifact') return gameData.getArtifactImage(unit.id)
-  return null
-}
-
 function go(event: MouseEvent, id: string): void {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  if (opensElsewhere(event)) return
   event.preventDefault()
   emit('go', id)
 }
@@ -132,11 +126,11 @@ function go(event: MouseEvent, id: string): void {
       >
         <GuidePortrait v-if="unit.kind === 'hero'" :slug="unit.id" :lang :size="26" />
         <GuideDisc v-else :size="26" class="mark">
-          <img v-if="picture(unit)" :src="picture(unit)!" alt="" />
+          <img v-if="unitPicture(unit)" :src="unitPicture(unit)!" alt="" />
           <IconGem v-else :size="16" />
         </GuideDisc>
         <span class="words">
-          <span class="name">{{ unit.kind === 'hero' ? heroName(unit.id) : unitName(unit) }}</span>
+          <span class="name">{{ unitName(unit) }}</span>
           <span v-if="unitSub(unit)" class="sub">{{ unitSub(unit) }}</span>
         </span>
         <span class="dots" data-theme="dark">

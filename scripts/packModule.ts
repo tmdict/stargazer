@@ -4,7 +4,7 @@
 // through Vite's module runner so the app's imports resolve. The runner
 // (`runnerImport`) is marked experimental in Vite, so a Vite upgrade checks
 // that the guide index still draws the generator's card and the Formation
-// rules page its lists.
+// engine rules page its lists.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { runnerImport, type Plugin, type ResolvedConfig } from 'vite'

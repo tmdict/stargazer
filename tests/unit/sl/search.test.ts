@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { MapLayout } from '@/lib/maps'
 import { lineupKey } from '@/lib/pvp/data/sides'
 import type { SlData, SlModel, SlTeam } from '@/lib/pvp/data/types'
 import { shortfall } from '@/lib/pvp/data/upgrades'
@@ -11,7 +10,13 @@ import type { SlBoard } from '@/lib/pvp/generator/setType'
 import type { SlPick } from '@/lib/pvp/generator/types'
 import { sigmoid } from '@/lib/pvp/model/odds'
 import { readSlFile, type SlReader } from '@/lib/pvp/model/reader'
-import { madeUpData, madeUpModel, seededRandom, type MadeUpTeam } from '../fixtures/slSeason'
+import {
+  madeUpData,
+  madeUpLayout,
+  madeUpModel,
+  seededRandom,
+  type MadeUpTeam,
+} from '../fixtures/slSeason'
 
 // Made-up numbers for heroes 1 to `heroes` and artifacts 1 to `artifacts`,
 // where artifact 1 does most for a team, and more on group 0, so which
@@ -73,14 +78,8 @@ const randomSeason = (next: () => number, everyMap = false): SlData => {
 }
 
 // The made-up maps have no tiles, so a search on them lets every team stand there.
-const layoutOf = (key: string): MapLayout => ({
-  key,
-  config: { id: 0, name: '', grid: [] },
-  buffTiles: [],
-})
-
 const boardsOn = (data: SlData, maps: number[]): SlBoard[] =>
-  maps.map((source) => ({ layout: layoutOf(data.maps[source]!.key), map: source, source }))
+  maps.map((source) => ({ layout: madeUpLayout(data.maps[source]!.key), map: source, source }))
 const standing = (data: SlData): SlFit => ({ ...slFit(data), stands: () => true })
 
 // The chance of winning most of the maps, over every way the maps can fall.
@@ -373,7 +372,7 @@ describe('the search', () => {
       paragon: 4,
       refinement: 4,
     }))
-    const board: SlBoard = { layout: layoutOf('new'), map: 0, source: null }
+    const board: SlBoard = { layout: madeUpLayout('new'), map: 0, source: null }
     const fit: SlFit = {
       stands: () => true,
       known: () => undefined,
@@ -476,7 +475,7 @@ describe('the search', () => {
       const shareOn = (board: number, heroes: number[]): number | null =>
         open.includes(board) ? fits.get(keyOn(board, heroes))! : 1
       const boards: SlBoard[] = layouts.map((key, map) => ({
-        layout: layoutOf(key),
+        layout: madeUpLayout(key),
         map,
         source: open.includes(map) ? null : 0,
       }))

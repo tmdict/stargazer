@@ -11,12 +11,14 @@ import {
   ruleLists,
   ruleUnit,
   type ListGroup,
+  type RuleCard,
   type RuleList,
   type RuleUnit,
 } from '@/lib/placement/formationRules'
 import { matchesFilter } from '@/lib/placement/lists'
 import type { HeroFilter } from '@/lib/placement/types'
 import type { CharacterType } from '@/lib/types/character'
+import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import {
   loadAppLocales,
@@ -86,9 +88,19 @@ export const RULE_LISTS: Readonly<Record<string, RuleList>> = formationData
   ? ruleLists(formationData.lists, RULE_UNITS, { heroesMatching })
   : {}
 
-export const LEANS = {
+const LEANS = {
   front: new Set(formationData?.leans.front),
   back: new Set(formationData?.leans.back),
+}
+
+export const leanOf = (id: number): 'front' | 'back' | 'none' =>
+  LEANS.front.has(id) ? 'front' : LEANS.back.has(id) ? 'back' : 'none'
+
+export function unitPicture(unit: RuleUnit): string | null {
+  const gameData = useGameDataStore()
+  if (unit.kind === 'phantimal') return gameData.getCharacterImage(unit.id)
+  if (unit.kind === 'artifact') return gameData.getArtifactImage(unit.id)
+  return null
 }
 
 // The page's parts that are no unit's: the intro first, the rest after the
@@ -187,6 +199,12 @@ export function useRulesNames() {
     return t('rules-every', { who: words(noun) })
   }
 
+  const cardUse = (card: RuleCard): { label: string; text: string } | null => {
+    if (!card.use) return null
+    const label = card.use === 'avoid' ? 'keep-away' : card.use === 'every' ? 'counts' : 'goes-to'
+    return { label: t(`rules-row-${label}`), text: t(`rules-use-${card.use}`) }
+  }
+
   // `{items}` in a sentence, each item a link, joined as the language joins a list.
   function linked(key: string, items: RulesLink[]): RulesLink[] {
     const [before = '', after = ''] = t(key).split('{items}')
@@ -239,6 +257,7 @@ export function useRulesNames() {
     unitSub,
     listName,
     everyName,
+    cardUse,
     and,
     listLines,
     groupLists,

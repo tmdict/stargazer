@@ -4,7 +4,6 @@
 
 import { useRulesNames } from './useRules'
 
-// The items' words are `rules-<view>-<n>` and `rules-<view>-<n>-text`.
 const { view, count } = defineProps<{ view: 'map' | 'questions'; count: number }>()
 
 const { t } = useRulesNames()

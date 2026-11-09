@@ -1,6 +1,7 @@
-/* The Formation engine rules page's model: each unit with placement rules, each rule
- * as its card shows it, and each list the rules read, its heroes grouped by
- * the entry that brought them in. The page words them in the site language. */
+/* The Formation engine rules page's model: each unit with placement rules,
+ * each rule as its card shows it, and each list the rules read, its heroes
+ * grouped by the entry that brought them in. The page words them in the site
+ * language. */
 
 import type { Rule, RuleTeam } from '../types/rule'
 import { effectVerb, goalList, goalWord } from './goals'

@@ -17,7 +17,7 @@ const { card, who, openList } = defineProps<{
 
 const emit = defineEmits<{ open: [list: string] }>()
 
-const { t } = useRulesNames()
+const { t, cardUse } = useRulesNames()
 
 const effect = computed(() => {
   if (card.effect === 'back')
@@ -31,11 +31,7 @@ const effect = computed(() => {
 })
 
 const list = computed(() => (card.list && RULE_LISTS[card.list] ? card.list : null))
-const use = computed(() => {
-  if (!card.use) return null
-  const label = card.use === 'avoid' ? 'keep-away' : card.use === 'every' ? 'counts' : 'goes-to'
-  return { label: t(`rules-row-${label}`), text: t(`rules-use-${card.use}`) }
-})
+const use = computed(() => cardUse(card))
 </script>
 
 <template>

@@ -90,6 +90,11 @@ function commitRank(): void {
 
 const place = (item: { place: number; counted?: boolean }): string =>
   item.counted ? '–' : item.place ? `#${item.place}` : '='
+
+const movedTag = computed(() => {
+  if (change?.kind !== 'moved') return ''
+  return change.was === row.index + 1 ? t('lists-moved-tag') : t('lists-was', { n: change.was })
+})
 </script>
 
 <template>
@@ -133,9 +138,7 @@ const place = (item: { place: number; counted?: boolean }): string =>
       </span>
     </div>
     <span v-if="change?.kind === 'new'" class="tag new">{{ t('lists-new') }}</span>
-    <span v-else-if="change" class="tag moved">
-      {{ change.was === row.index + 1 ? t('lists-moved-tag') : t('lists-was', { n: change.was }) }}
-    </span>
+    <span v-else-if="change" class="tag moved">{{ movedTag }}</span>
     <span v-if="also.length" class="tag also">{{ t('lists-also-in', { lists: and(also) }) }}</span>
     <span v-if="row.hero.counted" class="tag">{{ t('lists-counted') }}</span>
     <button
@@ -160,9 +163,7 @@ const place = (item: { place: number; counted?: boolean }): string =>
       <span>{{ t(row.extra ? 'lists-line-extra' : 'lists-line-text') }}</span>
     </div>
     <span v-if="change?.kind === 'new'" class="tag new">{{ t('lists-new') }}</span>
-    <span v-else-if="change" class="tag moved">
-      {{ change.was === row.index + 1 ? t('lists-moved-tag') : t('lists-was', { n: change.was }) }}
-    </span>
+    <span v-else-if="change" class="tag moved">{{ movedTag }}</span>
     <button
       type="button"
       class="x"
@@ -199,11 +200,7 @@ const place = (item: { place: number; counted?: boolean }): string =>
           {{ t('lists-open-list') }}
         </button>
         <span v-if="change?.kind === 'new'" class="tag new">{{ t('lists-new') }}</span>
-        <span v-else-if="change" class="tag moved">
-          {{
-            change.was === row.index + 1 ? t('lists-moved-tag') : t('lists-was', { n: change.was })
-          }}
-        </span>
+        <span v-else-if="change" class="tag moved">{{ movedTag }}</span>
       </div>
       <p v-if="row.loop" class="note">{{ t('lists-loop-note') }}</p>
       <p v-else-if="row.above" class="note">{{ t('lists-above-note') }}</p>
@@ -271,8 +268,7 @@ const place = (item: { place: number; counted?: boolean }): string =>
   opacity: 0.55;
 }
 
-.card.broken,
-.card.extra {
+.card.broken {
   border-color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 18%, transparent);
 }

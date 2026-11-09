@@ -3,8 +3,7 @@
    Placement tips place heroes by, unit by unit, with the lists they read. A
    column of units and the parts every team shares, the open one in the
    middle, addressed by the page's hash (#gunnar), and the open list on the
-   right, or in a pop-up where the window has no room for it. The page is
-   pre-rendered whole, on its intro. */
+   right, or in a pop-up where the window has no room for it. */
 
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

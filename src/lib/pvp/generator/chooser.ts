@@ -372,9 +372,9 @@ function searcher(
 
   // The best set under each evidence rule in turn, every chance counting the
   // fit of a team not yet measured at its most, so once a set's teams are all
-  // measured, no other set can beat it. Placing a team is slow,
-  // so only the teams a search picks are measured. Each round first yields
-  // the fits it is about to measure.
+  // measured, no other set can beat it. Placing a team is slow, so only the
+  // teams a search picks are measured. Each round first yields the fits it is
+  // about to measure.
   return {
     optionsFor,
     *choose(reads: readonly (number | null)[]): Steps {

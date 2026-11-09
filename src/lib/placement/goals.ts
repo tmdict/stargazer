@@ -1,5 +1,5 @@
 /* What a rule's goal asks, read alike by the placement cards, the Formation
- * rules page and the rules test. */
+ * engine rules page and the rules test. */
 
 import type { RuleGoal } from '../types/rule'
 

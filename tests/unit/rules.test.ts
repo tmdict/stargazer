@@ -172,8 +172,9 @@ describe('placement rules', () => {
     expect(named.filter((key) => !needed.has(key))).toEqual([])
   })
 
-  // The Formation engine rules page shows each rule's note in the site language, and
-  // for a rule against an enemy hero, which of our units its skill lands on.
+  // The Formation engine rules page shows each rule's note in the site
+  // language, and for a rule against an enemy hero, which of our units its
+  // skill lands on.
   it('each have their note words, the English word for word, and no words outlive one', () => {
     const needed = new Set<string>()
     for (const { name, rules } of owners) {

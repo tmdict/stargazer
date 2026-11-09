@@ -4,7 +4,7 @@
    own lists; a visitor's version stays in the browser until sent. A column
    of lists, the open one in the middle, addressed by the page's hash
    (#temp-buff), and the Add heroes panel on the right, below it where the
-   window has no room. The page is pre-rendered with the site's lists. */
+   window has no room. */
 
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -23,6 +23,7 @@ import {
   SITE_LISTS,
   useListWords,
 } from '@/components/guide/lists/useListEditor'
+import { opensElsewhere } from '@/composables/useDropdown'
 import { useOverlay } from '@/composables/useOverlay'
 import { useToast } from '@/composables/useToast'
 import { SL_RULES_PATH } from '@/lib/guide'
@@ -101,8 +102,9 @@ function rulesEntry(): number | null {
 function back(event: MouseEvent, navigate: (event?: MouseEvent) => unknown): void {
   const rulesAt = rulesEntry()
   const position = (window.history.state as { position?: unknown } | null)?.position
-  const plain = !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-  if (!plain || rulesAt === null || typeof position !== 'number') return void navigate(event)
+  if (opensElsewhere(event) || rulesAt === null || typeof position !== 'number') {
+    return void navigate(event)
+  }
   event.preventDefault()
   router.go(rulesAt - position)
 }

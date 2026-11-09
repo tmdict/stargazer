@@ -262,10 +262,10 @@ function searched(
 
 /**
  * Places a team on a map's ally tiles: scores placements by the rules of its
- * units, its artifact and its charms, the map's buff tile, the rules found in
- * the formations and where its heroes lean, and the rules of the enemy units it
- * could face there, and returns the best, with how many were about as good and
- * which tiles each hero kept among them. A rebuild gives the same placement.
+ * units, its artifact and its charms, the map's buff tile and where its heroes
+ * lean, and the rules of the enemy units it could face there, and returns the
+ * best, with how many were about as good and which tiles each hero kept among
+ * them. A rebuild gives the same placement.
  */
 export function placeTeam(
   team: PlacementTeam,

@@ -3,6 +3,7 @@
  * evidence rule every team with a decided game passes.
  */
 
+import type { MapLayout } from '@/lib/maps'
 import { lineupKey } from '@/lib/pvp/data/sides'
 import type { SlData, SlEveryMapTeam, SlModel, SlTeam } from '@/lib/pvp/data/types'
 import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
@@ -46,6 +47,12 @@ export const madeUpModel = (numbers: Partial<SlModel>): SlModel => ({
   artifacts: {},
   artifactsOnKind: {},
   ...numbers,
+})
+
+export const madeUpLayout = (key: string): MapLayout => ({
+  key,
+  config: { id: 0, name: '', grid: [] },
+  buffTiles: [],
 })
 
 // Each team ranks by its place in `teams`, and a lineup's row over every map

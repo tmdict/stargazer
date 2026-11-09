@@ -6,14 +6,12 @@ import { computed } from 'vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import { CLASS_ORDER } from '@/lib/filterOrder'
 import { useGameDataStore } from '@/stores/gameData'
-import { LEANS, RULE_HEROES, useRulesNames } from './useRules'
+import { leanOf, RULE_HEROES, useRulesNames } from './useRules'
 
 const gameData = useGameDataStore()
 const { lang, t, game, heroName } = useRulesNames()
 
 const LEAN_ORDER = ['front', 'back', 'none'] as const
-const leanOf = (id: number) =>
-  LEANS.front.has(id) ? 'front' : LEANS.back.has(id) ? 'back' : 'none'
 
 const classes = computed(() =>
   CLASS_ORDER.map((key) => {

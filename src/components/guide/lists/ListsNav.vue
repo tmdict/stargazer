@@ -5,6 +5,7 @@
 
 import { computed } from 'vue'
 
+import { opensElsewhere } from '@/composables/useDropdown'
 import { useListEditor, useListWords } from './useListEditor'
 
 const { current } = defineProps<{ current: string }>()
@@ -27,7 +28,7 @@ const readers = (name: string): string =>
   )
 
 function go(event: MouseEvent, name: string): void {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  if (opensElsewhere(event)) return
   event.preventDefault()
   emit('go', name)
 }
