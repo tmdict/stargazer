@@ -16,7 +16,7 @@
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "save" },
+      "goal": { "target": "hepler" },
       "weight": "aim",
       "note": "Hepler protects his frontmost neighbour from one fatal blow, best the hero most worth saving."
     }

@@ -3,12 +3,14 @@
 // starts. Where the effect lands is the unit's skill's to say, so a rule names
 // only the aim, and the lists and weights it names are valued outside it. An
 // effect Stargazer draws no skill for, such as a charm's, names its tile
-// instead.
+// instead, as does one the battle aims, such as Reinier's swap, which takes any
+// teammate next to him.
 export type RuleTeam = 'ally' | 'enemy'
 
-// Where an effect with no skill code acts: on the unit behind or in front of
-// its holder, on the tiles around it, or on the other tiles of its row.
-type RuleTile = 'behind' | 'front' | 'around' | 'row'
+// Where an effect that names its tile acts: on the unit behind or in front of
+// its holder, on the tiles around it, on the other tiles of its row, or on the
+// tiles mirroring its own side's tiles around it.
+type RuleTile = 'behind' | 'front' | 'around' | 'row' | 'mirror-around'
 
 export type RuleGoal =
   // fallback: false leaves the goal unmet when the team has none of the list's

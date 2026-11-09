@@ -12,10 +12,13 @@ import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from './reach'
-import type { ListEntry, PlacementData, PlacementTeam } from './types'
+import type { ListEntry, PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // The list a rule falls back on when the team has none of its own list's heroes.
 const FALLBACK_LIST = 'damage'
+// What a hero below a list's line counts for a rule that counts every listed
+// hero it reaches, while a hero above the line is on the team.
+const BELOW_LINE = 0.9
 
 // The enemy units' rules are left out: they choose only among placements as
 // good on these (threats()).
@@ -75,25 +78,50 @@ const countsAllies = (goal: RuleGoal): boolean =>
 const isWall = (state: State): boolean =>
   state === State.BLOCKED || state === State.BLOCKED_BREAKABLE
 
-// A list's heroes, the lists it brings in included. `seen` holds the lists on
-// the way down, so a list two others bring in is read for each, and only a list
-// that brings itself in fails.
+// A list's heroes, the lists it brings in included: those above its line in
+// order, and those below it, who rank the same. A list brought in above the
+// line keeps its own order and line; one brought in below it counts all its
+// heroes the same. A hero counts at its first place, so one named again after
+// a list that holds it below that list's line stays there. `seen` holds the
+// lists on the way down, so a list two others bring in is read for each, and
+// only a list that brings itself in fails.
+interface ListHeroes {
+  ranked: number[]
+  equal: number[]
+}
+
 function expandList(
   lists: PlacementData['lists'],
   name: string,
+  lookups: PlacementLookups,
   seen: Set<string> = new Set(),
-): number[] | undefined {
+): ListHeroes | undefined {
   const entries: ListEntry[] | undefined = lists[name]
   if (!entries || seen.has(name)) return undefined
   seen.add(name)
-  const heroes: number[] = []
+  const found: ListHeroes = { ranked: [], equal: [] }
+  const placed = new Set<number>()
+  const put = (heroes: number[], into: number[]) => {
+    for (const hero of heroes) {
+      if (placed.has(hero)) continue
+      placed.add(hero)
+      into.push(hero)
+    }
+  }
+  let below = false
   for (const entry of entries) {
-    const more = typeof entry === 'number' ? [entry] : expandList(lists, entry.list, seen)
-    if (!more) return undefined
-    for (const hero of more) if (!heroes.includes(hero)) heroes.push(hero)
+    if (typeof entry === 'number') put([entry], below ? found.equal : found.ranked)
+    else if ('line' in entry) below = true
+    else if ('every' in entry) put(lookups.heroesMatching(entry.every), found.equal)
+    else {
+      const more = expandList(lists, entry.list, lookups, seen)
+      if (!more) return undefined
+      put(more.ranked, below ? found.equal : found.ranked)
+      put(more.equal, found.equal)
+    }
   }
   seen.delete(name)
-  return heroes
+  return found
 }
 
 // Each tile a unit can walk to from the given tiles round the walls, with its
@@ -140,8 +168,8 @@ export class PlacementScorer {
   // rules after it can add.
   private readonly heaviest: { index: number; rest: number }[] = []
   readonly threatCeiling: number
-  private readonly lists = new Map<string, number[] | undefined>()
-  private readonly rankings = new Map<string, number[]>()
+  private readonly lists = new Map<string, ListHeroes | undefined>()
+  private readonly rankings = new Map<string, { order: number[]; above: number }>()
   private readonly enemyTiles: Set<number>
   // Ascending, the tiles an enemy unit is tried on.
   private readonly enemyOrder: number[]
@@ -210,24 +238,32 @@ export class PlacementScorer {
       }
     }
     // An enemy unit stands alone on its side, so a skill that reads its own
-    // teammates finds none.
+    // teammates finds none; a rule that names its tiles reads them instead.
     for (const [id, share] of Object.entries(data.pickRates[layout.key] ?? {})) {
       const unit = Number(id)
       const rules = lookups.rulesOf(unit)
-      if (rules.some((rule) => rule.team === 'enemy') && !getCharacterSkill(unit)) {
+      if (rules.some((rule) => rule.team === 'enemy' && !rule.tile) && !getCharacterSkill(unit)) {
         this.skipped.push({ owner: unit, reason: 'no skill' })
         continue
       }
-      const reach = ({ grid, manager }: PlacementBoard): Reach[] =>
-        this.enemyOrder.flatMap((hexId) => {
-          if (!performPlace(grid, hexId, unit, Team.ENEMY)) return []
-          manager.activateCharacterSkill(unit, hexId, Team.ENEMY, grid)
-          const found = skillReach(manager, unit, Team.ENEMY)
-          manager.deactivateCharacterSkill(unit, hexId, Team.ENEMY, grid)
-          performRemove(grid, hexId)
-          return [found]
-        })
-      for (const rule of rules) this.addEffect('unit', unit, undefined, rule, reach, 'enemy', share)
+      const reach =
+        ({ tile }: Rule) =>
+        ({ grid, manager }: PlacementBoard): Reach[] =>
+          this.enemyOrder.flatMap((hexId) => {
+            if (tile) {
+              const holder = { grid, hexId, team: Team.ENEMY, characterId: unit }
+              return [tileReach({ ...holder, skillManager: manager, lookups }, tile)]
+            }
+            if (!performPlace(grid, hexId, unit, Team.ENEMY)) return []
+            manager.activateCharacterSkill(unit, hexId, Team.ENEMY, grid)
+            const found = skillReach(manager, unit, Team.ENEMY)
+            manager.deactivateCharacterSkill(unit, hexId, Team.ENEMY, grid)
+            performRemove(grid, hexId)
+            return [found]
+          })
+      for (const rule of rules) {
+        this.addEffect('unit', unit, undefined, rule, reach(rule), 'enemy', share)
+      }
     }
     for (const hero of team.heroes) {
       const charm = lookups.charmOf(hero)
@@ -339,8 +375,10 @@ export class PlacementScorer {
     return weight ?? 0
   }
 
-  private list(name: string): number[] | undefined {
-    if (!this.lists.has(name)) this.lists.set(name, expandList(this.data.lists, name))
+  private list(name: string): ListHeroes | undefined {
+    if (!this.lists.has(name)) {
+      this.lists.set(name, expandList(this.data.lists, name, this.board.lookups))
+    }
     return this.lists.get(name)
   }
 
@@ -440,20 +478,27 @@ export class PlacementScorer {
     }
   }
 
-  private ranked(goal: RuleGoal, holder: number | undefined): number[] {
+  // The team's heroes on the goal's list but the holder: those above its line
+  // in order, then those below it, with how many are above.
+  private ranked(goal: RuleGoal, holder: number | undefined): { order: number[]; above: number } {
     const name = goalList(goal)!
     const fallback = fallsBack(goal)
     const key = `${name}|${holder}|${fallback}`
-    let order = this.rankings.get(key)
-    if (!order) {
+    let found = this.rankings.get(key)
+    if (!found) {
       const others = this.heroes.filter((hero) => hero !== holder)
-      order = this.list(name)!.filter((hero) => others.includes(hero))
-      if (!order.length && fallback) {
-        order = this.list(FALLBACK_LIST)!.filter((hero) => others.includes(hero))
+      const onTeam = ({ ranked, equal }: ListHeroes) => {
+        const above = ranked.filter((hero) => others.includes(hero))
+        return {
+          order: [...above, ...equal.filter((hero) => others.includes(hero))],
+          above: above.length,
+        }
       }
-      this.rankings.set(key, order)
+      found = onTeam(this.list(name)!)
+      if (!found.order.length && fallback) found = onTeam(this.list(FALLBACK_LIST)!)
+      this.rankings.set(key, found)
     }
-    return order
+    return found
   }
 
   // The share met, averaged over the ways the effect can stand where it applies.
@@ -520,7 +565,7 @@ export class PlacementScorer {
       return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
     }
 
-    const order = this.ranked(goal, self)
+    const { order, above } = this.ranked(goal, self)
     if (!order.length) return null
     // A hero's lean comes before a Spirit Mark: the Mark counts only on a hero
     // standing in the half it leans to, or on one with no lean.
@@ -531,11 +576,20 @@ export class PlacementScorer {
         : tiles,
       holder,
     )
-    if ('avoid' in goal) return hit.has(order[0]!) ? 0 : 1
+    // With nobody above the line on the team, nobody is worth guarding.
+    if ('avoid' in goal) return above ? (hit.has(order[0]!) ? 0 : 1) : null
     if ('target' in goal) {
-      // An effect that lands on two wants the list's first two, half each.
+      // An effect that lands on two wants the list's first two, half each. A
+      // place the heroes above the line leave open goes to any hero below it.
       const count = Math.max(effect.marks, hit.size)
-      const reached = order.slice(0, count).filter((hero) => hit.has(hero))
+      const top = order.slice(0, Math.min(count, above))
+      const reached = [
+        ...top.filter((hero) => hit.has(hero)),
+        ...order
+          .slice(above)
+          .filter((hero) => hit.has(hero))
+          .slice(0, count - top.length),
+      ]
       // A unit other than the team's heroes, such as a phantimal, earns no
       // others share: the effect is for a hero.
       const others = goal.others
@@ -551,7 +605,9 @@ export class PlacementScorer {
     const slots = marked.length ? order.length : 1
     const reached = order.filter((hero) => hit.has(hero))
     counted?.push(...reached)
-    return Math.min(1, reached.length / slots)
+    const below = above ? BELOW_LINE : 1
+    const points = reached.reduce((sum, hero) => sum + (order.indexOf(hero) < above ? 1 : below), 0)
+    return Math.min(1, points / slots)
   }
 
   private onBuffTiles(): number {

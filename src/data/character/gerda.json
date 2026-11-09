@@ -8,5 +8,13 @@
   "energy": [0],
   "range": 1,
   "season": 3,
-  "tags": {}
+  "tags": {},
+  "rules": [
+    {
+      "team": "ally",
+      "goal": "back",
+      "weight": "aim",
+      "note": "Gerda leaps up to 3 tiles forward when a battle starts and makes her hot spring where she lands, so she starts in the back half for it to cover the middle of the arena."
+    }
+  ]
 }

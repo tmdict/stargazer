@@ -22,10 +22,18 @@
   },
   "rules": [
     {
+      "team": "ally",
+      "goal": { "target": "damage" },
+      "tile": "around",
+      "weight": "aim",
+      "note": "Reinier swaps a teammate next to him over to the enemy's side, where it heals from the enemy it swapped with and gains ATK. Any of them can be the one he sends, so everyone next to him should be among the team's top damage dealers, never a support."
+    },
+    {
       "team": "enemy",
       "goal": { "avoid": "damage" },
+      "tile": "mirror-around",
       "weight": "threat",
-      "note": "An enemy Reinier swaps one of ours on a tile symmetrical to his neighbour's, so that unit is best not a damage dealer."
+      "note": "An enemy Reinier swaps one of ours over to his side: the unit on the tile that mirrors a teammate next to him. Our top damage dealer is safest on a tile he can't take, best one with no enemy tile mirroring it."
     }
   ]
 }

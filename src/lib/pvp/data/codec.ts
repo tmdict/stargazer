@@ -7,6 +7,7 @@
  * object, never put in a store or on window. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
+import { CLASS_ORDER } from '@/lib/filterOrder'
 import { MAPS } from '@/lib/maps'
 import pvpFileUrl from '@/pack/pvp/pvp.bin?url'
 import pvpKey from '@/pack/pvp/pvp.key?raw'
@@ -94,8 +95,18 @@ const isModel = (value: unknown): boolean =>
   isRows(value.artifacts, 3) &&
   isRows(value.artifactsOnKind, 3)
 
+const isHeroFilter = (value: unknown): boolean =>
+  isObject(value) &&
+  (value.class === undefined ||
+    (Array.isArray(value.class) &&
+      value.class.every((name: unknown) => CLASS_ORDER.includes(name as string)))) &&
+  (value.range === undefined || value.range === 'melee' || value.range === 'ranged') &&
+  (value.damage === undefined || value.damage === 'physical' || value.damage === 'magic')
+
 const isListEntry = (value: unknown): boolean =>
-  Number.isInteger(value) || (isObject(value) && typeof value.list === 'string')
+  Number.isInteger(value) ||
+  (isObject(value) &&
+    (typeof value.list === 'string' || value.line === true || isHeroFilter(value.every)))
 
 const isPlacementData = (value: unknown): boolean =>
   isObject(value) &&

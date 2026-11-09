@@ -25,6 +25,7 @@ const MEHIRA = 94
 const PHRAESTO = 50
 const LUDOVIC = 53
 const EVIE = 113
+const REINIER = 31
 const WEDGE_OF_MATTER = toPhantimalId(5)
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
@@ -39,9 +40,10 @@ const DATA: PlacementData = {
     taichi: [{ list: 'temp-buff' }, { list: 'damage' }],
     tank: [ALNA],
     melee: [ALNA],
+    save: [ORION],
   },
   leans: { front: [], back: [] },
-  weights: { aim: 10, 'aliceth-mark': 6, buff: 3, lean: 0.2, margin: 1 },
+  weights: { aim: 10, threat: 6, buff: 3, lean: 0.2, margin: 1 },
   pickRates: {},
 }
 
@@ -99,21 +101,55 @@ describe('placement scoring', () => {
   it('scores a share of the listed heroes on the tiles an effect marks', () => {
     const at = { [TAICHI]: 6, [ORION]: 1, [PERSEUS]: 3, [DIONEL]: 8, [ALNA]: 10 }
     expect(metOf(scoredAt(at), TAICHI)).toBeCloseTo(2 / 3)
+    // Below the line every melee hero counts, at 0.9 while Orion above it is
+    // on the team, and Dionel, a marksman, not at all.
+    const lined = [ORION, { line: true as const }, { every: { range: 'melee' as const } }]
+    const data = { ...DATA, lists: { ...DATA.lists, taichi: lined } }
+    expect(metOf(scoredAt(at, data), TAICHI)).toBeCloseTo((1 + 0.9) / 3)
   })
 
-  // An enemy Aliceth marks our unit farthest from her, best a tank: Alna at the
-  // back is that unit from some enemy tiles, at the front from none. Her rule
-  // scales by her pick rate and leaves the team's own score as it is.
+  // Ravion's Objectives go to the two rearmost allies, tiles 1 and 2.
+  it('fills the places the heroes above a list line leave open with any hero below it', () => {
+    const ravionMet = (damage: PlacementData['lists'][string], more = {}) => {
+      const data = { ...DATA, lists: { ...DATA.lists, damage, ...more } }
+      const at = { [RAVION]: 13, [ORION]: 1, [DIONEL]: 2, [SYLPHIRA]: 6, [ALNA]: 7 }
+      return metOf(scoredAt(at, data), RAVION)
+    }
+    expect(ravionMet([ORION, { line: true }, SYLPHIRA, DIONEL])).toBe(1)
+    // A list brought in keeps its line, so the hero below it stays there
+    // though the list bringing it in goes on ranking heroes after it.
+    const inner = { inner: [ORION, { line: true as const }, DIONEL] }
+    expect(ravionMet([{ list: 'inner' }, SYLPHIRA], inner)).toBe(0.5)
+  })
+
+  // An enemy Aliceth's arrow lands on our unit farthest from her, where the
+  // hero most worth saving should not stand: Orion at the back is that unit
+  // from some enemy tiles, at the front from none. Her rule scales by her pick
+  // rate and leaves the team's own score as it is.
   it('reads an enemy rule from each enemy tile, scaled by how often it is picked', () => {
     const data = { ...DATA, pickRates: { [MAP.key]: { [ALICETH]: 0.5 } } }
-    const back = { [ALNA]: 1, [SYLPHIRA]: 5, [ORION]: 6, [PERSEUS]: 8, [DIONEL]: 13 }
+    const back = { [ORION]: 1, [SYLPHIRA]: 5, [ALNA]: 6, [PERSEUS]: 8, [DIONEL]: 13 }
     const scorer = scoredAt(back, data)
     const met = metOf(scorer, ALICETH)!
-    expect(met).toBeGreaterThan(0)
+    expect(met).toBeLessThan(1)
     expect(scorer.threats()).toBeCloseTo(6 * 0.5 * met)
     expect(scorer.score()).toEqual(scoredAt(back).score())
-    const front = { [ALNA]: 13, [SYLPHIRA]: 5, [ORION]: 6, [PERSEUS]: 8, [DIONEL]: 1 }
-    expect(metOf(scoredAt(front, data), ALICETH)).toBe(0)
+    const front = { [ORION]: 13, [SYLPHIRA]: 5, [ALNA]: 6, [PERSEUS]: 8, [DIONEL]: 1 }
+    expect(metOf(scoredAt(front, data), ALICETH)).toBe(1)
+    // With nobody above the list's line on the team, nobody is worth guarding.
+    const unranked = { ...data, lists: { ...data.lists, save: [{ line: true as const }, ORION] } }
+    expect(metOf(scoredAt(back, unranked), ALICETH)).toBeNull()
+  })
+
+  // An enemy Reinier takes the unit on the tile mirroring one of his
+  // teammates' tiles next to him. On arena2 the mirror of tile 1 is next to
+  // three of the ten enemy tiles, and the mirror of tile 13 is no enemy tile.
+  it("reads an enemy tile rule from the tiles mirroring the holder's own side around it", () => {
+    const data = { ...DATA, pickRates: { [MAP.key]: { [REINIER]: 1 } } }
+    const safeAt = (tile: number) =>
+      metOf(scoredAt({ [ORION]: tile, [SYLPHIRA]: tile === 1 ? 13 : 1, [ALNA]: 6 }, data), REINIER)
+    expect(safeAt(1)).toBeCloseTo(0.7)
+    expect(safeAt(13)).toBe(1)
   })
 
   // Elijah on tile 1 and Lailah on 10 have tiles 4 and 7 between them. The
@@ -209,7 +245,7 @@ describe('placement scoring', () => {
   })
 
   // Tile 2 is the tile directly behind tile 7.
-  it("gives a hero the list does not rank first the others share, and a phantimal none", () => {
+  it('gives a hero the list does not rank first the others share, and a phantimal none', () => {
     const data = { ...DATA, lists: { ...DATA.lists, ultimate: [ORION] } }
     const team = { heroes: [PHRAESTO, ORION, PERSEUS, DIONEL, ALNA], phantimal: WEDGE_OF_MATTER }
     const contractMet = (behind: number) => {

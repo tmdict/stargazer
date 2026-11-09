@@ -1,9 +1,18 @@
 import type { SkillLookups } from '../skills/skill'
 import type { Rule } from '../types/rule'
 
+// The heroes an every entry names: those whose hero file matches each field
+// given.
+export interface HeroFilter {
+  class?: string[]
+  range?: 'melee' | 'ranged'
+  damage?: 'physical' | 'magic'
+}
+
 // A list a rule names: heroes by id, best first, where an entry can bring in
-// another list's heroes at that point.
-export type ListEntry = number | { list: string }
+// another list's heroes at that point. Below a line order stops mattering, and
+// an every entry, which stands only there, adds every hero its filter matches.
+export type ListEntry = number | { list: string } | { line: true } | { every: HeroFilter }
 
 // What the engine is tuned with. Weights are named by the rules that use them,
 // beside buff (a hero on a buff tile), lean (a hero standing where it leans)
@@ -27,6 +36,7 @@ export interface PlacementLookups extends SkillLookups {
   // The name of a hero's or phantimal's data file, by unit id.
   nameOf: (unitId: number) => string | undefined
   rangeOf: (unitId: number) => number | undefined
+  heroesMatching: (filter: HeroFilter) => number[]
 }
 
 // The team to place: five hero ids, and the phantimal's unit id.

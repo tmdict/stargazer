@@ -24,7 +24,7 @@ const FIELDS = new Set(['team', 'goal', 'tile', 'from', 'weight', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
 const COUNT_GOALS = new Set(['atMost', 'exactly'])
 const MOST_KINDS = new Set(['walls', 'allies'])
-const TILE_WORDS = new Set(['behind', 'front', 'around', 'row'])
+const TILE_WORDS = new Set(['behind', 'front', 'around', 'row', 'mirror-around'])
 
 function goalProblem(goal: unknown): string | null {
   if (goal === 'most' || goal === 'none' || goal === 'companion' || goal === 'back') return null
@@ -71,9 +71,8 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
     if (goal) problems.push(goal)
     if (tile === 'always' && rule.tile === undefined) problems.push('no tile word')
     if (tile === 'never' && rule.tile !== undefined) problems.push('a tile word')
-    if (rule.tile !== undefined) {
-      if (!TILE_WORDS.has(rule.tile)) problems.push(`the tile word ${rule.tile}`)
-      if (rule.team !== 'ally') problems.push('a tile word on an enemy rule')
+    if (rule.tile !== undefined && !TILE_WORDS.has(rule.tile)) {
+      problems.push(`the tile word ${rule.tile}`)
     }
     if (
       rule.goal === 'back' &&

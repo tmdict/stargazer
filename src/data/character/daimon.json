@@ -20,9 +20,9 @@
   "rules": [
     {
       "team": "ally",
-      "goal": { "target": "daimon" },
+      "goal": { "target": "save" },
       "weight": "aim",
-      "note": "Daimon's bond goes to the ally behind him, the teammate his list ranks first."
+      "note": "Daimon's bond goes to the ally behind him, best the hero most worth saving."
     }
   ]
 }

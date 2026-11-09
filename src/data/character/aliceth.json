@@ -23,9 +23,9 @@
     },
     {
       "team": "enemy",
-      "goal": { "target": "tank" },
-      "weight": "aliceth-mark",
-      "note": "An enemy Aliceth marks our unit farthest from her, best a tank."
+      "goal": { "avoid": "save" },
+      "weight": "threat",
+      "note": "An enemy Aliceth's arrow (her Mark of Judgment) lands on our unit farthest from her, and her team attacks that unit first, so our most valuable hero should not be the one standing there."
     }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "en": "Dynamic Balance (a swap with the enemy opposite, healing by the damage that enemy takes) to an ally next to him ({heroes})",
+  "zh": "周围1格内的友军与对称位置的敌军互换位置的动态平衡，按该敌军受到的伤害恢复生命值（{heroes}）",
+  "ko": "주변 1칸 내 아군에게 대칭 위치의 적군과 위치를 바꾸고 그 적군이 받는 대미지로 HP를 회복하는 동작의 균형 ({heroes})"
+}

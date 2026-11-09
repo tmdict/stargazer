@@ -6,6 +6,7 @@ import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '
 import type { PlacementLookups } from './types'
 
 const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
+const heroes = [...heroById.values()].filter((hero) => !hero.placeholder)
 const artifactById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact]))
 const phantimals = new Map(loadPhantimals().map((phantimal) => [phantimal.id, phantimal]))
 const phantimalOf = (unitId: number) => phantimals.get(toLocalPhantimalId(unitId))
@@ -28,4 +29,13 @@ export const PLACEMENT_LOOKUPS: PlacementLookups = {
   },
   nameOf: (id) => dataOf(id)?.name,
   rangeOf: (id) => dataOf(id)?.range,
+  heroesMatching: ({ class: classes, range, damage }) =>
+    heroes
+      .filter(
+        (hero) =>
+          (!classes || classes.includes(hero.class)) &&
+          (!range || (range === 'melee') === (hero.range === 1)) &&
+          (!damage || hero.damage === damage),
+      )
+      .map((hero) => hero.id),
 }
