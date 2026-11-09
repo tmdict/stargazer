@@ -112,6 +112,20 @@ describe('assignUnits', () => {
     ])
   })
 
+  it("weighs a swap with each of Zanie's turrets before calling her sure", () => {
+    // Swapping her with the first turret loses 0.19, with the second gains 0.05.
+    const units = [
+      unit(1, { [ZANIE]: 0.9, [TURRET]: 0.86 }),
+      unit(2, { [TURRET]: 0.95, [ZANIE]: 0.8 }),
+      unit(3, { [ZANIE]: 0.89, [TURRET]: 0.8 }),
+    ]
+    expect(assignUnits(units, [ZANIE], {}, () => true).map((a) => a.state)).toEqual([
+      'review',
+      'sure',
+      'review',
+    ])
+  })
+
   it('leaves a portrait unlike any art to the unit left over, for review', () => {
     const units = [unit(1, { [ELIJAH_LAILAH]: 0.5 }), unit(2, { 7: 0.7 })]
     const assigned = assignUnits(units, [ELIJAH_LAILAH], {}, () => true)

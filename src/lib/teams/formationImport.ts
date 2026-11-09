@@ -153,11 +153,13 @@ export function assignUnits(
     const lead = Math.min(
       ...pool
         .filter((s) => s.art !== slot.art)
-        .map((s) => {
+        .flatMap((s) => {
           const own = score - scoreOf(units[i]!, s.art)
-          const pair =
-            familyOf(s) === familyOf(slot) ? matched.find((m) => m.slot.art === s.art) : undefined
-          return pair ? own + pair.score - scoreOf(units[pair.i]!, slot.art) : own
+          const partners =
+            familyOf(s) === familyOf(slot) ? matched.filter((m) => m.slot.art === s.art) : []
+          return partners.length
+            ? partners.map((m) => own + m.score - scoreOf(units[m.i]!, slot.art))
+            : [own]
         }),
     )
     const sure = score >= SURE_SCORE && lead >= SURE_MARGIN
