@@ -83,6 +83,8 @@ const gameName = (index: number): string => i18n.t('app.www-game', { n: index + 
 
 .www-summary {
   display: grid;
+  grid-template-columns: minmax(0, var(--www-result-max));
+  justify-content: center;
   gap: 8px;
   min-width: 0;
   padding: 14px 16px 16px;

@@ -1,5 +1,5 @@
 /* The lists rules name, read as the placement engine reads them, for the
- * engine's scorer and the Formation rules page alike. */
+ * engine's scorer and the Formation engine rules page alike. */
 
 import type { HeroFilter, ListEntry, PlacementData, PlacementLookups } from './types'
 

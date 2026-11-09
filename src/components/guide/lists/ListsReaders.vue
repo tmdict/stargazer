@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* The open list's Read by row, folded by default so the list comes first:
-   each rule that reads the list, as the Formation rules page words it, the
+   each rule that reads the list, as the Formation engine rules page words it, the
    lists that bring it in, and how to edit it. */
 
 import { computed } from 'vue'

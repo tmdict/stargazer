@@ -1,10 +1,11 @@
 <script setup lang="ts">
-/* How a formation is picked, and how to read a rule card, on one of Gunnar's
-   rules. */
+/* What the formation engine does, and how to read a rule card, on one of
+   Gunnar's rules. */
 
 import { computed } from 'vue'
 
 import RulesCard from './RulesCard.vue'
+import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { ruleUnitOf, useRulesNames } from './useRules'
 
@@ -13,6 +14,11 @@ const emit = defineEmits<{ open: [list: string] }>()
 const { t, proseName, unitName } = useRulesNames()
 
 const sample = ruleUnitOf('gunnar')
+
+// The generator page marks a Generated board with this sparkle.
+const intro = computed(() =>
+  interpolateParts(t('rules-how-intro'), { sparkle: [{ text: '', marked: true }] }),
+)
 
 const bold = (key: string): TextPart[] => [{ text: t(key), marked: true }]
 const KEYS = ['effect', 'list', 'use', 'enemy', 'tile', 'weight']
@@ -34,20 +40,16 @@ const keys = computed(() =>
 <template>
   <section class="rules-view">
     <h2>{{ t('rules-how') }}</h2>
-    <p>{{ t('rules-how-intro') }}</p>
-    <p>{{ t('rules-how-steps') }}</p>
-    <ol class="steps">
-      <li v-for="step in [1, 2]" :key="step" class="rules-box">
-        <span class="number">{{ step }}</span>
-        <div>
-          <p class="step">{{ t(`rules-how-step-${step}-title`) }}</p>
-          <p class="reading-secondary">{{ t(`rules-how-step-${step}`) }}</p>
-        </div>
-      </li>
-    </ol>
-    <p>{{ t('rules-how-also-fine') }}</p>
+    <p>
+      <template v-for="(part, i) in intro" :key="i"
+        ><SlIcon v-if="part.marked" name="sparkle" class="inline-icon" /><template v-else>{{
+          part.text
+        }}</template></template
+      >
+    </p>
+    <p>{{ t('rules-how-best') }}</p>
 
-    <h3>{{ t('rules-how-reading') }}</h3>
+    <h2>{{ t('rules-how-reading') }}</h2>
     <RulesCard
       v-if="sample"
       :card="sample.cards[0]!"
@@ -71,43 +73,6 @@ const keys = computed(() =>
 </template>
 
 <style scoped>
-.steps {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0;
-  padding: 0;
-  list-style: none;
-}
-
-.steps li {
-  display: flex;
-  gap: 12px;
-  margin: 0;
-  opacity: 1;
-}
-
-.steps p {
-  margin: 0;
-}
-
-.number {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  font-family: var(--font-ui);
-  font-weight: 700;
-  color: #fff;
-}
-
-.step {
-  font-weight: 600;
-}
-
 .legend {
   display: flex;
   margin-top: -4px;

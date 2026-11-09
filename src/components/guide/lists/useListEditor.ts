@@ -28,7 +28,6 @@ import {
 import type { HeroFilter, ListEntry } from '@/lib/placement/types'
 import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 import {
-  hasListName,
   heroesMatching,
   RULE_HEROES,
   RULE_UNITS,
@@ -107,12 +106,6 @@ export function createListEditor(current: Readonly<Ref<string>>) {
     for (const parent of parentsOf(name)) for (const use of usesOf(parent.list, seen)) uses.add(use)
     return uses
   }
-
-  // Shared lists first, as the Formation rules page orders them.
-  const groups = computed(() => ({
-    shared: names.value.filter(hasListName),
-    own: names.value.filter((name) => !hasListName(name)),
-  }))
 
   function persist(): void {
     for (const name of names.value) {
@@ -272,7 +265,6 @@ export function createListEditor(current: Readonly<Ref<string>>) {
     focusKey,
     flashKey,
     names,
-    groups,
     layouts,
     problems,
     changed,
@@ -308,7 +300,7 @@ const EDITOR: InjectionKey<ListEditor> = Symbol('list-editor')
 export const provideListEditor = (editor: ListEditor): void => provide(EDITOR, editor)
 export const useListEditor = (): ListEditor => inject(EDITOR)!
 
-// The page's words for entries and readers, on top of the Formation rules page's.
+// The page's words for entries and readers, on top of the Formation engine rules page's.
 export function useListWords() {
   const names = useRulesNames()
   const { lang, t, proseName, heroNameById, unitName, listName, everyName, and } = names

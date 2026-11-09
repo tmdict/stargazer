@@ -4,9 +4,10 @@
 
 import { computed } from 'vue'
 
+import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
+import IconGem from '@/components/ui/IconGem.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { RuleUnitKind } from '@/lib/placement/formationRules'
 import { useGameDataStore } from '@/stores/gameData'
@@ -139,10 +140,10 @@ function go(event: MouseEvent, id: string): void {
         @click="go($event, unit.id)"
       >
         <GuidePortrait v-if="unit.kind === 'hero'" :slug="unit.id" :lang :size="26" />
-        <span v-else class="mark">
+        <GuideDisc v-else :size="26" class="mark">
           <img v-if="picture(unit)" :src="picture(unit)!" alt="" />
-          <IconSparkle v-else :size="18" />
-        </span>
+          <IconGem v-else :size="16" />
+        </GuideDisc>
         <span class="words">
           <span class="name">{{ unit.kind === 'hero' ? heroName(unit.id) : unitName(unit) }}</span>
           <span v-if="unitSub(unit)" class="sub">{{ unitSub(unit) }}</span>
@@ -263,19 +264,7 @@ h3 span {
 }
 
 .mark {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
   color: var(--color-header-gold);
-}
-
-.mark img {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
 }
 
 .words {

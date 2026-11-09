@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 
 import RulesLinks from './RulesLinks.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
+import { SL_LISTS_PATH } from '@/lib/guide'
 import type { ListGroup } from '@/lib/placement/formationRules'
 import type { ListSource } from '@/lib/placement/lists'
 import { groupSize, heroOf, RULE_LISTS, useRulesNames } from './useRules'
@@ -92,6 +93,10 @@ const rankStart = (index: number): number => groupSize(list.value.ranked.slice(0
         {{ t(named.has(index) ? 'rules-hide-names' : 'rules-show-names') }}
       </button>
     </template>
+
+    <p class="reading-meta rules-edit">
+      <RouterLink :to="`${SL_LISTS_PATH}#${name}`">{{ t('rules-change-list') }}</RouterLink>
+    </p>
   </section>
 </template>
 

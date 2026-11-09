@@ -1,5 +1,0 @@
-{
-  "en": "The generator tries many formations and keeps the best one. It compares them in two steps, and the second only chooses between the formations the first couldn't tell apart.",
-  "zh": "生成器会尝试许多种布阵并保留最好的一种。它分两步比较，第二步只在第一步分不出高下的布阵之间做选择。",
-  "ko": "생성기는 여러 배치를 시도해 가장 좋은 배치를 남깁니다. 두 단계로 비교하며, 두 번째 단계는 첫 단계에서 우열을 가리지 못한 배치 사이에서만 고릅니다."
-}

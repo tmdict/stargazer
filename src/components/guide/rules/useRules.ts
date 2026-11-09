@@ -1,4 +1,4 @@
-/* The Formation rules page's units and lists, worked out once from Stargazer's
+/* The Formation engine rules page's units and lists, worked out once from Stargazer's
  * own data files and the lists, leans and weights of the build's data pack,
  * and how the page names them in the site language. Without the data pack
  * the page shows the rules without their lists, weights or leans. */
@@ -91,8 +91,8 @@ export const LEANS = {
   back: new Set(formationData?.leans.back),
 }
 
-// The page's parts that are no unit's: how a formation is picked first, the
-// rest after the units.
+// The page's parts that are no unit's: the intro first, the rest after the
+// units.
 export const HOW_VIEW = 'how'
 export const SHARED_VIEWS = ['leans', 'map', 'lists', 'questions'] as const
 
@@ -109,6 +109,12 @@ export const listPeek = (list: RuleList): number[] =>
 
 export const groupSize = (groups: readonly ListGroup[]): number =>
   groups.reduce((sum, group) => sum + group.heroes.length, 0)
+
+export interface ListGroupNames {
+  key: 'per-hero' | 'shared'
+  label: string
+  names: string[]
+}
 
 // A part of a sentence, a link to a unit or a list where `go` or `open` names one.
 export interface RulesLink {
@@ -208,6 +214,20 @@ export function useRulesNames() {
     ]
   }
 
+  // One hero's lists first, then the shared ones, each group by name.
+  function groupLists(names: readonly string[]): ListGroupNames[] {
+    const collator = new Intl.Collator(lang.value)
+    const sorted = (picked: string[]) =>
+      picked.sort((a, b) => collator.compare(listName(a), listName(b)))
+    const groups = [
+      { key: 'per-hero', names: sorted(names.filter((name) => !hasListName(name))) },
+      { key: 'shared', names: sorted(names.filter(hasListName)) },
+    ] as const
+    return groups
+      .filter((group) => group.names.length)
+      .map((group) => ({ ...group, label: t(`rules-lists-${group.key}`) }))
+  }
+
   return {
     lang,
     t,
@@ -221,5 +241,6 @@ export function useRulesNames() {
     everyName,
     and,
     listLines,
+    groupLists,
   }
 }

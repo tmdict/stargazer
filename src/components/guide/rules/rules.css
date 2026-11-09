@@ -14,7 +14,7 @@
   margin-bottom: 0;
 }
 
-.content .rules-view > h2 {
+.content .rules-view > h2:first-child {
   margin: 0 0 12px;
 }
 
@@ -27,6 +27,10 @@
   text-transform: uppercase;
   color: var(--reading-muted);
   opacity: 1;
+}
+
+.content .rules-edit {
+  margin-top: 16px;
 }
 
 .content .rules-heroes {

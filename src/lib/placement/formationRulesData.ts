@@ -1,4 +1,4 @@
-/* What the placement engine is tuned with, for the Formation rules page,
+/* What the placement engine is tuned with, for the Formation engine rules page,
  * taken from the PvP data file once per build (scripts/packModule.ts) so the
  * page loads neither the file nor its decoder. */
 

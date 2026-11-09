@@ -53,9 +53,9 @@ Equally good placements are those with `goals` within the `margin` weight of the
 
 A reason names units by id and an effect by the data file its rule sits in: the hero's or phantimal's name, the charm's id or the artifact's name. The card words a `target`, `include` or `exactly` goal by `placement-gives-<file>` (`{heroes}`) and `placement-receives-<file>` (`{giver}`), and a `most` or `companion` goal by `placement-reaches-<file>`, in `src/locales/app/placement/effects/`, while a `back` goal takes the place line `placement-stands-back-half`. An effect a unit's other body gives (`from: 'companion'`) takes `<file>-companion` as its file. A goal about enemy heroes gives no line. The rules test fails when a weighted rule has no words, or words name no rule.
 
-## The Formation rules page
+## The Formation engine rules page
 
-The Formation rules page (`/guide/pvp/generator/rules`) shows each unit's rules and the lists they read: `formationRules.ts` builds its cards and lists, and `src/components/guide/rules/` draws them. A rule's note is `placement-note-<file>-<team>-<goal word>` (`<file>-companion` for the other body) in `src/locales/app/placement/notes/`, its English the rule's `note`, and an `avoid` rule's targets `placement-targets-<file>` in `.../targets/`. A list is named by `rules-list-<name>`, else after the one unit whose rule reads it.
+The Formation engine rules page (`/guide/pvp/generator/rules`) shows each unit's rules and the lists they read: `formationRules.ts` builds its cards and lists, and `src/components/guide/rules/` draws them. A rule's note is `placement-note-<file>-<team>-<goal word>` (`<file>-companion` for the other body) in `src/locales/app/placement/notes/`, its English the rule's `note`, and an `avoid` rule's targets `placement-targets-<file>` in `.../targets/`. A list is named by `rules-list-<name>`, else after the one unit whose rule reads it.
 
 ## A visitor's lists
 

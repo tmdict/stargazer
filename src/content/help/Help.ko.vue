@@ -410,20 +410,20 @@ const SKILL = {
         </li>
         <li>
           각 맵 아래의 막대 네 개는 이 팀 뒤에 기록된 전투가 얼마나 있는지 보여 주고,
-          <SlIcon name="players" class="help-inline-icon" /> 숫자는 그 맵에서 이 팀의 조합을 쓴
-          플레이어 수, <SlIcon name="games" class="help-inline-icon" /> 숫자는 그 맵에서 기록된 이
-          조합의 전투 수입니다.
+          <SlIcon name="players" class="inline-icon" /> 숫자는 그 맵에서 이 팀의 조합을 쓴 플레이어
+          수, <SlIcon name="games" class="inline-icon" /> 숫자는 그 맵에서 기록된 이 조합의 전투
+          수입니다.
         </li>
         <li>
-          <SlIcon name="check" class="help-inline-icon" /> 표시가 있는 보드는 플레이어가 기록된
-          전투에서 사용한 배치입니다. 옆의 <SlIcon name="sparkle" class="help-inline-icon" />을
-          누르면 팀의 스킬에 따라 정한 자리를 볼 수 있으며, 다른 보드는 모두 이렇게 배치됩니다.
+          <SlIcon name="check" class="inline-icon" /> 표시가 있는 보드는 플레이어가 기록된 전투에서
+          사용한 배치입니다. 옆의 <SlIcon name="sparkle" class="inline-icon" />을 누르면 팀의 스킬에
+          따라 정한 자리를 볼 수 있으며, 다른 보드는 모두 이렇게 배치됩니다.
         </li>
         <li>
-          <SlIcon name="lock" class="help-inline-icon" /> 표시 옆의 영웅은 바뀌지 않는 핵심
-          영웅입니다. <SlIcon name="swap" class="help-inline-icon" /> 표시 옆에는 같은 조합의 기록된
-          팀에서 나온 교체가 나옵니다. 세트에서 쓰지 않은 내 영웅으로, 왼쪽의 영웅 하나나 두 영웅을
-          오른쪽의 아무 후보로 바꿀 수 있으며 더 좋은 후보부터 표시됩니다.
+          <SlIcon name="lock" class="inline-icon" /> 표시 옆의 영웅은 바뀌지 않는 핵심 영웅입니다.
+          <SlIcon name="swap" class="inline-icon" /> 표시 옆에는 같은 조합의 기록된 팀에서 나온
+          교체가 나옵니다. 세트에서 쓰지 않은 내 영웅으로, 왼쪽의 영웅 하나나 두 영웅을 오른쪽의
+          아무 후보로 바꿀 수 있으며 더 좋은 후보부터 표시됩니다.
         </li>
         <li>
           <b>작동 방식</b>에서 세트를 기록에서 어떻게 고르는지, 승리 확률을 어떻게 계산하는지 볼 수

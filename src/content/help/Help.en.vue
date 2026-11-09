@@ -409,21 +409,20 @@ const SKILL = {
         </li>
         <li>
           Under each map, the four bars show how many games stand behind the team,
-          <SlIcon name="players" class="help-inline-icon" /> how many players used its comp on the
-          map, and <SlIcon name="games" class="help-inline-icon" /> how many of the comp's games
-          were recorded there.
+          <SlIcon name="players" class="inline-icon" /> how many players used its comp on the map,
+          and <SlIcon name="games" class="inline-icon" /> how many of the comp's games were recorded
+          there.
         </li>
         <li>
-          <SlIcon name="check" class="help-inline-icon" /> on a board marks a formation players used
-          in a recorded game. <SlIcon name="sparkle" class="help-inline-icon" /> next to it shows
-          where each hero would stand by the team's skills, which is how every other board is
-          placed.
+          <SlIcon name="check" class="inline-icon" /> on a board marks a formation players used in a
+          recorded game. <SlIcon name="sparkle" class="inline-icon" /> next to it shows where each
+          hero would stand by the team's skills, which is how every other board is placed.
         </li>
         <li>
-          <SlIcon name="lock" class="help-inline-icon" /> marks the core heroes, which stay.
-          <SlIcon name="swap" class="help-inline-icon" /> lists swaps taken from recorded teams of
-          the same comp, using your heroes the set leaves free: the hero or pair on the left for any
-          on the right, best first.
+          <SlIcon name="lock" class="inline-icon" /> marks the core heroes, which stay.
+          <SlIcon name="swap" class="inline-icon" /> lists swaps taken from recorded teams of the
+          same comp, using your heroes the set leaves free: the hero or pair on the left for any on
+          the right, best first.
         </li>
         <li>
           <b>How it works</b> explains how the set is picked from the records and how its chance to

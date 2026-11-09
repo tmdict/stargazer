@@ -22,7 +22,7 @@ The hard rule is that the client's first render must equal the baked HTML, or th
 
 `npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the skill text: each hero with skill text in a language gets a page in that language. A `SKILL_LOCALES` row with no hero text fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the PvP team generator (`SL_GENERATOR_PATH`), its Formation rules page (`SL_RULES_PATH`) and Who Would Win? (`WWW_PATH`) beside them, and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the skill text: each hero with skill text in a language gets a page in that language. A `SKILL_LOCALES` row with no hero text fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, one each, with the PvP team generator (`SL_GENERATOR_PATH`), its Formation engine rules page (`SL_RULES_PATH`) and Who Would Win? (`WWW_PATH`) beside them, and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
 
 The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so the first render matches the baked page.
 
@@ -36,7 +36,7 @@ The game-data store has two loaders with one body. `initializeContentData()` als
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 
-A page is baked once per path, so nothing from the query string is in its HTML. The tag link on `/skills` and on the Mechanics guide ([Skill Pages](./SKILL_PAGES.md)) therefore applies its filter after mount. The Formation rules page likewise bakes on how a formation is picked, and shows the unit or part its hash names (`#gunnar`) after mount.
+A page is baked once per path, so nothing from the query string is in its HTML. The tag link on `/skills` and on the Mechanics guide ([Skill Pages](./SKILL_PAGES.md)) therefore applies its filter after mount. The Formation engine rules page likewise bakes on its intro, and shows the unit or part its hash names (`#gunnar`) after mount.
 
 ## Two locale axes
 
@@ -76,7 +76,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 Each report comes with a summary, which the guide index shows. The external report generator writes it with the report, owns its format, and documents it where it writes the file, so nothing here derives or edits its numbers. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) finds the summaries newest first, so a new season needs no entry in the code. The data step stops a build on a summary with no report beside it, while a report with no summary yet still gets its page and stays off the index. A summary carries each team's label in the languages its report is written in, and in any other app locale a team is named by its heroes (`pvpTeamName`), so a season needs nothing per app locale beyond the hero names the app already has.
 
-The guide index's card for the PvP team generator (`virtual:sl-preview`) and the Formation rules page (`virtual:formation-rules`) show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so both are in the baked HTML and neither page loads the file.
+The guide index's card for the PvP team generator (`virtual:sl-preview`) and the Formation engine rules page (`virtual:formation-rules`) show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so both are in the baked HTML and neither page loads the file.
 
 ## Hosting
 

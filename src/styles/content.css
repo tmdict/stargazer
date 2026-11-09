@@ -96,6 +96,13 @@
   font-weight: 600;
 }
 
+.content svg.inline-icon {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  color: var(--reading-muted);
+}
+
 .content .meta-chips {
   display: flex;
   flex-wrap: wrap;

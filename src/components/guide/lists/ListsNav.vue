@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* The page's column of lists: the shared lists, then each list one rule
-   reads, each with how many heroes it holds and who reads it, and a dot when
+/* The page's column of lists, in the Formation engine rules page's groups,
+   each with how many heroes it holds and who reads it, and a dot when
    the visitor changed it, the site changed it since, or it breaks a rule. */
 
 import { computed } from 'vue'
@@ -12,17 +12,9 @@ const { current } = defineProps<{ current: string }>()
 const emit = defineEmits<{ go: [name: string] }>()
 
 const editor = useListEditor()
-const { lang, t, listName, readersLine } = useListWords()
+const { t, listName, readersLine, groupLists } = useListWords()
 
-const groups = computed(() => {
-  const collator = new Intl.Collator(lang.value)
-  const sorted = (names: string[]) =>
-    [...names].sort((a, b) => collator.compare(listName(a), listName(b)))
-  return [
-    { key: 'shared', label: t('lists-shared'), names: sorted(editor.groups.value.shared) },
-    { key: 'own', label: t('lists-own'), names: sorted(editor.groups.value.own) },
-  ].filter((group) => group.names.length)
-})
+const groups = computed(() => groupLists(editor.names.value))
 
 const anyBroken = computed(() =>
   editor.names.value.some((name) => editor.problems.value[name]!.length),

@@ -345,20 +345,20 @@ const SKILL = {
         <li>
           每张地图下方，四个竖条表示这支队伍背后有多少对局，<SlIcon
             name="players"
-            class="help-inline-icon"
+            class="inline-icon"
           />
-          是在这张地图上用过这个阵容的玩家数，<SlIcon name="games" class="help-inline-icon" />
+          是在这张地图上用过这个阵容的玩家数，<SlIcon name="games" class="inline-icon" />
           是这个阵容在这张地图上记录的对局数。
         </li>
         <li>
-          <SlIcon name="check" class="help-inline-icon" />
+          <SlIcon name="check" class="inline-icon" />
           表示这张棋盘的布阵是玩家在记录对局中用过的。点旁边的
-          <SlIcon name="sparkle" class="help-inline-icon" />
+          <SlIcon name="sparkle" class="inline-icon" />
           可以改看按队伍技能算出的站位，其他棋盘也都是这样摆的。
         </li>
         <li>
-          <SlIcon name="lock" class="help-inline-icon" />
-          标出核心英雄，这些英雄保留不动。<SlIcon name="swap" class="help-inline-icon" />
+          <SlIcon name="lock" class="inline-icon" />
+          标出核心英雄，这些英雄保留不动。<SlIcon name="swap" class="inline-icon" />
           列出同一阵容的记录队伍中出现过的替换，只用这套阵容没用到的你的英雄：左边的一位或两位英雄可以换成右边任意一个选项，越靠前越好。
         </li>
         <li><b>原理说明</b>解释了这套阵容是怎么从记录中选出来的，以及它的获胜几率是怎么算的。</li>

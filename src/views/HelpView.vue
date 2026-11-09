@@ -92,13 +92,6 @@ onMounted(() => {
   color: #fff;
 }
 
-.help :deep(.help-inline-icon) {
-  width: 1.15em;
-  height: 1.15em;
-  vertical-align: -0.2em;
-  color: var(--reading-muted);
-}
-
 .help :deep(.help-tab) {
   padding: 2px 1px 4px;
   border-bottom: 2px solid var(--color-accent);

@@ -390,6 +390,8 @@ const warningText = (warning: WwwWarning): string => {
 <style scoped>
 .www-result {
   display: grid;
+  grid-template-columns: minmax(0, var(--www-result-max));
+  justify-content: center;
   gap: 8px;
   min-width: 0;
   padding: 14px 16px 16px;

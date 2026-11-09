@@ -1,5 +1,5 @@
 {
-  "en": "Season {season} · records up to {date}",
-  "zh": "第 {season} 赛季 · 记录截至 {date}",
-  "ko": "시즌 {season} · {date}까지의 기록"
+  "en": "Season {season} · data update {date}",
+  "zh": "第 {season} 赛季 · 数据更新 {date}",
+  "ko": "시즌 {season} · 데이터 업데이트 {date}"
 }

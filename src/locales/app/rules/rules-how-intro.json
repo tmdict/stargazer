@@ -1,5 +1,5 @@
 {
-  "en": "Every Generated board in the PvP team generator places its heroes by the rules on this page. Generate on the Arena and Teams pages uses them for any team without a recorded formation, and Placement tips uses them to explain a side you placed yourself.",
-  "zh": "PvP阵容生成器中所有“自动生成”的棋盘都按本页的规则安排英雄站位。竞技场和阵容页面的“生成”会对没有实战记录布阵的队伍使用这些规则，“站位提示”则用它们来解释你自己摆好的一方。",
-  "ko": "PvP 조합 생성기의 모든 ‘자동 생성’ 보드는 이 페이지의 규칙으로 영웅을 배치합니다. 아레나와 진형 페이지의 ‘생성’은 기록된 배치가 없는 팀에 이 규칙을 쓰고, ‘배치 팁’은 직접 배치한 쪽을 설명할 때 이 규칙을 씁니다."
+  "en": "The formation engine places the heroes on every {sparkle} Generated board in the PvP team generator. Generate on the Arena and Teams pages uses it for a team without a recorded formation, and Placement tips uses it to explain a side you placed yourself.",
+  "zh": "布阵引擎为PvP阵容生成器中所有{sparkle}“自动生成”的棋盘安排英雄站位。竞技场和阵容页面的“生成”会对没有实战记录布阵的队伍使用它，“站位提示”则用它来解释你自己摆好的一方。",
+  "ko": "배치 엔진은 PvP 조합 생성기의 모든 {sparkle} ‘자동 생성’ 보드에 영웅을 배치합니다. 아레나와 진형 페이지의 ‘생성’은 기록된 배치가 없는 팀에 이 엔진을 쓰고, ‘배치 팁’은 직접 배치한 쪽을 설명할 때 이 엔진을 씁니다."
 }

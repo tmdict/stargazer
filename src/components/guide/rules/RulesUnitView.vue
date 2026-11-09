@@ -5,8 +5,9 @@
 import { computed } from 'vue'
 
 import RulesCard from './RulesCard.vue'
+import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import IconSparkle from '@/components/ui/IconSparkle.vue'
+import IconGem from '@/components/ui/IconGem.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { LEANS, RULE_HEROES, useRulesNames, type RulesUnit } from './useRules'
 
@@ -36,10 +37,10 @@ const picture = computed(() => {
   <section class="rules-view">
     <header class="unit-head">
       <GuidePortrait v-if="hero" :slug="hero.name" :lang :size="56" />
-      <span v-else class="mark">
+      <GuideDisc v-else :size="56" class="mark">
         <img v-if="picture" :src="picture" alt="" />
-        <IconSparkle v-else :size="30" />
-      </span>
+        <IconGem v-else :size="30" />
+      </GuideDisc>
       <div>
         <h2>{{ unitName(unit) }}</h2>
         <p v-if="hero" class="meta reading-meta">
@@ -88,21 +89,7 @@ const picture = computed(() => {
 }
 
 .mark {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-large);
-  background: var(--field-dark-background);
   color: var(--color-header-gold);
-}
-
-.mark img {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
 }
 
 .meta {

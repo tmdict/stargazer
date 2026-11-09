@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* The Formation rules page: every rule the PvP team generator, Generate and
+/* The Formation engine rules page: every rule the PvP team generator, Generate and
    Placement tips place heroes by, unit by unit, with the lists they read. A
    column of units and the parts every team shares, the open one in the
    middle, addressed by the page's hash (#gunnar), and the open list on the
    right, or in a pop-up where the window has no room for it. The page is
-   pre-rendered whole, on how a formation is picked. */
+   pre-rendered whole, on its intro. */
 
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -20,7 +20,6 @@ import RulesUnitView from '@/components/guide/rules/RulesUnitView.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import {
-  hasListName,
   HOW_VIEW,
   RULE_LISTS,
   ruleUnitOf,
@@ -28,14 +27,13 @@ import {
   useRulesNames,
 } from '@/components/guide/rules/useRules'
 import { useOverlay } from '@/composables/useOverlay'
-import { guidePath, SL_GENERATOR_PATH } from '@/lib/guide'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupSlRulesContentMeta } from '@/utils/contentMeta'
 
 import '@/styles/content.css'
 import '@/components/guide/rules/rules.css'
 
-const { lang, t, unitName, listName } = useRulesNames()
+const { lang, t, unitName, listName, groupLists } = useRulesNames()
 setupSlRulesContentMeta(lang)
 
 // SSG-safe: the portraits are in the pre-rendered page.
@@ -45,8 +43,8 @@ const route = useRoute()
 const router = useRouter()
 
 const VIEWS = new Set<string>([HOW_VIEW, ...SHARED_VIEWS])
-// The hash is read only after mount: the baked page shows how a formation is
-// picked, and the first client render has to match it.
+// The hash is read only after mount: the baked page shows the intro, and the
+// first client render has to match it.
 const mounted = ref(false)
 onMounted(() => (mounted.value = true))
 const view = computed(() => {
@@ -56,13 +54,7 @@ const view = computed(() => {
 const unit = computed(() => ruleUnitOf(view.value))
 const viewName = computed(() => (unit.value ? unitName(unit.value) : t(`rules-${view.value}`)))
 
-const listOrder = computed(() => {
-  const collator = new Intl.Collator(lang.value)
-  return Object.keys(RULE_LISTS).sort(
-    (a, b) =>
-      Number(hasListName(b)) - Number(hasListName(a)) || collator.compare(listName(a), listName(b)),
-  )
-})
+const listGroups = computed(() => groupLists(Object.keys(RULE_LISTS)))
 
 const openList = ref<string | null>(null)
 const sheet = ref(false)
@@ -102,15 +94,7 @@ function go(id: string): void {
 <template>
   <main class="rules-page">
     <header class="rules-head">
-      <p class="crumbs">
-        <RouterLink :to="guidePath('index')">{{ t('guide') }}</RouterLink>
-        <span aria-hidden="true"> › </span>
-        <RouterLink :to="SL_GENERATOR_PATH">{{ t('sl-title') }}</RouterLink>
-        <span aria-hidden="true"> › </span>
-        <span>{{ t('rules-title') }}</span>
-      </p>
       <h1>{{ t('rules-title') }}</h1>
-      <p class="intro">{{ t('rules-description') }}</p>
     </header>
 
     <div class="rules-layout">
@@ -140,7 +124,7 @@ function go(id: string): void {
         <RulesTexts v-else-if="view === 'map'" view="map" :count="4" />
         <RulesLists
           v-else-if="view === 'lists'"
-          :names="listOrder"
+          :groups="listGroups"
           :open-list
           @go="go"
           @open="open"
@@ -152,10 +136,13 @@ function go(id: string): void {
       <aside class="rules-column rules-aside content" :aria-label="t('rules-row-list')">
         <RulesListPanel v-if="openList" :key="openList" :name="openList" @go="go" @open="open" />
         <template v-else>
-          <p class="reading-meta pick">{{ t('rules-pick-list') }}</p>
-          <div class="index">
-            <RulesListChip v-for="name in listOrder" :key="name" :name @open="open" />
-          </div>
+          <h2>{{ t('rules-lists') }}</h2>
+          <template v-for="group in listGroups" :key="group.key">
+            <p class="rules-group">{{ group.label }}</p>
+            <div class="index">
+              <RulesListChip v-for="name in group.names" :key="name" :name @open="open" />
+            </div>
+          </template>
         </template>
       </aside>
     </div>
@@ -180,28 +167,6 @@ function go(id: string): void {
   color: var(--reading-text);
 }
 
-.rules-head,
-.rules-layout {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.crumbs {
-  margin: 0 0 4px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--reading-muted);
-}
-
-.crumbs a {
-  font-weight: normal;
-  color: inherit;
-}
-
-.crumbs a:hover {
-  color: var(--color-accent);
-}
 
 h1 {
   margin: 0;
@@ -212,16 +177,9 @@ h1 {
   color: var(--reading-text);
 }
 
-.intro {
-  margin: 4px 0 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--reading-muted);
-}
-
 .rules-layout {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  grid-template-columns: 240px minmax(0, 1fr) clamp(300px, 20vw, 380px);
   align-items: start;
   gap: 16px;
 }
@@ -250,8 +208,8 @@ h1 {
   padding: 14px;
 }
 
-.pick {
-  margin: 4px 0 10px;
+.rules-aside h2 {
+  margin: 0 0 4px;
 }
 
 .index {

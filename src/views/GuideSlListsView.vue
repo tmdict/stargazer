@@ -23,10 +23,9 @@ import {
   SITE_LISTS,
   useListWords,
 } from '@/components/guide/lists/useListEditor'
-import { hasListName } from '@/components/guide/rules/useRules'
 import { useOverlay } from '@/composables/useOverlay'
 import { useToast } from '@/composables/useToast'
-import { guidePath, SL_GENERATOR_PATH, SL_RULES_PATH } from '@/lib/guide'
+import { SL_RULES_PATH } from '@/lib/guide'
 import { listsExportFile, listsExportText } from '@/lib/placement/listEdits'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupSlListsContentMeta } from '@/utils/contentMeta'
@@ -35,7 +34,7 @@ import { downloadBlob, timestampedName } from '@/utils/download'
 import '@/styles/content.css'
 import '@/components/guide/lists/lists.css'
 
-const { lang, t, listName } = useListWords()
+const { lang, t, listName, groupLists } = useListWords()
 setupSlListsContentMeta(lang)
 
 // SSG-safe: the portraits are in the pre-rendered page.
@@ -46,12 +45,7 @@ const router = useRouter()
 const { success, error } = useToast()
 
 // The first list of the column opens when the hash names none.
-const first = computed(() => {
-  const collator = new Intl.Collator(lang.value)
-  const byName = (a: string, b: string) => collator.compare(listName(a), listName(b))
-  const names = Object.keys(SITE_LISTS)
-  return names.filter(hasListName).sort(byName)[0] ?? names.sort(byName)[0] ?? ''
-})
+const first = computed(() => groupLists(Object.keys(SITE_LISTS))[0]?.names[0] ?? '')
 
 // The hash and the stored lists are read only after mount: the baked page
 // shows the site's lists, and the first client render has to match it.
@@ -79,6 +73,16 @@ useOverlay({
 
 const changesOpen = ref(false)
 const compareOpen = ref(false)
+
+// Back returns to the rules page as the visitor left it (the unit they were
+// reading) when they came from it, and opens it fresh otherwise.
+function back(event: MouseEvent): void {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  const from = (window.history.state as { back?: unknown } | null)?.back
+  if (typeof from !== 'string' || from.split('#')[0] !== SL_RULES_PATH) return
+  event.preventDefault()
+  router.back()
+}
 
 function go(name: string): void {
   navOpen.value = false
@@ -140,14 +144,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 <template>
   <main ref="page" class="lists-page" @pointerdown="drag.onDown" @dragstart.prevent>
     <header class="lists-head">
-      <p class="crumbs">
-        <RouterLink :to="guidePath('index')">{{ t('guide') }}</RouterLink>
-        <span aria-hidden="true"> › </span>
-        <RouterLink :to="SL_GENERATOR_PATH">{{ t('sl-title') }}</RouterLink>
-        <span aria-hidden="true"> › </span>
-        <RouterLink :to="SL_RULES_PATH">{{ t('rules-title') }}</RouterLink>
-        <span aria-hidden="true"> › </span>
-        <span>{{ t('lists-title') }}</span>
+      <p class="back">
+        <RouterLink :to="SL_RULES_PATH" @click="back"
+          ><span aria-hidden="true">‹ </span>{{ t('back') }}</RouterLink
+        >
       </p>
       <h1>{{ t('lists-title') }}</h1>
       <p class="intro">{{ t('lists-intro') }}</p>
@@ -247,29 +247,19 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   color: var(--reading-text);
 }
 
-.lists-head,
-.tools,
-.notes,
-.none,
-.lists-layout {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.crumbs {
+.back {
   margin: 0 0 4px;
   font-size: 13px;
   line-height: 1.5;
   color: var(--reading-muted);
 }
 
-.crumbs a {
+.back a {
   font-weight: normal;
   color: inherit;
 }
 
-.crumbs a:hover {
+.back a:hover {
   color: var(--color-accent);
 }
 
@@ -331,7 +321,7 @@ h1 {
 
 .lists-layout {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  grid-template-columns: 240px minmax(0, 1fr) clamp(300px, 20vw, 380px);
   align-items: start;
   gap: 16px;
 }
