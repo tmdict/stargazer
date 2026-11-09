@@ -316,7 +316,7 @@ defineExpose({
     :also-fine="rulesCard.alsoFine.length > 0"
     :better="rulesCard.better.length > 0"
     page-look
-    :hint="i18n.t('app.toggle-in-grid-info')"
+    :hint="i18n.t('app.turn-off-placement-tips')"
   />
 
   <!-- Teleported out of the map container so its transforms don't skew the popup. -->

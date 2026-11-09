@@ -130,7 +130,9 @@ const hoverHint = computed(() => {
       : card && heroInspectTarget(card.hero)
         ? 'app.hold-for-skills'
         : null
-  return [...(inspect ? [i18n.t(inspect)] : []), i18n.t('app.toggle-in-grid-info')]
+  // The two rows are never both on, so the one on is the one showing this card.
+  const off = props.showHover ? 'app.turn-off-details-on-hover' : 'app.turn-off-placement-tips'
+  return [...(inspect ? [i18n.t(inspect)] : []), i18n.t(off)]
 })
 
 // Where a point dy screen pixels below a sprite's center lands on the layer.
