@@ -1,11 +1,13 @@
 /* How much of a team's own effects its board's map leaves it. A board takes
  * only teams that have an ally tile on its map for each of their units
  * (`stands`), since a row of every map (chooser.ts) may have been recorded on
- * a map with more tiles. A team on another map than the one it was recorded
- * on keeps the points its goals earn in the engine's best placement on the
- * board's map, as a share of those on its own map (for a row of every map,
- * its home), at most all of them. A team on its own map, or one whose goals
- * earn nothing there, keeps all of them. Both placements leave out the
+ * a map with more tiles. A team keeps the points its goals earn in the
+ * engine's best placement on the board's map, as a share of those on its
+ * lineup's main map (the home of its row of every map), at most all of them.
+ * A team on its main map, or one whose goals earn nothing there, keeps all of
+ * them. A team recorded on the board's map is measured too: a few games there
+ * do not show its effects work there, since a map's tiles can keep two of
+ * them from both being met. Both placements leave out the
  * artifact and the enemy units' rules, so the share is the team's alone.
  * The search on the board's map stops once its best placement keeps all of
  * them, since the share is capped there. A later start could still find a
@@ -23,6 +25,7 @@ import { effectPoints } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import type { PlacementTeam } from '@/lib/placement/types'
 import { Team } from '@/lib/types/team'
+import { lineupKey } from '../data/sides'
 import type { SlData } from '../data/types'
 import { summonedPhantimal } from './formation'
 import type { SlBoard } from './setType'
@@ -31,12 +34,11 @@ import type { StoredPoints } from './storedFits'
 export interface SlFitRequest {
   board: SlBoard
   heroes: number[]
-  // The file's map the heroes were recorded on (an index into its maps).
-  from: number
 }
 
-// A fit check: the lineup placed on its home map, unless `home` already holds
-// its points there, then on the board's map.
+// A fit check: the lineup placed on its main map, `from` (an index into the
+// file's maps), unless `home` already holds its points there, then on the
+// board's map.
 export interface FitJob {
   heroes: number[]
   from: number
@@ -56,8 +58,8 @@ export interface SlFit {
   // companions included, on the board's map.
   stands(board: SlBoard, heroes: number[]): boolean
   // The share, or undefined while it waits on a placement.
-  known(board: SlBoard, heroes: number[], from: number): number | undefined
-  measure(board: SlBoard, heroes: number[], from: number): number
+  known(board: SlBoard, heroes: number[]): number | undefined
+  measure(board: SlBoard, heroes: number[]): number
 }
 
 // The store the worker keeps for the visit, which fit checks run elsewhere
@@ -98,15 +100,17 @@ export function slFit(data: SlData): SlFitStore {
   const room = new Map<string, boolean>()
   const homeOf = (from: number): string => data.maps[from]!.key
   const lineupOf = (heroes: number[]): string => heroes.join(',')
+  const mainOf = new Map(data.everyMap.map((row) => [lineupKey(row.heroes), row.home]))
   const pointsOn = (map: string, lineup: string): number | undefined => points.get(map)?.get(lineup)
   const keep = (map: string, lineup: string, value: number): void => {
     let lineups = points.get(map)
     if (!lineups) points.set(map, (lineups = new Map()))
     lineups.set(lineup, value)
   }
-  const known = (board: SlBoard, heroes: number[], from: number): number | undefined => {
-    if (from === board.source) return 1
+  const known = (board: SlBoard, heroes: number[]): number | undefined => {
     const lineup = lineupOf(heroes)
+    const from = mainOf.get(lineupKey(heroes))
+    if (from === undefined || from === board.source) return 1
     const home = pointsOn(homeOf(from), lineup)
     if (home === undefined) return undefined
     if (home <= 0) return 1
@@ -115,10 +119,11 @@ export function slFit(data: SlData): SlFitStore {
   }
   const jobs = (requests: readonly SlFitRequest[]): FitJob[] => {
     const found = new Map<string, FitJob>()
-    for (const { board, heroes, from } of requests) {
+    for (const { board, heroes } of requests) {
       const lineup = lineupOf(heroes)
       const key = `${board.layout.key}|${lineup}`
-      if (found.has(key) || known(board, heroes, from) !== undefined) continue
+      if (found.has(key) || known(board, heroes) !== undefined) continue
+      const from = mainOf.get(lineupKey(heroes))!
       const home = pointsOn(homeOf(from), lineup)
       found.set(key, { heroes, from, home, board: board.layout })
     }
@@ -146,11 +151,11 @@ export function slFit(data: SlData): SlFitStore {
       return room.get(key)!
     },
     known,
-    measure(board, heroes, from) {
-      const share = known(board, heroes, from)
+    measure(board, heroes) {
+      const share = known(board, heroes)
       if (share !== undefined) return share
-      for (const job of jobs([{ board, heroes, from }])) record(job, fitPoints(data, job))
-      return known(board, heroes, from)!
+      for (const job of jobs([{ board, heroes }])) record(job, fitPoints(data, job))
+      return known(board, heroes)!
     },
     jobs,
     record,

@@ -310,7 +310,7 @@ describe('the search', () => {
 
   // Each lineup's row adds up its games on every map, so it can meet a
   // minimum its record on any one map would miss.
-  it('takes each lineup’s record over every map on a map with no records, its fit measured from its home', () => {
+  it('takes each lineup’s record over every map on a map with no records, its odds scaled by its fit', () => {
     const next = seededRandom(1)
     const lineup = (map: number, heroes: number[], decided: number): MadeUpTeam => ({
       map,
@@ -339,7 +339,7 @@ describe('the search', () => {
     const fit: SlFit = {
       stands: () => true,
       known: () => undefined,
-      measure: (_, __, from) => (from === 1 ? 0.5 : 1),
+      measure: () => 0.5,
     }
     const reader = readSlFile(data)
     const set = chooseSlSet(data, reader, picks, () => true, [board], fit)

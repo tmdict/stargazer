@@ -129,10 +129,9 @@ function searcher(
           if (t.decided < 1 || !(meets(t.players, proof.players) || meets(t.games, proof.games))) {
             continue
           }
-          const home = source ?? data.everyMap[team]!.home
           const shares = new Map<string, number | undefined>()
           for (const [layout, b] of served) {
-            if (fit.stands(b, t.heroes)) shares.set(layout, fit.known(b, t.heroes, home))
+            if (fit.stands(b, t.heroes)) shares.set(layout, fit.known(b, t.heroes))
           }
           if (!shares.size) continue
           const claim = claimOf(t)
@@ -173,12 +172,12 @@ function searcher(
             best: bestNow(),
             pending: (i) =>
               shares.get(boards[i]!.layout.key) === undefined
-                ? [{ board: boards[i]!, heroes: t.heroes, from: home }]
+                ? [{ board: boards[i]!, heroes: t.heroes }]
                 : [],
             refit: (i) => {
               const layout = boards[i]!.layout.key
               if (shares.get(layout) !== undefined) return false
-              const share = fit.measure(boards[i]!, t.heroes, home)
+              const share = fit.measure(boards[i]!, t.heroes)
               shares.set(layout, share)
               if (share === 1) return false
               option.best = bestNow()
