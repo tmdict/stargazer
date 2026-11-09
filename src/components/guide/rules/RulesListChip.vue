@@ -8,7 +8,7 @@ import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import { groupSize, heroOf, listPeek, RULE_LISTS, useRulesNames } from './useRules'
 
-const { name } = defineProps<{ name: string; pressed?: boolean }>()
+const { name, pressed = undefined } = defineProps<{ name: string; pressed?: boolean }>()
 
 const emit = defineEmits<{ open: [name: string] }>()
 
@@ -25,12 +25,7 @@ const count = computed(() => {
 </script>
 
 <template>
-  <button
-    type="button"
-    class="rules-chip"
-    :aria-pressed="pressed === undefined ? undefined : pressed"
-    @click="emit('open', name)"
-  >
+  <button type="button" class="rules-chip" :aria-pressed="pressed" @click="emit('open', name)">
     <span class="peek">
       <GuidePortrait v-for="slug in peek" :key="slug" :slug :lang />
     </span>
