@@ -79,11 +79,11 @@ export const RULE_UNITS: readonly RulesUnit[] = [
   ),
 ]
 
+export const heroesMatching = (filter: HeroFilter): number[] =>
+  RULE_HEROES.filter((hero) => matchesFilter(hero, filter)).map((hero) => hero.id)
+
 export const RULE_LISTS: Readonly<Record<string, RuleList>> = formationData
-  ? ruleLists(formationData.lists, RULE_UNITS, {
-      heroesMatching: (filter) =>
-        RULE_HEROES.filter((hero) => matchesFilter(hero, filter)).map((hero) => hero.id),
-    })
+  ? ruleLists(formationData.lists, RULE_UNITS, { heroesMatching })
   : {}
 
 export const LEANS = {

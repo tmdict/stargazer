@@ -1,0 +1,5 @@
+{
+  "en": "{name} (#{from} to #{to})",
+  "zh": "{name}（第{from}项→第{to}项）",
+  "ko": "{name} ({from}번째 → {to}번째)"
+}

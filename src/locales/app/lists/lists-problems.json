@@ -1,0 +1,5 @@
+{
+  "en": "This list has {problems}, so the rules couldn't read it. Copy and Export leave it out until it's fixed.",
+  "zh": "这个名单存在以下问题，规则无法读取：{problems}。修正之前，复制和导出都不会包含它。",
+  "ko": "이 목록에는 다음 문제가 있어 규칙이 읽을 수 없습니다: {problems}. 고치기 전까지 복사와 내보내기에서 빠집니다."
+}

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import RulesLinks from './RulesLinks.vue'
 import RulesListChip from './RulesListChip.vue'
+import { SL_LISTS_PATH } from '@/lib/guide'
 import { useRulesNames } from './useRules'
 
 const { names } = defineProps<{ names: string[]; openList: string | null }>()
@@ -38,6 +39,9 @@ const lists = computed(() => names.map((name) => ({ name, lines: listLines(name)
         />
       </div>
     </div>
+    <p class="reading-meta edit">
+      <RouterLink :to="SL_LISTS_PATH">{{ t('rules-lists-edit') }}</RouterLink>
+    </p>
   </section>
 </template>
 
@@ -63,5 +67,9 @@ const lists = computed(() => names.map((name) => ({ name, lines: listLines(name)
 
 .read {
   margin: 6px 2px 0;
+}
+
+.edit {
+  margin-top: 16px;
 }
 </style>

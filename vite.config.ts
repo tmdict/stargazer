@@ -12,6 +12,7 @@ import {
   GUIDE_PAGES,
   guidePath,
   SL_GENERATOR_PATH,
+  SL_LISTS_PATH,
   SL_RULES_PATH,
   WWW_PATH,
 } from './src/lib/guide.ts'
@@ -44,6 +45,7 @@ function getSSGRoutes(): string[] {
     ...GUIDE_PAGES.map(guidePath),
     SL_GENERATOR_PATH,
     SL_RULES_PATH,
+    SL_LISTS_PATH,
     WWW_PATH,
   ]
 
@@ -218,8 +220,9 @@ export default defineConfig({
         changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
-        // The share-link shell, not content.
-        exclude: ['/share'],
+        // The share-link shell, not content, and the lists page, which only
+        // the Formation rules page links to.
+        exclude: ['/share', SL_LISTS_PATH],
         // @ts-expect-error - vite-ssg-sitemap types do not allow disabling lastmod
         lastmod: '',
       })

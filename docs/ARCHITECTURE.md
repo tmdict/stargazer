@@ -92,6 +92,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.locale`                                                                 | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
 | `stargazer.whatsNewSeen`                                                           | the What's New edition last opened                                      | below                                                    |
 | `stargazer.fits`                                                                   | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                 |
+| `stargazer.placement.lists`                                                        | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                 |
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 

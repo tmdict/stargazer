@@ -1,0 +1,5 @@
+{
+  "en": "{name} (#{place})",
+  "zh": "{name}（第{place}项）",
+  "ko": "{name} ({place}번째)"
+}

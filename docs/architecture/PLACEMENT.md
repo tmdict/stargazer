@@ -57,6 +57,60 @@ A reason names units by id and an effect by the data file its rule sits in: the 
 
 The Formation rules page (`/guide/pvp/generator/rules`) shows each unit's rules and the lists they read: `formationRules.ts` builds its cards and lists, and `src/components/guide/rules/` draws them. A rule's note is `placement-note-<file>-<team>-<goal word>` (`<file>-companion` for the other body) in `src/locales/app/placement/notes/`, its English the rule's `note`, and an `avoid` rule's targets `placement-targets-<file>` in `.../targets/`. A list is named by `rules-list-<name>`, else after the one unit whose rule reads it.
 
+## A visitor's lists
+
+The Hero lists page (`/guide/pvp/generator/rules/lists`) lets a visitor change the lists the rules read and copy or export the changed ones; the site always places heroes by its own. The browser keeps the changed lists under `stargazer.placement.lists` as they are made (`src/lib/placement/listEdits.ts`), and Back to the site's lists for every list removes the key:
+
+```json
+{
+  "lists": {
+    "temp-buff": {
+      "entries": [120, 92, 128, 105],
+      "site": [120, 92, 128, 13, 105]
+    },
+    "taichi": {
+      "entries": [
+        { "list": "temp-buff" },
+        115,
+        { "line": true },
+        { "every": { "class": ["warrior", "rogue", "mage", "marksman", "support"] } }
+      ],
+      "site": [
+        { "list": "temp-buff" },
+        { "line": true },
+        { "every": { "class": ["warrior", "rogue", "mage", "marksman", "support"] } }
+      ]
+    }
+  }
+}
+```
+
+| Field             | Type   | Rule                                                                                                                                                                                                                                                                                          |
+| ----------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lists`           | object | Keyed by the name of a list the data file has. A name it does not have is dropped, with a line on the page.                                                                                                                                                                                   |
+| `lists.*.entries` | array  | The visitor's version, in the data file's entry forms and under its rules (one line at most, `every` entries only below it, no list bringing itself in). An unknown hero number is dropped; a list that breaks a rule or cannot be read is dropped whole. Each drop shows a line on the page. |
+| `lists.*.site`    | array  | The data file's version of the list when the visitor first changed it, or last chose Keep mine. When it differs from the data file's version now, the page says the site changed the list.                                                                                                    |
+
+Export writes the changed lists the rules can read, entries only, to a file, and Copy puts the same text on the clipboard:
+
+```json
+{
+  "app": "stargazer",
+  "kind": "placement-lists",
+  "exportedAt": "2026-11-08T10:00:00.000Z",
+  "lists": {
+    "temp-buff": [120, 92, 128, 105]
+  }
+}
+```
+
+| Field        | Type   | Rule                                                       |
+| ------------ | ------ | ---------------------------------------------------------- |
+| `app`        | string | Always `"stargazer"`.                                      |
+| `kind`       | string | Always `"placement-lists"`.                                |
+| `exportedAt` | string | When the file was made, ISO 8601.                          |
+| `lists`      | object | List name to entries, each under the stored value's rules. |
+
 ## Fits kept between visits
 
 The browser keeps the points fit checks find under `stargazer.fits`, so a later visit checks only the fits it has not met. The page hands the stored value to the Supreme League worker with the worker's first press, and the worker uses it only when its `build` is the worker's own file name, whose hash changes with the code and the data file. Each press answers with the points it measured, stamped with that name, and the page adds them and saves (`src/lib/pvp/generator/storedFits.ts`). A save over a value of another build replaces it, and a value that does not parse is removed when read. Past 2,000 entries a save removes whole maps, the one that gained points longest ago first; the map that gained points last always stays. A save the browser refuses removes the value. The development server's worker has no hash in its file name, so nothing is kept there.

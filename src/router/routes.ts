@@ -5,7 +5,7 @@ import type {
   RouterScrollBehavior,
 } from 'vue-router'
 
-import { guidePath, SL_GENERATOR_PATH, SL_RULES_PATH, WWW_PATH } from '@/lib/guide'
+import { guidePath, SL_GENERATOR_PATH, SL_LISTS_PATH, SL_RULES_PATH, WWW_PATH } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
@@ -165,6 +165,11 @@ export const routes: RouteRecordRaw[] = [
     path: SL_RULES_PATH,
     name: 'guide-sl-rules',
     component: () => import('@/views/GuideSlRulesView.vue'),
+  },
+  {
+    path: SL_LISTS_PATH,
+    name: 'guide-sl-lists',
+    component: () => import('@/views/GuideSlListsView.vue'),
   },
   {
     path: WWW_PATH,
