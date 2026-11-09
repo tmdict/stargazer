@@ -77,7 +77,11 @@ const ASSIGN_FLOOR = 0.2
 // more than the floor yet still matches a hero better.
 const PHANTIMAL_FLOOR = 0.6
 // A match is sure when it scores this well and leads every unit of other art
-// by this much; else it waits for review.
+// by this much; else it waits for review. Against its own family's other art
+// (an owner and the companions its skill or phantimal brings) taken by another
+// portrait, the lead is what swapping the two portraits would lose: Phraesto's
+// shadow is drawn in his likeness, so each portrait alone leads the other's
+// art by 0.05 to 0.08, while the pair together leads the swap by over 0.1.
 export const SURE_SCORE = 0.6
 const SURE_MARGIN = 0.08
 
@@ -137,14 +141,26 @@ export function assignUnits(
   })
   pairs.sort((a, b) => b.score - a.score)
   const done = new Set<number>()
+  const matched: { i: number; slot: Slot; score: number }[] = []
   for (const { i, slot, score } of pairs) {
     if (done.has(i) || taken.has(slot.unitId)) continue
     done.add(i)
     taken.add(slot.unitId)
-    const rival = Math.max(
-      ...pool.filter((s) => s.art !== slot.art).map((s) => scoreOf(units[i]!, s.art)),
+    matched.push({ i, slot, score })
+  }
+  const familyOf = (slot: Slot): number => slot.owner ?? slot.unitId
+  for (const { i, slot, score } of matched) {
+    const lead = Math.min(
+      ...pool
+        .filter((s) => s.art !== slot.art)
+        .map((s) => {
+          const own = score - scoreOf(units[i]!, s.art)
+          const pair =
+            familyOf(s) === familyOf(slot) ? matched.find((m) => m.slot.art === s.art) : undefined
+          return pair ? own + pair.score - scoreOf(units[pair.i]!, slot.art) : own
+        }),
     )
-    const sure = score >= SURE_SCORE && score - rival >= SURE_MARGIN
+    const sure = score >= SURE_SCORE && lead >= SURE_MARGIN
     out[i] = { unitId: slot.unitId, state: sure ? 'sure' : 'review' }
   }
   // A portrait left over is still one of the side's units, and one with no

@@ -14,11 +14,13 @@ import {
 import { Team } from '@/lib/types/team'
 
 // Code-registered companion skills, each companion with a picture of its own:
-// Zanie's two turrets share one, Elijah & Lailah's companion is Lailah, and
-// Wedge of Matter (phantimal 5) brings Wedge of Power.
+// Zanie's two turrets share one, Elijah & Lailah's companion is Lailah,
+// Phraesto's is his shadow, and Wedge of Matter (phantimal 5) brings Wedge of
+// Power.
 const ZANIE = 89
 const TURRET = COMPANION_ID_OFFSET + ZANIE
 const ELIJAH_LAILAH = 68
+const PHRAESTO = 50
 const WEDGE = toPhantimalId(5)
 const WEDGE_POWER = COMPANION_ID_OFFSET + WEDGE
 
@@ -85,6 +87,28 @@ describe('assignUnits', () => {
     expect(assignUnits(units, [ELIJAH_LAILAH], {}, () => true)).toEqual([
       { unitId: ELIJAH_LAILAH, state: 'sure' },
       { unitId: LAILAH, state: 'sure' },
+    ])
+  })
+
+  it('settles Phraesto and his shadow by what swapping them would lose', () => {
+    const SHADOW = COMPANION_ID_OFFSET + PHRAESTO
+    // Each portrait alone leads the other's art by 0.06 and 0.05; the swap loses 0.11.
+    const pair = [
+      unit(13, { [PHRAESTO]: 0.96, [SHADOW]: 0.9 }),
+      unit(12, { [SHADOW]: 0.94, [PHRAESTO]: 0.89 }),
+    ]
+    expect(assignUnits(pair, [PHRAESTO], {}, () => true)).toEqual([
+      { unitId: PHRAESTO, state: 'sure' },
+      { unitId: SHADOW, state: 'sure' },
+    ])
+    // The shadow's portrait looks more like Phraesto, so the swap loses only 0.04.
+    const unclear = [
+      unit(13, { [PHRAESTO]: 0.95, [SHADOW]: 0.9 }),
+      unit(12, { [SHADOW]: 0.9, [PHRAESTO]: 0.91 }),
+    ]
+    expect(assignUnits(unclear, [PHRAESTO], {}, () => true).map((a) => a.state)).toEqual([
+      'review',
+      'review',
     ])
   })
 
