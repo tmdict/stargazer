@@ -7,8 +7,14 @@ import { imagetools } from 'vite-imagetools'
 import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
-import { slPreview } from './scripts/slPreview.ts'
-import { GUIDE_PAGES, guidePath, SL_GENERATOR_PATH, WWW_PATH } from './src/lib/guide.ts'
+import { packModule } from './scripts/packModule.ts'
+import {
+  GUIDE_PAGES,
+  guidePath,
+  SL_GENERATOR_PATH,
+  SL_RULES_PATH,
+  WWW_PATH,
+} from './src/lib/guide.ts'
 import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
 import { APP_LOCALES, isAppLocale, SKILL_LOCALES } from './src/lib/types/i18n.ts'
@@ -37,6 +43,7 @@ function getSSGRoutes(): string[] {
     '/skills',
     ...GUIDE_PAGES.map(guidePath),
     SL_GENERATOR_PATH,
+    SL_RULES_PATH,
     WWW_PATH,
   ]
 
@@ -171,7 +178,23 @@ function processRenderedPage(route: string, html: string): string {
 // Vite Config
 
 export default defineConfig({
-  plugins: [vue(), imagetools(), guideReports(), slPreview()],
+  plugins: [
+    vue(),
+    imagetools(),
+    guideReports(),
+    packModule({
+      name: 'sl-preview',
+      entry: 'src/lib/pvp/generator/defaultSet.ts',
+      run: 'defaultSlSet',
+      without: 'the guide index shows no preview',
+    }),
+    packModule({
+      name: 'formation-rules',
+      entry: 'src/lib/placement/formationRulesData.ts',
+      run: 'formationRulesData',
+      without: 'the Formation rules page shows no lists, leans or weights',
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

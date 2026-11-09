@@ -7,6 +7,7 @@ import { configDefaults, defineConfig } from 'vitest/config'
 // leaves them out and says so.
 const PVP_DATA_TESTS = [
   'tests/unit/content/pvpSeasons.test.ts',
+  'tests/unit/placement/listNames.test.ts',
   'tests/unit/sl/slData.test.ts',
   'tests/unit/sl/team.test.ts',
 ]

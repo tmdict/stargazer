@@ -171,6 +171,7 @@ export function loadPhantimals(): PhantimalType[] {
 }
 
 let heroCharmCache: Map<string, CharmData> | null = null
+let charmsCache: CharmData[] | null = null
 
 // A charm's tags join each sharing hero's own, pinned to the tiers that carry
 // them, so every tag consumer (filters, guide, skill chips) sees them as
@@ -186,16 +187,23 @@ function withCharmTags(character: CharacterType): CharacterType {
   return { ...character, tags }
 }
 
-/** The charm a hero shares, with the full sharer list; null when the hero has
- * none (or charms are retired, which leaves the glob matching no file). */
+/** The season's charms in id order; none once charms are retired, which
+ * leaves the glob matching no file. */
+export function loadCharms(): CharmData[] {
+  charmsCache ??= Object.values(
+    import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  ).sort((a, b) => a.id.localeCompare(b.id, 'en', { numeric: true }))
+  return charmsCache
+}
+
+/** The charm a hero shares, with the full sharer list; null when the hero has none. */
 export function getCharmForHero(slug: string): CharmData | null {
   if (!heroCharmCache) {
     heroCharmCache = new Map()
-    const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
-      eager: true,
-      import: 'default',
-    })
-    for (const charm of Object.values(modules)) {
+    for (const charm of loadCharms()) {
       for (const hero of charm.heroes) heroCharmCache.set(hero, charm)
     }
   }

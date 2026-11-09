@@ -1,0 +1,5 @@
+{
+  "en": "Rules against enemy heroes count more on maps where that hero is picked more often, and they only choose between formations that are already about as good.",
+  "zh": "针对敌方英雄的规则，在该英雄更常被选用的地图上更重要，而且只在已经差不多好的布阵之间做选择。",
+  "ko": "적군 영웅에 대한 규칙은 그 영웅이 자주 쓰이는 맵에서 더 중요하게 계산되며, 이미 비슷하게 좋은 배치들 사이에서만 고릅니다."
+}

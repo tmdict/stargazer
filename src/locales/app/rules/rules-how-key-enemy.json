@@ -1,0 +1,5 @@
+{
+  "en": "A rule for a hero on the enemy team moves our units, never the enemy's. {targets} says which of our units its skill lands on, and {keep} which of our heroes it should not land on.",
+  "zh": "敌方英雄的规则只移动我方单位，从不移动敌方单位。{targets}说明它的技能落在我方哪个单位上，{keep}说明不该让它落在我方哪位英雄身上。",
+  "ko": "적군 영웅의 규칙은 아군 유닛만 옮기고 적군 유닛은 옮기지 않습니다. ‘{targets}’ 항목은 그 스킬이 어느 아군 유닛에 닿는지, ‘{keep}’ 항목은 그 스킬이 닿지 않아야 할 아군 영웅을 보여 줍니다."
+}

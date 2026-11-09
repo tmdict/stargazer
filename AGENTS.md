@@ -59,7 +59,7 @@ System docs:
 - [Screenshot Import](./docs/architecture/IMPORT.md) - The team, roster and matchup imports, the engine and references they share, and their limits
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
-- [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring and search
+- [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring and search, and the Formation rules page
 - [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, PvP reports and summaries, hosting
 
 ## BUILD COMMANDS

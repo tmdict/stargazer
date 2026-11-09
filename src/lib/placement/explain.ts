@@ -4,9 +4,9 @@
 
 import { inPhantimalBand } from '../characters/phantimal'
 import type { MapLayout } from '../maps'
-import type { RuleGoal } from '../types/rule'
 import { PlacementBoard } from './board'
 import { asGoodAs, beats, EPS } from './engine'
+import { effectVerb } from './goals'
 import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
@@ -42,16 +42,6 @@ export interface PlacementExplanation {
   // In the board's units' order.
   units: UnitPlacement[]
   artifact: PlacementReason[]
-}
-
-// How a unit's own effect reads: given to heroes, or reaching as much as it can
-// or its own other body. A goal about enemy heroes explains nothing on our side.
-function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
-  if (goal === 'most' || goal === 'companion' || (typeof goal === 'object' && 'most' in goal))
-    return 'reaches'
-  if (typeof goal === 'object' && ('target' in goal || 'include' in goal || 'exactly' in goal))
-    return 'gives'
-  return undefined
 }
 
 /**

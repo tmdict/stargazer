@@ -11,8 +11,10 @@ import type { Rule, RuleGoal, RuleTeam } from '../types/rule'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
+import { goalList } from './goals'
+import { expandList, type ListHeroes } from './lists'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from './reach'
-import type { ListEntry, PlacementData, PlacementLookups, PlacementTeam } from './types'
+import type { PlacementData, PlacementTeam } from './types'
 
 // The list a rule falls back on when the team has none of its own list's heroes.
 const FALLBACK_LIST = 'damage'
@@ -78,52 +80,6 @@ const countsAllies = (goal: RuleGoal): boolean =>
 const isWall = (state: State): boolean =>
   state === State.BLOCKED || state === State.BLOCKED_BREAKABLE
 
-// A list's heroes, the lists it brings in included: those above its line in
-// order, and those below it, who rank the same. A list brought in above the
-// line keeps its own order and line; one brought in below it counts all its
-// heroes the same. A hero counts at its first place, so one named again after
-// a list that holds it below that list's line stays there. `seen` holds the
-// lists on the way down, so a list two others bring in is read for each, and
-// only a list that brings itself in fails.
-interface ListHeroes {
-  ranked: number[]
-  equal: number[]
-}
-
-function expandList(
-  lists: PlacementData['lists'],
-  name: string,
-  lookups: PlacementLookups,
-  seen: Set<string> = new Set(),
-): ListHeroes | undefined {
-  const entries: ListEntry[] | undefined = lists[name]
-  if (!entries || seen.has(name)) return undefined
-  seen.add(name)
-  const found: ListHeroes = { ranked: [], equal: [] }
-  const placed = new Set<number>()
-  const put = (heroes: number[], into: number[]) => {
-    for (const hero of heroes) {
-      if (placed.has(hero)) continue
-      placed.add(hero)
-      into.push(hero)
-    }
-  }
-  let below = false
-  for (const entry of entries) {
-    if (typeof entry === 'number') put([entry], below ? found.equal : found.ranked)
-    else if ('line' in entry) below = true
-    else if ('every' in entry) put(lookups.heroesMatching(entry.every), found.equal)
-    else {
-      const more = expandList(lists, entry.list, lookups, seen)
-      if (!more) return undefined
-      put(more.ranked, below ? found.equal : found.ranked)
-      put(more.equal, found.equal)
-    }
-  }
-  seen.delete(name)
-  return found
-}
-
 // Each tile a unit can walk to from the given tiles round the walls, with its
 // fewest steps.
 function walkingSteps(grid: Grid, from: Iterable<number>): Map<number, number> {
@@ -146,13 +102,6 @@ function walkingSteps(grid: Grid, from: Iterable<number>): Map<number, number> {
 
 const fallsBack = (goal: RuleGoal): boolean =>
   !(typeof goal === 'object' && 'target' in goal && goal.fallback === false)
-
-function goalList(goal: RuleGoal): string | undefined {
-  if (typeof goal !== 'object') return undefined
-  if ('target' in goal) return goal.target
-  if ('include' in goal) return goal.include
-  return 'avoid' in goal ? goal.avoid : undefined
-}
 
 /**
  * Scores the board a team stands on: its own rules, the rules of the enemy units

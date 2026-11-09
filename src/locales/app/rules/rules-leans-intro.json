@@ -1,0 +1,5 @@
+{
+  "en": "Most heroes lean to the front or the back. When two tiles are about as good, a hero takes the one further toward its side. The front is the side nearer the enemy, counted in steps walking round the walls, and a tile with no way to the enemy counts as the back.",
+  "zh": "大多数英雄偏向前排或后排。两个格子差不多好时，英雄会站在更靠近自己偏向一侧的那格。前方指离敌人更近的一侧，按绕过墙壁行走的步数计算；无法走到敌人那里的格子算作后方。",
+  "ko": "대부분의 영웅은 앞쪽이나 뒤쪽을 선호합니다. 두 타일이 비슷하게 좋으면 선호하는 쪽에 더 가까운 타일에 섭니다. 앞쪽은 벽을 돌아 걷는 걸음 수로 따져 적에게 더 가까운 쪽이고, 적에게 갈 길이 없는 타일은 뒤쪽으로 칩니다."
+}

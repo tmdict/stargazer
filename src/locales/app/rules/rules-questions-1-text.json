@@ -1,0 +1,5 @@
+{
+  "en": "Only on a map the team's games don't come from. A team the generator takes from a map's own records keeps the chance its games give it. When it takes a team's games from other maps, as on a map with no recorded games yet, it lowers the team's chance when its skills fit the map worse than the map the team played most.",
+  "zh": "只在队伍的对局并非来自这张地图时才会。生成器从某张地图自己的记录中选出的队伍，保持其对局得出的胜率。当它采用队伍在其他地图上的对局时（例如在还没有记录对局的地图上），如果队伍的技能在这张地图上不如在其最常出战的地图上发挥得好，就会降低其胜率。",
+  "ko": "팀의 전투 기록이 그 맵에서 나온 것이 아닐 때만 그렇습니다. 생성기가 그 맵의 기록에서 고른 팀은 전투 기록이 주는 승률을 그대로 유지합니다. 아직 기록된 전투가 없는 맵처럼 다른 맵의 전투 기록을 쓸 때는, 팀의 스킬이 가장 많이 싸운 맵보다 이 맵에 덜 맞으면 승률을 낮춥니다."
+}

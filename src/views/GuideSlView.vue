@@ -285,7 +285,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
 
 <template>
   <main class="sl-page" data-theme="dark">
-    <SlHead :title="i18n.t('app.sl-title')" :records="heading" @about="aboutOpen = true" />
+    <SlHead :title="i18n.t('app.sl-title')" :records="heading" rules @about="aboutOpen = true" />
     <SlAbout
       v-if="heading"
       :show="aboutOpen"

@@ -3,12 +3,19 @@
    records it reads with the link to the note on the data. */
 
 import SlBeta from './SlBeta.vue'
+import { SL_RULES_PATH } from '@/lib/guide'
 import { useI18nStore } from '@/stores/i18n'
 
 // records: the data file's season and export date, once the file has loaded.
-const { title, records } = defineProps<{
+// rules: the page places heroes, so it links the rules it places them by.
+const {
+  title,
+  records,
+  rules = false,
+} = defineProps<{
   title: string
   records: { season: number; date: string } | null
+  rules?: boolean
 }>()
 
 const emit = defineEmits<{ about: [] }>()
@@ -25,6 +32,12 @@ const i18n = useI18nStore()
       <button type="button" class="sl-about-link" @click="emit('about')">
         {{ i18n.t('app.sl-about') }}
       </button>
+      <template v-if="rules">
+        <span aria-hidden="true"> ·</span>
+        <RouterLink :to="SL_RULES_PATH" class="sl-about-link">
+          {{ i18n.t('app.rules-title') }}
+        </RouterLink>
+      </template>
     </p>
   </header>
 </template>

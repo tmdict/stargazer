@@ -7,18 +7,20 @@ import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
+import { noteKey, targetsKey } from '@/lib/placement/formationRules'
+import { effectVerb } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
-import type { CharmData } from '@/lib/types/skill'
 import { Team } from '@/lib/types/team'
-import { loadAppLocales, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import {
+  loadAppLocales,
+  loadArtifacts,
+  loadCharacters,
+  loadCharms,
+  loadPhantimals,
+} from '@/utils/dataLoader'
 import { placeOnTile } from './fixtures/skills'
-
-const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
-  eager: true,
-  import: 'default',
-})
 
 const FIELDS = new Set(['team', 'goal', 'tile', 'from', 'weight', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
@@ -122,6 +124,10 @@ const units = [
   })),
 ].filter((unit) => unit.rules)
 
+// Every file with rules, by the name the words of its rules go by.
+const owners = [...units, ...loadCharms().map((charm) => ({ name: charm.id, rules: charm.rules }))]
+const words = loadAppLocales()
+
 describe('placement rules', () => {
   it('keep the contract on every hero, artifact and phantimal, each on a unit Stargazer places or naming its tile', () => {
     for (const unit of units) {
@@ -131,7 +137,7 @@ describe('placement rules', () => {
   })
 
   it('keep the contract on every charm, each naming its tile', () => {
-    for (const charm of Object.values(charmFiles)) {
+    for (const charm of loadCharms()) {
       expect(shapeProblems(charm.rules ?? [], 'always'), `${charm.id}'s rules`).toEqual([])
     }
   })
@@ -141,22 +147,12 @@ describe('placement rules', () => {
   // (target, include, exactly) gives and what a hero receives, or what a most or
   // companion goal reaches.
   it('each have the words a placement card names their effect with, and no words outlive one', () => {
-    const owners = [
-      ...units,
-      ...Object.values(charmFiles).map((charm) => ({ name: charm.id, rules: charm.rules })),
-    ]
     const needed = new Set<string>()
     for (const { name, rules } of owners) {
       for (const rule of rules ?? []) {
         if (rule.team !== 'ally' || rule.weight === undefined) continue
-        const { goal } = rule
-        const kinds =
-          goal === 'most' || goal === 'companion' || (typeof goal === 'object' && 'most' in goal)
-            ? ['reaches']
-            : typeof goal === 'object' &&
-                ('target' in goal || 'include' in goal || 'exactly' in goal)
-              ? ['gives', 'receives']
-              : []
+        const verb = effectVerb(rule.goal)
+        const kinds = verb === 'gives' ? ['gives', 'receives'] : verb ? [verb] : []
         const file = rule.from === 'companion' ? `${name}-companion` : name
         for (const key of kinds.map((kind) => `placement-${kind}-${file}`)) {
           expect(needed.has(key), `two of ${name}'s rules are worded by ${key}`).toBe(false)
@@ -164,9 +160,28 @@ describe('placement rules', () => {
         }
       }
     }
-    const words = Object.keys(loadAppLocales())
-    expect([...needed].filter((key) => !words.includes(key))).toEqual([])
-    const named = words.filter((key) => /^placement-(gives|receives|reaches)-/.test(key))
+    expect([...needed].filter((key) => !words[key])).toEqual([])
+    const named = Object.keys(words).filter((key) =>
+      /^placement-(gives|receives|reaches)-/.test(key),
+    )
+    expect(named.filter((key) => !needed.has(key))).toEqual([])
+  })
+
+  // The Formation rules page shows each rule's note in the site language, and
+  // for a rule against an enemy hero, which of our units its skill lands on.
+  it('each have their note words, the English word for word, and no words outlive one', () => {
+    const needed = new Set<string>()
+    for (const { name, rules } of owners) {
+      for (const rule of rules ?? []) {
+        const key = noteKey(name, rule)
+        expect(needed.has(key), `two of ${name}'s rules are noted by ${key}`).toBe(false)
+        needed.add(key)
+        expect(words[key]?.en, `${key} in English`).toBe(rule.note)
+        if (typeof rule.goal === 'object' && 'avoid' in rule.goal) needed.add(targetsKey(name))
+      }
+    }
+    expect([...needed].filter((key) => !words[key])).toEqual([])
+    const named = Object.keys(words).filter((key) => /^placement-(note|targets)-/.test(key))
     expect(named.filter((key) => !needed.has(key))).toEqual([])
   })
 })

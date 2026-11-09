@@ -3,6 +3,7 @@
 import { toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import { matchesFilter } from './lists'
 import type { PlacementLookups } from './types'
 
 const heroById = new Map(loadCharacters().map((hero) => [hero.id, hero]))
@@ -29,13 +30,6 @@ export const PLACEMENT_LOOKUPS: PlacementLookups = {
   },
   nameOf: (id) => dataOf(id)?.name,
   rangeOf: (id) => dataOf(id)?.range,
-  heroesMatching: ({ class: classes, range, damage }) =>
-    heroes
-      .filter(
-        (hero) =>
-          (!classes || classes.includes(hero.class)) &&
-          (!range || (range === 'melee') === (hero.range === 1)) &&
-          (!damage || hero.damage === damage),
-      )
-      .map((hero) => hero.id),
+  heroesMatching: (filter) =>
+    heroes.filter((hero) => matchesFilter(hero, filter)).map((hero) => hero.id),
 }

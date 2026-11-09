@@ -1,7 +1,7 @@
 import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
-import { guidePath, SL_GENERATOR_PATH, WWW_PATH, type GuidePage } from '@/lib/guide'
+import { guidePath, SL_GENERATOR_PATH, SL_RULES_PATH, WWW_PATH, type GuidePage } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
@@ -201,6 +201,9 @@ const setupTextMeta = (locale: Ref<AppLocale>, prefix: string, path: string): vo
 
 export const setupSlContentMeta = (locale: Ref<AppLocale>): void =>
   setupTextMeta(locale, 'sl', SL_GENERATOR_PATH)
+
+export const setupSlRulesContentMeta = (locale: Ref<AppLocale>): void =>
+  setupTextMeta(locale, 'rules', SL_RULES_PATH)
 
 export const setupWwwContentMeta = (locale: Ref<AppLocale>): void =>
   setupTextMeta(locale, 'www', WWW_PATH)

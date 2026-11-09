@@ -1,5 +1,5 @@
 /* The set the generator gives before a roster is picked. The guide index's
- * card draws it, worked out once per build (scripts/slPreview.ts) so the index
+ * card draws it, worked out once per build (scripts/packModule.ts) so the index
  * loads neither the data file, the model nor the chooser. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
