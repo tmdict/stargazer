@@ -7,12 +7,12 @@
    where they match no list. Open in Teams opens the set on the Teams page as a
    new team, and the boards of the page Generate's ↗ opened this one from
    (lib/pvp/generator/handover) are drawn on arrival. The picker edits the
-   active roster, or under All heroes a draft (useSlRoster). The set
-   is chosen only on Generate and stays as it is while the selection, the mode
-   or the maps change. A board draws the formation of its team's recorded game
-   where the team was recorded on its map, and the engine's elsewhere; the
-   engine's formations of the recorded boards, which their switches show, are
-   worked out in the worker once the set is drawn.
+   active roster, or under All heroes a draft (useSlRoster). The set is chosen
+   only on Generate and stays as it is while the selection, the mode or the
+   maps change. A board draws the formation of its team's recorded game where
+   the team was recorded on its map, and the engine's elsewhere; the engine's
+   formations of the recorded boards, which their switches show, are worked
+   out in the worker once the set is drawn.
    The page is pre-rendered with its heading alone: the picker and the set
    follow the visitor's rosters, which the browser holds, so they are drawn
    after mount. */

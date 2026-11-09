@@ -81,7 +81,6 @@ const onClick = (event: Event): void => {
   if (found) toggle(...found)
 }
 
-// The unit drawn on each tile, a swap's included.
 const unitIds = computed(() => {
   const ids = new Map<number, number>()
   for (const unit of board.units) {
