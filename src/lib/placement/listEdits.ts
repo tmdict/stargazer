@@ -11,11 +11,11 @@ export type Lists = Record<string, ListEntry[]>
 
 export const LIST_EDITS_KEY = 'stargazer.placement.lists'
 
-export interface StoredListEdits {
+interface StoredListEdits {
   lists: Record<string, { entries: ListEntry[]; site: ListEntry[] }>
 }
 
-export interface ListsExportFile {
+interface ListsExportFile {
   app: 'stargazer'
   kind: 'placement-lists'
   exportedAt: string
@@ -138,7 +138,7 @@ export function listProblems(lists: Lists, name: string): ListProblem[] {
   return problems
 }
 
-export interface ListEdits {
+interface ListEdits {
   // Every list, the visitor's version where they changed it.
   lists: Lists
   // The site's version of each changed list when the visitor first changed it,
@@ -228,7 +228,7 @@ export function listsExportText(file: ListsExportFile): string {
   return `{\n  "app": "stargazer",\n  "kind": "placement-lists",\n  "exportedAt": ${JSON.stringify(file.exportedAt)},\n  "lists": ${lists}\n}\n`
 }
 
-export interface ListDiff {
+interface ListDiff {
   added: Set<string>
   removed: string[]
   // Entries out of the site's order, by key, with their place on the site's list.

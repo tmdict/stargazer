@@ -22,7 +22,6 @@ export const goalWord = (goal: RuleGoal): string =>
         (key) => !['fallback', 'others', 'sameFaction', 'nonHero'].includes(key),
       )!
 
-// The list a goal reads, if any.
 export function goalList(goal: RuleGoal): string | undefined {
   if (typeof goal !== 'object') return undefined
   if ('target' in goal) return goal.target

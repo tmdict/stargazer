@@ -7,10 +7,10 @@ import type { Lists } from '@/lib/placement/listEdits'
 import { expandList } from '@/lib/placement/lists'
 import type { HeroFilter, ListEntry } from '@/lib/placement/types'
 
-export type HeroesMatching = (filter: HeroFilter) => number[]
+type HeroesMatching = (filter: HeroFilter) => number[]
 
 // A hero's place on a list: its rank, or 0 below the line.
-export interface PlacedHero {
+interface PlacedHero {
   id: number
   place: number
   // An entry above already counts it.

@@ -26,7 +26,7 @@ interface Drag {
   speed: number
 }
 
-export interface DragMarker {
+interface DragMarker {
   left: number
   top: number
   width: number
@@ -229,7 +229,7 @@ export function useListDrag(root: Ref<HTMLElement | null>, editor: ListEditor) {
   return { marker, removing, lifted, onDown }
 }
 
-export type ListDrag = ReturnType<typeof useListDrag>
+type ListDrag = ReturnType<typeof useListDrag>
 
 const DRAG: InjectionKey<ListDrag> = Symbol('list-drag')
 

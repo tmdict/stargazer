@@ -45,7 +45,6 @@ function compare(a: PlacementScore, b: PlacementScore): number {
 export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
   score.goals >= best.goals - margin - EPS
 
-// Goals higher by more than the margin.
 export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean =>
   score.goals > base.goals + margin + EPS
 

@@ -24,7 +24,6 @@ describe('Reading a visitor’s stored lists', () => {
     expect(readListEdits('{not json', SITE, HEROES)).toEqual({ lists: SITE, since: {}, notes: [] })
   })
 
-  // A list that breaks a rule stays, for the page to show what to fix.
   it('drops a list the site no longer has and one it cannot read, and keeps one that breaks a rule', () => {
     const tank = [4, { line: true }, 5, { line: true }]
     const edits = readListEdits(

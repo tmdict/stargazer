@@ -359,7 +359,6 @@ export function useListWords() {
     return card.team === 'enemy' ? t('rules-an-enemy', { name }) : name
   }
 
-  // Who reads a list, and the lists that bring it in, in a line.
   const readersLine = (name: string, parents: readonly string[]): string => {
     const all = [
       ...new Set(readersOf(name).map(readerName)),
