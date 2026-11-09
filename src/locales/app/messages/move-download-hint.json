@@ -1,5 +1,5 @@
 {
-  "en": "The download opens at the old address and works only in the browser you used there. Import saved teams on the Teams page and rosters in the Rosters tab.",
-  "zh": "下载页面在旧地址打开，仅在您当时使用的浏览器中有效。保存的阵容在阵容页面导入，英雄池在英雄池标签页导入。",
-  "ko": "다운로드는 이전 주소에서 열리며, 그때 사용한 브라우저에서만 가능합니다. 저장한 진형은 진형 페이지에서, 로스터는 영웅 로스터 탭에서 가져옵니다."
+  "en": "Open it in the browser you used before. Load the files here with Import.",
+  "zh": "请在您之前使用的浏览器中打开，然后在这里通过“导入”载入文件。",
+  "ko": "이전에 사용한 브라우저에서 여세요. 파일은 여기에서 ‘가져오기’로 불러옵니다."
 }

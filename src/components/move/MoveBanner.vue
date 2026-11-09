@@ -1,59 +1,52 @@
 <script setup lang="ts">
-/* The first page's notice that the site moved. Its action opens the popup, or,
-   once the old address only redirects, fetches the old data. That action is a
-   button: opened in another tab, a link would leave without the marker that
-   tells the new address the data was asked for. */
+/* The first page's notice that the site moved: a bar under the header that
+   opens the popup. */
 
-import IconInfo from '@/components/ui/IconInfo.vue'
-import NoticeBanner from '@/components/ui/NoticeBanner.vue'
-import { MOVE_STAGE } from '@/lib/move/config'
+import { computed } from 'vue'
+
+import { SITE_HOST } from '@/lib/site'
 import { useI18nStore } from '@/stores/i18n'
 
-const emit = defineEmits<{ details: []; bring: []; dismiss: [] }>()
+const emit = defineEmits<{ open: [] }>()
 
 const i18n = useI18nStore()
+
+const line = computed(() => i18n.t('app.move-banner').split('{site}'))
 </script>
 
 <template>
-  <div class="move-banner">
-    <NoticeBanner
-      :icon="IconInfo"
-      :message="i18n.t('app.move-banner')"
-      role="status"
-      @dismiss="emit('dismiss')"
-    >
-      <button v-if="MOVE_STAGE === 2" type="button" class="move-action" @click="emit('bring')">
-        {{ i18n.t('app.move-bring') }}
-      </button>
-      <button type="button" class="move-action" @click="emit('details')">
-        {{ i18n.t('app.move-details') }}
-      </button>
-    </NoticeBanner>
-  </div>
+  <button type="button" class="move-banner" @click="emit('open')">
+    {{ line[0] }}<b>{{ SITE_HOST }}</b
+    >{{ line[1] }}
+  </button>
 </template>
 
 <style scoped>
 .move-banner {
-  padding: var(--spacing-md) var(--spacing-lg) 0;
-}
-
-.move-banner :deep(.notice-banner) {
-  flex-wrap: wrap;
-  margin-bottom: 0;
-}
-
-.move-action {
-  padding: 0;
+  display: block;
+  width: 100%;
+  padding: 9px var(--spacing-lg);
   border: none;
-  background: none;
-  color: var(--color-primary);
+  border-bottom: 1px solid #1d2026;
+  background: #343944;
+  color: #e6e6e6;
   font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
+  font-size: 14px;
+  text-align: center;
   cursor: pointer;
 }
 
-.move-action:hover {
-  color: var(--color-primary-hover);
+.move-banner:hover {
+  background: #3d4350;
+}
+
+.move-banner b {
+  color: var(--color-header-gold);
+}
+
+@media (max-width: 480px) {
+  .move-banner {
+    text-align: left;
+  }
 }
 </style>

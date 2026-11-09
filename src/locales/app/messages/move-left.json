@@ -1,5 +1,5 @@
 {
-  "en": "{teams} saved teams and {rosters} rosters didn't fit because the library is full. They are still in the download from the old address.",
-  "zh": "有 {teams} 个保存的阵容和 {rosters} 个英雄池因数量已达上限未能迁移，仍可从旧地址下载。",
-  "ko": "저장 한도가 가득 차서 저장한 진형 {teams}개와 로스터 {rosters}개는 옮기지 못했습니다. 이전 주소에서 다운로드할 수 있습니다."
+  "en": "{teams} saved teams and {rosters} rosters didn't fit because the library is full. You can still save them as files from the old site.",
+  "zh": "有 {teams} 个保存的阵容和 {rosters} 个英雄池因数量已达上限未能迁移，仍可在旧站点将它们保存为文件。",
+  "ko": "저장 한도가 가득 차서 저장한 진형 {teams}개와 로스터 {rosters}개는 옮기지 못했습니다. 이전 사이트에서 파일로 저장할 수 있습니다."
 }

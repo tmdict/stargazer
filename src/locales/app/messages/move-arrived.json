@@ -1,5 +1,5 @@
 {
-  "en": "Your data came with you: {teams} saved teams and {rosters} rosters were added, along with your boards and settings.",
-  "zh": "您的数据已一并迁移：新增 {teams} 个保存的阵容和 {rosters} 个英雄池，棋盘和设置也已带上。",
-  "ko": "데이터를 함께 옮겼습니다. 저장한 진형 {teams}개와 로스터 {rosters}개를 추가했고, 보드와 설정도 가져왔습니다."
+  "en": "Everything you saved came with you: {teams} saved teams, {rosters} rosters, and your boards and settings.",
+  "zh": "您保存的内容已全部迁移：{teams} 个保存的阵容、{rosters} 个英雄池，以及棋盘和设置。",
+  "ko": "저장한 내용을 모두 옮겼습니다. 저장한 진형 {teams}개, 로스터 {rosters}개, 그리고 보드와 설정입니다."
 }

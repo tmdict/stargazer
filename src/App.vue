@@ -255,12 +255,7 @@ onUnmounted(() => {
     </nav>
   </header>
 
-  <MoveBanner
-    v-if="moveBannerShown"
-    @details="movePopupShown = true"
-    @bring="bringOldData"
-    @dismiss="moveBannerShown = false"
-  />
+  <MoveBanner v-if="moveBannerShown" @open="movePopupShown = true" />
 
   <RouterView />
 
