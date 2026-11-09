@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /* A dismissible one-line notice with an icon: the season notice above the
-   boards, and (`dark`) the skill reader's language hint on its dark panel. */
+   boards, and (`dark`) the skill reader's language hint on its dark panel. The
+   slot takes the notice's actions. */
 
 import type { Component } from 'vue'
 
@@ -21,6 +22,7 @@ const i18n = useI18nStore()
   <div class="notice-banner" :class="{ dark }">
     <component :is="icon" :size="15" class="notice-banner-icon" aria-hidden="true" />
     <span>{{ message }}</span>
+    <slot />
     <button
       type="button"
       class="notice-banner-dismiss"

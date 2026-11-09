@@ -67,6 +67,13 @@ describe('parseImport record validation', () => {
     expect(result.accepted[0]!.name).toBe('Alpha (imported)')
   })
 
+  it('skips an old version whose "(imported)" copy an earlier import already added', () => {
+    const edited = record({ id: 'existing', name: 'Other' })
+    const first = parseImport(envelope([record({ id: 'existing' })]), [edited])!
+    const again = parseImport(envelope([record({ id: 'existing' })]), [edited, ...first.accepted])!
+    expect(again).toMatchObject({ accepted: [], skipped: 1, conflicts: 0 })
+  })
+
   it('regenerates in-file duplicate ids without marking a conflict', () => {
     const result = parseImport(
       envelope([record({ id: 'dupe' }), record({ id: 'dupe', name: 'Other' })]),

@@ -6,6 +6,7 @@ import DragPreview from '@/components/DragPreview.vue'
 import GuideMenu from '@/components/guide/GuideMenu.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
 import InspectModals from '@/components/modals/InspectModals.vue'
+import MoveBanner from '@/components/move/MoveBanner.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
@@ -20,6 +21,7 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
+import { useMove } from '@/composables/useMove'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
@@ -40,6 +42,8 @@ const showWhatsNew = ref(false)
 // mounted after, so its leave transition plays.
 const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/WhatsNewModal.vue'))
 const whatsNewMounted = ref(false)
+const MoveModal = defineLazyComponent(() => import('@/components/modals/MoveModal.vue'))
+const moveModalMounted = ref(false)
 const contactOpen = ref(false)
 const contactButton = ref<HTMLElement | null>(null)
 const i18n = useI18nStore()
@@ -49,6 +53,15 @@ const { target: localeTarget, pick: switchLocale } = useLocaleSwitch()
 const { open: openSearch } = useSearchOverlay()
 useLiftGuard()
 const { unseen: whatsNewUnseen, markSeen: markWhatsNewSeen } = useWhatsNew()
+const {
+  result: moveResult,
+  bannerShown: moveBannerShown,
+  popupShown: movePopupShown,
+  bringOldData,
+} = useMove()
+watch(movePopupShown, (shown) => {
+  if (shown) moveModalMounted.value = true
+})
 
 const openWhatsNew = () => {
   whatsNewMounted.value = true
@@ -242,6 +255,13 @@ onUnmounted(() => {
     </nav>
   </header>
 
+  <MoveBanner
+    v-if="moveBannerShown"
+    @details="movePopupShown = true"
+    @bring="bringOldData"
+    @dismiss="moveBannerShown = false"
+  />
+
   <RouterView />
 
   <!-- Global drag preview -->
@@ -255,6 +275,14 @@ onUnmounted(() => {
     :show="showWhatsNew"
     @close="showWhatsNew = false"
     @shown="markWhatsNewSeen"
+  />
+
+  <MoveModal
+    v-if="moveModalMounted"
+    :show="movePopupShown"
+    :result="moveResult"
+    @close="movePopupShown = false"
+    @bring="bringOldData"
   />
 
   <ContactForm v-model:open="contactOpen" :trigger="contactButton" />

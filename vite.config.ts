@@ -7,6 +7,7 @@ import { imagetools } from 'vite-imagetools'
 import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
+import { movePages } from './scripts/movePages.ts'
 import { packModule } from './scripts/packModule.ts'
 import {
   GUIDE_PAGES,
@@ -184,6 +185,14 @@ export default defineConfig({
     vue(),
     imagetools(),
     guideReports(),
+    movePages(),
+    {
+      name: 'site-origin',
+      transformIndexHtml: {
+        order: 'pre',
+        handler: (html) => html.replaceAll('%SITE_ORIGIN%', SITE_ORIGIN),
+      },
+    },
     packModule({
       name: 'sl-preview',
       entry: 'src/lib/pvp/generator/defaultSet.ts',
@@ -220,9 +229,10 @@ export default defineConfig({
         changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
-        // The share-link shell, not content, and the Hero lists page, which
-        // only the Formation engine rules page links to.
-        exclude: ['/share', SL_LISTS_PATH],
+        // The share-link shell, not content, the Hero lists page, which only
+        // the Formation engine rules page links to, and the old address's
+        // recovery page.
+        exclude: ['/share', SL_LISTS_PATH, '/move-recovery'],
         // @ts-expect-error - vite-ssg-sitemap types do not allow disabling lastmod
         lastmod: '',
       })

@@ -1,4 +1,6 @@
-https://afkj-stargazer.netlify.app/* https://stargazer.tmdict.com/:splat 301!
+https://afkj-stargazer.netlify.app/* https://afkstargazer.com/:splat 301!
+# The old address's recovery page; the app's fallback would otherwise answer.
+https://stargazer.tmdict.com/backup /move-recovery.html 200!
 # Retired page; its content lives on as the in-app About modal.
 /en/about / 301
 /zh/about / 301

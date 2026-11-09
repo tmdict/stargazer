@@ -6,11 +6,9 @@
 import { onMounted, readonly, ref } from 'vue'
 
 import type { AppLocale } from '@/lib/types/i18n'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { readFlag, writeFlag } from '@/utils/flags'
 
 const WHATS_NEW_EDITION = '2026-11-06'
-
-const SEEN_KEY = 'stargazer.whatsNewSeen'
 
 /** The edition's date as the popup's title shows it. */
 export function whatsNewEditionDate(locale: AppLocale): string {
@@ -25,12 +23,12 @@ export function useWhatsNew() {
   const unseen = ref(false)
 
   onMounted(() => {
-    unseen.value = readStorage(SEEN_KEY) !== WHATS_NEW_EDITION
+    unseen.value = readFlag('whatsNew') !== WHATS_NEW_EDITION
   })
 
   const markSeen = (): void => {
     unseen.value = false
-    writeStorage(SEEN_KEY, WHATS_NEW_EDITION)
+    writeFlag('whatsNew', WHATS_NEW_EDITION)
   }
 
   return { unseen: readonly(unseen), markSeen }

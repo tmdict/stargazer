@@ -58,7 +58,7 @@ A skill page's prefix names only its text, so a saved site language frames it as
 
 vite-ssg creates its own unhead instance on the server and the client, and `src/main.ts` creates one from `@unhead/vue/client`. The root `@unhead/vue` range must stay within the range vite-ssg depends on, so npm installs one copy. A second copy would split the app's `useHead` calls from the server head.
 
-`/share` and `/skills` set their own title and canonical through `useHead`, and `/` keeps the `index.html` defaults.
+`/share` and `/skills` set their own title and canonical through `useHead`, and `/` keeps the `index.html` defaults. The build fills the site's address into `index.html` from `SITE_ORIGIN` in `src/lib/site.ts`, the one place it is written.
 
 ## Chunk error recovery
 

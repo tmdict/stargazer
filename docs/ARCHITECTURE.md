@@ -78,22 +78,22 @@ SVG has no z-index, so the board draws its layers in order and puts an invisible
 
 Everything persists in the browser's `localStorage` under `stargazer.*` keys. Each key's exact shape, with an example, lives in the doc of the feature that owns it:
 
-| Key                                                                                | Holds                                                                   | Shape in                                                 |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| `stargazer.arena`                                                                  | the Arena board, as a binary link payload                               | [URL Serialization](./architecture/URL_SERIALIZATION.md) |
-| `stargazer.arena.variant`                                                          | the mode of the Arena's map dropdown pick, `sl` or `gd`                 | [Grid](./architecture/GRID.md#map-editor)                |
-| `stargazer.season`                                                                 | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)           |
-| `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort`            | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                         |
-| `stargazer.rosters`, `stargazer.rosters.active`                                    | the roster library and the active roster                                | [Teams](./architecture/TEAMS.md)                         |
-| `stargazer.import.names`                                                           | the team import's record names                                          | [Screenshot Import](./architecture/IMPORT.md)            |
-| `stargazer.import.learned`                                                         | the screenshot imports' learned faces                                   | [Screenshot Import](./architecture/IMPORT.md)            |
-| `stargazer.skillLocale`, `stargazer.skillLocaleHintSeen`, `stargazer.recentHeroes` | skill text language, tip dismissal, recent heroes                       | [Skill Pages](./architecture/SKILL_PAGES.md)             |
-| `stargazer.tags.expanded`                                                          | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)             |
-| `stargazer.prefs`                                                                  | device preferences                                                      | below                                                    |
-| `stargazer.locale`                                                                 | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
-| `stargazer.whatsNewSeen`                                                           | the What's New edition last opened                                      | below                                                    |
-| `stargazer.fits`                                                                   | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                 |
-| `stargazer.placement.lists`                                                        | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                 |
+| Key                                                                     | Holds                                                                   | Shape in                                                 |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
+| `stargazer.arena`                                                       | the Arena board, as a binary link payload                               | [URL Serialization](./architecture/URL_SERIALIZATION.md) |
+| `stargazer.arena.variant`                                               | the mode of the Arena's map dropdown pick, `sl` or `gd`                 | [Grid](./architecture/GRID.md#map-editor)                |
+| `stargazer.season`                                                      | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)           |
+| `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort` | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                         |
+| `stargazer.rosters`, `stargazer.rosters.active`                         | the roster library and the active roster                                | [Teams](./architecture/TEAMS.md)                         |
+| `stargazer.import.names`                                                | the team import's record names                                          | [Screenshot Import](./architecture/IMPORT.md)            |
+| `stargazer.import.learned`                                              | the screenshot imports' learned faces                                   | [Screenshot Import](./architecture/IMPORT.md)            |
+| `stargazer.skillLocale`, `stargazer.recentHeroes`                       | skill text language, recent heroes                                      | [Skill Pages](./architecture/SKILL_PAGES.md)             |
+| `stargazer.tags.expanded`                                               | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)             |
+| `stargazer.prefs`                                                       | device preferences                                                      | below                                                    |
+| `stargazer.locale`                                                      | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
+| `stargazer.flags`                                                       | one-time flags, each the date it happened                               | below                                                    |
+| `stargazer.fits`                                                        | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                 |
+| `stargazer.placement.lists`                                             | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                 |
 
 The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
 
@@ -117,7 +117,19 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
 }
 ```
 
-`stargazer.whatsNewSeen` holds the date of the What's New edition last opened, as plain text such as `2026-11-06`, and is written when the popup opens. While it is missing or holds any other date, the top bar's What's New tab shows a dot, so a new edition, which carries a new date, brings the dot back.
+`stargazer.flags` holds every "has this happened" flag as one object, each entry a date as plain text such as `2026-11-06`. A reader takes only the entries `src/utils/flags.ts` lists, an entry that is not a date reads as unset, and a write drops everything else, so retiring a flag is removing its name from that list.
+
+| Entry             | Holds                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `whatsNew`        | The date of the What's New edition last opened, written when the popup opens. While it is missing or another date, the top bar's What's New tab shows a dot. |
+| `skillLocaleHint` | The day the skill-language tip was dismissed. While it is set the tip stays hidden.                                                                          |
+
+```json
+{
+  "whatsNew": "2026-11-06",
+  "skillLocaleHint": "2026-11-20"
+}
+```
 
 Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change.
 

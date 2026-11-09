@@ -137,12 +137,11 @@ Matching in `useSkillSearch` follows these rules:
 
 ## Stored preferences
 
-| Key                             | Example   | Holds                                                                                                                                                                                |
-| ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `stargazer.skillLocale`         | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. Removed when a site language is picked.                                              |
-| `stargazer.skillLocaleHintSeen` | `"1"`     | Present once the skill-language tip is dismissed.                                                                                                                                    |
-| `stargazer.recentHeroes`        | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.                                                                                       |
-| `stargazer.tags.expanded`       | `"0"`     | `"0"` while hero lists show the mechanic filter as its menu, `"1"` while they show it as chips. Anything else, or no value, reads as chips. Phones use the menu without changing it. |
+| Key                       | Example   | Holds                                                                                                                                                                                |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `stargazer.skillLocale`   | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. Removed when a site language is picked.                                              |
+| `stargazer.recentHeroes`  | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.                                                                                       |
+| `stargazer.tags.expanded` | `"0"`     | `"0"` while hero lists show the mechanic filter as its menu, `"1"` while they show it as chips. Anything else, or no value, reads as chips. Phones use the menu without changing it. |
 
 ```json
 ["valen", "rowan", "athalia"]

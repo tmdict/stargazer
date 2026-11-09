@@ -102,12 +102,16 @@ export function mergeImport<T extends { id: string; name: string }>(
     }
     seen.add(key)
     if (existingIds.has(valid.id)) {
+      // The copy an earlier import of this record made already stands in for it.
+      const name = suffixedName(valid.name, ' (imported)')
+      const markedKey = dedupeKey({ ...valid, name })
+      if (seen.has(markedKey)) {
+        skipped++
+        continue
+      }
+      seen.add(markedKey)
       conflicts++
-      accepted.push({
-        ...valid,
-        id: crypto.randomUUID(),
-        name: suffixedName(valid.name, ' (imported)'),
-      })
+      accepted.push({ ...valid, id: crypto.randomUUID(), name })
       continue
     }
     const id =

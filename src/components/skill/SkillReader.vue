@@ -9,6 +9,7 @@ import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { hasSkillLocale } from '@/utils/dataLoader'
+import { readFlag, writeFlag } from '@/utils/flags'
 
 import '@/styles/content.css'
 
@@ -38,22 +39,13 @@ const sectionsKey = computed(() => `${visibleSlug.value}:${props.lang}`)
 
 // One-time tip that skill text has more languages than the site. Read
 // post-mount so the baked HTML (which has no hint) hydrates unchanged.
-const HINT_SEEN_KEY = 'stargazer.skillLocaleHintSeen'
 const showLocaleHint = ref(false)
 onMounted(() => {
-  try {
-    showLocaleHint.value = !localStorage.getItem(HINT_SEEN_KEY)
-  } catch {
-    // localStorage unavailable: hint stays hidden rather than nagging forever
-  }
+  showLocaleHint.value = readFlag('skillLocaleHint') === null
 })
 const dismissLocaleHint = () => {
   showLocaleHint.value = false
-  try {
-    localStorage.setItem(HINT_SEEN_KEY, '1')
-  } catch {
-    // ignore
-  }
+  writeFlag('skillLocaleHint')
 }
 
 // A globe pick proves the feature is discovered, which is all the hint
