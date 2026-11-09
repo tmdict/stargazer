@@ -191,7 +191,6 @@ const buffMarks = computed(() => {
     .filter((hexId) => shown.has(hexId))
     .map((hexId) => ({
       hexId,
-      tile: cornerPoints(hexId),
       strokes: scaledCorners(hexId, BUFF_MARK_SCALE)
         .map((p, i, all) => {
           const [before, after] = [all.at(i - 1)!, all[(i + 1) % all.length]!]
@@ -576,16 +575,15 @@ onUnmounted(() => {
         <!-- Board information like the tile numbers, so it stays in exported images.
              The image keeps a shape's own attributes, not its stylesheet's caps. -->
         <g v-if="buffMarks.length" class="buff-marks">
-          <template v-for="mark in buffMarks" :key="`buff-${mark.hexId}`">
-            <polygon class="buff-fill" :points="mark.tile" />
-            <path
-              class="buff-corners"
-              :d="mark.strokes"
-              :stroke-width="3 * ctx.hexScale"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </template>
+          <path
+            v-for="mark in buffMarks"
+            :key="`buff-${mark.hexId}`"
+            class="buff-corners"
+            :d="mark.strokes"
+            :stroke-width="3 * ctx.hexScale"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </g>
 
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
@@ -727,10 +725,6 @@ onUnmounted(() => {
 
 .buff-marks {
   pointer-events: none;
-}
-
-.buff-fill {
-  fill: var(--buff-tile-fill);
 }
 
 .buff-corners {

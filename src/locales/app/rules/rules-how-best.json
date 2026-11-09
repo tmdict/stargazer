@@ -1,5 +1,5 @@
 {
   "en": "It tries many formations and keeps the one where each skill, phantimal, artifact and charm reaches the teammate it suits best, counting the map's buff tiles and walls. Between formations that do equally well, heroes stand on the side they lean to and out of reach of enemy heroes often picked on the map. When a hero could stand on another tile just as well, those tiles get a dashed outline.",
-  "zh": "它会尝试许多种布阵，保留每个技能、幻灵、神器和魔法配饰都能作用到最合适队友的那一种，地图上的增益格子和墙壁也计算在内。在同样好的布阵之间，英雄站到自己偏向的一侧，并避开这张地图上常被选用的敌方英雄的攻击范围。如果某位英雄站在另一格也一样好，这些格子会以虚线框标出。",
+  "zh": "它会尝试许多种布阵，保留每个技能、幻灵、神器和魔法配饰都能作用到最合适队友的那一种，地图上的增益格和墙壁也计算在内。在同样好的布阵之间，英雄站到自己偏向的一侧，并避开这张地图上常被选用的敌方英雄的攻击范围。如果某位英雄站在另一格也一样好，这些格子会以虚线框标出。",
   "ko": "엔진은 여러 배치를 시도해 각 스킬, 팬텀, 메아리, 주문석이 가장 알맞은 아군에게 닿는 배치를 남기며, 맵의 버프 타일과 벽도 계산합니다. 똑같이 좋은 배치 사이에서는 영웅이 선호하는 쪽에 서고, 이 맵에서 자주 쓰이는 적군 영웅의 손이 닿지 않는 곳에 섭니다. 영웅이 다른 타일에 서도 똑같이 좋다면 그 타일들은 점선 테두리로 표시됩니다."
 }
