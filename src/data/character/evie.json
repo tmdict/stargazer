@@ -30,6 +30,12 @@
       "note": "Evie lands where the most enemy tiles are around her mirror tile."
     },
     {
+      "team": "ally",
+      "goal": { "target": "temp-buff", "fallback": false },
+      "weight": "lean",
+      "note": "Evie's quill follows the rearmost ally when the battle starts, best a hero who gains from temporary buffs."
+    },
+    {
       "team": "enemy",
       "goal": { "atMost": 1 },
       "weight": "spread",

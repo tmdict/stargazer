@@ -11,7 +11,10 @@ export type RuleTeam = 'ally' | 'enemy'
 type RuleTile = 'behind' | 'front' | 'around' | 'row'
 
 export type RuleGoal =
-  | { target: string }
+  // fallback: false leaves the goal unmet when the team has none of the list's
+  // heroes, where it would otherwise fall back on the damage list. others: the
+  // share of the goal met on a hero the list does not rank first, none when unset.
+  | { target: string; fallback?: false; others?: number }
   | { avoid: string }
   | { include: string }
   | { atMost: number }

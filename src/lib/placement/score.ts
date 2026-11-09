@@ -7,14 +7,12 @@ import type { Hex } from '../hex'
 import { configTiles } from '../maps'
 import { defaultCanTraverse } from '../pathfinding'
 import { getCharacterSkill, type SkillContext } from '../skills/skill'
-import { searchByRow } from '../skills/utils/ring'
-import { findUnitBehind } from '../skills/utils/targeting'
 import type { Rule, RuleGoal, RuleTeam } from '../types/rule'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from './reach'
-import type { FormationRule, ListEntry, PlacementData, PlacementTeam } from './types'
+import type { ListEntry, PlacementData, PlacementTeam } from './types'
 
 // The list a rule falls back on when the team has none of its own list's heroes.
 const FALLBACK_LIST = 'damage'
@@ -22,11 +20,9 @@ const FALLBACK_LIST = 'damage'
 // The enemy units' rules are left out: they choose only among placements as
 // good on these (threats()).
 export interface PlacementScore {
-  // Always rules from the formations that the placement breaks.
-  broken: number
   // The team's goals, and its heroes on buff tiles.
   goals: number
-  // The goals and the light preferences: where heroes lean, and usually rules.
+  // The goals and the light preference of where heroes lean.
   total: number
 }
 
@@ -48,11 +44,6 @@ export interface OwnGoalCheck extends GoalCheck {
   holder: number | undefined
   on: number[]
   to: number[]
-}
-
-interface FormationCheck {
-  rule: FormationRule
-  held: boolean
 }
 
 // A rule the engine leaves out, and why.
@@ -125,6 +116,9 @@ function walkingSteps(grid: Grid, from: Iterable<number>): Map<number, number> {
   return steps
 }
 
+const fallsBack = (goal: RuleGoal): boolean =>
+  !(typeof goal === 'object' && 'target' in goal && goal.fallback === false)
+
 function goalList(goal: RuleGoal): string | undefined {
   if (typeof goal !== 'object') return undefined
   if ('target' in goal) return goal.target
@@ -134,9 +128,9 @@ function goalList(goal: RuleGoal): string | undefined {
 
 /**
  * Scores the board a team stands on: its own rules, the rules of the enemy units
- * it could face there, its heroes on the map's buff tile, the rules found in the
- * formations, and where its heroes lean. Every rule reads where its effect lands
- * from the unit's skill as the board stands.
+ * it could face there, its heroes on the map's buff tile, and where its heroes
+ * lean. Every rule reads where its effect lands from the unit's skill as the
+ * board stands.
  */
 export class PlacementScorer {
   readonly skipped: SkippedRule[] = []
@@ -146,8 +140,6 @@ export class PlacementScorer {
   // rules after it can add.
   private readonly heaviest: { index: number; rest: number }[] = []
   readonly threatCeiling: number
-  private readonly mustHold: FormationRule[]
-  private readonly usually: FormationRule[]
   private readonly lists = new Map<string, number[] | undefined>()
   private readonly rankings = new Map<string, number[]>()
   private readonly enemyTiles: Set<number>
@@ -193,12 +185,6 @@ export class PlacementScorer {
       lean: this.weightOf('lean'),
       walled: this.weightOf('walled'),
     }
-
-    const formation = data.formationRules.filter((rule) =>
-      rule.heroes.every((hero) => team.heroes.includes(hero)),
-    )
-    this.mustHold = formation.filter((rule) => rule.holds === 'always')
-    this.usually = formation.filter((rule) => rule.holds === 'usually')
 
     const units = team.phantimal === undefined ? team.heroes : [...team.heroes, team.phantimal]
     for (const unit of units) {
@@ -273,11 +259,7 @@ export class PlacementScorer {
     const goals =
       this.addEffects(this.weights.buff * this.onBuffTiles()) -
       this.weights.walled * this.walledIn()
-    let broken = 0
-    for (const rule of this.mustHold) if (!this.held(rule)) broken++
-    let light = this.leaning()
-    for (const rule of this.usually) if (this.held(rule)) light++
-    return { broken, goals, total: goals + this.weights.lean * light }
+    return { goals, total: goals + this.weights.lean * this.leaning() }
   }
 
   // The points the team's own goals earn as the board stands, the buff tile's
@@ -333,10 +315,6 @@ export class PlacementScorer {
     })
   }
 
-  formation(): FormationCheck[] {
-    return [...this.mustHold, ...this.usually].map((rule) => ({ rule, held: this.held(rule) }))
-  }
-
   onBuffTile(unit: number): boolean {
     return (
       this.weights.buff > 0 &&
@@ -382,7 +360,9 @@ export class PlacementScorer {
       return
     }
     const listName = goalList(rule.goal)
-    for (const name of listName === undefined ? [] : [listName, FALLBACK_LIST]) {
+    const names = listName === undefined ? [] : [listName]
+    if (listName !== undefined && fallsBack(rule.goal)) names.push(FALLBACK_LIST)
+    for (const name of names) {
       if (!this.list(name)) {
         this.skipped.push({ owner, reason: `no list ${name}` })
         return
@@ -460,13 +440,17 @@ export class PlacementScorer {
     }
   }
 
-  private ranked(name: string, holder: number | undefined): number[] {
-    const key = `${name}|${holder}`
+  private ranked(goal: RuleGoal, holder: number | undefined): number[] {
+    const name = goalList(goal)!
+    const fallback = fallsBack(goal)
+    const key = `${name}|${holder}|${fallback}`
     let order = this.rankings.get(key)
     if (!order) {
       const others = this.heroes.filter((hero) => hero !== holder)
       order = this.list(name)!.filter((hero) => others.includes(hero))
-      if (!order.length) order = this.list(FALLBACK_LIST)!.filter((hero) => others.includes(hero))
+      if (!order.length && fallback) {
+        order = this.list(FALLBACK_LIST)!.filter((hero) => others.includes(hero))
+      }
       this.rankings.set(key, order)
     }
     return order
@@ -536,7 +520,7 @@ export class PlacementScorer {
       return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
     }
 
-    const order = this.ranked(goalList(goal)!, self)
+    const order = this.ranked(goal, self)
     if (!order.length) return null
     // A hero's lean comes before a Spirit Mark: the Mark counts only on a hero
     // standing in the half it leans to, or on one with no lean.
@@ -552,8 +536,15 @@ export class PlacementScorer {
       // An effect that lands on two wants the list's first two, half each.
       const count = Math.max(effect.marks, hit.size)
       const reached = order.slice(0, count).filter((hero) => hit.has(hero))
-      counted?.push(...reached)
-      return reached.length / count
+      // A unit other than the team's heroes, such as a phantimal, earns no
+      // others share: the effect is for a hero.
+      const others = goal.others
+        ? [...hit]
+            .filter((unit) => this.heroes.includes(unit) && !reached.includes(unit))
+            .slice(0, count - reached.length)
+        : []
+      counted?.push(...reached, ...others)
+      return (reached.length + (goal.others ?? 0) * others.length) / count
     }
     // Include: a share for each listed hero among those it reaches, where a
     // single target needs only one of them.
@@ -561,36 +552,6 @@ export class PlacementScorer {
     const reached = order.filter((hero) => hit.has(hero))
     counted?.push(...reached)
     return Math.min(1, reached.length / slots)
-  }
-
-  private held(rule: FormationRule): boolean {
-    const { board } = this
-    const tileOf = (hero: number) => board.tileOf(hero)
-    const [a, b] = rule.heroes as [number, number]
-    const tiles = this.heroes.map(tileOf).sort((x, y) => y - x)
-    const isHero = (unit: number) => this.heroes.includes(unit)
-    const nearestOnRow = (from: number, to: number) =>
-      searchByRow(this.contextOf(board, from), Team.ALLY, isHero)?.targetHexId === tileOf(to)
-    switch (rule.relation) {
-      case 'frontmost':
-        return tileOf(a) === tiles[0]
-      case 'twoFrontmost':
-        return tiles.indexOf(tileOf(a)) < 2
-      case 'rearmost':
-        return tileOf(a) === tiles[tiles.length - 1]
-      case 'twoRearmost':
-        return tiles.indexOf(tileOf(a)) >= tiles.length - 2
-      case 'inFrontOf':
-        return tileOf(a) > tileOf(b)
-      case 'nextTo':
-        return board.grid.getHexById(tileOf(a)).distance(board.grid.getHexById(tileOf(b))) === 1
-      case 'behind':
-        return findUnitBehind(this.contextOf(board, a))?.targetHexId === tileOf(b)
-      case 'nearestOnRow':
-        return nearestOnRow(a, b)
-      case 'mutualNearestOnRow':
-        return nearestOnRow(a, b) && nearestOnRow(b, a)
-    }
   }
 
   private onBuffTiles(): number {

@@ -104,14 +104,6 @@ const isPlacementData = (value: unknown): boolean =>
   isObject(value.leans) &&
   isNumbers(value.leans.front) &&
   isNumbers(value.leans.back) &&
-  Array.isArray(value.formationRules) &&
-  value.formationRules.every(
-    (rule: unknown) =>
-      isObject(rule) &&
-      isNumbers(rule.heroes) &&
-      typeof rule.relation === 'string' &&
-      (rule.holds === 'always' || rule.holds === 'usually'),
-  ) &&
   isNumberRecord(value.weights)
 
 const isSeasons = (value: unknown, live: unknown): boolean =>

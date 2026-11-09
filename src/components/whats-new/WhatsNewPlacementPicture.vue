@@ -21,14 +21,14 @@ const lang = useHelpLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 const gameData = useGameDataStore()
 
-// Tiles of the first arena map: Alna stands in Valen's row, behind Koko, and
-// would do better one tile along her row.
+// Tiles of the first arena map: Alna stands in Valen's row and would do better
+// one tile along it.
 const MAP_KEY = 'arena1'
 const BETTER = [7]
 const UNITS = [
   { slug: 'alna', hexId: 9, team: Team.ALLY, ring: 'focus' },
   { slug: 'valen', hexId: 12, team: Team.ALLY, ring: 'named' },
-  { slug: 'koko', hexId: 16, team: Team.ALLY, ring: 'named' },
+  { slug: 'koko', hexId: 16, team: Team.ALLY },
   { slug: 'gerda', hexId: 4, team: Team.ALLY },
   { slug: 'frieren', hexId: 2, team: Team.ALLY },
   { slug: 'thoran', hexId: 37, team: Team.ENEMY },
@@ -58,10 +58,6 @@ const lines = computed(() => [
   {
     lead: label('placement-gives'),
     parts: interpolateParts(label('placement-gives-alna'), { heroes: named('valen') }),
-  },
-  {
-    lead: label('placement-stands'),
-    parts: interpolateParts(label('placement-stands-behind'), { hero: named('koko') }),
   },
   {
     lead: label('placement-stands'),

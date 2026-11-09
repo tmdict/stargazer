@@ -29,17 +29,19 @@ const TILE_WORDS = new Set(['behind', 'front', 'around', 'row'])
 function goalProblem(goal: unknown): string | null {
   if (goal === 'most' || goal === 'none' || goal === 'companion' || goal === 'back') return null
   if (typeof goal !== 'object' || goal === null) return `the goal ${JSON.stringify(goal)}`
-  const { sameFaction, nonHero, ...words } = goal as Record<string, unknown>
+  const { sameFaction, nonHero, fallback, others, ...words } = goal as Record<string, unknown>
   const entries = Object.entries(words)
   if (entries.length !== 1) return 'a goal of more than one word'
   const [word, value] = entries[0]!
+  const isShare = (share: unknown) => typeof share === 'number' && share >= 0 && share < 1
   if (sameFaction !== undefined && (word !== 'exactly' || sameFaction !== true))
     return 'sameFaction off an exactly goal'
-  if (
-    nonHero !== undefined &&
-    (word !== 'exactly' || typeof nonHero !== 'number' || !(nonHero >= 0 && nonHero < 1))
-  )
+  if (nonHero !== undefined && (word !== 'exactly' || !isShare(nonHero)))
     return 'nonHero off an exactly goal, or not a share below 1'
+  if (fallback !== undefined && (word !== 'target' || fallback !== false))
+    return 'fallback off a target goal, or not false'
+  if (others !== undefined && (word !== 'target' || !isShare(others)))
+    return 'others off a target goal, or not a share below 1'
   if (LIST_GOALS.has(word))
     return typeof value === 'string' && value !== '' ? null : `${word} names no list`
   if (COUNT_GOALS.has(word))

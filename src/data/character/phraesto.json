@@ -24,18 +24,18 @@
     },
     {
       "team": "ally",
-      "goal": { "target": "ultimate" },
+      "goal": { "target": "ultimate", "others": 0.9 },
       "tile": "behind",
       "weight": "aim",
-      "note": "Phraesto's Crimson Contract speeds up the Energy of the ally right behind him, best the hero whose ultimate matters most."
+      "note": "Phraesto's Crimson Contract speeds up the Energy of the hero right behind him: any hero gains from it, best the one whose ultimate matters most."
     },
     {
       "team": "ally",
-      "goal": { "target": "support" },
+      "goal": { "target": "support", "others": 0.9 },
       "tile": "behind",
       "from": "companion",
       "weight": "aim",
-      "note": "The Illusion's Crimson Contract raises the damage reduction of the ally right behind it, best a support."
+      "note": "The Illusion's Crimson Contract raises the damage reduction of the hero right behind it: any hero gains from it, best a support."
     }
   ]
 }

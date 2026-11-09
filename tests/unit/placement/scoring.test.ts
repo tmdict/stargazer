@@ -17,8 +17,6 @@ const DIONEL = 13
 const SENEA = 128
 const RAVION = 90
 const TAICHI = 123
-const GUNNAR = 106
-const GWYNETH = 115
 const ALICETH = 91
 const TWINS = 68
 const ROLAN = 121
@@ -26,6 +24,7 @@ const LILY_MAY = 54
 const MEHIRA = 94
 const PHRAESTO = 50
 const LUDOVIC = 53
+const EVIE = 113
 const WEDGE_OF_MATTER = toPhantimalId(5)
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
@@ -38,12 +37,10 @@ const DATA: PlacementData = {
     damage: [ORION, SYLPHIRA, DIONEL],
     'temp-buff': [ORION, PERSEUS, DIONEL],
     taichi: [{ list: 'temp-buff' }, { list: 'damage' }],
-    gunnar: [GWYNETH],
     tank: [ALNA],
     melee: [ALNA],
   },
   leans: { front: [], back: [] },
-  formationRules: [],
   weights: { aim: 10, 'aliceth-mark': 6, buff: 3, lean: 0.2, margin: 1 },
   pickRates: {},
 }
@@ -77,6 +74,18 @@ describe('placement scoring', () => {
     expect(metOf(scoredAt(at, data), ALNA)).toBe(1)
   })
 
+  // Evie's quill follows the rearmost ally, the lowest tile number. With no
+  // fallback, Sylphira on the damage list is not counted in place of the list.
+  it('leaves a target goal with no fallback unmet when the team has none of its list', () => {
+    const quillMet = (at: Record<number, number>) =>
+      scoredAt(at)
+        .goals()
+        .find(({ owner, rule }) => owner === EVIE && rule.team === 'ally' && rule.goal !== 'most')!
+        .met
+    expect(quillMet({ [EVIE]: 13, [ORION]: 1, [ALNA]: 3, [SYLPHIRA]: 4, [SENEA]: 6 })).toBe(1)
+    expect(quillMet({ [EVIE]: 13, [SYLPHIRA]: 1, [ALNA]: 3, [SENEA]: 4, [ROLAN]: 6 })).toBeNull()
+  })
+
   // Ravion's Objectives go to the two rearmost allies, the lowest tile numbers.
   it('scores half for each of the first two listed heroes an effect on two lands on', () => {
     const both = { [RAVION]: 13, [ORION]: 1, [SYLPHIRA]: 2, [DIONEL]: 6, [ALNA]: 7 }
@@ -90,18 +99,6 @@ describe('placement scoring', () => {
   it('scores a share of the listed heroes on the tiles an effect marks', () => {
     const at = { [TAICHI]: 6, [ORION]: 1, [PERSEUS]: 3, [DIONEL]: 8, [ALNA]: 10 }
     expect(metOf(scoredAt(at), TAICHI)).toBeCloseTo(2 / 3)
-  })
-
-  // Tile 2 is the tile directly behind tile 7.
-  it('counts an always rule from the formations broken until it holds', () => {
-    const data: PlacementData = {
-      ...DATA,
-      formationRules: [{ heroes: [GUNNAR, GWYNETH], relation: 'behind', holds: 'always' }],
-    }
-    const held = { [GUNNAR]: 7, [GWYNETH]: 2, [ORION]: 1, [PERSEUS]: 3, [DIONEL]: 4 }
-    expect(scoredAt(held, data).score().broken).toBe(0)
-    const broken = { [GUNNAR]: 7, [GWYNETH]: 1, [ORION]: 2, [PERSEUS]: 3, [DIONEL]: 4 }
-    expect(scoredAt(broken, data).score().broken).toBe(1)
   })
 
   // An enemy Aliceth marks our unit farthest from her, best a tank: Alna at the
@@ -211,6 +208,28 @@ describe('placement scoring', () => {
     expect(contractMet({ [PHRAESTO]: 7, [ILLUSION]: 13, ...rest })).toBe(0)
   })
 
+  // Tile 2 is the tile directly behind tile 7.
+  it("gives a hero the list does not rank first the others share, and a phantimal none", () => {
+    const data = { ...DATA, lists: { ...DATA.lists, ultimate: [ORION] } }
+    const team = { heroes: [PHRAESTO, ORION, PERSEUS, DIONEL, ALNA], phantimal: WEDGE_OF_MATTER }
+    const contractMet = (behind: number) => {
+      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(board, team, data)
+      const fixed = new Map([
+        [PHRAESTO, 7],
+        [behind, 2],
+      ])
+      const free = board.tiles.filter((tile) => ![...fixed.values()].includes(tile))
+      board.place(board.units.map((unit) => fixed.get(unit) ?? free.shift()!))
+      return scorer
+        .goals()
+        .find(({ owner, rule }) => owner === PHRAESTO && rule.tile === 'behind' && !rule.from)!.met
+    }
+    expect(contractMet(ORION)).toBe(1)
+    expect(contractMet(PERSEUS)).toBe(0.9)
+    expect(contractMet(WEDGE_OF_MATTER)).toBe(0)
+  })
+
   // preset-sr3's tile 14 has no way to the enemy until a wall falls.
   it('takes the walled weight off for each melee hero on a tile with no way to the enemy', () => {
     const sr3 = presetLayout('preset-sr3')!
@@ -230,7 +249,6 @@ describe('placement search', () => {
   const data: PlacementData = {
     ...DATA,
     leans: { front: [SYLPHIRA, ORION], back: [] },
-    formationRules: [{ heroes: [ALNA, SYLPHIRA], relation: 'nextTo', holds: 'usually' }],
   }
 
   it('finds the best goals that trying every placement finds, and the same pick twice', () => {

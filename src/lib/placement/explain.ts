@@ -9,7 +9,7 @@ import { PlacementBoard } from './board'
 import { asGoodAs, beats, EPS } from './engine'
 import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
-import type { FormationRule, PlacementData, PlacementLookups, PlacementTeam } from './types'
+import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
 // One of the team's effects: the data file its rule sits in (the unit's, the
 // charm's id or the artifact's), with -companion after a unit's for the effect
@@ -21,26 +21,12 @@ export interface PlacedEffect {
   giver?: number
 }
 
-type Standing =
-  | 'buff'
-  | 'front'
-  | 'back'
-  | 'back-half'
-  | 'frontmost'
-  | 'front-two'
-  | 'rearmost'
-  | 'back-two'
-  | 'in-front-of'
-  | 'behind'
-  | 'right-in-front-of'
-  | 'right-behind'
-  | 'next-to'
-  | 'on-row'
+type Standing = 'buff' | 'front' | 'back' | 'back-half'
 
 // `to`: the units a given effect goes to.
 export type PlacementReason =
   | { verb: 'gives' | 'reaches' | 'receives'; effect: PlacedEffect; to: number[] }
-  | { verb: 'stands'; place: Standing; hero?: number }
+  | { verb: 'stands'; place: Standing }
 
 export interface UnitPlacement {
   unit: number
@@ -66,32 +52,6 @@ function effectVerb(goal: RuleGoal): 'gives' | 'reaches' | undefined {
   if (typeof goal === 'object' && ('target' in goal || 'include' in goal || 'exactly' in goal))
     return 'gives'
   return undefined
-}
-
-const BACK_PLACES = new Set<Standing>(['back', 'rearmost', 'back-two'])
-
-const RANKS: Partial<Record<FormationRule['relation'], Standing>> = {
-  frontmost: 'frontmost',
-  twoFrontmost: 'front-two',
-  rearmost: 'rearmost',
-  twoRearmost: 'back-two',
-}
-
-function habitOf({ relation, heroes: [a, b] }: FormationRule, hero: number): PlacementReason {
-  const rank = RANKS[relation]
-  if (rank) return { verb: 'stands', place: rank }
-  const first = hero === a
-  const other = first ? b! : a!
-  switch (relation) {
-    case 'inFrontOf':
-      return { verb: 'stands', place: first ? 'in-front-of' : 'behind', hero: other }
-    case 'behind':
-      return { verb: 'stands', place: first ? 'right-in-front-of' : 'right-behind', hero: other }
-    case 'nextTo':
-      return { verb: 'stands', place: 'next-to', hero: other }
-    default:
-      return { verb: 'stands', place: 'on-row', hero: other }
-  }
 }
 
 /**
@@ -124,18 +84,14 @@ export function explainPlacement(
       giver: goal.holder,
     }
   })
-  const habits = scorer
-    .formation()
-    .filter(({ held }) => held)
-    .map(({ rule }) => rule)
   const leans = new Map(team.heroes.map((hero) => [hero, scorer.leanOf(hero)]))
   const onBuff = new Set(board.units.filter((unit) => scorer.onBuffTile(unit)))
   const isOwn = (k: number, owner: number) =>
     goals[k]!.source !== 'artifact' && ruleUnit(goals[k]!.holder!) === owner
 
   // A unit's other tiles are those the engine itself would pick for it moved
-  // alone, in the order it picks a placement by: fewest broken rules, goals
-  // within the margin of the best, then the highest total, its lean included.
+  // alone, in the order it picks a placement by: goals within the margin of the
+  // best, then the highest total, its lean included.
   const used = new Set(positions)
   const free = board.tiles.filter((hexId) => !used.has(hexId))
   const own = scorer.score()
@@ -147,14 +103,7 @@ export function explainPlacement(
       return { hexId, score: scorer.score() }
     })
     const scores = [own, ...options.map(({ score }) => score)]
-    const broken = Math.min(...scores.map((score) => score.broken))
-    const top = {
-      broken,
-      goals: Math.max(
-        ...scores.filter((score) => score.broken === broken).map((score) => score.goals),
-      ),
-      total: 0,
-    }
+    const top = { goals: Math.max(...scores.map((score) => score.goals)), total: 0 }
     const total = Math.max(
       ...scores.filter((score) => asGoodAs(score, top, margin)).map((score) => score.total),
     )
@@ -197,21 +146,16 @@ export function explainPlacement(
         reasons.push({ verb: 'receives', effect: effects[k]!, to: [] })
     })
     if (onBuff.has(unit)) reasons.push({ verb: 'stands', place: 'buff' })
-    const kept = habits.filter((rule) => rule.heroes.includes(unit))
-    for (const rule of kept) reasons.push(habitOf(rule, unit))
     const lean = leans.get(unit)
-    if (lean && onEdge(unit, lean) && !kept.some((rule) => RANKS[rule.relation])) {
-      reasons.push({ verb: 'stands', place: lean })
-    }
+    const atEdge = lean !== undefined && onEdge(unit, lean)
+    if (atEdge) reasons.push({ verb: 'stands', place: lean })
     const backHalf = goals.some(
       ({ rule, met, holder }) => rule.goal === 'back' && met && holder === unit,
     )
-    // A line saying the unit stands at the back, or among the rearmost, says
-    // more than the back half.
-    const atBack = reasons.some(
-      (reason) => reason.verb === 'stands' && BACK_PLACES.has(reason.place),
-    )
-    if (backHalf && !atBack) reasons.push({ verb: 'stands', place: 'back-half' })
+    // A line saying the unit stands at the back says more than the back half.
+    if (backHalf && !(atEdge && lean === 'back')) {
+      reasons.push({ verb: 'stands', place: 'back-half' })
+    }
     return { unit, tile: positions[index]!, reasons, ...movesFor[index]! }
   })
 
@@ -240,10 +184,7 @@ export function cardRings(
   const named = new Set<number>()
   let artifact = false
   for (const reason of reasons) {
-    if (reason.verb === 'stands') {
-      if (reason.hero !== undefined) named.add(reason.hero)
-      continue
-    }
+    if (reason.verb === 'stands') continue
     for (const to of reason.to) named.add(to)
     if (reason.verb === 'receives') {
       if (reason.effect.giver === undefined) artifact = true

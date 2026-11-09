@@ -13,8 +13,6 @@ const PERSEUS = 92
 const DIONEL = 13
 const SENEA = 128
 const RAVION = 90
-const GUNNAR = 106
-const GWYNETH = 115
 const PHRAESTO = 50
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
@@ -23,10 +21,9 @@ const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 const MAP = presetLayout('arena2')!
 
 const DATA: PlacementData = {
-  lists: { damage: [ORION, SYLPHIRA, DIONEL], gunnar: [GWYNETH] },
+  lists: { damage: [ORION, SYLPHIRA, DIONEL] },
   leans: { front: [], back: [] },
-  formationRules: [],
-  weights: { aim: 10, gunnar: 20, buff: 3, lean: 0.2, margin: 1 },
+  weights: { aim: 10, buff: 3, lean: 0.2, margin: 1 },
   pickRates: {},
 }
 
@@ -100,31 +97,6 @@ describe('placement explanation', () => {
       { ...DATA, leans: { front: [], back: [PERSEUS] } },
     )
     expect(of(PERSEUS)).toMatchObject({ alsoFine: [8], better: [] })
-  })
-
-  it("words a formation rule from each hero's side, and a lean only without a rank", () => {
-    const of = explained(
-      { [GUNNAR]: 7, [GWYNETH]: 2, [ORION]: 13, [PERSEUS]: 3, [DIONEL]: 4 },
-      {
-        ...DATA,
-        formationRules: [
-          { heroes: [GUNNAR, GWYNETH], relation: 'behind', holds: 'always' },
-          { heroes: [GWYNETH], relation: 'rearmost', holds: 'usually' },
-        ],
-        leans: { front: [ORION], back: [GWYNETH] },
-      },
-    )
-    const doomfield = { source: 'unit', file: 'gunnar', giver: GUNNAR }
-    expect(of(GUNNAR).reasons).toEqual([
-      { verb: 'gives', effect: doomfield, to: [GWYNETH] },
-      { verb: 'stands', place: 'right-in-front-of', hero: GWYNETH },
-    ])
-    expect(of(GWYNETH).reasons).toEqual([
-      { verb: 'receives', effect: doomfield, to: [] },
-      { verb: 'stands', place: 'right-behind', hero: GUNNAR },
-      { verb: 'stands', place: 'rearmost' },
-    ])
-    expect(of(ORION).reasons).toEqual([{ verb: 'stands', place: 'front' }])
   })
 
   // Tile 6 is a row in front of tile 4 but farther from the enemy round the

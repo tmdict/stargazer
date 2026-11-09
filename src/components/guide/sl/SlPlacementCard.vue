@@ -41,10 +41,7 @@ function partsOf(reason: PlacementReason): TextPart[] {
     case 'receives':
       return line(`placement-receives-${reason.effect.file}`, { giver: giverName(reason.effect) })
     case 'stands':
-      return line(
-        `placement-stands-${reason.place}`,
-        reason.hero === undefined ? {} : { hero: named(cardName(reason.hero)) },
-      )
+      return line(`placement-stands-${reason.place}`)
   }
 }
 

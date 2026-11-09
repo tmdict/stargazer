@@ -5,38 +5,12 @@ import type { Rule } from '../types/rule'
 // another list's heroes at that point.
 export type ListEntry = number | { list: string }
 
-// How two heroes, or one hero and the rest, stand, among the five heroes alone.
-// Front and back go by tile number, the higher number in front, as frontmost
-// and rearmost targeting goes.
-type Relation =
-  | 'frontmost'
-  | 'twoFrontmost'
-  | 'rearmost'
-  | 'twoRearmost'
-  | 'inFrontOf'
-  | 'nextTo'
-  // The second hero on the tile directly behind the first.
-  | 'behind'
-  // The second hero the nearest hero on the first's diagonal row.
-  | 'nearestOnRow'
-  | 'mutualNearestOnRow'
-
-// A rule found in recorded formations: an always rule must hold, a usually rule
-// is a light preference.
-export interface FormationRule {
-  heroes: number[]
-  relation: Relation
-  holds: 'always' | 'usually'
-}
-
 // What the engine is tuned with. Weights are named by the rules that use them,
-// beside buff (a hero on a buff tile), lean (a hero standing where it leans,
-// and a usually rule holding) and margin (how far below the best a placement
-// still counts as equally good).
+// beside buff (a hero on a buff tile), lean (a hero standing where it leans)
+// and margin (how far below the best a placement still counts as equally good).
 export interface PlacementData {
   lists: Record<string, ListEntry[]>
   leans: { front: number[]; back: number[] }
-  formationRules: FormationRule[]
   weights: Record<string, number>
   // For each map, the share of the Supreme League board sides recorded there
   // that each enemy hero with a rule against us is on, by hero id.

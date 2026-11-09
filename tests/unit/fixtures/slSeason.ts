@@ -83,7 +83,7 @@ export function madeUpData(teams: MadeUpTeam[], model: SlModel, fallback: number
     flex: { heroes: 2, options: 2 },
     prices: { paragon: { f: [0, 10, 20, 30, 40] }, refinement: [0, 5, 10, 15, 20] },
     order: [...new Set(teams.flatMap((t) => t.heroes))].sort((a, b) => a - b),
-    placement: { lists: {}, leans: { front: [], back: [] }, formationRules: [], weights: {} },
+    placement: { lists: {}, leans: { front: [], back: [] }, weights: {} },
     model,
     fallback,
     families: [0, 1].map(() => ({ name: {}, core: [], swaps: [] })),

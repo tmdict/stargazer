@@ -35,7 +35,7 @@ import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer, type PlacementScore } from '@/lib/placement/score'
-import type { FormationRule, PlacementData, PlacementTeam } from '@/lib/placement/types'
+import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { decodeSlData } from '@/lib/pvp/data/codec'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
@@ -231,14 +231,12 @@ const teamKey = ({ team, map, live }: Pick<Setup, 'team' | 'map' | 'live'>) =>
   `${map}|${team.heroes.join(',')}|${team.phantimal ?? ''}|${team.artifact ?? ''}|${live}`
 
 type GoalCheck = ReturnType<PlacementScorer['goals']>[number]
-type FormationCheck = ReturnType<PlacementScorer['formation']>[number]
 
 interface Scored {
   positions: number[]
   score: PlacementScore
   threats: number
   goals: GoalCheck[]
-  formation: FormationCheck[]
   skipped: PlacementScorer['skipped']
 }
 
@@ -263,7 +261,6 @@ function scoreAt(
     score: scorer.score(),
     threats: scorer.threats(),
     goals: scorer.goals(),
-    formation: scorer.formation(),
     skipped: scorer.skipped,
   }
 }
@@ -314,19 +311,6 @@ function bandsOf(map: string): Map<number, number> {
   return bands
 }
 
-const RELATION_TEXT: Record<FormationRule['relation'], (names: string[]) => string> = {
-  frontmost: ([a]) => `${a} frontmost`,
-  twoFrontmost: ([a]) => `${a} in the two frontmost`,
-  rearmost: ([a]) => `${a} rearmost`,
-  twoRearmost: ([a]) => `${a} in the two rearmost`,
-  inFrontOf: ([a, b]) => `${a} in front of ${b}`,
-  nextTo: ([a, b]) => `${a} next to ${b}`,
-  behind: ([a, b]) => `${b} directly behind ${a}`,
-  nearestOnRow: ([a, b]) => `${b} nearest on ${a}'s row`,
-  mutualNearestOnRow: ([a, b]) => `${a} and ${b} nearest on each other's row`,
-}
-const ruleText = (rule: FormationRule) =>
-  `${RELATION_TEXT[rule.relation](rule.heroes.map(nameOf))} (${rule.holds})`
 const goalKey = (goal: GoalCheck) => `${nameOf(goal.owner)}: ${goal.rule.note}`
 
 const pct = (n: number, d: number) => (d ? `${((100 * n) / d).toFixed(0)}%` : '-')
@@ -404,22 +388,16 @@ function boardSvg(map: string, units: number[], positions: number[]): string {
   return `<svg viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}" role="img">${cells.join('')}</svg>${LEGEND}`
 }
 
-function goalList(goals: GoalCheck[], formation: FormationCheck[]): string {
-  const rows = [
-    ...goals.map(
-      (goal) =>
-        `<li class="${goal.met === null ? 'na' : goal.met >= 1 ? 'met' : goal.met > 0 ? 'part' : 'miss'}">${esc(goalKey(goal))} <b>${goal.met === null ? 'n/a' : `${Math.round(goal.met * 100)}%`}</b></li>`,
-    ),
-    ...formation.map(
-      ({ rule, held }) =>
-        `<li class="${held ? 'met' : 'miss'}">${esc(ruleText(rule))} <b>${held ? 'holds' : 'breaks'}</b></li>`,
-    ),
-  ]
-  return rows.length ? `<ul>${rows.join('')}</ul>` : '<p class="na">No goal or rule applies.</p>'
+function goalList(goals: GoalCheck[]): string {
+  const rows = goals.map(
+    (goal) =>
+      `<li class="${goal.met === null ? 'na' : goal.met >= 1 ? 'met' : goal.met > 0 ? 'part' : 'miss'}">${esc(goalKey(goal))} <b>${goal.met === null ? 'n/a' : `${Math.round(goal.met * 100)}%`}</b></li>`,
+  )
+  return rows.length ? `<ul>${rows.join('')}</ul>` : '<p class="na">No goal applies.</p>'
 }
 
 const scoreLine = (score: PlacementScore) =>
-  `goals ${score.goals.toFixed(1)}, total ${score.total.toFixed(2)}${score.broken ? `, ${score.broken} always rule broken` : ''}`
+  `goals ${score.goals.toFixed(1)}, total ${score.total.toFixed(2)}`
 
 describe.skipIf(!EXPORTS.length)('placement engine', () => {
   it('places every recorded set-up and measures it against the player', async () => {
@@ -481,7 +459,6 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
     for (const season of [...new Set(setups.map((s) => s.season))].sort((a, b) => b - a)) {
       const ofSeason = setups.filter((setup) => setup.season === season)
       const goals = { players: new Map<string, Tally>(), engine: new Map<string, Tally>() }
-      const formation = { players: new Map<string, Tally>(), engine: new Map<string, Tally>() }
       let heroes = 0
       let onTile = 0
       let inBand = 0
@@ -513,9 +490,6 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           if (goal.met !== null) add(goals.players, goalKey(goal), goal.met)
         for (const goal of pick.goals)
           if (goal.met !== null) add(goals.engine, goalKey(goal), goal.met)
-        for (const check of player.formation)
-          add(formation.players, ruleText(check.rule), +check.held)
-        for (const check of pick.formation) add(formation.engine, ruleText(check.rule), +check.held)
 
         const band = bandsOf(setup.map)
         setup.team.heroes.forEach((hero, i) => {
@@ -527,21 +501,13 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           if (result.kept[i]!.includes(mine)) inKept++
         })
         const best = result.best
-        if (
-          player.score.broken < best.broken ||
-          (player.score.broken === best.broken && player.score.goals > best.goals + 1e-9)
-        ) {
+        if (player.score.goals > best.goals + 1e-9) {
           playerAhead++
           missed.push(
             `${setup.team.heroes.map(nameOf).join(', ')} on ${setup.map}: the player ${scoreLine(player.score)}, the engine's best ${scoreLine(best)}`,
           )
         }
-        if (
-          player.score.broken === best.broken &&
-          player.score.goals >= best.goals - margin - 1e-9
-        ) {
-          amongEqual++
-        }
+        if (player.score.goals >= best.goals - margin - 1e-9) amongEqual++
       }
 
       const teamResults = [...teams].map((key) => results.get(key)!)
@@ -571,13 +537,6 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       log('  goals, how much of each players and the engine meet (set-ups where it applies):')
       for (const [key, tally] of [...goals.players].sort((a, b) => b[1].n - a[1].n)) {
         const engine = goals.engine.get(key)
-        log(
-          `    ${pct(tally.sum, tally.n).padStart(4)} ${pct(engine?.sum ?? 0, engine?.n ?? 0).padStart(4)}  n=${tally.n}  ${key}`,
-        )
-      }
-      log('  rules from the formations, how often they hold for players and the engine:')
-      for (const [key, tally] of [...formation.players].sort((a, b) => b[1].n - a[1].n)) {
-        const engine = formation.engine.get(key)
         log(
           `    ${pct(tally.sum, tally.n).padStart(4)} ${pct(engine?.sum ?? 0, engine?.n ?? 0).padStart(4)}  n=${tally.n}  ${key}`,
         )
@@ -681,11 +640,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           full: true,
         })
         times.push(performance.now() - start)
-        if (
-          full.best.broken === result.best.broken &&
-          Math.abs(full.best.goals - result.best.goals) < 1e-9
-        )
-          sameBest++
+        if (Math.abs(full.best.goals - result.best.goals) < 1e-9) sameBest++
         if (full.positions.join() === result.positions.join()) samePick++
         counts.push(`${result.equallyGood}${result.complete ? '' : '+'}/${full.equallyGood}`)
       }
@@ -722,10 +677,10 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
           ? ''
           : `, ${nameOf(artifactById.get(setup.team.artifact)!.name)}`,
       ].join('')
-      const engineCard = `<div class="card"><h3>Engine</h3>${boardSvg(setup.map, units, result.positions)}<p>${scoreLine(pick.score)}, against enemy rules ${pick.threats.toFixed(2)}; ${result.equallyGood}${result.complete ? '' : ' or more'} equally good</p><p class="kept">${setup.team.heroes.map((hero, i) => `${esc(nameOf(hero))} keeps ${result.kept[i]!.length}`).join(', ')}</p>${goalList(pick.goals, pick.formation)}</div>`
+      const engineCard = `<div class="card"><h3>Engine</h3>${boardSvg(setup.map, units, result.positions)}<p>${scoreLine(pick.score)}, against enemy rules ${pick.threats.toFixed(2)}; ${result.equallyGood}${result.complete ? '' : ' or more'} equally good</p><p class="kept">${setup.team.heroes.map((hero, i) => `${esc(nameOf(hero))} keeps ${result.kept[i]!.length}`).join(', ')}</p>${goalList(pick.goals)}</div>`
       const playerCards = common.map(
         ({ player, n: times }) =>
-          `<div class="card"><h3>Players, ${times} of ${n} set-ups</h3>${boardSvg(setup.map, units, player.positions)}<p>${scoreLine(player.score)}, against enemy rules ${player.threats.toFixed(2)}</p>${goalList(player.goals, player.formation)}</div>`,
+          `<div class="card"><h3>Players, ${times} of ${n} set-ups</h3>${boardSvg(setup.map, units, player.positions)}<p>${scoreLine(player.score)}, against enemy rules ${player.threats.toFixed(2)}</p>${goalList(player.goals)}</div>`,
       )
       return `<section><h2>${esc(title)} <span>${setup.map}, ${n} set-ups</span></h2><div class="cards">${engineCard}${playerCards.join('')}</div></section>`
     })

@@ -27,30 +27,27 @@ export interface PlacementResult {
   positions: number[]
   // The best score found, which the pick is within the margin of.
   best: PlacementScore
-  // Placements with the pick's broken rules and goals within the margin of the
-  // best, and whether the count reached them all rather than stopping at its cap.
+  // Placements with goals within the margin of the best, and whether the count
+  // reached them all rather than stopping at its cap.
   equallyGood: number
   complete: boolean
   // For each hero, in the team's order, the tiles it stands on among them.
   kept: number[][]
 }
 
-// Negative when `a` is the better score: fewer broken rules, then higher goals,
-// then a higher total.
+// Negative when `a` is the better score: higher goals, then a higher total.
 function compare(a: PlacementScore, b: PlacementScore): number {
-  if (a.broken !== b.broken) return a.broken - b.broken
   if (Math.abs(a.goals - b.goals) > EPS) return b.goals - a.goals
   if (Math.abs(a.total - b.total) > EPS) return b.total - a.total
   return 0
 }
 
 export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
-  score.broken === best.broken && score.goals >= best.goals - margin - EPS
+  score.goals >= best.goals - margin - EPS
 
-// Fewer broken rules, or goals higher by more than the margin.
+// Goals higher by more than the margin.
 export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean =>
-  score.broken < base.broken ||
-  (score.broken === base.broken && score.goals > base.goals + margin + EPS)
+  score.goals > base.goals + margin + EPS
 
 // A generator of numbers in [0, 1) seeded from a string, so one team on one map
 // always searches from the same starts.
