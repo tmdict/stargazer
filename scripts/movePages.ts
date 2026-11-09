@@ -64,7 +64,11 @@ function recoveryStrings(root: string): Record<string, Record<string, string>> {
         string,
         string
       >
-      for (const locale of APP_LOCALES) strings[locale]![name] = entry[locale]!
+      for (const locale of APP_LOCALES) {
+        const value = entry[locale]
+        if (!value) throw new Error(`${file} has no ${locale} text for the recovery page`)
+        strings[locale]![name] = value
+      }
     }
   }
   return strings
@@ -117,7 +121,8 @@ const recoveryScript = (strings: Record<string, Record<string, string>>): string
   add('h1', t.title)
 
   var bring = new URLSearchParams(location.search).get('bring')
-  if (bring !== null) {
+  // Off the old address there is nothing of the old address's to send.
+  if (bring !== null && location.hostname === ${text(OLD_HOST)}) {
     var page = /^\\/(?![\\/\\\\])/.test(bring) ? bring.split('#')[0] : '/'
     var status = add('p', t.working)
     var arrive = function (code) {
@@ -197,10 +202,13 @@ export function movePages(): Plugin[] {
       // page's parsing until they load, and the visitor is leaving anyway.
       transformIndexHtml: {
         order: 'pre',
-        handler: (html) =>
-          MOVE_STAGE === 1
-            ? html.replace('<title>', () => `<script>${SENDER}</script>\n    <title>`)
-            : html,
+        handler: (html) => {
+          if (MOVE_STAGE !== 1) return html
+          // The app waits forever on the old address, so a page without the
+          // script would never leave it.
+          if (!html.includes('<title>')) throw new Error('index.html has no <title> to put the sender before')
+          return html.replace('<title>', () => `<script>${SENDER}</script>\n    <title>`)
+        },
       },
     },
     {
@@ -213,11 +221,18 @@ export function movePages(): Plugin[] {
         // Once the old address redirects, an old page no longer runs its
         // script, so the stage and the redirect rule have to change together.
         const rules = readFileSync(join(config.publicDir, '_redirects'), 'utf8')
-        const redirects = rules.includes(`https://${OLD_HOST}/* `)
-        if (redirects !== (MOVE_STAGE === 2)) {
+          .split('\n')
+          .map((line) => line.trim())
+        const all = rules.findIndex((line) => line.startsWith(`https://${OLD_HOST}/* `))
+        const backup = rules.findIndex((line) => line.startsWith(`https://${OLD_HOST}/backup `))
+        if ((all !== -1) !== (MOVE_STAGE === 2)) {
           this.error(
-            `MOVE_STAGE is ${MOVE_STAGE}, so public/_redirects ${redirects ? 'must not' : 'must'} redirect https://${OLD_HOST}/*`,
+            `MOVE_STAGE is ${MOVE_STAGE}, so public/_redirects ${all !== -1 ? 'must not' : 'must'} redirect https://${OLD_HOST}/*`,
           )
+        }
+        // The host takes the first rule that matches.
+        if (backup === -1 || (all !== -1 && all < backup)) {
+          this.error(`public/_redirects must serve https://${OLD_HOST}/backup above any rule for https://${OLD_HOST}/*`)
         }
       },
       generateBundle() {

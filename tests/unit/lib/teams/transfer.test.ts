@@ -74,6 +74,13 @@ describe('parseImport record validation', () => {
     expect(again).toMatchObject({ accepted: [], skipped: 1, conflicts: 0 })
   })
 
+  it('keeps an old version whose name is at the length limit and already marked', () => {
+    const name = `${'x'.repeat(49)} (imported)`
+    const edited = record({ id: 'existing', name: 'Other' })
+    const result = parseImport(envelope([record({ id: 'existing', name })]), [edited])!
+    expect(result).toMatchObject({ accepted: [{ name }], skipped: 0, conflicts: 1 })
+  })
+
   it('regenerates in-file duplicate ids without marking a conflict', () => {
     const result = parseImport(
       envelope([record({ id: 'dupe' }), record({ id: 'dupe', name: 'Other' })]),

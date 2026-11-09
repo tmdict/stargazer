@@ -2,6 +2,18 @@
  * composables and the library stores (saved teams, rosters). Persistence is best-effort
  * everywhere: private mode, disabled storage, or quota failures are silent. */
 
+// False where the browser refuses the page its storage, which a read alone
+// cannot tell from an item that was never written.
+export const storageReadable = (): boolean => {
+  if (import.meta.env.SSR) return false
+  try {
+    localStorage.getItem('stargazer.flags')
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const readStorage = (key: string): string | null => {
   if (import.meta.env.SSR) return null
   try {

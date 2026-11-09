@@ -21,8 +21,8 @@ import { readPrefs } from '@/utils/prefs'
 
 /* The router reads the address as it is created, so the code leaves the
  * address bar while this module loads: the entry file imports the app, and
- * this module with it, ahead of the router. It then
- * cannot reach a bookmark or a shared link either. */
+ * this module with it, ahead of the router. The code then cannot reach a
+ * bookmark or a shared link either. */
 const takeArrivalCode = (): string | null => {
   if (import.meta.env.SSR || typeof location === 'undefined') return null
   if (!location.hash.startsWith(LINK_MARK)) return null
@@ -56,8 +56,10 @@ export async function startMove(pinia: Pinia): Promise<void> {
   // The head script is packing this address's data and about to leave. The app
   // must not start meanwhile: it would write to the storage being carried.
   if (MOVE_STAGE === 1 && location.hostname === OLD_HOST) await new Promise(() => {})
-  if (arrivalCode === null) return
+  // Taken even when no code came back, so a request the old address could not
+  // answer does not vouch for a later link.
   const requested = takeRequest()
+  if (arrivalCode === null) return
   try {
     const { applyHandOver } = await import('@/lib/move/receive')
     result.value = await applyHandOver(arrivalCode, requested, pinia)

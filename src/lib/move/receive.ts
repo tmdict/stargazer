@@ -7,6 +7,7 @@ import type { Pinia } from 'pinia'
 
 import { MAX_ROSTERS, parseRostersImport } from '@/lib/rosters'
 import { MAX_SAVED_TEAMS, TEAM_MODE_ORDER } from '@/lib/teams/modes'
+import { teamContentKey, type SavedTeam } from '@/lib/teams/savedTeam'
 import { parseImport } from '@/lib/teams/transfer'
 import { useRosters } from '@/stores/rosters'
 import { useTeamLibrary } from '@/stores/teamLibrary'
@@ -49,7 +50,23 @@ const teamsSlotInUse = (key: string): boolean => {
   }
 }
 
-const fillBoards = (items: Map<string, string>): void => {
+/* A Teams board names the saved team it was loaded from, and Save writes to
+ * that team. An id this address already held may be other work, so the name
+ * is kept only where both addresses hold the same team under it. */
+const withSafeSource = (slot: string, held: Map<string, SavedTeam>, carried: string): string => {
+  const stored = JSON.parse(slot) as { sourceId?: unknown }
+  const here = typeof stored.sourceId === 'string' ? held.get(stored.sourceId) : undefined
+  if (!here) return slot
+  const records = JSON.parse(carried) as unknown
+  const there = Array.isArray(records)
+    ? (records as { id?: unknown; data?: unknown }[]).find((r) => r?.id === here.id)
+    : undefined
+  const same =
+    typeof there?.data === 'string' && teamContentKey(there.data) === teamContentKey(here.data)
+  return same ? slot : JSON.stringify({ ...stored, sourceId: null })
+}
+
+const fillBoards = (items: Map<string, string>, held: Map<string, SavedTeam>): void => {
   const arena = items.get('stargazer.arena')
   if (arena !== undefined && !arenaInUse()) {
     writeStorage('stargazer.arena', arena)
@@ -64,7 +81,9 @@ const fillBoards = (items: Map<string, string>): void => {
   for (const mode of TEAM_MODE_ORDER) {
     const key = `stargazer.teams.active.${mode}`
     const slot = items.get(key)
-    if (slot !== undefined && !teamsSlotInUse(key)) writeStorage(key, slot)
+    if (slot !== undefined && !teamsSlotInUse(key)) {
+      writeStorage(key, withSafeSource(slot, held, items.get(TEAMS_KEY) ?? '[]'))
+    }
   }
 }
 
@@ -95,6 +114,7 @@ export async function applyHandOver(
   const result: HandOverResult = { ok: true, teams: 0, rosters: 0, teamsLeft: 0, rostersLeft: 0 }
 
   const teams = useTeamLibrary(pinia)
+  const held = new Map(teams.teams.map((team) => [team.id, team]))
   const teamsFile = exportFile('saved-teams', 'teams', items.get(TEAMS_KEY) ?? '[]')
   if (teamsFile) {
     const fresh = parseImport(teamsFile, teams.teams)?.accepted.length ?? 0
@@ -120,12 +140,13 @@ export async function applyHandOver(
   }
 
   // Boards and settings are a convenience: a bad value is left behind rather
-  // than failing the libraries' hand-over.
-  try {
-    fillBoards(items)
-    fillSettings(items)
-  } catch (error) {
-    console.warn('Hand-over left a board or setting behind:', error)
+  // than failing the libraries' hand-over, or each other.
+  for (const fill of [() => fillBoards(items, held), () => fillSettings(items)]) {
+    try {
+      fill()
+    } catch (error) {
+      console.warn('Hand-over left a board or setting behind:', error)
+    }
   }
 
   if (result.ok) writeFlag('moved')

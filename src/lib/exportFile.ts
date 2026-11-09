@@ -71,8 +71,9 @@ const MAX_ID_LENGTH = 64
  * otherwise the library would show two same-named records with no
  * explanation. `skipped`
  * counts invalid records and duplicates (same content key and name as an
- * existing or already-accepted record). Cap enforcement stays with the caller,
- * which owns the library size. */
+ * existing or already-accepted record, or a same-lineage record whose marked
+ * copy is already there). Cap enforcement stays with the caller, which owns
+ * the library size. */
 export function mergeImport<T extends { id: string; name: string }>(
   records: readonly unknown[],
   existing: readonly T[],
@@ -90,7 +91,13 @@ export function mergeImport<T extends { id: string; name: string }>(
   let conflicts = 0
 
   for (const record of records) {
-    const valid = validate(record)
+    // A validator may throw on a record it cannot read; that record drops alone.
+    let valid: T | null = null
+    try {
+      valid = validate(record)
+    } catch {
+      valid = null
+    }
     if (!valid) {
       skipped++
       continue
@@ -100,20 +107,23 @@ export function mergeImport<T extends { id: string; name: string }>(
       skipped++
       continue
     }
-    seen.add(key)
     if (existingIds.has(valid.id)) {
-      // The copy an earlier import of this record made already stands in for it.
+      // The copy an earlier import of this record made already stands in for
+      // it. Checked before this record's own key is noted: a name at the
+      // length limit takes the mark without changing.
       const name = suffixedName(valid.name, ' (imported)')
       const markedKey = dedupeKey({ ...valid, name })
       if (seen.has(markedKey)) {
         skipped++
         continue
       }
+      seen.add(key)
       seen.add(markedKey)
       conflicts++
       accepted.push({ ...valid, id: crypto.randomUUID(), name })
       continue
     }
+    seen.add(key)
     const id =
       valid.id.length <= MAX_ID_LENGTH && !takenIds.has(valid.id) ? valid.id : crypto.randomUUID()
     takenIds.add(id)

@@ -10,6 +10,7 @@ import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { hasSkillLocale } from '@/utils/dataLoader'
 import { readFlag, writeFlag } from '@/utils/flags'
+import { storageReadable } from '@/utils/storage'
 
 import '@/styles/content.css'
 
@@ -41,7 +42,9 @@ const sectionsKey = computed(() => `${visibleSlug.value}:${props.lang}`)
 // post-mount so the baked HTML (which has no hint) hydrates unchanged.
 const showLocaleHint = ref(false)
 onMounted(() => {
-  showLocaleHint.value = readFlag('skillLocaleHint') === null
+  // Without storage a dismissal cannot be kept, and the tip would return on
+  // every page.
+  showLocaleHint.value = storageReadable() && readFlag('skillLocaleHint') === null
 })
 const dismissLocaleHint = () => {
   showLocaleHint.value = false

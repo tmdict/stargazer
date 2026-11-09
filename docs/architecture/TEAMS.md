@@ -198,7 +198,7 @@ The team screenshot import ([Screenshot Import](./IMPORT.md#the-team-import)) en
 | `exportedAt` | string | When the file was made, ISO 8601. Written, never read.                    |
 | `teams`      | array  | Saved-team records, each following the library's rules and checked alone. |
 
-A field the reader does not know is ignored. Import only merges; replacing everything is Delete all followed by Import. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip. An id that is too long gets a fresh one, and a record whose id belongs to a different existing team (an old export of it, edited since) comes in under a fresh id with an "(imported)" suffix. The reading and merging live in `src/lib/exportFile.ts`, shared with the roster file.
+A field the reader does not know is ignored. Import only merges; replacing everything is Delete all followed by Import. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip. An id that is too long gets a fresh one, and a record whose id belongs to a different existing team (an old export of it, edited since) comes in under a fresh id with an "(imported)" suffix, unless that copy is already in the library. The reading and merging live in `src/lib/exportFile.ts`, shared with the roster file.
 
 ## Rosters
 

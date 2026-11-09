@@ -170,6 +170,21 @@ describe('applyHandOver', () => {
     expect(savedTeams()).toHaveLength(4)
   })
 
+  it('unlinks a carried board from a saved team that was edited here', async () => {
+    const linked = (sourceId: string): string =>
+      JSON.stringify({ ...(JSON.parse(slot(11)) as object), sourceId })
+    const code = await pack({ ...OLD, 'stargazer.teams.active.1v1': linked('t1') })
+
+    storage.set('stargazer.teams.saved', JSON.stringify([team('t1', 'Alpha')]))
+    await applyHandOver(code, true, createPinia())
+    expect(storage.get('stargazer.teams.active.1v1')).toBe(linked('t1'))
+
+    storage.delete('stargazer.teams.active.1v1')
+    storage.set('stargazer.teams.saved', JSON.stringify([team('t1', 'Alpha edited', 13)]))
+    await applyHandOver(code, true, createPinia())
+    expect(JSON.parse(storage.get('stargazer.teams.active.1v1')!)).toMatchObject({ sourceId: null })
+  })
+
   it('stops at the library limit and reports what did not fit', async () => {
     const full = Array.from({ length: MAX_SAVED_TEAMS - 1 }, (_, i) => team(`own${i}`, `Own ${i}`))
     storage.set('stargazer.teams.saved', JSON.stringify(full))
