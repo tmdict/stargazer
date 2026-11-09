@@ -188,7 +188,7 @@ function sidesOf(board: BoardState): Side[] {
       ]
       for (const [owner, rule] of tiled) {
         if (rule.tile)
-          side.landings.push(landing(owner, { name, hexId }, team, tileReach(ctx, rule.tile)))
+          side.landings.push(landing(owner, { name, hexId }, team, tileReach(ctx, rule)))
       }
     }
     const artifactId = board.a?.[team === Team.ALLY ? 0 : 1]

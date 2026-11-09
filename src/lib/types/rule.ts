@@ -39,6 +39,8 @@ export interface Rule {
   team: RuleTeam
   goal: RuleGoal
   tile?: RuleTile
+  // How many tiles out an around tile reaches, 1 when unset.
+  distance?: number
   // Where a tile rule reads from: the holder's own other body in place of the
   // holder, for an effect each body gives on its own.
   from?: 'companion'

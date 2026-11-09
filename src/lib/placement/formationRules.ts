@@ -24,6 +24,7 @@ export interface RuleCard {
   // Which of our units an enemy hero's skill lands on.
   targets?: string
   tile?: Rule['tile']
+  distance?: number
   // A weight other than a skill's main effect's.
   weight?: 'more' | 'less'
 }
@@ -65,6 +66,7 @@ function ruleCard(file: string, rule: Rule, weights: PlacementData['weights']): 
     }
   }
   if (ally && rule.tile) card.tile = rule.tile
+  if (ally && rule.distance) card.distance = rule.distance
   const weight = rule.weight === undefined ? undefined : weights[rule.weight]
   if (ally && weight !== undefined && weight !== weights.aim) {
     card.weight = weight > weights.aim! ? 'more' : 'less'

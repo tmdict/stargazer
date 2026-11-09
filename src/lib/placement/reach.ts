@@ -1,6 +1,7 @@
 import { toBaseHeroId } from '../characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '../characters/phantimal'
 import type { Grid } from '../grid'
+import type { Hex } from '../hex'
 import { artifactTargetArrows } from '../skills/artifact'
 import type { SkillContext, SkillManager } from '../skills/skill'
 import { getSymmetricalHexId } from '../skills/utils/symmetry'
@@ -28,13 +29,36 @@ export function skillReach(manager: SkillManager, unit: number, team: Team): Rea
   return { landed, marked: manager.getMarkedTiles(unit, team) }
 }
 
-export function tileReach(holder: SkillContext, tile: NonNullable<Rule['tile']>): Reach {
+// The hexes within `distance` of `center`, ring by ring outward, its own left out.
+function hexesAround(center: Hex, distance: number): Hex[] {
+  const seen = new Set([`${center.q},${center.r}`])
+  const found: Hex[] = []
+  let ring = [center]
+  for (let step = 0; step < distance; step++) {
+    ring = ring
+      .flatMap((hex) => hex.getNeighbors())
+      .filter((hex) => {
+        const key = `${hex.q},${hex.r}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    found.push(...ring)
+  }
+  return found
+}
+
+export function tileReach(
+  holder: SkillContext,
+  { tile, distance = 1 }: Pick<Rule, 'tile' | 'distance'>,
+): Reach {
   const { grid, hexId } = holder
   if (tile === 'around') {
-    const around = grid.getHexById(hexId).getNeighbors()
     return {
       landed: [],
-      marked: around.flatMap((hex) => grid.getTileOrUndefined(hex)?.hex.getId() ?? []),
+      marked: hexesAround(grid.getHexById(hexId), distance).flatMap(
+        (hex) => grid.getTileOrUndefined(hex)?.hex.getId() ?? [],
+      ),
     }
   }
   // A unit on its own side's tiles next to the holder swaps with the unit on

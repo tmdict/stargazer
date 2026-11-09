@@ -69,7 +69,13 @@ const use = computed(() => {
       <template v-if="card.tile">
         <dt>{{ t('rules-row-tile') }}</dt>
         <dd>
-          <p class="reading-secondary">{{ t(`rules-tile-${card.tile}`) }}</p>
+          <p class="reading-secondary">
+            {{
+              card.distance
+                ? t('rules-tile-within', { distance: card.distance })
+                : t(`rules-tile-${card.tile}`)
+            }}
+          </p>
         </dd>
       </template>
       <template v-if="card.weight">

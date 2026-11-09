@@ -221,6 +221,15 @@ describe('placement scoring', () => {
     expect(metOf(scoredAt({ [LUDOVIC]: 8, [ALNA]: 3, [SYLPHIRA]: 6 }), LUDOVIC)).toBe(1)
   })
 
+  // Tile 4 is next to tile 6, tile 7 two tiles from it and tile 10 three.
+  it('reaches the tiles within a tile rule’s distance, its own left out', () => {
+    const reached = (orion: number) =>
+      metOf(scoredAt({ [PERSEUS]: 6, [ORION]: orion, [ALNA]: 1 }), PERSEUS)
+    expect(reached(4)).toBe(1)
+    expect(reached(7)).toBe(1)
+    expect(reached(10)).toBe(0)
+  })
+
   // Tiles 3, 4 and 5 make up one row of arena2.
   it("meets a companion goal when the holder's other body stands on the tiles it marks", () => {
     const rowMet = (at: Record<number, number>) =>

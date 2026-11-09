@@ -22,7 +22,7 @@ import {
 } from '@/utils/dataLoader'
 import { placeOnTile } from './fixtures/skills'
 
-const FIELDS = new Set(['team', 'goal', 'tile', 'from', 'weight', 'note'])
+const FIELDS = new Set(['team', 'goal', 'tile', 'distance', 'from', 'weight', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
 const COUNT_GOALS = new Set(['atMost', 'exactly'])
 const MOST_KINDS = new Set(['walls', 'allies'])
@@ -81,6 +81,11 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
       (rule.team !== 'ally' || rule.tile !== undefined || tile === 'never')
     )
       problems.push('a back goal on an enemy, tile or artifact rule')
+    if (
+      rule.distance !== undefined &&
+      (rule.tile !== 'around' || !Number.isInteger(rule.distance) || rule.distance < 2)
+    )
+      problems.push('a distance off an around tile rule, or not a whole number above 1')
     if (rule.from !== undefined && (rule.from !== 'companion' || rule.tile === undefined))
       problems.push(`from ${rule.from} off a companion tile rule`)
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {

@@ -174,15 +174,14 @@ export class PlacementScorer {
         continue
       }
       for (const rule of rules) {
-        const { tile } = rule
         this.addEffect('unit', unit, unit, rule, (b) => {
           if (rule.goal === 'back') return [{ landed: [], marked: [] }]
-          if (!tile) return [skillReach(b.manager, unit, Team.ALLY)]
+          if (!rule.tile) return [skillReach(b.manager, unit, Team.ALLY)]
           const from =
             rule.from === 'companion'
               ? b.units.find((other) => other !== unit && ruleUnit(other) === unit)
               : unit
-          return from === undefined ? [] : [tileReach(this.contextOf(b, from), tile)]
+          return from === undefined ? [] : [tileReach(this.contextOf(b, from), rule)]
         })
       }
     }
@@ -196,12 +195,12 @@ export class PlacementScorer {
         continue
       }
       const reach =
-        ({ tile }: Rule) =>
+        (rule: Rule) =>
         ({ grid, manager }: PlacementBoard): Reach[] =>
           this.enemyOrder.flatMap((hexId) => {
-            if (tile) {
+            if (rule.tile) {
               const holder = { grid, hexId, team: Team.ENEMY, characterId: unit }
-              return [tileReach({ ...holder, skillManager: manager, lookups }, tile)]
+              return [tileReach({ ...holder, skillManager: manager, lookups }, rule)]
             }
             if (!performPlace(grid, hexId, unit, Team.ENEMY)) return []
             manager.activateCharacterSkill(unit, hexId, Team.ENEMY, grid)
@@ -218,7 +217,7 @@ export class PlacementScorer {
       const charm = lookups.charmOf(hero)
       for (const rule of charm?.rules ?? []) {
         this.addEffect('charm', charm!.id, hero, rule, (b) => [
-          tileReach(this.contextOf(b, hero), rule.tile!),
+          tileReach(this.contextOf(b, hero), rule),
         ])
       }
     }
