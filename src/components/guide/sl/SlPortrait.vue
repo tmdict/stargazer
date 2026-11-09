@@ -4,24 +4,62 @@
 
 import { computed } from 'vue'
 
+import HoldRing from '@/components/ui/HoldRing.vue'
+import { unitInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
 
-const { id, titled = true } = defineProps<{ id: number; titled?: boolean }>()
+const {
+  id,
+  titled = true,
+  inspectable = false,
+} = defineProps<{
+  id: number
+  titled?: boolean
+  // Right-click or a hold opens the hero's skills.
+  inspectable?: boolean
+}>()
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 const slug = computed(() => gameData.getCharacterNameById(id) ?? '')
+
+const target = computed(() => (inspectable ? unitInspectTarget(id) : null))
+const { inspect } = useInspect()
+const { pressing, start, onContextMenu } = useLongPress<InspectTarget>(
+  (inspected) => void inspect(inspected),
+)
 </script>
 
 <template>
-  <span class="pt" :title="titled ? curatedHeroName(slug, i18n.currentLocale) : undefined">
-    <img :src="gameData.getCharacterImage(slug)" alt="" />
+  <!-- The frame holds the hold ring outside the portrait's clipped circle. -->
+  <span
+    class="pt-frame"
+    :class="{ inspectable: target }"
+    @pointerdown="target && start($event, target)"
+    @contextmenu="target && onContextMenu($event, target)"
+  >
+    <span class="pt" :title="titled ? curatedHeroName(slug, i18n.currentLocale) : undefined">
+      <img :src="gameData.getCharacterImage(slug)" alt="" draggable="false" />
+    </span>
+    <HoldRing v-if="pressing" />
   </span>
 </template>
 
 <style scoped>
+.pt-frame {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.inspectable {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 .pt {
   display: inline-flex;
   align-items: center;

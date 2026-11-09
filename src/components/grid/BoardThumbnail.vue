@@ -357,7 +357,20 @@ function zoneBox(zone: 'ally' | 'enemy'): DOMRect | undefined {
   return new DOMRect(a.x, a.y, b.x - a.x, b.y - a.y)
 }
 
-defineExpose({ zoneBox })
+// The square on screen round a unit's hex or a side's artifact, for a ring
+// drawn over the board.
+function itemBox(at: number | 'ally' | 'enemy'): DOMRect | undefined {
+  const toScreen = svgEl.value?.getScreenCTM()
+  const tile = typeof at === 'number'
+  const center = tile ? geometry.value.centers.get(at) : geometry.value.artifactCenters[at]
+  if (!toScreen || !center) return undefined
+  const radius = tile ? hexSize : hexSize * ARTIFACT_RADIUS_RATIO
+  const a = new DOMPoint(center.x - radius, center.y - radius).matrixTransform(toScreen)
+  const b = new DOMPoint(center.x + radius, center.y + radius).matrixTransform(toScreen)
+  return new DOMRect(a.x, a.y, b.x - a.x, b.y - a.y)
+}
+
+defineExpose({ zoneBox, itemBox })
 </script>
 
 <template>

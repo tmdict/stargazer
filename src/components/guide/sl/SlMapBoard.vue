@@ -3,13 +3,14 @@
    why it stands where it does, rings it and the units the card names and
    outlines the free tiles the unit could take as well (dashed) or better
    (green). A swap tried below the board draws its heroes on the tiles they
-   would take and fades the units that leave. Right-click opens a unit's or
-   the artifact's skills. */
+   would take and fades the units that leave. Right-click or a hold opens a
+   unit's or the artifact's skills. */
 
 import { computed, useTemplateRef } from 'vue'
 
 import SlPlacementCard from './SlPlacementCard.vue'
 import BoardThumbnail from '@/components/grid/BoardThumbnail.vue'
+import HoldRing from '@/components/ui/HoldRing.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { unitInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
@@ -26,7 +27,6 @@ import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import { previewUnitId, type PreviewBoard, type PreviewUnit } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { isTouchClick } from '@/utils/pointer'
 
 const {
   board,
@@ -92,29 +92,57 @@ const unitIds = computed(() => {
   return ids
 })
 
-const inspectedAt = (target: EventTarget | null): InspectTarget | null => {
+interface Held {
+  target: InspectTarget
+  at: number | 'ally'
+}
+
+const heldAt = (target: EventTarget | null): Held | null => {
   if (!(target instanceof Element)) return null
   const unit = target.closest<SVGElement>('[data-hex]')
   if (unit) {
-    const id = unitIds.value.get(Number(unit.dataset.hex))
-    return id === undefined ? null : unitInspectTarget(id)
+    const hexId = Number(unit.dataset.hex)
+    const id = unitIds.value.get(hexId)
+    const inspected = id === undefined ? null : unitInspectTarget(id)
+    return inspected && { target: inspected, at: hexId }
   }
   const slot = target.closest('[data-artifact="ally"]') ? board.artifacts.ally : null
   const artifact = typeof slot === 'number' ? gameData.getArtifactById(slot) : undefined
-  return artifact ? { kind: 'artifact', artifact } : null
+  return artifact ? { target: { kind: 'artifact', artifact }, at: 'ally' } : null
 }
 
 const { inspect } = useInspect()
-const { onContextMenu } = useLongPress<InspectTarget>((target) => {
+const {
+  pressing,
+  start: startHold,
+  onContextMenu,
+} = useLongPress<Held>(({ target }) => {
   close()
   void inspect(target)
 })
 
-// A touch long-press is left to the browser: this board has no hold gesture.
-const onRightClick = (event: MouseEvent): void => {
-  const target = inspectedAt(event.target)
-  if (target && !isTouchClick(event)) onContextMenu(event, target)
+const onPress = (event: PointerEvent): void => {
+  const held = heldAt(event.target)
+  if (held) startHold(event, held)
 }
+
+const onRightClick = (event: MouseEvent): void => {
+  const held = heldAt(event.target)
+  if (held) onContextMenu(event, held)
+}
+
+// The board is one drawing, so the hold ring is laid over the page.
+const holdBox = computed(() => {
+  const box = pressing.value && thumbnailView.value?.itemBox(pressing.value.at)
+  return (
+    box && {
+      left: `${box.x}px`,
+      top: `${box.y}px`,
+      width: `${box.width}px`,
+      height: `${box.height}px`,
+    }
+  )
+})
 
 const lit = computed(() =>
   shown.value && why ? cardRings(why, shown.value.reasons, shown.value.unit) : null,
@@ -195,6 +223,7 @@ const unitCardAnchor = computed(() => {
     @mouseover="onOver"
     @mouseout="hoverClose"
     @click="onClick"
+    @pointerdown="onPress"
     @contextmenu="onRightClick"
     @touchstart.passive="onTouchStart"
   />
@@ -205,11 +234,22 @@ const unitCardAnchor = computed(() => {
     :also-fine="shown.alsoFine.length > 0"
     :better="shown.better.length > 0"
   />
+  <Teleport v-if="holdBox" to="body">
+    <span class="sl-hold" :style="holdBox"><HoldRing /></span>
+  </Teleport>
 </template>
 
 <style scoped>
 .sl-board {
   width: 100%;
   height: auto;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.sl-hold {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
 }
 </style>
