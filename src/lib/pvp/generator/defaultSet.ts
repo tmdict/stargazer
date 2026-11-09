@@ -35,7 +35,7 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
       paragon: TOP_LEVELS[ATTR_PARAGON]!,
       refinement: TOP_LEVELS[ATTR_REFINEMENT]!,
     }))
-  const boards = slBoards(file, TEAM_VARIANTS.sl.maps)
+  const boards = slBoards(file, TEAM_VARIANTS.sl.maps, 'sl')
   const set = chooseSlSet(
     file,
     readSlFile(file),

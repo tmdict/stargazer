@@ -15,14 +15,13 @@
  * (a TEAM_MODES row, a wire id, a slot).
  */
 
-import variantMapLists from '@/data/maps.json'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { DEFAULT_MAP_KEY } from '../maps'
+import { DEFAULT_MAP_KEY, MODE_BOARDS, type ModeListKey } from '../maps'
 import { stripRetiredSeasonal } from '../seasonal'
 
 export type TeamModeKey = '1v1' | '3v3' | '5v5'
 
-export type TeamVariantKey = 'sl' | 'gd'
+export type TeamVariantKey = ModeListKey
 
 export interface TeamModeConfig {
   key: TeamModeKey
@@ -78,24 +77,24 @@ export const TEAM_MODES: Record<TeamModeKey, TeamModeConfig> = {
   },
 }
 
-/* A season rotation edits a variant's map list in src/data/maps.json, which
- * the external report generator also reads, and nowhere else: slots and
- * records keep their maps, and boards that no longer match simply stop
- * reading as that variant. */
-const VARIANT_MAPS: Record<TeamVariantKey, string[]> = variantMapLists
+/* A season rotation edits a variant's map list in src/data/maps.json, its
+ * maps and their buffs together, which the external report generator also
+ * reads, and nowhere else: slots and records keep their maps, and boards that
+ * no longer match simply stop reading as that variant. */
+const listMaps = (key: TeamVariantKey): string[] => MODE_BOARDS[key].map((board) => board.map)
 
 export const TEAM_VARIANTS: Record<TeamVariantKey, TeamVariantConfig> = {
   sl: {
     key: 'sl',
     mode: '5v5',
     labelKey: 'app.mode-sl',
-    maps: VARIANT_MAPS.sl,
+    maps: listMaps('sl'),
   },
   gd: {
     key: 'gd',
     mode: '3v3',
     labelKey: 'app.mode-gd',
-    maps: VARIANT_MAPS.gd,
+    maps: listMaps('gd'),
   },
 }
 

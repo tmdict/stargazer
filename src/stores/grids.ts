@@ -43,6 +43,13 @@ import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import type { SkillRow } from '@/lib/skills/skill'
 import {
+  DEFAULT_VARIANT,
+  matchVariant,
+  TEAM_MODE_ORDER,
+  TEAM_MODES,
+  type TeamVariantKey,
+} from '@/lib/teams/modes'
+import {
   sideLoadBoard,
   type SideLoadBoard,
   type SideLoadPlan,
@@ -109,6 +116,22 @@ export const useGrids = defineStore('grids', () => {
   // What the Skills dropdown has turned off. Never serialized or persisted, so
   // a reload or a share link shows every drawing.
   const hiddenSkills = shallowRef<ReadonlySet<string>>(new Set())
+  // The Arena's map dropdown pick: the mode of the row picked and its map
+  // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
+  const arenaPick = shallowRef<{ mode: TeamVariantKey; map: string } | null>(null)
+
+  /* The mode whose list gives the boards their buffs: the Arena's pick while
+   * its board stays on the map picked, else the list the boards' maps match as
+   * a whole, in order, as a Teams set's type does. One board alone matches no
+   * list, so the Arena and 1 v 1 boards carry buffs only through the pick. */
+  const buffMode = computed((): TeamVariantKey | null => {
+    const maps = contexts.value.map((ctx) => ctx.currentMap)
+    const pick = arenaPick.value
+    if (pick) return maps.length === 1 && maps[0] === pick.map ? pick.mode : null
+    const mode = TEAM_MODE_ORDER.find((key) => TEAM_MODES[key].boardCount === maps.length)
+    const match = mode ? matchVariant(mode, maps) : null
+    return match === null || match === DEFAULT_VARIANT ? null : match
+  })
 
   const deriveSynergy = (): void => {
     synergy.value = contexts.value.some((ctx) =>
@@ -192,6 +215,7 @@ export const useGrids = defineStore('grids', () => {
   const setGridCount = (count: number, maps?: (string | undefined)[]): void => {
     const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
+    arenaPick.value = null
     contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
         hexSize,
@@ -201,6 +225,7 @@ export const useGrids = defineStore('grids', () => {
         synergy,
         sharedCrop,
         hiddenSkills,
+        buffMode,
       }),
     )
     if (activeId.value >= clamped) activeId.value = 0
@@ -949,6 +974,8 @@ export const useGrids = defineStore('grids', () => {
     deriveSynergy,
     setSynergy,
     hiddenSkills,
+    arenaPick,
+    buffMode,
     skillRows,
     setSkillsHidden,
     setGridCount,

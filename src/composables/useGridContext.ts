@@ -59,7 +59,7 @@ import { decomposeUnitId } from '@/lib/characters/synergy'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
-import { getMapByKey } from '@/lib/maps'
+import { buffTilesOf, getMapByKey, modeBuffs, type ModeListKey, type TileBuff } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
 import { artifactCanDraw, artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
 import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
@@ -98,6 +98,8 @@ interface GridContextGlobals {
   sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
   // The units and artifacts whose drawings the Skills dropdown has turned off.
   hiddenSkills: Ref<ReadonlySet<string>>
+  // The mode whose list gives the boards their buffs; null for none.
+  buffMode?: Ref<ModeListKey | null>
 }
 
 // The drop chain (routeDrop -> handleDrop) reads only the drag-source
@@ -119,6 +121,9 @@ export interface GridContext {
   artifacts: { ally: number | null; enemy: number | null }
 
   // Derived (per board)
+  // The board's buffs on its mode's list, and their tiles together.
+  buffs: readonly TileBuff[]
+  buffTiles: readonly number[]
   layout: Layout
   visibleHexes: Hex[]
   cropHexes: Hex[]
@@ -187,7 +192,7 @@ export function createGridContext(
   globals: GridContextGlobals,
 ): GridContext {
   const gameDataStore = useGameDataStore()
-  const { hexSize, teamView, inverted, perspective, sharedCrop, hiddenSkills } = globals
+  const { hexSize, teamView, inverted, perspective, sharedCrop, hiddenSkills, buffMode } = globals
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
@@ -478,6 +483,10 @@ export function createGridContext(
   }
 
   const ctx = scope.run(() => {
+    const buffs = computed((): readonly TileBuff[] =>
+      buffMode?.value ? modeBuffs(buffMode.value, currentMap.value) : [],
+    )
+    const buffTiles = computed((): readonly number[] => buffTilesOf(buffs.value))
     const hexScale = computed(() => hexSize.value.x / BASE_HEX_RADIUS)
     const fullBox = computed<ViewBoxBounds>(() => {
       const size = BOARD_SIZE * hexScale.value
@@ -699,6 +708,8 @@ export function createGridContext(
     watch(placements, reconcilePhantimals, { flush: 'post' })
 
     return {
+      buffs,
+      buffTiles,
       layout,
       visibleHexes,
       cropHexes,

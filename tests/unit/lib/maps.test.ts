@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buffTiles, configTiles, findMapByTiles, MAPS, tilesLayout } from '@/lib/maps'
+import { configTiles, findMapByTiles, MAPS, tilesLayout } from '@/lib/maps'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -36,17 +36,19 @@ describe('findMapByTiles', () => {
 })
 
 describe('tilesLayout', () => {
-  it("gives a preset's tiles that preset's key and buff tiles", () => {
+  // Buff tiles belong to a mode's board, so a map alone carries none.
+  it("gives a preset's tiles that preset's key and only the buff tiles it is handed", () => {
     const layout = tilesLayout(tilesOf('preset-sr1'))
     expect(layout.key).toBe('preset-sr1')
-    expect(layout.buffTiles).toEqual(buffTiles('preset-sr1'))
+    expect(layout.buffTiles).toEqual([])
+    expect(tilesLayout(tilesOf('preset-sr1'), [2, 44]).buffTiles).toEqual([2, 44])
   })
 
   // The key seeds the engine's search and keys its cached fits, so a board
   // whose units move keeps the same one.
   it('keys an edited layout by its tiles alone, whatever their order or occupants', () => {
     const edited = [...tilesOf('arena1'), [20, State.BLOCKED]]
-    const layout = tilesLayout(edited)
+    const layout = tilesLayout(edited, [2])
     const occupied = edited.map(([id, state]) => [
       id!,
       state === State.AVAILABLE_ALLY ? State.OCCUPIED_ALLY : state!,

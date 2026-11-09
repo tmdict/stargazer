@@ -6,7 +6,7 @@
  * recorded set-up, every format's, is placed by the engine and set beside the
  * player's own. A season other than the one Stargazer holds
  * phantimals for is placed without its phantimal and seasonal artifact, and
- * scores no buff tile, since the map files hold this season's, and how often
+ * scores no buff tile, since Supreme League's map list holds this season's, and how often
  * each enemy hero is on a map is counted from its boards. PLACEMENT_FULL is
  * how many of the most used teams are also placed by trying every placement,
  * to check the search. PLACEMENT_TUNE names weights, joined by commas, for
@@ -30,7 +30,15 @@ import {
 } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
-import { buffTiles, deploymentTiles, getMapByKey, presetLayout, resolveBoardMap } from '@/lib/maps'
+import {
+  buffTilesOf,
+  deploymentTiles,
+  getMapByKey,
+  modeBuffs,
+  presetLayout,
+  resolveBoardMap,
+  type MapLayout,
+} from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
@@ -240,9 +248,11 @@ interface Scored {
   skipped: PlacementScorer['skipped']
 }
 
-// The map files hold the live season's buff tiles, so no other season scores one.
-const dataFor = (setup: Setup, data: PlacementData): PlacementData =>
-  setup.live ? data : { ...data, weights: { ...data.weights, buff: 0 } }
+// Supreme League's map list holds the live season's buff tiles, so no other
+// season scores one.
+const slBuffTiles = (map: string): number[] => buffTilesOf(modeBuffs('sl', map))
+const layoutOf = (setup: Setup): MapLayout =>
+  presetLayout(setup.map, setup.live ? slBuffTiles(setup.map) : [])!
 
 // The set-up's team on the tiles `positionsOf` gives, in the board's units'
 // order, scored as the engine scores it, or null where it gives none.
@@ -251,10 +261,10 @@ function scoreAt(
   data: PlacementData,
   positionsOf: (board: PlacementBoard) => number[] | null,
 ): Scored | null {
-  const board = new PlacementBoard(setup.team, presetLayout(setup.map)!, PLACEMENT_LOOKUPS)
+  const board = new PlacementBoard(setup.team, layoutOf(setup), PLACEMENT_LOOKUPS)
   const positions = positionsOf(board)
   if (!positions) return null
-  const scorer = new PlacementScorer(board, setup.team, dataFor(setup, data))
+  const scorer = new PlacementScorer(board, setup.team, data)
   board.place(positions)
   return {
     positions,
@@ -279,12 +289,7 @@ interface Placed {
 
 function placeSetup(setup: Setup, data: PlacementData): Placed & { ms: number } {
   const start = performance.now()
-  const result = placeTeam(
-    setup.team,
-    presetLayout(setup.map)!,
-    dataFor(setup, data),
-    PLACEMENT_LOOKUPS,
-  )
+  const result = placeTeam(setup.team, layoutOf(setup), data, PLACEMENT_LOOKUPS)
   const ms = performance.now() - start
   return { result, pick: scoreAt(setup, data, () => result.positions)!, ms }
 }
@@ -362,7 +367,7 @@ function boardSvg(map: string, units: number[], positions: number[]): string {
   const [x0, y0] = [Math.min(...xs) - 18, Math.min(...ys) - 18]
   const [w, h] = [Math.max(...xs) - x0 + 18, Math.max(...ys) - y0 + 18]
   const at = new Map(positions.map((hexId, i) => [hexId, units[i]!]))
-  const buffs = new Set(buffTiles(map))
+  const buffs = new Set(slBuffTiles(map))
   const cells = tiles.map((tile, i) => {
     const { x, y } = centers[i]!
     const corners = Array.from({ length: 6 }, (_, c) => {
@@ -635,8 +640,7 @@ describe.skipIf(!EXPORTS.length)('placement engine', () => {
       for (const { setup } of sample) {
         const { result } = engineOf(setup)
         const start = performance.now()
-        const data = dataFor(setup, dataOf(setup))
-        const full = placeTeam(setup.team, presetLayout(setup.map)!, data, PLACEMENT_LOOKUPS, {
+        const full = placeTeam(setup.team, layoutOf(setup), dataOf(setup), PLACEMENT_LOOKUPS, {
           full: true,
         })
         times.push(performance.now() - start)

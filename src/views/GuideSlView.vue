@@ -133,7 +133,11 @@ const boardsFor = (file: SlData): SlBoard[] => {
   const own = pageBoards.value.find((boards) => boards.page === maps.value)
   return own
     ? layoutBoards(file, own.layouts)
-    : slBoards(file, variantMaps(mode.value, variant.value ?? DEFAULT_VARIANT))
+    : slBoards(
+        file,
+        variantMaps(mode.value, variant.value ?? DEFAULT_VARIANT),
+        variant.value === null || variant.value === DEFAULT_VARIANT ? undefined : variant.value,
+      )
 }
 
 const shown = ref<SlShown | null>(null)

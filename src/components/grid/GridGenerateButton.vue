@@ -61,17 +61,18 @@ onScopeDispose(() => {
   live = false
 })
 
-const boardLayouts = (): MapLayout[] => grids.contexts.map((ctx) => gridLayout(ctx.grid))
+const boardLayouts = (): MapLayout[] =>
+  grids.contexts.map((ctx) => gridLayout(ctx.grid, ctx.buffTiles))
 
-// The maps and the ally side of every board, which a set is drawn for and
-// replaces.
+// The maps, buff tiles and the ally side of every board, which a set is drawn
+// for and replaces.
 const boardsKey = (): string =>
   grids.contexts
     .map((ctx) => {
       const ally = [...ctx.placements]
         .filter(([hexId]) => getCharacterTeam(ctx.grid, hexId) === Team.ALLY)
         .sort(([a], [b]) => a - b)
-      return `${gridLayout(ctx.grid).key}|${ctx.artifacts.ally}|${ally.join(';')}`
+      return `${gridLayout(ctx.grid).key}|${ctx.buffTiles.join(',')}|${ctx.artifacts.ally}|${ally.join(';')}`
     })
     .join(' ')
 

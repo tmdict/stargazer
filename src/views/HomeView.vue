@@ -16,6 +16,7 @@ import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
+import { useArenaPick } from '@/composables/useArenaPick'
 import { useBoardFit } from '@/composables/useBoardFit'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
@@ -181,9 +182,21 @@ const handleTabChange = (tab: string) => {
   applyTabResets(tab)
 }
 
+const arenaPick = useArenaPick()
+
 const handleMapChange = (mapKey: string) => {
   gridStore.moveToMap(mapKey)
+  arenaPick.drop()
 }
+
+// A board moved off the map picked, by a saved team loaded on another map, is
+// a plain map again.
+watch(
+  () => grids.arenaPick !== null && grids.active?.currentMap !== grids.arenaPick.map,
+  (left) => {
+    if (left) arenaPick.drop()
+  },
+)
 
 // Browser back/forward (and the push above) change the query; mirror it onto the
 // active tab. Landing back on a bare `/` (no `?t=`) restores the default.
@@ -212,6 +225,7 @@ if (sharedLink) {
   const result = urlStateStore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
     sharedLinkRestored = true
+    arenaPick.drop()
     applyFlags(result.displayFlags)
     // The restore replaced the board; drop any stale mobile tap/lift selection.
     clearTargetHex()
@@ -241,6 +255,7 @@ onMounted(() => {
         applyTabResets(activeTab.value)
       }
     }
+    arenaPick.restore()
   }
   arenaPersistence.startAutosave()
 })

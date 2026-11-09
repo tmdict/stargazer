@@ -1,6 +1,6 @@
 /* The boards a set is chosen for, and the teams each board draws from. */
 
-import { presetLayout, type MapLayout } from '@/lib/maps'
+import { modeLayout, presetLayout, type MapLayout, type ModeListKey } from '@/lib/maps'
 import type { SlData } from '../data/types'
 
 export interface SlBoard {
@@ -21,9 +21,10 @@ export function layoutBoards(data: SlData, layouts: readonly MapLayout[]): SlBoa
   })
 }
 
-// Boards on preset maps, by their keys.
-export const slBoards = (data: SlData, maps: readonly string[]): SlBoard[] =>
+// Boards on preset maps, by their keys, with the buffs they have on `mode`'s
+// list.
+export const slBoards = (data: SlData, maps: readonly string[], mode?: ModeListKey): SlBoard[] =>
   layoutBoards(
     data,
-    maps.map((key) => presetLayout(key)!),
+    maps.map((key) => (mode ? modeLayout(mode, key) : presetLayout(key))!),
   )

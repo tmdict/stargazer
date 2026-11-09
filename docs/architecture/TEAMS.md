@@ -33,6 +33,36 @@ Every stored form of a team, whether a mode's autosave, a saved team or a backup
 
 A team's type is never stored. `matchVariant` compares the boards' maps, in order, against the default list and then the mode's types, and the result is either a type, the default, or nothing for hand-picked maps. Because it is derived, a season that changes the Supreme League map list only edits that one list, in `src/data/maps.json`: saved teams keep their maps and stop reading as Supreme League.
 
+The lists also carry the buff tiles, since the game gives a buff to a mode's board rather than to its map. A set of boards whose maps match a type as a whole takes each board's buffs from that type's entry, and any other set takes none, so links, saved teams and exports hold no buff data. The external report generator reads this file too. Each type is its boards in board order:
+
+```json
+{
+  "sl": [
+    { "map": "arena1" },
+    { "map": "arena3", "buffs": [{ "id": "placeholder", "tiles": [21, 25] }] }
+  ],
+  "gd": [
+    {
+      "map": "preset-sr8",
+      "buffs": [
+        { "id": "battle-fervor", "tiles": [3, 43] },
+        { "id": "swift-shadow", "tiles": [17, 29] }
+      ]
+    }
+  ]
+}
+```
+
+| Field           | Type            | Rule                                                                                                         |
+| --------------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `sl`, `gd`      | list            | A type's boards in board order, under its `TEAM_VARIANTS` key.                                               |
+| `map`           | string          | The map's file name under `src/data/arena/`, at most once in a list.                                         |
+| `buffs`         | list, optional  | The board's buffs; missing means none.                                                                       |
+| `buffs[].id`    | string          | The name of the buff's text under `src/locales/buff/`: the game's own sentence for it in each app locale.    |
+| `buffs[].tiles` | list of numbers | The tiles it sits on, each an ally or enemy tile of the map and in no other buff of the board, in any order. |
+
+`src/lib/maps.ts` refuses a list that breaks a rule when it loads.
+
 A board's serialized tile states (`t`) are authoritative. Restoring resets every tile and replays `t`, with each occupied tile read as its side's available tile because placing the units marks occupancy, so a team on a map that no longer exists still loads, previews and exports. For a board saved without a map key, `resolveBoardMap` picks the preset its tiles reproduce, or the default map, and both the saved-team chip and the restore use that same rule.
 
 Every Teams page load goes through `normalizeTeamPayload`. It drops seasonal content from other seasons ([Seasonal Content](./SEASONAL.md)), pads or truncates the payload to the mode's board count, and removes synergy units on modes that do not allow them, since a hand-crafted synergy unit would slip past the duplicate check. `/share` shows payloads as they are.

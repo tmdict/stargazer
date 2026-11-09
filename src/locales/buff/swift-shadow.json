@@ -1,0 +1,5 @@
+{
+  "en": "Increases movement speed of the hero placed on this Buff Tile by [[50%]], granting them [[20]] Life Drain. They remain [[unaffected|unaffected]] for the first [[4]]s of battle.",
+  "zh": "增益格上的英雄增加[[50%]]移动速度，[[20]]点生命汲取效并在开场[[4]]秒内处于[[霸体|unaffected]]状态。",
+  "ko": "버프 칸에 배치된 영웅은 이동 속도가 [[50%]], 생명 흡수가 [[20]] 증가하며 전투 시작 [[4]]초 동안 [[제어 면역|unaffected]] 상태가 된다."
+}

@@ -1,8 +1,9 @@
-/* The arena map registry. teams/wire.ts reads map ids from here for the
-   binary link codec, so this file loads only the map JSON and stays free of
-   dataLoader and Vue. */
+/* The arena map registry and the mode map lists. teams/wire.ts reads map ids
+   from here for the binary link codec, so this file loads only the map JSON,
+   the mode lists and the buff text they name, and stays free of dataLoader and
+   Vue. */
 
-import variantMapLists from '@/data/maps.json'
+import modeMapLists from '@/data/maps.json'
 import type { Grid } from './grid'
 import { State } from './types/state'
 import { Team } from './types/team'
@@ -18,8 +19,6 @@ interface ArenaJson {
     blocked: number[]
     breakable: number[]
   }
-  // Tiles that buff the unit standing on them, one on each side, ally tile first.
-  buffTiles?: number[]
 }
 
 export interface MapConfig {
@@ -65,32 +64,89 @@ function loadArenas(): Record<string, ArenaJson> {
   // A new preset usually starts as a copy of another file, and two maps on one
   // id would send that id's links to whichever loaded last.
   const owners = new Map<number, string>()
-  for (const [key, { id, grid, buffTiles = [] }] of Object.entries(arenas)) {
+  for (const [key, { id }] of Object.entries(arenas)) {
     if (!Number.isInteger(id) || id < 1) {
       throw new Error(`Map ${key}: id must be a positive integer`)
     }
     const owner = owners.get(id)
     if (owner) throw new Error(`Map ${key}: id ${id} already belongs to ${owner}`)
     owners.set(id, key)
-    for (const hex of buffTiles) {
-      if (!grid.ally.includes(hex) && !grid.enemy.includes(hex)) {
-        throw new Error(`Map ${key}: buff tile ${hex} is not an ally or enemy tile`)
-      }
-    }
   }
   return arenas
 }
 
 const ARENAS = loadArenas()
 
+// ---- Mode map lists ----
+
+// A buff on a mode's board: the tiles it sits on, and the name of its text's
+// file under src/locales/buff/.
+export interface TileBuff {
+  id: string
+  tiles: readonly number[]
+}
+
+// One board of a mode, in the order the mode plays them.
+interface ModeBoard {
+  map: string
+  buffs?: readonly TileBuff[]
+}
+
+export type ModeListKey = keyof typeof modeMapLists
+
+const BUFF_TEXTS = new Set(
+  Object.keys(import.meta.glob('@/locales/buff/*.json', { eager: true })).map(fileKey),
+)
+
+/* A board is found by its mode and map alone (the Arena's dropdown pick keeps
+ * no board number), so a map is on a mode's list at most once. A buff sits on
+ * deployment tiles, where a hero can stand, and a tile holds one buff. */
+function loadModeLists(): Record<ModeListKey, readonly ModeBoard[]> {
+  const lists: Record<ModeListKey, readonly ModeBoard[]> = modeMapLists
+  for (const [mode, boards] of Object.entries(lists)) {
+    const listed = new Set<string>()
+    for (const { map, buffs = [] } of boards) {
+      const grid = ARENAS[map]?.grid
+      if (!grid) throw new Error(`Mode ${mode}: no map ${map}`)
+      if (listed.has(map)) throw new Error(`Mode ${mode}: map ${map} is listed twice`)
+      listed.add(map)
+      const buffed = new Set<number>()
+      for (const { id, tiles } of buffs) {
+        if (!BUFF_TEXTS.has(id)) throw new Error(`Mode ${mode}, map ${map}: no text for buff ${id}`)
+        if (!tiles.length) throw new Error(`Mode ${mode}, map ${map}: buff ${id} has no tiles`)
+        for (const hex of tiles) {
+          if (!grid.ally.includes(hex) && !grid.enemy.includes(hex)) {
+            throw new Error(
+              `Mode ${mode}, map ${map}: buff tile ${hex} is not an ally or enemy tile`,
+            )
+          }
+          if (buffed.has(hex)) {
+            throw new Error(`Mode ${mode}, map ${map}: tile ${hex} has two buffs`)
+          }
+          buffed.add(hex)
+        }
+      }
+    }
+  }
+  return lists
+}
+
+// Each mode's boards in board order, keyed as the Teams page's variants.
+export const MODE_BOARDS = loadModeLists()
+
+// The buffs a map carries on a mode's list; none for a map off it.
+export const modeBuffs = (mode: ModeListKey, mapKey: string): readonly TileBuff[] =>
+  MODE_BOARDS[mode].find((board) => board.map === mapKey)?.buffs ?? []
+
+// Every buff's tiles together, as a layout holds them.
+export const buffTilesOf = (buffs: readonly TileBuff[]): number[] =>
+  buffs.flatMap((buff) => buff.tiles)
+
 // Keyed by filename under src/data/arena/; the key is what `m` sections and
 // TEAM_MODES default lists reference.
 export const MAPS: Record<string, MapConfig> = Object.fromEntries(
   Object.entries(ARENAS).map(([key, json]) => [key, parseMapConfig(json)]),
 )
-
-// A map's buff tiles, ally tile first; none for a map without them.
-export const buffTiles = (mapKey: string): readonly number[] => ARENAS[mapKey]?.buffTiles ?? []
 
 // The map a board stands on when nothing names one: fresh contexts, mode
 // default lists, and boards restored without a resolvable key.
@@ -131,7 +187,11 @@ const tileKey = (hexId: number, state: State): string => `${hexId}:${availableSt
 
 const layoutKey = (tileKeys: string[]): string => tileKeys.sort().join(' ')
 
-const onTeamList = new Set(Object.values(variantMapLists).flat())
+const onTeamList = new Set(
+  Object.values(MODE_BOARDS)
+    .flat()
+    .map((board) => board.map),
+)
 
 const LAYOUTS = Object.entries(MAPS)
   .map(([key, config]) => ({
@@ -156,23 +216,36 @@ export const findMapByTiles = (tiles: readonly number[][]): string | undefined =
 
 // A board's tiles and buff tiles as the placement engine plans on them, under
 // the key it reads its seed, its cached fits and the enemies' pick rates by: a
-// preset's own key, or `edited:` and the layout for tiles no preset has.
+// preset's own key, or `edited:` and the layout for tiles no preset has. A
+// board's buff tiles come from the mode whose list it stands on, never from
+// the map alone.
 export interface MapLayout {
   key: string
   config: MapConfig
   buffTiles: readonly number[]
 }
 
-export const presetLayout = (key: string): MapLayout | undefined => {
+export const presetLayout = (
+  key: string,
+  buffTiles: readonly number[] = [],
+): MapLayout | undefined => {
   const config = MAPS[key]
-  return config && { key, config, buffTiles: buffTiles(key) }
+  return config && { key, config, buffTiles }
 }
 
-// The layout serialized `[hexId, state]` tiles stand on. A Map Editor map has
-// no buff tiles, since the editor cannot place them.
-export const tilesLayout = (tiles: readonly number[][]): MapLayout => {
+// A preset as a board of a mode stands on it, with the buff tiles it has on
+// that mode's list.
+export const modeLayout = (mode: ModeListKey, key: string): MapLayout | undefined =>
+  presetLayout(key, buffTilesOf(modeBuffs(mode, key)))
+
+// The layout serialized `[hexId, state]` tiles stand on, with a preset's buff
+// tiles. A Map Editor map has none, since the editor cannot place them.
+export const tilesLayout = (
+  tiles: readonly number[][],
+  buffTiles: readonly number[] = [],
+): MapLayout => {
   const preset = findMapByTiles(tiles)
-  if (preset) return presetLayout(preset)!
+  if (preset) return presetLayout(preset, buffTiles)!
   const byState = new Map<State, number[]>()
   for (const [hexId, state] of tiles) {
     if (hexId === undefined || state === undefined) continue
@@ -187,11 +260,15 @@ export const tilesLayout = (tiles: readonly number[][]): MapLayout => {
 }
 
 // The layout a live board's tiles stand on.
-export const gridLayout = (grid: Pick<Grid, 'getAllTiles'>): MapLayout =>
+export const gridLayout = (
+  grid: Pick<Grid, 'getAllTiles'>,
+  buffTiles: readonly number[] = [],
+): MapLayout =>
   tilesLayout(
     grid
       .getAllTiles()
       .flatMap((tile) => (tile.state === State.DEFAULT ? [] : [[tile.hex.getId(), tile.state]])),
+    buffTiles,
   )
 
 /* The map a serialized board stands on: its key when present, else the preset

@@ -153,6 +153,8 @@ Drag painting in `GridTiles` paints each hex once per drag and at most once ever
 
 Links and saved boards store every non-default tile, so an edited map round-trips exactly. A payload without a map key is matched to a preset by its tiles (`findMapByTiles`). An edited map matches none and keeps the board's current map key, which is what Clear returns to.
 
+The map dropdown in the Arena's tab bar, shown at 1,320 px and wider, lists every board of the Supreme League and Guild Duel lists ("SL Arena 3", "GD Arena 2"). A pick moves the board onto that map with the buffs it has on that mode's list ([Teams](./TEAMS.md#modes-and-types)), and the dropdown names the row picked. The Arena's saved board and its links carry no map key, so the pick is kept apart from them under `stargazer.arena.variant`, as plain text: the mode of the row picked, `sl` or `gd`, such as `gd`. A map is on a mode's list at most once, so the mode and the board's map give the row. The key is written on a pick and removed when the board becomes a plain map: a pick in the Maps tab, a tile edit, an opened link, or a saved team loaded onto another map. On load the pick holds only when the board's map is on that mode's list, and anything else reads as no pick. A plain map carries no buffs, and the dropdown then shows "Arena".
+
 ## Related documentation
 
 - [Companion Skills](./skills/COMPANION.md): companion spawn, rollback and removal

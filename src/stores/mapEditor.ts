@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 
+import { useArenaPick } from '@/composables/useArenaPick'
 import { State } from '@/lib/types/state'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
@@ -7,6 +8,8 @@ import { useGridStore } from './grid'
 export const useMapEditorStore = defineStore('mapEditor', () => {
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
+  // An edited board is no mode's map, so it carries no buffs.
+  const arenaPick = useArenaPick()
 
   // An occupant is removed first (its team could change under it). The refresh
   // at the end is for terrain-aware skill paint (zone membership, blocked
@@ -18,11 +21,13 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     }
     gridStore.setState(gridStore.getHexById(hexId), state)
     gridStore.refreshSkills()
+    arenaPick.drop()
   }
 
   const resetAllHexesToState = (state: State) => {
     characterStore.clearAllCharacters()
     gridStore.resetAllTiles(state)
+    arenaPick.drop()
   }
 
   const resetToCurrentMap = () => {

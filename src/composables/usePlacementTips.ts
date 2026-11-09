@@ -101,7 +101,7 @@ export function usePlacementTips(
     return at === 'artifact' || isAlly(at) ? at : null
   })
 
-  const layout = computed(() => gridLayout(ctx.grid))
+  const layout = computed(() => gridLayout(ctx.grid, ctx.buffTiles))
   const units = computed((): SlUnit[] =>
     [...ctx.placements]
       .filter(([hexId]) => isAlly(hexId))
@@ -109,7 +109,8 @@ export function usePlacementTips(
       .sort(([a], [b]) => a - b),
   )
   const sideKey = computed(
-    () => `${layout.value.key}|${ctx.artifacts.ally}|${units.value.join(';')}`,
+    () =>
+      `${layout.value.key}|${layout.value.buffTiles.join(',')}|${ctx.artifacts.ally}|${units.value.join(';')}`,
   )
 
   // The answer for the side as it stood when asked, kept until the side changes.

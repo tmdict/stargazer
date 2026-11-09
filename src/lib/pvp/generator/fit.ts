@@ -8,7 +8,9 @@
  * them. A team recorded on the board's map is measured too: a few games there
  * do not show its effects work there, since a map's tiles can keep two of
  * them from both being met. Both placements leave out the
- * artifact and the enemy units' rules, so the share is the team's alone.
+ * artifact, the enemy units' rules and the buff tiles, so the share is the
+ * team's alone and a map's points are the same whichever mode's board asked
+ * for them.
  * The search on the board's map stops once its best placement keeps all of
  * them, since the share is capped there. A later start could still find a
  * placement the engine rates higher that keeps fewer, so a stopped search can
@@ -87,7 +89,7 @@ export function fitPoints(data: SlData, { heroes, from, home, board }: FitJob): 
   const team = teamOf(data, heroes)
   const placement = { ...data.placement, pickRates: {} }
   const points = (layout: MapLayout, enough?: number): number =>
-    effectPoints(team, layout, placement, PLACEMENT_LOOKUPS, enough)
+    effectPoints(team, { ...layout, buffTiles: [] }, placement, PLACEMENT_LOOKUPS, enough)
   const before = home ?? points(presetLayout(data.maps[from]!.key)!)
   return { home: before, board: before > 0 ? points(board, before) : null }
 }

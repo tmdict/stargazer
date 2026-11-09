@@ -2,44 +2,50 @@
 import { computed } from 'vue'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
+import { useArenaPick } from '@/composables/useArenaPick'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const gridStore = useGridStore()
+const grids = useGrids()
 const i18nStore = useI18nStore()
+const arenaPick = useArenaPick()
 
 // Quick-select slots: one row per map of every registered team type, so a
 // season rotation in the registry updates the entries by itself. One map can
 // back several slots (SL Arena 1 and GD Arena 1 are both arena1), so entries
-// key by label and every slot backed by the current map highlights.
+// key by label.
 const quickMaps = computed(() => {
   const arena = i18nStore.t('app.arena')
   return Object.values(TEAM_VARIANTS).flatMap((variant) =>
     variant.maps.map((key, i) => ({
       label: `${variant.key.toUpperCase()} ${arena} ${i + 1}`,
+      mode: variant.key,
       key,
     })),
   )
 })
 
-// The first matching slot names the trigger; a map picked outside this list
-// (the Maps tab offers every preset) falls back to the generic label.
-const currentLabel = computed(
-  () => quickMaps.value.find((m) => m.key === gridStore.currentMap)?.label,
-)
+// The row picked names the trigger while the board stays on its map; a board
+// on a plain map (a Maps tab pick, an edited map, a link) shows the generic
+// label.
+const picked = computed(() => {
+  const pick = grids.arenaPick
+  if (!pick || grids.active?.currentMap !== pick.map) return undefined
+  return quickMaps.value.find((m) => m.mode === pick.mode && m.key === pick.map)
+})
 
 const items = computed((): DropdownItem[] =>
   quickMaps.value.map((m) => ({
     key: m.label,
     label: m.label,
-    selected: m.key === gridStore.currentMap,
+    selected: m === picked.value,
   })),
 )
 
 const select = (label: string): void => {
-  const map = quickMaps.value.find((m) => m.label === label)
-  if (map) gridStore.moveToMap(map.key)
+  const row = quickMaps.value.find((m) => m.label === label)
+  if (row) arenaPick.pick(row.mode, row.key)
 }
 </script>
 
@@ -47,7 +53,7 @@ const select = (label: string): void => {
   <DropdownSelect
     class="arena-dropdown"
     variant="tab"
-    :label="currentLabel ?? i18nStore.t('app.arena')"
+    :label="picked?.label ?? i18nStore.t('app.arena')"
     :items
     @select="select"
   />

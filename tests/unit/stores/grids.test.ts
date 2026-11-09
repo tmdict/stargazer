@@ -8,7 +8,9 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { MODE_BOARDS, modeBuffs } from '@/lib/maps'
 import { unitSkillKey } from '@/lib/skills/skill'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { BoardLineup, TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
@@ -148,6 +150,43 @@ describe('useGrids.swapBoards', () => {
     expect(destPhraesto[0]!.team).toBe(Team.ALLY)
     expect(destCompanion).toHaveLength(1)
     expect(destCompanion[0]!.team).toBe(Team.ALLY)
+  })
+})
+
+describe('useGrids board buffs', () => {
+  // A map on both lists, buffed on at least one, tells the two modes apart.
+  const shared = MODE_BOARDS.gd.find(
+    ({ map, buffs }) => buffs && TEAM_VARIANTS.sl.maps.includes(map),
+  )!.map
+
+  it("gives a set its mode's buffs only while its maps match that list as a whole", () => {
+    const grids = useGrids()
+    grids.setGridCount(TEAM_VARIANTS.sl.maps.length, TEAM_VARIANTS.sl.maps)
+    expect(grids.contexts.map((ctx) => ctx.buffs)).toEqual(
+      TEAM_VARIANTS.sl.maps.map((map) => modeBuffs('sl', map)),
+    )
+    expect(grids.contexts.some((ctx) => ctx.buffTiles.length > 0)).toBe(true)
+
+    // Board 1 on board 2's map: the set reads as custom maps.
+    grids.moveToMap(grids.contexts[0]!, TEAM_VARIANTS.sl.maps[1]!)
+    expect(grids.contexts.every((ctx) => ctx.buffs.length === 0)).toBe(true)
+  })
+
+  it("gives the Arena's board a pick's buffs only while it stays on the map picked", () => {
+    const { grids, a: ctx } = setupBoards(1)
+    grids.moveToMap(ctx, shared)
+    expect(ctx.buffs).toEqual([])
+
+    grids.arenaPick = { mode: 'gd', map: shared }
+    expect(ctx.buffs).toEqual(modeBuffs('gd', shared))
+    grids.arenaPick = { mode: 'sl', map: shared }
+    expect(ctx.buffs).toEqual(modeBuffs('sl', shared))
+
+    grids.moveToMap(ctx, 'arena2')
+    expect(ctx.buffs).toEqual([])
+    grids.setGridCount(1, [shared])
+    expect(grids.arenaPick).toBeNull()
+    expect(grids.active!.buffs).toEqual([])
   })
 })
 
