@@ -1,12 +1,13 @@
 <script setup lang="ts">
 /* The popup about the move: the new address, what a hand-over brought or why
    it could not, and the ways to fetch data still at the old address. What a
-   full hand-over brought is told once, in the popup that opens as it arrives. */
+   full hand-over brought is told once, in the popup that opens as it arrives;
+   opened from the banner, the popup offers the hand-over again. */
 
 import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
-import { MOVE_STAGE, RECOVERY_URL, type HandOverResult } from '@/lib/move/config'
+import { RECOVERY_URL, type HandOverResult } from '@/lib/move/config'
 import { SITE_HOST } from '@/lib/site'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -49,12 +50,12 @@ const arrivedList = computed(() =>
     : '',
 )
 
-// The files are for data a hand-over left behind. Before any hand-over they
-// are offered as a backup only while the old address still serves its pages;
-// after that the one-click transfer comes first.
-const filesOffered = computed(() =>
-  props.result ? !props.result.ok || left.value : MOVE_STAGE === 1,
-)
+// The files are for data a hand-over left behind.
+const filesOffered = computed(() => !!props.result && (!props.result.ok || left.value))
+
+// A full library has no room for another hand-over, and the popup that tells
+// what arrived has nothing more to bring.
+const bringOffered = computed(() => !props.result?.ok || (!props.onArrival && !left.value))
 </script>
 
 <template>
@@ -73,10 +74,9 @@ const filesOffered = computed(() =>
       <p v-if="left">{{ i18n.t('app.move-left', { list: leftList }) }}</p>
     </template>
     <p v-else-if="result && !result.ok">{{ i18n.t('app.move-failed') }}</p>
-    <p v-else-if="!result && MOVE_STAGE === 1">{{ i18n.t('app.move-backup') }}</p>
 
-    <template v-if="MOVE_STAGE === 2 && !result?.ok">
-      <p v-if="!result">{{ i18n.t('app.move-bring-hint') }}</p>
+    <template v-if="bringOffered">
+      <p v-if="!result || result.ok">{{ i18n.t('app.move-bring-hint') }}</p>
       <p>
         <button type="button" class="solid-btn move-bring" @click="emit('bring')">
           {{ i18n.t('app.move-bring') }}

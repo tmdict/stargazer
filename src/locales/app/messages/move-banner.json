@@ -1,5 +1,5 @@
 {
-  "en": "Stargazer has moved to {site}.",
-  "zh": "Stargazer 已迁移至 {site}。",
-  "ko": "Stargazer가 {site}으로 이전했습니다."
+  "en": "Stargazer has moved to {site}. Don't see your saved teams? Click here to bring them over.",
+  "zh": "Stargazer 已迁移至 {site}。没看到保存的阵容？点击此处迁移。",
+  "ko": "Stargazer가 {site}으로 이전했습니다. 저장한 진형이 보이지 않나요? 여기를 눌러 가져오세요."
 }

@@ -16,7 +16,6 @@ import {
   REQUEST_WINDOW_MS,
   type HandOverResult,
 } from '@/lib/move/config'
-import { readFlag } from '@/utils/flags'
 import { readPrefs } from '@/utils/prefs'
 
 /* The router reads the address as it is created, so the code leaves the
@@ -92,17 +91,15 @@ export function useMove() {
 
   // After mount, so the first render matches the pre-rendered page.
   onMounted(() => {
-    bannerShown.value = result.value !== null || readFlag('moved') === null
+    bannerShown.value = true
     popupOnArrival.value = result.value !== null
     popupShown.value = popupOnArrival.value
   })
 
-  // The banner belongs to the first page of a visit, and the popup must not
-  // stay open over another page. The app mounts before its first route
-  // resolves, and that first resolve is not a change of page.
+  // The popup must not stay open over another page. The app mounts before its
+  // first route resolves, and that first resolve is not a change of page.
   router.afterEach((to, from) => {
     if (!from.matched.length || to.path === from.path) return
-    bannerShown.value = false
     popupShown.value = false
   })
 

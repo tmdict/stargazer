@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* The first page's notice that the site moved: a bar under the header that
-   opens the popup. */
+/* The notice that the site moved: a bar under the header that opens the
+   popup. */
 
 import { computed } from 'vue'
 

@@ -5,9 +5,9 @@
 export const OLD_HOST = 'stargazer.tmdict.com'
 
 /* 1: an old page hands the visitor's data over as it opens. 2: the old address
- * answers with redirects, and the banner offers the hand-over in one click.
- * public/_redirects carries the old address's redirect rule in stage 2 only,
- * which the build checks. */
+ * answers with redirects. In both, the banner's popup offers the hand-over in
+ * one click. public/_redirects carries the old address's redirect rule in
+ * stage 2 only, which the build checks. */
 export const MOVE_STAGE: 1 | 2 = 1
 
 export const RECOVERY_URL = `https://${OLD_HOST}/backup`
