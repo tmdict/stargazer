@@ -1,10 +1,7 @@
 https://afkj-stargazer.netlify.app/* https://afkstargazer.com/:splat 301!
 # The old address's recovery page; the app's fallback would otherwise answer.
 https://stargazer.tmdict.com/backup /move-recovery.html 200!
-# Skill pages at the old address, which search engines list most: a permanent
-# redirect ahead of the rest of the old address.
-https://stargazer.tmdict.com/skills https://afkstargazer.com/skills 301!
-https://stargazer.tmdict.com/:locale/skill/* https://afkstargazer.com/:locale/skill/:splat 301!
+https://stargazer.tmdict.com/* https://afkstargazer.com/:splat 301!
 # Retired page; its content lives on as the in-app About modal.
 /en/about / 301
 /zh/about / 301

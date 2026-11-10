@@ -8,7 +8,7 @@ export const OLD_HOST = 'stargazer.tmdict.com'
  * answers with redirects. In both, the banner's popup offers the hand-over in
  * one click. public/_redirects carries the old address's redirect rule in
  * stage 2 only, which the build checks. */
-export const MOVE_STAGE: 1 | 2 = 1
+export const MOVE_STAGE: 1 | 2 = 2
 
 export const RECOVERY_URL = `https://${OLD_HOST}/backup`
 
