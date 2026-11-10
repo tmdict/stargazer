@@ -34,7 +34,7 @@ export interface SkillLocaleDef {
 }
 
 // Table order is menu order. Adding a language is a one-row edit here, once
-// the data pack holds its skill text; the data export, the data step, routes,
+// the data pack holds its skill text; a pack update, the data step, routes,
 // SSG route list, hreflang, and the menu all derive from this table.
 export const SKILL_LOCALES = [
   { code: 'en', native: 'English' },

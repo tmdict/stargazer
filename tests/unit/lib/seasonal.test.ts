@@ -16,7 +16,7 @@ import { normalizeTeamPayload } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { canonicalTeamData, teamContentKey } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadPhantimals } from '@/utils/dataLoader'
+import { loadArtifacts, loadCharms, loadPhantimals } from '@/utils/dataLoader'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
@@ -138,6 +138,9 @@ describe('season data contract', () => {
     }
     for (const phantimal of loadPhantimals()) {
       expect(phantimal.season).toBe(CURRENT_SEASON)
+    }
+    for (const charm of loadCharms()) {
+      expect(charm.season).toBe(CURRENT_SEASON)
     }
   })
 

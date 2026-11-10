@@ -21,8 +21,8 @@ export interface PlacementData {
   lists: Record<string, ListEntry[]>
   leans: { front: number[]; back: number[] }
   weights: Record<string, number>
-  // For each map, the share of the Supreme League board sides recorded there
-  // that each enemy hero with a rule against us is on, by hero id.
+  // For each map, the share of the board sides recorded there, in every
+  // format, that each enemy hero with a rule against us is on, by hero id.
   pickRates: Record<string, Record<string, number>>
 }
 

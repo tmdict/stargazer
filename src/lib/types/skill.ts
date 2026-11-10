@@ -62,7 +62,7 @@ export interface SkillTerms {
   initialEnergy: string
 }
 
-// On-disk shape of src/pack/text/skill/numbers.json (written by the data export):
+// On-disk shape of src/pack/text/skill/numbers.json (written by a pack update):
 // hero slug → slot → the numbers shown with that skill. Only displayable
 // values are written, so the app renders whatever is present. Cooldowns are
 // seconds, range is tiles.
@@ -95,13 +95,13 @@ export interface SkillCharms {
   charms: Record<string, string[]>
 }
 
-// On-disk shape of src/pack/text/skill/<lang>/_artifacts.json (written by the
-// data export): artifact name → its name and effect text in that language,
+// On-disk shape of src/pack/text/skill/<lang>/_artifacts.json (written by a
+// pack update): artifact name → its name and effect text in that language,
 // `levels[i]` being level i+1. Covers the permanent and the seasonal set.
 export type SkillArtifacts = Record<string, { name: string; levels: string[] }>
 
-// On-disk shape of src/pack/text/skill/<lang>/_phantimals.json (written by the
-// data export): phantimal name → its name and skills in that language, each
+// On-disk shape of src/pack/text/skill/<lang>/_phantimals.json (written by a
+// pack update): phantimal name → its name and skills in that language, each
 // skill's `levels[i]` being level i+1. Absent once the season is retired.
 export type SkillPhantimals = Record<
   string,
@@ -120,7 +120,7 @@ export interface SkillLanguage {
   phantimals: SkillPhantimals
 }
 
-// On-disk shape of src/data/seasonal/charm/<id>.json: the data export writes
+// On-disk shape of src/data/seasonal/charm/<id>.json: a pack update writes
 // the id, season and the heroes sharing the charm, and keeps the fields
 // written by hand within the season. The inverse hero → charm lookup is
 // derived at load time.

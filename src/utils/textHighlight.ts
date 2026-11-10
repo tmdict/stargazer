@@ -7,7 +7,7 @@ const STAT_LABEL: Record<string, string> = {
   hp: 'HP',
 }
 
-// Skill-text token grammar; searchHighlight, vite.config.ts and the data export
+// Skill-text token grammar; searchHighlight, vite.config.ts and a pack update
 // import these rather than mirroring them.
 export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
 export const STAT_TAG_RE = /\{([a-z]+)\}/g

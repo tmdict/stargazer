@@ -38,4 +38,19 @@ describe('placement lists', () => {
     const lists = Object.keys(placement.lists).map((name) => `rules-list-${name}`)
     expect(named.filter((key) => !lists.includes(key))).toEqual([])
   })
+
+  // The engine leaves out a rule whose list or weight the data pack lacks,
+  // without a word, while the rules page still shows it.
+  it('and the weights hold everything a rule names', () => {
+    const missing = rules.flatMap((rule) => {
+      const list = goalList(rule.goal)
+      return [
+        ...(list !== undefined && !placement.lists[list] ? [`list ${list}`] : []),
+        ...(rule.weight !== undefined && placement.weights[rule.weight] === undefined
+          ? [`weight ${rule.weight}`]
+          : []),
+      ]
+    })
+    expect(missing).toEqual([])
+  })
 })

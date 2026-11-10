@@ -1,6 +1,6 @@
 // Charm data integrity: the generated charm files and locale files must
 // stay mutually consistent, and every referenced hero must exist in the
-// hero list. Guards the data export's charm outputs the UI consumes without
+// hero list. Guards a pack update's charm outputs the UI consumes without
 // runtime checks.
 import { beforeAll, describe, expect, it } from 'vitest'
 
@@ -9,7 +9,7 @@ import { APP_LOCALES } from '@/lib/types/i18n'
 import type { CharmData } from '@/lib/types/skill'
 import { getSkillCharms, loadAppLocales, loadCharacters, loadSkillLocale } from '@/utils/dataLoader'
 
-// A season between charm feeds has no charm file.
+// A season whose charms the data pack does not hold yet has no charm file.
 const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
   eager: true,
   import: 'default',
@@ -23,8 +23,8 @@ describe('charm data', () => {
   })
 
   // A season can ship before its charm text, so no charm file is legitimate
-  // (the export retires charms with their season); charm files without text, or
-  // text without charm files, is a half-written export.
+  // (a pack update retires charms with their season); charm files without text,
+  // or text without charm files, is a half-applied pack update.
   it('is either fully present or fully retired', () => {
     for (const lang of APP_LOCALES) {
       expect(getSkillCharms(lang) !== null, `${lang} _charms.json vs the charm files`).toBe(

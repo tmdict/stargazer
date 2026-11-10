@@ -240,7 +240,7 @@ export function packProblems(
     }
   }
 
-  // The data export writes every language's artifact and phantimal text
+  // A pack update writes every language's artifact and phantimal text
   // alike, so English answers for all.
   const textIn = (file: string): Record<string, unknown> => {
     const path = join(pack, SKILL, 'en', file)
