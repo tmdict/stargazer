@@ -9,7 +9,8 @@
  * Marks go out one at a time, the phantimal's first and then its companions',
  * each to the first unit in its chain that can take one: a hero or a hero's
  * companion, never a phantimal or a phantimal's companion. A unit holds one
- * mark, so a marked unit is passed over by the marks after it.
+ * mark, so a marked unit is passed over by the marks after it. Marked units
+ * are told apart by tile: a placeholder's copies share one unit id.
  *
  * A team fields one phantimal, so one spiritMarkTiles call gives out all of a
  * team's marks. The registry holds one skill per id, so a phantimal that already
@@ -37,10 +38,10 @@ export function spiritMarkTiles(
     const info = findAdjacentPriorityTarget(
       from,
       chain,
-      (unitId) => !inPhantimalBand(unitId) && !marked.has(unitId),
+      (unitId, hexId) => !inPhantimalBand(unitId) && !marked.has(hexId),
     )
     if (!info?.targetHexId || info.targetCharacterId === null) return []
-    marked.add(info.targetCharacterId)
+    marked.add(info.targetHexId)
     return [
       { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR },
       { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, fill: true },

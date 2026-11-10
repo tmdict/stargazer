@@ -687,9 +687,10 @@ export function useImportEngine(session: ShotSession): ImportEngine {
   const adding = ref(0)
 
   /* Each file is sorted, then placed by the import: read as the kind it
-   * gives, or turned away. A file already among the shots is skipped. One at
-   * a time, so the shots keep the files' order. Adding stops when the import
-   * closes. */
+   * gives, or turned away. A file already among the shots is skipped, unless
+   * its shot failed for a reason outside the file, which adding it again reads
+   * once more. One at a time, so the shots keep the files' order. Adding stops
+   * when the import closes. */
   const addFiles = async <K extends ImportKind, S extends EngineShot>(
     files: File[],
     { replay, place, add }: Intake<K, S>,
@@ -707,7 +708,20 @@ export function useImportEngine(session: ShotSession): ImportEngine {
     try {
       for (const file of files) {
         if (!open()) break
-        if (session.shots().some((s) => s.name === file.name && s.size === file.size)) {
+        const same = session.shots().find((s) => s.name === file.name && s.size === file.size)
+        if (same) {
+          if (same.error === 'worker' || same.error === 'references') {
+            const again = await decodeFile(file)
+            try {
+              if (!open()) break
+              dropShot(same.id)
+              same.status = 'waiting'
+              same.error = null
+              queueShot(same, again)
+            } finally {
+              again?.close()
+            }
+          }
           settle()
           continue
         }

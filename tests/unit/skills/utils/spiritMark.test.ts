@@ -106,6 +106,12 @@ describe('phantimal Spirit Mark skills', () => {
       expect(markedTiles()).toEqual([9, 13])
     })
 
+    it('marks a second copy of a placeholder, which shares the unit id of the first', () => {
+      placeOnTile(grid, 9, 100, Team.ALLY)
+      placeOnTile(grid, 13, 100, Team.ALLY)
+      expect(markedTiles()).toEqual([9, 13])
+    })
+
     it('draws no second mark when the only hero in its chain holds one', () => {
       placeOnTile(grid, 9, 100, Team.ALLY)
       expect(markedTiles()).toEqual([9])

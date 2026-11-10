@@ -102,7 +102,7 @@ const {
   setInput: setRenameInput,
   start,
   commit: commitRename,
-  cancel: cancelRename,
+  onKeydown: renameKeydown,
 } = useInlineRename({
   currentName: () => sourceName,
   rename: (_key, name) => emit('rename', name),
@@ -136,8 +136,7 @@ const {
           :maxlength="MAX_NAME_LENGTH"
           spellcheck="false"
           :aria-label="i18n.t('app.team-name')"
-          @keydown.enter.prevent="commitRename"
-          @keydown.esc="cancelRename"
+          @keydown="renameKeydown"
           @blur="commitRename"
         />
         <template v-else>

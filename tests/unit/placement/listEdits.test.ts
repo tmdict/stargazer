@@ -75,6 +75,15 @@ describe('A list the site changed since the visitor did', () => {
     expect(siteChanged('buff', SITE, { buff: [1, 2] }, SITE)).toBe(false)
   })
 
+  it('stops counting for a list the site came to match', () => {
+    const edits = readListEdits(
+      stored({ buff: { entries: [1, 2, 3], site: [3, 2, 1] } }),
+      SITE,
+      HEROES,
+    )
+    expect(edits.since).toEqual({})
+  })
+
   it('is told even when the site’s old version brought in a list the site no longer has', () => {
     const edits = readListEdits(
       stored({ buff: { entries: [2, 1, 3], site: [1, 2, 3, { list: 'gone' }] } }),

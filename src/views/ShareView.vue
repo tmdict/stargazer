@@ -42,10 +42,13 @@ const linkAtLoad = encodedAtLoad !== null ? decodeLinkFromUrl(encodedAtLoad) : n
 const isMultiBoard = ref(linkAtLoad !== null && linkAtLoad.mode !== 'arena')
 
 // Multi reuses the Teams board sizing; single keeps the Arena breakpoint sizing.
+// The single board is rebuilt so it shows what the link carries, without the
+// map pick or the hidden skills of the page that opened it; multi rebuilds on
+// restore.
 if (isMultiBoard.value) {
   grids.hexSizeMode = 'fixed-medium'
 } else {
-  if (grids.contexts.length !== 1) grids.setGridCount(1)
+  grids.setGridCount(1)
   grids.hexSizeMode = 'breakpoint'
 }
 // The viewer opens flat, and a lift made on the page that opened it would

@@ -98,7 +98,7 @@ function straightHexId(
 export function findAdjacentPriorityTarget(
   context: SkillContext,
   direction: TargetDirection = 'behind',
-  isCandidate: (characterId: number) => boolean = () => true,
+  isCandidate: (characterId: number, hexId: number) => boolean = () => true,
 ): SkillTargetInfo | null {
   const { grid, hexId, characterId, team } = context
   const centerHex = grid.getHexById(hexId)
@@ -116,7 +116,7 @@ export function findAdjacentPriorityTarget(
       tile?.characterId !== undefined &&
       tile.team === team &&
       tile.characterId !== characterId &&
-      isCandidate(tile.characterId)
+      isCandidate(tile.characterId, tile.hex.getId())
     ) {
       return {
         targetHexId: tile.hex.getId(),

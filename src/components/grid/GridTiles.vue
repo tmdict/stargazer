@@ -101,8 +101,10 @@ const textTransform = (hex: Hex) => {
 const getHexFill = (hex: Hex) => {
   const baseFill = getTileFillColor(ctx.grid.getTile(hex).state)
   if (props.showSkills) {
-    const fills = ctx.getTileFillModifier(hex.getId())
-    if (fills) return `color-mix(in srgb, ${fills[0]} ${SKILL_FILL_PERCENT}%, ${baseFill})`
+    // Sorted, so a tile two skills fill shows the same one of their colours
+    // whatever order the units were placed in.
+    const fill = [...(ctx.getTileFillModifier(hex.getId()) ?? [])].sort()[0]
+    if (fill) return `color-mix(in srgb, ${fill} ${SKILL_FILL_PERCENT}%, ${baseFill})`
   }
   return baseFill
 }

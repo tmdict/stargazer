@@ -238,6 +238,7 @@ const generate = async (): Promise<void> => {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker or here.
     shown.value = null
+    noSet.value = 0
     failed.value = true
   } finally {
     busy.value = false

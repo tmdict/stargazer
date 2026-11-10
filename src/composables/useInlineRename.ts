@@ -1,6 +1,7 @@
 import { nextTick, ref } from 'vue'
 
 import { sanitizeName } from '@/lib/names'
+import { isComposing } from '@/utils/keyboard'
 
 /* Inline rename edit state: one input at a time, focused and pre-selected on
  * entry; Enter/blur commit, Esc cancels. `key` distinguishes sibling targets
@@ -46,5 +47,16 @@ export function useInlineRename(options: {
     editingKey.value = null
   }
 
-  return { editingKey, editingName, setInput, start, commit, cancel }
+  // For a field with no key handling of its own.
+  const onKeydown = (event: KeyboardEvent): void => {
+    if (isComposing(event)) return
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      commit()
+    } else if (event.key === 'Escape') {
+      cancel()
+    }
+  }
+
+  return { editingKey, editingName, setInput, start, commit, cancel, onKeydown }
 }

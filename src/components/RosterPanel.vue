@@ -62,7 +62,7 @@ const {
   setInput,
   start: startRename,
   commit: commitRename,
-  cancel: cancelRename,
+  onKeydown: renameKeydown,
 } = useInlineRename({
   currentName: (id) => rosters.rosters.find((r) => r.id === id)?.name,
   rename: (id, name) => {
@@ -85,8 +85,7 @@ const {
             class="roster-name-input"
             :maxlength="MAX_NAME_LENGTH"
             :aria-label="i18n.t('app.rename')"
-            @keydown.enter="commitRename"
-            @keydown.esc="cancelRename"
+            @keydown="renameKeydown"
             @blur="commitRename"
           />
           <RenameButton

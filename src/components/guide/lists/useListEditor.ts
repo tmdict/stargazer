@@ -85,6 +85,9 @@ export function createListEditor(current: Readonly<Ref<string>>, events: ListEdi
       names.value.map((name) => [name, listLayout(lists.value, name, heroesMatching)]),
     ),
   )
+  // Each hero's place on the site's own version of a list.
+  const sitePlaces = (name: string): Map<number, number> =>
+    listLayout(SITE_LISTS, name, heroesMatching).places
   const problems = computed<Record<string, ListProblem[]>>(() =>
     Object.fromEntries(names.value.map((name) => [name, listProblems(lists.value, name)])),
   )
@@ -303,6 +306,7 @@ export function createListEditor(current: Readonly<Ref<string>>, events: ListEdi
     flashKey,
     names,
     layouts,
+    sitePlaces,
     problems,
     changed,
     sendable,

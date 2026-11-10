@@ -114,6 +114,7 @@ export function usePlacementTips(
   )
 
   // The answer for the side as it stood when asked, kept until the side changes.
+  // A request that failed keeps none, so the next unit pointed at asks again.
   const answer = shallowRef<{ key: string; why: PlacementExplanation | null } | null>(null)
   let asked: string | null = null
   watch(
@@ -121,11 +122,12 @@ export function usePlacementTips(
     async (key) => {
       if (key === null || key === answer.value?.key || key === asked) return
       asked = key
-      let why: PlacementExplanation | null = null
+      let why: PlacementExplanation | null
       try {
         why = await explain(layout.value, units.value, ctx.artifacts.ally)
       } catch {
-        why = null
+        if (asked === key) asked = null
+        return
       }
       if (asked !== key) return
       asked = null

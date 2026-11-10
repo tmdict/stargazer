@@ -93,7 +93,8 @@ const place = (item: { place: number; counted?: boolean }): string =>
 
 const movedTag = computed(() => {
   if (change?.kind !== 'moved') return ''
-  return change.was === row.index + 1 ? t('lists-moved-tag') : t('lists-was', { n: change.was })
+  const at = row.kind === 'hero' ? row.hero.place : row.index + 1
+  return change.was && change.was !== at ? t('lists-was', { n: change.was }) : t('lists-moved-tag')
 })
 </script>
 

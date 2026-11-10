@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import type { HeroReading } from '@/lib/import/card/types'
 import type { MatchupPanel, MatchupTeam } from '@/lib/import/screens/matchup/types'
-import { buildWwwImportPlan, shotToCheck, type WwwShotInput } from '@/lib/pvp/www/wwwImport'
+import {
+  buildWwwImportPlan,
+  cardKey,
+  shotToCheck,
+  type WwwShotInput,
+} from '@/lib/pvp/www/wwwImport'
 import { createImage } from '../fixtures/image'
 
 const hero = (characterId: number, { sure = true, paragon = 0 } = {}): HeroReading => ({
@@ -94,6 +99,18 @@ describe('buildWwwImportPlan', () => {
     expect(kept).toMatchObject({ characterId: 11, state: 'sure', issues: [] })
     expect(differ).toMatchObject({ characterId: 12, doubtful: ['paragon'], issues: ['differ'] })
     expect(plan.blocked).toBe(true)
+  })
+
+  it('asks nothing about the levels of a card removed in every screenshot', () => {
+    const again = game(1)
+    again.blue.cards![0] = hero(11, { paragon: 3 })
+    const removed = { [cardKey(0, 'blue', 0)]: { characterId: null } }
+    const plan = buildWwwImportPlan([
+      { ...shot('one', [game(1)]), overrides: removed },
+      { ...shot('two', [again]), overrides: removed },
+    ])
+    expect(plan.games[0]!.a.slots[0]).toMatchObject({ characterId: null, issues: [] })
+    expect(plan.blocked).toBe(false)
   })
 
   it('leaves an empty slot empty, with nothing to check', () => {

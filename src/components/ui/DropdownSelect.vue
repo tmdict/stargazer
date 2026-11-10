@@ -132,12 +132,20 @@ const clearing = computed(() => clearable && lit)
 // Pressing the clear button uncovers the trigger under the pointer; hover
 // stays off until the pointer leaves, or the list would reopen at once.
 let hoverPaused = false
+// The pointer leaving mid-rename must not close the list under the field, so
+// the leave waits for the rename to end.
+let leftMidRename = false
+const enterList = (): void => {
+  leftMidRename = false
+  onMouseEnter()
+}
 const hoverTrigger = (): void => {
+  leftMidRename = false
   if (!clickOnly && !hoverPaused) onMouseEnter()
 }
-// The pointer leaving mid-rename must not close the list under the field.
 const leaveList = (): void => {
   if (editingKey.value === null) onMouseLeave()
+  else leftMidRename = true
 }
 const leave = (): void => {
   hoverPaused = false
@@ -186,8 +194,13 @@ const renameEsc = (e: KeyboardEvent): void => {
   if (!isComposing(e)) endRename(cancelRename)
 }
 watch(editingKey, (key) => {
-  if (key === null) window.removeEventListener('keydown', renameEsc, true)
-  else window.addEventListener('keydown', renameEsc, true)
+  if (key !== null) {
+    window.addEventListener('keydown', renameEsc, true)
+    return
+  }
+  window.removeEventListener('keydown', renameEsc, true)
+  if (leftMidRename) onMouseLeave()
+  leftMidRename = false
 })
 onUnmounted(() => window.removeEventListener('keydown', renameEsc, true))
 
@@ -217,7 +230,7 @@ const tabOutOfList = (e: KeyboardEvent): void => {
 // it for an outside click and close.
 const listEvents = floating
   ? {
-      mouseenter: onMouseEnter,
+      mouseenter: enterList,
       mouseleave: leaveList,
       keydown: tabOutOfList,
       click: (e: MouseEvent) => e.stopPropagation(),

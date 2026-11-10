@@ -213,7 +213,7 @@ const {
   setInput: setNameInput,
   start,
   commit: commitRename,
-  cancel: cancelRename,
+  onKeydown: renameKeydown,
 } = useInlineRename({
   currentName: (id) => library.get(id)?.name,
   rename: (id, name) => {
@@ -468,8 +468,7 @@ const actionTipText = computed((): string => {
             type="text"
             :maxlength="MAX_NAME_LENGTH"
             spellcheck="false"
-            @keydown.enter.prevent="commitRename"
-            @keydown.esc="cancelRename"
+            @keydown="renameKeydown"
             @blur="commitRename"
           />
           <template v-else>

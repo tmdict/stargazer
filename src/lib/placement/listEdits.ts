@@ -174,7 +174,13 @@ export function readListEdits(
       continue
     }
     edits.lists[name] = mine.entries
-    edits.since[name] = (isRecord(stored) && readEntries(stored.site)?.entries) || [...site[name]!]
+    // A list the site now matches is no longer an edit, so the next change to
+    // it starts from the site's list now.
+    if (!sameEntries(mine.entries, site[name]!)) {
+      edits.since[name] = (isRecord(stored) && readEntries(stored.site)?.entries) || [
+        ...site[name]!,
+      ]
+    }
     if (mine.dropped) edits.notes.push({ kind: 'heroes', list: name, count: mine.dropped })
   }
   return edits

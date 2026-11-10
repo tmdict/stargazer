@@ -31,9 +31,10 @@ const other = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
 
 /* Who Would Win?'s games, the mode that shows them and the slot the hero grid
  * fills next. One game shows game 1 and Match all five, and the page's buttons
- * act on the games shown. In Match a side fields each hero and each artifact
- * once, as a player does in a match, so its pickers leave out what it fields
- * in its other games. A hero added to Team A starts at the active roster's
+ * act on the games shown. A side fields each hero and each artifact once over
+ * the five games, as a player does in a match, so its pickers leave out what
+ * it fields in its other games, shown or not, and Swap sides swaps all five.
+ * A hero added to Team A starts at the active roster's
  * levels and one added to Team B at the top levels, as the generator treats a
  * visitor and their opponents. The games live in the page alone. */
 export function useWwwGames() {
@@ -54,12 +55,11 @@ export function useWwwGames() {
     showing.value.every((game) => SIDES.every((side) => heroIds({ game, side }).length > 0)),
   )
 
-  // What the side fields in Match's other games.
+  // What the side fields in its other games.
   const elsewhere = (at: { game: number; side: TeamSide }) => {
-    const teams =
-      mode.value === 'match'
-        ? showing.value.flatMap((game) => (game === at.game ? [] : [{ game, side: at.side }]))
-        : []
+    const teams = games.value.flatMap((_, game) =>
+      game === at.game ? [] : [{ game, side: at.side }],
+    )
     return {
       heroes: new Set(teams.flatMap(heroIds)),
       artifacts: new Set(teams.flatMap((team) => teamAt(team).artifact ?? [])),
@@ -71,8 +71,8 @@ export function useWwwGames() {
     return { paragon: record[ATTR_PARAGON] ?? 0, refinement: record[ATTR_REFINEMENT] ?? 0 }
   }
 
-  // The next empty slot after `from` on its team, then on its game's other
-  // team, then in the games shown after it.
+  // The next empty slot after `from` on its team, then the first on its game's
+  // other team, then in the games shown after it.
   const nextOpen = (from: WwwSlotAt): WwwSlotAt | null => {
     const order = showing.value
     const start = order.indexOf(from.game)
@@ -80,8 +80,9 @@ export function useWwwGames() {
       const game = order[(start + step) % order.length]!
       for (const side of [from.side, other(from.side)]) {
         const slots = teamAt({ game, side }).heroes
+        const after = step === 0 && side === from.side ? from.slot : -1
         for (let k = 1; k <= slots.length; k++) {
-          const slot = (from.slot + k) % slots.length
+          const slot = (after + k) % slots.length
           if (!slots[slot]) return { game, side, slot }
         }
       }
@@ -91,7 +92,7 @@ export function useWwwGames() {
 
   const setMode = (next: WwwMode): void => {
     mode.value = next
-    if (target.value && !showing.value.includes(target.value.game)) {
+    if (!target.value || !showing.value.includes(target.value.game)) {
       // From before game 1's first slot.
       target.value = nextOpen({ game: 0, side: 'a', slot: -1 })
     }
@@ -140,10 +141,7 @@ export function useWwwGames() {
   }
 
   const swapSides = (): void => {
-    for (const i of showing.value) {
-      const game = games.value[i]!
-      games.value[i] = { a: game.b, b: game.a }
-    }
+    games.value = games.value.map((game) => ({ a: game.b, b: game.a }))
     if (target.value) target.value = { ...target.value, side: other(target.value.side) }
   }
 

@@ -114,7 +114,8 @@ export const useGrids = defineStore('grids', () => {
   // arriving state with a synergy unit lands with the box checked.
   const synergy = ref(false)
   // What the Skills dropdown has turned off. Never serialized or persisted, so
-  // a reload or a share link shows every drawing.
+  // a reload or a share link shows every drawing, and every rebuild of the
+  // boards clears it.
   const hiddenSkills = shallowRef<ReadonlySet<string>>(new Set())
   // The Arena's map dropdown pick: the mode of the row picked and its map
   // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
@@ -216,6 +217,7 @@ export const useGrids = defineStore('grids', () => {
     const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
     arenaPick.value = null
+    hiddenSkills.value = new Set()
     contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
         hexSize,

@@ -25,6 +25,7 @@ const name = computed(() => editor.current.value)
 const entries = computed(() => editor.lists.value[name.value] ?? [])
 const layout = computed(() => editor.layouts.value[name.value]!)
 const diff = computed(() => editor.diffOf(name.value))
+const sitePlaces = computed(() => editor.sitePlaces(name.value))
 const changed = computed(() => editor.isChanged(name.value))
 const problems = computed(() => editor.problems.value[name.value] ?? [])
 
@@ -63,7 +64,11 @@ const rows = computed(() => {
     const key = entryKey(entry)
     const times = seen.get(key) ?? 0
     seen.set(key, times + 1)
-    const was = diff.value.moved.get(key)
+    // A hero was at its place among the heroes, which a list brought in above
+    // it sets apart from its entry's number; 0 is below the line.
+    const moved = diff.value.moved.get(key)
+    const was =
+      moved !== undefined && row.kind === 'hero' ? (sitePlaces.value.get(row.hero.id) ?? 0) : moved
     const hero = row.kind === 'hero' ? heroOf(row.hero.id) : undefined
     return {
       row,
