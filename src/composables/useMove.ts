@@ -48,6 +48,8 @@ const takeRequest = (): boolean => {
 }
 
 const result = shallowRef<HandOverResult | null>(null)
+// Whether the visitor asked for the hand-over that arrived, with the popup's button.
+const resultRequested = ref(false)
 const bannerShown = ref(false)
 const popupShown = ref(false)
 // Whether the popup is the one that opened by itself as a hand-over arrived.
@@ -63,6 +65,7 @@ export async function startMove(pinia: Pinia): Promise<void> {
   // answer does not vouch for a later link.
   const requested = takeRequest()
   if (arrivalCode === null) return
+  resultRequested.value = requested
   try {
     const { applyHandOver } = await import('@/lib/move/receive')
     result.value = await applyHandOver(arrivalCode, requested, pinia)
@@ -116,5 +119,13 @@ export function useMove() {
     popupShown.value = true
   }
 
-  return { result, bannerShown, popupShown, popupOnArrival, openPopup, bringOldData }
+  return {
+    result,
+    resultRequested,
+    bannerShown,
+    popupShown,
+    popupOnArrival,
+    openPopup,
+    bringOldData,
+  }
 }

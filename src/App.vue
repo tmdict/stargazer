@@ -55,6 +55,7 @@ useLiftGuard()
 const { unseen: whatsNewUnseen, markSeen: markWhatsNewSeen } = useWhatsNew()
 const {
   result: moveResult,
+  resultRequested: moveResultRequested,
   bannerShown: moveBannerShown,
   popupShown: movePopupShown,
   popupOnArrival: movePopupOnArrival,
@@ -279,6 +280,7 @@ onUnmounted(() => {
     :show="movePopupShown"
     :result="moveResult"
     :on-arrival="movePopupOnArrival"
+    :requested="moveResultRequested"
     @close="movePopupShown = false"
     @bring="bringOldData"
   />

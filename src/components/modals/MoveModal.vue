@@ -15,6 +15,7 @@ const props = defineProps<{
   show: boolean
   result: HandOverResult | null
   onArrival: boolean
+  requested: boolean
 }>()
 
 const emit = defineEmits<{ close: []; bring: [] }>()
@@ -22,6 +23,11 @@ const emit = defineEmits<{ close: []; bring: [] }>()
 const i18n = useI18nStore()
 
 const welcome = computed(() => i18n.t('app.move-welcome').split('{site}'))
+
+// The answer to the popup's own button comes back seconds after its welcome,
+// so it is the result alone, under the button's name.
+const answer = computed(() => props.onArrival && props.requested)
+const title = computed(() => i18n.t(answer.value ? 'app.move-bring' : 'app.move-title'))
 
 // "12 saved teams, 3 rosters": a kind with none is left out.
 const counted = (teams: number, rosters: number, joiner: string): string =>
@@ -59,9 +65,9 @@ const bringOffered = computed(() => !props.result?.ok || (!props.onArrival && !l
 </script>
 
 <template>
-  <BaseModal :show :label="i18n.t('app.move-title')" @close="emit('close')">
-    <h2>{{ i18n.t('app.move-title') }}</h2>
-    <p>
+  <BaseModal :show :label="title" @close="emit('close')">
+    <h2>{{ title }}</h2>
+    <p v-if="!answer">
       {{ welcome[0] }}<b>{{ SITE_HOST }}</b
       >{{ welcome[1] }}
     </p>
