@@ -16,8 +16,11 @@ const line = computed(() => i18n.t('app.move-banner').split('{site}'))
 
 <template>
   <button type="button" class="move-banner" @click="emit('open')">
-    {{ line[0] }}<b>{{ SITE_HOST }}</b
-    >{{ line[1] }}
+    <!-- Search engines honour data-nosnippet on a span, div or section only. -->
+    <span data-nosnippet
+      >{{ line[0] }}<b>{{ SITE_HOST }}</b
+      >{{ line[1] }}</span
+    >
   </button>
 </template>
 
