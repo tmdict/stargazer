@@ -57,6 +57,8 @@ const {
   result: moveResult,
   bannerShown: moveBannerShown,
   popupShown: movePopupShown,
+  popupOnArrival: movePopupOnArrival,
+  openPopup: openMovePopup,
   bringOldData,
 } = useMove()
 watch(movePopupShown, (shown) => {
@@ -255,7 +257,7 @@ onUnmounted(() => {
     </nav>
   </header>
 
-  <MoveBanner v-if="moveBannerShown" @open="movePopupShown = true" />
+  <MoveBanner v-if="moveBannerShown" @open="openMovePopup" />
 
   <RouterView />
 
@@ -276,6 +278,7 @@ onUnmounted(() => {
     v-if="moveModalMounted"
     :show="movePopupShown"
     :result="moveResult"
+    :on-arrival="movePopupOnArrival"
     @close="movePopupShown = false"
     @bring="bringOldData"
   />

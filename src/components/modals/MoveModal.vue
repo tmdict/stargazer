@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /* The popup about the move: the new address, what a hand-over brought or why
-   it could not, and the ways to fetch data still at the old address. */
+   it could not, and the ways to fetch data still at the old address. What a
+   full hand-over brought is told once, in the popup that opens as it arrives. */
 
 import { computed } from 'vue'
 
@@ -12,6 +13,7 @@ import { useI18nStore } from '@/stores/i18n'
 const props = defineProps<{
   show: boolean
   result: HandOverResult | null
+  onArrival: boolean
 }>()
 
 const emit = defineEmits<{ close: []; bring: [] }>()
@@ -63,15 +65,15 @@ const filesOffered = computed(() =>
       >{{ welcome[1] }}
     </p>
 
-    <template v-if="result?.ok">
+    <template v-if="result?.ok && (left || onArrival)">
       <p v-if="arrivedList">
         {{ i18n.t(left ? 'app.move-arrived-part' : 'app.move-arrived', { list: arrivedList }) }}
       </p>
       <p v-else-if="!left">{{ i18n.t('app.move-arrived-none') }}</p>
       <p v-if="left">{{ i18n.t('app.move-left', { list: leftList }) }}</p>
     </template>
-    <p v-else-if="result">{{ i18n.t('app.move-failed') }}</p>
-    <p v-else-if="MOVE_STAGE === 1">{{ i18n.t('app.move-backup') }}</p>
+    <p v-else-if="result && !result.ok">{{ i18n.t('app.move-failed') }}</p>
+    <p v-else-if="!result && MOVE_STAGE === 1">{{ i18n.t('app.move-backup') }}</p>
 
     <template v-if="MOVE_STAGE === 2 && !result?.ok">
       <p v-if="!result">{{ i18n.t('app.move-bring-hint') }}</p>

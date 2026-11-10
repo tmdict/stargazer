@@ -49,6 +49,8 @@ const takeRequest = (): boolean => {
 const result = shallowRef<HandOverResult | null>(null)
 const bannerShown = ref(false)
 const popupShown = ref(false)
+// Whether the popup is the one that opened by itself as a hand-over arrived.
+const popupOnArrival = ref(false)
 
 /** Applies an arriving hand-over. The app waits for it before reading saved data. */
 export async function startMove(pinia: Pinia): Promise<void> {
@@ -91,7 +93,8 @@ export function useMove() {
   // After mount, so the first render matches the pre-rendered page.
   onMounted(() => {
     bannerShown.value = result.value !== null || readFlag('moved') === null
-    popupShown.value = result.value !== null
+    popupOnArrival.value = result.value !== null
+    popupShown.value = popupOnArrival.value
   })
 
   // The banner belongs to the first page of a visit, and the popup must not
@@ -103,5 +106,10 @@ export function useMove() {
     popupShown.value = false
   })
 
-  return { result, bannerShown, popupShown, bringOldData }
+  const openPopup = () => {
+    popupOnArrival.value = false
+    popupShown.value = true
+  }
+
+  return { result, bannerShown, popupShown, popupOnArrival, openPopup, bringOldData }
 }
