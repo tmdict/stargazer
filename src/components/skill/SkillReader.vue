@@ -67,6 +67,7 @@ watch(
     <div class="content">
       <NoticeBanner
         v-if="visibleSlug && showLocaleHint"
+        data-nosnippet
         dark
         :icon="IconGlobe"
         :message="i18n.t('app.skill-locale-hint')"
