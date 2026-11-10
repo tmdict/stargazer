@@ -34,9 +34,9 @@ const other = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
  * act on the games shown. A side fields each hero and each artifact once over
  * the five games, as a player does in a match, so its pickers leave out what
  * it fields in its other games, shown or not, and Swap sides swaps all five.
- * A hero added to Team A starts at the active roster's
- * levels and one added to Team B at the top levels, as the generator treats a
- * visitor and their opponents. The games live in the page alone. */
+ * A hero added to Team A starts at the active roster's levels and one added to
+ * Team B at the top levels, as the generator treats a visitor and their
+ * opponents. The games live in the page alone. */
 export function useWwwGames() {
   const rosters = useRosters()
   const mode = ref<WwwMode>('one')

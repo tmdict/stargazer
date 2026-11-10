@@ -273,14 +273,14 @@ function slotOf(cards: WwwCard[]): WwwSlot {
     const differ = new Set(from.map((c) => (part === 'hero' ? c.characterId : c[part]))).size > 1
     return { part, card: from[0]!, doubtful: !sure.length || differ, differ }
   }
-  // A card every reading leaves without a hero has no levels to settle.
   const settled = PARTS.map(settle)
   const hero = settled[0]!
+  // A card every reading leaves without a hero has no levels to settle.
   const asked = hero.card.characterId === null && !hero.differ ? [hero] : settled
   const doubtful = asked.filter((s) => s.doubtful).map((s) => s.part)
   return {
     cards,
-    characterId: settled[0]!.card.characterId,
+    characterId: hero.card.characterId,
     paragon: settled[1]!.card.paragon,
     refinement: settled[2]!.card.refinement,
     state: doubtful.length ? PART_STATE[doubtful[0]!] : 'sure',
