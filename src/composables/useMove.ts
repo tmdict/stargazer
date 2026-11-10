@@ -16,7 +16,9 @@ import {
   REQUEST_WINDOW_MS,
   type HandOverResult,
 } from '@/lib/move/config'
+import { readFlag, writeFlag } from '@/utils/flags'
 import { readPrefs } from '@/utils/prefs'
+import { storageReadable } from '@/utils/storage'
 
 /* The router reads the address as it is created, so the code leaves the
  * address bar while this module loads: the entry file imports the app, and
@@ -93,7 +95,13 @@ export function useMove() {
   onMounted(() => {
     bannerShown.value = true
     popupOnArrival.value = result.value !== null
-    popupShown.value = popupOnArrival.value
+    // A browser's first landing opens the popup once, `welcomed` being the
+    // date it did. One that a hand-over reached has had its popup, and one
+    // that refuses its storage would be asked on every visit.
+    const firstLanding =
+      storageReadable() && readFlag('welcomed') === null && readFlag('moved') === null
+    popupShown.value = popupOnArrival.value || firstLanding
+    if (popupShown.value && readFlag('welcomed') === null) writeFlag('welcomed')
   })
 
   // The popup must not stay open over another page. The app mounts before its
