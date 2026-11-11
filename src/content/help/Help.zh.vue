@@ -444,8 +444,8 @@ const SKILL = {
           <p>隐藏敌方，方便截图</p>
           <HelpToggle label="地图信息" split />
           <p>在棋盘上显示格子编号、英雄卡片和等级、站位提示等</p>
-          <HelpToggle label="协同" />
-          <p>加入好友的英雄作为助战</p>
+          <HelpToggle label="赛制" menu />
+          <p>不使用赛季内容对战，或加入协同英雄</p>
         </div>
       </div>
       <div>

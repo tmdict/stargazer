@@ -15,6 +15,7 @@ import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const { phantimals, isDraggable = false } = defineProps<{
@@ -23,6 +24,7 @@ const { phantimals, isDraggable = false } = defineProps<{
 }>()
 
 const gameDataStore = useGameDataStore()
+const grids = useGrids()
 const i18n = useI18nStore()
 const { fillOrder, targetHexId, targetTile, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
@@ -70,6 +72,7 @@ const removableHex = (phantimal: PhantimalType): number | null => {
 // A targeted tile takes a phantimal in place of the side's own, or moves it
 // there, so only the side's faction count can refuse it.
 const isDimmed = (phantimal: PhantimalType): boolean => {
+  if (grids.nonSeasonal) return true
   const tile = targetTile.value
   return tile
     ? !tile.ctx.phantimalCanJoinTeam(toPhantimalId(phantimal.id), tile.team)
@@ -132,7 +135,8 @@ const {
 
 const availability = computed(() => {
   const phantimal = hovered.value
-  if (!phantimal) return []
+  // The faction count is not what keeps a phantimal out of the Non-Seasonal format.
+  if (!phantimal || grids.nonSeasonal) return []
   const id = toPhantimalId(phantimal.id)
   const team = openTeam(phantimal) ?? fillOrder[0]
   const count = characterStore.phantimalFactionCount(id, team)

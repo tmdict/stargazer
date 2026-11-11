@@ -80,6 +80,10 @@ Links store phantimals in each board's `s` section by local id, with companions 
 
 The six pre-season artifacts (`season: 0`) never rotate. `season` orders the artifact picker newest first. An artifact draws targeting arrows exactly when `ARTIFACT_TARGETING` has an entry under its name, so adding the rule turns it on, and the artifact leaving the data at a cutover turns it off.
 
+## The Non-Seasonal format
+
+The Format menu's Non-Seasonal switch keeps phantimals and the season's artifacts off a lone board, leaving the permanent artifacts (season 0). The board rules are in [Grid](./GRID.md). Generate follows the switch: the set is chosen as usual, then each team trades its artifact for a permanent one, the one it was recorded with most or else the first in its fallback list (`permanentArtifact`), and its board is drawn without the phantimal (`nonSeasonalUnits`).
+
 ## Phantimal and artifact tags
 
 Phantimal and artifact data files, the six pre-season artifacts included, can carry a hand-written `tags` list, which the Seasonal tab's filter reads. It names each hero tag whose effect appears anywhere in the skill or effect text, upgrade levels included. The list has no modifiers or level pins, so `debuff` counts a stat reduction on one enemy as well as on all of them. A file without the field has no tags.

@@ -163,7 +163,7 @@ const {
     <GridControls
       :generator-from="activeMode"
       :show-wrap-toggle="canWrap"
-      :show-syn-toggle="TEAM_MODES[activeMode].allowSynergy"
+      :show-format-menu="TEAM_MODES[activeMode].allowSynergy"
       confirm-clear
       v-model:wrap="wrap"
       v-model:show-perspective="showPerspective"

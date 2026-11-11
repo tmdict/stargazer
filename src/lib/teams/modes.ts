@@ -33,7 +33,7 @@ export interface TeamModeConfig {
   initialVariant?: TeamVariantKey
   // Wrap (the 3-2 boards layout) only makes sense for 5-board modes.
   canWrap: boolean
-  // Whether the Syn toggle is offered: the in-game friend-assist mechanic is
+  // Whether the Format menu is offered: the in-game friend-assist mechanic is
   // 1v1-only, and normalizeTeamPayload strips y from modes without it.
   allowSynergy: boolean
 }

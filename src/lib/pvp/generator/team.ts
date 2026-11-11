@@ -17,7 +17,8 @@ import { FULL_GRID } from '@/lib/types/grid'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlData, SlUnit } from '../data/types'
+import type { SlData, SlTeam, SlUnit } from '../data/types'
+import { artifactClaims, permanentArtifact } from './artifacts'
 import type { BoardFormation } from './formation'
 import type { SlBoard } from './setType'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
@@ -28,6 +29,22 @@ type ChoiceOf = Pick<SlChoiceTeam, 'source' | 'team'>
 // map the one where it has the most games.
 export const homeMap = (data: SlData, { source, team }: ChoiceOf): number =>
   source ?? data.everyMap[team]!.home
+
+const recordOf = (data: SlData, { source, team }: ChoiceOf): SlTeam =>
+  source === null ? data.everyMap[team]! : data.maps[source]!.teams[team]!
+
+// A chosen set for the Non-Seasonal format: every team as chosen, with the
+// permanent artifact it takes in place of its own (artifacts.ts).
+export function nonSeasonalSet(data: SlData, set: SlChoice): SlChoice {
+  const claimOf = artifactClaims(data)
+  return {
+    ...set,
+    teams: set.teams.map((choice) => ({
+      ...choice,
+      artifact: permanentArtifact(claimOf(recordOf(data, choice))),
+    })),
+  }
+}
 
 // A team's recorded placement: its heroes and their companions, then its
 // phantimal and the phantimal's companions. Null for a team whose games

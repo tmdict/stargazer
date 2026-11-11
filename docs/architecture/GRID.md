@@ -16,7 +16,7 @@ Two things make it hard. Many kinds of unit share one tile slot (heroes, placeho
              ▼                                    ▼             │
 ┌────────────────────────────────────────────────────────┐      │
 │ useGrids                                               │      │
-│ boards, active board, display flags, Syn,              │      │
+│ boards, active board, display flags, format,           │      │
 │ page-wide uniqueness, cross-board transfers            │      │
 └───────────────────────────┬────────────────────────────┘      │
                             │ owns 1 to 5                       │
@@ -40,7 +40,7 @@ A tile (`GridTile`) has its `characterId` and `team` fields from the moment it i
 
 ## Boards
 
-`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, perspective, Syn and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
+`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, perspective, the two format switches and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
 
 Placement operations refresh skill results themselves. Raw tile edits and companion settling do not, so their callers refresh once at the end.
 
@@ -56,7 +56,10 @@ Every pick (click, tap, popup, drag gate) goes through `resolvePick`, which comb
 
 Upgrade records follow their hero. Cross-board moves and swaps read the record before removing the hero, since the remove drops it, then write it on the destination, or back on the source when the move rolls back. `swapBoards` carries each hero's record the same way, and a same-board team change re-keys it inside the board's own move or swap. `swapBoards` exchanges the two boards' units and artifacts. The Load menu, the board swap and a map change all place through `placeSide`: a unit keeps its own tile where the board gives that tile to its team, and takes a random free tile otherwise.
 
-The Syn toggle (friend assist) is never serialized. `deriveSynergy` re-reads it from the boards after every restore, and turning it off removes every synergy unit from every board, so the box always matches the boards.
+The Format menu holds two switches, shown on the Arena and in the Teams page's 1 v 1 mode. Neither is serialized or stored.
+
+- **Synergy** (friend assist): `deriveSynergy` re-reads it from the boards after every restore, and turning it off removes every synergy unit from every board, so the box always matches the boards.
+- **Non-Seasonal**: turning it on removes each team's phantimal and seasonal artifact (`setNonSeasonal`). While it is on, `phantimalCanJoinTeam` refuses every phantimal, which also stops the faction watcher from placing one, and the pickers grey out the season's artifacts (`allowsArtifact`). Content that arrives from a link, a loaded team or an import turns it off first when it holds a phantimal or a seasonal artifact (`admitSeasonal`), and so does a rebuild to more than one board.
 
 ## Unit ids
 

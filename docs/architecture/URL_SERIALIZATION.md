@@ -114,7 +114,7 @@ Display flags travel with every link, and a `?g=` restore applies them, since sh
 
 A phantimal-band or synergy-band value found inside `c` or `y` is dropped. The JSON codec has no validation pass, and `200050 % 10000` would otherwise match hero 50's companions.
 
-A multi-board restore caps the boards at `MAX_GRID_COUNT` (5) and then runs `grids.dedupeCharacters()`, because per-board checks cannot see the same hero on one team across two boards. Every restore ends with `grids.deriveSynergy()`, since the Syn toggle is never serialized.
+A multi-board restore caps the boards at `MAX_GRID_COUNT` (5) and then runs `grids.dedupeCharacters()`, because per-board checks cannot see the same hero on one team across two boards. Every restore ends with `grids.deriveSynergy()`, since the Synergy switch is never serialized, and each board's restore starts with `grids.admitSeasonal()`, which turns the Non-Seasonal switch off when the board holds a phantimal or a seasonal artifact.
 
 ## JSON interchange format
 

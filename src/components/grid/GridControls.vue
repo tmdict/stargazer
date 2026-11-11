@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import GridFormatMenu from '@/components/grid/GridFormatMenu.vue'
 import GridGenerateButton from '@/components/grid/GridGenerateButton.vue'
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import GridSkillsToggle from '@/components/grid/GridSkillsToggle.vue'
@@ -17,7 +18,7 @@ import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
 const grids = useGrids()
-const { handleClearAll, handleClearSide, clearTargetHex, clearLiftedHex } = useSelectionState()
+const { handleClearAll, handleClearSide } = useSelectionState()
 
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills', { required: true })
@@ -38,8 +39,8 @@ defineProps<{
   // Hides the Grid Info chip (map-editor painting suppresses every grid-info
   // surface, so a live-looking chip would misrepresent the board).
   hideGridInfo?: boolean
-  // Shows the "Syn" friend-assist toggle (Arena team tabs; Teams 1v1 mode only).
-  showSynToggle?: boolean
+  // Shows the Format menu (Arena team tabs; Teams 1v1 mode only).
+  showFormatMenu?: boolean
   // Two-step confirm on Clear, whose armed step also offers clearing one side
   // (Teams only; the Arena clears instantly).
   confirmClear?: boolean
@@ -55,20 +56,6 @@ const emit = defineEmits<{
 const flatView = computed({
   get: () => !showPerspective.value,
   set: (flat) => (showPerspective.value = !flat),
-})
-
-// Unchecking removes the placed synergy units (setSynergy), which may delete
-// the unit a pending tap/lift gesture references, so the gesture state drops
-// with it (every other bulk mutation clears it the same way).
-const synergyView = computed({
-  get: () => grids.synergy,
-  set: (value: boolean) => {
-    grids.setSynergy(value)
-    if (!value) {
-      clearTargetHex()
-      clearLiftedHex()
-    }
-  },
 })
 
 // Team view hides the enemy half, so its side choice goes too. The plain Clear
@@ -88,7 +75,7 @@ const clearSides = computed((): ClearSide[] =>
       <ToggleChip v-if="showWrapToggle" v-model="wrap" :label="i18n.t('app.wrap')" />
       <GridInfoToggle v-if="!hideGridInfo" />
       <GridSkillsToggle v-model="showSkills" />
-      <ToggleChip v-if="showSynToggle" v-model="synergyView" :label="i18n.t('app.syn')" />
+      <GridFormatMenu v-if="showFormatMenu" />
       <ToggleChip v-model="flatView" :label="i18n.t('app.flat')" />
       <ToggleChip v-model="grids.inverted" :label="i18n.t('app.invert')" />
       <ToggleChip v-model="teamView" :disabled="disableTeamView" :label="i18n.t('app.team-view')" />

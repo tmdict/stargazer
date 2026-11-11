@@ -32,11 +32,13 @@ const placedTeam = (artifactId: number): Team | null => {
 // A targeted slot asks only about its own side: the other side may field the
 // same artifact.
 const isDimmed = (artifactId: number): boolean => {
+  if (!grids.allowsArtifact(artifactId)) return true
   const team = targetArtifactTeam.value
   return team === null ? placedTeam(artifactId) !== null : grids.isArtifactUsed(artifactId, team)
 }
 
 const handleArtifactClick = (artifact: ArtifactType) => {
+  if (!grids.allowsArtifact(artifact.id)) return
   // Tapping an on-grid artifact cell targets that cell's team on its board
   // (mobile); the pick toggles that slot directly.
   const targeted = targetArtifactTeam.value

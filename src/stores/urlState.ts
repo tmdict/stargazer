@@ -56,6 +56,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
   }
 
   const applyGridState = (gridState: BoardState): void => {
+    grids.admitSeasonal((gridState.s?.length ?? 0) > 0, gridState.a ?? [])
     const getValidatedTileEntry = (entry: number[]): { hexId: number; state: number } | null => {
       const hexId = entry[0]
       const state = entry[1]

@@ -11,7 +11,7 @@
  * the Arena or Teams is explained where it stands (Placement tips). */
 
 import { isBaseHeroId } from '@/lib/characters/character'
-import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import type { MapLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
@@ -198,6 +198,24 @@ export function engineFormation(
     units: unitsOf(placed),
     why: explainPlacement(team, board.layout, placement, PLACEMENT_LOOKUPS, placed),
   }
+}
+
+// A board of the Non-Seasonal format, which fields no phantimal: the recorded
+// game's heroes on their tiles where there is one, the engine's formation of
+// the heroes and the team's artifact elsewhere.
+export function nonSeasonalUnits(data: SlData, choice: SlChoiceTeam, board: SlBoard): SlUnit[] {
+  const recorded = choice.source === board.source ? recordedUnits(data, choice) : null
+  const team = { ...boardTeam(data, choice.heroes, choice.artifact), phantimal: undefined }
+  const held = recorded && heldOn(recorded.filter(([, unit]) => !inPhantimalBand(unit)))
+  return unitsOf(
+    placeTeam(
+      team,
+      board.layout,
+      boardPlacement(data, board, choice),
+      PLACEMENT_LOOKUPS,
+      held ? { held } : {},
+    ),
+  )
 }
 
 // The recorded game's formation where there is one, the engine's elsewhere;

@@ -521,8 +521,8 @@ const SKILL = {
           <p>Hide the enemy side, handy for screenshots</p>
           <HelpToggle label="Grid Info" split />
           <p>Show tile numbers, hero cards and levels, Placement tips and more on the grid</p>
-          <HelpToggle label="Syn" />
-          <p>Add a friend's hero as your assist</p>
+          <HelpToggle label="Format" menu />
+          <p>Play without seasonal content, or add a synergy hero</p>
         </div>
       </div>
       <div>

@@ -11,8 +11,13 @@
  *
  * A team's artifact is always one of its own or among the first it falls back
  * to, as many as there are boards, which bounds the search (chooser.ts). The
- * file picks a team's board for every artifact it can end up with this way. */
+ * file picks a team's board for every artifact it can end up with this way.
+ *
+ * The Non-Seasonal format plays the permanent artifacts alone. A team chosen
+ * as above then trades its artifact for a permanent one by the same order:
+ * the one it was recorded with most, else the first in its fallback list. */
 
+import { isPermanentArtifactId } from '@/lib/seasonal'
 import type { SlData, SlTeam } from '../data/types'
 
 export interface ArtifactClaim {
@@ -30,6 +35,10 @@ export const artifactClaims =
     const list = data.fallback[family ?? data.fallback.length - 1]!
     return { own, fallback: list.filter((id) => !own.some((o) => o.id === id)) }
   }
+
+// Null when neither its records nor its fallback list hold a permanent one.
+export const permanentArtifact = ({ own, fallback }: ArtifactClaim): number | null =>
+  [...own.map((o) => o.id), ...fallback].find(isPermanentArtifactId) ?? null
 
 // The artifact of each claim, in board order; null only when no artifact is free.
 export function handOutArtifacts(claims: readonly ArtifactClaim[]): (number | null)[] {

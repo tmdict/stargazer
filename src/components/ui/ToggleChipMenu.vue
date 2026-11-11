@@ -4,7 +4,8 @@
    presentations: wide screens get a checkbox checklist, narrow ones a chip tray
    opened by tapping a pill (master chip first), and `share` a right-aligned
    checklist on the dark overlay. With no rows the checklist has nothing to open,
-   while the tray still holds the master chip. */
+   while the tray still holds the master chip. `plain` drops the master: the
+   chip is a button that only opens the panel, lit while any row is ticked. */
 
 import { computed, ref, useId } from 'vue'
 
@@ -35,21 +36,26 @@ const {
   groups,
   share = false,
   pinned = false,
+  plain = false,
 } = defineProps<{
   label: string
-  optionsLabel: string
+  // Names the caret; a plain menu has none.
+  optionsLabel?: string
   groups: readonly ChipMenuGroup[]
   share?: boolean
   // Holds the panel open below the chip, in the page's flow, for a picture of
   // the menu.
   pinned?: boolean
+  plain?: boolean
 }>()
 
 const emit = defineEmits<{ toggle: [key: K] }>()
 
-const master = defineModel<boolean>({ required: true })
+const master = defineModel<boolean>()
 
 const allRows = computed(() => groups.flatMap((group) => group.rows))
+
+const lit = computed(() => allRows.value.some((row) => row.checked))
 
 const empty = computed(() => allRows.value.length === 0)
 
@@ -68,7 +74,9 @@ const {
   onMouseEnter,
   onMouseLeave,
   onTouchStart,
-} = useDropdown({ rootRef, hover: true })
+  // The plain chip is its own trigger, so a click after a hover-open would
+  // close the panel the pointer just opened.
+} = useDropdown({ rootRef, hover: !plain })
 
 const panelOpen = computed(() => (open.value || pinned) && (tray.value || !empty.value))
 
@@ -92,8 +100,18 @@ const panelShift = usePanelClamp(
     @mouseleave="onMouseLeave"
     @touchstart.passive="onTouchStart"
   >
+    <ToggleChip
+      v-if="plain"
+      menu
+      :model-value="lit"
+      :label
+      :aria-expanded="panelOpen"
+      :aria-controls="panelId"
+      aria-haspopup="true"
+      @click="togglePanel"
+    />
     <button
-      v-if="tray"
+      v-else-if="tray"
       type="button"
       class="pill"
       :class="{ active: master }"
@@ -131,7 +149,13 @@ const panelShift = usePanelClamp(
       :style="{ '--panel-shift': `${panelShift}px` }"
     >
       <template v-if="tray">
-        <button type="button" class="tray-chip" :class="{ on: master }" @click="master = !master">
+        <button
+          v-if="!plain"
+          type="button"
+          class="tray-chip"
+          :class="{ on: master }"
+          @click="master = !master"
+        >
           {{ label }}
         </button>
         <div v-if="grouped" class="tray-groups">
@@ -165,7 +189,7 @@ const panelShift = usePanelClamp(
           </template>
         </div>
         <template v-else>
-          <span class="tray-divider" />
+          <span v-if="!plain" class="tray-divider" />
           <button
             v-for="row in allRows"
             :key="row.key"

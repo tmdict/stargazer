@@ -21,6 +21,7 @@ import {
 } from '@/composables/useGridContext'
 import {
   canPlaceCharacterOnTile,
+  findTeamPhantimalHex,
   findTeamSynergyHex,
   getAllAvailableTilesForTeam,
   getAvailableTeamSize,
@@ -41,6 +42,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
+import { isPermanentArtifactId } from '@/lib/seasonal'
 import type { SkillRow } from '@/lib/skills/skill'
 import {
   DEFAULT_VARIANT,
@@ -113,6 +115,10 @@ export const useGrids = defineStore('grids', () => {
   // content, and deriveSynergy re-reads the boards after every restore path so
   // arriving state with a synergy unit lands with the box checked.
   const synergy = ref(false)
+  // The Non-Seasonal format: phantimals and the season's artifacts stay off the
+  // board. Never serialized or persisted, and only a lone board plays it, as
+  // the game's 1 v 1 does.
+  const nonSeasonal = ref(false)
   // What the Skills dropdown has turned off. Never serialized or persisted, so
   // a reload or a share link shows every drawing, and every rebuild of the
   // boards clears it.
@@ -155,6 +161,33 @@ export const useGrids = defineStore('grids', () => {
       }
     }
     synergy.value = value
+  }
+
+  const allowsArtifact = (artifactId: number): boolean =>
+    !nonSeasonal.value || isPermanentArtifactId(artifactId)
+
+  // Arriving content wins over the box: a board about to take a phantimal or a
+  // season's artifact (a link, a loaded team, an import) leaves the format
+  // first, since the placement gates would otherwise refuse the phantimal.
+  const admitSeasonal = (phantimal: boolean, artifacts: readonly (number | null)[]): void => {
+    if (phantimal || artifacts.some((id) => id !== null && !isPermanentArtifactId(id))) {
+      nonSeasonal.value = false
+    }
+  }
+
+  // Destructive as setSynergy is: ticking takes each team's phantimal and its
+  // season's artifact off, so the box always mirrors the board.
+  const setNonSeasonal = (value: boolean): void => {
+    nonSeasonal.value = value
+    if (!value) return
+    for (const ctx of contexts.value) {
+      for (const team of [Team.ALLY, Team.ENEMY]) {
+        const hex = findTeamPhantimalHex(ctx.grid, team)
+        if (hex !== null) ctx.remove(hex)
+        const artifact = artifactSlot(ctx.artifacts, team)
+        if (artifact !== null && !allowsArtifact(artifact)) ctx.removeArtifact(team)
+      }
+    }
   }
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
@@ -218,6 +251,7 @@ export const useGrids = defineStore('grids', () => {
     contexts.value.forEach((ctx) => ctx.dispose())
     arenaPick.value = null
     hiddenSkills.value = new Set()
+    if (clamped !== 1) nonSeasonal.value = false
     contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
         hexSize,
@@ -225,6 +259,7 @@ export const useGrids = defineStore('grids', () => {
         inverted,
         perspective,
         synergy,
+        nonSeasonal,
         sharedCrop,
         hiddenSkills,
         buffMode,
@@ -464,6 +499,7 @@ export const useGrids = defineStore('grids', () => {
         ? hexId
         : undefined
     }
+    admitSeasonal(side.phantimal !== null, [side.artifact])
     const kept = new Set<number>()
     for (const unit of [...side.mains, ...side.companions, side.phantimal]) {
       const hexId = unit ? ownHex(unit) : undefined
@@ -975,6 +1011,10 @@ export const useGrids = defineStore('grids', () => {
     synergy,
     deriveSynergy,
     setSynergy,
+    nonSeasonal,
+    allowsArtifact,
+    admitSeasonal,
+    setNonSeasonal,
     hiddenSkills,
     arenaPick,
     buffMode,

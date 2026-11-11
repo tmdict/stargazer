@@ -645,6 +645,69 @@ describe('useGrids synergy', () => {
   })
 })
 
+describe('useGrids Non-Seasonal format', () => {
+  // Artifact 3 is permanent, 8 the season's.
+  it("setNonSeasonal(true) takes phantimals and the season's artifacts off and keeps them off", () => {
+    const { grids, a: ctx } = setupBoards(1)
+    expect(ctx.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(ctx.placePhantimal(4, toPhantimalId(1), Team.ALLY)).toBe(true)
+    expect(ctx.placePhantimal(40, toPhantimalId(1), Team.ENEMY)).toBe(true)
+    ctx.setArtifact(Team.ALLY, 8)
+    ctx.setArtifact(Team.ENEMY, 3)
+
+    grids.setNonSeasonal(true)
+
+    expect(lineup(ctx.grid)).toEqual([{ characterId: ALLY_A, team: Team.ALLY }])
+    expect(ctx.artifacts).toMatchObject({ ally: null, enemy: 3 })
+    expect(ctx.placePhantimal(4, toPhantimalId(1), Team.ALLY)).toBe(false)
+    expect(grids.canDropCharacter(toPhantimalId(1), undefined, undefined, ctx.id, 4)).toBe(false)
+    expect(grids.allowsArtifact(8)).toBe(false)
+    expect(grids.allowsArtifact(3)).toBe(true)
+  })
+
+  it('a loaded side with seasonal content leaves the format and lands whole', () => {
+    const { grids, a: ctx } = setupBoards(1)
+    grids.setNonSeasonal(true)
+
+    grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          {
+            mains: [{ unitId: ALLY_A, hexId: 1 }],
+            companions: [],
+            phantimal: { unitId: toPhantimalId(1), hexId: 4 },
+            artifact: 8,
+          },
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(grids.nonSeasonal).toBe(false)
+    expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
+    expect(ctx.artifacts.ally).toBe(8)
+  })
+
+  it('a loaded side without seasonal content stays in the format', () => {
+    const { grids, a: ctx } = setupBoards(1)
+    grids.setNonSeasonal(true)
+
+    grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          { mains: [{ unitId: ALLY_A, hexId: 1 }], companions: [], phantimal: null, artifact: 3 },
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(grids.nonSeasonal).toBe(true)
+    expect(ctx.artifacts.ally).toBe(3)
+  })
+})
+
 describe('useGrids hidden skills', () => {
   const SILVINA = 39
 

@@ -19,6 +19,7 @@ import {
   boardDraws,
   engineFormation,
   marksCount,
+  nonSeasonalUnits,
   shownFormation,
   sideExplanation,
   type BoardDraw,
@@ -28,7 +29,7 @@ import { slPicks } from '@/lib/pvp/generator/picks'
 import { layoutBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import type { StoredFits, StoredPoints } from '@/lib/pvp/generator/storedFits'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/generator/swapPreview'
-import { slTeamData } from '@/lib/pvp/generator/team'
+import { nonSeasonalSet, slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/www/panel'
@@ -45,6 +46,8 @@ export type SlRequest =
       id: number
       levels: Record<string, AttrRecord> | null
       layouts: MapLayout[]
+      // False for the Non-Seasonal format.
+      seasonal: boolean
       fits: StoredFits | null
     }
   | { type: 'place'; id: number; set: SlChoice; boards: SlBoard[] }
@@ -181,10 +184,13 @@ scope.addEventListener('message', async (event) => {
       const levels = msg.levels ?? Object.fromEntries(heroes.map((c) => [c.id, TOP_LEVELS]))
       const picks = slPicks(levels, (id) => factions.get(id), withheld)
       const boards = layoutBoards(data, msg.layouts)
-      const { set, gained } = await press(loaded, picks, boards, msg.fits)
-      const formations = set
-        ? (await draws(data, set, boards)).map((draw) => shownFormation(draw, false))
-        : []
+      const { set: chosen, gained } = await press(loaded, picks, boards, msg.fits)
+      const set = chosen && !msg.seasonal ? nonSeasonalSet(data, chosen) : chosen
+      const formations = !set
+        ? []
+        : msg.seasonal
+          ? (await draws(data, set, boards)).map((draw) => shownFormation(draw, false))
+          : set.teams.map((choice, i) => ({ units: nonSeasonalUnits(data, choice, boards[i]!) }))
       const team = set && slTeamData(data, set, picks, boards, formations)
       scope.postMessage({ type: 'filled', id: msg.id, team, gained })
     } else if (msg.type === 'explain') {

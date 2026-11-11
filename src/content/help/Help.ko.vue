@@ -524,8 +524,8 @@ const SKILL = {
           <p>적군 진영을 숨깁니다. 스크린샷을 찍을 때 유용합니다</p>
           <HelpToggle label="맵 정보" split />
           <p>맵에 타일 번호, 영웅 카드와 레벨, 배치 팁 등을 표시합니다</p>
-          <HelpToggle label="협력" />
-          <p>친구의 영웅을 협력 영웅으로 추가합니다</p>
+          <HelpToggle label="대전 방식" menu />
+          <p>시즌 콘텐츠 없이 플레이하거나 협력 영웅을 추가합니다</p>
         </div>
       </div>
       <div>

@@ -31,13 +31,15 @@ const ctx = useGridContext()
 // Drop artifacts already assigned to this team on any board (page-wide per-team
 // uniqueness), like the character popup hides placed heroes.
 const availableArtifacts = computed(() =>
-  gameDataStore.pickerArtifacts.filter((a) => !grids.isArtifactUsed(a.id, props.team)),
+  gameDataStore.pickerArtifacts.filter(
+    (a) => grids.allowsArtifact(a.id) && !grids.isArtifactUsed(a.id, props.team),
+  ),
 )
 
 const handleSelect = (artifact: ArtifactType) => {
   // Re-check page-wide per-team uniqueness at pick time; the list filter can be
   // stale by the time the click lands. Close only on a successful placement.
-  if (grids.isArtifactUsed(artifact.id, props.team)) return
+  if (!grids.allowsArtifact(artifact.id) || grids.isArtifactUsed(artifact.id, props.team)) return
   ctx.setArtifact(props.team, artifact.id)
   // Active follows interaction, matching drop routing.
   grids.setActive(ctx.id)

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /* A checkbox drawn as a chip: the grid controls bar's display toggles, the
-   Grid Info chip (split by its `caret` slot) and the Map Editor's Edit Tiles. */
+   Grid Info chip (split by its `caret` slot) and the Map Editor's Edit Tiles.
+   `menu` draws a button in the chip's look that opens a list and holds no
+   tick of its own; the model then only lights it. */
 
 import '@/styles/modal.css'
 
@@ -14,13 +16,27 @@ defineProps<{
   standalone?: boolean
   // The dark overlay's glass look (modal.css) in place of the light one.
   glass?: boolean
+  menu?: boolean
 }>()
 
 defineSlots<{ caret?(): unknown }>()
 </script>
 
 <template>
-  <span v-if="$slots.caret" class="toggle-chip split" :class="{ 'glass-button': glass, disabled }">
+  <button
+    v-if="menu"
+    type="button"
+    class="toggle-chip toggle-chip-body bar menu"
+    :class="{ active: checked }"
+  >
+    <span>{{ label }}</span>
+    <span class="toggle-chip-arrow" aria-hidden="true">&#9662;</span>
+  </button>
+  <span
+    v-else-if="$slots.caret"
+    class="toggle-chip split"
+    :class="{ 'glass-button': glass, disabled }"
+  >
     <label class="toggle-chip-body">
       <input v-model="checked" type="checkbox" :disabled class="toggle-chip-checkbox" />
       <span>{{ label }}</span>
@@ -69,6 +85,14 @@ defineSlots<{ caret?(): unknown }>()
   flex-shrink: 0;
 }
 
+.toggle-chip.menu {
+  font-family: inherit;
+}
+
+.toggle-chip-arrow {
+  font-size: 0.7rem;
+}
+
 .toggle-chip.split {
   align-items: stretch;
 }
@@ -99,6 +123,13 @@ defineSlots<{ caret?(): unknown }>()
   margin: 0;
 }
 
+@media (min-width: 769px) {
+  .toggle-chip.menu.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
 @media (pointer: coarse) and (min-width: 1220px) {
   .toggle-chip-body.bar,
   .split .toggle-chip-body {
@@ -118,6 +149,12 @@ defineSlots<{ caret?(): unknown }>()
     min-height: var(--control-height-tablet);
     gap: 0;
     font-size: var(--toggle-chip-font-size-tablet);
+  }
+  .toggle-chip.menu {
+    gap: 2px;
+  }
+  .toggle-chip-arrow {
+    font-size: 0.6rem;
   }
   .toggle-chip.bar.active {
     background: var(--color-primary);

@@ -93,6 +93,8 @@ interface GridContextGlobals {
   perspective: Ref<boolean>
   // The Syn affordance; per-board drop handling resolves base-vs-copy with it.
   synergy?: Ref<boolean>
+  // The Non-Seasonal format: no phantimal may join a team.
+  nonSeasonal?: Ref<boolean>
   // Team-view crop shared across boards so they stay the same size; null means
   // each board crops to its own ally extent (the single-board Arena).
   sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
@@ -276,6 +278,7 @@ export function createGridContext(
   }
 
   const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean =>
+    !globals.nonSeasonal?.value &&
     teamQualifies(
       grid,
       team,

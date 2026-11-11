@@ -322,7 +322,7 @@ const handleResetMap = () => {
             :disable-team-view="mapEditorActive || activeTab === 'debug'"
             :hide-team-controls="mapEditorActive || activeTab === 'debug'"
             :hide-grid-info="mapEditorActive"
-            :show-syn-toggle="!mapEditorActive && activeTab !== 'debug'"
+            :show-format-menu="!mapEditorActive && activeTab !== 'debug'"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"
             @download="handleDownload"

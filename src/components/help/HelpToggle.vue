@@ -1,14 +1,15 @@
 <script setup lang="ts">
 /* Look-only copy of GridControls' display toggle. `split` adds Grid Info's
-   options caret. */
+   options caret; `menu` is the Format button, which has no tick. */
 
-defineProps<{ label: string; on?: boolean; split?: boolean }>()
+defineProps<{ label: string; on?: boolean; split?: boolean; menu?: boolean }>()
 </script>
 
 <template>
   <span class="help-toggle" :class="{ on }">
-    <input type="checkbox" :checked="on" tabindex="-1" aria-hidden="true" />{{ label
-    }}<span v-if="split" class="help-toggle-split">▾</span>
+    <input v-if="!menu" type="checkbox" :checked="on" tabindex="-1" aria-hidden="true" />{{ label
+    }}<span v-if="split" class="help-toggle-split">▾</span
+    ><span v-else-if="menu" class="help-toggle-arrow">▾</span>
   </span>
 </template>
 
@@ -37,6 +38,10 @@ defineProps<{ label: string; on?: boolean; split?: boolean }>()
   pointer-events: none;
 }
 
+.help-toggle-arrow {
+  font-size: 0.6rem;
+}
+
 .help-toggle-split {
   display: inline-flex;
   align-self: stretch;
@@ -48,6 +53,10 @@ defineProps<{ label: string; on?: boolean; split?: boolean }>()
 }
 
 @media (max-width: 768px) {
+  .help-toggle-arrow {
+    margin-left: 2px;
+  }
+
   .help-toggle {
     gap: 0;
     padding: 4px 11px;
