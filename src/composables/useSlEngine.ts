@@ -117,19 +117,18 @@ export function useSlEngine({ startOnMount = true } = {}) {
     return answer.set
   }
 
-  // The set for these boards as a saved team, or null when none can be made;
-  // `seasonal` false asks for the Non-Seasonal format's.
+  // The set for these boards as a saved team, or null when none can be made.
   const fill = async (
     levels: Record<string, AttrRecord> | null,
     layouts: MapLayout[],
-    seasonal: boolean,
+    nonSeasonal: boolean,
   ): Promise<string | null> => {
     const answer = await ask((id) => ({
       type: 'fill',
       id,
       levels,
       layouts,
-      seasonal,
+      nonSeasonal,
       fits: seed(),
     }))
     if (answer.type !== 'filled') throw new Error('The worker answered another request')

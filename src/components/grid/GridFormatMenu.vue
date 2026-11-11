@@ -34,7 +34,8 @@ const onToggle = (key: FormatKey): void => {
   else grids.setNonSeasonal(on)
   // Leaving Synergy or entering Non-Seasonal takes units off the board, maybe
   // the one a pending tap or lift points at.
-  if (on === (key === 'non-seasonal')) {
+  const removesUnits = key === 'syn' ? !on : on
+  if (removesUnits) {
     clearTargetHex()
     clearLiftedHex()
   }

@@ -70,7 +70,7 @@ const removableHex = (phantimal: PhantimalType): number | null => {
 }
 
 // A targeted tile takes a phantimal in place of the side's own, or moves it
-// there, so only the side's faction count can refuse it.
+// there, so only the side's gate on joining can refuse it.
 const isDimmed = (phantimal: PhantimalType): boolean => {
   if (grids.nonSeasonal) return true
   const tile = targetTile.value

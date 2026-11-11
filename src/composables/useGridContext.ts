@@ -61,6 +61,7 @@ import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { buffTilesOf, getMapByKey, modeBuffs, type ModeListKey, type TileBuff } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
+import { isPermanentArtifactId } from '@/lib/seasonal'
 import { artifactCanDraw, artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
 import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
@@ -91,9 +92,10 @@ interface GridContextGlobals {
   teamView: Ref<boolean>
   inverted: Ref<boolean>
   perspective: Ref<boolean>
-  // The Syn affordance; per-board drop handling resolves base-vs-copy with it.
+  // The Synergy format; per-board drop handling resolves base-vs-copy with it.
   synergy?: Ref<boolean>
-  // The Non-Seasonal format: no phantimal may join a team.
+  // The Non-Seasonal format: no phantimal joins a team and no season's
+  // artifact takes a slot.
   nonSeasonal?: Ref<boolean>
   // Team-view crop shared across boards so they stay the same size; null means
   // each board crops to its own ally extent (the single-board Arena).
@@ -437,6 +439,7 @@ export function createGridContext(
   }
 
   const setArtifact = (team: Team, artifactId: number): void => {
+    if (globals.nonSeasonal?.value && !isPermanentArtifactId(artifactId)) return
     if (team === Team.ALLY) artifacts.ally.value = artifactId
     else artifacts.enemy.value = artifactId
   }

@@ -81,14 +81,14 @@ defineSlots<{ caret?(): unknown }>()
 }
 
 .toggle-chip.menu {
-  gap: 2px;
+  gap: var(--toggle-chip-caret-gap);
   padding-right: var(--spacing-sm);
   font-family: inherit;
   line-height: inherit;
 }
 
 .toggle-chip-arrow {
-  font-size: 0.7rem;
+  font-size: var(--toggle-chip-caret-size);
 }
 
 .toggle-chip.split {
@@ -142,10 +142,10 @@ defineSlots<{ caret?(): unknown }>()
     font-size: var(--toggle-chip-font-size-tablet);
   }
   .toggle-chip.menu {
-    gap: 2px;
+    gap: var(--toggle-chip-caret-gap);
   }
   .toggle-chip-arrow {
-    font-size: 0.6rem;
+    font-size: var(--toggle-chip-caret-size-tablet);
   }
   .toggle-chip.bar.active {
     background: var(--color-primary);

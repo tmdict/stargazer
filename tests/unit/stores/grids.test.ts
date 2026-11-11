@@ -661,7 +661,8 @@ describe('useGrids Non-Seasonal format', () => {
     expect(ctx.artifacts).toMatchObject({ ally: null, enemy: 3 })
     expect(ctx.placePhantimal(4, toPhantimalId(1), Team.ALLY)).toBe(false)
     expect(grids.canDropCharacter(toPhantimalId(1), undefined, undefined, ctx.id, 4)).toBe(false)
-    expect(grids.allowsArtifact(8)).toBe(false)
+    ctx.setArtifact(Team.ALLY, 8)
+    expect(ctx.artifacts.ally).toBeNull()
     expect(grids.allowsArtifact(3)).toBe(true)
   })
 

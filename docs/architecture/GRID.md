@@ -59,7 +59,7 @@ Upgrade records follow their hero. Cross-board moves and swaps read the record b
 The Format menu holds two switches, shown on the Arena and in the Teams page's 1 v 1 mode. Neither is serialized or stored.
 
 - **Synergy** (friend assist): `deriveSynergy` re-reads it from the boards after every restore, and turning it off removes every synergy unit from every board, so the box always matches the boards.
-- **Non-Seasonal**: turning it on removes each team's phantimal and seasonal artifact (`setNonSeasonal`). While it is on, `phantimalCanJoinTeam` refuses every phantimal, which also stops the faction watcher from placing one, and the pickers grey out the season's artifacts (`allowsArtifact`). Content that arrives from a link, a loaded team or an import turns it off first when it holds a phantimal or a seasonal artifact (`admitSeasonal`), and so does a rebuild to more than one board.
+- **Non-Seasonal**: turning it on removes each team's phantimal and seasonal artifact (`setNonSeasonal`). While it is on, `phantimalCanJoinTeam` refuses every phantimal, which also stops the faction watcher from placing one, and the pickers grey out the season's artifacts (`allowsArtifact`). Content that arrives from a link, a loaded team or an import turns it off first when it holds a phantimal or a seasonal artifact (`admitSeasonal`), and every rebuild of the boards (another page, another mode, a new or opened team) turns it off.
 
 ## Unit ids
 

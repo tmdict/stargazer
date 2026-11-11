@@ -249,6 +249,23 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(snapshotTiles(restored.grid)).toEqual(expected)
   })
 
+  it('leaves the Non-Seasonal format for a link with seasonal content, which lands whole', () => {
+    const source = createStores()
+    expect(source.character.placeCharacterOnHex(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(source.character.placePhantimalOnHex(3, toPhantimalId(2), Team.ALLY)).toBe(true)
+    source.artifact.placeArtifact(8, Team.ENEMY)
+    const encoded = encodeStores(source)
+    const expected = snapshotTiles(source.grid)
+
+    const restored = createStores()
+    useGrids().setNonSeasonal(true)
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+
+    expect(useGrids().nonSeasonal).toBe(false)
+    expect(snapshotTiles(restored.grid)).toEqual(expected)
+    expect(restored.artifact.enemyArtifactId).toBe(8)
+  })
+
   it('rejects garbage encoded strings and leaves existing state untouched', () => {
     const stores = createStores()
     expect(stores.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)

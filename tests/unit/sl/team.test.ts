@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import { isBaseHeroId } from '@/lib/characters/character'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
@@ -21,6 +22,7 @@ import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementTeam } from '@/lib/placement/types'
 import { loadSlData } from '@/lib/pvp/data/codec'
 import type { SlData, SlUnit } from '@/lib/pvp/data/types'
+import { nonSeasonalSet } from '@/lib/pvp/generator/artifacts'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
 import { slFit } from '@/lib/pvp/generator/fit'
 import {
@@ -28,6 +30,7 @@ import {
   boardPlacement,
   boardTeam,
   engineFormation,
+  nonSeasonalUnits,
   shownFormation,
   sideExplanation,
   summonedPhantimal,
@@ -156,6 +159,28 @@ describe('a set saved as a team', () => {
 
 // The shipped file with the last two league maps under keys no entry holds,
 // as a file from before a rotation has them.
+describe('a set for the Non-Seasonal format', () => {
+  const plain = nonSeasonalSet(data, set)
+
+  it('keeps every team and gives each a permanent artifact', () => {
+    plain.teams.forEach((team, i) => {
+      expect({ ...team, artifact: set.teams[i]!.artifact }).toEqual(set.teams[i])
+      expect(isPermanentArtifactId(team.artifact!)).toBe(true)
+    })
+  })
+
+  it('stands the recorded heroes on their tiles and fields no phantimal', () => {
+    plain.teams.forEach((team, i) => {
+      const units = nonSeasonalUnits(data, team, boards[i]!)
+      expect(units.some(([, unit]) => inPhantimalBand(unit))).toBe(false)
+      const recorded = recordedUnits(data, team)?.filter(([, unit]) => !inPhantimalBand(unit))
+      expect(units).toEqual(expect.arrayContaining(recorded ?? []))
+      const heroes = units.map(([, unit]) => unit).filter(isBaseHeroId)
+      expect(heroes.sort()).toEqual([...team.heroes].sort())
+    })
+  })
+})
+
 describe('a file behind the current maps', () => {
   const current = TEAM_VARIANTS.sl.maps
   const gone = Object.keys(MAPS).filter((key) => !data.maps.some((m) => m.key === key))

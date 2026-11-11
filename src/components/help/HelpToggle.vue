@@ -39,7 +39,7 @@ defineProps<{ label: string; on?: boolean; split?: boolean; menu?: boolean }>()
 }
 
 .help-toggle-arrow {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
 }
 
 .help-toggle-split {
@@ -55,6 +55,7 @@ defineProps<{ label: string; on?: boolean; split?: boolean; menu?: boolean }>()
 @media (max-width: 768px) {
   .help-toggle-arrow {
     margin-left: 2px;
+    font-size: 0.6rem;
   }
 
   .help-toggle {

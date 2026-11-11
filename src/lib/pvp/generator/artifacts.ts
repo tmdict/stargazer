@@ -19,6 +19,7 @@
 
 import { isPermanentArtifactId } from '@/lib/seasonal'
 import type { SlData, SlTeam } from '../data/types'
+import type { SlChoice } from './types'
 
 export interface ArtifactClaim {
   // Each artifact the team was recorded with this season, most used first, and
@@ -39,6 +40,21 @@ export const artifactClaims =
 // Null when neither its records nor its fallback list hold a permanent one.
 export const permanentArtifact = ({ own, fallback }: ArtifactClaim): number | null =>
   [...own.map((o) => o.id), ...fallback].find(isPermanentArtifactId) ?? null
+
+// A chosen set for the Non-Seasonal format: every team as chosen, with the
+// permanent artifact it takes in place of its own. Each team takes its own
+// with no regard for the others', as the format plays a lone board.
+export function nonSeasonalSet(data: SlData, set: SlChoice): SlChoice {
+  const claimOf = artifactClaims(data)
+  return {
+    ...set,
+    teams: set.teams.map((choice) => {
+      const { source, team } = choice
+      const record = source === null ? data.everyMap[team]! : data.maps[source]!.teams[team]!
+      return { ...choice, artifact: permanentArtifact(claimOf(record)) }
+    }),
+  }
+}
 
 // The artifact of each claim, in board order; null only when no artifact is free.
 export function handOutArtifacts(claims: readonly ArtifactClaim[]): (number | null)[] {

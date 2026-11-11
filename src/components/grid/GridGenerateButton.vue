@@ -91,7 +91,7 @@ const generate = async (): Promise<void> => {
     const levels = roster
       ? Object.fromEntries(Object.entries(roster.heroes).map(([id, attrs]) => [id, { ...attrs }]))
       : null
-    const team = await fill(levels, layouts, !grids.nonSeasonal)
+    const team = await fill(levels, layouts, grids.nonSeasonal)
     if (!live) return
     // The set was drawn for the boards as they stood at the press, so it never
     // replaces a side placed or loaded during the wait.

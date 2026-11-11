@@ -246,7 +246,7 @@ const panelShift = usePanelClamp(
   border-left: 1px solid var(--color-border-primary);
   background: none;
   color: inherit;
-  font-size: 0.7rem;
+  font-size: var(--toggle-chip-caret-size);
   cursor: pointer;
 }
 
@@ -262,7 +262,7 @@ const panelShift = usePanelClamp(
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--toggle-chip-caret-gap);
   border: 1px solid var(--color-border-primary);
   border-radius: 999px;
   background: var(--color-bg-secondary);
@@ -283,7 +283,7 @@ const panelShift = usePanelClamp(
 }
 
 .pill-caret {
-  font-size: 0.6rem;
+  font-size: var(--toggle-chip-caret-size-tablet);
 }
 
 @media (max-width: 480px) {

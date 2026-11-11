@@ -111,13 +111,13 @@ export const useGrids = defineStore('grids', () => {
   // The perspective view (the Flat toggle unticked): squashed by the container,
   // tilted by the layout, so it is the same kind of view transform as invert.
   const perspective = ref(false)
-  // The Syn affordance. Never serialized or persisted: the placed unit is the
+  // The Synergy format. Never serialized or persisted: the placed unit is the
   // content, and deriveSynergy re-reads the boards after every restore path so
   // arriving state with a synergy unit lands with the box checked.
   const synergy = ref(false)
   // The Non-Seasonal format: phantimals and the season's artifacts stay off the
-  // board. Never serialized or persisted, and only a lone board plays it, as
-  // the game's 1 v 1 does.
+  // board. Never serialized or persisted, and every rebuild of the boards
+  // clears it, so it never follows a visitor to another page or team.
   const nonSeasonal = ref(false)
   // What the Skills dropdown has turned off. Never serialized or persisted, so
   // a reload or a share link shows every drawing, and every rebuild of the
@@ -168,7 +168,7 @@ export const useGrids = defineStore('grids', () => {
 
   // Arriving content wins over the box: a board about to take a phantimal or a
   // season's artifact (a link, a loaded team, an import) leaves the format
-  // first, since the placement gates would otherwise refuse the phantimal.
+  // first, since the board's own gates would otherwise refuse them.
   const admitSeasonal = (phantimal: boolean, artifacts: readonly (number | null)[]): void => {
     if (phantimal || artifacts.some((id) => id !== null && !isPermanentArtifactId(id))) {
       nonSeasonal.value = false
@@ -251,7 +251,7 @@ export const useGrids = defineStore('grids', () => {
     contexts.value.forEach((ctx) => ctx.dispose())
     arenaPick.value = null
     hiddenSkills.value = new Set()
-    if (clamped !== 1) nonSeasonal.value = false
+    nonSeasonal.value = false
     contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
         hexSize,
