@@ -2,7 +2,7 @@
 /* A checkbox drawn as a chip: the grid controls bar's display toggles, the
    Grid Info chip (split by its `caret` slot) and the Map Editor's Edit Tiles.
    `menu` draws a button in the chip's look that opens a list and holds no
-   tick of its own; the model then only lights it. */
+   tick of its own. */
 
 import '@/styles/modal.css'
 
@@ -23,12 +23,7 @@ defineSlots<{ caret?(): unknown }>()
 </script>
 
 <template>
-  <button
-    v-if="menu"
-    type="button"
-    class="toggle-chip toggle-chip-body bar menu"
-    :class="{ active: checked }"
-  >
+  <button v-if="menu" type="button" class="toggle-chip toggle-chip-body bar menu">
     <span>{{ label }}</span>
     <span class="toggle-chip-arrow" aria-hidden="true">&#9662;</span>
   </button>
@@ -86,7 +81,10 @@ defineSlots<{ caret?(): unknown }>()
 }
 
 .toggle-chip.menu {
+  gap: 2px;
+  padding-right: var(--spacing-sm);
   font-family: inherit;
+  line-height: inherit;
 }
 
 .toggle-chip-arrow {
@@ -121,13 +119,6 @@ defineSlots<{ caret?(): unknown }>()
   cursor: pointer;
   accent-color: var(--color-primary);
   margin: 0;
-}
-
-@media (min-width: 769px) {
-  .toggle-chip.menu.active {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
 }
 
 @media (pointer: coarse) and (min-width: 1220px) {

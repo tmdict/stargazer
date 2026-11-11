@@ -5,7 +5,7 @@
    opened by tapping a pill (master chip first), and `share` a right-aligned
    checklist on the dark overlay. With no rows the checklist has nothing to open,
    while the tray still holds the master chip. `plain` drops the master: the
-   chip is a button that only opens the panel, lit while any row is ticked. */
+   chip is a button that only opens the panel. */
 
 import { computed, ref, useId } from 'vue'
 
@@ -55,8 +55,6 @@ const master = defineModel<boolean>()
 
 const allRows = computed(() => groups.flatMap((group) => group.rows))
 
-const lit = computed(() => allRows.value.some((row) => row.checked))
-
 const empty = computed(() => allRows.value.length === 0)
 
 const grouped = computed(() => groups.some((group) => group.parent))
@@ -103,7 +101,6 @@ const panelShift = usePanelClamp(
     <ToggleChip
       v-if="plain"
       menu
-      :model-value="lit"
       :label
       :aria-expanded="panelOpen"
       :aria-controls="panelId"

@@ -130,6 +130,10 @@ const clearSides = computed((): ClearSide[] =>
   gap: var(--spacing-md);
 }
 
+.controls-toggles {
+  gap: 10px;
+}
+
 .controls-actions {
   --control-height: var(--control-height-compact);
 }
@@ -143,6 +147,9 @@ const clearSides = computed((): ClearSide[] =>
 @media (min-width: 769px) and (max-width: 1599px) {
   .controls-row {
     gap: var(--spacing-sm);
+  }
+  .controls-toggles {
+    gap: 6px;
   }
 }
 
