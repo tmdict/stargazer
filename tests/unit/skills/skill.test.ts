@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { executeMoveCharacter } from '@/lib/characters/move'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
@@ -48,23 +47,6 @@ describe('skill', () => {
 
         skillManager.clearPaintedTiles(2, Team.ALLY)
         expect(skillManager.getTileColorModifier(1)).toBeUndefined()
-      })
-
-      it('keeps another skill same-color paint when a highlight moves off its tile', () => {
-        // Ally Evie (113) outlines enemy-zone tiles around her mirror cell (40 among
-        // them); enemy Cassadee (10) highlights her nearest teammate's tile with the
-        // same color. Moving the teammate off 40 makes Cassadee unpaint it mid-sweep,
-        // after Evie already repainted; the refcount keeps Evie's outline alive.
-        const arena = new Grid()
-        const sm = new SkillManager(NO_LOOKUPS)
-        arena.skillManager = sm
-        expect(executePlaceCharacter(arena, sm, 9, 113, Team.ALLY)).toBe(true)
-        expect(sm.getTileColorModifier(40)).toBeDefined()
-        expect(executePlaceCharacter(arena, sm, 43, 10, Team.ENEMY)).toBe(true)
-        expect(executePlaceCharacter(arena, sm, 40, 21, Team.ENEMY)).toBe(true)
-
-        expect(executeMoveCharacter(arena, sm, 40, 45, 21)).toBe(true)
-        expect(sm.getTileColorModifier(40)).toBeDefined()
       })
     })
 

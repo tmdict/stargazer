@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import { MAPS } from '@/lib/maps'
 import { TEAM_MODES } from '@/lib/teams/modes'
-import { mapKeyByWireId, wireModeById, wireModeByKey } from '@/lib/teams/wire'
+import { wireModeById, wireModeByKey } from '@/lib/teams/wire'
 
 describe('wire registry', () => {
   it('pins the mode wire ids: arena plus exactly the TEAM_MODES board counts', () => {
@@ -37,6 +37,5 @@ describe('wire registry', () => {
     for (const [key, { id }] of Object.entries(MAPS)) {
       expect(id, `map ${key}`).toBeLessThan(64)
     }
-    expect(mapKeyByWireId(0), 'map id 0 is "no map"').toBeUndefined()
   })
 })

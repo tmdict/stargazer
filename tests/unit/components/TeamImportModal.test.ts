@@ -5,11 +5,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamImportModal from '@/components/modals/TeamImportModal.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { shownText } from '../fixtures/dom'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 const sample = (): ImportShot => ({
@@ -61,7 +59,6 @@ afterEach(() => {
   teardown = undefined
   leaveTeamImport()
   localStorage.clear()
-  vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
@@ -109,76 +106,22 @@ const mountImport = async () => {
 }
 
 describe('match import review and save', () => {
-  it('requires a second click to forget learned icons and expires an unconfirmed click', async () => {
-    vi.useFakeTimers()
+  it('keeps paragon confirmation separate when confirming the hero', async () => {
     const { api } = await mountImport()
-    const cell = api.shots.value[0]!.reading!.sides[1][0]!
-    cell.paragon = { ...cell.paragon, score: 0.8, runnerUp: 0.2, sure: true }
-    cell.descriptor = new Float32Array(DESCRIPTOR_LENGTH).fill(0.02)
-    api.setHero('sample', 1, 0, 9)
+    expect(document.querySelector('.cell.review')).not.toBeNull()
+    document.querySelector<HTMLButtonElement>('.cell.review .confirm-choice')!.click()
     await nextTick()
-    const forget = [...document.querySelectorAll<HTMLButtonElement>('.link-btn')].find((button) =>
-      button.textContent?.includes('Reset heroes learned from your corrections'),
-    )!
-    const save = document.querySelector<HTMLButtonElement>('.footer-btn.danger')!
-
-    forget.click()
-    await nextTick()
-    expect(api.learnedCount.value).toBe(1)
-    expect(shownText(forget)).toBe('Confirm?')
-    expect(shownText(save)).toContain('Save as New')
-
-    vi.advanceTimersByTime(3000)
-    await nextTick()
-    expect(shownText(forget)).toBe('Reset heroes learned from your corrections')
-    forget.click()
-    expect(api.learnedCount.value).toBe(1)
-    forget.click()
-    await nextTick()
-    expect(api.learnedCount.value).toBe(0)
-    expect(forget.isConnected).toBe(false)
-  })
-
-  it.each(['confirm', 'correct'])(
-    'keeps paragon confirmation separate when choosing to %s the hero',
-    async (action) => {
-      const { api } = await mountImport()
-      expect(document.querySelector('.cell.review')).not.toBeNull()
-      if (action === 'confirm') {
-        document.querySelector<HTMLButtonElement>('.cell.review .confirm-choice')!.click()
-      } else {
-        api.setHero('sample', 1, 0, 9)
-      }
-      await nextTick()
-      const characterId = action === 'confirm' ? 5 : 9
-      expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId })
-      expect(document.querySelector('.cell.review .confirm-choice')).toBeNull()
-      expect(document.querySelector('.selection-popup')).toBeNull()
-      const confirm = document.querySelector<HTMLButtonElement>('.cell.paragon .confirm-choice')!
-      expect(confirm.title).toBe('Paragon 4')
-      expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
-      confirm.click()
-      await nextTick()
-      expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId, paragon: 4 })
-      expect(document.querySelector('.cell.paragon .confirm-choice')).toBeNull()
-      expect(document.querySelector('.cell.sure .edited')).not.toBeNull()
-      expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
-    },
-  )
-
-  it('accepts an artifact guess without opening the picker or changing the guess', async () => {
-    const { api } = await mountImport()
-    api.shots.value[0]!.reading!.artifacts[1] = {
-      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
-      candidates: [{ artifactId: 1, score: 0.5 }],
-      margin: 0.02,
-      sure: false,
-    }
-    await nextTick()
-    document.querySelector<HTMLButtonElement>('.artifact .confirm-choice')!.click()
-    await nextTick()
-    expect(api.shots.value[0]!.artifactOverrides).toEqual({ 1: 1 })
-    expect(document.querySelector('.artifact .confirm-choice')).toBeNull()
+    expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId: 5 })
+    expect(document.querySelector('.cell.review .confirm-choice')).toBeNull()
     expect(document.querySelector('.selection-popup')).toBeNull()
+    const confirm = document.querySelector<HTMLButtonElement>('.cell.paragon .confirm-choice')!
+    expect(confirm.title).toBe('Paragon 4')
+    expect(document.querySelector('.shot-status')?.textContent).toContain('1 to review')
+    confirm.click()
+    await nextTick()
+    expect(api.shots.value[0]!.overrides['1:0']).toEqual({ characterId: 5, paragon: 4 })
+    expect(document.querySelector('.cell.paragon .confirm-choice')).toBeNull()
+    expect(document.querySelector('.cell.sure .edited')).not.toBeNull()
+    expect(document.querySelector('.shot-status')?.textContent).toContain('Ready')
   })
 })

@@ -9,7 +9,6 @@ import { makeSkillContext, placeOnTile, removeFromTile } from '../../fixtures/sk
 
 // Key distances on TARGETING_GRID used by the assertions below:
 // from hex 1 → hex 11 = 2, hex 10 = 3, hex 2 = 1
-// from hex 5 → hex 10 = 1, hex 11 = 2
 // from hex 7 → hex 5 = hex 9 = 2 (a true tie)
 const frontmost = (context: SkillContext, targetTeam: Team) =>
   findTarget(context, { targetTeam, targetingMethod: TargetingMethod.FRONTMOST })
@@ -48,18 +47,6 @@ describe('distance targeting', () => {
 
       expect(findTarget(context, options)?.targetHexId).toBe(1)
       expect(findTarget(context, { ...options, excludeSelf: true })).toBeNull()
-    })
-
-    it('measures from the reference hex when provided', () => {
-      // From hex 1 the furthest enemy is 10; from reference hex 5 it is 11
-      const result = findTarget(context, {
-        targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.FURTHEST,
-        referenceHexId: 5,
-      })
-
-      expect(result?.targetHexId).toBe(11)
-      expect(result?.metadata?.sourceHexId).toBe(1)
     })
 
     it('forwards excludeSelf to the REARMOST dispatch', () => {

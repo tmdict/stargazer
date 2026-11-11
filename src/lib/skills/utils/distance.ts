@@ -22,7 +22,6 @@ export interface TargetingOptions {
   targetTeam: Team
   excludeSelf?: boolean
   targetingMethod: TargetingMethod
-  referenceHexId?: number // Default to context.hexId
 }
 
 function sortFurthestFirst(
@@ -75,7 +74,7 @@ function applyHexIdTieBreaker(
 
 /**
  * One entry point for the three methods: REARMOST and FRONTMOST are hex-id
- * picks, FURTHEST is the distance search below (furthest from the reference
+ * picks, FURTHEST is the distance search below (furthest from the caster's
  * hex, ties broken by team-aware hex id).
  */
 export function findTarget(
@@ -91,7 +90,6 @@ export function findTarget(
   }
 
   const { grid, team, hexId, characterId } = context
-  const referenceHexId = options.referenceHexId ?? hexId
 
   const candidates = getCandidates(
     grid,
@@ -101,10 +99,10 @@ export function findTarget(
 
   if (candidates.length === 0) return null
 
-  calculateDistances(candidates, [referenceHexId], grid)
+  calculateDistances(candidates, [hexId], grid)
 
-  const sorted = sortFurthestFirst(candidates, referenceHexId)
-  const winner = applyHexIdTieBreaker(sorted, team, referenceHexId)
+  const sorted = sortFurthestFirst(candidates, hexId)
+  const winner = applyHexIdTieBreaker(sorted, team, hexId)
 
   if (!winner) return null
 
@@ -116,7 +114,7 @@ export function findTarget(
     targetCharacterId: winner.characterId,
     metadata: {
       sourceHexId: hexId,
-      distance: winner.distances.get(referenceHexId),
+      distance: winner.distances.get(hexId),
       examinedTiles,
     },
   }

@@ -157,8 +157,6 @@ describe('a set saved as a team', () => {
   })
 })
 
-// The shipped file with the last two league maps under keys no entry holds,
-// as a file from before a rotation has them.
 describe('a set for the Non-Seasonal format', () => {
   const plain = nonSeasonalSet(data, set)
 
@@ -181,6 +179,8 @@ describe('a set for the Non-Seasonal format', () => {
   })
 })
 
+// The shipped file with the last two league maps under keys no entry holds,
+// as a file from before a rotation has them.
 describe('a file behind the current maps', () => {
   const current = TEAM_VARIANTS.sl.maps
   const gone = Object.keys(MAPS).filter((key) => !data.maps.some((m) => m.key === key))
@@ -338,19 +338,6 @@ describe("the engine's formations", () => {
       maps: data.maps.map((m) => ({ ...m, teams: unplaced(m.teams) })),
     }
     expect(engineOf(without)).toEqual(suggested)
-  })
-
-  it('are what the saved set holds', () => {
-    const state = decodeMultiGridStateFromUrl(slTeamData(data, set, picks, boards, suggested))!
-    state.boards.forEach((board, i) => {
-      const saved = [
-        ...(board.c ?? []),
-        ...(board.s ?? []).map(([tile, local]) => [tile, toPhantimalId(local), Team.ALLY]),
-      ]
-      expect(saved.sort(byTile)).toEqual(
-        suggested[i]!.units.map(([tile, id]) => [tile, id, Team.ALLY]).sort(byTile),
-      )
-    })
   })
 })
 

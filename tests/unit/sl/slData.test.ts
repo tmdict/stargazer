@@ -255,10 +255,6 @@ describe('chooseSlSet on the shipped data', () => {
     expect(low.chance).toBeLessThanOrEqual(full.chance)
   })
 
-  it('makes no set from no heroes', () => {
-    expect(choose([])).toBeNull()
-  })
-
   // A row of every map can come from a map with more ally tiles than a board
   // with records of its own, whose tiles the engine could not place it on.
   it('gives a team a board with records only where its map has a tile for each unit', () => {

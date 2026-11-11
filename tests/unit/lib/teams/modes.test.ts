@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
+import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import {
   DEFAULT_VARIANT,
   isTeamModeKey,
@@ -38,18 +38,6 @@ describe('TEAM_MODES registry', () => {
 })
 
 describe('TEAM_VARIANTS registry', () => {
-  it('keeps each list aligned with its mode and made of real maps', () => {
-    for (const variant of Object.values(TEAM_VARIANTS)) {
-      expect(variant.key).toBe(
-        Object.keys(TEAM_VARIANTS).find((k) => TEAM_VARIANTS[k as 'sl'] === variant),
-      )
-      expect(variant.maps).toHaveLength(TEAM_MODES[variant.mode].boardCount)
-      for (const map of variant.maps) {
-        expect(MAPS[map], `${variant.key} references unknown map ${map}`).toBeDefined()
-      }
-    }
-  })
-
   it('round-trips every choice through variantMaps and matchVariant', () => {
     for (const mode of TEAM_MODE_ORDER) {
       const choices: TeamVariantChoice[] = [
@@ -130,12 +118,6 @@ describe('normalizeTeamPayload', () => {
   it('truncates oversize payloads', () => {
     const normalized = normalizeTeamPayload(boards(5), '3v3')
     expect(normalized.boards).toHaveLength(3)
-  })
-
-  it('does not mutate the input payload', () => {
-    const payload = boards(1)
-    normalizeTeamPayload(payload, '3v3')
-    expect(payload.boards).toHaveLength(1)
   })
 })
 

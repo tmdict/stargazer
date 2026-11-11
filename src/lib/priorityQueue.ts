@@ -6,10 +6,6 @@
 export class PriorityQueue<T> {
   private heap: Array<{ item: T; priority: number }> = []
 
-  get size(): number {
-    return this.heap.length
-  }
-
   isEmpty(): boolean {
     return this.heap.length === 0
   }

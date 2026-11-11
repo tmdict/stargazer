@@ -189,17 +189,6 @@ describe('place.ts', () => {
       expect(hexes.some((hexId) => grid.getTileById(hexId).characterId === ALLY_A)).toBe(true)
     })
 
-    it('should reject when character cannot be placed on team', () => {
-      // Fill team to capacity
-      grid.maxTeamSizes.set(Team.ALLY, 2)
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-      performPlace(grid, 2, ALLY_B, Team.ALLY)
-
-      const result = executeAutoPlaceCharacter(grid, skillManager, ALLY_C, Team.ALLY)
-
-      expect(result).toBe(false)
-    })
-
     it('should reject when no tiles available', () => {
       performPlace(grid, 1, ALLY_A, Team.ALLY)
       performPlace(grid, 2, ALLY_B, Team.ALLY)

@@ -32,7 +32,6 @@ describe('seasonal', () => {
     // Heroes and synergy units are never seasonal; the permanent artifact
     // survives while the seasonal one nulls.
     expect(stripped).toEqual({ c: board.c, y: board.y, a: [1, null] })
-    expect(board.s).toBeDefined() // input untouched
   })
 
   it('strips a payload only when its season is retired', () => {

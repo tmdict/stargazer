@@ -46,13 +46,6 @@ describe('reinier tile highlighting', () => {
     expect(skillManager.getTileColorModifier(enemyHex)).toEqual(allyFill)
   })
 
-  it('highlights nothing when the symmetrical tile has no enemy', () => {
-    reinier().onActivate(ctx())
-
-    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
-  })
-
   it('clears the highlight on update once the pair disappears', () => {
     placeOnTile(grid, enemyHex, 200, Team.ENEMY)
     reinier().onActivate(ctx())

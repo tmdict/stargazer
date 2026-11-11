@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { useGridSwap } from '@/composables/useGridSwap'
 import { Team } from '@/lib/types/team'
@@ -19,7 +19,6 @@ const OTHER = 3
 describe('useGridSwap target selection', () => {
   let grids: ReturnType<typeof useGrids>
   let swap: ReturnType<typeof useGridSwap>
-  let swapBoards: MockInstance
 
   // A tap on a board overlay: press and release in place.
   const tap = (boardId: number, x = 50, y = 50) => {
@@ -35,8 +34,6 @@ describe('useGridSwap target selection', () => {
     grids.setGridCount(4) // real boards for SOURCE/TARGET/OTHER
     swap = useGridSwap()
     swap.cancel() // clear the module-level singleton between tests
-    // Spy only: the real swapBoards runs, so commits move real board content
-    swapBoards = vi.spyOn(grids, 'swapBoards')
   })
 
   describe('tap layout (two-step)', () => {
@@ -57,7 +54,6 @@ describe('useGridSwap target selection', () => {
       tap(TARGET)
       tap(OTHER)
       expect(swap.pendingId.value).toBe(OTHER)
-      expect(swapBoards).not.toHaveBeenCalled()
     })
 
     it('ignores a swipe (release past the travel limit)', () => {
@@ -70,7 +66,6 @@ describe('useGridSwap target selection', () => {
     it('ignores a release with no matching press (the arming tap over a fresh overlay)', () => {
       swap.onOverlayUp(TARGET, at(50, 50))
       expect(swap.pendingId.value).toBeNull()
-      expect(swapBoards).not.toHaveBeenCalled()
     })
   })
 

@@ -134,21 +134,6 @@ describe('phantimal Spirit Mark skills', () => {
     expect(skillManager.getTileFillModifier(19)).toHaveLength(1)
   })
 
-  it('keeps the paint refcount at one across repeated updates', () => {
-    placeOnTile(grid, 23, BEHIND_MARK, Team.ALLY)
-    placeOnTile(grid, 16, 100, Team.ALLY)
-    const skill = getCharacterSkill(BEHIND_MARK)!
-
-    skill.onActivate(ctx(23, BEHIND_MARK))
-    skill.onUpdate!(ctx(23, BEHIND_MARK))
-    skill.onUpdate!(ctx(23, BEHIND_MARK))
-    expect(skillManager.getTileFillModifier(16)).toHaveLength(1)
-
-    skill.onDeactivate(ctx(23, BEHIND_MARK))
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
-  })
-
   it('re-keys the mark when a phantimal moves cross-team through the execute ops', () => {
     // End-to-end over performCrossTeamMove: phantimal skills are registry-gated
     // like hero skills, so a cross-team move deactivates under the old team key

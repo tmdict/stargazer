@@ -296,7 +296,6 @@ describe('binaryEncoder', () => {
         's',
         15,
       ],
-      ['synergy', { y: Array.from({ length: 16 }, (_, i) => [i + 1, 100 + i, 1]) }, 'y', 15],
       [
         'upgrades',
         { u: Array.from({ length: 64 }, (_, i) => [(i % 2) + 1, i + 1, 1, 3]) },

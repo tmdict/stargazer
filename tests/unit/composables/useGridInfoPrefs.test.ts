@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { stubLocalStorage } from '../fixtures/storage'
 
-/* Storage seeding, hydration-safe adoption, the enable cascades, and the
+/* Storage seeding, hydration-safe adoption, and the
  * sibling-slice contract of stargazer.prefs. The composable is a module
  * singleton, so every test re-imports it through vi.resetModules. */
 
@@ -82,18 +82,11 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.rules).toBe(true) // absent key keeps its default
   })
 
-  it('keeps Details on hover and Placement tips either/or, Details winning a stored pair', async () => {
+  it('reads a stored pair of Details on hover and Placement tips as Details alone', async () => {
     storage.set(PREFS_KEY, JSON.stringify({ gridInfo: { hover: true, rules: true } }))
     const mod = await importComposable()
-    const { prefs, setPref } = mountPrefs(mod)
+    const { prefs } = mountPrefs(mod)
     expect(prefs.hover).toBe(true)
-    expect(prefs.rules).toBe(false)
-
-    setPref('rules', true)
-    expect(prefs.hover).toBe(false)
-    setPref('hover', true)
-    expect(prefs.rules).toBe(false)
-    setPref('hover', false)
     expect(prefs.rules).toBe(false)
   })
 

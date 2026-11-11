@@ -38,7 +38,7 @@ export const artifactClaims =
   }
 
 // Null when neither its records nor its fallback list hold a permanent one.
-export const permanentArtifact = ({ own, fallback }: ArtifactClaim): number | null =>
+const permanentArtifact = ({ own, fallback }: ArtifactClaim): number | null =>
   [...own.map((o) => o.id), ...fallback].find(isPermanentArtifactId) ?? null
 
 // A chosen set for the Non-Seasonal format: every team as chosen, with the

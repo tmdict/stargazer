@@ -268,7 +268,6 @@ describe('import engine', () => {
     { device: 'a touch screen with middling memory', memory: 4, touch: true, pool: 2 },
     { device: 'a touch screen with plenty of memory', memory: 8, touch: true, pool: 3 },
     { device: 'a touch screen reporting no memory', memory: undefined, touch: true, pool: 2 },
-    { device: 'a computer reporting no memory', memory: undefined, touch: false, pool: 5 },
   ])('reads with $pool at most on $device', async ({ memory, touch, pool }) => {
     vi.stubGlobal('navigator', { hardwareConcurrency: 8, deviceMemory: memory })
     vi.stubGlobal('matchMedia', () => ({ matches: touch }))

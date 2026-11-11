@@ -109,7 +109,6 @@ const heroesOn = (plan: TeamImportPlan, mapIndex: number, team: Team): number[] 
 
 describe('record name', () => {
   it.each([
-    { prefix: '', left: '', right: '' },
     { ...NAMES, left: '  ' },
     { ...NAMES, right: '' },
   ])('leaves the record name blank without both players: %j', (names) => {

@@ -127,7 +127,7 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
   )
 }
 
-export interface TeamsPersistence {
+interface TeamsPersistence {
   // Last-used mode key, or null when absent/unknown.
   loadMode: () => TeamModeKey | null
   persistMode: (mode: TeamModeKey) => void

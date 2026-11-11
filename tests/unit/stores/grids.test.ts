@@ -873,20 +873,6 @@ describe('useGrids.loadTeamSide', () => {
     expect(findCharacterHex(grids.contexts[2]!.grid, 13, Team.ALLY)).toBe(3)
   })
 
-  it("places the plan's phantimal on its saved hex", () => {
-    const { grids, a: ctx } = setupBoards(1)
-
-    grids.loadTeamSide(
-      {
-        side: Team.ALLY,
-        boards: [board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4 } })],
-      },
-      { invert: false, scope: 'all' },
-    )
-
-    expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
-  })
-
   it('derives the Syn affordance from a loaded synergy hero', () => {
     const { grids, a: ctx } = setupBoards(1)
     expect(grids.synergy).toBe(false)

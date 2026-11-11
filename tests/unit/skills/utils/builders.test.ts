@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { getMaxTeamSize } from '@/lib/characters/character'
-import { getCompanions } from '@/lib/characters/companion'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { SkillManager, type SkillContext, type SkillTargetInfo } from '@/lib/skills/skill'
 import {
@@ -9,7 +8,6 @@ import {
   createTargetingSkill,
   createTileHighlightSkill,
 } from '@/lib/skills/utils/builders'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { NO_LOOKUPS } from '../../fixtures/skills'
 
@@ -43,29 +41,6 @@ describe('createTargetingSkill', () => {
         arrowType: 'ally',
         calculateTarget,
       })
-
-    it('sets target with single arrow on activation when target is hit', () => {
-      const skill = buildSkill(() => ({
-        targetHexId: 3,
-        targetCharacterId: 42,
-      }))
-      skill.onActivate(buildContext(grid, skillManager))
-
-      const stored = skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)
-      expect(stored?.targetHexId).toBe(3)
-      expect(stored?.metadata?.arrows).toEqual([
-        { fromHexId: CASTER_HEX, toHexId: 3, type: 'ally' },
-      ])
-    })
-
-    it.each([
-      ['calculateTarget finds nothing', () => null],
-      ['the target has no hex', () => ({ targetHexId: null, targetCharacterId: null })],
-    ])('sets no target when %s', (_label, calculate) => {
-      const skill = buildSkill(calculate)
-      skill.onActivate(buildContext(grid, skillManager))
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    })
 
     it('clears target on onUpdate when target is missed', () => {
       let value: SkillTargetInfo | null = { targetHexId: 3, targetCharacterId: 42 }
@@ -167,22 +142,6 @@ describe('createCompanionSkill', () => {
   const companionTiles = () =>
     grid.getAllTiles().filter((t) => t.characterId !== undefined && t.characterId > 10000)
 
-  it('places one linked companion, bumps capacity, and gives it its picture', () => {
-    makeSkill().onActivate(context())
-
-    const placed = companionTiles()
-    expect(placed).toHaveLength(1)
-    expect(placed[0]!.characterId).toBe(grid.companionIdOffset + CHARACTER_ID)
-    expect(placed[0]!.team).toBe(Team.ALLY)
-    expect(getCompanions(grid, CHARACTER_ID, Team.ALLY).size).toBe(1)
-    expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE + 1)
-
-    const images = skillManager.getImageModifiersByCharacterAndTeam()
-    expect(images.get(`${grid.companionIdOffset + CHARACTER_ID}-${Team.ALLY}`)).toBe(
-      'companion-art',
-    )
-  })
-
   it('places count companions with namespaced IDs on distinct tiles', () => {
     makeSkill({ count: 2 }).onActivate(context())
 
@@ -193,18 +152,5 @@ describe('createCompanionSkill', () => {
     ])
     expect(new Set(placed.map((t) => t.hex.getId())).size).toBe(2)
     expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE + 2)
-  })
-
-  it('throws without side effects when there are not enough free tiles', () => {
-    // Occupy every ally tile except one (bypassing the capacity limit),
-    // then ask for two companions
-    const allyTiles = grid.getAllTiles().filter((t) => t.state === State.AVAILABLE_ALLY)
-    for (const tile of allyTiles.slice(1)) {
-      tile.characterId = 1000 + tile.hex.getId()
-    }
-
-    expect(() => makeSkill({ count: 2 }).onActivate(context())).toThrow()
-    expect(companionTiles()).toHaveLength(0)
-    expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
   })
 })

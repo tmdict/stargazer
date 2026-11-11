@@ -1,26 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
-import { clipLaneBoundary, hexesBetween, zoneOutline } from '@/lib/skills/utils/line'
-
-describe('hexesBetween', () => {
-  const grid = new Grid()
-  // The returned hexes are id-less (coordinate-only); map them back to grid cell
-  // ids for readable assertions.
-  const betweenIds = (a: number, b: number): Array<number | undefined> =>
-    hexesBetween(grid.getHexById(a), grid.getHexById(b)).map((hex) =>
-      grid.getTileOrUndefined(hex)?.hex.getId(),
-    )
-
-  it('returns the cells on a straight axis between two collinear cells', () => {
-    // Cells 1, 4, 7, 10 share q = -3 (one straight column).
-    expect(betweenIds(1, 10)).toEqual([4, 7])
-  })
-
-  it('returns [] for adjacent cells (nothing between)', () => {
-    expect(betweenIds(1, 4)).toEqual([])
-  })
-})
+import { clipLaneBoundary, zoneOutline } from '@/lib/skills/utils/line'
 
 describe('zoneOutline', () => {
   it('outlines a single hex with all six edges, corners clockwise per direction', () => {

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { kindRule } from '@/lib/pvp/data/kinds'
-import { handOutArtifacts, type ArtifactClaim } from '@/lib/pvp/generator/artifacts'
+import { handOutArtifacts, nonSeasonalSet, type ArtifactClaim } from '@/lib/pvp/generator/artifacts'
+import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
+import { madeUpData, madeUpModel } from '../fixtures/slSeason'
 
 describe('a team’s kind', () => {
   const kindOf = kindRule([
@@ -66,5 +68,51 @@ describe('the artifact rule', () => {
   it('gives a team with none of its own, as one only earlier seasons recorded, the first free one in board order', () => {
     const claims = [now([], [5, 6]), now([[1, 1]], [5, 6]), now([[1, 9]], [5])]
     expect(handOutArtifacts(claims)).toEqual([5, 6, 1])
+  })
+})
+
+// Artifacts 2, 3 and 5 are permanent; 7 and up are the season's.
+describe('the Non-Seasonal artifact', () => {
+  const team = (map: number, family: number | null, artifacts: [number, number][]) => ({
+    map,
+    family,
+    heroes: [map * 5 + 1, map * 5 + 2, map * 5 + 3, map * 5 + 4, map * 5 + 5],
+    artifacts,
+    decided: 1,
+  })
+  const data = madeUpData(
+    [
+      team(0, 0, [
+        [8, 40],
+        [5, 6],
+        [3, 2],
+      ]),
+      team(1, 1, [[8, 40]]),
+      team(2, null, [[8, 40]]),
+    ],
+    madeUpModel({}),
+    [
+      [2, 9],
+      [9, 14, 3, 2],
+      [9, 14],
+    ],
+  )
+  const chosen = (source: number): SlChoiceTeam => ({
+    source,
+    team: 0,
+    heroes: data.maps[source]!.teams[0]!.heroes,
+    family: data.maps[source]!.teams[0]!.family,
+    chance: 0,
+    comp: null,
+    artifact: 8,
+    placement: 0,
+    core: [],
+    flex: [],
+    pairs: [],
+  })
+
+  it('is the permanent one a team was recorded with most, else the first it falls back to, else none', () => {
+    const set = { chance: 0, odds: [], teams: [chosen(0), chosen(1), chosen(2)] }
+    expect(nonSeasonalSet(data, set).teams.map((t) => t.artifact)).toEqual([5, 3, null])
   })
 })
