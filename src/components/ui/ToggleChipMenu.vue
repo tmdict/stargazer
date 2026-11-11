@@ -72,9 +72,7 @@ const {
   onMouseEnter,
   onMouseLeave,
   onTouchStart,
-  // The plain chip is its own trigger, so a click after a hover-open would
-  // close the panel the pointer just opened.
-} = useDropdown({ rootRef, hover: !plain })
+} = useDropdown({ rootRef, hover: true })
 
 const panelOpen = computed(() => (open.value || pinned) && (tray.value || !empty.value))
 
