@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 
 import SkillSections from './SkillSections.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
-import NoticeBanner from '@/components/ui/NoticeBanner.vue'
 import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { hasSkillLocale } from '@/utils/dataLoader'
-import { readFlag, writeFlag } from '@/utils/flags'
-import { storageReadable } from '@/utils/storage'
 
 import '@/styles/content.css'
 
@@ -37,48 +34,18 @@ onMounted(() => {
 // Remount per hero AND per text locale: SkillSections writes head meta and
 // the html-lang override in setup, so a locale switch must re-run it.
 const sectionsKey = computed(() => `${visibleSlug.value}:${props.lang}`)
-
-// One-time tip that skill text has more languages than the site. Read
-// post-mount so the baked HTML (which has no hint) hydrates unchanged.
-const showLocaleHint = ref(false)
-onMounted(() => {
-  // Without storage a dismissal cannot be kept, and the tip would return on
-  // every page.
-  showLocaleHint.value = storageReadable() && readFlag('skillLocaleHint') === null
-})
-const dismissLocaleHint = () => {
-  showLocaleHint.value = false
-  writeFlag('skillLocaleHint')
-}
-
-// A globe pick proves the feature is discovered, which is all the hint
-// teaches; treat it as a dismissal.
-watch(
-  () => i18n.skillLocale,
-  (picked) => {
-    if (picked && showLocaleHint.value) dismissLocaleHint()
-  },
-)
 </script>
 
 <template>
   <!-- .container + .content from content.css: visual match to SkillModal. -->
   <div class="container page-panel">
     <div class="content">
-      <NoticeBanner
-        v-if="visibleSlug && showLocaleHint"
-        data-nosnippet
-        dark
-        :icon="IconGlobe"
-        :message="i18n.t('app.skill-locale-hint')"
-        @dismiss="dismissLocaleHint"
-      />
       <SkillSections v-if="visibleSlug" :key="sectionsKey" :slug="visibleSlug" :lang />
       <div v-else class="empty-state" @click="emit('emptyClick')">
         <IconInfo :size="40" class="empty-icon" />
         <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>
-        <!-- Permanent counterpart of the locale-hint banner: states the fact
-             without naming the globe menu, which isn't on screen here. -->
+        <!-- States the fact without naming the globe menu, which isn't on
+             screen here. -->
         <p class="empty-locale">
           <IconGlobe :size="14" aria-hidden="true" />
           {{ i18n.t('app.skill-locale-empty') }}

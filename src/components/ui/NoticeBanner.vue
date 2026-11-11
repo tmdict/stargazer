@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* A dismissible one-line notice with an icon: the season notice above the
-   boards, and (`dark`) the skill reader's language hint on its dark panel. */
+   boards. */
 
 import type { Component } from 'vue'
 
@@ -9,7 +9,6 @@ import { useI18nStore } from '@/stores/i18n'
 defineProps<{
   icon: Component
   message: string
-  dark?: boolean
 }>()
 
 const emit = defineEmits<{ dismiss: [] }>()
@@ -18,7 +17,7 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <div class="notice-banner" :class="{ dark }">
+  <div class="notice-banner">
     <component :is="icon" :size="15" class="notice-banner-icon" aria-hidden="true" />
     <span>{{ message }}</span>
     <button
@@ -46,20 +45,9 @@ const i18n = useI18nStore()
   font-size: 12.5px;
 }
 
-.notice-banner.dark {
-  margin-bottom: var(--spacing-lg);
-  border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  color: var(--color-accent-text);
-}
-
 .notice-banner-icon {
   flex-shrink: 0;
   color: var(--color-primary);
-}
-
-.dark .notice-banner-icon {
-  color: inherit;
 }
 
 .notice-banner-dismiss {
@@ -73,13 +61,5 @@ const i18n = useI18nStore()
 
 .notice-banner-dismiss:hover {
   color: var(--color-text-primary);
-}
-
-.dark .notice-banner-dismiss {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.dark .notice-banner-dismiss:hover {
-  color: rgba(255, 255, 255, 0.9);
 }
 </style>

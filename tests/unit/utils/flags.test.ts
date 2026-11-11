@@ -19,13 +19,10 @@ afterEach(() => {
 
 describe('flags item', () => {
   it('reads an entry only when it is a date', () => {
-    storage.set(
-      FLAGS_KEY,
-      JSON.stringify({ whatsNew: '2026-11-06', moved: 1, skillLocaleHint: '1' }),
-    )
+    storage.set(FLAGS_KEY, JSON.stringify({ whatsNew: '2026-11-06', moved: 1, welcomed: '1' }))
     expect(readFlag('whatsNew')).toBe('2026-11-06')
     expect(readFlag('moved')).toBeNull()
-    expect(readFlag('skillLocaleHint')).toBeNull()
+    expect(readFlag('welcomed')).toBeNull()
   })
 
   it('reads a value that is not an object as no flags', () => {
@@ -38,10 +35,10 @@ describe('flags item', () => {
       FLAGS_KEY,
       JSON.stringify({ whatsNew: '2026-11-06', retired: '2026-01-01', moved: 7 }),
     )
-    writeFlag('skillLocaleHint', '2026-11-20')
+    writeFlag('welcomed', '2026-11-20')
     expect(JSON.parse(storage.get(FLAGS_KEY)!)).toEqual({
       whatsNew: '2026-11-06',
-      skillLocaleHint: '2026-11-20',
+      welcomed: '2026-11-20',
     })
   })
 })

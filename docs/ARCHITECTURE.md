@@ -119,15 +119,13 @@ The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RE
 
 `stargazer.flags` holds every "has this happened" flag as one object, each entry a date as plain text such as `2026-11-06`. A reader takes only the entries `src/utils/flags.ts` lists, an entry that is not a date reads as unset, and a write drops everything else, so retiring a flag is removing its name from that list.
 
-| Entry             | Holds                                                                                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `whatsNew`        | The date of the What's New edition last opened, written when the popup opens. While it is missing or another date, the top bar's What's New tab shows a dot. |
-| `skillLocaleHint` | The day the skill-language tip was dismissed. While it is set the tip stays hidden.                                                                          |
+| Entry      | Holds                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `whatsNew` | The date of the What's New edition last opened, written when the popup opens. While it is missing or another date, the top bar's What's New tab shows a dot. |
 
 ```json
 {
-  "whatsNew": "2026-11-06",
-  "skillLocaleHint": "2026-11-20"
+  "whatsNew": "2026-11-06"
 }
 ```
 

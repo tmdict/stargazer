@@ -6,7 +6,7 @@ import { readStorage, writeStorage } from '@/utils/storage'
 
 const FLAGS_KEY = 'stargazer.flags'
 
-const FLAG_NAMES = ['whatsNew', 'skillLocaleHint', 'moved', 'welcomed'] as const
+const FLAG_NAMES = ['whatsNew', 'moved', 'welcomed'] as const
 
 type FlagName = (typeof FLAG_NAMES)[number]
 
