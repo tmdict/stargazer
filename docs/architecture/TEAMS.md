@@ -63,7 +63,7 @@ The lists also carry the buff tiles, since the game gives a buff to a mode's boa
 
 `src/lib/maps.ts` refuses a list that breaks a rule when it loads.
 
-A board's serialized tile states (`t`) are authoritative. Restoring resets every tile and replays `t`, with each occupied tile read as its side's available tile because placing the units marks occupancy, so a team on a map that no longer exists still loads, previews and exports. For a board saved without a map key, `resolveBoardMap` picks the preset its tiles reproduce, or the default map, and both the saved-team chip and the restore use that same rule.
+A board's serialized tile states (`t`) are authoritative. Restoring resets every tile and replays `t`, so a team on a map that no longer exists still loads, previews and exports. For a board saved without a map key, `resolveBoardMap` picks the preset its tiles reproduce, or the default map.
 
 Every Teams page load goes through `normalizeTeamPayload`. It drops seasonal content from other seasons ([Seasonal Content](./SEASONAL.md)), pads or truncates the payload to the mode's board count, and removes synergy units on modes that do not allow them, since a hand-crafted synergy unit would slip past the duplicate check. `/share` shows payloads as they are.
 
@@ -106,7 +106,7 @@ A field the reader does not know is ignored and dropped by the next write.
 
 Every whole-board apply (mode switch, slot restore, saved-team load, `?g=` link) goes through `restoreMultiFromEncodedState`, which handles board order, companion placement, duplicate repair across boards, and the phantimal baseline. A `?g=` link overwrites its mode's slot with `sourceId` null, because a shared link is nobody's saved team. A link that fails to decode or apply, or an Arena link, falls back to the saved slot.
 
-Autosave only writes after the page has started it, so a page that failed to load game data can never overwrite a slot. The page resets to the Arena's single board in `onScopeDispose`, which runs synchronously on unmount, so a hot reload cannot leave the board count wrong.
+Autosave only writes after the page has started it, so a page that failed to load game data can never overwrite a slot.
 
 Display toggles (skills, perspective, team view, invert, wrap) are device preferences shared by every mode. Share links carry them and a `?g=` restore applies them, since showing the sharer's view is the reason for a link. Slot and saved-team restores ignore them.
 
@@ -143,31 +143,24 @@ A record that breaks a rule is dropped with a console warning, and the others st
 - Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS`, so a `GridState` section missing from it is silently dropped from saved teams. A section with units is also read by `preview.ts` and `sideLoad.ts`.
 - Loading validates each record on its own (known mode, matching board count, data that canonicalizes). One bad record is dropped, never the library.
 - Records on removed maps or with other seasons' content stay valid. Loading strips the old content from the boards while the record keeps it.
-- `updatedAt` changes only on content edits, not renames, so the last-modified sort follows board changes.
 - Every change re-reads the stored library first. If a write fails, the store keeps working in memory and reports the loss, instead of claiming the save worked. The store never shows messages; components do.
 - The library holds at most `MAX_SAVED_TEAMS`.
-
-Save updates the source team in place, or behaves as Save as New when there is none. New builds fresh boards and detaches the source, so Save cannot overwrite the previous team. Clear only empties the boards, or one side of every board, and keeps the source.
-
-Search matches heroes and artifacts per lineup, meaning one board's ally or enemy side with its artifact, so picks never pair across boards or against the opponent. A filtered export writes only the teams shown and says so in its label and toast, so a partial backup cannot pass for a full one.
 
 ## Loading one side
 
 The Load menu stamps a saved one-sided team onto the live boards without touching the other side (`src/lib/teams/sideLoad.ts`, executed by `grids.loadTeamSide`). A team qualifies when every unit on every board belongs to the same side.
 
-It is deliberately not a restore. It clears the destination side with `clearTeam`, then places each unit on its saved hex, or a random free tile when the map puts that hex elsewhere or something already stands there. It never replaces a unit, so it cannot undo its own work. Companions are moved onto their saved hexes right after their main places. Phantimals place after the heroes, because their faction check needs the lineup. Maps, display flags and `sourceId` stay as they were, and the change shows up as ordinary unsaved edits.
+It is deliberately not a restore. It clears the destination side, then places each unit on its saved hex, or a random free tile when the map puts that hex elsewhere or something already stands there. It never replaces a unit, so it cannot undo its own work. Phantimals place after the heroes, because their faction check needs the lineup. Maps, display flags and `sourceId` stay as they were, and the change shows up as ordinary unsaved edits.
 
-A team of the active mode loads board for board, and a 1v1 team loads onto the active board in any mode. Invert loads onto the other side and rotates every hex 180° (`rotatedHexId`).
-
-Generate on the Arena and Teams puts a generated set on the ally side through the same loader (`useFillSide`), without seasonal content while the [Non-Seasonal format](./SEASONAL.md#the-non-seasonal-format) is on. The PvP team generator's Open in Teams opens its set as a new team instead (`applyTeamData` with no `sourceId`), on the maps it was drawn on, so Save can't overwrite the team the boards held; the generator asks for a second press only when that mode's boards hold unsaved work. The pages pass each other notes in the browser's history entry, never stored and in no link (`src/lib/pvp/generator/handover.ts`): Generate's ↗ leaves `generatorFrom` (`arena`, `1v1`, `3v3` or `5v5`), and the generator opens on that page's saved boards. However it is opened, the generator offers the saved boards of the Arena and the Teams page in the mode on screen as a choice of maps wherever they match none of the mode's lists; Open in Teams leaves `generatedSide`, the set as an encoded team, which the Teams page reads once and clears.
+Generate on the Arena and Teams puts a generated set on the ally side through the same loader (`useFillSide`). The PvP team generator's Open in Teams opens its set as a new team instead, so Save cannot overwrite the team the boards held. The two pages pass each other notes in the browser's history entry, never stored and in no link (`src/lib/pvp/generator/handover.ts`).
 
 ## Screenshot import
 
-The team screenshot import ([Screenshot Import](./IMPORT.md#the-team-import)) ends here. The page starts a new team as New does, so the import never merges into the previous one. `grids.applyLineups` then places the plan's lineups as a one-sided load does (`placeSide`), again without a restore: on the tiles a formation screenshot or replay frame shows, else on random free ones, after moving the board to the map a formation screenshot shows. Boards and sides no screenshot shows stay empty. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
+The team screenshot import ([Screenshot Import](./IMPORT.md#the-team-import)) ends here. The page starts a new team as New does, so the import never merges into the previous one. `grids.applyLineups` then places the plan's lineups as a one-sided load does (`placeSide`), again without a restore, and the page saves the boards as a new team.
 
 ## Thumbnails
 
-`BoardThumbnail` draws a board as an SVG from a record's decoded data, never from the live boards or a DOM capture, and it renders from the record's own `t` so a thumbnail shows exactly what Load produces. A card's Copy and Download draw the team as the preview popup shows it, rendered off-screen, and serialize those SVGs onto a canvas, because WebKit fails to capture SVG content from the DOM. Hex shapes are cached per hex size, so a full library draws hundreds of boards from one set of polygons.
+`BoardThumbnail` draws a board as an SVG from a record's decoded data, never from the live boards or a DOM capture, and it renders from the record's own `t` so a thumbnail shows exactly what Load produces. A card's Copy and Download serialize those SVGs onto a canvas, because WebKit fails to capture SVG content from the DOM.
 
 ## Backup files
 
@@ -198,17 +191,15 @@ The team screenshot import ([Screenshot Import](./IMPORT.md#the-team-import)) en
 | `exportedAt` | string | When the file was made, ISO 8601. Written, never read.                    |
 | `teams`      | array  | Saved-team records, each following the library's rules and checked alone. |
 
-A field the reader does not know is ignored. Import only merges; replacing everything is Delete all followed by Import. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip. An id that is too long gets a fresh one, and a record whose id belongs to a different existing team (an old export of it, edited since) comes in under a fresh id with an "(imported)" suffix, unless that copy is already in the library. The reading and merging live in `src/lib/exportFile.ts`, shared with the roster file.
+A field the reader does not know is ignored. Import only merges. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip; a record whose id belongs to a different existing team comes in under a fresh id. The reading and merging live in `src/lib/exportFile.ts`, shared with the roster file.
 
 ## Rosters
 
-A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.ts`, `src/stores/rosters.ts`). The Rosters tab, on both the Arena and Teams pages, edits them, and the menu at the head of the Characters tab and of the empty-tile popup picks the active one. The active roster decides two things: which heroes the picker and the empty-tile popup offer, and the levels a hero starts with when placed from them. Faction placeholders are always offered. With no active roster the source is All heroes, the full list at default levels.
+A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.ts`, `src/stores/rosters.ts`). The active roster decides two things: which heroes the pickers offer, and the levels a hero starts with when placed from them. With no active roster the source is All heroes, the full list at default levels.
 
 After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
 
-The tab's dock, filters and hero grid are one component, `RosterEditor.vue`. It edits whatever hero pool it is given and reports each change in the shape `setHeroes` takes (hero id to levels, or null to remove), so the tab and the PvP team generator both bind it to the active roster. Under All heroes the generator edits a draft of every hero at the top levels instead, which its Save makes a new roster of with `create`.
-
-The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster. At the limit nothing is created, and the import keeps its review.
+The Rosters tab and the PvP team generator edit rosters through one component, `RosterEditor.vue`, which edits whatever hero pool it is given. The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)) saves with `create`, which writes the roster's name and heroes in one write and makes it the active roster.
 
 | Key                        | Holds                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -241,7 +232,7 @@ The roster screenshot import ([Screenshot Import](./IMPORT.md#the-roster-import)
 
 A roster that breaks a rule is dropped with a console warning, and the others still load. Heroes are stored in ascending id order with levels in canonical form, so equal content is byte-equal.
 
-The Rosters tab exports every roster, and so does the PvP team generator, except under All heroes, where its Export writes a file holding one roster of the heroes on its screen. Imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object. The first roster a file adds becomes the active one, as a new roster does, and a file that adds none leaves the active roster as it was:
+Imports merge with the backup-file rules above, keyed on the `heroes` object. The roster file:
 
 ```json
 {

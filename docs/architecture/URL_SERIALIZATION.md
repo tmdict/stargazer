@@ -42,7 +42,7 @@ Sections, in bitmap-bit order
 
 Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: a state without `d` encodes the unpack defaults, so skills and perspective do not switch off on decode. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
 
-`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key that names no registered map encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because old and mangled links are ordinary input. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
+A board list that disagrees with the mode's board count is trimmed or padded with empty boards, because the decoder takes the count from the mode. A map key that names no registered map encodes as 0: the board still restores from its tiles. `decodeLink` returns null without logging, because old and mangled links are ordinary input. The bytes become text in a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares.
 
 In memory, a board keeps phantimals and their companions together in `s`, a phantimal as its local id L and a companion as `N × 10000 + L`. The encoder splits the companions into the bit 6 section so the phantimal entry keeps its fixed 4-bit id, and the decoder appends them back to `s` after the phantimals. A companion entry with index 0 rejects, because index 0 is the phantimal itself. A board without companions leaves bit 6 unset.
 
@@ -63,8 +63,6 @@ A section left empty is omitted, which the decoder's zero-count rule relies on.
 
 ### Capacity and headroom
 
-A link is the envelope, then per board a header plus only the sections it uses, rounded up to whole bytes and written at 6 bits per URL character. An Arena link with 3 changed tiles, 2 heroes and 1 upgrade row is 14 + 14 + (6 + 3 × 9) + (6 + 2 × 23) + (6 + 27) = 146 bits, which is 19 bytes or 26 characters. A full board (20 changed tiles, 10 heroes at P4 and R4, both artifacts, a phantimal per side) is about 175 characters as an Arena link and about 855 as a five-board link, roughly a quarter of the same boards as JSON.
-
 Contract tests fail when a mode, map or attr outgrows its field, including an attr whose max would not fit the 4-bit value, so nothing truncates on the wire.
 
 | Field                  | Bits | Capacity | Limit it sets                                      |
@@ -83,9 +81,9 @@ Contract tests fail when a mode, map or attr outgrows its field, including an at
 | Attr value             | 4    | 15       | level caps up to 15, 16 modes per hero             |
 | Upgrade rows per board | 6    | 63       | 6 attrs per hero on a full board of 10 heroes      |
 
-Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types and upgrade kinds, level caps up to 15, up to 3 more display toggles, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
+Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types, upgrade kinds, display toggles in the spare bits, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
 
-Changing the game's shape does need a new format: a grid beyond 63 hexes, a ninth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format breaks every existing link, and the Arena autosave is converted once by a temporary migration holding a frozen copy of the old decoder.
+A change that outgrows a field needs a new format, which breaks every existing link. The Arena autosave is then converted once by a temporary migration holding a frozen copy of the old decoder.
 
 ## Wire registries
 
@@ -99,7 +97,7 @@ An id stays fixed while its mode or map exists, since reassigning one that live 
 
 Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
 
-Display flags travel with every link, and a `?g=` restore applies them, since showing the sharer's view is the reason for a link. Multi-board restores report `hasDisplayFlags`, so a payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
+Display flags travel with every link, and a `?g=` restore applies them. A payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 
 ## Restoring a board
 

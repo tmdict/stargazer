@@ -43,13 +43,13 @@ A synergy copy runs its base hero's skill. Only the definition lookup strips the
 
 `SkillManager` is a plain class, one per board. The board wraps it in `reactive`, and its computeds call `getTargetVersion()` before reading, so every visible mutation bumps `targetVersion` to trigger a re-derive. Instance state is keyed `characterId-team`, so the same unit can be active on both teams.
 
-Place, move, swap and remove run their tile changes and skill hooks inside `executeTransaction` (`src/lib/characters/transaction.ts`). When `onActivate` throws, `activateCharacterSkill` drops the entry and returns false, and the transaction rolls the whole operation back. `updateActiveSkills` isolates each skill in its own try/catch so one failure cannot leave the rest stale, and a unit that vanished without going through removal is fully deactivated so its companions and capacity change are not leaked. It looks for each skill's unit on the tile it last stood on before searching the board, since a unit with a skill stands on one tile of its team: only placeholders repeat there, and they have no skills. Companions cannot be placed directly: only a skill creates them ([Companions](./skills/COMPANION.md)).
+Place, move, swap and remove run their tile changes and skill hooks inside `executeTransaction` (`src/lib/characters/transaction.ts`). When `onActivate` throws, `activateCharacterSkill` drops the entry and returns false, and the transaction rolls the whole operation back. `updateActiveSkills` isolates each skill in its own try/catch so one failure cannot leave the rest stale, and a unit that vanished without going through removal is fully deactivated so its companions and capacity change are not leaked. Companions cannot be placed directly: only a skill creates them ([Companions](./skills/COMPANION.md)).
 
 ## Builders and composition
 
 `src/lib/skills/utils/builders.ts` covers the common shapes: one target with an optional arrow, one highlighted tile, a set of drawn effects (tile paints, lines and unit badges), and companions. Target helpers are documented in [Targeting](./skills/TARGETING.md).
 
-The registry allows one skill per character, so a hero with several behaviors decorates a base skill. `withEffects` writes the tile paints, lines and unit badges its `calculate` returns after the base hooks on activate and update, and clears them before the base on deactivate. Effects from one computation are returned together, so it runs once: Himmel's tiles and badges come from one scan of his party. Elijah-Lailah, for example, is a companion skill decorated with its tiles and lines. `createEffectsSkill` is the same decorator over an empty base. Kulu and Reinier pass a hand-written object to `registerSkill`.
+The registry allows one skill per character, so a hero with several behaviors decorates a base skill. `withEffects` writes the tile paints, lines and unit badges its `calculate` returns after the base hooks on activate and update, and clears them before the base on deactivate. Elijah-Lailah, for example, is a companion skill decorated with its tiles and lines. `createEffectsSkill` is the same decorator over an empty base, and a skill with a lifecycle of its own, such as Kulu's, passes a hand-written object to `registerSkill`.
 
 A companion's id is `N × grid.companionIdOffset + characterId`, so lookups resolve it to its main hero. The synergy and phantimal bands mirror this arithmetic, so it holds inside them too ([Seasonal Content](./SEASONAL.md)). `createCompanionSkill` raises team capacity by its count unless `raisesCapacity: false`, which a phantimal uses because it holds no team slot.
 
@@ -57,25 +57,25 @@ A companion's id is `N × grid.companionIdOffset + characterId`, so lookups reso
 
 A tile has two paint channels, `tileColorModifiers` for the border and `tileFillModifiers` for the fill. Each maps a hex to its colors with a refcount per color, so independent skills can paint the same color on one tile and one skill's cleanup never removes another's paint. Kulu depends on this: its two teams' zones overlap, and it never repaints on update. `paintTiles` diffs against the set the instance painted last time, and `TilePaint.fill` picks the channel for both the add and the remove, so a tile always leaves the channel it entered.
 
-Lines need no diff: `setSkillLines` replaces the instance's set outright and the renderer draws the flattened list. A `SkillLine` runs border to border between hex centers by default. With `fromCorner` and `toCorner` it runs between hex corners instead. On a single hex that is an exact tile edge, as `outlineEdges` and `zoneOutline` produce. `zoneBoundary` leaves out the stretches along the board's rim, so a region that spans the board draws as the one line between it and the rest, such as the edge of the rows behind Taichi & Agumon. Across two hexes it is a lane boundary that `SkillCornerLines` clips to the visible region (`clipLaneBoundary`).
+Lines need no diff: `setSkillLines` replaces the instance's set outright and the renderer draws the flattened list. A `SkillLine` runs between hex centers by default, or between hex corners with `fromCorner` and `toCorner`, which is how tile edges, zone outlines and lane boundaries are drawn.
 
-A skill that acts on a group of tiles it outlines rather than paints, such as Callan's and Satrana's zones, Zandrok's band or the rows behind Taichi & Agumon, also returns those tiles from `withEffects`' `calculate` as its `zone`. Nothing draws a zone, so setting one bumps no version. `getMarkedTiles` gives the tiles a skill instance acts on, those it paints and its zone, each once, which the placement engine reads ([Placement](./PLACEMENT.md)).
+A skill that acts on a group of tiles it outlines rather than paints, such as Zandrok's band, also returns those tiles from `withEffects`' `calculate` as its `zone`. Nothing draws a zone, so setting one bumps no version. `getMarkedTiles` gives the tiles a skill instance acts on, those it paints and its zone, each once, which the placement engine reads ([Placement](./PLACEMENT.md)).
 
-Arrows take their color from the definition's `targetingColorModifier`, or from the hero's skill mode (below), while lines and paints carry their own color. Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. Each entry is a CSS variable with a value for each look (`src/styles/variables.css`), so an effect sets its color through `style`, never an SVG attribute. `SkillTargeting` draws arrows and center lines, which join units and stand above the portraits. `GridTiles` draws paints and, through `SkillCornerLines`, corner lines, dashed in quarters of a tile edge, which lie on the tiles beneath everything standing on them. All of them show only while the Skills toggle is on.
+Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. Each entry is a CSS variable with a value for each look (`src/styles/variables.css`), so an effect sets its color through `style`, never an SVG attribute.
 
 ## Unit badges
 
-A unit badge is an icon in a colored disc on a portrait's rim, drawn by `UnitBadge.vue`, which maps each icon key (`BadgeIcon`, `src/lib/types/unitBadge.ts`) to its component. Each source has its own spot, so badges never cover each other: skill-mode buttons sit at the upper right and skill badges at the upper left. The lower right stays free because the rows of the perspective view overlap there.
+A unit badge is an icon in a colored disc on a portrait's rim (`UnitBadge.vue`). Each source has its own spot, so badges never cover each other: skill-mode buttons sit at the upper right and skill badges at the upper left. The lower right stays free because the rows of the perspective view overlap there.
 
-A skill shows badges the way it draws lines. The `badges` that `withEffects`' `calculate` returns replace the instance's `SkillBadge` list (a hex, an icon key and a color) on activate and update and are cleared on deactivate, and `GridCharacters` draws the flattened list on the units standing on those hexes, one badge per hex and icon however many instances show it. Himmel badges each member of his party with its class, in the color of the party's tiles.
+A skill shows badges the way it draws lines: the `badges` that `withEffects`' `calculate` returns replace the instance's list on activate and update and are cleared on deactivate.
 
 What identifies a unit shows whatever the Skills toggle says: the picture a skill draws a unit with (a companion, or Elijah alone) and a skill-mode button. What pictures a skill's effect shows only while the toggle is on: tile paints, arrows, lines and skill badges.
 
 ## Hiding one unit
 
-The Skills chip's list (`GridSkillsToggle.vue`) turns off what one unit or artifact draws, and shows a row for each one able to draw, whether it has drawn anything yet or not. A skill that only spawns companions (`drawsNothing`), a phantimal without its data's `targeting` flag and an artifact with no targeting rule get no row. Each team's own row switches every unit listed under it, turning them all on unless all are on already. The hidden keys are one set in the `grids` store, shared by every board on the page, and each board's computeds ask `SkillManager` for what is left, so the renderers need no check of their own. A hero and its synergy copy share a key, and a key leaves the set when its unit leaves the boards.
+The Skills chip's list turns off what one unit or artifact draws. The hidden keys are one set in the `grids` store, shared by every board on the page, and each board's computeds ask `SkillManager` for what is left, so the renderers need no check of their own. A hero and its synergy copy share a key.
 
-A hidden unit's paint comes off a copy of the refcounts, so a color another skill paints on the same tile stays. That needs to know who painted what, so every tile paint goes through `paintTiles`. The Debug tab reads the engine directly and still shows hidden units. The set is never stored or serialized, so a reload or a link shows every drawing, while Copy and Download capture the board as it stands.
+A hidden unit's paint comes off a copy of the refcounts, so a color another skill paints on the same tile stays. That needs to know who painted what, so every tile paint goes through `paintTiles`. The set is never stored or serialized.
 
 ## Lookups
 
@@ -85,7 +85,7 @@ A skill that needs data-store facts reads them from `ctx.lookups`, never from th
 
 ## Skill modes
 
-Some heroes enter battle in one of several modes the player picks beforehand, such as Dunlingr's Bell of Order (Spellbind or Curelock) and Natsu's Lightning Fire Dragon Mode or Fire Dragon King Mode. `SKILL_MODES` (`src/lib/skills/skillModes.ts`) lists them per base hero id: an icon key, and per mode an app locale key for its game name and a `SKILL_COLORS` color.
+Some heroes enter battle in one of several modes the player picks beforehand, such as Dunlingr's Bell of Order (Spellbind or Curelock). `SKILL_MODES` (`src/lib/skills/skillModes.ts`) lists them per base hero id: an icon key, and per mode an app locale key for its game name and a `SKILL_COLORS` color.
 
 A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#hero-upgrade-attributes)), whose value is the mode's position in that list. Position 0 is the default and is never written, so a hero in its default mode has no row. Each list is append-only: a mode is never reordered or removed, and a new one goes at the end. The 4-bit value field allows 16 modes per hero. A value past a hero's last mode reads as the last mode, and a row for any id without an entry drops, including companion and synergy ids, since the lookup takes the exact id. Rosters never store a mode. A saved team with Valen at P4 and Dunlingr set to Curelock:
 
@@ -109,15 +109,15 @@ A placed hero's mode is hero attribute 3 (`ATTR_SKILL_MODE`, [Grid](./GRID.md#he
 }
 ```
 
-A mode changes no targeting, only colors. `SkillTargeting` draws the hero's arrows in its current mode's color, and `GridCharacters` puts a button with the mode's icon and color on the portrait's upper right, a [unit badge](#unit-badges). The button shows whatever the Skills toggle says, because the mode is part of the hero's setup. A synergy copy has no button and draws the default mode's color.
+A mode changes no targeting, only colors: the hero's arrows take the current mode's color, and a button with the mode's icon sits on the portrait as a [unit badge](#unit-badges). A synergy copy has no button and draws the default mode's color.
 
 ## Artifact targeting
 
 Some artifacts act on specific units, such as Enlightening on the rearmost ally, and draw arrows from their slot's host cell (`artifactHostHex`). This is not a Skill. A skill belongs to a placed unit and lives with its placement, while an artifact belongs to board-level slot state and has no hex for the lifecycle to track. Each board instead derives `artifactArrows` as a computed over both slots and the grid, the same way the closest-target arrows are derived, so no place, move or remove path needs wiring.
 
-`ARTIFACT_TARGETING` (`src/lib/skills/artifact.ts`) is keyed by artifact name, which the board looks up from the artifact id in the slot. A rule receives the team whose slot holds the artifact and may pick units on either team, using the same whole-team helpers as hero skills (`frontmostUnit`, `frontmostUnits`, `rearmostUnit` in `src/lib/skills/utils/distance.ts`), so phantimals and companions count the same way. An artifact draws exactly when it has an entry, and only its base-level targets are drawn. Seasonal ids are reused, so a rule left over from an old season never draws for the artifact that takes its id.
+`ARTIFACT_TARGETING` (`src/lib/skills/artifact.ts`) is keyed by artifact name, which the board looks up from the artifact id in the slot. A rule receives the team whose slot holds the artifact and may pick units on either team, using the same whole-team helpers as hero skills (`frontmostUnit`, `frontmostUnits`, `rearmostUnit` in `src/lib/skills/utils/distance.ts`), so phantimals and companions count the same way. Seasonal ids are reused, so keying by name keeps a rule left over from an old season from drawing for the artifact that takes its id.
 
-The arrows render in `SkillTargeting` in the team colors (`TEAM_COLORS`) and share the Skills toggle. Team view hides the enemy slot's arrows, and also any arrow whose target tile it crops out, such as an ally artifact pointing at enemies. `GridArrow` prefixes its SVG marker id with the board id, because marker ids are document-wide and the Teams page renders several boards.
+`GridArrow` prefixes its SVG marker id with the board id, because marker ids are document-wide and the Teams page renders several boards.
 
 The table only draws arrows. An artifact side effect such as a spawned unit or a capacity change would need skills to take a caster-agnostic source, since the table has no lifecycle.
 

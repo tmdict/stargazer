@@ -44,7 +44,7 @@ The hero list, skill pages and search pick the character up from those files.
 
 ### Adding an arena map
 
-Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. A map file holds the layout alone. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are in `src/data/maps.json`, which the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` read, with each board's buff tiles and the name of each buff's text under `src/locales/buff/` ([Teams](/docs/architecture/TEAMS.md)). A rotation edits a list's maps and buffs together. The Supreme League list changes every couple of months, mid-season too, and the replay-frame reader then needs checking against frames of the new maps ([Screenshot Import](/docs/architecture/IMPORT.md#replay-frames)).
+Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. A map file holds the layout alone. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are in `src/data/maps.json`, which the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` read, with each board's buff tiles and the name of each buff's text under `src/locales/buff/` ([Teams](/docs/architecture/TEAMS.md)). A rotation edits a list's maps and buffs together, and the replay-frame reader then needs checking against frames of the new maps ([Screenshot Import](/docs/architecture/IMPORT.md#replay-frames)).
 
 ### Adding a skill
 
@@ -52,7 +52,7 @@ Add `src/lib/skills/characters/<slug>.ts`, or `seasonal/` for a unit that rotate
 
 ### Adding a skill note
 
-A hero's skill note is one file per app locale, `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` ([Skill Pages](/docs/architecture/SKILL_PAGES.md#commentary-snippets)), and its boards are `GridSnippet`s. A board that shows which units a skill takes puts a hero on every candidate, dims the ones it passes over (`dimmed`) and lights the border of the ones it takes (`outlined`). A board that shows an order numbers the tiles instead, since a number on a portrait is hard to read, and colours them by ring only when the order runs through more than one ring. A ring that runs off the board is completed with a dashed tile (`imaginaryHexes`) carrying the number that tile would have in the order. The casting hero's tile is left uncoloured unless the colour groups it with other tiles, such as Aliceth's row or Nara's mirror tile.
+A hero's skill note is one file per app locale, `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` ([Skill Pages](/docs/architecture/SKILL_PAGES.md#commentary-snippets)), and its boards are `GridSnippet`s. A board that shows which units a skill takes puts a hero on every candidate, dims the ones it passes over (`dimmed`) and lights the border of the ones it takes (`outlined`). A board that shows an order numbers the tiles instead, since a number on a portrait is hard to read.
 
 ### Adding a screenshot screen
 
@@ -64,13 +64,13 @@ Placement, moves, swaps and removal live in `src/lib/characters/` and run inside
 
 ### Changing a unit's placement rule
 
-A unit's placement rule is in `rules` in its data file, and its words are defined in `src/lib/types/rule.ts` ([Placement](/docs/architecture/PLACEMENT.md)). After a change, run `npx vitest run tests/unit/rules.test.ts tests/unit/placement`. The first checks that every rule keeps the contract's fields and words and sits on a unit whose skill says where its effect lands, and the second checks each goal word, the rules against us and the search. A new goal word or field also goes in the scorer (`src/lib/placement/score.ts`), in the goal table in [Placement](/docs/architecture/PLACEMENT.md#scoring), and in a unit test of its own.
+A unit's placement rule is in `rules` in its data file, and its words are defined in `src/lib/types/rule.ts` ([Placement](/docs/architecture/PLACEMENT.md)). After a change, run `npx vitest run tests/unit/rules.test.ts tests/unit/placement`. A new goal word or field also goes in the scorer (`src/lib/placement/score.ts`) and in a unit test of its own, and a new goal word in the goal table in [Placement](/docs/architecture/PLACEMENT.md#scoring).
 
-To see how a change moves real teams, run the measuring test, `tests/placement/engine.test.ts`, whose header lists its settings. A rule for a unit's own team moves only the teams that hold the unit, so a run with `PLACEMENT_UNITS` set to the unit's name (for a charm, its holders' names) is enough and much quicker. A rule against us, a weight, a goal word or the search can move every team and needs the whole run. A change that should move no team, such as a speed-up, is checked with the whole run and `PLACEMENT_COMPARE` naming the `picks.json` of a run from before it. The lists, leans and weights come in the PvP data file, so a change to them arrives with the next copy of it.
+To see how a change moves real teams, run the measuring test, `tests/placement/engine.test.ts`, whose header lists its settings. The lists, leans and weights come in the PvP data file, so a change to them arrives with the next copy of it.
 
 ### Styles
 
-Component styles are scoped in each `.vue` file and global styles are in `src/styles/`. Tile colors are tokens in `src/styles/variables.css`, and `src/utils/tileStateFormatting.ts` picks them for each tile state and holds the team colors that SVG drawing uses (`TEAM_COLORS`, `teamTint`). Boards draw wall hatching with `src/components/grid/TileHatchPatterns.vue` and `TileHatch.vue`: breakable walls in the light look, every wall in the dark look. In the dark look `TileBevel.vue` adds an inner line to every tile but open ground, as the preview board does.
+Component styles are scoped in each `.vue` file and global styles are in `src/styles/`. Tile colors are tokens in `src/styles/variables.css`, and `src/utils/tileStateFormatting.ts` picks them for each tile state and holds the team colors that SVG drawing uses (`TEAM_COLORS`, `teamTint`).
 
 ## Documentation
 

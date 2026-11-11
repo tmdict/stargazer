@@ -29,13 +29,13 @@ Two facts shape the design. Stargazer's seasonal ids restart each season (artifa
 | Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`              | hand        |
 | Icons                               | data pack                                                                         | pack update |
 
-A pack update writes the structural files at a season's start, with each id, season, stat, range, damage type, faction and class. An artifact's id is 6 plus its place in the season's set, a phantimal's follows its faction, and a phantimal that counts for both Hypogean and Celestial lists both. Ids are baked into share links, so an update never changes an existing file's id within a season. Hand-set fields such as `targeting` and `tags` are kept within a season (a slug that returns in a later season starts without them), and the previous season's files are removed.
+A pack update writes the structural files at a season's start. An artifact's id is 6 plus its place in the season's set, and a phantimal's follows its faction. Ids are baked into share links, so an update never changes an existing file's id within a season. Hand-set fields such as `targeting` and `tags` are kept within a season, and the previous season's files are removed.
 
 The same update brings the season's text and icons into the data pack. The app reads the pack's copy in `src/pack/`, and `npm run build` stops when a seasonal artifact or phantimal in the data files has no icon there, and lists those with no text yet.
 
 ## Reused ids
 
-`CURRENT_SEASON` (`src/lib/seasonal.ts`) is the highest `season` in the loaded data files, so the season changes when a cutover deploys, not on a date. Every saved team records the season it was saved in. When a stored team comes from another season, its phantimals and seasonal artifacts are dropped as it is read (`stripRetiredSeasonal`, applied by `normalizeTeamPayload` on every Teams page load and by side-load), and a dismissible banner says what was removed (`useSeasonNotice`). The saved record itself keeps them until it is saved again, and its card shows an "S7"-style placeholder instead of looking the reused id up. `teamContentKey` includes the stamp only when a team has seasonal content, so a season change does not mark other teams as edited.
+`CURRENT_SEASON` (`src/lib/seasonal.ts`) is the highest `season` in the loaded data files, so the season changes when a cutover deploys, not on a date. Every saved team records the season it was saved in. When a stored team comes from another season, its phantimals and seasonal artifacts are dropped as it is read (`stripRetiredSeasonal`), and a banner says what was removed. The saved record itself keeps them until it is saved again. `teamContentKey` includes the stamp only when a team has seasonal content, so a season change does not mark other teams as edited.
 
 The arena autosave is stored without a season, so `runSeasonRotationPass` (`src/utils/seasonRotation.ts`) keeps a marker (`stargazer.season`, a decimal string such as `"8"`) and strips the autosave once per season change. A missing marker, or one that is not one to four digits, counts as season 7 (`PRE_MARKER_SEASON`), the season the marker shipped in.
 
@@ -72,8 +72,6 @@ Every phantimal's marks follow one rule (`spiritMarkTiles`, `src/lib/skills/util
 - A unit holds one mark, so a later mark passes over a marked unit, and the tile it stands on, as if it were not there.
 - A mark tries the tiles of its chain in order and takes the first unit it can. If none is left, it is not drawn.
 
-So when Wedge of Matter and Wedge of Power both reach one hero, Wedge of Matter keeps that hero and Wedge of Power takes the next hero in its own chain. A team fields one phantimal, so one call gives out all of a team's marks.
-
 Links store phantimals in each board's `s` section by local id, with companions as `N × 10000 + L` (bit layout in [URL Serialization](./URL_SERIALIZATION.md)). An id with no data renders on the grid as a removable "?".
 
 ## Seasonal artifacts
@@ -82,11 +80,11 @@ The six pre-season artifacts (`season: 0`) never rotate. `season` orders the art
 
 ## The Non-Seasonal format
 
-The Format menu's Non-Seasonal switch keeps phantimals and the season's artifacts off a lone board, leaving the permanent artifacts (season 0). The board rules are in [Grid](./GRID.md). Generate follows the switch: the set is chosen as usual, then each team trades its artifact for a permanent one, the one it was recorded with most or else the first in its fallback list (`permanentArtifact`), and its board is drawn without the phantimal (`nonSeasonalUnits`).
+The Format menu's Non-Seasonal switch keeps phantimals and the season's artifacts off a lone board, leaving the permanent artifacts (season 0). The board rules are in [Grid](./GRID.md). Generate follows the switch: the set is chosen as usual, then each team trades its artifact for a permanent one, and its board is drawn without the phantimal.
 
 ## Phantimal and artifact tags
 
-Phantimal and artifact data files, the six pre-season artifacts included, can carry a hand-written `tags` list, which the Seasonal tab's filter reads. It names each hero tag whose effect appears anywhere in the skill or effect text, upgrade levels included. The list has no modifiers or level pins, so `debuff` counts a stat reduction on one enemy as well as on all of them. A file without the field has no tags.
+Phantimal and artifact data files, the six pre-season artifacts included, can carry a hand-written `tags` list, which the Seasonal tab's filter reads. It names each hero tag whose effect appears anywhere in the skill or effect text. A file without the field has no tags.
 
 ```json
 {
@@ -100,7 +98,7 @@ Phantimal and artifact data files, the six pre-season artifacts included, can ca
 
 ## Charms
 
-A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. The charms' text sits in each language's skill text folder, so it loads with that language's skill text, in a file whose name starts with an underscore, which the route and hero walks skip. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
+A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under its id (the season and the charm's place in the season's list, `s8-1`) and each hero points to it. The charms' text sits in each language's skill text folder, in a file whose name starts with an underscore, which the route and hero walks skip.
 
 Each charm has a data file, `src/data/seasonal/charm/<id>.json`, where a pack update writes its id, season and the heroes sharing it. Charms can carry tags, written by hand in the same file: each tag gives every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
 
@@ -123,7 +121,7 @@ Each charm has a data file, `src/data/seasonal/charm/<id>.json`, where a pack up
 }
 ```
 
-`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. A pack update keeps a charm file's hand-written fields within the season. A charm's effects change with the season, so an update removes the file of a charm that has left the season, stops instead when that file holds fields written by hand, and removes every charm file with the text when the season retires.
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. A charm's effects change with the season, so a pack update removes the file of a charm that has left the season.
 
 ## Season cutover
 
@@ -137,7 +135,7 @@ Each phase ships on its own, because a season's text arrives weeks after the fli
 
 Nothing stored is rewritten at a cutover: stale teams are cleaned as they are read, and each device's arena autosave on its first visit after it. `PRE_MARKER_SEASON` does not change.
 
-The PvP data file keeps working across a cutover until the next season's file arrives, which comes with the next season's first report and so waits for that season's first recorded games. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals. The file's unit test checks those ids only while the seasons match, so a cutover never holds up a deploy.
+The PvP data file keeps working across a cutover until the next season's file arrives. While its season is not `CURRENT_SEASON`, its seasonal artifact ids name the new season's artifacts (`artifactSurvives`), so the PvP pages count each as a typical artifact and save their sets without seasonal artifacts or phantimals.
 
 ## Related documentation
 

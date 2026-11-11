@@ -8,7 +8,7 @@ Skill text comes from the data pack, one folder per language. `SKILL_LOCALES` is
 
 Each hero's file, named by its slug, stores the localized name in `_hero.name` and entries for the hero's slots in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and optional EX refinement tiers `r`. `SLOT_ORDER` also defines render order and the slots commentary can fill.
 
-Files whose names start with an underscore hold shared language data: the terms file for panel labels, the glossary, every artifact's name and effects, and the [seasonal text](./SEASONAL.md) of charms and phantimals. `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too. The artifact and phantimal windows read theirs in the language of their own globe menu, through `useModalSkillLocale` as the skill window does, so their text loads with that language's chunk.
+Files whose names start with an underscore hold shared language data: the terms file for panel labels, the glossary, every artifact's name and effects, and the [seasonal text](./SEASONAL.md) of charms and phantimals. `splitSkillDict` excludes them from hero dictionaries, and the pre-render route walk must exclude them too.
 
 In the terms file, `ultimate` and `ex` prefix slot headings. The remaining fields are panel templates, with `{cooldown}`, `{initialCooldown}`, `{range}` and `{energy}` replaced by values:
 
@@ -86,9 +86,7 @@ Each attachment describes one effect and pins exactly one `{ slot: level }` or `
 
 `tagVocabulary` derives tags and modifiers from hero data; labels live in `src/locales/app/<key>.json`. A tag whose attachments all carry the same single modifier becomes one combined entry. Synergies are excluded from that rule because they describe a partner rather than the effect. Shared rules live in `src/lib/tags.ts`, independent of the data loader, for hero lists, skill chips and the Mechanics guide.
 
-Within each tag, chips merge picks that match identical attachments, so any of the merged picks activates the chip. Synergies have no skill chip and are removed from incoming modal picks. Modals discard picks with no matching text.
-
-Active chips combine as any-of and show matching slots or charms in full, accenting matching levels or tiers. A tagged upgrade cannot stand alone because its text depends on earlier levels. EX refinements have no tags and remain with their slot without accents.
+Active chips combine as any-of and show matching slots or charms in full, accenting matching levels or tiers. A tagged upgrade cannot stand alone because its text depends on earlier levels.
 
 ### Initial energy filter
 
@@ -117,23 +115,13 @@ The guide index adds the card id as a fragment: the tag or `init-energy`. Unknow
 
 ## Commentary snippets
 
-Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after mount, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order. `GridSnippet` resolves portraits so snippet data files need no image imports.
+Optional commentary lives at `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue`, with one file per app locale. The text locale wins when it is an app locale, then chrome, then English. `SkillSnippets` teleports named slots into `useSnippetAnchors` refs, which exist only after mount, keeping commentary out of pre-rendered descriptions. Without anchors it renders inline in slot order.
 
 ## Search
 
 `SkillSearchOverlay` mounts once at the app root and teleports after mount. Its select mode returns a hero to the opener; route changes close it so a handler cannot outlive its page. Results link to `/<hit locale>/skill/<slug>#<slot>` using reader section ids and the router's scroll behavior.
 
-Matching in `useSkillSearch` follows these rules:
-
-| Rule     | Behavior                                                                                                  |
-| -------- | --------------------------------------------------------------------------------------------------------- |
-| Corpus   | Every warm language; the first non-empty query loads missing chunks and re-runs as each arrives.          |
-| Names    | Localized hero names plus chrome name aliases, which work before any chunk loads. One character suffices. |
-| Deep     | From 3 characters (2 for Han, kana or Hangul), includes skill names, descriptions and charm text.         |
-| Priority | Text locale, then chrome locale, then table order; each hit records and links to its matched language.    |
-| Dedup    | One hit per hero and slot at the lowest level, one charm slot, at most 3 hits per hero.                   |
-| Ranking  | Name matches first, then hit count, then curated name.                                                    |
-| Picker   | `matchCharacterNames` searches the same names in warm languages without loading chunks.                   |
+`useSkillSearch` searches every loaded language, and the first non-empty query loads the missing chunks and re-runs as each arrives. Hero names and their chrome aliases match from one character and work before any chunk loads; skill names, descriptions and charm text join from 3 characters (2 for Han, kana or Hangul). Each hit records the language it matched in and links there. The hero picker's `matchCharacterNames` searches the same names without loading chunks.
 
 ## Stored preferences
 

@@ -40,7 +40,7 @@ A tile (`GridTile`) has its `characterId` and `team` fields from the moment it i
 
 ## Boards
 
-`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size, team view, invert, perspective, the two format switches and the team-view crop come from `useGrids`, because every board renders at one size with one set of display flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
+`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size and the display flags come from `useGrids`, because every board renders at one size with one set of flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
 
 Placement operations refresh skill results themselves. Raw tile edits and companion settling do not, so their callers refresh once at the end.
 
@@ -54,12 +54,12 @@ A hero is unique per team across all boards, and so is an artifact. Placeholders
 
 Every pick (click, tap, popup, drag gate) goes through `resolvePick`, which combines the engine's resolver with page-wide uniqueness, so hover cues and drops cannot disagree. Clicks, taps and the popup place through `placePick`, and a drag from the picker through `routeDrop`. Both then give the hero the active roster's levels, the one place a roster touches a board ([Teams](./TEAMS.md)). A drop that stays on one board runs the board's own `handleDrop`. A drop across boards is a remove on one board plus a place on the other, and restores the original if the place fails. Drop payloads carry only source coordinates, and ids and teams are read from the live cells at drop time. Drag gestures and drop routing are covered in [Drag & Drop](./DRAG_AND_DROP.md).
 
-Upgrade records follow their hero. Cross-board moves and swaps read the record before removing the hero, since the remove drops it, then write it on the destination, or back on the source when the move rolls back. `swapBoards` carries each hero's record the same way, and a same-board team change re-keys it inside the board's own move or swap. `swapBoards` exchanges the two boards' units and artifacts. The Load menu, the board swap and a map change all place through `placeSide`: a unit keeps its own tile where the board gives that tile to its team, and takes a random free tile otherwise.
+Upgrade records follow their hero through cross-board moves and swaps, back to the source when a move rolls back. The Load menu, the board swap (`swapBoards`) and a map change all place through `placeSide`: a unit keeps its own tile where the board gives that tile to its team, and takes a random free tile otherwise.
 
 The Format menu holds two switches, shown on the Arena and in the Teams page's 1 v 1 mode. Neither is serialized or stored.
 
 - **Synergy** (friend assist): `deriveSynergy` re-reads it from the boards after every restore, and turning it off removes every synergy unit from every board, so the box always matches the boards.
-- **Non-Seasonal**: turning it on removes each team's phantimal and seasonal artifact (`setNonSeasonal`). While it is on, `phantimalCanJoinTeam` refuses every phantimal, which also stops the faction watcher from placing one, and the pickers grey out the season's artifacts (`allowsArtifact`). Content that arrives from a link, a loaded team or an import turns it off first when it holds a phantimal or a seasonal artifact (`admitSeasonal`), and every rebuild of the boards (another page, another mode, a new or opened team) turns it off.
+- **Non-Seasonal**: turning it on removes each team's phantimal and seasonal artifact (`setNonSeasonal`), and while it is on the board refuses both. Content that arrives from a link, a loaded team or an import turns it off first when it holds seasonal content (`admitSeasonal`), and so does every rebuild of the boards.
 
 ## Unit ids
 
@@ -118,53 +118,30 @@ Rotating content is separate. `rotatedHexId` (`src/lib/grid.ts`) negates all thr
 
 ## Perspective
 
-The perspective view (the Flat toggle unticked) draws the board the way the game's formation screen does: flattened, and leaning away from the viewer so lower rows are larger. `PERSPECTIVE` (`src/lib/layout.ts`) holds both numbers, measured from in-game formation captures, and the import's board fit reads formation screenshots through the same camera ([Screenshot Import](./IMPORT.md#formation-screenshots)). The flag is page state on `useGrids`, beside invert, because every board's layout reads it, and board components read it from their context (`ctx.perspective`). Each page opens flat, and `useBreakpoint` hands the flag to the page.
+The perspective view draws the board the way the game's formation screen does: flattened, and leaning away from the viewer so lower rows are larger. `PERSPECTIVE` (`src/lib/layout.ts`) holds both numbers, and the import's board fit reads formation screenshots through the same camera ([Screenshot Import](./IMPORT.md)). The flag is page state on `useGrids`, beside invert, because every board's layout reads it.
 
-The squash (`compression`, how much the camera shortens the board vertically) is a CSS `scaleY` on the board's container, which sprites undo so portraits stay round. A transform leaves the box at the board's flat height, so in perspective `GridContainer` sizes the box to the squashed height of `drawnBounds` and moves the board up to fill it. `drawnBounds` is the padded extent of the tiles, the artifact host cells and the portraits standing above the far row, the same extent team view crops to.
+The two parts are built differently. The squash (`compression`) is a CSS `scaleY` on the board's container, which portraits and the arrow layers undo so they keep their shape. The lean (`tilt`) cannot be a CSS transform, since it is not affine and `getScreenCTM` could not invert it for hit-testing. It lives in the `Layout` like rotation, applied after any rotation, so every surface that draws from the layout follows it and `getScreenCTM` only has to undo the squash.
 
-The box has an explicit height in both views, so switching views eases it with the board's squash and the content below moves with the board. Only a switch eases (`.switching` on the box until the board's transition ends), and the arrow layers stay hidden meanwhile, because they take their final shape at once.
-
-The lean (`tilt`) cannot be a CSS transform, since it is not affine and `getScreenCTM` could not invert it for hit-testing. It lives in the `Layout` like rotation: each position scales by `1 / (1 - tilt × rows down in hex radii)` about the board center, after any rotation, so the bottom of the screen stays nearest under invert. Every surface that draws from the layout follows it, and `getScreenCTM` only has to undo the squash. Tilting alone would lower the board in its box, its near edge past the bottom, so the grid context raises the layout's origin until the drawn board is centered, as the flat one is.
-
-Portraits and artifact icons stand on their tiles: each is raised until the tip of its pointer touches the tile's center (`Layout.standingLift`). The arrows and center lines rise to the centers of the tokens they join and end on their rims as drawn, because the layout stretches those ring offsets against the squash (`Layout.squash`). An artifact icon is smaller than a portrait and stands lower, so its arrows start on its own rim.
-
-Arrows between units arc up through the air (`Layout.arcPath`), never above the top of the portrait at their higher end, so the crop and the box never cut one off. A closest-target arrow arcs lower than a skill arrow on the same pair. Artifact arrows keep the flat view's sideways bow, and so do two arrows joining the same pair of units in opposite directions, which would otherwise share one arc.
-
-The arrow layers (`GridArrowLayer`) undo the squash, as portraits do, so strokes and arrowheads keep their shape. The layout's arrow and line paths come out in those upright coordinates. Tile highlights and corner lines (zone and lane edges) are drawn with the tiles, beneath everything standing on them.
+A transform leaves the box at the board's flat height, so in perspective `GridContainer` sizes the box to the squashed height of `drawnBounds`, the same extent team view crops to.
 
 ## Image export
 
-Image export (`useGridExport`) trims every image to what it draws, on all four sides: the room the squash leaves, the hero cards and board buttons the Teams page's image of all boards leaves out, and the width of a board's area beyond the board. With the boards wrapped, the cards and buttons under the top row leave an empty band between the rows, which the trim narrows to a fixed gap (`ROW_GAP`). The background is transparent, so the trim keeps the portraits and arrows above the far row. The trim cuts on whole pixels, because a fractional offset would resample, and so soften, the whole image.
-
-The image's resolution follows the board, not the screen. Every portrait keeps all the pixels of the 100 px image the board draws it from (`FULL_DETAIL_RATIO`), so every device saves the same image, within the largest canvas iOS Safari draws.
+Image export (`useGridExport`) trims every image to what it draws. The trim cuts on whole pixels, because a fractional offset would resample, and so soften, the whole image. The image's resolution follows the board, not the screen, so every device saves the same image.
 
 ## Hero upgrade attributes
 
 `src/lib/characters/attributes.ts` defines every per-hero attribute: the levelled upgrades (paragon, EX refinement) and the skill mode ([Skills](./SKILLS.md#skill-modes)). Attribute ids are append-only because saved teams and links carry them. The link codec's 4-bit value field caps `max` at 15, and character id 0 is reserved for future team-wide rows.
 
-Each board keeps one record per team and hero, keyed that way instead of by hex, so levels follow a hero across moves and each team tracks its copy separately. Records are sparse: a default value deletes its key, so an untouched board stores nothing. A record exists only while its real hero (`isRealHeroId`) stands on that side of the board. `setAttr` and `setAttrs` ignore anyone else, so a record can only be written once its hero is placed. Every operation that can take a hero off the board (remove, a replacing place, `clearTeam`, clearing, a map switch) prunes afterwards, so a hero that comes back starts at defaults. Companions and phantimals never hold a record, because they also leave the board through skills and the phantimal reconciler, which do not prune. Placeholders never hold one either, because copies repeat on a team and would share a key. A move or swap reads each record before the engine runs and writes it under the hero's new key, and a same-hero cross-team swap reads both records before writing either.
+Each board keeps one record per team and hero, keyed that way instead of by hex, so levels follow a hero across moves and each team tracks its copy separately. Records are sparse: a default value deletes its key, so an untouched board stores nothing. A record exists only while its real hero (`isRealHeroId`) stands on that side of the board, and every operation that can take a hero off the board prunes afterwards, so a hero that comes back starts at defaults. Companions, phantimals and placeholders never hold a record.
 
-`clampAttr` runs wherever values enter: `setAttr`, the link decoder and saved-team canonicalization. All three drop unknown attribute ids. It takes the hero id, because a skill mode's range is that hero's own mode list. Rows are sorted by `compareAttrRows` everywhere they are emitted, because unsaved-change checks and import dedupe compare bytes. The upgrade controls appear only for real heroes, and the serializer writes rows only for base heroes, so it never finds a placeholder record to write.
+`clampAttr` runs wherever values enter: `setAttr`, the link decoder and saved-team canonicalization. All three drop unknown attribute ids. Rows are sorted by `compareAttrRows` everywhere they are emitted, because unsaved-change checks and import dedupe compare bytes.
 
 ## Map editor
 
-The Arena's Maps tab paints tile states straight onto the live board while its Edit Tiles toggle is on, and turning it on also turns team view off, because team view crops the board to the ally side. Only empty, ally, enemy, blocked and breakable states are paintable. Occupied states come only from placing units. A click in editor mode goes to `useMapEditorStore().setHexState` before any placement logic, so it never opens the unit picker.
+The Arena's Maps tab paints tile states straight onto the live board while its Edit Tiles toggle is on. Only empty, ally, enemy, blocked and breakable states are paintable. Occupied states come only from placing units. A click in editor mode goes to `useMapEditorStore().setHexState` before any placement logic, so it never opens the unit picker.
 
 `setHexState` removes the occupant of an occupied tile first, since the tile's team may change under it. It then refreshes the board's skills, because terrain-aware skill paint (zones, blocked tiles) is not recomputed by a tile edit. Fill and Clear remove every unit before repainting.
 
-Drag painting in `GridTiles` paints each hex once per drag and at most once every `PAINT_THROTTLE_MS` (50 ms). A hex crossed inside that window is skipped instead of queued, so the user has to re-enter it.
-
 Links and saved boards store every non-default tile, so an edited map round-trips exactly. A payload without a map key is matched to a preset by its tiles (`findMapByTiles`). An edited map matches none and keeps the board's current map key, which is what Clear returns to.
 
-The map dropdown in the Arena's tab bar, shown at 1,320 px and wider, lists every board of the Supreme League and Guild Duel lists ("SL Arena 3", "GD Arena 2"). A pick moves the board onto that map with the buffs it has on that mode's list ([Teams](./TEAMS.md#modes-and-types)), and the dropdown names the row picked. The Arena's saved board and its links carry no map key, so the pick is kept apart from them under `stargazer.arena.variant`, as plain text: the mode of the row picked, `sl` or `gd`, such as `gd`. A map is on a mode's list at most once, so the mode and the board's map give the row. The key is written on a pick and removed when the board becomes a plain map: a pick in the Maps tab, a tile edit, an opened link, or a saved team loaded onto another map. On load the pick holds only when the board's map is on that mode's list, and anything else reads as no pick. A plain map carries no buffs, and the dropdown then shows "Arena".
-
-With Grid Info's Buff tiles row on, `GridTiles` draws yellow corner marks on the board's buff tiles, under the portraits. They are board information like the tile numbers, so image exports keep them, while Placement tips' marks stay out. Hovering an empty buff tile opens a Buff Tile card with the buff's text. A unit on one adds that text to its own card, or shows the Buff Tile card when it has no card of its own, except an ally under Placement tips, whose card already names the tile. Touch screens show the marks and no card.
-
-## Related documentation
-
-- [Companion Skills](./skills/COMPANION.md): companion spawn, rollback and removal
-- [Skills](./SKILLS.md): the skill registry and runtime
-- [Drag & Drop](./DRAG_AND_DROP.md): gestures, taps and drop routing
-- [Teams](./TEAMS.md): modes, persistence and saved teams
-- [Seasonal Content](./SEASONAL.md): phantimals and their id range
-- [URL Serialization](./URL_SERIALIZATION.md): link sections and display flags
+The map dropdown in the Arena's tab bar lists every board of the Supreme League and Guild Duel lists. A pick moves the board onto that map with the buffs it has on that mode's list ([Teams](./TEAMS.md#modes-and-types)). The Arena's saved board and its links carry no map key, so the pick is kept apart from them under `stargazer.arena.variant`, as plain text: the mode of the row picked, `sl` or `gd`, such as `gd`. A map is on a mode's list at most once, so the mode and the board's map give the row. The key is written on a pick and removed when the board becomes a plain map. On load the pick holds only when the board's map is on that mode's list, and anything else reads as no pick. A plain map carries no buffs.

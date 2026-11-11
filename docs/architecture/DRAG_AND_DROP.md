@@ -40,7 +40,7 @@ A tile's `dragleave` clears the hover only when position detection disagrees, be
 
 ### Hover after a drop
 
-Mouse events resume the moment `isDragging` drops, which would flash a hover on the drop tile before the drag UI has cleaned up. `GridTiles` blocks the plain hover during a drag and for 100 ms after. `endDrag` copies the hovered hex into `lastDropHexId` and `lastDropGridId`, and when the grace period ends the matching board restores its hover there.
+Mouse events resume the moment `isDragging` drops, which would flash a hover on the drop tile before the drag UI has cleaned up. `GridTiles` blocks the plain hover during a drag and for a short grace period after, then restores the hover on the tile the drop landed on.
 
 ## Drop routing
 
@@ -74,29 +74,25 @@ The engine still has the last word. `performPlace` runs `canPlaceCharacterOnTile
 
 ## Taps and clicks
 
-A board is in tap mode when its page passes `tap-mode`. The Arena and the Teams page pass it at the sheet widths (tablet and phone, `isNarrowBreakpoint`), where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts.
+A board is in tap mode when its page passes `tap-mode`, which the Arena and the Teams page do at the widths where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero: tapping it targets it, and the next picker tap places there. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight.
 
-In tap mode, tapping an empty tile targets it, and the next picker tap places there through `resolvePick`. A picker tap with no target auto-places on the active board, ally side first (`fillOrder`), and a phantimal goes to the first side with no phantimal that it can join. A full team still accepts a target, because a phantimal may fit. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight. On wide layouts, clicking an empty tile opens the multi-add popup, which stays open only while `teamHasOpenSlot` holds.
+Moving and removing work through a lift. A tap on a placed hero lifts it, and a mouse click on a wide layout removes it instead, as in the game. A tap elsewhere then swaps, moves or removes the lifted hero. The move goes through `routeLiftDrop`, which builds a normal payload so the tap passes every drag gate.
 
-Moving and removing work through a lift. A tap on a placed hero lifts it, and a mouse click on a wide layout removes it instead, as in the game. Tapping the lifted hero again removes it. Tapping another hero on the same board swaps the two after `canDropCharacter`, and tapping a hero on another board starts a fresh lift there. Tapping an empty tile on any board sends the lifted hero through `routeLiftDrop`, which builds a normal payload so the tap passes every drag gate. A non-placement tile or the start of a drag cancels the lift.
+A lift records its board, hex and unit id. Placements also change under a lift without any tap, such as a map switch or a board swap. `useLiftGuard`, installed once in `App.vue`, drops the lift as soon as its cell stops holding the lifted unit, so a stale lift can never eat a tap or move a hero the user did not lift.
 
-A lift records its board, hex and unit id. Placements also change under a lift without any tap (picker removes, map switches, board swaps, phantimal reconciliation, companion cascades). `useLiftGuard`, installed once in `App.vue`, drops the lift as soon as its cell stops holding the lifted unit, so a stale lift can never eat a tap or move a hero the user did not lift. Unticking Synergy or ticking Non-Seasonal in the Format menu removes units, so `GridFormatMenu` clears the target and the lift along with it.
+Every placement surface resolves a pick through `resolvePick`, so the picker, the popup and the targeted tile agree on what a pick does, including when it places a synergy copy.
 
-While Synergy is on, a picker click on a hero already placed on a team with a free assist slot places the synergy copy instead of removing the hero. Every placement surface resolves the pick through `resolvePick`, so the picker, the popup and the targeted tile agree on when a copy is allowed.
-
-`isTouchClick` (`src/utils/pointer.ts`) decides whether a click came from touch. It records the type of the last `pointerdown` or `pointerup` document-wide in the capture phase, and a press within `PRESS_CLICK_WINDOW_MS` (800) outranks the click's own `pointerType`. Safari before 18.4 synthesizes tap clicks with a missing or wrong `pointerType`, so trusting the click alone would read every tap as a mouse.
+`isTouchClick` (`src/utils/pointer.ts`) decides whether a click came from touch. It records the type of the last `pointerdown` or `pointerup` document-wide in the capture phase, and a recent press outranks the click's own `pointerType`. Safari before 18.4 synthesizes tap clicks with a missing or wrong `pointerType`, so trusting the click alone would read every tap as a mouse.
 
 ## Inspecting units
 
-A placed unit opens its details without leaving the board: heroes open the skill modal, phantimals the phantimal modal and artifacts the artifact modal, and companions and synergy copies open their owner's. A unit with no page (a placeholder, a hero without skill text, retired content) has no inspect gesture and keeps the browser's own menu. The pickers and the other hero icons inspect the same way, with two exceptions. The empty-tile popups close when the pointer leaves them, so the modal would close the popup it opened from. The Skills hero list's icons are links, and a right-click there keeps the browser's link menu.
+A placed unit opens its details without leaving the board, and the pickers and other hero icons inspect the same way. Every surface calls `useInspect`, a module-level target that `InspectModals`, mounted once at the app root, renders.
 
-Every surface calls `useInspect`, a module-level target that `InspectModals`, mounted once at the app root, renders. The modal for the target's kind mounts closed and opens a tick later, so its enter transition plays.
+Three gestures reach it: a long-press with any pointer, as in the game, a right-click, and the Skills button a lifted unit shows, for touch users who do not know the gesture. `usePressClick`, the click gate of the hero and phantimal icons, counts only the primary button, so a right-click inspects without also placing, toggling or expanding.
 
-Three gestures reach it: a long-press with any pointer, as in the game, a right-click (Shift+right-click still shows the browser menu), and the Skills button a lifted unit shows, for touch users who do not know the gesture. `usePressClick`, the click gate of the hero and phantimal icons, counts only the primary button, so a right-click inspects without also placing, toggling or expanding.
+`useLongPress` shares the press with each surface's own click or tap and with HTML5 drag. A short press stays an ordinary click or tap, and moving or starting a drag abandons the hold. A hold that lasts past a short press swallows the click the release produces, whether or not it opens the modal, in a document capture listener. That click would otherwise remove or lift the unit, and since the modal opens under the pointer, it would also land outside the modal and trip `useOverlay`'s click-outside close. The next `pointerdown` disarms the swallow, so a browser that sends no click after a long-press cannot eat a later one.
 
-`useLongPress` shares the press with each surface's own click or tap (place, remove, lift, toggle, level cycle) and with HTML5 drag. A press released before the ring appears (250 ms) stays an ordinary click or tap. Moving past 8 px or starting a drag abandons the hold. Once the ring shows, the release does nothing, and a completed hold (550 ms) opens the modal. Both endings swallow the click the release produces, in a document capture listener. That click would otherwise remove or lift the unit, and since the modal opens under the pointer, it would also land outside the modal and trip `useOverlay`'s click-outside close. The next `pointerdown` disarms the swallow, so a browser that sends no click after a long-press cannot eat a later one.
-
-Android reports a touch long-press as a `contextmenu` event, sometimes before the timer fires. That event completes the hold in progress, and one that arrives after the hold has ended is ignored, so the modal opens once. Units, inspectable icons and the panel's portraits set `-webkit-touch-callout: none` and `user-select: none`, because iOS would otherwise answer the press with its image menu. A portrait image that is not a drag source sets `draggable="false"` (the panel's, and `CharacterIcon`'s wherever the icon itself does not drag), because a native image drag would start inside the 8 px tolerance and abandon the hold.
+Android reports a touch long-press as a `contextmenu` event, sometimes before the timer fires. That event completes the hold in progress, and one that arrives after the hold has ended is ignored, so the modal opens once. Inspectable units and icons set `-webkit-touch-callout: none` and `user-select: none`, because iOS would otherwise answer the press with its image menu. A portrait image that is not a drag source sets `draggable="false"`, because a native image drag would start inside the move tolerance and abandon the hold.
 
 ## Grid events
 
@@ -114,9 +110,4 @@ A target that `canDropArtifact` rejects gets `stopPropagation()` without `preven
 
 ## Board swap
 
-Swapping two Teams boards (`useGridSwap`, committed by `grids.swapBoards`) uses pointer events instead of HTML5 drag, with module-level state for the same listener-identity reason. A press on a board's swap button that travels past `DRAG_THRESHOLD` (6 px) becomes a drag, and the release picks the board under the pointer through `[data-grid-board-id]`. Otherwise the button arms the swap and a click on another board completes it. On tap layouts the first tap on a board previews it and a second tap confirms, and a release counts as a tap only under `TAP_MOVE_MAX` (10 px) of travel, so swiping the board row neither selects nor cancels. A press outside every board cancels.
-
-## Related documentation
-
-- [Grid & Characters](./GRID.md): board contexts, placement rules and gestures
-- [Teams](./TEAMS.md): the multi-board page that hosts cross-board drags and board swaps
+Swapping two Teams boards (`useGridSwap`, committed by `grids.swapBoards`) uses pointer events instead of HTML5 drag, with module-level state for the same listener-identity reason. A press on a board's swap button that travels becomes a drag, and the release picks the board under the pointer through `[data-grid-board-id]`. Otherwise the button arms the swap and a click on another board completes it. On tap layouts a release counts as a tap only under a small travel limit, so swiping the board row neither selects nor cancels.
