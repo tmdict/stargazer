@@ -40,7 +40,7 @@ Sections, in bitmap-bit order
   companions                            companion index N 2, team 1
 ```
 
-Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: a state without `d` encodes the unpack defaults, so skills and perspective do not switch off on decode. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
+Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: the encoder requires `d`, so every link carries its sender's display flags. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
 
 A board list that disagrees with the mode's board count is trimmed or padded with empty boards, because the decoder takes the count from the mode. A map key that names no registered map encodes as 0: the board still restores from its tiles. `decodeLink` returns null without logging, because old and mangled links are ordinary input. The bytes become text in a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares.
 

@@ -1,17 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
-import {
-  packDisplayFlags,
-  unpackDisplayFlags,
-  type BoardState,
-  type GridState,
-} from '@/utils/gridStateSerializer'
+import type { BoardState, GridState } from '@/utils/gridStateSerializer'
 
-// The envelope's mandatory flags byte for a state that carried none.
-const DEFAULT_FLAGS = packDisplayFlags(unpackDisplayFlags(undefined))
+const FLAGS = 0b10110
 
-const arenaLink = (board: BoardState, d?: number): Uint8Array =>
+const arenaLink = (board: BoardState, d = FLAGS): Uint8Array =>
   encodeLink({ mode: 'arena', boards: [board], d })
 
 describe('binaryEncoder', () => {
@@ -32,7 +26,7 @@ describe('binaryEncoder', () => {
       ['a team-scope sentinel row (characterId 0)', { u: [[1, 0, 2, 4]] }],
     ])('round-trips an arena board with %s', (_, board) => {
       const decoded = decodeLink(arenaLink(board as BoardState))
-      expect(decoded).toEqual({ mode: 'arena', active: 0, d: DEFAULT_FLAGS, boards: [board] })
+      expect(decoded).toEqual({ mode: 'arena', active: 0, d: FLAGS, boards: [board] })
     })
 
     it('round-trips a full 45-tile board', () => {
@@ -43,24 +37,19 @@ describe('binaryEncoder', () => {
       expect(decodeLink(arenaLink(board))!.boards[0]).toEqual(board)
     })
 
-    it('preserves an explicit all-off flags byte and defaults an absent one', () => {
-      expect(decodeLink(arenaLink({}, 0))!.d).toBe(0)
-      expect(decodeLink(arenaLink({}))!.d).toBe(DEFAULT_FLAGS)
-    })
-
     it('clamps the active board into the mode range on both sides', () => {
       const boards: BoardState[] = [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }]
-      expect(decodeLink(encodeLink({ mode: '3v3', boards, active: 9 }))!.active).toBe(2)
+      expect(decodeLink(encodeLink({ mode: '3v3', boards, active: 9, d: FLAGS }))!.active).toBe(2)
     })
 
     it('pads or trims a board list that disagrees with the mode', () => {
-      const decoded = decodeLink(encodeLink({ mode: '3v3', boards: [{ m: 'arena1' }] }))
+      const decoded = decodeLink(encodeLink({ mode: '3v3', boards: [{ m: 'arena1' }], d: FLAGS }))
       expect(decoded!.boards).toEqual([{ m: 'arena1' }, {}, {}])
     })
 
     it('encodes an unregistered map key as none, keeping the board content', () => {
       const decoded = decodeLink(
-        encodeLink({ mode: '1v1', boards: [{ m: 'retired-map', t: [[1, 1]] }] }),
+        encodeLink({ mode: '1v1', boards: [{ m: 'retired-map', t: [[1, 1]] }], d: FLAGS }),
       )
       expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
     })

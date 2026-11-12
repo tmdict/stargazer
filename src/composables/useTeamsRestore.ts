@@ -44,7 +44,7 @@ import { useTeamsPersistence } from './useGridPersistence'
 
 export interface TeamsRestoreOptions {
   getFlags: () => DisplayFlags
-  applyFlags: (flags: DisplayFlags) => void
+  applyFlags: (flags: Required<DisplayFlags>) => void
   // Page sizing re-asserted after every rebuild (hexSizeMode pinning).
   applySize: () => void
   // Resolves a stored sourceId against the saved-team library; unresolvable ids
@@ -97,9 +97,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
    * share payload (one serialization path). */
   const applyEncoded = (encoded: string, adoptFlags: boolean): boolean => {
     const result = urlStateStore.restoreMultiFromEncodedState(encoded)
-    if (adoptFlags && result.success && result.hasDisplayFlags && result.displayFlags) {
-      options.applyFlags(result.displayFlags)
-    }
+    if (adoptFlags && result.displayFlags) options.applyFlags(result.displayFlags)
     return result.success
   }
 

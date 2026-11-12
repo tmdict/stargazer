@@ -39,8 +39,8 @@ const roster = (id: string, name: string, hero = 1) => ({
   updatedAt: 1,
 })
 
-const ARENA_WITH_HERO = encodeGridStateToUrl({ c: [[1, 11, Team.ALLY]] })
-const ARENA_EMPTY = encodeGridStateToUrl({})
+const ARENA_WITH_HERO = encodeGridStateToUrl({ c: [[1, 11, Team.ALLY]], d: 0 })
+const ARENA_EMPTY = encodeGridStateToUrl({ d: 0 })
 
 const slot = (hero?: number): string =>
   JSON.stringify({

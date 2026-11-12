@@ -70,8 +70,8 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
     getFlags: () => ({ ...flags, wrap: wrapBoards.value, inverted: inverted.value }),
     applyFlags: (next) => {
       Object.assign(flags, next)
-      wrapBoards.value = next.wrap ?? false
-      inverted.value = next.inverted ?? false
+      wrapBoards.value = next.wrap
+      inverted.value = next.inverted
     },
     applySize: () => {},
     resolveSourceId,
@@ -287,13 +287,16 @@ describe('useTeamsRestore', () => {
   it('ingress: a binary teams link restores boards, mode, and slot', async () => {
     let link: string
     {
-      const { restore, grids, character } = createHarness()
+      const { restore, grids, character, flags } = createHarness()
       restore.initialize(null)
       restore.switchMode('3v3')
       grids.setActive(0)
       expect(character.placeCharacterOnHex(1, 11, Team.ALLY)).toBe(true)
       await nextTick()
-      link = encodeMultiGridStateToLinkUrl(decodeBoards(restore.snapshot()))
+      link = encodeMultiGridStateToLinkUrl({
+        ...decodeBoards(restore.snapshot()),
+        d: packDisplayFlags(flags),
+      })
     }
 
     const { restore, grids } = createHarness()
@@ -308,7 +311,7 @@ describe('useTeamsRestore', () => {
 
   it('ingress: an arena-mode payload is a wrong-page link and falls back', () => {
     const { restore } = createHarness()
-    const result = restore.initialize(encodeGridStateToUrl({ c: [[1, 11, Team.ALLY]] }))
+    const result = restore.initialize(encodeGridStateToUrl({ c: [[1, 11, Team.ALLY]], d: 0 }))
     expect(result).toEqual({ linkLoaded: false, linkFailed: true })
     expect(restore.activeMode.value).toBe('5v5')
   })
@@ -355,7 +358,7 @@ describe('useTeamsRestore', () => {
         sourceId: 'team-1',
       } satisfies ActiveSlot),
     )
-    const link = encodeMultiGridStateToLinkUrl({ boards: [{ m: 'arena4' }], mode: '1v1' })
+    const link = encodeMultiGridStateToLinkUrl({ boards: [{ m: 'arena4' }], mode: '1v1', d: 0 })
     restore.initialize(link)
     expect(restore.activeMode.value).toBe('1v1')
     expect(restore.sourceId.value).toBeNull()

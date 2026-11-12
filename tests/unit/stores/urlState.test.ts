@@ -57,7 +57,7 @@ const createStores = (): TestStores => {
   }
 }
 
-const encodeStores = ({ grid, artifact }: TestStores, displayFlags?: DisplayFlags): string =>
+const encodeStores = ({ grid, artifact }: TestStores, displayFlags: DisplayFlags = {}): string =>
   encodeGridStateToUrl(
     serializeGridState(
       grid.getAllTiles,
@@ -132,7 +132,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
         source.grid.getAllTiles,
         source.artifact.allyArtifactId,
         source.artifact.enemyArtifactId,
-        undefined,
+        {},
         sourceGrids.active!.getAttrs,
       ),
     )

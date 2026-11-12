@@ -190,7 +190,7 @@ describe('phantimal companion serialization', () => {
   // The companion section (bit 6) without the phantimal section (bit 3).
   it('round-trips a companion row without its phantimal', () => {
     const s = [[9, 10000 + OWNER_LOCAL, Team.ALLY]]
-    expect(decodeGridStateFromUrl(encodeGridStateToUrl({ s }))?.s).toEqual(s)
+    expect(decodeGridStateFromUrl(encodeGridStateToUrl({ s, d: 0 }))?.s).toEqual(s)
   })
 
   it('restores the companion onto its saved hex', () => {
@@ -211,6 +211,7 @@ describe('phantimal companion serialization', () => {
           [16, OWNER_LOCAL, Team.ALLY],
           [target, 10000 + OWNER_LOCAL, Team.ALLY],
         ],
+        d: 0,
       })
 
       expect(useUrlStateStore().restoreFromEncodedState(encoded).success).toBe(true)
@@ -237,6 +238,7 @@ describe('phantimal companion serialization', () => {
         [16, OWNER_LOCAL, Team.ALLY],
         [9, 10000 + OWNER_LOCAL, Team.ALLY],
       ],
+      d: 0,
     })
 
     expect(useUrlStateStore().restoreFromEncodedState(encoded).success).toBe(true)

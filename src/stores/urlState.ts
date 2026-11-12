@@ -20,11 +20,10 @@ import { MAX_GRID_COUNT, useGrids } from './grids'
 
 interface UrlRestoreResult {
   success: boolean
-  displayFlags?: DisplayFlags
-  // Multi-board only: false when the payload carried no `d` field, so callers can
-  // keep the viewer's current flags instead of applying unpack defaults (canonical
-  // saved-team data deliberately has no `d`; see lib/teams).
-  hasDisplayFlags?: boolean
+  // Absent when a multi-board payload carried no `d`, so callers keep the
+  // viewer's current flags (canonical saved-team data deliberately has no `d`;
+  // see lib/teams).
+  displayFlags?: Required<DisplayFlags>
 }
 
 export const useUrlStateStore = defineStore('urlState', () => {
@@ -229,8 +228,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       return {
         success: true,
-        displayFlags: unpackDisplayFlags(multi.d),
-        hasDisplayFlags: multi.d !== undefined,
+        displayFlags: multi.d === undefined ? undefined : unpackDisplayFlags(multi.d),
       }
     } catch (err) {
       console.error('Failed to restore multi state:', err)

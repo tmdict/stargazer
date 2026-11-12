@@ -18,7 +18,7 @@ import {
   urlSafeToBytes,
   type BinaryLinkState,
 } from './binaryEncoder'
-import type { GridState, MultiGridState } from './gridStateSerializer'
+import type { ArenaState, MultiGridState } from './gridStateSerializer'
 
 /* Decode any `?g=` link payload. Pages route on the result's mode: 'arena'
  * or a team mode key. */
@@ -27,7 +27,7 @@ export function decodeLinkFromUrl(encoded: string): BinaryLinkState | null {
   return bytes ? decodeLink(bytes) : null
 }
 
-export function encodeGridStateToUrl(gridState: GridState): string {
+export function encodeGridStateToUrl(gridState: ArenaState): string {
   try {
     const { d, ...board } = gridState
     return bytesToUrlSafe(encodeLink({ mode: 'arena', active: 0, d, boards: [board] }))
@@ -40,14 +40,14 @@ export function encodeGridStateToUrl(gridState: GridState): string {
 /* The arena adapter over the universal decoder: a payload naming any other
  * mode rejects, so a teams link pasted on the Arena page (or crafted into the
  * arena autosave) fails clean instead of half-rendering one board. */
-export function decodeGridStateFromUrl(encodedState: string): GridState | null {
+export function decodeGridStateFromUrl(encodedState: string): ArenaState | null {
   const link = decodeLinkFromUrl(encodedState)
   if (!link || link.mode !== 'arena') return null
   const board = link.boards[0] ?? {}
   return { ...board, d: link.d }
 }
 
-export function encodeMultiGridStateToLinkUrl(state: MultiGridState): string {
+export function encodeMultiGridStateToLinkUrl(state: MultiGridState & { d: number }): string {
   try {
     return bytesToUrlSafe(
       encodeLink({

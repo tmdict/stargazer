@@ -21,6 +21,7 @@ import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
+import { unpackDisplayFlags } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { decodeLinkFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
@@ -78,7 +79,7 @@ applyMultiSize()
 watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
-const showSkills = ref(true)
+const showSkills = ref(false)
 const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
 
 // Grid-info visibility is the viewer's own shared pref, not the link's.
@@ -91,27 +92,21 @@ i18nStore.initialize()
 
 // Restore state from URL
 const restoreStateFromUrl = () => {
-  const result =
-    isMultiBoard.value && linkAtLoad
-      ? urlStateStore.restoreMultiFromDecodedState(linkAtLoad)
-      : urlStateStore.restoreFromEncodedState(encodedAtLoad)
+  if (!linkAtLoad) return false
+  const result = isMultiBoard.value
+    ? urlStateStore.restoreMultiFromDecodedState(linkAtLoad)
+    : urlStateStore.restoreFromEncodedState(encodedAtLoad)
+  if (!result.success) return false
 
-  if (result.success) {
-    // Apply display flags if present
-    if (result.displayFlags) {
-      showPerspective.value = result.displayFlags.showPerspective ?? false
-      showSkills.value = result.displayFlags.showSkills ?? true
-      gridStore.teamView = result.displayFlags.teamView ?? false
-      gridStore.inverted = result.displayFlags.inverted ?? false
-      // Wrap is a 5-board layout; a stray wrap bit on a smaller payload is
-      // ignored (BoardsRow degrades gracefully anyway; this is cosmetic).
-      wrapBoards.value = (result.displayFlags.wrap ?? false) && grids.contexts.length === 5
-    }
-
-    return true
-  }
-
-  return false
+  const flags = unpackDisplayFlags(linkAtLoad.d)
+  showPerspective.value = flags.showPerspective
+  showSkills.value = flags.showSkills
+  gridStore.teamView = flags.teamView
+  gridStore.inverted = flags.inverted
+  // Wrap is a 5-board layout; a stray wrap bit on a smaller payload is
+  // ignored (BoardsRow degrades gracefully anyway; this is cosmetic).
+  wrapBoards.value = flags.wrap && grids.contexts.length === 5
+  return true
 }
 
 // Check for valid grid state on mount

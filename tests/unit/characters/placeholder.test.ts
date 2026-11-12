@@ -84,7 +84,7 @@ describe('placeholder placement rules', () => {
     const grid = new Grid()
     performPlace(grid, ALLY_TILES[0]!, PLACEHOLDER.id, Team.ALLY)
     performPlace(grid, ALLY_TILES[1]!, PLACEHOLDER.id, Team.ALLY)
-    const state = serializeGridState(grid.getAllTiles(), null, null)
+    const state = serializeGridState(grid.getAllTiles(), null, null, {})
 
     const decoded = decodeGridStateFromUrl(encodeGridStateToUrl(state))
 

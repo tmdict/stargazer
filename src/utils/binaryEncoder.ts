@@ -1,12 +1,7 @@
 import { attrDefault, clampAttr, compareAttrRows, isKnownAttrId } from '@/lib/characters/attributes'
 import { joinPhantimalBandLocal, splitPhantimalBandLocal } from '@/lib/characters/phantimal'
 import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
-import {
-  packDisplayFlags,
-  unpackDisplayFlags,
-  type BoardState,
-  type GridState,
-} from './gridStateSerializer'
+import type { BoardState, GridState } from './gridStateSerializer'
 
 /**
  * Binary link codec: one compact format for every share link — the Arena is
@@ -21,9 +16,7 @@ import {
  *   from the mode, so no count field exists.
  * - Active board (3 bits): 0-based.
  * - Display flags (8 bits): the packDisplayFlags byte (wrap, skills,
- *   perspective, inverted, teamView; 3 spare). Always present — an absent `d`
- *   is encoded as the unpack defaults (skills and perspective on), so a
- *   flag-less board never decodes with those views switched off.
+ *   perspective, inverted, teamView; 3 spare).
  *
  * Each board (14-bit header, then its sections):
  * - Map id (6 bits): wire registry; 0 = none (arena boards, whose serialized
@@ -124,7 +117,7 @@ export interface BinaryLinkState {
 interface BinaryLinkInput {
   mode: string
   active?: number
-  d?: number
+  d: number
   boards: BoardState[]
 }
 
@@ -329,11 +322,6 @@ class BitReader {
   }
 }
 
-// The envelope's flags byte is mandatory, so an absent `d` encodes as the
-// unpack defaults — a pre-flags state must not flip skills/perspective off.
-const flagsByte = (d: number | undefined): number =>
-  (d ?? packDisplayFlags(unpackDisplayFlags(undefined))) & 0xff
-
 function encodeBoard(writer: BitWriter, board: BoardState): void {
   const state = validateGridState(board)
 
@@ -445,7 +433,7 @@ export function encodeLink(link: BinaryLinkInput): Uint8Array {
   writer.writeBits(mode.wireId, MODE_BITS)
   const active = Math.min(Math.max(link.active ?? 0, 0), mode.boardCount - 1)
   writer.writeBits(active, ACTIVE_BITS)
-  writer.writeBits(flagsByte(link.d), DISPLAY_FLAGS_BITS)
+  writer.writeBits(link.d, DISPLAY_FLAGS_BITS)
   for (const board of boards) {
     // Arena boards never carry a map on the wire (their tiles are
     // authoritative), and the decoder rejects one; strip a crafted `m` so

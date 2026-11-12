@@ -45,6 +45,7 @@ import { isNarrowBreakpoint } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { packDisplayFlags } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import {
   decodeMultiGridStateFromUrl,
@@ -278,7 +279,8 @@ const handleDownload = () => downloadAsImage(boardCapture)
 // binary form, so the snapshot is decoded once and re-encoded for the wire.
 const handleCopyLink = () => {
   const multi = decodeMultiGridStateFromUrl(teamsRestore.snapshot())
-  if (multi) shareLink(encodeMultiGridStateToLinkUrl(multi))
+  // A link requires the flags, which decoded JSON types as optional.
+  if (multi) shareLink(encodeMultiGridStateToLinkUrl({ ...multi, d: packDisplayFlags(toFlags()) }))
 }
 </script>
 

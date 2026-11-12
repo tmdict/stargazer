@@ -28,12 +28,12 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
     ...(wrap ? { wrap: wrap.value } : {}),
   })
 
-  const applyFlags = (flags: DisplayFlags): void => {
-    showPerspective.value = flags.showPerspective ?? false
-    showSkills.value = flags.showSkills ?? false
-    grids.teamView = flags.teamView ?? false
-    grids.inverted = flags.inverted ?? false
-    if (wrap) wrap.value = flags.wrap ?? false
+  const applyFlags = (flags: Required<DisplayFlags>): void => {
+    showPerspective.value = flags.showPerspective
+    showSkills.value = flags.showSkills
+    grids.teamView = flags.teamView
+    grids.inverted = flags.inverted
+    if (wrap) wrap.value = flags.wrap
   }
 
   return {

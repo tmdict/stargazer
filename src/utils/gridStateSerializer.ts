@@ -23,6 +23,9 @@ export interface GridState {
   d?: number // display flags: bit-packed (wrap, showSkills, showPerspective, inverted, teamView)
 }
 
+/* The Arena board as its link and autosave hold it: both always carry the display flags. */
+export type ArenaState = GridState & { d: number }
+
 /* The user-facing display toggles carried in the URL's bit-packed `d` field */
 export interface DisplayFlags {
   showPerspective?: boolean
@@ -33,6 +36,20 @@ export interface DisplayFlags {
   wrap?: boolean
 }
 
+export function serializeGridState(
+  allTiles: readonly GridTile[],
+  allyArtifact: number | null,
+  enemyArtifact: number | null,
+  displayFlags: DisplayFlags,
+  getAttrs?: (team: Team, characterId: number) => AttrRecord,
+): ArenaState
+export function serializeGridState(
+  allTiles: readonly GridTile[],
+  allyArtifact: number | null,
+  enemyArtifact: number | null,
+  displayFlags?: undefined,
+  getAttrs?: (team: Team, characterId: number) => AttrRecord,
+): GridState
 export function serializeGridState(
   allTiles: readonly GridTile[],
   allyArtifact: number | null,
@@ -202,18 +219,7 @@ export function serializeMultiGridState(
   return state
 }
 
-export function unpackDisplayFlags(packed: number | undefined): Required<DisplayFlags> {
-  if (packed === undefined) {
-    // Return defaults if no flags are stored
-    return {
-      showPerspective: true,
-      showSkills: true,
-      teamView: false,
-      inverted: false,
-      wrap: false,
-    }
-  }
-
+export function unpackDisplayFlags(packed: number): Required<DisplayFlags> {
   return {
     wrap: !!(packed & (1 << 0)),
     showSkills: !!(packed & (1 << 1)),
