@@ -42,6 +42,9 @@ export interface TilePaint {
   hexId: number
   color: string
   fill?: boolean
+  // The body the paint belongs to, where a skill paints for its holder and for
+  // its companions apart, as a phantimal's Spirit Marks do.
+  source?: number
 }
 
 // A straight line a skill draws between two hexes: border to border between their
@@ -424,9 +427,12 @@ export class SkillManager {
   }
 
   // The tiles a skill instance acts on: those it paints and its zone, each once.
-  getMarkedTiles(characterId: number, team: Team): number[] {
+  // With `sources`, a paint that names its body counts only for those bodies.
+  getMarkedTiles(characterId: number, team: Team, sources?: readonly number[]): number[] {
     const key = this.getSkillKey(characterId, team)
-    const painted = (this.skillPaintedTiles.get(key) ?? []).map((tile) => tile.hexId)
+    const painted = (this.skillPaintedTiles.get(key) ?? [])
+      .filter((tile) => !sources || tile.source === undefined || sources.includes(tile.source))
+      .map((tile) => tile.hexId)
     return [...new Set([...painted, ...(this.skillZones.get(key) ?? [])])]
   }
 

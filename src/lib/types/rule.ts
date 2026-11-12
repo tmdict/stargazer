@@ -41,8 +41,9 @@ export interface Rule {
   tile?: RuleTile
   // How many tiles out an around tile reaches, 1 when unset.
   distance?: number
-  // Where a tile rule reads from: the holder's own other body in place of the
-  // holder, for an effect each body gives on its own.
+  // Which body's effect the rule reads: the holder's own other body in place
+  // of the holder, for an effect each body gives on its own. A tile rule reads
+  // from that body's tile, and any other rule the tiles the skill marks for it.
   from?: 'companion'
   // Absent only for a goal of none, which scores nothing.
   weight?: string

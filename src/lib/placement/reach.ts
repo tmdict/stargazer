@@ -22,11 +22,18 @@ export interface Reach {
 export const ruleUnit = (unitId: number): number =>
   inPhantimalBand(unitId) ? phantimalOwnerId(unitId) : toBaseHeroId(unitId)
 
-export function skillReach(manager: SkillManager, unit: number, team: Team): Reach {
+// `bodies` narrows the marked tiles to those the skill paints for these bodies
+// of the unit, where it paints for each apart.
+export function skillReach(
+  manager: SkillManager,
+  unit: number,
+  team: Team,
+  bodies?: readonly number[],
+): Reach {
   const target = manager.getSkillTarget(unit, team)
   const landed = target?.metadata?.arrows?.map((arrow) => arrow.toHexId) ?? []
   if (target?.targetHexId != null) landed.push(target.targetHexId)
-  return { landed, marked: manager.getMarkedTiles(unit, team) }
+  return { landed, marked: manager.getMarkedTiles(unit, team, bodies) }
 }
 
 // The hexes within `distance` of `center`, ring by ring outward, its own left out.

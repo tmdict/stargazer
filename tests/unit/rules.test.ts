@@ -86,8 +86,7 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
       (rule.tile !== 'around' || !Number.isInteger(rule.distance) || rule.distance < 2)
     )
       problems.push('a distance off an around tile rule, or not a whole number above 1')
-    if (rule.from !== undefined && (rule.from !== 'companion' || rule.tile === undefined))
-      problems.push(`from ${rule.from} off a companion tile rule`)
+    if (rule.from !== undefined && rule.from !== 'companion') problems.push(`from ${rule.from}`)
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {
       problems.push(rule.goal === 'none' ? 'a weight on a goal of none' : 'no weight')
     }

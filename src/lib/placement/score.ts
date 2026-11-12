@@ -176,11 +176,12 @@ export class PlacementScorer {
       for (const rule of rules) {
         this.addEffect('unit', unit, unit, rule, (b) => {
           if (rule.goal === 'back') return [{ landed: [], marked: [] }]
-          if (!rule.tile) return [skillReach(b.manager, unit, Team.ALLY)]
-          const from =
-            rule.from === 'companion'
-              ? b.units.find((other) => other !== unit && ruleUnit(other) === unit)
-              : unit
+          const others = b.units.filter((other) => other !== unit && ruleUnit(other) === unit)
+          if (!rule.tile) {
+            const bodies = rule.from === 'companion' ? others : [unit]
+            return [skillReach(b.manager, unit, Team.ALLY, bodies)]
+          }
+          const from = rule.from === 'companion' ? others[0] : unit
           return from === undefined ? [] : [tileReach(this.contextOf(b, from), rule)]
         })
       }
@@ -359,11 +360,11 @@ export class PlacementScorer {
       this.skipped.push({ owner, reason: `no weight ${rule.weight}` })
       return
     }
-    // A phantimal and each of its companions give a Spirit Mark of their own,
-    // so a mark that finds no hero leaves its share of the goal unmet.
+    // A phantimal's companions give a Spirit Mark each, read by a rule of their
+    // own, so a mark that finds no hero leaves its share of that goal unmet.
     const marks =
-      holder !== undefined && inPhantimalBand(holder)
-        ? 1 + getCompanions(this.board.grid, holder, Team.ALLY).size
+      holder !== undefined && inPhantimalBand(holder) && rule.from === 'companion'
+        ? Math.max(1, getCompanions(this.board.grid, holder, Team.ALLY).size)
         : 1
     const effect: Effect = { source, owner, holder, rule, weight: weight * share, reach, marks }
     if (rule.goal === 'most' || (typeof rule.goal === 'object' && 'most' in rule.goal)) {

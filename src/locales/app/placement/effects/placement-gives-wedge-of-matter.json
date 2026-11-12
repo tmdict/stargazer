@@ -1,5 +1,5 @@
 {
-  "en": "Spirit Marks (higher stats) to the heroes in front of and behind the Wedges ({heroes})",
-  "zh": "物质之楔身前与权能之楔身后的友方英雄提升属性的灵能（{heroes}）",
-  "ko": "물질의 큐브 앞과 권능의 큐브 뒤의 아군 영웅에게 속성을 높이는 능력 ({heroes})"
+  "en": "a Spirit Mark (higher stats, less damage taken) to the hero in front of the Wedge of Matter ({heroes})",
+  "zh": "物质之楔身前的友方英雄提升属性、降低所受伤害的“物质之灵能”（{heroes}）",
+  "ko": "물질의 큐브 앞의 아군 영웅에게 속성을 높이고 받는 대미지를 줄이는 물질의 능력 ({heroes})"
 }

@@ -42,10 +42,8 @@ export function spiritMarkTiles(
     )
     if (!info?.targetHexId || info.targetCharacterId === null) return []
     marked.add(info.targetHexId)
-    return [
-      { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR },
-      { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, fill: true },
-    ]
+    const paint = { hexId: info.targetHexId, color: SPIRIT_MARK_COLOR, source: from.characterId }
+    return [paint, { ...paint, fill: true }]
   }
   const tiles = mark(ctx, direction)
   for (const companionId of getCompanions(ctx.grid, ctx.characterId, ctx.team)) {

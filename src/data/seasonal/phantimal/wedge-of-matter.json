@@ -13,10 +13,19 @@
     {
       "team": "ally",
       "goal": {
-        "target": "melee"
+        "target": "tank"
       },
       "weight": "aim",
-      "note": "The Wedges' Spirit Marks go to the allied hero in front of the Wedge of Matter and the one behind the Wedge of Power, both helping against enemies within 2 tiles, best two melee heroes."
+      "note": "The Wedge of Matter's Spirit Mark goes to the allied hero in front of it, raising their stats and cutting the damage they take from enemies within 2 tiles, best a tank."
+    },
+    {
+      "team": "ally",
+      "from": "companion",
+      "goal": {
+        "target": "haste"
+      },
+      "weight": "aim",
+      "note": "The Wedge of Power's Spirit Mark goes to the allied hero behind it, granting Haste and more damage against enemies within 2 tiles, best a hero who gains most from Haste."
     }
   ]
 }

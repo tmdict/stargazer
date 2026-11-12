@@ -178,26 +178,32 @@ describe('placement scoring', () => {
 
   // The Wedge of Matter on tile 1 marks the hero on tile 6, and the Wedge of
   // Power the hero behind it: none from tile 2, the one on tile 2 from tile 4.
+  // Each mark has a rule of its own, the Wedge of Matter's first.
   const wedgesMet = (at: Record<number, number>, power: number, leans = DATA.leans) => {
-    const data = { ...DATA, lists: { ...DATA.lists, melee: [ALNA, SYLPHIRA] }, leans }
+    const data = { ...DATA, lists: { ...DATA.lists, haste: [SYLPHIRA] }, leans }
     const team = { heroes: [ALNA, SYLPHIRA, ORION, PERSEUS, DIONEL], phantimal: WEDGE_OF_MATTER }
     const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
     const scorer = new PlacementScorer(board, team, data)
     board.place(board.units.map((unit) => at[unit] ?? (unit === WEDGE_OF_MATTER ? 1 : power)))
-    return metOf(scorer, WEDGE_OF_MATTER)
+    return scorer
+      .goals()
+      .filter((goal) => goal.owner === WEDGE_OF_MATTER)
+      .map((goal) => goal.met)
   }
   const wedgeHeroes = { [ALNA]: 6, [ORION]: 3, [PERSEUS]: 5, [DIONEL]: 7 }
 
-  it('scores half for each Wedge whose Spirit Mark lands on one of the first two listed heroes', () => {
-    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 2 }, 4)).toBe(1)
-    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 4 }, 2)).toBe(0.5)
+  it('scores each Wedge by the hero its own Spirit Mark lands on', () => {
+    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 2 }, 4)).toEqual([1, 1])
+    expect(wedgesMet({ ...wedgeHeroes, [SYLPHIRA]: 4 }, 2)).toEqual([1, 0])
+    // The marks the other way round: the tank behind the Wedge of Power.
+    expect(wedgesMet({ ...wedgeHeroes, [ALNA]: 2, [SYLPHIRA]: 6 }, 4)).toEqual([0, 0])
   })
 
   // Walking round arena2's walls, tile 6 is in the back half of the ally tiles.
   it('counts a Spirit Mark only on a hero standing on the side it leans to', () => {
     const at = { ...wedgeHeroes, [SYLPHIRA]: 2 }
-    expect(wedgesMet(at, 4, { front: [], back: [ALNA] })).toBe(1)
-    expect(wedgesMet(at, 4, { front: [ALNA], back: [] })).toBe(0.5)
+    expect(wedgesMet(at, 4, { front: [], back: [ALNA] })).toEqual([1, 1])
+    expect(wedgesMet(at, 4, { front: [ALNA], back: [] })).toEqual([0, 1])
   })
 
   // Walking round arena2's walls, tile 6 is in the back half of the ally tiles,
