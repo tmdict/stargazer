@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import type { TeamModeKey, TeamVariantChoice, VariantMatch } from '@/lib/teams/modes'
-import { useI18nStore } from '@/stores/i18n'
 import { shownText } from '../fixtures/dom'
 
 /* The type picker's two-step confirm must belong to the boards it was armed
@@ -29,7 +28,6 @@ afterEach(() => {
 const mountPicker = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   const state = reactive<PickerState>({
     activeMode: '5v5',
     match: 'sl',

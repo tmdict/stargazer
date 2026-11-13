@@ -39,7 +39,7 @@ describe('i18nStore', () => {
     })
 
     it('a skill page keeps its text language while the app around it follows the site language', () => {
-      store.setLocale('ko')
+      store.pickLocale('ko')
       const token = store.setHtmlLangOverride('ja')
       expect([document.documentElement.lang, document.body.lang]).toEqual(['ja', 'ko'])
 
@@ -72,7 +72,7 @@ describe('i18nStore', () => {
       store.applyAddressLocale(null, { pins: true })
       expect(store.currentLocale).toBe('zh')
 
-      store.setLocale('ko')
+      store.pickLocale('ko')
       store.applyAddressLocale('en', { pins: false })
       expect(store.currentLocale).toBe('ko')
 

@@ -1,7 +1,7 @@
 /* The guide's pages, one route each. Shared by the router, the SSG route list
- * (vite.config.ts) and the page meta, so a page added here is routed,
- * pre-rendered and titled in one place. Relative import: vite.config.ts
- * type-checks this file without the `@` alias. */
+ * (vite.config.ts) and the page meta: a page added here is pre-rendered and
+ * needs a title, and the router names its view (router/routes.ts). Relative
+ * import: vite.config.ts type-checks this file without the `@` alias. */
 
 export type GuidePage = 'index' | 'upgrades' | 'mechanics'
 

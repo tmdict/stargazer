@@ -61,7 +61,6 @@ const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
 
 gameDataStore.initializeData()
-i18n.initialize()
 
 useHead({ title: 'Teams | Stargazer' })
 

@@ -90,7 +90,6 @@ const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
-i18nStore.initialize()
 
 // Restore state from URL
 const restoreStateFromUrl = () => {

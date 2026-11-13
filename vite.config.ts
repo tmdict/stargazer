@@ -19,6 +19,7 @@ import {
 } from './src/lib/guide.ts'
 import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
+import { skillPath } from './src/lib/skillPath.ts'
 import { APP_LOCALES, isAppLocale, SKILL_LOCALES } from './src/lib/types/i18n.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
 
@@ -67,7 +68,7 @@ function getSSGRoutes(): string[] {
     if (!heroes.length) {
       throw new Error(`[ssg] no skill text for "${code}"; run npm run data`)
     }
-    for (const f of heroes) routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`)
+    for (const f of heroes) routes.push(skillPath(code, f.replace(/\.json$/, '')))
   }
 
   return routes

@@ -7,7 +7,6 @@ import RosterImportReview from '@/components/RosterImportReview.vue'
 import type { RosterImportShot } from '@/composables/useRosterImport'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { RosterCard, RosterImportPlan } from '@/lib/rosterImport'
-import { useI18nStore } from '@/stores/i18n'
 
 let teardown: (() => void) | undefined
 
@@ -46,7 +45,6 @@ describe('the roster review', () => {
   // finishes reading later puts its card first.
   it('keeps the hero picker open when a screenshot read meanwhile puts a card ahead of it', async () => {
     setActivePinia(createPinia())
-    useI18nStore().initialize()
     const plan = ref(planOf([card('b', 'r1c1')]))
     const host = document.createElement('div')
     document.body.append(host)

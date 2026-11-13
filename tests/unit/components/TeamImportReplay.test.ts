@@ -10,7 +10,6 @@ import type { ReplayReading } from '@/lib/import/screens/replay/types'
 import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { useI18nStore } from '@/stores/i18n'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 const deploymentTiles = (type: State): number[] =>
@@ -42,7 +41,6 @@ const mountReplay = async (
 ) => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   const reading: ReplayReading = {
     mapIndex: 0,
     mapCount: 5,

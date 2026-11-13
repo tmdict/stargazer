@@ -8,9 +8,9 @@ import { slBoards } from '@/lib/pvp/generator/setType'
 import { isRetiredSeason } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { LockedHeroes } from '@/lib/types/character'
-import { reloadOntoCurrentBuild } from '@/router/routes'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { reloadOntoCurrentBuild } from '@/utils/chunkRecovery'
 
 interface SlHeading {
   season: number

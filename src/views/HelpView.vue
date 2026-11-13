@@ -25,8 +25,8 @@ useGameDataStore().initializeContentData()
 
 const content = computed(() => CONTENT[lang.value])
 
-// Set after mount: the prerendered HTML has the mouse wording, and hydration
-// must match it.
+// Set after mount: the prerendered HTML has the mouse wording, and the first
+// client render must match it.
 const touch = provideHelpTouch()
 onMounted(() => {
   touch.value = window.matchMedia('(pointer: coarse)').matches

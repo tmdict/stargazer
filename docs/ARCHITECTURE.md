@@ -38,7 +38,7 @@ Arrows show import direction.
 | Domain               | `src/lib/`                      | lib, `src/data/` JSON           | Vue, Pinia, stores, composables, components, utils |
 | Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                            |
 
-One exception is deliberate: `src/utils/contentMeta.ts` reads the i18n store, and every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
+Two exceptions are deliberate. `src/stores/mapEditor.ts` imports the `useArenaPick` composable, which holds the Arena's map pick, and no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
 
 The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
 

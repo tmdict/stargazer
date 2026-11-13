@@ -33,9 +33,8 @@ import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { ARENA_STORAGE_KEY, readStorage, writeStorage } from '@/utils/storage'
 
-const ARENA_KEY = 'stargazer.arena'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
 
@@ -84,7 +83,7 @@ export const readTeamsSlot = (mode: TeamModeKey): ActiveSlot | null => {
  * saved or they do not decode. */
 export const readSavedBoards = (page: 'arena' | TeamModeKey): GridState[] | null => {
   if (page === 'arena') {
-    const raw = readStorage(ARENA_KEY)
+    const raw = readStorage(ARENA_STORAGE_KEY)
     const board = raw ? decodeGridStateFromUrl(raw) : null
     return board && [board]
   }
@@ -114,7 +113,7 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
   const gridStore = useGridStore()
   const artifactStore = useArtifactStore()
   const grids = useGrids()
-  return createPersistence(ARENA_KEY, () =>
+  return createPersistence(ARENA_STORAGE_KEY, () =>
     encodeGridStateToUrl(
       serializeGridState(
         gridStore.getAllTiles,

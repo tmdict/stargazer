@@ -11,7 +11,6 @@ import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
-import { useI18nStore } from '@/stores/i18n'
 
 const phantimal = (id: number, name: string): PhantimalType => ({
   id,
@@ -36,7 +35,6 @@ describe('a phantimal click', () => {
   it('fills a side with room before it removes, and replaces only when every side is taken', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    useI18nStore().initialize()
     const gameData = useGameDataStore()
     vi.spyOn(gameData, 'getCharacterFaction').mockReturnValue('lightbearer')
     vi.spyOn(gameData, 'getPhantimalById').mockImplementation((id: number) =>

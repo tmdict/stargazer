@@ -35,7 +35,6 @@ afterEach(() => {
 const mountPanel = async (): Promise<ReturnType<typeof useRosters>> => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   const gameData = useGameDataStore()
   gameData.initializeContentData()
   const rosters = useRosters()

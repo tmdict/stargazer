@@ -8,6 +8,7 @@ import type {
 import { guidePath, SL_GENERATOR_PATH, SL_LISTS_PATH, SL_RULES_PATH, WWW_PATH } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
+import { isChunkLoadError, reloadOntoCurrentBuild } from '@/utils/chunkRecovery'
 import { loadSkillLocale } from '@/utils/skillLocale'
 
 /**
@@ -50,50 +51,9 @@ async function warmSkillLocale(
   }
 }
 
-// Import-failure wording differs per engine (Chrome "Failed to fetch
-// dynamically imported module", Safari "Importing a module script failed",
-// Firefox "error loading dynamically imported module", plus the module-MIME
-// variant the SPA rewrite produces), so match the family.
-const CHUNK_ERROR_RE =
-  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
-
-export const isChunkLoadError = (error: unknown): boolean =>
-  error instanceof Error && CHUNK_ERROR_RE.test(error.message)
-
-// A deploy purges the previous build's hashed chunks, so a stale tab's next
-// lazy route import fails (the SPA rewrite answers the miss with index.html)
-// and vue-router would swallow the aborted navigation: header clicks die
-// until a hard refresh. Recover by completing the click as a full navigation
-// onto the new build. Remembering the last recovered URL keeps a persistent
-// failure (offline, a blocked chunk) from looping: its second failure stays
-// a dead click. Every other dynamic import recovers where it is made
-// (components through defineLazyComponent, skill locales in warmSkillLocale)
-// or toasts (html-to-image), so no vite:preloadError backstop: it would fire
-// first, and preventing its rethrow starves this handler of the destination.
-const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
-
-/* Loads `fullPath` afresh from the current build, once per URL: false when
- * this URL was already recovered (or storage is refused), so the caller shows
- * its failure instead. A page whose own data file a deploy replaced recovers
- * through it too. */
-export function reloadOntoCurrentBuild(fullPath: string): boolean {
-  try {
-    if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === fullPath) return false
-    sessionStorage.setItem(CHUNK_RECOVERY_KEY, fullPath)
-  } catch {
-    return false
-  }
-  // Assigning the page already shown, when its address has a #fragment, only
-  // scrolls to the fragment.
-  const target = new URL(fullPath, window.location.href)
-  if (target.pathname + target.search === window.location.pathname + window.location.search) {
-    window.location.reload()
-  } else {
-    window.location.assign(target)
-  }
-  return true
-}
-
+// A stale tab's failed route chunk would leave vue-router swallowing the
+// aborted navigation: header clicks die until a hard refresh. Recover by
+// completing the click as a full navigation onto the new build.
 function installChunkErrorRecovery(router: Router): void {
   if (import.meta.env.SSR) return
   router.onError((error, to) => {
@@ -139,7 +99,6 @@ export const routes: RouteRecordRaw[] = [
     name: 'skill',
     component: () => import('@/views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
-    // Locale chunk warm-up lives in warmSkillLocale (global beforeResolve).
   },
   {
     path: guidePath('index'),

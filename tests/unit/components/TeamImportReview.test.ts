@@ -9,7 +9,6 @@ import type { FormationReading } from '@/lib/import/screens/formation/types'
 import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { useI18nStore } from '@/stores/i18n'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 vi.mock('@/stores/gameData', () => ({
@@ -43,7 +42,6 @@ const PHANTIMAL = toPhantimalId(1)
 const mountFormation = async (withPortrait = true, state: 'sure' | 'review' = 'sure') => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   const portraitTile = ALLY_TILES[0]!
   const reading: FormationReading = {
     mapIndex: 0,

@@ -9,6 +9,7 @@ import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import PickerSearchRow from '@/components/ui/PickerSearchRow.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { fromMechanicQuery, toMechanicQuery } from '@/lib/mechanics'
+import { skillPath } from '@/lib/skillPath'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { heroDisplayName } from '@/utils/skillLabels'
@@ -79,7 +80,7 @@ watch(mechanicFilter, (pick) => {
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
-        :to="`/${linkLocale}/skill/${character.name}`"
+        :to="skillPath(linkLocale, character.name)"
         class="character-cell"
       >
         <template v-if="namesOnly">{{ heroName(character) }}</template>

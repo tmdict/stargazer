@@ -7,6 +7,7 @@ import { closeDropdowns } from '@/composables/useDropdown'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 import { useOverlay } from '@/composables/useOverlay'
 import { useScrollLock } from '@/composables/useScrollLock'
+import { skillPath } from '@/lib/skillPath'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -48,7 +49,9 @@ const modalRef = ref<HTMLElement>()
 const i18n = useI18nStore()
 
 // Permalink to the hero's skill page (modal-local locale override wins over global).
-const linkHref = computed(() => `/${localeOverride ?? i18n.currentLocale}/skill/${linkParam}`)
+const linkHref = computed(
+  () => linkParam && skillPath(localeOverride ?? i18n.currentLocale, linkParam),
+)
 
 const isOpen = toRef(() => show)
 useOverlay({ elementRef: modalRef, onClose: () => emit('close'), isOpen })

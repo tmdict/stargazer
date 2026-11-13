@@ -4,7 +4,7 @@
 
 import { defineAsyncComponent, type AsyncComponentLoader, type Component } from 'vue'
 
-import { isChunkLoadError, reloadOntoCurrentBuild } from '@/router/routes'
+import { isChunkLoadError, reloadOntoCurrentBuild } from './chunkRecovery'
 
 export const defineLazyComponent = <T extends Component>(loader: AsyncComponentLoader<T>) =>
   defineAsyncComponent({

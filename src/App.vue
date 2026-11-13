@@ -71,10 +71,6 @@ const openWhatsNew = () => {
   showWhatsNew.value = true
 }
 
-// Header renders on every route; init here so SSG-only routes whose views
-// don't call initialize (about, skill/*) still get translations. Idempotent.
-i18n.initialize()
-
 // Root setup runs before any route child's persistence reads, and the arena
 // autosave must re-align once per season flip before its page can read it.
 const strippedSeason = runSeasonRotationPass()

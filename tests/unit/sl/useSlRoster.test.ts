@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { useSlRoster } from '@/components/guide/sl/useSlRoster'
 import { ATTR_PARAGON, TOP_LEVELS } from '@/lib/characters/attributes'
 import { useGameDataStore } from '@/stores/gameData'
-import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
 /* Which roster an edit on the generator lands in: a selected roster takes it at
@@ -23,7 +22,6 @@ afterEach(() => {
 
 const setup = () => {
   setActivePinia(createPinia())
-  useI18nStore().initialize()
   const gameData = useGameDataStore()
   gameData.initializeContentData()
   const rosters = useRosters()

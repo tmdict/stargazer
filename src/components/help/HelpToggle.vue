@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* Look-only copy of GridControls' display toggle. `split` adds Grid Info's
-   options caret; `menu` is the Format button, which has no tick. */
+/* Look-only copy of ToggleChip, the grid controls bar's display toggle.
+   `split` adds Grid Info's options caret; `menu` is the Format button, which
+   has no tick. */
 
 defineProps<{ label: string; on?: boolean; split?: boolean; menu?: boolean }>()
 </script>

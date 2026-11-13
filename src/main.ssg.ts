@@ -15,9 +15,9 @@ import './styles/variables.css'
  * Uses the same route definitions as the SPA (imported from router/routes.ts)
  * to ensure consistency between modes. vite-ssg pre-renders every route in
  * vite.config's getSSGRoutes: the skill permalinks across all SKILL_LOCALES
- * languages, the guide and Help pages per app locale, and the interactive
- * shells (/, /share, /skills), which carry canonical/meta and hydrate into
- * the app.
+ * languages, the guide pages, Help per app locale, and the interactive shells
+ * (/, /share, /skills), which carry canonical/meta. The client draws each
+ * page afresh over the baked HTML.
  *
  * Chrome locale comes from an app-locale URL prefix (App.vue store sync);
  * skill pages read their text locale from the :textLocale route param.

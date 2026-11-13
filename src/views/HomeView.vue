@@ -213,7 +213,6 @@ watch(
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
-i18nStore.initialize()
 
 const arenaPersistence = useArenaPersistence(toFlags)
 

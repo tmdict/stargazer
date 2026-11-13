@@ -19,10 +19,9 @@
 
 import { CURRENT_SEASON, stripSeasonalBoard } from '@/lib/seasonal'
 import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/lib/teams/codec'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { ARENA_STORAGE_KEY, readStorage, writeStorage } from '@/utils/storage'
 
 const SEASON_KEY = 'stargazer.season'
-const ARENA_KEY = 'stargazer.arena'
 
 // The season the marker feature shipped in: a device with no marker last
 // wrote arena data on a build no newer than this pool.
@@ -42,7 +41,7 @@ export function runSeasonRotationPass(): number | null {
   // strip retries on the next load. A throw must not block startup.
   let stripped: number | null = null
   try {
-    const stored = readStorage(ARENA_KEY)
+    const stored = readStorage(ARENA_STORAGE_KEY)
     let ok = true
     if (stored !== null) {
       const state = decodeGridStateFromUrl(stored)
@@ -51,7 +50,7 @@ export function runSeasonRotationPass(): number | null {
         const { d, ...board } = state
         const encoded = encodeGridStateToUrl({ ...stripSeasonalBoard(board), d })
         if (encoded !== stored) {
-          ok = writeStorage(ARENA_KEY, encoded)
+          ok = writeStorage(ARENA_STORAGE_KEY, encoded)
           if (ok) stripped = last
         }
       }

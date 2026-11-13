@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
-import { useI18nStore } from '@/stores/i18n'
 
 /* New's two-step confirm must belong to the boards it was armed for: a mode
  * switch, a type switch, or a Load inside the window replaces them, and the
@@ -29,7 +28,6 @@ afterEach(() => {
 const mountActions = async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   const state = reactive<ActionsState>({
     hasSource: false,
     suggestedName: 'Team 1',

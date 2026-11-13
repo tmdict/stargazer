@@ -9,6 +9,7 @@ import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { deepSearchMinLength, useSkillSearch, type SearchHit } from '@/composables/useSkillSearch'
 import { useVisualViewport } from '@/composables/useVisualViewport'
 import { getCharmForHero } from '@/lib/dataLoader'
+import { skillPath } from '@/lib/skillPath'
 import { isSkillLocale, SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { SPLIT_MIN_WIDTH } from '@/utils/breakpoints'
@@ -32,7 +33,8 @@ const route = useRoute()
 const router = useRouter()
 const { recentHeroes } = useRecentHeroes()
 
-// Teleport only after mount: the SSG pass and hydration both render nothing.
+// Teleport only after mount: the pre-render and the first client render both
+// draw nothing.
 const mounted = ref(false)
 onMounted(() => {
   mounted.value = true
@@ -114,7 +116,7 @@ const hitRows = computed<OverlayRow[]>(() => {
     r.hits.map((hit, i) => ({
       key: `${r.slug}:${hit.slot ?? hit.loc}:${i}`,
       slug: r.slug,
-      href: `/${hit.locale}/skill/${r.slug}${hitAnchor(hit)}`,
+      href: skillPath(hit.locale, r.slug) + hitAnchor(hit),
       lang: hit.locale,
       portrait: i === 0,
       alt: heroName(r.slug),
@@ -130,7 +132,7 @@ const recentRows = computed<OverlayRow[]>(() =>
     .map((slug) => ({
       key: `recent:${slug}`,
       slug,
-      href: `/${textLang.value}/skill/${slug}`,
+      href: skillPath(textLang.value, slug),
       lang: textLang.value,
       portrait: true,
       alt: heroName(slug),
@@ -152,7 +154,7 @@ const heroRows = computed<OverlayRow[]>(() => {
       {
         key: `hero:${r.slug}`,
         slug: r.slug,
-        href: `/${hit.locale}/skill/${r.slug}${hitAnchor(hit)}`,
+        href: skillPath(hit.locale, r.slug) + hitAnchor(hit),
         lang: hit.locale,
         portrait: true,
         alt: name,
@@ -250,7 +252,7 @@ const paneHits = computed<PaneHit[]>(() => {
     }
     return {
       key: `${hero.slug}:${slot ?? hit.loc}:${i}`,
-      href: `/${hit.locale}/skill/${hero.slug}${hitAnchor(hit)}`,
+      href: skillPath(hit.locale, hero.slug) + hitAnchor(hit),
       lang: hit.locale,
       title: hit.loc === 'description' || hit.loc === 'charm' ? null : hit.snippet,
       typeLine,

@@ -7,7 +7,6 @@ import TeamImportModal from '@/components/modals/TeamImportModal.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
-import { useI18nStore } from '@/stores/i18n'
 import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 
 const sample = (): ImportShot => ({
@@ -80,7 +79,6 @@ const mountImport = async () => {
   vi.stubGlobal('fetch', () => new Promise(() => {}))
   const pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   useGameDataStore().initializeContentData()
   const api = holdTeamImport(
     () => '3v3',

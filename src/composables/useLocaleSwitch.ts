@@ -1,5 +1,6 @@
 import { useRoute, useRouter } from 'vue-router'
 
+import { skillPath } from '@/lib/skillPath'
 import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
@@ -19,7 +20,7 @@ export function useLocaleSwitch() {
   const target = (locale: AppLocale): string | undefined => {
     // A site-language pick resets the skill text to that language, so a skill
     // page moves under any prefix, `/ja/...` included.
-    if (route.name === 'skill') return `/${locale}/skill/${route.params.name as string}`
+    if (route.name === 'skill') return skillPath(locale, route.params.name as string)
     const { locale: current, rest } = splitLocalePath(route.path)
     return current ? `/${locale}${rest}` : undefined
   }

@@ -15,8 +15,8 @@ const query = ref('')
 const selectHandler = ref<((slug: string) => void) | null>(null)
 
 /** Platform-aware shortcut chip label for the triggers. SSG bakes the
- * majority label; Macs swap after mount (post-hydration, and the chips carry
- * a min-width so the swap doesn't shift layout). */
+ * majority label; Macs swap after mount (after the first render, and the
+ * chips carry a min-width so the swap doesn't shift layout). */
 export function useShortcutLabel() {
   const shortcut = ref('Ctrl K')
   onMounted(() => {

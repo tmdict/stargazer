@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 
+import { readStorage, writeStorage } from '@/utils/storage'
+
 // Recently viewed skill pages, newest first; feeds the search overlay's
 // empty state. Module-scope ref so recording (skill pages) and reading (the
 // overlay) share one live list; localStorage only persists it across visits.
@@ -12,9 +14,9 @@ let loaded = false
 function load(): void {
   if (loaded || import.meta.env.SSR) return
   loaded = true
+  const raw = readStorage(STORAGE_KEY)
+  if (!raw) return
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
     const parsed: unknown = JSON.parse(raw)
     if (Array.isArray(parsed)) {
       recentHeroes.value = parsed
@@ -22,7 +24,7 @@ function load(): void {
         .slice(0, MAX_RECENT)
     }
   } catch {
-    // unreadable storage: start empty
+    // unreadable value: start empty
   }
 }
 
@@ -35,11 +37,7 @@ export function useRecentHeroes() {
       0,
       MAX_RECENT,
     )
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(recentHeroes.value))
-    } catch {
-      // storage unavailable: the in-memory list still works this session
-    }
+    writeStorage(STORAGE_KEY, JSON.stringify(recentHeroes.value))
   }
 
   return { recentHeroes, record }

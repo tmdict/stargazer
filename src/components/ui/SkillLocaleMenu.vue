@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import IconGlobe from './IconGlobe.vue'
 import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { usePanelFit } from '@/composables/usePanelFit'
+import { skillPath } from '@/lib/skillPath'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -76,7 +77,7 @@ const pickSelect = (locale: SkillLocale) => {
         <RouterLink
           v-for="l in SKILL_LOCALES"
           :key="l.code"
-          :to="`/${l.code}/skill/${slug}`"
+          :to="skillPath(l.code, slug)"
           class="item"
           :class="{ 'is-selected': l.code === current }"
           @click="pickLink(l.code, $event)"

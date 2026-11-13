@@ -11,6 +11,7 @@ import {
 } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
+import { skillPath } from '@/lib/skillPath'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { loadCharacterImages } from '@/utils/imageLoader'
@@ -46,7 +47,6 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   const nameLocale = loadCharacterLocales()[name]
   // Warm by the route guard before this runs.
   const heroName = heroDisplayName(name, locale)
-  const url = `skill/${name}`
   // Per-hero preview reusing the small picker thumbnail: Discord renders it, but
   // it is below the size FB/X require, so they fall back to a text-only card.
   // Absolute URL for crawlers; left unset (default og:image applies) for any hero
@@ -66,18 +66,18 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
             { property: 'og:image:alt', content: heroName },
           ]
         : []),
-      { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },
+      { property: 'og:url', content: `${ORIGIN}${skillPath(locale, name)}` },
     ],
     link: [
-      { rel: 'canonical', href: `${ORIGIN}/${locale}/${url}` },
-      // Coverage is asserted at import time, so every language exists for
-      // every hero and the alternate set is reciprocal across all 16 pages.
+      { rel: 'canonical', href: `${ORIGIN}${skillPath(locale, name)}` },
+      // The data step refuses a pack that lacks a hero in any language, so the
+      // alternate set is reciprocal across all 16 pages.
       ...SKILL_LOCALES.map(({ code }) => ({
         rel: 'alternate',
         hreflang: code,
-        href: `${ORIGIN}/${code}/${url}`,
+        href: `${ORIGIN}${skillPath(code, name)}`,
       })),
-      { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
+      { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${skillPath('en', name)}` },
     ],
   })
 }

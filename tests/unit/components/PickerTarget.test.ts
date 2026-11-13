@@ -9,7 +9,6 @@ import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
-import { useI18nStore } from '@/stores/i18n'
 
 /* A tapped tile picks the side a tap fills, so the hero picker's grey follows
  * that side rather than the whole board. */
@@ -26,7 +25,6 @@ beforeEach(() => {
   )
   pinia = createPinia()
   setActivePinia(pinia)
-  useI18nStore().initialize()
   useGameDataStore().initializeContentData()
   useGrids().setGridCount(1)
 })
