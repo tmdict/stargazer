@@ -10,7 +10,6 @@ import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
-import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -108,10 +107,7 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
 const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   if (!isDraggable) return
   const id = toPhantimalId(phantimal.id)
-  // Minimal character-shaped payload: the drop handler only needs the id (no
-  // sourceHexId marks it as a picker placement).
-  const dragData = { id } as unknown as CharacterType
-  startDrag(event, dragData, id, gameDataStore.getCharacterImage(phantimal.name))
+  startDrag(event, { characterId: id }, gameDataStore.getCharacterImage(phantimal.name))
 }
 
 const handleDragEnd = (event: DragEvent) => {

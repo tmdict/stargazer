@@ -17,8 +17,6 @@ export interface CharacterType {
   // Faction placeholder stand-in (see lib/characters/placeholder.ts): faction
   // is real, class and damage are 'none'. Absent on real heroes.
   placeholder?: true
-  sourceHexId?: number // Optional property for tracking drag source
-  sourceGridId?: number // Board the drag started on (for cross-board moves/swaps)
   team?: Team // Team assignment for placement
 }
 

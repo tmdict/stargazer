@@ -12,14 +12,16 @@
 import { inject, provide, ref, type InjectionKey } from 'vue'
 
 import type { CharacterType } from '@/lib/types/character'
+import type { CharacterDropPayload } from '@/stores/gridContext'
 import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
 
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'
 
-interface CharacterDragPayload {
-  character: CharacterType
-  characterId: number
+// The unit in hand. `hero` is what the preview draws its frame and name from;
+// a phantimal has none.
+export interface DraggedUnit extends CharacterDropPayload {
+  hero?: CharacterType
 }
 
 // Pre-load transparent drag image to avoid timing issues and eliminate browser drag visuals
@@ -31,7 +33,7 @@ if (!import.meta.env.SSR && typeof Image !== 'undefined') {
 }
 
 const isDragging = ref(false)
-const draggedCharacter = ref<CharacterType | null>(null)
+const draggedUnit = ref<DraggedUnit | null>(null)
 const draggedImageSrc = ref<string>('')
 const dragPreviewPosition = ref({ x: 0, y: 0 })
 const dropHandled = ref(false)
@@ -79,7 +81,7 @@ const endDrag = (event: DragEvent) => {
   if (!isDragging.value) return
 
   isDragging.value = false
-  draggedCharacter.value = null
+  draggedUnit.value = null
   draggedImageSrc.value = ''
 
   lastDropHexId.value = hoveredHexId.value
@@ -96,29 +98,20 @@ const endDrag = (event: DragEvent) => {
   document.removeEventListener('dragend', endDrag)
 }
 
-const startDrag = (
-  event: DragEvent,
-  character: CharacterType,
-  characterId: number,
-  imageUrl?: string,
-) => {
+const startDrag = (event: DragEvent, unit: DraggedUnit, imageUrl: string) => {
   if (!event.dataTransfer) return
 
   isDragging.value = true
-  draggedCharacter.value = character
-  draggedImageSrc.value = imageUrl || character.name
+  draggedUnit.value = unit
+  draggedImageSrc.value = imageUrl || unit.hero?.name || ''
   dropHandled.value = false
   lastDropHexId.value = null
 
   updateDragPosition(event.clientX, event.clientY)
 
-  event.dataTransfer.setData(
-    CHARACTER_MIME_TYPE,
-    JSON.stringify({
-      character,
-      characterId: characterId || character.id,
-    }),
-  )
+  const { characterId, sourceHexId, sourceGridId } = unit
+  const payload: CharacterDropPayload = { characterId, sourceHexId, sourceGridId }
+  event.dataTransfer.setData(CHARACTER_MIME_TYPE, JSON.stringify(payload))
 
   event.dataTransfer.effectAllowed = 'copy'
 
@@ -146,7 +139,7 @@ const handleDragOver = (event: DragEvent) => {
   }
 }
 
-const handleDrop = (event: DragEvent): CharacterDragPayload | null => {
+const handleDrop = (event: DragEvent): CharacterDropPayload | null => {
   event.preventDefault()
 
   if (!event.dataTransfer) {
@@ -160,8 +153,7 @@ const handleDrop = (event: DragEvent): CharacterDragPayload | null => {
       return null
     }
 
-    const { character, characterId } = JSON.parse(dragData) as CharacterDragPayload
-    return { character, characterId: characterId || character.id }
+    return JSON.parse(dragData) as CharacterDropPayload
   } catch (error) {
     console.error('Error parsing drag data:', error)
     return null
@@ -187,7 +179,7 @@ export const useDragDrop = () => {
   return {
     // State
     isDragging,
-    draggedCharacter,
+    draggedUnit,
     draggedImageSrc,
     dragPreviewPosition,
     artifactDragPayload,

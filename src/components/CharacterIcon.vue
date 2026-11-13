@@ -130,7 +130,7 @@ const handleContextMenu = (event: MouseEvent) => {
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
-  startDrag(event, props.character, props.character.id, portraitUrl.value)
+  startDrag(event, { characterId: props.character.id, hero: props.character }, portraitUrl.value)
 }
 
 const handleDragEnd = (event: DragEvent) => {

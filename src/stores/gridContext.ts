@@ -53,7 +53,6 @@ import { getClosestTargetMap } from '@/lib/pathfinding'
 import { isPermanentArtifactId } from '@/lib/seasonal'
 import { artifactCanDraw, artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
 import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
-import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
 import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -95,12 +94,13 @@ interface GridContextGlobals {
   buffMode?: Ref<ModeListKey | null>
 }
 
-// The drop chain (routeDrop -> handleDrop) reads only the drag-source
-// coordinates from the payload; live cells are authoritative for everything
-// else at drop time. Absent coordinates mean a picker placement.
+// A unit on its way to a tile, from a drag, a lift or a picker. The source
+// cell is absent for a picker placement; live cells are authoritative for
+// everything else at drop time.
 export interface CharacterDropPayload {
-  character: Pick<CharacterType, 'sourceHexId' | 'sourceGridId'>
   characterId: number
+  sourceHexId?: number
+  sourceGridId?: number
 }
 
 // A reactive board entity (store-like): refs and computeds are unwrapped on
@@ -392,22 +392,22 @@ export function createGridContext(
   // Same-board drop dispatch: grid-source drags move or swap, picker drops place
   // and replace any occupant. Cross-board routing is one level up.
   const handleDrop = (payload: CharacterDropPayload, targetHexId: number): boolean => {
-    const { character, characterId } = payload
-    if (character.sourceHexId !== undefined) {
+    const { characterId, sourceHexId } = payload
+    if (sourceHexId !== undefined) {
       if (hasCharacter(grid, targetHexId)) {
-        return swap(character.sourceHexId, targetHexId)
+        return swap(sourceHexId, targetHexId)
       }
       // Moving a phantimal onto an empty cell on the other team must keep the
       // one-per-team rule and the destination team's faction requirement.
       if (isPhantimalId(characterId)) {
         const destTeam = getTeamFromTileState(grid.getTileById(targetHexId).state)
-        const sourceTeam = getCharacterTeam(grid, character.sourceHexId)
+        const sourceTeam = getCharacterTeam(grid, sourceHexId)
         if (destTeam !== null && destTeam !== sourceTeam) {
           if (!phantimalCanJoinTeam(characterId, destTeam)) return false
-          clearTeamPhantimal(destTeam, character.sourceHexId)
+          clearTeamPhantimal(destTeam, sourceHexId)
         }
       }
-      return move(character.sourceHexId, targetHexId, characterId)
+      return move(sourceHexId, targetHexId, characterId)
     }
     const team = getTeamFromTileState(grid.getTileById(targetHexId).state)
     if (team === null) return false

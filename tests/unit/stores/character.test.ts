@@ -3,7 +3,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -11,20 +10,6 @@ import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
-
-const buildCharacter = (id: number, sourceHexId?: number): CharacterType => ({
-  id,
-  name: `hero-${id}`,
-  level: '1',
-  faction: '',
-  class: '',
-  damage: '',
-  energy: [],
-  range: 1,
-  season: 1,
-  tags: {},
-  ...(sourceHexId !== undefined ? { sourceHexId } : {}),
-})
 
 let store: ReturnType<typeof useCharacterStore>
 let gridStore: ReturnType<typeof useGridStore>
@@ -44,14 +29,8 @@ beforeEach(() => {
 describe('characterStore phantimals', () => {
   it('routes a picker phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
-    grids.active!.handleDrop(
-      { character: buildCharacter(toPhantimalId(1)), characterId: toPhantimalId(1) },
-      tiles[0]!.getId(),
-    )
-    grids.active!.handleDrop(
-      { character: buildCharacter(toPhantimalId(2)), characterId: toPhantimalId(2) },
-      tiles[1]!.getId(),
-    )
+    grids.active!.handleDrop({ characterId: toPhantimalId(1) }, tiles[0]!.getId())
+    grids.active!.handleDrop({ characterId: toPhantimalId(2) }, tiles[1]!.getId())
 
     expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBeUndefined()
     expect(gridStore.getTile(tiles[1]!.getId()).characterId).toBe(toPhantimalId(2))
@@ -129,10 +108,7 @@ describe('characterStore phantimal faction rule', () => {
     await nextTick()
 
     const ok = grids.active!.handleDrop(
-      {
-        character: buildCharacter(toPhantimalId(1), allyPhantimalHex),
-        characterId: toPhantimalId(1),
-      },
+      { characterId: toPhantimalId(1), sourceHexId: allyPhantimalHex },
       emptyEnemyHex,
     )
 

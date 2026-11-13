@@ -59,7 +59,7 @@ const {
   handleDragOver,
   handleDrop,
   hasCharacterData,
-  draggedCharacter,
+  draggedUnit,
   hoveredHexId,
   hoveredGridId,
   lastDropHexId,
@@ -309,11 +309,11 @@ const getHexDropClass = (hex: Hex) => {
   // for every routing-layer rejection; per-grid engine rejections and
   // mid-transaction failures still resolve at drop time as silent no-ops.
   let validDropZone = false
-  if (isDragHover && draggedCharacter.value) {
+  if (isDragHover && draggedUnit.value) {
     validDropZone = grids.canDropCharacter(
-      draggedCharacter.value.id,
-      draggedCharacter.value.sourceGridId,
-      draggedCharacter.value.sourceHexId,
+      draggedUnit.value.characterId,
+      draggedUnit.value.sourceGridId,
+      draggedUnit.value.sourceHexId,
       ctx.id,
       hexId,
     )

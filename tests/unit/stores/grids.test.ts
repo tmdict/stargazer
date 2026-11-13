@@ -13,7 +13,6 @@ import { unitSkillKey } from '@/lib/skills/skill'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { BoardLineup, TeamImportPlan } from '@/lib/teams/teamImport'
-import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useRosters } from '@/stores/rosters'
@@ -40,17 +39,14 @@ const lineup = (grid: Grid): { characterId: number; team: Team }[] =>
     .map((tile) => ({ characterId: tile.characterId!, team: tile.team! }))
     .sort((a, b) => a.characterId - b.characterId)
 
-// Minimal cross-board drag payload (routeDrop only reads these fields off the character).
 const dragPayload = (sourceGridId: number, sourceHexId: number, characterId: number) => ({
-  character: { sourceGridId, sourceHexId } as unknown as CharacterType,
   characterId,
+  sourceGridId,
+  sourceHexId,
 })
 
 // Picker drag payload: no source cell, so the drop is a placement.
-const pickerPayload = (characterId: number) => ({
-  character: { id: characterId } as unknown as CharacterType,
-  characterId,
-})
+const pickerPayload = (characterId: number) => ({ characterId })
 
 // Fresh store with `count` arena1 boards; a/b are the first two contexts.
 const setupBoards = (count = 2) => {

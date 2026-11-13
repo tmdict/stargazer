@@ -6,13 +6,12 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { characterDisplayName } from '@/utils/nameFormatting'
 
-const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = useDragDrop()
+const { isDragging, draggedUnit, draggedImageSrc, dragPreviewPosition } = useDragDrop()
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
 const backgroundImage = computed(() => {
-  if (!draggedCharacter.value) return ''
-  const level = draggedCharacter.value.level
+  const level = draggedUnit.value?.hero?.level
   const bgImage = gameData.icons[`bg-${level}`]
   return bgImage ? `url(${bgImage})` : ''
 })
@@ -21,7 +20,7 @@ const backgroundImage = computed(() => {
 <template>
   <Teleport to="body">
     <div
-      v-if="isDragging && draggedCharacter && draggedImageSrc"
+      v-if="isDragging && draggedUnit && draggedImageSrc"
       class="drag-preview"
       :style="{
         left: `${dragPreviewPosition.x}px`,
@@ -38,7 +37,7 @@ const backgroundImage = computed(() => {
       >
         <img
           :src="draggedImageSrc"
-          :alt="characterDisplayName(i18n.t, draggedCharacter)"
+          :alt="draggedUnit.hero ? characterDisplayName(i18n.t, draggedUnit.hero) : ''"
           class="portrait"
         />
       </div>

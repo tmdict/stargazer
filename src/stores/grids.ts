@@ -935,8 +935,7 @@ export const useGrids = defineStore('grids', () => {
   ): boolean => {
     const targetCtx = getContext(targetCtxId)
     if (!targetCtx) return false
-    const sourceGridId = payload.character.sourceGridId
-    const sourceHexId = payload.character.sourceHexId
+    const { sourceGridId, sourceHexId } = payload
     if (
       !canDropCharacter(payload.characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)
     ) {
@@ -979,7 +978,7 @@ export const useGrids = defineStore('grids', () => {
     const characterId = getCharacter(fromCtx.grid, fromHexId)
     if (characterId === undefined) return false
     return routeDrop(
-      { character: { sourceHexId: fromHexId, sourceGridId: fromCtxId }, characterId },
+      { characterId, sourceHexId: fromHexId, sourceGridId: fromCtxId },
       targetCtxId,
       targetHexId,
     )

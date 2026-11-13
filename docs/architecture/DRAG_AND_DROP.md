@@ -76,7 +76,7 @@ For a drop that stays on one board the gate also asks the engine's own rules, `c
 
 A board is in tap mode when its page passes `tap-mode`, which the Arena and the Teams page do at the widths where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero: tapping it targets it, and the next picker tap places there. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight.
 
-Moving and removing work through a lift. A tap on a placed hero lifts it, and a mouse click on a wide layout removes it instead, as in the game. A tap elsewhere then swaps, moves or removes the lifted hero. The move goes through `routeLiftDrop`, which builds a normal payload so the tap passes every drag gate.
+Moving and removing work through a lift. A tap on a placed hero lifts it, and a mouse click on a wide layout removes it instead, as in the game. A tap elsewhere then swaps, moves or removes the lifted hero. The move and the swap go through `routeLiftDrop`, which builds a normal payload so the tap passes every drag gate.
 
 A lift records its board, hex and unit id. Placements also change under a lift without any tap, such as a map switch or a board swap. `useLiftGuard`, installed once in `App.vue`, drops the lift as soon as its cell stops holding the lifted unit, so a stale lift can never eat a tap or move a hero the user did not lift.
 

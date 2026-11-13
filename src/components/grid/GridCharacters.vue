@@ -254,33 +254,19 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   // still fire on the next empty-cell tap.
   clearLiftedHex()
 
-  // Phantimals carry a minimal payload (the drop handler only needs id +
-  // sourceHexId).
+  // The id is the placed unit's (a companion or synergy id), not its base hero's.
+  const from = { characterId, sourceHexId: hexId, sourceGridId: ctx.id }
+
   if (inPhantimalBand(characterId)) {
     const slug = gameDataStore.getPhantimalUnitSlug(characterId)
     if (!slug) return
-    const dragData = {
-      id: characterId,
-      sourceHexId: hexId,
-      sourceGridId: ctx.id,
-    } as unknown as CharacterType
-    startDrag(event, dragData, characterId, gameDataStore.getCharacterImage(slug))
+    startDrag(event, from, gameDataStore.getCharacterImage(slug))
     return
   }
 
-  const character = gameDataStore.getCharacterById(toBaseHeroId(characterId))
-  if (!character) return
-
-  // sourceHexId marks a board-origin drag (the drop handler routes on it), and
-  // id is the placed unit (companion or synergy id), not the base card's.
-  const characterWithSource = {
-    ...character,
-    id: characterId,
-    sourceHexId: hexId,
-    sourceGridId: ctx.id,
-  }
-
-  startDrag(event, characterWithSource, characterId, getUnitImage(characterId, hexId))
+  const hero = gameDataStore.getCharacterById(toBaseHeroId(characterId))
+  if (!hero) return
+  startDrag(event, { ...from, hero }, getUnitImage(characterId, hexId))
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -307,15 +293,9 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
       ctx.remove(hexId)
       clearLiftedHex()
     } else if (liftedHexId.value !== null) {
-      // Like a drag, a tap-swap that changes teams must keep page-wide character
-      // uniqueness; a violation silently no-ops (the lift is consumed either way).
-      const liftedId = getCharacter(ctx.grid, liftedHexId.value)
-      if (
-        liftedId !== undefined &&
-        grids.canDropCharacter(liftedId, ctx.id, liftedHexId.value, ctx.id, hexId)
-      ) {
-        ctx.swap(liftedHexId.value, hexId)
-      }
+      // Through the drop router, so a tap-swap shares every drag gate; a
+      // refused swap silently no-ops and the lift is consumed either way.
+      grids.routeLiftDrop(ctx.id, liftedHexId.value, ctx.id, hexId)
       clearLiftedHex()
     } else {
       setLiftedHex(hexId, ctx.id, characterId)

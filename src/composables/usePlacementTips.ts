@@ -44,7 +44,7 @@ export function usePlacementTips(
   liftActions: () => HTMLElement | null | undefined,
 ) {
   const ctx = useGridContext()
-  const { isDragging, draggedCharacter } = useDragDrop()
+  const { isDragging, draggedUnit } = useDragDrop()
   const { liftedHexId, liftedGridId } = useSelectionState()
   const { explain } = useSlEngine({ startOnMount: false })
 
@@ -73,7 +73,7 @@ export function usePlacementTips(
   const subject = computed((): number | 'artifact' | null => {
     if (!enabled()) return null
     if (isDragging.value) {
-      const from = draggedCharacter.value
+      const from = draggedUnit.value
       return from?.sourceGridId === ctx.id &&
         from.sourceHexId !== undefined &&
         isAlly(from.sourceHexId)
