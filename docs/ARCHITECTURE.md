@@ -16,7 +16,7 @@ Each system has its own doc under `docs/architecture/`; the index is in `AGENTS.
 │ Composables               │    │ Stores (Pinia)            │
 │ useGridContext: the board │    │ useGrids: N boards, built │
 │ a component stands on     │───▶│ by gridContext            │
-│ useDragDrop, useGridEvents│    │ active-board facades,     │
+│ useDragDrop, useLongPress,│    │ active-board facades,     │
 │ useSelectionState, ...    │    │ gameData, i18n            │
 └─────────────┬─────────────┘    └─────────────┬─────────────┘
               ▼                                ▼
@@ -54,7 +54,7 @@ The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share 
   tap, click or drag on a board
              │
              ▼
-  event layer on top of the SVG ──▶ useGridEvents / useDragDrop
+  event layer on top of the SVG ──▶ component events / useDragDrop
              │
              ▼
   component handler ──▶ board operation (GridContext)
@@ -73,7 +73,7 @@ The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share 
              └──▶ watchers: phantimal faction check, autosave
 ```
 
-SVG has no z-index, so the board draws its layers in order and puts an invisible layer on top to catch input ([Board Input](./architecture/DRAG_AND_DROP.md)). The event bus only notifies; whoever subscribes owns the state change. `executeTransaction` (`src/lib/characters/transaction.ts`) stops at the first step that fails and undoes the earlier ones in reverse, so a half-finished move never reaches the screen. The board wraps `SkillManager` in `reactive`, so its computed values re-read when a skill changes what the manager holds.
+SVG has no z-index, so the board draws its layers in order and puts an invisible layer on top to catch input ([Board Input](./architecture/DRAG_AND_DROP.md)). A board layer only reports input with a component event; `GridManager` owns the state change. `executeTransaction` (`src/lib/characters/transaction.ts`) stops at the first step that fails and undoes the earlier ones in reverse, so a half-finished move never reaches the screen. The board wraps `SkillManager` in `reactive`, so its computed values re-read when a skill changes what the manager holds.
 
 ## Where state is stored
 

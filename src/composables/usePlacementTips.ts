@@ -4,7 +4,7 @@
  * by the Supreme League worker (sideExplanation), which starts with the first
  * card and answers again after each change to the side. */
 
-import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterTeam } from '@/lib/characters/character'
@@ -22,7 +22,6 @@ import { Team } from '@/lib/types/team'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { isTouchHover } from '@/utils/pointer'
 import { useDragDrop } from './useDragDrop'
-import type { GridEventAPI } from './useGridEvents'
 import { useSelectionState } from './useSelectionState'
 import { useSlEngine } from './useSlEngine'
 
@@ -37,10 +36,9 @@ export interface PlacementTip {
   artifact?: 'own' | 'named'
 }
 
-// `gridEvents` is the board's own bus, which its manager provides, and
-// `liftActions` the lifted unit's Skills button.
+// `liftActions` is the lifted unit's Skills button. The board calls `hover`'s
+// functions as the pointer enters and leaves a unit or an artifact.
 export function usePlacementTips(
-  gridEvents: GridEventAPI,
   enabled: () => boolean,
   svgEl: () => SVGSVGElement | null | undefined,
   liftActions: () => HTMLElement | null | undefined,
@@ -63,16 +61,6 @@ export function usePlacementTips(
   const leaveArtifact = (): void => {
     if (hovered.value === 'artifact') hovered.value = null
   }
-  gridEvents.on('character:mouseenter', enter)
-  gridEvents.on('character:mouseleave', leave)
-  gridEvents.on('artifact:mouseenter', enterArtifact)
-  gridEvents.on('artifact:mouseleave', leaveArtifact)
-  onScopeDispose(() => {
-    gridEvents.off('character:mouseenter', enter)
-    gridEvents.off('character:mouseleave', leave)
-    gridEvents.off('artifact:mouseenter', enterArtifact)
-    gridEvents.off('artifact:mouseleave', leaveArtifact)
-  })
   // A drag fires no mouseleave on the unit it starts from.
   watch(isDragging, (dragging) => {
     if (dragging) hovered.value = null
@@ -193,5 +181,5 @@ export function usePlacementTips(
     }
   })
 
-  return { card, faded, anchor }
+  return { card, faded, anchor, hover: { enter, leave, enterArtifact, leaveArtifact } }
 }

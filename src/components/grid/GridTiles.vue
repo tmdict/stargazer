@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useId, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watchEffect } from 'vue'
 
 import TileBevel from './TileBevel.vue'
 import TileHatch from './TileHatch.vue'
@@ -7,7 +7,6 @@ import TileHatchPatterns from './TileHatchPatterns.vue'
 import SkillCornerLines from '@/components/SkillCornerLines.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
-import { useGridEvents } from '@/composables/useGridEvents'
 import type { PlacementTip } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
@@ -43,6 +42,9 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   tileEnter: [event: MouseEvent, hexId: number]
   tileLeave: []
+  // The DOM event travels along so the handler can tell a touch tap from a
+  // mouse click.
+  hexClick: [hex: Hex, event: MouseEvent]
 }>()
 
 // Base (unscaled) render constants
@@ -54,8 +56,6 @@ const TEXT_ROTATION = 30
 // so an exported PNG has no partial alpha for a viewer to composite against its
 // own background. Kept below the arrow opacity (0.8); a full-cell tint reads strong.
 const SKILL_FILL_PERCENT = 35
-
-const gridEvents = useGridEvents()
 
 const {
   handleDragOver,
@@ -73,7 +73,6 @@ const {
 
 // Root SVG, exposed for GridManager's screen→SVG coordinate conversion
 const svgEl = ref<SVGSVGElement | null>(null)
-defineExpose({ svgEl })
 const ctx = useGridContext()
 const grids = useGrids()
 const mapEditorStore = useMapEditorStore()
@@ -438,27 +437,21 @@ const framedHexes = computed(() =>
     .map((hex) => ({ id: hex.getId(), corners: props.layout.polygonCorners(hex) })),
 )
 
-const handleCharacterHoverEnter = (hexId: number) => {
+// A portrait covers its tile, so the board passes the pointer entering and
+// leaving a unit here to light the tile under it.
+const unitEnter = (hexId: number) => {
   if (!blockHover.value && !props.readonly) {
     hoveredHex.value = hexId
   }
 }
 
-const handleCharacterHoverLeave = (hexId: number) => {
+const unitLeave = (hexId: number) => {
   if (hoveredHex.value === hexId && !props.readonly) {
     hoveredHex.value = null
   }
 }
 
-onMounted(() => {
-  gridEvents.on('character:mouseenter', handleCharacterHoverEnter)
-  gridEvents.on('character:mouseleave', handleCharacterHoverLeave)
-})
-
-onUnmounted(() => {
-  gridEvents.off('character:mouseenter', handleCharacterHoverEnter)
-  gridEvents.off('character:mouseleave', handleCharacterHoverLeave)
-})
+defineExpose({ svgEl, unitEnter, unitLeave })
 </script>
 
 <template>
@@ -633,7 +626,7 @@ onUnmounted(() => {
             fill="transparent"
             stroke="transparent"
             stroke-width="0"
-            @click="!readonly && gridEvents.emit('hex:click', hex, $event)"
+            @click="!readonly && emit('hexClick', hex, $event)"
             @mouseenter="handleTileEnter($event, hex)"
             @mouseleave="handleTileLeave(hex)"
             @dragover="!readonly && handleHexDragOver($event, hex)"

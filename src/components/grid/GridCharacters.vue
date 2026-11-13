@@ -12,7 +12,6 @@ import GridPointer from './GridPointer.vue'
 import UnitBadge from './UnitBadge.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
-import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { heroInspectTarget, unitInspectTarget, useInspect } from '@/composables/useInspect'
@@ -60,12 +59,16 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  unitEnter: [hexId: number]
+  unitLeave: [hexId: number]
+}>()
+
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { unitName } = useUnitLabels()
 const grids = useGrids()
-const gridEvents = useGridEvents()
 
 const { startDrag, endDrag } = useDragDrop()
 const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
@@ -340,12 +343,12 @@ const hoverCardAt = (hexId: number, characterId: number): HoverCard | undefined 
 }
 
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
-  gridEvents.emit('character:mouseenter', hexId)
+  emit('unitEnter', hexId)
   show(event, hoverCardAt(hexId, characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
-  gridEvents.emit('character:mouseleave', hexId)
+  emit('unitLeave', hexId)
   hideTooltip()
 }
 

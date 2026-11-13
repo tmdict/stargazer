@@ -13,7 +13,6 @@ import SlPlacementCard from '@/components/guide/sl/SlPlacementCard.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
-import { provideGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { usePlacementTips } from '@/composables/usePlacementTips'
@@ -56,8 +55,6 @@ const grids = useGrids()
 const i18n = useI18nStore()
 const mapEditorStore = useMapEditorStore()
 
-const gridEvents = provideGridEvents()
-
 const { hoveredHexId, handleDrop, dropHandled, setDropHandled } = useDragDrop()
 const { registerHexDetector, unregisterHexDetector, registerDropHandler, unregisterDropHandler } =
   useDragDropRegistration()
@@ -70,13 +67,22 @@ const {
   card: rulesCard,
   faded: rulesFaded,
   anchor: rulesAnchor,
+  hover: tipsHover,
 } = usePlacementTips(
-  gridEvents,
   () => props.info.rules,
   () => gridTilesRef.value?.svgEl,
   () => gridCharactersRef.value?.liftActionsEl,
 )
 const rulesArtifactMark = computed(() => rulesCard.value && (rulesCard.value.artifact ?? 'faded'))
+
+const handleUnitEnter = (hexId: number) => {
+  gridTilesRef.value?.unitEnter(hexId)
+  tipsHover.enter(hexId)
+}
+const handleUnitLeave = (hexId: number) => {
+  gridTilesRef.value?.unitLeave(hexId)
+  tipsHover.leave(hexId)
+}
 
 // An empty buff tile's card; a unit's card names the tile it stands on.
 const {
@@ -104,7 +110,7 @@ const { liftedHexId, liftedGridId, setTargetHex, clearLiftedHex } = useSelection
  * the sheet-layout tap-target flow, and wide-layout remove-or-pick. A lift
  * exists on any layout (touch gestures lift everywhere), so the drop runs
  * before the layout branch. */
-gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
+const handleHexClick = (hex: Hex, event: MouseEvent) => {
   if (props.readonly) {
     return
   }
@@ -167,7 +173,7 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
     modalHex.value = hex
     showCharacterModal.value = true
   }
-})
+}
 
 const closeCharacterModal = () => {
   showCharacterModal.value = false
@@ -277,6 +283,7 @@ defineExpose({
       :readonly
       :rules="rulesCard"
       :show-buff-tiles="info.buffTiles"
+      @hex-click="handleHexClick"
       @tile-enter="handleTileEnter"
       @tile-leave="hideBuffTileCard"
     />
@@ -292,6 +299,8 @@ defineExpose({
       :is-map-editor-mode
       :readonly
       :tap-mode
+      @artifact-enter="tipsHover.enterArtifact"
+      @artifact-leave="tipsHover.leaveArtifact"
     />
 
     <!-- Character layer (above artifacts) -->
@@ -307,6 +316,8 @@ defineExpose({
       :is-map-editor-mode
       :readonly
       :tap-mode
+      @unit-enter="handleUnitEnter"
+      @unit-leave="handleUnitLeave"
     />
 
     <SkillTargeting v-if="showSkills" />

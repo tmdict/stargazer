@@ -8,7 +8,6 @@ import GridPointer from '@/components/grid/GridPointer.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
-import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
@@ -39,11 +38,15 @@ const props = defineProps<{
   tapMode?: boolean
 }>()
 
+const emit = defineEmits<{
+  artifactEnter: [team: Team]
+  artifactLeave: []
+}>()
+
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const grids = useGrids()
-const gridEvents = useGridEvents()
 const { setArtifactTarget, requestTab } = useSelectionState()
 const { artifactDragPayload } = useDragDrop()
 
@@ -62,12 +65,12 @@ const {
 // pref alone.
 const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null, team: Team) => {
   if (!artifact) return
-  gridEvents.emit('artifact:mouseenter', team)
+  emit('artifactEnter', team)
   if (props.showHover || (props.showRules && team === Team.ENEMY)) show(event, artifact)
 }
 
-const hideArtifactHover = (team: Team) => {
-  gridEvents.emit('artifact:mouseleave', team)
+const hideArtifactHover = () => {
+  emit('artifactLeave')
   hideArtifactTooltip()
 }
 
@@ -328,7 +331,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ALLY)"
       @mouseenter="showArtifactTooltip($event, allyArtifact, Team.ALLY)"
-      @mouseleave="hideArtifactHover(Team.ALLY)"
+      @mouseleave="hideArtifactHover"
       @pointerdown="allyArtifact && startHold($event, Team.ALLY)"
       @contextmenu="allyArtifact && onContextMenu($event, Team.ALLY)"
     >
@@ -355,7 +358,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ENEMY)"
       @mouseenter="showArtifactTooltip($event, enemyArtifact, Team.ENEMY)"
-      @mouseleave="hideArtifactHover(Team.ENEMY)"
+      @mouseleave="hideArtifactHover"
       @pointerdown="enemyArtifact && startHold($event, Team.ENEMY)"
       @contextmenu="enemyArtifact && onContextMenu($event, Team.ENEMY)"
     >

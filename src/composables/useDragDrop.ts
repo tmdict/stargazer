@@ -215,8 +215,7 @@ export const useDragDrop = () => {
 // The grid registers its pointer→hex detector and drop handler with
 // DragDropProvider, whose document-level listeners are scoped to its mount:
 // its global dragover preventDefault must not outlive the drag UI, so this
-// stays a component-provided API rather than module state. Mirrors the
-// useGridEvents provide/inject pattern.
+// stays a component-provided API rather than module state.
 
 export type HexDetector = (x: number, y: number) => number | null
 export type DropHandler = (event: DragEvent) => void

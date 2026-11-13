@@ -49,7 +49,7 @@ This is the one index of the project docs.
 System docs:
 
 - [Grid](./docs/architecture/GRID.md) - The grid engine, boards, placement rules, unit ids, map editor
-- [Board Input](./docs/architecture/DRAG_AND_DROP.md) - Drag, tap, drop routing, the event bus
+- [Board Input](./docs/architecture/DRAG_AND_DROP.md) - Drag, tap, drop routing, board events
 - [Pathfinding](./docs/architecture/PATHFINDING.md) - Closest-target search and tie-breaking
 - [Skills](./docs/architecture/SKILLS.md) - The skill engine on the grid, artifact targeting
 - [Companions](./docs/architecture/skills/COMPANION.md) - Skill-spawned companion units

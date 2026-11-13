@@ -7,7 +7,7 @@ Two things make this harder than it looks. HTML5 drag never fires on touch, so e
 ## Layers
 
 ```
-GridManager                       event bus, drop handler, hex detector
+GridManager                       click and hover handlers, drop handler, hex detector
 ├── GridTiles                     SVG, stacked by draw order:
 │   ├── regular hexes
 │   ├── occupied hexes
@@ -96,11 +96,11 @@ Android reports a touch long-press as a `contextmenu` event, sometimes before th
 
 ## Grid events
 
-`GridManager` creates one small typed pub/sub bus per board (`provideGridEvents`), so events never cross boards. Emitting only notifies subscribers, and all state changes happen in the subscribers. An event exists only when another component subscribes to it, and a component that can reach a store calls its actions directly. The bus carries `hex:click`, which passes the DOM event along so handlers can call `isTouchClick`, and the character `mouseenter` and `mouseleave` events that let `GridTiles` highlight the tile under a hovered portrait.
+A board's layers report input to `GridManager` with ordinary component events, and all state changes happen there. `GridTiles` emits `hexClick`, which passes the DOM event along so the handler can call `isTouchClick`. `GridCharacters` emits `unitEnter` and `unitLeave`, and `GridArtifacts` emits `artifactEnter` and `artifactLeave`. `GridManager` hands the unit events to `GridTiles`, which lights the tile under a hovered portrait, and all four to Placement tips. A component that can reach a store calls its actions directly.
 
-`GridManager` owns every click decision in its one `hex:click` subscriber: map-editor paint, the lifted-hero drop, tap targeting, and the wide-layout remove or picker. It subscribes synchronously at setup and never unsubscribes, because the bus lives and dies with it. Children subscribe in `onMounted` and call `off` in `onUnmounted` with the same handler reference, since `off` removes by identity.
+`GridManager` owns every click decision in its one `hexClick` handler: map-editor paint, the lifted-hero drop, tap targeting, and the wide-layout remove or picker.
 
-Readonly gating happens on different sides. `GridTiles` emits `hex:click` only on interactive boards. `GridCharacters` emits hover events on every board, and `GridTiles` ignores them on readonly boards and during the post-drag grace period. Removal is not a bus event: `GridCharacters` and `GridArtifacts` call `ctx.remove()` and `ctx.removeArtifact()` on their injected context directly.
+Readonly gating happens on different sides. `GridTiles` emits `hexClick` only on interactive boards. `GridCharacters` emits hover events on every board, and `GridTiles` ignores them on readonly boards and during the post-drag grace period. Removal is not an event: `GridCharacters` and `GridArtifacts` call `ctx.remove()` and `ctx.removeArtifact()` on their injected context directly.
 
 ## Artifacts
 
