@@ -18,6 +18,7 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { heroInspectTarget, unitInspectTarget, useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useUnitLabels } from '@/composables/useUnitLabels'
 import { ATTR_SKILL_MODE } from '@/lib/characters/attributes'
 import {
   getCharacter,
@@ -62,6 +63,7 @@ const props = defineProps<Props>()
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
+const { unitName } = useUnitLabels()
 const grids = useGrids()
 const gridEvents = useGridEvents()
 
@@ -190,9 +192,6 @@ const getUnitImage = (characterId: number, hexId: number): string => {
 // owner skill's companion portrait.
 const phantimalUrl = (characterId: number) =>
   gameDataStore.getCharacterImage(gameDataStore.getPhantimalUnitSlug(characterId) ?? '')
-
-const phantimalName = (characterId: number): string =>
-  gameDataStore.getPhantimalUnitSlug(characterId) ?? 'Phantimal'
 
 // A phantimal id with no data is retired seasonal content: the id stays in the
 // team (removable/replaceable like any unit) and renders as a placeholder.
@@ -473,14 +472,14 @@ const liftedMode = computed(() =>
         <img
           v-else-if="inPhantimalBand(characterId)"
           :src="phantimalUrl(characterId)"
-          :alt="phantimalName(characterId)"
+          :alt="unitName(characterId)"
           class="character-image phantimal"
           draggable="false"
         />
         <img
           v-else
           :src="getUnitImage(characterId, hexId)"
-          :alt="getCharacterName(characterId, hexId)"
+          :alt="unitName(characterId)"
           class="character-image"
           draggable="false"
         />

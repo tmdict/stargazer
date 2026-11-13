@@ -3,9 +3,12 @@ import { computed } from 'vue'
 
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
+import { characterDisplayName } from '@/utils/nameFormatting'
 
 const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = useDragDrop()
 const gameData = useGameDataStore()
+const i18n = useI18nStore()
 
 const backgroundImage = computed(() => {
   if (!draggedCharacter.value) return ''
@@ -33,7 +36,11 @@ const backgroundImage = computed(() => {
           backgroundPosition: 'center',
         }"
       >
-        <img :src="draggedImageSrc" :alt="draggedCharacter.name" class="portrait" />
+        <img
+          :src="draggedImageSrc"
+          :alt="characterDisplayName(i18n.t, draggedCharacter)"
+          class="portrait"
+        />
       </div>
     </div>
   </Teleport>

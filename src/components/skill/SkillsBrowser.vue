@@ -17,9 +17,14 @@ const props = defineProps<{
 }>()
 
 // initializeContentData (unlike initializeData) runs during SSG too, so the
-// character grid and its crawlable skill links pre-render into the static HTML.
+// hero list's crawlable skill links pre-render into the static HTML.
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeContentData()
+
+// The picker repeated on every baked hero page would be most of each page and
+// of the build's time, so those pages bake its links as plain hero names and
+// the browser draws the picker in their place.
+const namesOnly = import.meta.env.SSR && props.slug !== null
 
 // Mobile: the hero list is a pull-up sheet. It opens on the empty /skills index,
 // stays peeked on a hero page (so it doesn't cover the reader), and collapses
@@ -55,6 +60,7 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
           :characters="gameDataStore.characters"
           :link-locale="lang"
           :current-slug="slug"
+          :names-only
         />
       </BottomSheet>
     </div>

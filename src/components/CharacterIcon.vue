@@ -43,6 +43,11 @@ const props = defineProps<{
   // Greyed and never picked: hovering, a click or a tap shows this line under
   // the hero's name instead.
   lockedNote?: string
+  // The portrait's description in place of the site-language name, and the
+  // language it is written in: a link holding only the portrait is read out
+  // and indexed by it.
+  alt?: string
+  altLang?: string
 }>()
 
 const emit = defineEmits<{
@@ -90,7 +95,7 @@ const handleTouchStart = () => {
 }
 
 // A hero can join the hero list before its portrait ships, and a portrait can
-// fail to load; the tile shows the name instead.
+// fail to load; the tile shows the name instead of describing the portrait by it.
 const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.character.name))
 const portraitFailed = ref(false)
 watch(portraitUrl, () => (portraitFailed.value = false))
@@ -184,7 +189,8 @@ const handleDragEnd = (event: DragEvent) => {
           :src="showingOutfit ? outfitUrl : portraitUrl"
           loading="lazy"
           decoding="async"
-          :alt="character.name"
+          :alt="alt ?? displayName"
+          :lang="altLang"
           class="portrait"
           :draggable="isDraggable"
           @error="onImageError"

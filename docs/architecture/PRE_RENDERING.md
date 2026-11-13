@@ -2,7 +2,7 @@
 
 The production build uses vite-ssg to write static HTML for every crawlable page. In the browser `src/main.ts` mounts a plain app, which renders the page again in place of the baked HTML, so the baked HTML serves crawlers and the first paint. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation, and `/teams` is client-only. Game state never enters the baked HTML.
 
-The hard rule is that the client's first render must equal the baked HTML, or the page jumps when the app replaces it. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
+The hard rule is that the client's first render must equal the baked HTML, or the page jumps when the app replaces it. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts. The hero list on a skill page is the one exception. The picker repeated on every skill page would be most of each page and of the build's time, so the baked page holds its links as plain hero names in the page's language, and the browser draws the picker in their place.
 
 ## How a build runs
 
@@ -30,7 +30,7 @@ The hard rule is that the client's first render must equal the baked HTML, or th
 
 ## Static input
 
-The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and guide views call it in setup so the hero list and its crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
+The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and guide views call it in setup so the hero list's crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 

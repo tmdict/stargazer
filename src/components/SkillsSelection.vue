@@ -11,16 +11,23 @@ import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { fromMechanicQuery, toMechanicQuery } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
+import { heroDisplayName } from '@/utils/skillLabels'
 import { loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  /** Skill-text language the tiles link into: the route prefix on skill
-   * pages (browsing keeps the reading language), the saved pref on the
-   * /skills index. Display strings stay in the chrome locale. */
+  /** Skill-text language the tiles link into and name their heroes in: the
+   * route prefix on skill pages (browsing keeps the reading language), the
+   * saved pref on the /skills index. Every other display string stays in the
+   * chrome locale. */
   linkLocale: SkillLocale
   currentSlug?: string | null
+  /** The links alone, each as its hero's name: what a baked hero page carries
+   * in the picker's place (SkillsBrowser). */
+  namesOnly?: boolean
 }>()
+
+const heroName = (character: CharacterType) => heroDisplayName(character.name, props.linkLocale)
 
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
@@ -60,6 +67,7 @@ watch(mechanicFilter, (pick) => {
     </PickerSearchRow>
 
     <CharacterFilterStrip
+      v-if="!namesOnly"
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
       v-model:mechanic-filter="mechanicFilter"
@@ -67,19 +75,23 @@ watch(mechanicFilter, (pick) => {
       :mechanic-pool
     />
 
-    <CharacterGrid>
+    <CharacterGrid :class="{ 'hero-names': namesOnly }" :lang="namesOnly ? linkLocale : undefined">
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
         :to="`/${linkLocale}/skill/${character.name}`"
         class="character-cell"
       >
+        <template v-if="namesOnly">{{ heroName(character) }}</template>
         <CharacterIcon
+          v-else
           :character
           hide-tooltip
           :is-selected="currentSlug === character.name"
           :show-energy="energyPicked"
           show-outfit
+          :alt="heroName(character)"
+          :alt-lang="linkLocale"
         />
       </RouterLink>
     </CharacterGrid>
@@ -99,6 +111,21 @@ watch(mechanicFilter, (pick) => {
   cursor: pointer;
   text-decoration: none;
   color: inherit;
+}
+
+.skills-selection .hero-names {
+  justify-content: flex-start;
+  gap: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--control-font-size);
+}
+
+.hero-names .character-cell {
+  color: var(--color-text-secondary);
+}
+
+.hero-names .character-cell[aria-current] {
+  color: var(--color-text-primary);
+  font-weight: var(--control-font-weight);
 }
 
 @media (max-width: 768px) {

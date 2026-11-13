@@ -9,6 +9,7 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
+import { characterDisplayName } from '@/utils/nameFormatting'
 
 /* Select mode on the Rosters tab: which heroes a level chip reaches. Dragging
  * across heroes: which heroes a stroke changes. */
@@ -70,8 +71,10 @@ const levelChip = (name: string): HTMLButtonElement =>
 
 const heroIds = (): number[] => {
   const gameData = useGameDataStore()
+  const { t } = useI18nStore()
   return [...document.querySelectorAll('.character-grid .portrait')].map(
-    (img) => gameData.characters.find((c) => c.name === img.getAttribute('alt'))!.id,
+    (img) =>
+      gameData.characters.find((c) => characterDisplayName(t, c) === img.getAttribute('alt'))!.id,
   )
 }
 
