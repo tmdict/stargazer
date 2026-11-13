@@ -15,6 +15,8 @@ import { isTouchClick } from '@/utils/pointer'
  * before any of those handlers, whatever the click's target.
  *
  * Right-click opens directly (Shift+right-click keeps the browser menu).
+ * macOS Ctrl+click opens the same way but is a primary-button press, whose
+ * release some browsers follow with a click, so that click is swallowed too.
  * Android reports a touch long-press as a contextmenu too, possibly before the
  * timer: it completes the hold in progress, and a stopped hold ignores it. */
 
@@ -116,6 +118,7 @@ export function useLongPress<T>(onHold: (target: T) => void) {
       return
     }
     stop()
+    if (event.button === 0) armClickSwallow()
     onHold(clicked)
   }
 

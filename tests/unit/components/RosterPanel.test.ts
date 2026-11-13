@@ -81,7 +81,8 @@ const heroIds = (): number[] => {
 const tap = async (index: number, shiftKey = false): Promise<void> => {
   const portrait = document.querySelectorAll('.character-grid .character-display')[index]!
   portrait.dispatchEvent(new MouseEvent('mousedown', { button: 0, bubbles: true }))
-  portrait.dispatchEvent(new MouseEvent('mouseup', { button: 0, shiftKey, bubbles: true }))
+  portrait.dispatchEvent(new MouseEvent('mouseup', { button: 0, bubbles: true }))
+  portrait.dispatchEvent(new MouseEvent('click', { button: 0, shiftKey, bubbles: true }))
   await nextTick()
 }
 

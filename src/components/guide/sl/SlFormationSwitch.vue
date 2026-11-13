@@ -28,7 +28,7 @@ const emit = defineEmits<{ switch: [engineOn: boolean] }>()
 
 const i18n = useI18nStore()
 const { cardNames } = useSlNames()
-const { anchor, payload: half, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip<Half>()
+const { anchor, payload: half, hoverOpen, hoverClose, toggle } = useInfoTip<Half>()
 
 const halfEl: Partial<Record<Half, Element>> = {}
 
@@ -82,7 +82,6 @@ const card = computed(() => {
     @click="press"
     @focus="hoverOpen(halfEl[shown]!, shown)"
     @blur="hoverClose"
-    @touchstart.passive="onTouchStart"
   >
     <span
       v-for="{ half: h, icon } in HALVES"

@@ -38,7 +38,6 @@ const {
   payload: tipKey,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip<string>()
 </script>
 
@@ -46,7 +45,6 @@ const {
   <RosterImportButton
     @click="hideTip"
     @mouseenter="showTip($event, 'app.tooltip-roster-import')"
-    @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   />
   <button
@@ -55,7 +53,6 @@ const {
     :aria-label="i18n.t('app.import')"
     @click="fileInput?.click()"
     @mouseenter="showTip($event, 'app.tooltip-rosters-import')"
-    @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >
     <IconUpload :size="13" class="btn-icon" />
@@ -70,7 +67,6 @@ const {
     @mouseenter="
       showTip($event, exportFile ? 'app.tooltip-roster-export-shown' : 'app.tooltip-rosters-export')
     "
-    @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >
     <IconDownload :size="13" class="btn-icon" />

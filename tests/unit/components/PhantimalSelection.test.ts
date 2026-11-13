@@ -78,8 +78,7 @@ describe('a phantimal click', () => {
     const wedge = document.querySelectorAll('.phantimal')[0]!
     const other = document.querySelectorAll('.phantimal')[1]!
     const click = async (el: Element): Promise<void> => {
-      el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
-      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0 }))
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }))
       await nextTick()
     }
 

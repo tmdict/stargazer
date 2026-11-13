@@ -29,7 +29,6 @@ const {
   payload: tip,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip<string>()
 
 const hover = (event: MouseEvent, chip: Chip): void => {
@@ -49,7 +48,6 @@ const hover = (event: MouseEvent, chip: Chip): void => {
       :aria-label="i18n.t(chip.name)"
       @click="emit('select', chip.choice)"
       @mouseenter="hover($event, chip)"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <UpgradeIcon v-if="chip.icon" class="layer-icon" :kind="chip.icon" />

@@ -79,7 +79,6 @@ const {
   hoverOpen: warnOpen,
   hoverClose: warnClose,
   toggle: warnToggle,
-  onTouchStart: warnTouchStart,
 } = useInfoTip()
 const verdict = computed(() =>
   i18n.t(`app.www-verdict-${panel.verdict}`, { team: teamName(panel.shown >= 500 ? 'a' : 'b') }),
@@ -160,7 +159,6 @@ const warningText = (warning: WwwWarning): string => {
         @focus="warnOpen"
         @blur="warnClose"
         @click="warnToggle"
-        @touchstart.passive="warnTouchStart"
       >
         <IconAlertSmall :size="14" class="sl-help-mark" aria-hidden="true" />
       </button>

@@ -11,6 +11,7 @@ import FilterIcons from './ui/FilterIcons.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { CharacterType, LockedHeroes } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
+import { isComposing } from '@/utils/keyboard'
 
 const {
   characters,
@@ -89,7 +90,7 @@ const enterTarget = computed(() =>
 // query restarts type-to-pick for the next pick (the palette may stay open).
 // The Enter that commits an IME composition must not double as a pick.
 function handleEnter(event: KeyboardEvent) {
-  if (event.isComposing || !enterTarget.value) return
+  if (isComposing(event) || !enterTarget.value) return
   emit('pick', enterTarget.value)
   searchQuery.value = ''
 }

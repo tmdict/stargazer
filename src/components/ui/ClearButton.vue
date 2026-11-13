@@ -5,9 +5,9 @@ import ConfirmLabel from './ConfirmLabel.vue'
 import IconTrash from './IconTrash.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { usePanelClamp } from '@/composables/usePanelClamp'
-import { useTouchDetection } from '@/composables/useTouchDetection'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
+import { isTouchHover } from '@/utils/pointer'
 
 export interface ClearSide {
   team: Team
@@ -27,7 +27,6 @@ const emit = defineEmits<{
 }>()
 
 const i18n = useI18nStore()
-const { isTouchDevice } = useTouchDetection()
 const { armed, confirm, disarm, pause, resume } = useArmedConfirm()
 
 const handleClick = (): void => {
@@ -55,7 +54,7 @@ watch(
 )
 
 const onMouseEnter = (): void => {
-  if (!isTouchDevice.value) hovered.value = true
+  if (!isTouchHover()) hovered.value = true
 }
 
 const buttonRef = ref<HTMLElement>()

@@ -7,6 +7,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import { useScrollLock } from '@/composables/useScrollLock'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -26,12 +27,12 @@ const natural = ref(false)
 useScrollLock(ref(true))
 
 // Focus lives here while open so Escape is handled (and stopped) before it
-// reaches a parent overlay's document-level listener; it goes back to the
-// opener on close.
+// reaches a parent overlay's document-level listener. The trap never sees a
+// close, as closing unmounts the lightbox, so the return to the opener is here.
+const { trapTab } = useFocusTrap(root, ref(true))
 let opener: Element | null = null
 onMounted(() => {
   opener = document.activeElement
-  root.value?.focus({ preventScroll: true })
 })
 onBeforeUnmount(() => {
   if (opener instanceof HTMLElement) opener.focus({ preventScroll: true })
@@ -49,6 +50,7 @@ onBeforeUnmount(() => {
       tabindex="-1"
       @click.stop="emit('close')"
       @keydown.esc.stop.prevent="emit('close')"
+      @keydown="trapTab"
     >
       <img class="lightbox-image" :class="{ natural }" :src :alt @click.stop="natural = !natural" />
       <button

@@ -1,11 +1,10 @@
 import { ref, type Ref } from 'vue'
 
-import { useTouchDetection } from './useTouchDetection'
+import { isTouchHover } from '@/utils/pointer'
 
 /**
  * Hover-tooltip visibility with touch suppression: mouse hover shows the
- * tooltip, but not on touch devices or when the interaction started as a
- * touch (a mobile tap fires a synthetic mouseenter right after touchstart).
+ * tooltip, but the synthetic mouseenter a tap fires does not.
  *
  * This is the contract for ACTION triggers (buttons, icons that do something
  * when tapped): touch users get the action, never the tooltip. Info-only
@@ -16,14 +15,12 @@ import { useTouchDetection } from './useTouchDetection'
  * callers can ignore them and read `showTooltip` alone.
  */
 export function useHoverTooltip<T = true>() {
-  const { isTouchDevice } = useTouchDetection()
   const showTooltip = ref(false)
   const anchor: Ref<Element | null> = ref(null)
   const payload = ref(null) as Ref<T | null>
-  const interactionStartedAsTouch = ref(false)
 
   const onMouseEnter = (event?: Event, value: T = true as T) => {
-    if (isTouchDevice.value || interactionStartedAsTouch.value) return
+    if (isTouchHover()) return
     showTooltip.value = true
     anchor.value = event?.currentTarget instanceof Element ? event.currentTarget : null
     payload.value = value
@@ -33,13 +30,7 @@ export function useHoverTooltip<T = true>() {
     showTooltip.value = false
     anchor.value = null
     payload.value = null
-    interactionStartedAsTouch.value = false // Reset for next interaction
   }
 
-  const onTouchStart = () => {
-    interactionStartedAsTouch.value = true
-    showTooltip.value = false
-  }
-
-  return { showTooltip, anchor, payload, onMouseEnter, onMouseLeave, onTouchStart }
+  return { showTooltip, anchor, payload, onMouseEnter, onMouseLeave }
 }

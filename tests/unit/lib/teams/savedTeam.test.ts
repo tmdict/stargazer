@@ -100,6 +100,20 @@ describe('canonicalTeamData', () => {
     ])
   })
 
+  it('drops sections the serializer never writes, so the record equals a fresh snapshot', () => {
+    const written = encode({ boards: [{ c: [[1, 11, Team.ALLY]], m: 'arena1' }], mode: '1v1' })
+    const padded = encode({
+      boards: [{ t: [], c: [[1, 11, Team.ALLY]], s: [], y: [], a: [null, null], m: 'arena1' }],
+      mode: '1v1',
+    })
+    const oneArtifact = encode({ boards: [{ a: [3] }], mode: '1v1' })
+    expect(canonicalTeamData(padded)).toBe(canonicalTeamData(written))
+    expect(canonicalTeamData(canonicalTeamData(padded)!)).toBe(canonicalTeamData(padded))
+    expect(
+      decodeMultiGridStateFromUrl(canonicalTeamData(oneArtifact)!)!.boards[0]!.a,
+    ).toBeUndefined()
+  })
+
   it('omits u entirely when every row normalizes away', () => {
     const crafted = encode({
       boards: [{ m: 'arena1', u: [[1, 11, 99, 4]] }, { m: 'arena2' }, { m: 'arena3' }],

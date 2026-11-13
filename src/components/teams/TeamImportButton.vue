@@ -31,7 +31,6 @@ const {
   showTooltip,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip()
 
 const openModal = (): void => {
@@ -53,7 +52,6 @@ const handleImport = (plan: TeamImportPlan, name: string): void => {
     :aria-label="i18n.t('app.import-title')"
     @click="openModal"
     @mouseenter="showTip($event)"
-    @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >
     <IconImagePlus :size="16" class="btn-icon" />

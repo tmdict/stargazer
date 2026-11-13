@@ -99,7 +99,7 @@ const i18n = useI18nStore()
 const rootRef = ref<HTMLElement>()
 const triggerRef = ref<HTMLElement>()
 const listRef = ref<HTMLElement>()
-const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDropdown({
+const { open, hide, toggle, onMouseEnter, onMouseLeave } = useDropdown({
   rootRef,
   panelRef: listRef,
   hover: true,
@@ -276,7 +276,6 @@ const pressSegment = (): void => {
     :class="[variant, { large, split: segment !== undefined }]"
     @mouseenter="hoverTrigger"
     @mouseleave="leave"
-    @touchstart.passive="onTouchStart"
     @keydown.tab="tabIntoList"
   >
     <!-- Hover opens from the trigger as well as the root: coming back from the

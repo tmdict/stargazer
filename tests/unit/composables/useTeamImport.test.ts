@@ -324,16 +324,19 @@ describe('adding screenshots', () => {
     stubImportBrowser()
     const api = hold()
     FakeWorker.sortAs = 'roster'
-    expect(await api.addFiles([file('dropped.png')], 'result')).toEqual({
+    expect(await api.addFiles([file('dropped.png')], 'result')).toMatchObject({
       added: 0,
       refused: { roster: 1 },
     })
-    expect(await api.addFiles([file('pasted.png')], 'sort')).toEqual({
+    expect(await api.addFiles([file('pasted.png')], 'sort')).toMatchObject({
       added: 0,
       refused: { roster: 1 },
     })
     FakeWorker.sortAs = 'formation'
-    expect(await api.addFiles([file('result.png')], 'result')).toEqual({ added: 1, refused: {} })
+    expect(await api.addFiles([file('result.png')], 'result')).toMatchObject({
+      added: 1,
+      refused: {},
+    })
     expect(api.shots.value.map((s) => s.kind)).toEqual(['result'])
   })
 
@@ -349,7 +352,7 @@ describe('adding screenshots', () => {
     FakeWorker.sortAs = null
     await api.addFiles([file('unplaced.png')], 'sort')
     FakeWorker.sortAs = 'result'
-    expect(await api.addFiles([file('result.png')], 'sort')).toEqual({
+    expect(await api.addFiles([file('result.png')], 'sort')).toMatchObject({
       added: 0,
       refused: { result: 1 },
     })

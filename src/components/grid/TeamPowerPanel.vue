@@ -161,7 +161,6 @@ const {
   hoverOpen: onStatEnter,
   hoverClose: onStatLeave,
   toggle: onStatToggle,
-  onTouchStart: onStatTouchStart,
 } = useInfoTip<Team>()
 const hoveredStat = computed(
   () => sides.value.find((side) => side.team === hoveredTeam.value)?.rivalryStat ?? 0,
@@ -184,7 +183,6 @@ const hoveredStat = computed(
             @mouseenter="onStatEnter($event, side.team)"
             @mouseleave="onStatLeave"
             @click="onStatToggle($event, side.team)"
-            @touchstart.passive="onStatTouchStart"
           >
             {{ rivalryStatName(side.rivalryStat) }}
           </span>

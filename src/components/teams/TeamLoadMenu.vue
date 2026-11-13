@@ -23,7 +23,6 @@ import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
-import { useTouchDetection } from '@/composables/useTouchDetection'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import { getOpposingTeam } from '@/lib/characters/character'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
@@ -35,6 +34,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { isTouchClick } from '@/utils/pointer'
 
 const { activeMode } = defineProps<{ activeMode: TeamModeKey }>()
 
@@ -45,7 +45,6 @@ const library = useTeamLibrary()
 const { success } = useToast()
 const seasonNotice = useSeasonNotice()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
-const { isTouchDevice } = useTouchDetection()
 const updatedLabel = useUpdatedLabel()
 
 // Click-only: opening focuses the search box, so hover-open would pull focus
@@ -66,12 +65,13 @@ const {
 })
 const panelShift = usePanelClamp(triggerRef, panelRef, () => open.value)
 
-const openMenu = async (): Promise<void> => {
+const openMenu = async (event: Event): Promise<void> => {
+  const touch = isTouchClick(event)
   hideTip()
   show()
   await nextTick()
   // On touch, focusing would pop the keyboard over the panel.
-  if (!isTouchDevice.value) searchInput.value?.focus()
+  if (!touch) searchInput.value?.focus()
 }
 
 // Memoized in the lib on the immutable data string.
@@ -156,7 +156,6 @@ const {
   payload: tip,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip<'load' | 'invert'>()
 
 const tipText = computed((): string =>
@@ -180,9 +179,8 @@ const tipText = computed((): string =>
       :aria-expanded="open"
       aria-haspopup="dialog"
       :aria-label="i18n.t('app.load')"
-      @click="open ? closeMenu() : openMenu()"
+      @click="open ? closeMenu() : openMenu($event)"
       @mouseenter="showTip($event, 'load')"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconFolderOpen :size="14" class="btn-icon" />
@@ -211,7 +209,6 @@ const tipText = computed((): string =>
           class="invert-pill"
           :class="{ active: invert }"
           @mouseenter="showTip($event, 'invert')"
-          @touchstart.passive="tipTouchStart"
           @mouseleave="hideTip"
         >
           <input v-model="invert" type="checkbox" class="invert-checkbox" />

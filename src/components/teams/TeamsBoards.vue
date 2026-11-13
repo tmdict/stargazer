@@ -119,7 +119,6 @@ const {
   hoverOpen: unsavedTipOpen,
   hoverClose: unsavedTipClose,
   toggle: unsavedTipToggle,
-  onTouchStart: unsavedTipTouchStart,
 } = useInfoTip()
 </script>
 
@@ -152,7 +151,6 @@ const {
           @mouseenter="unsavedTipOpen"
           @mouseleave="unsavedTipClose"
           @click="unsavedTipToggle"
-          @touchstart.passive="unsavedTipTouchStart"
         >
           <span class="dirty-dot" />
           <span class="status-text">{{ titleStatus }}</span>

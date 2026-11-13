@@ -70,7 +70,7 @@ A payload carries only the source coordinates (`sourceHexId`, `sourceGridId`). T
 
 Cross-board drops compose a remove and a place across two `Grid` instances, restoring the source when the place fails, because the single-board transactions cannot span two grids. A swap places the second unit only after the first succeeds, since a placement can evict a board's phantimal and a rollback could not bring it back. Upgrade attributes travel with each hero, including back to the source on a rollback. Any successful drop, picker drops included, makes the target board active.
 
-The engine still has the last word. `performPlace` runs `canPlaceCharacterOnTile` and `canPlaceCharacterOnTeam` (per-board capacity, duplicates, the synergy hero's one-per-team cap). The gate's same-board leg checks only the page-wide rule. A same-board rejection by the engine (a full team on a team change, a companion changing team) or a failure mid-transaction therefore ends as a silent no-op with no hover warning.
+For a drop that stays on one board the gate also asks the engine's own rules, `canMoveCharacter` and `canSwapCharacters` (`src/lib/characters/`), which the move and the swap run first themselves: per-board capacity and duplicates on a team change, and the units that never change team. The engine still has the last word, since a skill that cannot settle on its new team fails the transaction, which ends as a silent no-op with no hover warning.
 
 ## Taps and clicks
 
@@ -88,7 +88,7 @@ Every placement surface resolves a pick through `resolvePick`, so the picker, th
 
 A placed unit opens its details without leaving the board, and the pickers and other hero icons inspect the same way. Every surface calls `useInspect`, a module-level target that `InspectModals`, mounted once at the app root, renders.
 
-Three gestures reach it: a long-press with any pointer, as in the game, a right-click, and the Skills button a lifted unit shows, for touch users who do not know the gesture. `usePressClick`, the click gate of the hero and phantimal icons, counts only the primary button, so a right-click inspects without also placing, toggling or expanding.
+Three gestures reach it: a long-press with any pointer, as in the game, a right-click, and the Skills button a lifted unit shows, for touch users who do not know the gesture. A right-click sends no `click`, so it inspects without also placing, toggling or expanding; a macOS Ctrl+click may send one after its menu event, and `useLongPress` swallows it.
 
 `useLongPress` shares the press with each surface's own click or tap and with HTML5 drag. A short press stays an ordinary click or tap, and moving or starting a drag abandons the hold. A hold that lasts past a short press swallows the click the release produces, whether or not it opens the modal, in a document capture listener. That click would otherwise remove or lift the unit, and since the modal opens under the pointer, it would also land outside the modal and trip `useOverlay`'s click-outside close. The next `pointerdown` disarms the swallow, so a browser that sends no click after a long-press cannot eat a later one.
 

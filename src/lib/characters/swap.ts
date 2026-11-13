@@ -12,15 +12,9 @@ import { executeTransaction } from './transaction'
 
 // High-level operations
 
-export function executeSwapCharacters(
-  grid: Grid,
-  skillManager: SkillManager,
-  fromHexId: number,
-  toHexId: number,
-): boolean {
-  // 1. Perform all validations
-
-  // Basic validation
+// The rules a swap of two placed units must pass. The drag hover cue reads
+// them too, so a drop it shows as allowed is one the swap takes.
+export function canSwapCharacters(grid: Grid, fromHexId: number, toHexId: number): boolean {
   if (fromHexId == toHexId) return false
 
   const fromChar = getCharacter(grid, fromHexId)
@@ -57,14 +51,27 @@ export function executeSwapCharacters(
     return false
   }
 
-  // 2. Determine swap type and execute
+  return true
+}
+
+export function executeSwapCharacters(
+  grid: Grid,
+  skillManager: SkillManager,
+  fromHexId: number,
+  toHexId: number,
+): boolean {
+  if (!canSwapCharacters(grid, fromHexId, toHexId)) return false
+  const fromChar = getCharacter(grid, fromHexId)!
+  const toChar = getCharacter(grid, toHexId)!
+  const fromTeam = getCharacterTeam(grid, fromHexId)!
+  const toTeam = getCharacterTeam(grid, toHexId)!
 
   const isSameTeam = fromTeam == toTeam
   const fromHasSkill = hasSkill(fromChar)
   const toHasSkill = hasSkill(toChar)
   const needsSkillHandling = !isSameTeam && (fromHasSkill || toHasSkill)
 
-  // 2a. Simple swap (same team or cross-team with no skills)
+  // Simple swap (same team or cross-team with no skills)
   if (isSameTeam || !needsSkillHandling) {
     const result = performSwap(
       grid,
@@ -86,7 +93,7 @@ export function executeSwapCharacters(
     return result
   }
 
-  // 2b. Cross-team swap with skills involved
+  // Cross-team swap with skills involved
   return performCrossTeamSwap(
     grid,
     skillManager,

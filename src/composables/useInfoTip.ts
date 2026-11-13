@@ -1,12 +1,12 @@
 import { onMounted, onUnmounted, ref, type Ref } from 'vue'
 
-import { useTouchDetection } from './useTouchDetection'
+import { isTouchHover } from '@/utils/pointer'
 
 /**
  * Info tooltip for triggers whose only job is revealing information: hover
  * shows it while the mouse rests on the trigger, and click or tap shows the
  * same tooltip, which is the whole touch path (the synthetic mouseenter a tap
- * fires is suppressed via useHoverTooltip's guards). A second click of the
+ * fires opens nothing). A second click of the
  * trigger, a press outside it, or Escape dismisses it; hovering another
  * trigger simply replaces it, like any hover.
  *
@@ -23,9 +23,6 @@ import { useTouchDetection } from './useTouchDetection'
  * element directly.
  */
 export function useInfoTip<T = true>() {
-  const { isTouchDevice } = useTouchDetection()
-  const interactionStartedAsTouch = ref(false)
-
   const anchor: Ref<Element | null> = ref(null)
   const payload = ref(null) as Ref<T | null>
 
@@ -43,25 +40,18 @@ export function useInfoTip<T = true>() {
   }
 
   const hoverOpen = (src: Event | Element, value: T = true as T): void => {
-    if (isTouchDevice.value || interactionStartedAsTouch.value) return
+    if (isTouchHover()) return
     const el = elOf(src)
     if (el) open(el, value)
   }
 
-  const hoverClose = (): void => {
-    interactionStartedAsTouch.value = false
-    close()
-  }
+  const hoverClose = close
 
   const toggle = (src: Event | Element, value: T = true as T): void => {
     const el = elOf(src)
     if (!el) return
     if (el === anchor.value) close()
     else open(el, value)
-  }
-
-  const onTouchStart = (): void => {
-    interactionStartedAsTouch.value = true
   }
 
   // A press outside the anchored trigger dismisses; a press on the trigger
@@ -89,5 +79,5 @@ export function useInfoTip<T = true>() {
     document.removeEventListener('keydown', onKeyDown, { capture: true })
   })
 
-  return { anchor, payload, hoverOpen, hoverClose, toggle, onTouchStart, close }
+  return { anchor, payload, hoverOpen, hoverClose, toggle, close }
 }

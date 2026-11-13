@@ -87,11 +87,9 @@ const { targetHexId, targetGridId, liftedHexId, liftedGridId } = useSelectionSta
 const hoveredHex = ref<number | null>(null)
 
 // Map editor drag-to-paint: holding the mouse button paints every hex it
-// crosses, each once per drag session and at most every PAINT_THROTTLE_MS.
+// crosses, each once per drag session.
 const isMapEditorDragging = ref(false)
 const paintedHexes = ref(new Set<number>())
-let lastPaintTime = 0
-const PAINT_THROTTLE_MS = 50
 
 const textTransform = (hex: Hex) => {
   const pos = ctx.layout.hexToPixel(hex)
@@ -232,12 +230,9 @@ const handleHexMouseEnter = (hex: Hex) => {
 
   if (props.isMapEditorMode && isMapEditorDragging.value) {
     const hexId = hex.getId()
-    const now = Date.now()
-
-    if (!paintedHexes.value.has(hexId) && now - lastPaintTime >= PAINT_THROTTLE_MS) {
+    if (!paintedHexes.value.has(hexId)) {
       mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
       paintedHexes.value.add(hexId)
-      lastPaintTime = now
     }
   }
 }

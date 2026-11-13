@@ -30,6 +30,12 @@ if (typeof document !== 'undefined') {
   document.addEventListener('pointerup', recordPress, true)
 }
 
+/* A tap ends with a synthetic mouseenter on what it touched. Mouse events carry
+ * no pointer type, so a hover handler asks whether a touch press just happened. */
+export function isTouchHover(): boolean {
+  return lastPressType === 'touch' && performance.now() - lastPressAt <= PRESS_CLICK_WINDOW_MS
+}
+
 export function isTouchClick(event: Event): boolean {
   const pressIsRecent = performance.now() - lastPressAt <= PRESS_CLICK_WINDOW_MS
   const type =

@@ -133,7 +133,7 @@ const editLink = computed(() =>
 <template>
   <div class="overlay">
     <!-- Backdrop dismiss: back to the saved page, not the shared setup. -->
-    <a :href="dismissLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
+    <a :href="dismissLink" class="backdrop-link" :aria-label="i18nStore.t('app.share-back')"></a>
 
     <!-- Content container -->
     <div
@@ -145,14 +145,19 @@ const editLink = computed(() =>
       <!-- Edit opens the shared setup in its editable page; close dismisses to it. -->
       <div class="buttons">
         <GridInfoToggle share />
-        <a :href="editLink" class="button" aria-label="Edit in Stargazer" title="Edit">
+        <a
+          :href="editLink"
+          class="button"
+          :aria-label="i18nStore.t('app.share-edit')"
+          :title="i18nStore.t('app.share-edit')"
+        >
           <IconEdit :size="18" />
         </a>
         <a
           :href="dismissLink"
           class="button"
-          aria-label="Back to Stargazer"
-          title="Back to Stargazer"
+          :aria-label="i18nStore.t('app.share-back')"
+          :title="i18nStore.t('app.share-back')"
         >
           <IconClose />
         </a>

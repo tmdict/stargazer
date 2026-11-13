@@ -417,7 +417,6 @@ const {
   payload: modeHexId,
   onMouseEnter: onModeEnter,
   onMouseLeave: onModeLeave,
-  onTouchStart: onModeTouch,
 } = useHoverTooltip<number>()
 // Read live, so a click renames the open label.
 const hoveredMode = computed(
@@ -504,7 +503,6 @@ const liftedMode = computed(() =>
         @click="cycleMode(button)"
         @mouseenter="(showHover || showRules) && onModeEnter($event, button.hexId)"
         @mouseleave="onModeLeave"
-        @touchstart.passive="onModeTouch"
         @contextmenu="handleContextMenu($event, button.hexId, button.characterId)"
       >
         <UnitBadge :icon="button.icon" :color="button.mode.color" :glyph="badgeDimensions.glyph" />

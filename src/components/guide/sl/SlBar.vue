@@ -83,7 +83,6 @@ const {
   payload: tipShown,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip()
 
 const save = (): void => {
@@ -111,7 +110,6 @@ const save = (): void => {
           :aria-label="i18n.t('app.save')"
           @click="save"
           @mouseenter="showTip"
-          @touchstart.passive="tipTouchStart"
           @mouseleave="hideTip"
         >
           <span class="dirty-dot" />

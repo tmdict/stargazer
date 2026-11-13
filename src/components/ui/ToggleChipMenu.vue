@@ -71,7 +71,6 @@ const {
   toggle: togglePanel,
   onMouseEnter,
   onMouseLeave,
-  onTouchStart,
 } = useDropdown({ rootRef, hover: true })
 
 const panelOpen = computed(() => (open.value || pinned) && (tray.value || !empty.value))
@@ -94,7 +93,6 @@ const panelShift = usePanelClamp(
     :class="{ share, pinned }"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
-    @touchstart.passive="onTouchStart"
   >
     <ToggleChip
       v-if="plain"

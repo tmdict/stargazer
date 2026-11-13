@@ -7,7 +7,6 @@ import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
-import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
@@ -106,9 +105,6 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
   }
 }
 
-// A drag must not also fire a placement, so clicks are press-duration gated.
-const { onMouseDown, onMouseUp, cancel: cancelPress } = usePressClick(handlePhantimalClick)
-
 const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   if (!isDraggable) return
   const id = toPhantimalId(phantimal.id)
@@ -130,7 +126,6 @@ const {
   payload: hovered,
   onMouseEnter: onPortraitEnter,
   onMouseLeave: onPortraitLeave,
-  onTouchStart: onPortraitTouchStart,
 } = useHoverTooltip<PhantimalType>()
 
 const availability = computed(() => {
@@ -161,11 +156,6 @@ const {
   onPortraitLeave()
   void inspect({ kind: 'phantimal', phantimal })
 })
-
-const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void => {
-  cancelPress()
-  onContextMenu(event, phantimal)
-}
 </script>
 
 <template>
@@ -179,13 +169,11 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
           @dragend="handleDragEnd"
-          @mousedown="onMouseDown"
-          @mouseup="onMouseUp(phantimal)"
+          @click="handlePhantimalClick(phantimal)"
           @pointerdown="startHold($event, phantimal)"
-          @contextmenu="handleContextMenu($event, phantimal)"
+          @contextmenu="onContextMenu($event, phantimal)"
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
-          @touchstart.passive="onPortraitTouchStart"
         >
           <img
             :src="gameDataStore.getCharacterImage(phantimal.name)"

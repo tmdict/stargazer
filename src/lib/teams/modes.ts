@@ -16,7 +16,7 @@
  */
 
 import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { DEFAULT_MAP_KEY, MODE_BOARDS, type ModeListKey } from '../maps'
+import { DEFAULT_MAP_KEY, mapTileRows, MODE_BOARDS, type ModeListKey } from '../maps'
 import { stripRetiredSeasonal } from '../seasonal'
 
 export type TeamModeKey = '1v1' | '3v3' | '5v5'
@@ -165,8 +165,10 @@ export function normalizeTeamPayload(state: MultiGridState, mode: TeamModeKey): 
   // on ingress only); display surfaces mask instead of resolving.
   state = stripRetiredSeasonal(state)
   let boards = state.boards.slice(0, boardCount)
+  // A board is restored from its tile rows, so an empty one carries its map's.
   while (boards.length < boardCount) {
-    boards.push({ m: defaultMaps[boards.length] })
+    const map = defaultMaps[boards.length]!
+    boards.push({ t: mapTileRows(map), m: map })
   }
   // Synergy units are 1v1-only content. On other modes a crafted y section
   // would bypass the page-wide duplicate repair (its ids differ from the base

@@ -2,7 +2,7 @@ import { getTeamFromTileState } from '../../utils/tileStateFormatting'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
-import { getCharacter, getCharacterTeam } from './character'
+import { canPlaceCharacterOnTeam, getCharacter, getCharacterTeam, hasCharacter } from './character'
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
 import { performPlace } from './place'
 import { performRemove } from './remove'
@@ -11,6 +11,29 @@ import { executeTransaction } from './transaction'
 
 // High-level operations
 
+// The rules a move onto an empty tile must pass. The drag hover cue reads them
+// too, so a drop it shows as allowed is one the move takes.
+export function canMoveCharacter(
+  grid: Grid,
+  fromHexId: number,
+  toHexId: number,
+  characterId: number,
+): boolean {
+  if (fromHexId == toHexId) return false
+  if (getCharacter(grid, fromHexId) != characterId) return false
+
+  const fromTeam = getCharacterTeam(grid, fromHexId)
+  const toTeam = getTeamFromTileState(grid.getTileById(toHexId).state)
+  if (!fromTeam || !toTeam || hasCharacter(grid, toHexId)) return false
+  // Within a team the unit keeps the slot it holds.
+  if (fromTeam === toTeam) return true
+
+  // Companions can't change teams, and neither can a synergy hero: the
+  // destination team's assist slot may already be taken.
+  if (isCompanionId(grid, characterId) || isSynergyHeroId(characterId)) return false
+  return canPlaceCharacterOnTeam(grid, characterId, toTeam)
+}
+
 export function executeMoveCharacter(
   grid: Grid,
   skillManager: SkillManager,
@@ -18,35 +41,15 @@ export function executeMoveCharacter(
   toHexId: number,
   characterId: number,
 ): boolean {
-  // 1. Perform all validations
-
-  // Basic validation
-  if (fromHexId == toHexId) return false
-
-  const actualCharacterId = getCharacter(grid, fromHexId)
-  if (actualCharacterId != characterId) return false
-
-  const fromTeam = getCharacterTeam(grid, fromHexId)
-  if (!fromTeam) return false
-
-  const toTile = grid.getTileById(toHexId)
-  const toTeam = getTeamFromTileState(toTile.state)
-  if (!toTeam) return false
-
+  if (!canMoveCharacter(grid, fromHexId, toHexId, characterId)) return false
+  const fromTeam = getCharacterTeam(grid, fromHexId)!
+  const toTeam = getTeamFromTileState(grid.getTileById(toHexId).state)!
   const changingTeams = fromTeam != toTeam
-
-  // Companions can't change teams, and neither can a synergy hero: the
-  // destination team's assist slot may already be taken.
-  if ((isCompanionId(grid, characterId) || isSynergyHeroId(characterId)) && changingTeams) {
-    return false
-  }
-
-  // 2. Determine move type and execute
 
   const hasCharacterSkill = hasSkill(characterId)
   const needsSkillHandling = changingTeams && hasCharacterSkill
 
-  // 2a. Simple move (same team OR cross-team with no skills)
+  // Simple move (same team OR cross-team with no skills)
   if (!needsSkillHandling) {
     const result = performMove(grid, fromHexId, toHexId, characterId, toTeam, fromTeam)
 
@@ -56,7 +59,7 @@ export function executeMoveCharacter(
     return result
   }
 
-  // 2b. Cross-team move with skills
+  // Cross-team move with skills
   const result = performCrossTeamMove(
     grid,
     skillManager,

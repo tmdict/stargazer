@@ -64,10 +64,10 @@ watch(
 )
 
 const handleAdd = async (files: File[]): Promise<void> => {
-  const { added, refused } = await addFiles(files)
+  const { added, refused, skipped, closed } = await addFiles(files)
   if (refused.roster) error(i18n.t('app.import-roster-shots'))
   else if (Object.keys(refused).length) error(i18n.t('app.roster-import-match-shots'))
-  else if (added === 0) error(i18n.t('app.no-valid-images'))
+  else if (added === 0 && skipped === 0 && !closed) error(i18n.t('app.no-valid-images'))
 }
 
 const handlePaste = (event: ClipboardEvent): void => {

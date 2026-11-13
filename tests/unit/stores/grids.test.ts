@@ -577,6 +577,97 @@ describe('useGrids.routeDrop same-board uniqueness', () => {
   })
 })
 
+// The hover cue's answer against the board's own drop, which the router's gate
+// does not stand in front of.
+describe('useGrids.canDropCharacter on one board', () => {
+  const ENEMIES = [ENEMY_A, ENEMY_B, 23, 24, 25]
+  const cases: {
+    name: string
+    arrange: (ctx: ReturnType<typeof setupBoards>['a']) => { from: number; to: number }
+    allowed: boolean
+  }[] = [
+    {
+      name: 'a move to the other team with room',
+      arrange: (ctx) => {
+        ctx.place(1, ALLY_A, Team.ALLY)
+        return { from: 1, to: 40 }
+      },
+      allowed: true,
+    },
+    {
+      name: 'a move onto a full team',
+      arrange: (ctx) => {
+        ctx.place(1, ALLY_A, Team.ALLY)
+        ENEMIES.forEach((id, i) => ctx.place(41 + i, id, Team.ENEMY))
+        return { from: 1, to: 40 }
+      },
+      allowed: false,
+    },
+    {
+      name: 'a move within a full team',
+      arrange: (ctx) => {
+        ENEMIES.forEach((id, i) => ctx.place(41 + i, id, Team.ENEMY))
+        return { from: 41, to: 40 }
+      },
+      allowed: true,
+    },
+    {
+      name: 'a move to the team that already fields the hero',
+      arrange: (ctx) => {
+        ctx.place(1, ALLY_A, Team.ALLY)
+        ctx.place(41, ALLY_A, Team.ENEMY)
+        return { from: 1, to: 40 }
+      },
+      allowed: false,
+    },
+    {
+      name: "a companion's move to the other team",
+      arrange: (ctx) => {
+        ctx.place(1, PHRAESTO, Team.ALLY)
+        return { from: findCharacterHex(ctx.grid, PHRAESTO_COMPANION, Team.ALLY)!, to: 40 }
+      },
+      allowed: false,
+    },
+    {
+      name: 'a swap of two heroes across teams',
+      arrange: (ctx) => {
+        ctx.place(1, ALLY_A, Team.ALLY)
+        ctx.place(40, ENEMY_A, Team.ENEMY)
+        return { from: 1, to: 40 }
+      },
+      allowed: true,
+    },
+    {
+      name: 'a swap of a companion across teams',
+      arrange: (ctx) => {
+        ctx.place(1, PHRAESTO, Team.ALLY)
+        ctx.place(40, ENEMY_A, Team.ENEMY)
+        return { from: findCharacterHex(ctx.grid, PHRAESTO_COMPANION, Team.ALLY)!, to: 40 }
+      },
+      allowed: false,
+    },
+    {
+      name: 'a swap that would field a hero twice on a team',
+      arrange: (ctx) => {
+        ctx.place(1, ALLY_A, Team.ALLY)
+        ctx.place(2, ENEMY_A, Team.ALLY)
+        ctx.place(40, ENEMY_A, Team.ENEMY)
+        return { from: 1, to: 40 }
+      },
+      allowed: false,
+    },
+  ]
+
+  it.each(cases)('answers $name as the drop itself does', ({ arrange, allowed }) => {
+    const grids = useGrids()
+    const ctx = grids.contexts[0]!
+    const { from, to } = arrange(ctx)
+    const characterId = getCharacter(ctx.grid, from)!
+    expect(grids.canDropCharacter(characterId, ctx.id, from, ctx.id, to)).toBe(allowed)
+    expect(ctx.handleDrop(dragPayload(ctx.id, from, characterId), to)).toBe(allowed)
+  })
+})
+
 describe('useGrids synergy', () => {
   it('placeOnActive resolves a duplicate to the synergy copy only while armed', () => {
     const { grids } = setupBoards(1)

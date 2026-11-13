@@ -200,9 +200,9 @@ const handleRename = (name: string) => {
 
 const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
-  teamsRestore.applyTeamData(team.mode, team.data, team.id)
+  const applied = teamsRestore.applyTeamData(team.mode, team.data, team.id)
   pendingName.value = null
-  success(i18n.t('app.team-loaded'))
+  if (applied) success(i18n.t('app.team-loaded'))
 }
 
 // The previous team is never merged into or overwritten; the modal confirms

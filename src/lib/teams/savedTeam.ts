@@ -72,10 +72,15 @@ const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
   return [...byKey.values()].sort(compareAttrRows)
 }
 
+// The serializer writes artifacts as an [ally, enemy] pair, and only when one is set.
+const canonicalArtifacts = (pair: (number | null)[] | undefined): (number | null)[] | undefined =>
+  pair?.length === 2 && pair.some((id) => id !== null) ? pair : undefined
+
 /* Strip viewer state and re-encode. Boards are rebuilt key-by-key from
  * BOARD_CONTENT_KEYS (the serializer's emission order) so a hand-ordered import
  * and a fresh serialize of the same content produce identical bytes, and any
- * unregistered key is dropped. The mode is re-resolved so a canonical string is
+ * unregistered key is dropped, as is a section the serializer would leave out
+ * (an empty one, or artifacts with none set). The mode is re-resolved so a canonical string is
  * total and self-consistent even for hand-crafted input, and every board gets
  * its map key through the restore's own rule, so record-level derivations (the
  * type chip) and the live boards a record loads into name the same maps.
@@ -92,7 +97,11 @@ export function canonicalTeamData(encoded: string): string | null {
             ? canonicalAttrRows(board.u)
             : key === 'm'
               ? resolveBoardMap(board)
-              : board[key]
+              : key === 'a'
+                ? canonicalArtifacts(board.a)
+                : board[key]?.length
+                  ? board[key]
+                  : undefined
         if (value !== undefined) (ordered as Record<string, unknown>)[key] = value
       }
       return ordered

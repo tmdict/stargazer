@@ -19,12 +19,12 @@ import {
 import type { SlUnit } from '@/lib/pvp/data/types'
 import { Team } from '@/lib/types/team'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
+import { isTouchHover } from '@/utils/pointer'
 import { useDragDrop } from './useDragDrop'
 import { useGridContext } from './useGridContext'
 import type { GridEventAPI } from './useGridEvents'
 import { useSelectionState } from './useSelectionState'
 import { useSlEngine } from './useSlEngine'
-import { useTouchDetection } from './useTouchDetection'
 
 export interface PlacementTip {
   reasons: readonly PlacementReason[]
@@ -48,18 +48,17 @@ export function usePlacementTips(
   const ctx = useGridContext()
   const { isDragging, draggedCharacter } = useDragDrop()
   const { liftedHexId, liftedGridId } = useSelectionState()
-  const { isTouchDevice } = useTouchDetection()
   const { explain } = useSlEngine({ startOnMount: false })
 
   const hovered = ref<number | 'artifact' | null>(null)
   const enter = (hexId: number): void => {
-    hovered.value = hexId
+    if (!isTouchHover()) hovered.value = hexId
   }
   const leave = (hexId: number): void => {
     if (hovered.value === hexId) hovered.value = null
   }
   const enterArtifact = (team: Team): void => {
-    if (team === Team.ALLY) hovered.value = 'artifact'
+    if (team === Team.ALLY && !isTouchHover()) hovered.value = 'artifact'
   }
   const leaveArtifact = (): void => {
     if (hovered.value === 'artifact') hovered.value = null
@@ -97,7 +96,7 @@ export function usePlacementTips(
       return isAlly(liftedHexId.value) ? liftedHexId.value : null
     }
     const at = hovered.value
-    if (at === null || isTouchDevice.value) return null
+    if (at === null) return null
     return at === 'artifact' || isAlly(at) ? at : null
   })
 

@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, readonly, ref, type Ref } from 'vue'
 
+import { isTouchHover } from '@/utils/pointer'
 import { useOverlay } from './useOverlay'
-import { useTouchDetection } from './useTouchDetection'
 
 /* Open state for a dropdown whose root element wraps both the trigger and the
  * panel, so the trigger's own click never counts as an outside click.
@@ -21,7 +21,7 @@ import { useTouchDetection } from './useTouchDetection'
  *   left to its grace period, it would overlap the new panel of a neighbor.
  *   A dropdown a click opened stays until a click closes it.
  *
- * Bind the three pointer handlers on the root element (touchstart passive). */
+ * Bind the two mouse handlers on the root element. */
 
 const HOVER_CLOSE_GRACE_MS = 150
 
@@ -76,11 +76,8 @@ export function useDropdown({
 
   const toggle = (): void => (open.value ? hide() : show())
 
-  const { isTouchDevice } = useTouchDetection()
-  const interactionStartedAsTouch = ref(false)
-
   const onMouseEnter = (): void => {
-    if (!hover || isTouchDevice.value || interactionStartedAsTouch.value) return
+    if (!hover || isTouchHover()) return
     if (!open.value) {
       closeHoverOpened?.()
       closeHoverOpened = hide
@@ -88,13 +85,9 @@ export function useDropdown({
     show()
   }
   const onMouseLeave = (): void => {
-    interactionStartedAsTouch.value = false
-    if (!hover || isTouchDevice.value) return
+    if (!hover || isTouchHover()) return
     clearTimeout(closeTimer)
     closeTimer = setTimeout(hide, HOVER_CLOSE_GRACE_MS)
-  }
-  const onTouchStart = (): void => {
-    interactionStartedAsTouch.value = true
   }
 
   useOverlay({
@@ -117,5 +110,5 @@ export function useDropdown({
     forget()
   })
 
-  return { open: readonly(open), show, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart }
+  return { open: readonly(open), show, hide, toggle, onMouseEnter, onMouseLeave }
 }

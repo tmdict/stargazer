@@ -73,7 +73,6 @@ const {
   payload: tip,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip<TipId>()
 
 const tipText = computed((): string => {
@@ -100,7 +99,6 @@ const tipText = computed((): string => {
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.new')"
       @click="handleNew"
       @mouseenter="showTip($event, 'new')"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconFilePlus :size="14" class="btn-icon" />
@@ -114,7 +112,6 @@ const tipText = computed((): string => {
       :aria-label="i18n.t('app.save')"
       @click="handleSave"
       @mouseenter="showTip($event, 'save')"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconSave :size="14" class="btn-icon" />
@@ -132,7 +129,6 @@ const tipText = computed((): string => {
         :aria-label="i18n.t('app.save-as-new')"
         @click="openPopover"
         @mouseenter="showTip($event, 'save-as-new')"
-        @touchstart.passive="tipTouchStart"
         @mouseleave="hideTip"
       >
         <IconSavePlus :size="14" class="btn-icon" />

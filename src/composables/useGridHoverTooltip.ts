@@ -1,7 +1,7 @@
 import { shallowRef, watch, type WatchSource } from 'vue'
 
+import { isTouchHover } from '@/utils/pointer'
 import { useDragDrop } from './useDragDrop'
-import { useTouchDetection } from './useTouchDetection'
 
 /**
  * Hover-tooltip state shared by the grid overlays (placed characters, artifacts, buff
@@ -10,11 +10,6 @@ import { useTouchDetection } from './useTouchDetection'
  * starts and when `dismissWhenChanges` updates: an icon pulled out from under a still
  * cursor (removal, swap, team-view crop) fires no mouseleave.
  *
- * Touch suppression relies on useTouchDetection's global flag already being set when the
- * synthetic post-tap mouseenter fires; the picker icons instead track touch
- * per-interaction via useHoverTooltip, whose single-element model doesn't fit a
- * many-icon overlay.
- *
  * @param dismissWhenChanges reactive source whose every change hides the tooltip (the
  * placement set for characters and buff tiles, the artifact ids for artifacts).
  */
@@ -22,13 +17,12 @@ export function useGridHoverTooltip<T, E extends Element = HTMLElement>(
   dismissWhenChanges: WatchSource,
 ) {
   const { isDragging } = useDragDrop()
-  const { isTouchDevice } = useTouchDetection()
 
   const hoveredEl = shallowRef<E | null>(null)
   const hovered = shallowRef<T | null>(null)
 
   const show = (event: MouseEvent, payload: T | null | undefined): void => {
-    if (!payload || isDragging.value || isTouchDevice.value) return
+    if (!payload || isDragging.value || isTouchHover()) return
     hoveredEl.value = event.currentTarget as E
     hovered.value = payload
   }

@@ -231,7 +231,6 @@ const {
   hoverOpen: storageHintOpen,
   hoverClose: storageHintClose,
   toggle: storageHintToggle,
-  onTouchStart: storageHintTouchStart,
 } = useInfoTip()
 
 // Import and Export act on the library rather than the boards, which is why
@@ -297,7 +296,6 @@ const {
   payload: actionTip,
   onMouseEnter: showActionTip,
   onMouseLeave: hideActionTip,
-  onTouchStart: actionTipTouchStart,
 } = useHoverTooltip<'import' | 'export'>()
 
 const actionTipText = computed((): string => {
@@ -324,7 +322,6 @@ const actionTipText = computed((): string => {
           @focus="storageHintOpen"
           @blur="storageHintClose"
           @click="storageHintToggle"
-          @touchstart.passive="storageHintTouchStart"
         >
           <IconInfo :size="15" />
         </button>
@@ -355,7 +352,6 @@ const actionTipText = computed((): string => {
           class="library-btn solid-btn"
           @click="fileInput?.click()"
           @mouseenter="showActionTip($event, 'import')"
-          @touchstart.passive="actionTipTouchStart"
           @mouseleave="hideActionTip"
         >
           {{ i18n.t('app.import') }}
@@ -366,7 +362,6 @@ const actionTipText = computed((): string => {
           class="library-btn solid-btn"
           @click="handleExport"
           @mouseenter="showActionTip($event, 'export')"
-          @touchstart.passive="actionTipTouchStart"
           @mouseleave="hideActionTip"
         >
           {{

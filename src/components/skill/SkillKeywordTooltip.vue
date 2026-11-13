@@ -20,15 +20,7 @@ const props = defineProps<{
   container: HTMLElement | null
 }>()
 
-const {
-  anchor,
-  payload: kwKey,
-  hoverOpen,
-  hoverClose,
-  toggle,
-  onTouchStart,
-  close,
-} = useInfoTip<string>()
+const { anchor, payload: kwKey, hoverOpen, hoverClose, toggle, close } = useInfoTip<string>()
 
 const tip = computed(() => (kwKey.value ? (props.keywords[kwKey.value] ?? null) : null))
 
@@ -74,7 +66,6 @@ const listeners: [string, EventListener, AddEventListenerOptions?][] = [
   ['focusin', onFocusIn],
   ['focusout', hoverClose],
   ['keydown', onKeyDown],
-  ['touchstart', onTouchStart, { passive: true }],
 ]
 
 watch(

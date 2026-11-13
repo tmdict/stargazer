@@ -26,7 +26,7 @@ const emit = defineEmits<{ select: [key: T['key']] }>()
 
 defineSlots<{ default?(props: { segment: T }): unknown }>()
 
-const { anchor, payload: tip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip<string>()
+const { anchor, payload: tip, onMouseEnter, onMouseLeave } = useHoverTooltip<string>()
 </script>
 
 <template>
@@ -44,7 +44,6 @@ const { anchor, payload: tip, onMouseEnter, onMouseLeave, onTouchStart } = useHo
       @click="emit('select', segment.key)"
       @mouseenter="segment.tip && onMouseEnter($event, segment.tip)"
       @mouseleave="onMouseLeave"
-      @touchstart.passive="onTouchStart"
     >
       <slot :segment>{{ segment.label }}</slot>
     </button>

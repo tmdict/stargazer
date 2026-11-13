@@ -25,7 +25,6 @@ const {
   showTooltip: tipShown,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip()
 
 // A button disabled under the pointer never fires mouseleave, so its tip
@@ -50,7 +49,6 @@ const handleClick = (): void => {
     :aria-label="tip"
     @click="handleClick"
     @mouseenter="showTip"
-    @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >
     <slot />

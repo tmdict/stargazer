@@ -116,7 +116,7 @@ engine.then(
 const build = import.meta.env.DEV ? null : (self.location.pathname.split('/').at(-1) ?? null)
 
 // Undefined until the visit's first press or set to draw; null where the
-// worker works alone, on a device with too few cores or once a helper fails.
+// worker works alone, on a device with too few cores or once the helpers stop.
 let helpers: SlHelpers | null | undefined
 const startHelpers = (): void => {
   if (helpers === undefined) helpers = startSlHelpers()
@@ -127,7 +127,7 @@ async function aside<T>(work: (pool: SlHelpers) => Promise<T>, alone: () => T): 
     try {
       return await work(helpers)
     } catch {
-      helpers = null
+      if (helpers.stopped()) helpers = null
     }
   }
   return alone()
@@ -149,7 +149,8 @@ const fitsFor =
   }
 
 // Chooses the set with the points the page kept, when they come from this
-// build, and gives back the points measured for it. A press without
+// build, and gives back the points measured for it. The page hands its points
+// over once, so they are taken in whichever press brings them. A press without
 // phantimals keeps its own points for the visit, and gives none back.
 async function press(
   { data, reader, fit: seasonal, plainFit, counts }: Engine,
@@ -161,7 +162,7 @@ async function press(
   // The helpers load the data file while the set is chosen.
   startHelpers()
   const fit = plain ? plainFit : seasonal
-  if (!plain && build !== null && fits?.build === build) fit.seed(fits.maps)
+  if (build !== null && fits?.build === build) seasonal.seed(fits.maps)
   const gained: StoredPoints = {}
   const set = await chooseSlSetAsync(
     data,

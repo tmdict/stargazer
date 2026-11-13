@@ -43,15 +43,7 @@ type Shown = Pick<UnitPlacement, 'reasons' | 'alsoFine' | 'better'> & { unit?: n
 
 const gameData = useGameDataStore()
 const { thumbnailUnit, thumbnailArtifact } = usePreviewImages()
-const {
-  anchor,
-  payload: shown,
-  hoverOpen,
-  hoverClose,
-  toggle,
-  onTouchStart,
-  close,
-} = useInfoTip<Shown>()
+const { anchor, payload: shown, hoverOpen, hoverClose, toggle, close } = useInfoTip<Shown>()
 const thumbnailView = useTemplateRef<InstanceType<typeof BoardThumbnail>>('thumbnail')
 
 // The unit on a tile, when it has a card.
@@ -224,7 +216,6 @@ const unitCardAnchor = computed(() => {
     @click="onClick"
     @pointerdown="onPress"
     @contextmenu="onRightClick"
-    @touchstart.passive="onTouchStart"
   />
   <SlPlacementCard
     v-if="unitCardAnchor && shown"

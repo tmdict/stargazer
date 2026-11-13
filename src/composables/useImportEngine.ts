@@ -93,6 +93,10 @@ export interface Intake<K extends ImportKind, S extends EngineShot> {
 export interface IntakeResult {
   added: number
   refused: Partial<Record<ImportKind, number>>
+  // Files already among the shots.
+  skipped: number
+  // The import closed before every file was placed.
+  closed: boolean
 }
 
 // Narrower screenshots are refused unread: below 400 px the readers make many
@@ -691,15 +695,13 @@ export function useImportEngine(session: ShotSession): ImportEngine {
    * its shot failed for a reason outside the file, which adding it again reads
    * once more. One at a time, so the shots keep the files' order. Adding stops
    * when the import closes. */
-  const addFiles = async <K extends ImportKind, S extends EngineShot>(
+  const addNow = async <K extends ImportKind, S extends EngineShot>(
     files: File[],
     { replay, place, add }: Intake<K, S>,
+    mine: number,
   ): Promise<IntakeResult> => {
-    void ensureReferences()
-    const mine = opening
     const open = (): boolean => mine === opening
-    const result: IntakeResult = { added: 0, refused: {} }
-    adding.value += files.length
+    const result: IntakeResult = { added: 0, refused: {}, skipped: 0, closed: false }
     let settled = 0
     const settle = (): void => {
       settled++
@@ -710,6 +712,7 @@ export function useImportEngine(session: ShotSession): ImportEngine {
         if (!open()) break
         const same = session.shots().find((s) => s.name === file.name && s.size === file.size)
         if (same) {
+          result.skipped++
           if (same.error === 'worker' || same.error === 'references') {
             const again = await decodeFile(file)
             try {
@@ -745,7 +748,30 @@ export function useImportEngine(session: ShotSession): ImportEngine {
     } finally {
       adding.value -= files.length - settled
     }
+    result.closed = !open()
     return result
+  }
+
+  // Calls run one after another: two at once would each miss the file the
+  // other is still sorting and list it twice.
+  let lastAdd: Promise<void> | null = null
+  const addFiles = <K extends ImportKind, S extends EngineShot>(
+    files: File[],
+    intake: Intake<K, S>,
+  ): Promise<IntakeResult> => {
+    void ensureReferences()
+    const mine = opening
+    adding.value += files.length
+    const run = lastAdd
+      ? lastAdd.then(() => addNow(files, intake, mine))
+      : addNow(files, intake, mine)
+    const done: Promise<void> = run
+      .catch(() => undefined)
+      .then(() => {
+        if (lastAdd === done) lastAdd = null
+      })
+    lastAdd = done
+    return run
   }
 
   return {

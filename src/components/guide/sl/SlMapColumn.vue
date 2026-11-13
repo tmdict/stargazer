@@ -56,16 +56,12 @@ const swaps = computed(() => [
   ...team.pairs,
 ])
 
-type Tip<T> = Pick<
-  ReturnType<typeof useInfoTip<T>>,
-  'hoverOpen' | 'hoverClose' | 'toggle' | 'onTouchStart'
->
+type Tip<T> = Pick<ReturnType<typeof useInfoTip<T>>, 'hoverOpen' | 'hoverClose' | 'toggle'>
 
 const tipOn = <T,>(tip: Tip<T>, value: () => T) => ({
   mouseenter: (event: MouseEvent) => tip.hoverOpen(event, value()),
   mouseleave: tip.hoverClose,
   click: (event: MouseEvent) => tip.toggle(event, value()),
-  touchstartPassive: tip.onTouchStart,
 })
 
 const swapTip = useInfoTip<{ out: number[]; into: number[] }>()

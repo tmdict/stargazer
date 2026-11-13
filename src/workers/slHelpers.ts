@@ -11,9 +11,10 @@ import type { HelperResponse, HelperTask } from './slHelper.worker'
 type DrawTask = Omit<Extract<HelperTask, { type: 'draw' }>, 'type'>
 
 export interface SlHelpers {
-  // Each rejects, and every helper stops, once one fails.
+  // Each rejects when a task fails. A helper that itself fails stops them all.
   fit(jobs: FitJob[]): Promise<FitPoints[]>
   draw(tasks: DrawTask[]): Promise<BoardDraw[]>
+  stopped(): boolean
 }
 
 const MOST = 3
@@ -50,10 +51,11 @@ export function startSlHelpers(): SlHelpers | null {
     const helper = new Worker(new URL('./slHelper.worker.ts', import.meta.url), { type: 'module' })
     helper.onmessage = (event: MessageEvent<HelperResponse>) => {
       const waiting = working.get(helper)
-      if (!waiting || event.data.type === 'error') return stop()
+      if (!waiting) return stop()
       working.delete(helper)
       idle.push(helper)
-      waiting.done(event.data)
+      if (event.data.type === 'error') waiting.fail()
+      else waiting.done(event.data)
       next()
     }
     helper.onerror = stop
@@ -79,5 +81,6 @@ export function startSlHelpers(): SlHelpers | null {
         if (answer.type !== 'drawn') throw new Error('A helper answered another task')
         return answer.draw
       }),
+    stopped: () => stopped,
   }
 }

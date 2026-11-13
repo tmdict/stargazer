@@ -25,7 +25,7 @@ const emit = defineEmits<{
   artifactClick: [artifact: ArtifactType]
 }>()
 
-const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
+const { showTooltip, onMouseEnter, onMouseLeave } = useHoverTooltip()
 
 const artifactElement = ref<HTMLElement>()
 
@@ -52,7 +52,6 @@ const {
       @contextmenu="inspectable && onContextMenu($event, artifact)"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
-      @touchstart="onTouchStart"
     >
       <ArtifactImage :artifact />
     </div>

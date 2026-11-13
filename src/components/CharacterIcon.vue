@@ -8,7 +8,6 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
-import { usePressClick } from '@/composables/usePressClick'
 import { totalEnergy } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { TagPick } from '@/lib/types/skill'
@@ -59,26 +58,21 @@ const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
 const characterElement = ref<HTMLElement>()
 
-const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
+const { showTooltip, onMouseEnter, onMouseLeave } = useHoverTooltip()
 // A locked hero's note is info alone, so a tap shows it too.
 const {
   anchor: noteAnchor,
   hoverOpen: openNote,
   hoverClose: closeNote,
   toggle: toggleNote,
-  onTouchStart: noteTouchStart,
 } = useInfoTip()
 
-const {
-  onMouseDown,
-  onMouseUp,
-  cancel: cancelPress,
-} = usePressClick((event: MouseEvent) => {
+const handleClick = (event: MouseEvent) => {
   if (!props.lockedNote) emit('characterClick', props.character, event)
   // Kept open when hovering opened it: the click is a pick attempt, not a dismissal.
   else if (characterElement.value && noteAnchor.value !== characterElement.value)
     toggleNote(characterElement.value)
-})
+}
 
 const tooltipShown = computed(() =>
   props.lockedNote ? !!noteAnchor.value : showTooltip.value && !props.hideTooltip,
@@ -88,10 +82,6 @@ const handleMouseEnter = (event: MouseEvent) =>
 const handleMouseLeave = () => {
   onMouseLeave()
   closeNote()
-}
-const handleTouchStart = () => {
-  onTouchStart()
-  noteTouchStart()
 }
 
 // A hero can join the hero list before its portrait ships, and a portrait can
@@ -134,7 +124,6 @@ const {
 })
 
 const handleContextMenu = (event: MouseEvent) => {
-  cancelPress()
   if (inspectTarget.value) onContextMenu(event, inspectTarget.value)
 }
 
@@ -172,15 +161,13 @@ const handleDragEnd = (event: DragEvent) => {
         :draggable="isDraggable"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"
-        @mousedown="onMouseDown"
-        @mouseup="onMouseUp"
+        @click="handleClick"
         @pointerdown="inspectTarget && startHold($event, inspectTarget)"
         @contextmenu="handleContextMenu"
         @mouseenter="handleMouseEnter"
         @mouseleave="handleMouseLeave"
         @pointerenter="onPointerEnter"
         @pointerleave="hovered = false"
-        @touchstart="handleTouchStart"
       >
         <!-- The image drags only where the tile does: elsewhere a native image
              drag would start inside the hold's move tolerance and abandon it. -->

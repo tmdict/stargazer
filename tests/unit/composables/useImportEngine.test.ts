@@ -83,6 +83,25 @@ const answerReady = (worker: FakeWorker, parts: readonly ReferencePart[] = ['her
 }
 
 describe('import engine', () => {
+  it('lists a file once when two adds overlap, and reports the second as skipped', async () => {
+    const { shots, add } = openImport()
+    const [first, second] = await Promise.all([add([file('a.png')]), add([file('a.png')])])
+    expect(shots.map((s) => s.name)).toEqual(['a.png'])
+    expect(first).toEqual({ added: 1, refused: {}, skipped: 0, closed: false })
+    expect(second).toEqual({ added: 0, refused: {}, skipped: 1, closed: false })
+  })
+
+  it('keeps adding after an add that failed', async () => {
+    const { shots, add } = openImport()
+    await expect(
+      add([file('a.png')], () => {
+        throw new Error('place failed')
+      }),
+    ).rejects.toThrow('place failed')
+    await add([file('b.png')])
+    expect(shots.map((s) => s.name)).toEqual(['b.png'])
+  })
+
   it('gives a reader the waiting shots one at a time once the references are in', async () => {
     const { shots, applied, add } = openImport()
     await add([file('a.png')])
@@ -128,16 +147,22 @@ describe('import engine', () => {
     expect(await add([file('a.png'), file('b.png', 2)], refuseRosters)).toEqual({
       added: 0,
       refused: { roster: 2 },
+      skipped: 0,
+      closed: false,
     })
     FakeWorker.sortAs = null
     expect(await add([file('a.png'), file('c.png')], refuseRosters)).toEqual({
       added: 2,
       refused: {},
+      skipped: 0,
+      closed: false,
     })
     // The same name at another size is another file.
     expect(await add([file('c.png'), file('c.png', 3)], refuseRosters)).toEqual({
       added: 1,
       refused: {},
+      skipped: 1,
+      closed: false,
     })
     expect(shots.map((s) => `${s.name}:${s.size}`)).toEqual(['a.png:1', 'c.png:1', 'c.png:3'])
     // Every file is placed, so only the three shots, still waiting on their
@@ -155,7 +180,7 @@ describe('import engine', () => {
     expect(engine.progress.value).toEqual({ read: 0, total: 2 })
     engine.release()
     decoded()
-    expect(await adding).toEqual({ added: 0, refused: {} })
+    expect(await adding).toEqual({ added: 0, refused: {}, skipped: 0, closed: true })
     expect(shots).toEqual([])
     expect(engine.progress.value).toBeNull()
   })

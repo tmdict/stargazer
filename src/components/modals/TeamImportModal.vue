@@ -243,6 +243,14 @@ watch(
   { immediate: true },
 )
 
+// The saved team's name: the one built from the names above until the reviewer
+// types their own, which only the length limit holds; clearing it goes back.
+const customName = ref<string | null>(null)
+const recordName = computed(() => (customName.value ?? plan.value.suggestedName).trim())
+const settleRecordName = (): void => {
+  if (customName.value?.trim() === '') customName.value = null
+}
+
 // Every opening starts fresh: closing, by Save as New or otherwise, clears it.
 watch(
   () => show,
@@ -276,7 +284,7 @@ watch(
 
 const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Promise<void> => {
   const batch = reactive({ ids: [] as string[], before: selectedId.value })
-  const { added, refused } = await addFiles(files, kind, (id) => {
+  const { added, refused, skipped, closed } = await addFiles(files, kind, (id) => {
     if (batch.ids.length === 0) toOpen.value = batch
     batch.ids.push(id)
   })
@@ -284,7 +292,7 @@ const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Pro
   else if (refused.matchup) error(i18n.t('app.import-matchup-shots'))
   else if (refused.result) error(i18n.t('app.import-results-closed'))
   else if (refused.formation) error(i18n.t('app.import-formations-closed'))
-  else if (added === 0) error(i18n.t('app.no-valid-images'))
+  else if (added === 0 && skipped === 0 && !closed) error(i18n.t('app.no-valid-images'))
 }
 
 // A paste lands in no drop area, so each pasted screenshot goes to the
@@ -299,14 +307,6 @@ const handlePaste = (event: ClipboardEvent): void => {
 
 onMounted(() => window.addEventListener('paste', handlePaste))
 onUnmounted(() => window.removeEventListener('paste', handlePaste))
-
-// The saved team's name: the one built from the names above until the reviewer
-// types their own, which only the length limit holds; clearing it goes back.
-const customName = ref<string | null>(null)
-const recordName = computed(() => (customName.value ?? plan.value.suggestedName).trim())
-const settleRecordName = (): void => {
-  if (customName.value?.trim() === '') customName.value = null
-}
 
 const nameInvalid = computed(
   () =>

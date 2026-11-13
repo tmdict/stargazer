@@ -47,7 +47,6 @@ const {
   payload: tip,
   onMouseEnter: showTip,
   onMouseLeave: hideTip,
-  onTouchStart: tipTouchStart,
 } = useHoverTooltip<TipId>()
 
 const tipText = computed((): string => {
@@ -126,7 +125,6 @@ const generate = async (): Promise<void> => {
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.sl-generate')"
       @click="generate"
       @mouseenter="showTip($event, 'generate')"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconSparkle :size="20" class="btn-icon generate-sparkle" aria-hidden="true" />
@@ -136,7 +134,6 @@ const generate = async (): Promise<void> => {
       class="control-btn generate-btn generate-open"
       :aria-label="i18n.t('app.sl-open-generator')"
       @mouseenter="showTip($event, 'open')"
-      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconArrowUpRight :size="14" class="btn-icon" aria-hidden="true" />

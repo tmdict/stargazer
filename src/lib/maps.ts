@@ -203,6 +203,12 @@ const LAYOUTS = Object.entries(MAPS)
   }))
   .sort((a, b) => Number(onTeamList.has(b.key)) - Number(onTeamList.has(a.key)))
 
+// A preset's tiles as the serializer writes a board standing on it.
+export const mapTileRows = (key: string): number[][] =>
+  (MAPS[key]?.grid ?? [])
+    .flatMap(({ type, hex }) => hex.map((id) => [id, type]))
+    .sort(([a], [b]) => a! - b!)
+
 // The preset whose layout the serialized `[hexId, state]` tiles (non-default
 // only, as the serializer emits them) reproduce exactly, if any. Presets that
 // share a layout (a season's preset reusing a permanent arena) are the same

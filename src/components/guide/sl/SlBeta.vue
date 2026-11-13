@@ -11,7 +11,7 @@ const { inLink = false } = defineProps<{ inLink?: boolean }>()
 
 const i18n = useI18nStore()
 
-const { anchor, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip()
+const { anchor, hoverOpen, hoverClose, toggle } = useInfoTip()
 </script>
 
 <template>
@@ -25,7 +25,6 @@ const { anchor, hoverOpen, hoverClose, toggle, onTouchStart } = useInfoTip()
     @focus="hoverOpen"
     @blur="hoverClose"
     @click="toggle"
-    @touchstart.passive="onTouchStart"
   >
     BETA
   </button>

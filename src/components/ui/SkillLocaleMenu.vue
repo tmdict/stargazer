@@ -29,7 +29,7 @@ const i18n = useI18nStore()
 
 const root = ref<HTMLElement>()
 const panel = ref<HTMLElement>()
-const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDropdown({
+const { open, hide, toggle, onMouseEnter, onMouseLeave } = useDropdown({
   rootRef: root,
   hover: true,
 })
@@ -53,13 +53,7 @@ const pickSelect = (locale: SkillLocale) => {
 </script>
 
 <template>
-  <div
-    ref="root"
-    class="locale-menu"
-    @mouseenter="onMouseEnter"
-    @mouseleave="onMouseLeave"
-    @touchstart.passive="onTouchStart"
-  >
+  <div ref="root" class="locale-menu" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
     <button
       type="button"
       class="trigger glass-button"

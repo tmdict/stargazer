@@ -20,6 +20,7 @@ import {
   type GridContext,
 } from '@/composables/useGridContext'
 import {
+  canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
   findTeamPhantimalHex,
   findTeamSynergyHex,
@@ -35,9 +36,11 @@ import {
   resolvePlacement,
 } from '@/lib/characters/character'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
+import { canMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { resolveReplacement } from '@/lib/characters/place'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
+import { canSwapCharacters } from '@/lib/characters/swap'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
@@ -754,9 +757,9 @@ export const useGrids = defineStore('grids', () => {
   // canDropCharacter's same-board leg: a move or swap that stays on one board can
   // still change a unit's team, which risks the same page-wide duplicate as a
   // cross-board transfer, a copy already on the destination team of another board.
-  // Each unit is checked against its destination team excluding this board (an
-  // on-board conflict is already rejected by the engine's per-grid check), and
-  // phantimals are exempt (capped at one per team per board instead).
+  // Each unit is checked against its destination team excluding this board (the
+  // board's own rules cover a conflict on it), and phantimals are exempt (capped
+  // at one per team per board instead).
   const sameBoardDropKeepsUniqueness = (
     ctxId: number,
     sourceHexId: number,
@@ -773,10 +776,6 @@ export const useGrids = defineStore('grids', () => {
         ? getCharacterTeam(ctx.grid, targetHexId)
         : getTeamFromTileState(ctx.grid.getTileById(targetHexId).state)
     if (destTeam === undefined || destTeam === null || destTeam === movingTeam) return true
-    // Synergy heroes can't change teams (engine rule); reject here too so the
-    // hover cue never promises a drop the engine will refuse.
-    if (isSynergyHeroId(movingId)) return false
-    if (residentId !== undefined && isSynergyHeroId(residentId)) return false
     if (!isPhantimalId(movingId) && isUsed(movingId, destTeam, ctxId)) return false
     if (
       residentId !== undefined &&
@@ -788,11 +787,11 @@ export const useGrids = defineStore('grids', () => {
     return true
   }
 
-  // Read-only mirror of routeDrop's routing-layer validation, shared with the
-  // drag hover cue (GridTiles) so hover never promises a drop the router rejects.
-  // The engine's per-grid checks still have the last word at drop time: a
-  // per-board rejection (a full team on a same-board team change, a companion
-  // changing teams) or a mid-transaction failure resolves as a silent no-op.
+  // Whether routeDrop would take the drop, shared with the drag hover cue
+  // (GridTiles) so hover never promises a drop the router rejects. A drop that
+  // stays on one board asks the engine's own move and swap rules. Only a skill
+  // that cannot settle on the new team mid-transaction can still fail a drop
+  // allowed here, as a silent no-op.
   const canDropCharacter = (
     characterId: number,
     sourceGridId: number | undefined,
@@ -812,6 +811,19 @@ export const useGrids = defineStore('grids', () => {
     }
 
     if (sourceGridId === targetCtxId) {
+      const { grid } = targetCtx
+      if (hasCharacter(grid, targetHexId)) {
+        if (!canSwapCharacters(grid, sourceHexId, targetHexId)) return false
+      } else {
+        if (!canMoveCharacter(grid, sourceHexId, targetHexId, characterId)) return false
+        if (
+          isPhantimalId(characterId) &&
+          getCharacterTeam(grid, sourceHexId) !== destTeam &&
+          !targetCtx.phantimalCanJoinTeam(characterId, destTeam)
+        ) {
+          return false
+        }
+      }
       return sameBoardDropKeepsUniqueness(targetCtxId, sourceHexId, targetHexId)
     }
 
@@ -829,7 +841,7 @@ export const useGrids = defineStore('grids', () => {
     if (residentId === undefined) {
       if (isPhantimalId(movingId)) return targetCtx.phantimalCanJoinTeam(movingId, destTeam)
       if (sourceTeam !== destTeam && isUsed(movingId, destTeam, targetCtxId)) return false
-      return getAvailableTeamSize(targetCtx.grid, destTeam) > 0
+      return canPlaceCharacterOnTeam(targetCtx.grid, movingId, destTeam)
     }
 
     // Swap: the mover lands on the resident's team and vice versa. Enforce

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_MAP_KEY } from '@/lib/maps'
+import { DEFAULT_MAP_KEY, findMapByTiles, mapTileRows } from '@/lib/maps'
 import {
   DEFAULT_VARIANT,
   isTeamModeKey,
@@ -110,8 +110,10 @@ describe('normalizeTeamPayload', () => {
     const normalized = normalizeTeamPayload(payload, '3v3')
     expect(normalized.boards).toHaveLength(3)
     expect(normalized.boards[0]).toEqual({ m: 'arena2', c: [[1, 11, 0]] })
-    expect(normalized.boards[1]).toEqual({ m: 'arena1' })
-    expect(normalized.boards[2]).toEqual({ m: 'arena1' })
+    // A board is restored from its tile rows, so an empty one carries its map's.
+    const empty = { t: mapTileRows('arena1'), m: 'arena1' }
+    expect(normalized.boards.slice(1)).toEqual([empty, empty])
+    expect(findMapByTiles(empty.t)).toBe('arena1')
     expect(normalized.mode).toBe('3v3')
   })
 
