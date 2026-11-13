@@ -1,0 +1,15 @@
+{
+  "id": 132,
+  "name": "thane",
+  "level": "s",
+  "faction": "lightbearer",
+  "class": "warrior",
+  "damage": "physical",
+  "energy": [400],
+  "range": 1,
+  "season": 8,
+  "tags": {
+    "debuff": [{ "awakening": 1, "mods": ["aoe"] }],
+    "ult-denial": [{ "skill2": 1 }]
+  }
+}

@@ -6,7 +6,9 @@
     {
       "team": "ally",
       "tile": "behind",
-      "goal": { "target": "ranged" },
+      "goal": {
+        "target": "ranged"
+      },
       "weight": "charm",
       "note": "Raises the ranged damage of the ally 1 tile behind its holder."
     }

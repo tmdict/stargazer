@@ -6,7 +6,9 @@
     {
       "team": "ally",
       "tile": "front",
-      "goal": { "target": "melee" },
+      "goal": {
+        "target": "melee"
+      },
       "weight": "charm",
       "note": "Raises the melee damage of the ally 1 tile in front of its holder and cuts the ranged damage it takes."
     }
