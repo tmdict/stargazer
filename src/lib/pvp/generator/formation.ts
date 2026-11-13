@@ -89,9 +89,6 @@ export const placementDataFor = (
   return { ...data.placement, pickRates: { [layout.key]: data.maps[from]!.pickRates } }
 }
 
-// The name external tooling calls placementDataFor by.
-export const boardPlacement = placementDataFor
-
 // Units kept on their tiles, by unit id.
 export const heldOn = (units: readonly SlUnit[]): Map<number, number> =>
   new Map(units.map(([hexId, unit]) => [unit, hexId]))
