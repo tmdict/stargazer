@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { ruleUnit } from '@/lib/placement/formationRules'
 import { effectVerb } from '@/lib/placement/goals'
@@ -13,7 +14,6 @@ import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { placeOnTile } from './fixtures/skills'
 

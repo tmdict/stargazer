@@ -4,9 +4,9 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
 import { goalList } from '@/lib/placement/goals'
 import { decodeSlData } from '@/lib/pvp/data/codec'
-import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
 
 const { placement } = await decodeSlData(

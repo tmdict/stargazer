@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import { encodeTeamData } from '@/lib/teams/codec'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { teamHasSynergy } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
+const encode = (state: MultiGridState): string => encodeTeamData(state)
 
 describe('teamHasSynergy', () => {
   it('is true when any board fields a synergy hero', () => {

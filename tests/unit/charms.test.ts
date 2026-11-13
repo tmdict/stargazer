@@ -4,10 +4,10 @@
 // runtime checks.
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import { loadCharacters } from '@/lib/dataLoader'
 import { pinnedLevels } from '@/lib/tags'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import type { CharmData } from '@/lib/types/skill'
-import { loadCharacters } from '@/utils/dataLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { getSkillCharms, loadSkillLocale } from '@/utils/skillLocale'
 

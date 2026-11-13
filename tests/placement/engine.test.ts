@@ -28,6 +28,7 @@ import {
   toLocalPhantimalId,
   toPhantimalId,
 } from '@/lib/characters/phantimal'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
 import {
@@ -45,16 +46,15 @@ import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer, type PlacementScore } from '@/lib/placement/score'
 import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
 import { decodeSlData } from '@/lib/pvp/data/codec'
+import { decodeTeamData } from '@/lib/teams/codec'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import {
   loadArtifactLocales,
   loadCharacterLocales,
   loadPhantimalLocales,
 } from '@/utils/localeLoader'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 const EXPORTS = process.env.PLACEMENT_EXPORT?.split(delimiter).filter(Boolean) ?? []
 const OUT = process.env.PLACEMENT_OUT
@@ -105,7 +105,7 @@ const RECORD_NAME = /^S(\d+) [A-Z]+\d*\b.*?\s-\s(.+?)\s*[<>]\s*(.+?)(?:\s*\(.*\)
 const FULL_BOARD = new Grid()
 
 function sideOf(
-  board: NonNullable<ReturnType<typeof decodeMultiGridStateFromUrl>>['boards'][number],
+  board: NonNullable<ReturnType<typeof decodeTeamData>>['boards'][number],
   team: Team,
   map: string,
   live: boolean,
@@ -150,7 +150,7 @@ const picksSeen = new Map<number, Map<string, Map<number, number>>>()
 function countPicks(
   season: number,
   map: string,
-  board: NonNullable<ReturnType<typeof decodeMultiGridStateFromUrl>>['boards'][number],
+  board: NonNullable<ReturnType<typeof decodeTeamData>>['boards'][number],
 ) {
   const sides = sidesSeen.get(season) ?? new Map<string, number>()
   sides.set(map, (sides.get(map) ?? 0) + 2)
@@ -208,7 +208,7 @@ function setupsOf(records: { name: string; data: string }[]): Setup[] {
     const season = Number(name[1])
     const live = season === LIVE
     const players = [name[2]!.toLowerCase(), name[3]!.toLowerCase()]
-    for (const board of decodeMultiGridStateFromUrl(record.data)?.boards ?? []) {
+    for (const board of decodeTeamData(record.data)?.boards ?? []) {
       const map = resolveBoardMap(board)
       if (!getMapByKey(map)) continue
       countPicks(season, map, board)

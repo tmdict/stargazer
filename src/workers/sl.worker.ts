@@ -8,6 +8,7 @@
  * visits (storedFits.ts) and answers with those it measured. */
 
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
+import { loadCharacters } from '@/lib/dataLoader'
 import type { MapLayout } from '@/lib/maps'
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import { loadSlData, loadSlFits } from '@/lib/pvp/data/codec'
@@ -31,7 +32,6 @@ import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/www/panel'
 import { artifactSurvives } from '@/lib/seasonal'
-import { loadCharacters } from '@/utils/dataLoader'
 import { startSlHelpers, type SlHelpers } from './slHelpers'
 
 // `fits`: the points the page kept, with the worker's first press.

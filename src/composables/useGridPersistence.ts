@@ -15,10 +15,12 @@
 
 import { ref, watch, type Ref } from 'vue'
 
-import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
-import { useArtifactStore } from '@/stores/artifact'
-import { useGridStore } from '@/stores/grid'
-import { useGrids } from '@/stores/grids'
+import {
+  decodeGridStateFromUrl,
+  decodeTeamData,
+  encodeGridStateToUrl,
+  encodeTeamData,
+} from '@/lib/teams/codec'
 import {
   packDisplayFlags,
   serializeGridState,
@@ -26,14 +28,12 @@ import {
   unpackDisplayFlags,
   type DisplayFlags,
   type GridState,
-} from '@/utils/gridStateSerializer'
+} from '@/lib/teams/gridStateSerializer'
+import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
+import { useArtifactStore } from '@/stores/artifact'
+import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { readStorage, writeStorage } from '@/utils/storage'
-import {
-  decodeGridStateFromUrl,
-  decodeMultiGridStateFromUrl,
-  encodeGridStateToUrl,
-  encodeMultiGridStateToUrl,
-} from '@/utils/urlStateManager'
 
 const ARENA_KEY = 'stargazer.arena'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
@@ -89,7 +89,7 @@ export const readSavedBoards = (page: 'arena' | TeamModeKey): GridState[] | null
     return board && [board]
   }
   const slot = readTeamsSlot(page)
-  return (slot && decodeMultiGridStateFromUrl(slot.data)?.boards) ?? null
+  return (slot && decodeTeamData(slot.data)?.boards) ?? null
 }
 
 interface GridPersistence {
@@ -151,7 +151,7 @@ export function useTeamsPersistence(
   let started = false
 
   const snapshot = (): string =>
-    encodeMultiGridStateToUrl(
+    encodeTeamData(
       serializeMultiGridState(
         grids.contexts.map((ctx) => ({
           tiles: ctx.grid.getAllTiles(),

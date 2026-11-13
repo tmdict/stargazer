@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
+import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import {
   canonicalTeamData,
   holdsUnsavedWork,
@@ -9,10 +11,8 @@ import {
   type SavedTeam,
 } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
+const encode = (state: MultiGridState): string => encodeTeamData(state)
 
 const THREE_BOARDS: MultiGridState = {
   boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena2' }, { m: 'arena3' }],
@@ -23,7 +23,7 @@ describe('canonicalTeamData', () => {
   it('strips viewer state (active + display flags) and keeps content + mode', () => {
     const raw = encode({ ...THREE_BOARDS, active: 2, d: 127 })
     const canonical = canonicalTeamData(raw)!
-    const decoded = decodeMultiGridStateFromUrl(canonical)!
+    const decoded = decodeTeamData(canonical)!
     expect(decoded.active).toBeUndefined()
     expect(decoded.d).toBeUndefined()
     expect(decoded.mode).toBe('3v3')
@@ -46,18 +46,18 @@ describe('canonicalTeamData', () => {
 
   it('re-resolves a missing, contradictory, or unknown mode from the board count', () => {
     const noMode = encode({ boards: THREE_BOARDS.boards })
-    expect(decodeMultiGridStateFromUrl(canonicalTeamData(noMode)!)!.mode).toBe('3v3')
+    expect(decodeTeamData(canonicalTeamData(noMode)!)!.mode).toBe('3v3')
     const wrongMode = encode({ boards: THREE_BOARDS.boards, mode: '5v5' })
-    expect(decodeMultiGridStateFromUrl(canonicalTeamData(wrongMode)!)!.mode).toBe('3v3')
+    expect(decodeTeamData(canonicalTeamData(wrongMode)!)!.mode).toBe('3v3')
     const unknownMode = encode({ boards: THREE_BOARDS.boards, mode: '5v5sl' })
-    expect(decodeMultiGridStateFromUrl(canonicalTeamData(unknownMode)!)!.mode).toBe('3v3')
+    expect(decodeTeamData(canonicalTeamData(unknownMode)!)!.mode).toBe('3v3')
   })
 
   // Record-level derivations (the type chip) read `m`, and the restore gives a
   // key-less board the default map, so canonical data must say the same.
   it('fills a missing map key with the default map', () => {
     const noKeys = encode({ boards: [{ c: [[1, 11, Team.ALLY]] }, {}, {}], mode: '3v3' })
-    const decoded = decodeMultiGridStateFromUrl(canonicalTeamData(noKeys)!)!
+    const decoded = decodeTeamData(canonicalTeamData(noKeys)!)!
     expect(decoded.boards.map((b) => b.m)).toEqual([
       DEFAULT_MAP_KEY,
       DEFAULT_MAP_KEY,
@@ -93,7 +93,7 @@ describe('canonicalTeamData', () => {
       ],
       mode: '3v3',
     })
-    const decoded = decodeMultiGridStateFromUrl(canonicalTeamData(crafted)!)!
+    const decoded = decodeTeamData(canonicalTeamData(crafted)!)!
     expect(decoded.boards[0]!.u).toEqual([
       [1, 11, 1, 4],
       [1, 12, 2, 3],
@@ -109,9 +109,7 @@ describe('canonicalTeamData', () => {
     const oneArtifact = encode({ boards: [{ a: [3] }], mode: '1v1' })
     expect(canonicalTeamData(padded)).toBe(canonicalTeamData(written))
     expect(canonicalTeamData(canonicalTeamData(padded)!)).toBe(canonicalTeamData(padded))
-    expect(
-      decodeMultiGridStateFromUrl(canonicalTeamData(oneArtifact)!)!.boards[0]!.a,
-    ).toBeUndefined()
+    expect(decodeTeamData(canonicalTeamData(oneArtifact)!)!.boards[0]!.a).toBeUndefined()
   })
 
   it('omits u entirely when every row normalizes away', () => {
@@ -119,7 +117,7 @@ describe('canonicalTeamData', () => {
       boards: [{ m: 'arena1', u: [[1, 11, 99, 4]] }, { m: 'arena2' }, { m: 'arena3' }],
       mode: '3v3',
     })
-    expect(decodeMultiGridStateFromUrl(canonicalTeamData(crafted)!)!.boards[0]!.u).toBeUndefined()
+    expect(decodeTeamData(canonicalTeamData(crafted)!)!.boards[0]!.u).toBeUndefined()
   })
 })
 

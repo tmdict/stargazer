@@ -35,17 +35,13 @@ import { BASE_TEAM_SIZE, COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { registerSkill, SkillManager } from '@/lib/skills/skill'
 import { createCompanionSkill } from '@/lib/skills/utils/builders'
+import { decodeGridStateFromUrl, encodeGridStateToUrl, encodeTeamData } from '@/lib/teams/codec'
+import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import { buildSideLoadPlan } from '@/lib/teams/sideLoad'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { useBoardRestore } from '@/stores/boardRestore'
 import { useGridStore } from '@/stores/grid'
-import { useUrlStateStore } from '@/stores/urlState'
-import { serializeGridState } from '@/utils/gridStateSerializer'
-import {
-  decodeGridStateFromUrl,
-  encodeGridStateToUrl,
-  encodeMultiGridStateToUrl,
-} from '@/utils/urlStateManager'
 import { ALLY_A, ALLY_B, ALLY_C, ENEMY_A, ENEMY_B } from '../fixtures/characters'
 import { NO_LOOKUPS } from '../fixtures/skills'
 
@@ -214,7 +210,7 @@ describe('phantimal companion serialization', () => {
         d: 0,
       })
 
-      expect(useUrlStateStore().restoreFromEncodedState(encoded).success).toBe(true)
+      expect(useBoardRestore().restoreFromEncodedState(encoded).success).toBe(true)
       expect(gridStore.getTile(16).characterId).toBe(OWNER)
       expect(gridStore.getTile(target).characterId).toBe(COMPANION)
       expect(gridStore.getAllTiles.filter((tile) => tile.characterId === COMPANION)).toHaveLength(1)
@@ -241,13 +237,13 @@ describe('phantimal companion serialization', () => {
       d: 0,
     })
 
-    expect(useUrlStateStore().restoreFromEncodedState(encoded).success).toBe(true)
+    expect(useBoardRestore().restoreFromEncodedState(encoded).success).toBe(true)
     expect(gridStore.getTile(16).characterId).toBe(OWNER)
     expect(gridStore.getTile(9).characterId).toBe(COMPANION)
   })
 
   it('side-loads the companion as a settle target of its phantimal', () => {
-    const record = encodeMultiGridStateToUrl({
+    const record = encodeTeamData({
       boards: [
         {
           m: 'arena1',

@@ -7,6 +7,7 @@ import { companionIdsOf } from '@/lib/characters/companion'
 import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { toSynergyId } from '@/lib/characters/synergy'
+import { loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import {
   configTiles,
   deploymentTiles,
@@ -40,11 +41,10 @@ import { recordedUnits, slTeamData } from '@/lib/pvp/generator/team'
 import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON, isPermanentArtifactId } from '@/lib/seasonal'
+import { decodeTeamData } from '@/lib/teams/codec'
 import { DEFAULT_VARIANT, matchVariant, TEAM_VARIANTS, variantMaps } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { loadCharacters, loadPhantimals } from '@/utils/dataLoader'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { fileTeam, wholeFit } from '../fixtures/slSeason'
 
 // The page fetches the file the build emits, so the test serves it the same bytes.
@@ -79,7 +79,7 @@ const drawnOf = (file: SlData, chosen: SlChoice, on: SlBoard[] = boards) =>
   }))
 const decoded = (season: number) => {
   const file = { ...data, season }
-  return decodeMultiGridStateFromUrl(slTeamData(file, set, picks, boards, drawnOf(file, set)))!
+  return decodeTeamData(slTeamData(file, set, picks, boards, drawnOf(file, set)))!
 }
 
 // Each board of a saved set against the team it came from.
@@ -90,9 +90,7 @@ const expectSaved = (
   mode = '5v5',
 ) => {
   const formations = drawnOf(data, chosen, chosenOn)
-  const state = decodeMultiGridStateFromUrl(
-    slTeamData(data, chosen, chosenWith, chosenOn, formations),
-  )!
+  const state = decodeTeamData(slTeamData(data, chosen, chosenWith, chosenOn, formations))!
   expect(state.mode).toBe(mode)
   expect(state.boards).toHaveLength(chosen.teams.length)
   expect(state.season).toBe(CURRENT_SEASON)
@@ -219,9 +217,7 @@ describe('a file behind the current maps', () => {
     expect(draws.map((draw) => !!draw.played)).toEqual(
       chosen.teams.map((team, i) => i < 3 && !!recordedUnits(behind, team)),
     )
-    const state = decodeMultiGridStateFromUrl(
-      slTeamData(behind, chosen, picks, onCurrent, formations),
-    )!
+    const state = decodeTeamData(slTeamData(behind, chosen, picks, onCurrent, formations))!
     expect(
       matchVariant(
         '5v5',

@@ -1,8 +1,8 @@
 import { ref, type Ref } from 'vue'
 
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import type { DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { useGrids } from '@/stores/grids'
-import type { DisplayFlags } from '@/utils/gridStateSerializer'
 
 /**
  * Grid display state shared by the Arena and 5 v 5 views: the toggle flags

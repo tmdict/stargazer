@@ -18,8 +18,8 @@
  */
 
 import { CURRENT_SEASON, stripSeasonalBoard } from '@/lib/seasonal'
+import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/lib/teams/codec'
 import { readStorage, writeStorage } from '@/utils/storage'
-import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/utils/urlStateManager'
 
 const SEASON_KEY = 'stargazer.season'
 const ARENA_KEY = 'stargazer.arena'

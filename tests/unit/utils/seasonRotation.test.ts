@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import { encodeGridStateToUrl } from '@/lib/teams/codec'
 import { Team } from '@/lib/types/team'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
-import { encodeGridStateToUrl } from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../fixtures/storage'
 
 const SEASON_KEY = 'stargazer.season'

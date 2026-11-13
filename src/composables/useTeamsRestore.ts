@@ -8,7 +8,7 @@
  *
  * A mode's slot is only ever written while that mode's boards are live, which is
  * the invariant that keeps per-mode state independent. All bulk state application
- * goes through urlState.restoreMultiFromEncodedState (never a bespoke loader): it
+ * goes through boardRestore.restoreMultiFromEncodedState (never a bespoke loader): it
  * encapsulates per-board apply ordering, companion settling, cross-board dedupe,
  * and the phantimal baseline re-seed. New is the one exception: fresh boards
  * on a chosen map list. The type switch rebuilds nothing: it edits the live
@@ -19,6 +19,8 @@ import { computed, ref } from 'vue'
 
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { decodeLinkFromUrl, decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
+import type { DisplayFlags, MultiGridState } from '@/lib/teams/gridStateSerializer'
 import {
   DEFAULT_TEAM_MODE,
   initialMaps,
@@ -32,14 +34,8 @@ import {
   type TeamVariantChoice,
 } from '@/lib/teams/modes'
 import { retiredSeasonOf } from '@/lib/teams/savedTeam'
+import { useBoardRestore } from '@/stores/boardRestore'
 import { useGrids } from '@/stores/grids'
-import { useUrlStateStore } from '@/stores/urlState'
-import type { DisplayFlags, MultiGridState } from '@/utils/gridStateSerializer'
-import {
-  decodeLinkFromUrl,
-  decodeMultiGridStateFromUrl,
-  encodeMultiGridStateToUrl,
-} from '@/utils/urlStateManager'
 import { useTeamsPersistence } from './useGridPersistence'
 
 export interface TeamsRestoreOptions {
@@ -61,7 +57,7 @@ export interface InitializeResult {
 
 export function useTeamsRestore(options: TeamsRestoreOptions) {
   const grids = useGrids()
-  const urlStateStore = useUrlStateStore()
+  const boardRestore = useBoardRestore()
   const { clearTargetHex, clearLiftedHex } = useSelectionState()
   const seasonNotice = useSeasonNotice()
 
@@ -96,7 +92,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
    * link. Slots keep writing full flags regardless: the snapshot doubles as the
    * share payload (one serialization path). */
   const applyEncoded = (encoded: string, adoptFlags: boolean): boolean => {
-    const result = urlStateStore.restoreMultiFromEncodedState(encoded)
+    const result = boardRestore.restoreMultiFromEncodedState(encoded)
     if (adoptFlags && result.displayFlags) options.applyFlags(result.displayFlags)
     return result.success
   }
@@ -106,8 +102,8 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   // mode, the synergy strip. Undecodable payloads pass through so applyEncoded
   // reports the failure.
   const normalizeEncoded = (mode: TeamModeKey, encoded: string): string => {
-    const decoded = decodeMultiGridStateFromUrl(encoded)
-    return decoded ? encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode)) : encoded
+    const decoded = decodeTeamData(encoded)
+    return decoded ? encodeTeamData(normalizeTeamPayload(decoded, mode)) : encoded
   }
 
   // Rebuild hygiene shared by every path: boards share hex ids so stale selection
@@ -213,7 +209,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
           d: link.d,
           mode,
         }
-        const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
+        const normalized = encodeTeamData(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
         if (applyEncoded(normalized, true)) {
           // Persisted only on success: a link that decodes but fails to apply

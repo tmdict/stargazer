@@ -1,5 +1,5 @@
-import { getTeamFromTileState } from '../../../utils/tileStateFormatting'
 import { getOpposingTeam } from '../../characters/character'
+import { getTeamFromTileState } from '../../types/state'
 import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
 import { createTargetingSkill, withEffects } from '../utils/builders'

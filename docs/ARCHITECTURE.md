@@ -16,28 +16,28 @@ Each system has its own doc under `docs/architecture/`; the index is in `AGENTS.
 │ Composables               │    │ Stores (Pinia)            │
 │ useGridContext: one board │◀───│ useGrids: N boards        │
 │ useDragDrop, useGridEvents│───▶│ active-board facades,     │
-│ useSelectionState, ...    │    │ gameData, i18n, urlState  │
+│ useSelectionState, ...    │    │ gameData, i18n, boardRestore  │
 └─────────────┬─────────────┘    └─────────────┬─────────────┘
               ▼                                ▼
 ┌────────────────────────────────────────────────────────────┐
-│ Domain  src/lib/               ◀──▶  Utilities  src/utils/ │
-│ grid, hex, characters/, pathfinding, binaryEncoder,        │
-│ skills/, teams/, import/, seasonal   urlStateManager,      │
-│                                      dataLoader, viewport  │
+│ Domain  src/lib/               ◀───  Utilities  src/utils/ │
+│ grid, hex, characters/, pathfinding, storage, viewport,    │
+│ skills/, teams/, import/, seasonal,  localeLoader,         │
+│ dataLoader                           imageLoader           │
 └────────────────────────────────────────────────────────────┘
 ```
 
 Arrows show import direction.
 
-| Layer                | Path                            | Imports                         | Never imports                               |
-| -------------------- | ------------------------------- | ------------------------------- | ------------------------------------------- |
-| Views and components | `src/views/`, `src/components/` | composables, stores, lib, utils |                                             |
-| Composables          | `src/composables/`              | stores, lib, utils              | `.vue` components                           |
-| Stores               | `src/stores/`                   | other stores, lib, utils        | composables, components                     |
-| Domain               | `src/lib/`                      | lib, utils, `src/data/` JSON    | Vue, Pinia, stores, composables, components |
-| Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                     |
+| Layer                | Path                            | Imports                         | Never imports                                      |
+| -------------------- | ------------------------------- | ------------------------------- | -------------------------------------------------- |
+| Views and components | `src/views/`, `src/components/` | composables, stores, lib, utils |                                                    |
+| Composables          | `src/composables/`              | stores, lib, utils              | `.vue` components                                  |
+| Stores               | `src/stores/`                   | other stores, lib, utils        | composables, components                            |
+| Domain               | `src/lib/`                      | lib, `src/data/` JSON           | Vue, Pinia, stores, composables, components, utils |
+| Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                            |
 
-Three exceptions are deliberate. `src/stores/grids.ts` imports `createGridContext` from a composable, because the store that holds the boards is the one that builds them; no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and `src/utils/teamsBoardSize.ts` imports a type from the grid store; every other utility is store-free. Domain and utility modules import each other where needed (`lib/seasonal.ts` reads the data loader, the binary encoder reads `lib/teams/wire.ts`), so the "never imports" column is the only rule between them.
+Three exceptions are deliberate. `src/stores/grids.ts` imports `createGridContext` from a composable, because the store that holds the boards is the one that builds them; no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and `src/utils/teamsBoardSize.ts` imports a type from the grid store; every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
 
 The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
 
@@ -145,4 +145,4 @@ Text carries its language in the `lang` attribute, and nothing else decides how 
 
 ## Content and data
 
-Page text written for the site lives in `src/content/`, while skill text for all languages comes with the data pack. Game data (`src/data/`) loads through `src/utils/dataLoader.ts` and dictionaries (`src/locales/`) through `src/utils/localeLoader.ts`, except three files of single values that the modules using them import directly: `maps.json`, `grid.json` and `upgrades.json`. The external report generator reads these three files too, so their field names are part of its format. PvP reports produced by an external report generator come with the data pack and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).
+Page text written for the site lives in `src/content/`, while skill text for all languages comes with the data pack. Game data (`src/data/`) loads through `src/lib/dataLoader.ts` and dictionaries (`src/locales/`) through `src/utils/localeLoader.ts`, except three files of single values that the modules using them import directly: `maps.json`, `grid.json` and `upgrades.json`. The external report generator reads these three files too, so their field names are part of its format. PvP reports produced by an external report generator come with the data pack and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).

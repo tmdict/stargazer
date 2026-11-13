@@ -8,8 +8,8 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { resolveBoardMap } from '@/lib/maps'
 import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
+import { decodeTeamData } from '@/lib/teams/codec'
 import type { Team } from '@/lib/types/team'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import {
   DEFAULT_VARIANT,
   matchVariant,
@@ -66,7 +66,7 @@ export interface PreviewBoard {
 
 /* Null = undecodable record (the card renders its fallback tile). */
 export function teamPreviewBoards(data: string): PreviewBoard[] | null {
-  const decoded = decodeMultiGridStateFromUrl(data)
+  const decoded = decodeTeamData(data)
   if (!decoded || decoded.boards.length === 0) return null
 
   // Seasonal refs in a payload from another season's pool are retired: masked
@@ -118,7 +118,7 @@ const variantCache = new Map<string, VariantMatch>()
 export function teamVariant(data: string): VariantMatch {
   const cached = variantCache.get(data)
   if (cached !== undefined) return cached
-  const decoded = decodeMultiGridStateFromUrl(data)
+  const decoded = decodeTeamData(data)
   const result = decoded
     ? matchVariant(resolveTeamMode(decoded), decoded.boards.map(resolveBoardMap))
     : null
@@ -141,7 +141,7 @@ const synergyCache = new Map<string, boolean>()
 export function teamHasSynergy(data: string): boolean {
   const cached = synergyCache.get(data)
   if (cached !== undefined) return cached
-  const decoded = decodeMultiGridStateFromUrl(data)
+  const decoded = decodeTeamData(data)
   const result = !!decoded?.boards.some((board) =>
     (board.y ?? []).some((entry) => {
       const localId = entry[1]

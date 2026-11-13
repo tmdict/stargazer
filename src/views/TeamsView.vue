@@ -30,6 +30,8 @@ import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
 import { nextAutoName, uniqueName } from '@/lib/names'
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import { decodeTeamData, encodeMultiGridStateToLinkUrl } from '@/lib/teams/codec'
+import { packDisplayFlags } from '@/lib/teams/gridStateSerializer'
 import {
   DEFAULT_VARIANT,
   MAX_SAVED_TEAMS,
@@ -45,13 +47,8 @@ import { isNarrowBreakpoint } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { packDisplayFlags } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import {
-  decodeMultiGridStateFromUrl,
-  encodeMultiGridStateToLinkUrl,
-  getEncodedStateFromUrl,
-} from '@/utils/urlStateManager'
+import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
@@ -240,7 +237,7 @@ if (gameDataStore.dataLoaded) {
   // The generator page's Open in Teams opens its set as a new team, so Save
   // can never overwrite the saved team the boards held.
   const generated = takeGeneratedSide()
-  const decoded = generated ? decodeMultiGridStateFromUrl(generated) : null
+  const decoded = generated ? decodeTeamData(generated) : null
   if (
     generated &&
     decoded &&
@@ -278,7 +275,7 @@ const handleDownload = () => downloadAsImage(boardCapture)
 // + mode) in the JSON interchange encoding; links go out in the compact
 // binary form, so the snapshot is decoded once and re-encoded for the wire.
 const handleCopyLink = () => {
-  const multi = decodeMultiGridStateFromUrl(teamsRestore.snapshot())
+  const multi = decodeTeamData(teamsRestore.snapshot())
   // A link requires the flags, which decoded JSON types as optional.
   if (multi) shareLink(encodeMultiGridStateToLinkUrl({ ...multi, d: packDisplayFlags(toFlags()) }))
 }

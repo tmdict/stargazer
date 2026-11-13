@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
+import { encodeTeamData } from '@/lib/teams/codec'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { parseImport } from '@/lib/teams/transfer'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /* parseImport is the only place untrusted file content enters the app; this
  * suite exhausts its rejection paths, plus the merge/dedupe/id-stability rules. */
 
-const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
+const encode = (state: MultiGridState): string => encodeTeamData(state)
 
 const DATA_3V3 = encode({
   boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],

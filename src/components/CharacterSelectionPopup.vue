@@ -12,10 +12,10 @@ import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
+import { getTeamFromTileState } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
   // The tapped tile: determines the team and where the chosen hero is placed.

@@ -4,10 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LINK_MARK, MAX_CODE_LENGTH, TRAVEL_KEYS } from '@/lib/move/config'
 import { packLink } from '@/lib/move/pack'
 import { applyHandOver } from '@/lib/move/receive'
+import { encodeGridStateToUrl, encodeTeamData } from '@/lib/teams/codec'
 import { MAX_SAVED_TEAMS } from '@/lib/teams/modes'
 import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
-import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../../fixtures/storage'
 
 /* A hand-over end to end: an old address's storage is packed into a link code
@@ -16,7 +16,7 @@ import { stubLocalStorage } from '../../fixtures/storage'
 
 const teamData = (hero: number): string =>
   canonicalTeamData(
-    encodeMultiGridStateToUrl({
+    encodeTeamData({
       boards: [{ m: 'arena1', c: [[1, hero, Team.ALLY]] }],
       mode: '1v1',
     }),
@@ -44,7 +44,7 @@ const ARENA_EMPTY = encodeGridStateToUrl({ d: 0 })
 
 const slot = (hero?: number): string =>
   JSON.stringify({
-    data: encodeMultiGridStateToUrl({
+    data: encodeTeamData({
       boards: [{ m: 'arena1', ...(hero ? { c: [[1, hero, Team.ALLY]] } : {}) }],
       mode: '1v1',
     }),

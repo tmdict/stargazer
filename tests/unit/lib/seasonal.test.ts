@@ -12,13 +12,13 @@ import { getRegisteredSkills } from '@/lib/skills/registry'
 // Side effect: registers every skill file, the seasonal ones included.
 import '@/lib/skills/skill'
 
+import { loadArtifacts, loadCharms, loadPhantimals } from '@/lib/dataLoader'
+import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { normalizeTeamPayload } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { canonicalTeamData, teamContentKey } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadCharms, loadPhantimals } from '@/utils/dataLoader'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 describe('seasonal', () => {
   it('strips phantimals and seasonal artifacts from a retired board', () => {
@@ -64,8 +64,7 @@ describe('seasonal', () => {
 })
 
 describe('season provenance across surfaces', () => {
-  const encode = (state: Partial<MultiGridState>): string =>
-    encodeMultiGridStateToUrl(state as MultiGridState)
+  const encode = (state: Partial<MultiGridState>): string => encodeTeamData(state as MultiGridState)
 
   it('canonicalTeamData preserves a stale stamp', () => {
     // Provenance is preserved, never re-stamped: a record keeps saying which
@@ -77,13 +76,13 @@ describe('season provenance across surfaces', () => {
         season: CURRENT_SEASON - 1,
       }),
     )
-    const decoded = decodeMultiGridStateFromUrl(stale!)!
+    const decoded = decodeTeamData(stale!)!
     expect(decoded.season).toBe(CURRENT_SEASON - 1)
     expect(decoded.boards[0]!.s).toEqual([[7, 2, Team.ALLY]])
   })
 
   it('normalizeTeamPayload strips retired content at ingress', () => {
-    const stale = decodeMultiGridStateFromUrl(
+    const stale = decodeTeamData(
       encode({
         boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]], s: [[7, 2, Team.ALLY]], a: [1, 14] }],
         mode: '1v1',
@@ -93,7 +92,7 @@ describe('season provenance across surfaces', () => {
     const normalized = normalizeTeamPayload(stale, '1v1')
     expect(normalized.boards[0]).toEqual({ m: 'arena1', c: [[1, 11, Team.ALLY]], a: [1, null] })
 
-    const current = decodeMultiGridStateFromUrl(
+    const current = decodeTeamData(
       encode({
         boards: [{ m: 'arena1', s: [[7, 2, Team.ALLY]], a: [1, 14] }],
         mode: '1v1',
@@ -161,7 +160,7 @@ describe('season data contract', () => {
 
 describe('teamContentKey', () => {
   const key = (state: Partial<MultiGridState>): string | null =>
-    teamContentKey(encodeMultiGridStateToUrl(state as MultiGridState))
+    teamContentKey(encodeTeamData(state as MultiGridState))
 
   // A reused seasonal id names a different artifact each season, so the stamp
   // is part of the team's identity exactly when seasonal refs exist.

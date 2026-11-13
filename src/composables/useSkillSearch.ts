@@ -1,8 +1,8 @@
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 
+import { getCharmForHero } from '@/lib/dataLoader'
 import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
-import { getCharmForHero } from '@/utils/dataLoader'
 import { loadCharacterLocales } from '@/utils/localeLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'

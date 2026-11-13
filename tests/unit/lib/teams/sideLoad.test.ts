@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import { encodeTeamData } from '@/lib/teams/codec'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { buildSideLoadPlan, savedTeamSide, sideLoadBoard } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 const encode = (state: MultiGridState): string =>
-  encodeMultiGridStateToUrl({ season: CURRENT_SEASON, ...state })
+  encodeTeamData({ season: CURRENT_SEASON, ...state })
 
 // One 1v1 board exercising every unit section: mains, a companion, a
 // phantimal, the synergy hero with its companion, upgrade attrs for both

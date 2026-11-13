@@ -1,6 +1,6 @@
-import { getTeamFromTileState } from '../../utils/tileStateFormatting'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
+import { getTeamFromTileState } from '../types/state'
 import { Team } from '../types/team'
 import { canPlaceCharacterOnTeam, getCharacter, getCharacterTeam, hasCharacter } from './character'
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'

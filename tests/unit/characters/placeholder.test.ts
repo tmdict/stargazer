@@ -5,13 +5,13 @@ import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/
 import { performPlace } from '@/lib/characters/place'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { executeSwapCharacters } from '@/lib/characters/swap'
+import { loadCharacters } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
+import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/lib/teams/codec'
+import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
-import { loadCharacters } from '@/utils/dataLoader'
-import { serializeGridState } from '@/utils/gridStateSerializer'
-import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/utils/urlStateManager'
 import { NO_LOOKUPS } from '../fixtures/skills'
 
 // Default map (arena1) ally tiles, used for real placement-path tests.

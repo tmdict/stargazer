@@ -2,7 +2,7 @@
 
 import { toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand, toLocalPhantimalId } from '@/lib/characters/phantimal'
-import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { matchesFilter } from './lists'
 import type { PlacementLookups } from './types'
 

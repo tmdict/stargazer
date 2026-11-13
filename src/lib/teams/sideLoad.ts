@@ -27,9 +27,9 @@ import {
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
+import { decodeTeamData } from '@/lib/teams/codec'
+import type { GridState, MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
-import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 export interface SideLoadUnit {
   // Full unit id: base hero, placeholder, synergy-band hero, or phantimal-band id.
@@ -88,7 +88,7 @@ const sideCache = new Map<string, Team | null>()
 export function savedTeamSide(data: string): Team | null {
   const cached = sideCache.get(data)
   if (cached !== undefined) return cached
-  const decoded = decodeMultiGridStateFromUrl(data)
+  const decoded = decodeTeamData(data)
   // Retired seasonal refs never side-load (their reused ids would place the
   // new season's content), so eligibility ignores them too; retiredness is
   // deploy-constant, keeping the per-data cache valid.
@@ -176,7 +176,7 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
  * companions are included only when the destination mode offers the Syn
  * affordance; otherwise the hero is left out and counted. */
 export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoadPlan | null {
-  const raw = decodeMultiGridStateFromUrl(data)
+  const raw = decodeTeamData(data)
   if (!raw) return null
   const decoded = stripRetiredSeasonal(raw)
   const side = sideOfDecoded(decoded)

@@ -4,20 +4,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
-import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
-import { useArtifactStore } from '@/stores/artifact'
-import { useCharacterStore } from '@/stores/character'
-import { useGameDataStore } from '@/stores/gameData'
-import { useGridStore } from '@/stores/grid'
-import { MAX_GRID_COUNT, useGrids } from '@/stores/grids'
-import { useUrlStateStore } from '@/stores/urlState'
+import { encodeGridStateToUrl, encodeTeamData } from '@/lib/teams/codec'
 import {
   serializeGridState,
   serializeMultiGridState,
   type DisplayFlags,
-} from '@/utils/gridStateSerializer'
-import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+} from '@/lib/teams/gridStateSerializer'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import { useArtifactStore } from '@/stores/artifact'
+import { useBoardRestore } from '@/stores/boardRestore'
+import { useCharacterStore } from '@/stores/character'
+import { useGameDataStore } from '@/stores/gameData'
+import { useGridStore } from '@/stores/grid'
+import { MAX_GRID_COUNT, useGrids } from '@/stores/grids'
 import {
   ALLY_A,
   ALLY_B,
@@ -30,7 +30,7 @@ import {
 } from '../fixtures/characters'
 
 /**
- * Round-trip tests for the urlState store's restore path: state is built with
+ * Round-trip tests for the boardRestore store's restore path: state is built with
  * the real grid/character/artifact stores, serialized and encoded with the real
  * URL utils, then restored into fresh stores via restoreFromEncodedState.
  *
@@ -42,7 +42,7 @@ interface TestStores {
   grid: ReturnType<typeof useGridStore>
   character: ReturnType<typeof useCharacterStore>
   artifact: ReturnType<typeof useArtifactStore>
-  urlState: ReturnType<typeof useUrlStateStore>
+  boardRestore: ReturnType<typeof useBoardRestore>
 }
 
 // Swaps in a fresh Pinia, so a second call yields pristine restore-target
@@ -53,7 +53,7 @@ const createStores = (): TestStores => {
     grid: useGridStore(),
     character: useCharacterStore(),
     artifact: useArtifactStore(),
-    urlState: useUrlStateStore(),
+    boardRestore: useBoardRestore(),
   }
 }
 
@@ -82,7 +82,7 @@ const snapshotTiles = (grid: TestStores['grid']): TileSnapshot[] =>
     team: tile.team,
   }))
 
-describe('urlStateStore.restoreFromEncodedState', () => {
+describe('boardRestore.restoreFromEncodedState', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -109,7 +109,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const expected = snapshotTiles(source.grid)
 
     const restored = createStores()
-    const result = restored.urlState.restoreFromEncodedState(encoded)
+    const result = restored.boardRestore.restoreFromEncodedState(encoded)
 
     expect(result.success).toBe(true)
     expect(result.displayFlags).toEqual(flags)
@@ -139,7 +139,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
 
     const target = createStores()
     const targetGrids = useGrids()
-    expect(target.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(target.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
     // Both attrs of a two-key record survive: restore merges per-row setAttr
     // calls into one record rather than replacing it.
     expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(4)
@@ -167,7 +167,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const expected = snapshotTiles(source.grid)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     expect(restored.grid.getTile(5).characterId).toBe(PHRAESTO)
     expect(restored.grid.getTile(companionHexId).characterId).toBe(PHRAESTO_COMPANION)
@@ -197,7 +197,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const encoded = encodeStores(source)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     expect(restored.grid.getTile(1).characterId).toBe(PHRAESTO_COMPANION)
     const ctx = useGrids().active!
@@ -213,7 +213,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const expected = snapshotTiles(source.grid)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     expect(restored.grid.currentMap).toBe('arena2')
     expect(snapshotTiles(restored.grid)).toEqual(expected)
@@ -226,7 +226,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
 
     const restored = createStores()
     expect(restored.grid.switchMap('arena2')).toBe(true)
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     expect(restored.grid.currentMap).toBe('arena2')
     expect(restored.grid.getTile(20).state).toBe(State.BLOCKED)
@@ -243,7 +243,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const expected = snapshotTiles(source.grid)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     // Serialized as local ids (2/1); restored tiles carry the namespaced ids again.
     expect(snapshotTiles(restored.grid)).toEqual(expected)
@@ -259,7 +259,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
 
     const restored = createStores()
     useGrids().setNonSeasonal(true)
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
 
     expect(useGrids().nonSeasonal).toBe(false)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
@@ -275,7 +275,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     // '!' and '$' are outside the URL-safe alphabet, so decoding fails outright;
     // 'A' is inside the alphabet but too short to decode to a single byte.
     for (const garbage of ['!!!not-an-encoded-state$$$', 'A']) {
-      const result = stores.urlState.restoreFromEncodedState(garbage)
+      const result = stores.boardRestore.restoreFromEncodedState(garbage)
 
       expect(result.success).toBe(false)
       expect(result.displayFlags).toBeUndefined()
@@ -303,7 +303,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const expected = snapshotTiles(source.grid)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
   })
 
@@ -313,7 +313,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const encoded = encodeStores(source)
 
     const restored = createStores()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
     expect(restored.grid.getTile(9).state).toBe(State.AVAILABLE_ALLY)
   })
 
@@ -329,7 +329,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     target.artifact.placeArtifact(9, Team.ENEMY)
     target.grid.setState(target.grid.getHexById(20), State.BLOCKED)
 
-    const result = target.urlState.restoreFromEncodedState(encoded)
+    const result = target.boardRestore.restoreFromEncodedState(encoded)
 
     expect(result.success).toBe(true)
     expect(target.grid.getTile(1).characterId).toBeUndefined()
@@ -341,9 +341,9 @@ describe('urlStateStore.restoreFromEncodedState', () => {
   })
 })
 
-describe('urlStateStore.restoreMultiFromEncodedState', () => {
+describe('boardRestore.restoreMultiFromEncodedState', () => {
   const encodeBoards = (grids: ReturnType<typeof useGrids>): string =>
-    encodeMultiGridStateToUrl(
+    encodeTeamData(
       serializeMultiGridState(
         grids.contexts.map((ctx) => ({
           tiles: ctx.grid.getAllTiles(),
@@ -363,17 +363,17 @@ describe('urlStateStore.restoreMultiFromEncodedState', () => {
     const encoded = encodeBoards(grids)
 
     const restored = createStores()
-    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     expect(useGrids().contexts.map((ctx) => ctx.currentMap)).toEqual(['arena2', 'preset-sr1'])
   })
 
   it('caps a crafted URL at the supported board count', () => {
     const s = createStores()
-    const encoded = encodeMultiGridStateToUrl({
+    const encoded = encodeTeamData({
       boards: Array.from({ length: MAX_GRID_COUNT + 3 }, () => ({})),
     })
 
-    expect(s.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(s.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     expect(useGrids().contexts).toHaveLength(MAX_GRID_COUNT)
   })
 
@@ -389,7 +389,7 @@ describe('urlStateStore.restoreMultiFromEncodedState', () => {
     const encoded = encodeBoards(grids)
 
     const restored = createStores()
-    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     const fresh = useGrids()
     expect(fresh.contexts[0]!.grid.getTileById(1).characterId).toBe(ALLY_A)
     expect(fresh.contexts[1]!.grid.getTileById(2).characterId).toBeUndefined()
@@ -411,7 +411,7 @@ describe('synergy restore', () => {
 
     const restored = createStores()
     const restoredGrids = useGrids()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
     expect(restoredGrids.synergy).toBe(true)
   })
@@ -445,17 +445,17 @@ describe('synergy restore', () => {
 
     const restored = createStores()
     mockGameData()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreFromEncodedState(encoded).success).toBe(true)
     expect(restored.grid.getTile(3).characterId).toBe(toSynergyId(603))
     expect(restored.grid.getTile(4).characterId).toBe(toPhantimalId(1))
   })
 
   it('drops crafted out-of-band ids instead of misplacing them', () => {
     const restored = createStores()
-    const encoded = encodeMultiGridStateToUrl({
+    const encoded = encodeTeamData({
       boards: [{ c: [[1, toSynergyId(PHRAESTO), Team.ALLY]], y: [[2, 100005, Team.ALLY]] }],
     })
-    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     expect(restored.character.charactersPlaced).toBe(0)
   })
 })

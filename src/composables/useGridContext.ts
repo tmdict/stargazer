@@ -66,9 +66,9 @@ import { artifactCanDraw, artifactTargetArrows, type ArtifactArrow } from '@/lib
 import { artifactSkillKey, SkillManager, unitSkillKey, type SkillRow } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
+import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 // Padding around the drawn band (drawnBounds), as multipliers on hexRadius. In
 // perspective the top covers a portrait standing on the top row with its mode

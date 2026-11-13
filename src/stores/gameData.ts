@@ -8,11 +8,11 @@ import {
   phantimalOwnerId,
   toLocalPhantimalId,
 } from '@/lib/characters/phantimal'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import {
   loadArtifactImages,
   loadCharacterImages,

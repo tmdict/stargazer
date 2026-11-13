@@ -1,11 +1,11 @@
 import { computed, ref, watch } from 'vue'
 
 import { getCharacter } from '@/lib/characters/character'
+import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 // Mobile: the team whose artifact slot a tapped on-grid artifact cell targets, so
 // the seasonal sheet's pick lands on that cell's side instead of the default fill.

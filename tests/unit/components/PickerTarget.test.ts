@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 /* A tapped tile picks the side a tap fills, so the hero picker's grey follows
  * that side rather than the whole board. */

@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import formationData from 'virtual:formation-rules'
 
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
 import { CLASS_ORDER, compareCharacters } from '@/lib/filterOrder'
 import {
   ruleLists,
@@ -20,7 +21,6 @@ import type { HeroFilter } from '@/lib/placement/types'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
 import { curatedHeroName } from '@/utils/skillLabels'

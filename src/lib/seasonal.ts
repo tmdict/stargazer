@@ -16,8 +16,8 @@
  * current-pool content.
  */
 
-import { loadArtifacts, loadPhantimals } from '@/utils/dataLoader'
-import type { BoardState, MultiGridState } from '@/utils/gridStateSerializer'
+import { loadArtifacts, loadPhantimals } from '@/lib/dataLoader'
+import type { BoardState, MultiGridState } from '@/lib/teams/gridStateSerializer'
 
 export const CURRENT_SEASON: number = Math.max(
   0,

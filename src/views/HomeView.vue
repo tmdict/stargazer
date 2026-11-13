@@ -29,16 +29,17 @@ import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { useToast } from '@/composables/useToast'
+import { encodeGridStateToUrl } from '@/lib/teams/codec'
+import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
+import { useBoardRestore } from '@/stores/boardRestore'
 import { useGameDataStore } from '@/stores/gameData'
 import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { useUrlStateStore } from '@/stores/urlState'
-import { serializeGridState } from '@/utils/gridStateSerializer'
-import { encodeGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
+import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const gridStore = useGridStore()
 const grids = useGrids()
@@ -53,7 +54,7 @@ grids.perspective = false
 const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
-const urlStateStore = useUrlStateStore()
+const boardRestore = useBoardRestore()
 const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
 const { success, error } = useToast()
@@ -222,7 +223,7 @@ const arenaPersistence = useArenaPersistence(toFlags)
 const sharedLink = gameDataStore.dataLoaded ? getEncodedStateFromUrl() : null
 let sharedLinkRestored = false
 if (sharedLink) {
-  const result = urlStateStore.restoreFromEncodedState(sharedLink)
+  const result = boardRestore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
     sharedLinkRestored = true
     arenaPick.drop()
@@ -249,7 +250,7 @@ onMounted(() => {
   if (!sharedLinkRestored && gameDataStore.dataLoaded) {
     const saved = arenaPersistence.load()
     if (saved) {
-      const result = urlStateStore.restoreFromEncodedState(saved)
+      const result = boardRestore.restoreFromEncodedState(saved)
       if (result.success && result.displayFlags) {
         applyFlags(result.displayFlags)
         applyTabResets(activeTab.value)

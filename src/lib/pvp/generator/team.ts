@@ -12,11 +12,11 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Grid } from '@/lib/grid'
 import { DEFAULT_MAP_KEY, getMapByKey } from '@/lib/maps'
 import { artifactSurvives, isRetiredSeason } from '@/lib/seasonal'
+import { encodeTeamData } from '@/lib/teams/codec'
+import { serializeMultiGridState, type BoardInput } from '@/lib/teams/gridStateSerializer'
 import { TEAM_MODE_ORDER, TEAM_MODES } from '@/lib/teams/modes'
 import { FULL_GRID } from '@/lib/types/grid'
 import { Team } from '@/lib/types/team'
-import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import type { SlData, SlPlacement, SlUnit } from '../data/types'
 import type { BoardFormation } from './formation'
 import type { SlBoard } from './setType'
@@ -77,5 +77,5 @@ export function slTeamData(
     }
   })
   const mode = TEAM_MODE_ORDER.find((key) => TEAM_MODES[key].boardCount === drawn.length)
-  return encodeMultiGridStateToUrl(serializeMultiGridState(drawn, 0, undefined, mode))
+  return encodeTeamData(serializeMultiGridState(drawn, 0, undefined, mode))
 }

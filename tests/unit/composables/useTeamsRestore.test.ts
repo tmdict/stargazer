@@ -7,19 +7,19 @@ import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { CURRENT_SEASON } from '@/lib/seasonal'
+import {
+  decodeTeamData,
+  encodeGridStateToUrl,
+  encodeMultiGridStateToLinkUrl,
+  encodeTeamData,
+} from '@/lib/teams/codec'
+import { packDisplayFlags, type DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { TEAM_VARIANTS, type TeamModeKey } from '@/lib/teams/modes'
 import { teamVariant } from '@/lib/teams/preview'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
-import { packDisplayFlags, type DisplayFlags } from '@/utils/gridStateSerializer'
-import {
-  decodeMultiGridStateFromUrl,
-  encodeGridStateToUrl,
-  encodeMultiGridStateToLinkUrl,
-  encodeMultiGridStateToUrl,
-} from '@/utils/urlStateManager'
 import { stubLocalStorage, teamsSlotKey } from '../fixtures/storage'
 
 /* The mode-switch regression suite: per-mode slot isolation (one mode's edits
@@ -45,7 +45,7 @@ afterEach(() => {
 const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
   JSON.parse(storage.get(teamsSlotKey(mode))!) as ActiveSlot
 
-const decodeBoards = (encoded: string) => decodeMultiGridStateFromUrl(encoded)!
+const decodeBoards = (encoded: string) => decodeTeamData(encoded)!
 
 const currentMaps = (grids: ReturnType<typeof useGrids>): string[] =>
   grids.contexts.map((ctx) => ctx.currentMap)
@@ -197,7 +197,7 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('5v5'),
       JSON.stringify({
-        data: encodeMultiGridStateToUrl({
+        data: encodeTeamData({
           boards: ['arena1', 'arena3', 'arena1', 'arena1', 'arena1'].map((m) => ({ m })),
           mode: '5v5',
         }),
@@ -214,7 +214,7 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        data: encodeMultiGridStateToUrl({
+        data: encodeTeamData({
           boards: [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
           d: packDisplayFlags({ showSkills: false, teamView: true, inverted: true }),
@@ -236,7 +236,7 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        data: encodeMultiGridStateToUrl({
+        data: encodeTeamData({
           boards: [{ m: 'arena1', s: [[7, 2, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
           season: CURRENT_SEASON - 1,
@@ -256,7 +256,7 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        data: encodeMultiGridStateToUrl({
+        data: encodeTeamData({
           boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
           season: CURRENT_SEASON - 1,
@@ -369,13 +369,13 @@ describe('useTeamsRestore', () => {
 })
 
 const encode3v3Empty = (): string =>
-  encodeMultiGridStateToUrl({
+  encodeTeamData({
     boards: [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }],
     mode: '3v3',
   })
 
 const encode1v1WithUnit = (): string =>
-  encodeMultiGridStateToUrl({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' })
+  encodeTeamData({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' })
 
 describe('useTeamsRestore + saved teams (provenance and canonical compare)', () => {
   it('canonical snapshot ignores viewer state but tracks content', () => {
@@ -404,7 +404,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(restore.activeMode.value).toBe('5v5')
 
     const data = canonicalTeamData(
-      encodeMultiGridStateToUrl({
+      encodeTeamData({
         boards: [{ m: 'arena3', c: [[1, 11, Team.ALLY]] }],
         mode: '1v1',
       }),
@@ -421,7 +421,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     const { restore, grids } = createHarness()
     restore.initialize(null)
     const data = canonicalTeamData(
-      encodeMultiGridStateToUrl({
+      encodeTeamData({
         boards: [{ m: 'arena3', c: [[1, 11, Team.ALLY]] }],
         mode: '1v1',
       }),
@@ -471,7 +471,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     const arena2Tiles = decodeBoards(restore.snapshot()).boards[0]!.t!
     expect(arena2Tiles.length).toBeGreaterThan(0)
 
-    const crafted = encodeMultiGridStateToUrl({ boards: [{ t: arena2Tiles }, {}, {}], mode: '3v3' })
+    const crafted = encodeTeamData({ boards: [{ t: arena2Tiles }, {}, {}], mode: '3v3' })
     const canonical = canonicalTeamData(crafted)!
     expect(decodeBoards(canonical).boards.map((b) => b.m)).toEqual(['arena2', 'arena1', 'arena1'])
     expect(teamVariant(canonical)).toBeNull()
@@ -498,7 +498,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     inverted.value = true
     // The payload carries contrary display flags; applyTeamData restores with
     // adoptFlags=false, so they must be ignored.
-    const data = encodeMultiGridStateToUrl({
+    const data = encodeTeamData({
       boards: [{ m: 'arena1' }],
       mode: '1v1',
       d: packDisplayFlags({ showSkills: true, inverted: false }),

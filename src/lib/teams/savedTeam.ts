@@ -17,12 +17,12 @@ import {
 import { resolveBoardMap } from '@/lib/maps'
 import { sanitizeName } from '@/lib/names'
 import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
+import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
 import {
   BOARD_CONTENT_KEYS,
   type BoardState,
   type MultiGridState,
-} from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+} from '@/lib/teams/gridStateSerializer'
 import { isTeamModeKey, resolveTeamMode, TEAM_MODES, type TeamModeKey } from './modes'
 
 export interface SavedTeam {
@@ -86,7 +86,7 @@ const canonicalArtifacts = (pair: (number | null)[] | undefined): (number | null
  * type chip) and the live boards a record loads into name the same maps.
  * Null = undecodable. */
 export function canonicalTeamData(encoded: string): string | null {
-  const decoded = decodeMultiGridStateFromUrl(encoded)
+  const decoded = decodeTeamData(encoded)
   if (!decoded || decoded.boards.length === 0) return null
   const canonical: MultiGridState = {
     boards: decoded.boards.map((board) => {
@@ -112,14 +112,14 @@ export function canonicalTeamData(encoded: string): string | null {
     // with no provenance) stays absent; JSON.stringify drops the key.
     season: decoded.season,
   }
-  return encodeMultiGridStateToUrl(canonical)
+  return encodeTeamData(canonical)
 }
 
 /* The season a record's retired seasonal content came from, or null when
  * loading it would drop nothing — the load paths' one call for the
  * "Season {n} content removed" notice. */
 export function retiredSeasonOf(encoded: string): number | null {
-  const decoded = decodeMultiGridStateFromUrl(encoded)
+  const decoded = decodeTeamData(encoded)
   return decoded?.season !== undefined && hasRetiredSeasonal(decoded) ? decoded.season : null
 }
 
@@ -132,16 +132,16 @@ export function retiredSeasonOf(encoded: string): number | null {
 export function teamContentKey(encoded: string): string | null {
   const canonical = canonicalTeamData(encoded)
   if (canonical === null) return null
-  const decoded = decodeMultiGridStateFromUrl(canonical)!
+  const decoded = decodeTeamData(canonical)!
   if (decoded.season === undefined || hasSeasonalContent(decoded)) return canonical
   delete decoded.season
-  return encodeMultiGridStateToUrl(decoded)
+  return encodeTeamData(decoded)
 }
 
 /* Whether boards hold work no saved team keeps. */
 export function holdsUnsavedWork(encoded: string, source: SavedTeam | undefined): boolean {
   if (source) return teamContentKey(encoded) !== teamContentKey(source.data)
-  const decoded = decodeMultiGridStateFromUrl(encoded)
+  const decoded = decodeTeamData(encoded)
   return !!decoded?.boards.some((board) => board.c?.length || board.s?.length || board.a?.length)
 }
 
@@ -162,7 +162,7 @@ export function validateSavedTeam(record: unknown): SavedTeam | null {
   if (!isTeamModeKey(mode)) return null
   if (typeof data !== 'string') return null
 
-  const decoded = decodeMultiGridStateFromUrl(data)
+  const decoded = decodeTeamData(data)
   if (!decoded) return null
   if (decoded.boards.length !== TEAM_MODES[mode].boardCount) return null
 

@@ -47,6 +47,7 @@ import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { isPermanentArtifactId } from '@/lib/seasonal'
 import type { SkillRow } from '@/lib/skills/skill'
+import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import {
   DEFAULT_VARIANT,
   matchVariant,
@@ -61,9 +62,8 @@ import {
   type SideLoadUnit,
 } from '@/lib/teams/sideLoad'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
+import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { serializeGridState } from '@/utils/gridStateSerializer'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { useRosters } from './rosters'
 
 type HexSizeMode = 'breakpoint' | 'fixed-medium'

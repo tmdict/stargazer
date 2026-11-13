@@ -55,12 +55,6 @@ export const getStateClass = (state: State): string => getStateFormat(state).css
 
 export const getTileFillColor = (state: State): string => getStateFormat(state).fillColor
 
-export const getTeamFromTileState = (state: State): Team | null => {
-  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
-  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-  return null
-}
-
 // Team colours for SVG drawing, which takes a colour value rather than a CSS
 // token; the same as --color-ally and --color-enemy.
 export const TEAM_COLORS: Record<Team, string> = {

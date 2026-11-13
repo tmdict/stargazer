@@ -6,7 +6,7 @@ import type { BoardState, GridState } from './gridStateSerializer'
 /**
  * Binary link codec: one compact format for every share link — the Arena is
  * simply wire mode 0 with one board. Storage and export files use the JSON
- * encoding instead (urlStateManager); the only binary value at rest is the
+ * encoding instead (codec.ts); the only binary value at rest is the
  * arena autosave, by owner decision.
  *
  * Format (bit-sequential, LSB-first per BitWriter):

@@ -23,13 +23,12 @@ import type { Hex } from '@/lib/hex'
 import { BOARD_SIZE } from '@/lib/layout'
 import { buffAt } from '@/lib/maps'
 import type { CharacterType } from '@/lib/types/character'
-import { State } from '@/lib/types/state'
+import { getTeamFromTileState, State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { isTouchClick } from '@/utils/pointer'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
   // Data props

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
-import type { BoardState, GridState } from '@/utils/gridStateSerializer'
+import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/lib/teams/binaryEncoder'
+import type { BoardState, GridState } from '@/lib/teams/gridStateSerializer'
 
 const FLAGS = 0b10110
 

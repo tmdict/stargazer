@@ -5,20 +5,20 @@ import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { availableState, findMapByTiles, resolveBoardMap } from '@/lib/maps'
-import { Team } from '@/lib/types/team'
+import { decodeGridStateFromUrl, decodeTeamData } from '@/lib/teams/codec'
 import {
   unpackDisplayFlags,
   type BoardState,
   type DisplayFlags,
   type MultiGridState,
-} from '@/utils/gridStateSerializer'
-import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
+} from '@/lib/teams/gridStateSerializer'
+import { Team } from '@/lib/types/team'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
 import { MAX_GRID_COUNT, useGrids } from './grids'
 
-interface UrlRestoreResult {
+interface RestoreResult {
   success: boolean
   // Absent when a multi-board payload carried no `d`, so callers keep the
   // viewer's current flags (canonical saved-team data deliberately has no `d`;
@@ -26,13 +26,13 @@ interface UrlRestoreResult {
   displayFlags?: Required<DisplayFlags>
 }
 
-export const useUrlStateStore = defineStore('urlState', () => {
+export const useBoardRestore = defineStore('boardRestore', () => {
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
   const grids = useGrids()
 
-  const restoreFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
+  const restoreFromEncodedState = (encodedState: string | null): RestoreResult => {
     if (!encodedState) {
       return { success: false }
     }
@@ -206,7 +206,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
   // temporarily making it active so the same per-board apply path is reused.
   // Takes decoded state so both payload formats share it: the JSON wrapper
   // below (slots, saved teams) and ShareView's binary multi links.
-  const restoreMultiFromDecodedState = (multi: MultiGridState): UrlRestoreResult => {
+  const restoreMultiFromDecodedState = (multi: MultiGridState): RestoreResult => {
     try {
       if (multi.boards.length === 0) {
         return { success: false }
@@ -236,11 +236,11 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
-  const restoreMultiFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
+  const restoreMultiFromEncodedState = (encodedState: string | null): RestoreResult => {
     if (!encodedState) {
       return { success: false }
     }
-    const multi = decodeMultiGridStateFromUrl(encodedState)
+    const multi = decodeTeamData(encodedState)
     if (!multi) {
       return { success: false }
     }

@@ -5,7 +5,7 @@ import { compareCharacters } from '@/lib/filterOrder'
 import { ENERGY_KEY, mechanicKeys, totalEnergy } from '@/lib/mechanics'
 import { tagVocabulary, type TagVocabulary } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
-import { loadCharacters } from './dataLoader'
+import { loadCharacters } from '../lib/dataLoader'
 
 let vocabulary: TagVocabulary | null = null
 

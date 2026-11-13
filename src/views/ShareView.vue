@@ -16,14 +16,15 @@ import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoP
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { SITE_ORIGIN } from '@/lib/site'
+import { decodeLinkFromUrl } from '@/lib/teams/codec'
+import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
+import { useBoardRestore } from '@/stores/boardRestore'
 import { useGameDataStore } from '@/stores/gameData'
 import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { useUrlStateStore } from '@/stores/urlState'
-import { unpackDisplayFlags } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import { decodeLinkFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
+import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
 import '@/styles/content.css'
 import '@/styles/modal.css'
@@ -32,7 +33,7 @@ const gridStore = useGridStore()
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
-const urlStateStore = useUrlStateStore()
+const boardRestore = useBoardRestore()
 const { success } = useToast()
 const route = useRoute()
 
@@ -94,8 +95,8 @@ i18nStore.initialize()
 const restoreStateFromUrl = () => {
   if (!linkAtLoad) return false
   const result = isMultiBoard.value
-    ? urlStateStore.restoreMultiFromDecodedState(linkAtLoad)
-    : urlStateStore.restoreFromEncodedState(encodedAtLoad)
+    ? boardRestore.restoreMultiFromDecodedState(linkAtLoad)
+    : boardRestore.restoreFromEncodedState(encodedAtLoad)
   if (!result.success) return false
 
   const flags = unpackDisplayFlags(linkAtLoad.d)

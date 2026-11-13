@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { configTiles } from '@/lib/maps'
 import { decodeSlData, decodeSlFits, encodeSlFits, loadSlData } from '@/lib/pvp/data/codec'
 import type { SlData, SlTeam, SlUnit } from '@/lib/pvp/data/types'
@@ -17,7 +18,6 @@ import { readSlFile } from '@/lib/pvp/model/reader'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
-import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import { fileTeam, wholeFit } from '../fixtures/slSeason'
 
 // The file a deploy ships, as copied in from the external report generator.

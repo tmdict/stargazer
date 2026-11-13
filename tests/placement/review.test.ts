@@ -26,18 +26,18 @@ import {
 } from '@/lib/characters/phantimal'
 import { executePlaceCharacter } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
+import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { availableState, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from '@/lib/placement/reach'
 import { getCharacterSkill, SkillManager } from '@/lib/skills/skill'
+import { decodeTeamData } from '@/lib/teams/codec'
+import type { BoardState } from '@/lib/teams/gridStateSerializer'
 import { FULL_GRID } from '@/lib/types/grid'
 import type { Rule } from '@/lib/types/rule'
 import type { CharmData } from '@/lib/types/skill'
 import { Team } from '@/lib/types/team'
-import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
-import type { BoardState } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 const EXPORT = process.env.PLACEMENT_EXPORT
 const OUT = process.env.PLACEMENT_OUT
@@ -62,7 +62,7 @@ const unitName = (id: number): string => {
     : (heroById.get(unit)?.name ?? `hero ${id}`)
 }
 
-// The urlState restore's order: each main, then its companions onto their
+// The boardRestore restore's order: each main, then its companions onto their
 // saved tiles at once, so a spawned companion never squats on a tile a later
 // main needs.
 function restoreBand(grid: Grid, entries: number[][], toUnitId: (local: number) => number) {
@@ -293,7 +293,7 @@ describe.skipIf(!EXPORT)('placement review', () => {
       teams: { name: string; data: string }[]
     }
     const boards = exported.teams.flatMap((record) =>
-      (decodeMultiGridStateFromUrl(record.data)?.boards ?? []).map((board, i) => {
+      (decodeTeamData(record.data)?.boards ?? []).map((board, i) => {
         const [ally, enemy] = sidesOf(board)
         return { record: record.name, map: i + 1, arena: resolveBoardMap(board), ally, enemy }
       }),

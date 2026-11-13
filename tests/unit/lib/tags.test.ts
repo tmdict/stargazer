@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { loadCharacters } from '@/lib/dataLoader'
 import {
   addModifier,
   chipActive,
@@ -14,7 +15,6 @@ import {
   toTagQuery,
 } from '@/lib/tags'
 import { SLOT_ORDER, type CharacterTags, type TagPick } from '@/lib/types/skill'
-import { loadCharacters } from '@/utils/dataLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { isHeroModifier } from '@/utils/tagData'
 

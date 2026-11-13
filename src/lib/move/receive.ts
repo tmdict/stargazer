@@ -6,16 +6,16 @@
 import type { Pinia } from 'pinia'
 
 import { MAX_ROSTERS, parseRostersImport } from '@/lib/rosters'
+import { decodeGridStateFromUrl, decodeTeamData } from '@/lib/teams/codec'
+import type { GridState } from '@/lib/teams/gridStateSerializer'
 import { MAX_SAVED_TEAMS, TEAM_MODE_ORDER } from '@/lib/teams/modes'
 import { teamContentKey, type SavedTeam } from '@/lib/teams/savedTeam'
 import { parseImport } from '@/lib/teams/transfer'
 import { useRosters } from '@/stores/rosters'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { readFlag, writeFlag } from '@/utils/flags'
-import type { GridState } from '@/utils/gridStateSerializer'
 import { PREFS_KEY, readPrefs } from '@/utils/prefs'
 import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
-import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { HAND_OVER_FAILED, ROSTERS_KEY, TEAMS_KEY, type HandOverResult } from './config'
 import { unpackCode } from './pack'
 
@@ -43,7 +43,7 @@ const teamsSlotInUse = (key: string): boolean => {
   if (stored === null) return false
   try {
     const { data } = JSON.parse(stored) as { data?: unknown }
-    const state = typeof data === 'string' ? decodeMultiGridStateFromUrl(data) : null
+    const state = typeof data === 'string' ? decodeTeamData(data) : null
     return state !== null && state.boards.some(hasUnits)
   } catch {
     return false

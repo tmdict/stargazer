@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_MAP_KEY, findMapByTiles, mapTileRows } from '@/lib/maps'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import {
   DEFAULT_VARIANT,
   isTeamModeKey,
@@ -14,7 +15,6 @@ import {
   variantsForMode,
   type TeamVariantChoice,
 } from '@/lib/teams/modes'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
 
 const boards = (count: number): MultiGridState => ({
   boards: Array.from({ length: count }, () => ({ m: 'arena1' })),

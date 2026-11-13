@@ -3,9 +3,9 @@
  * loads neither the data file, the model nor the chooser. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, TOP_LEVELS } from '@/lib/characters/attributes'
+import { loadCharacters } from '@/lib/dataLoader'
 import { artifactSurvives } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
-import { loadCharacters } from '@/utils/dataLoader'
 import { decodeSlData } from '../data/codec'
 import { readSlFile } from '../model/reader'
 import { chooseSlSet } from './chooser'

@@ -15,7 +15,7 @@
  * (a TEAM_MODES row, a wire id, a slot).
  */
 
-import type { MultiGridState } from '@/utils/gridStateSerializer'
+import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { DEFAULT_MAP_KEY, mapTileRows, MODE_BOARDS, type ModeListKey } from '../maps'
 import { stripRetiredSeasonal } from '../seasonal'
 

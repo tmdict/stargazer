@@ -1,11 +1,11 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { encodeTeamData } from '@/lib/teams/codec'
 import { MAX_SAVED_TEAMS } from '@/lib/teams/modes'
 import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../fixtures/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
@@ -14,15 +14,13 @@ let storage: Map<string, string>
 let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
 const CANONICAL_3V3 = canonicalTeamData(
-  encodeMultiGridStateToUrl({
+  encodeTeamData({
     boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
     mode: '3v3',
   }),
 )!
 
-const CANONICAL_1V1 = canonicalTeamData(
-  encodeMultiGridStateToUrl({ boards: [{ m: 'arena2' }], mode: '1v1' }),
-)!
+const CANONICAL_1V1 = canonicalTeamData(encodeTeamData({ boards: [{ m: 'arena2' }], mode: '1v1' }))!
 
 const record = (id: string, name: string): SavedTeam => ({
   id,
@@ -68,7 +66,7 @@ describe('useTeamLibrary', () => {
 
   it('saveAsNew and update canonicalize data and reject garbage', () => {
     const library = useTeamLibrary()
-    const withViewerState = encodeMultiGridStateToUrl({
+    const withViewerState = encodeTeamData({
       boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
       active: 2,
       d: 127,

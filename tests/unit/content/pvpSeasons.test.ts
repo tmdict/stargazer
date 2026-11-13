@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { PVP_SEASONS } from '@/content/pvp/seasons'
-import { loadCharacters } from '@/utils/dataLoader'
+import { loadCharacters } from '@/lib/dataLoader'
 
 const heroNames = new Set(loadCharacters().map((character) => character.name))
 

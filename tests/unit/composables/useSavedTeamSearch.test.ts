@@ -3,13 +3,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useSavedTeamSearch, type SearchPick } from '@/composables/useSavedTeamSearch'
+import { encodeTeamData } from '@/lib/teams/codec'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import { lineupArtifactKey, lineupHeroKey } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { loadSkillLocale } from '@/utils/skillLocale'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { GUNNAR } from '../fixtures/characters'
 
 /* Runs over the real hero and artifact lists and the en name index. Rolan and
@@ -34,7 +34,7 @@ const team = (name: string, ...boards: Board[]): SavedTeam => {
     id: name,
     name,
     mode,
-    data: encodeMultiGridStateToUrl({
+    data: encodeTeamData({
       boards: boards.map(([ally, enemy = [], artifacts]) => ({
         m: 'arena1',
         c: [...side(ally, Team.ALLY, 1), ...side(enemy, Team.ENEMY, 30)],

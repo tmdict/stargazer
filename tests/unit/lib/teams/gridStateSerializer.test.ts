@@ -6,14 +6,14 @@ import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { CURRENT_SEASON } from '@/lib/seasonal'
-import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
 import {
   BOARD_CONTENT_KEYS,
   serializeGridState,
   serializeMultiGridState,
   unpackDisplayFlags,
-} from '@/utils/gridStateSerializer'
+} from '@/lib/teams/gridStateSerializer'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 function createMockTile(
   hexId: number,
