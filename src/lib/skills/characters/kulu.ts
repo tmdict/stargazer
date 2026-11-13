@@ -1,6 +1,7 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import type { SkillContext, TilePaint } from '../skill'
+import type { TilePaint } from '../skill'
+import { createEffectsSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 
 // Cosmetic "demolition zone": paints the tiles but never changes their state, so
@@ -23,17 +24,12 @@ function zoneTiles(team: Team): TilePaint[] {
   ]
 }
 
-function paintZone({ skillManager, characterId, team }: SkillContext): void {
-  skillManager.paintTiles(characterId, team, zoneTiles(team))
-}
-
-registerSkill({
-  id: 'kulu',
-  characterId: 80,
-  onActivate: paintZone,
-  // Tiles shared by both zones (22/23/24) survive one team's Kulu leaving via the
-  // paint channels' per-color refcounts, so no repaint on update is needed.
-  onDeactivate({ skillManager, characterId, team }: SkillContext): void {
-    skillManager.clearPaintedTiles(characterId, team)
-  },
-})
+// Tiles shared by both zones (22/23/24) survive one team's Kulu leaving through
+// the paint channels' per-color refcounts.
+registerSkill(
+  createEffectsSkill({
+    id: 'kulu',
+    characterId: 80,
+    calculate: ({ team }) => ({ tiles: zoneTiles(team) }),
+  }),
+)

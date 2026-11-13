@@ -1,6 +1,8 @@
+import { getOpposingTeam } from '../../characters/character'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
+import { getSymmetricalHexId } from './symmetry'
 import { calculateDistances, getCandidates, getTeamTargetCandidates } from './targeting'
 
 /**
@@ -255,4 +257,29 @@ export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTarget
       examinedTiles: ranked.map((c) => c.hexId),
     },
   }
+}
+
+// The enemy on the caster's symmetrical tile, else the nearest enemy to that
+// tile by spiral search.
+export function mirrorThenSpiralTarget(context: SkillContext): SkillTargetInfo | null {
+  const { grid, team, hexId } = context
+  const opposingTeam = getOpposingTeam(team)
+
+  const symmetricalHexId = getSymmetricalHexId(grid, hexId)
+  if (!symmetricalHexId) return null
+
+  const symmetricalTile = grid.getTileById(symmetricalHexId)
+  if (symmetricalTile.characterId && symmetricalTile.team === opposingTeam) {
+    return {
+      targetHexId: symmetricalHexId,
+      targetCharacterId: symmetricalTile.characterId,
+      metadata: {
+        symmetricalHexId,
+        isSymmetricalTarget: true,
+        examinedTiles: [symmetricalHexId],
+      },
+    }
+  }
+
+  return spiralSearchFromTile(grid, symmetricalHexId, opposingTeam, team)
 }

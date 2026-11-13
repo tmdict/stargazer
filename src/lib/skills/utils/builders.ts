@@ -37,7 +37,8 @@ import type {
 interface TargetingSkillConfig {
   id: string
   characterId: number
-  color: string
+  /** The arrows' colour. A skill that draws no arrow leaves it out. */
+  color?: string
   /**
    * If set, the factory wraps the calculated target with a single arrow
    * pointing from the caster's hex to the target. Omit for skills that
