@@ -532,23 +532,12 @@ const actionTipText = computed((): string => {
       @close="previewOpen = false"
     />
 
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="storageHintAnchor"
-        :target-element="storageHintAnchor"
-        variant="detailed"
-        max-width="320px"
-      >
-        <template #content>{{ i18n.t('app.storage-hint') }}</template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="actionTip && actionTipAnchor"
-        :target-element="actionTipAnchor"
-        variant="detailed"
-      >
-        <template #content>{{ actionTipText }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="storageHintAnchor" :target-element="storageHintAnchor" max-width="320px">
+      <template #content>{{ i18n.t('app.storage-hint') }}</template>
+    </TooltipPopup>
+    <TooltipPopup v-if="actionTip && actionTipAnchor" :target-element="actionTipAnchor">
+      <template #content>{{ actionTipText }}</template>
+    </TooltipPopup>
   </div>
 </template>
 
@@ -752,15 +741,6 @@ const actionTipText = computed((): string => {
 
 .team-card.loaded {
   border-color: var(--color-primary);
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .preview-btn {

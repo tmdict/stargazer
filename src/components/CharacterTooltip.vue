@@ -51,20 +51,18 @@ const rows = computed(() => [
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup :target-element :variant>
-      <template #content>
-        <!-- Placeholders have no stats; name-only regardless of variant. -->
-        <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">
-          {{ formattedName }}
-          <div v-if="note" class="simple-tooltip-note">{{ note }}</div>
-        </div>
-        <TooltipCard v-else :name="formattedName" :rows :hint>
-          <slot />
-        </TooltipCard>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup :target-element :variant>
+    <template #content>
+      <!-- Placeholders have no stats; name-only regardless of variant. -->
+      <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">
+        {{ formattedName }}
+        <div v-if="note" class="simple-tooltip-note">{{ note }}</div>
+      </div>
+      <TooltipCard v-else :name="formattedName" :rows :hint>
+        <slot />
+      </TooltipCard>
+    </template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

@@ -53,11 +53,9 @@ const handleClick = (): void => {
   >
     <slot />
   </button>
-  <Teleport to="body">
-    <TooltipPopup v-if="tipShown && tipEl" :target-element="tipEl" variant="detailed">
-      <template #content>{{ tip }}</template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup v-if="tipShown && tipEl" :target-element="tipEl">
+    <template #content>{{ tip }}</template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

@@ -1,17 +1,16 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
+import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { dynamicViewportHeight } from '@/utils/viewport'
 
+/** Collapsed (peek) visible height, in px. */
+export const SHEET_PEEK_PX = 56
+/** Expanded visible height, as a fraction of the viewport. */
+export const SHEET_EXPANDED_FRACTION = 0.8
+
 interface Options {
-  /** Collapsed (peek) visible height, in px. */
-  peek: number
-  /** Expanded visible height: a fraction of the viewport (<1) or px (>=1). */
-  expanded: number
-  /** Start expanded (vs. peek) when first mounted on a mobile viewport. */
+  /** Start expanded (vs. peek) when first mounted on a narrow viewport. */
   initialExpanded?: boolean
-  /** Max viewport width treated as mobile. */
-  breakpoint?: number
 }
 
 /**
@@ -23,9 +22,9 @@ interface Options {
  * viewport. `sheetStyle` is `undefined` on desktop so the CSS column layout wins.
  */
 export function useBottomSheet(opts: Options) {
-  const breakpoint = opts.breakpoint ?? TABLET_MAX_WIDTH
-
-  const isMobile = ref(false)
+  // Called before this composable's own onMounted, so `narrow` is read there
+  // already synced.
+  const narrow = useNarrowViewport()
   const expanded = ref(false)
   const dragging = ref(false)
   // True while applying a viewport-driven resize; suppresses the transition so the
@@ -34,21 +33,19 @@ export function useBottomSheet(opts: Options) {
   const dragDelta = ref(0) // px, positive = dragged down
   const viewportH = ref(800)
 
-  const expandedPx = computed(() =>
-    opts.expanded < 1 ? opts.expanded * viewportH.value : opts.expanded,
-  )
+  const expandedPx = computed(() => SHEET_EXPANDED_FRACTION * viewportH.value)
 
   // Live visible height (clamped between peek and expanded), then the translateY
   // that hides everything below it on the expanded-height-tall element.
   const visible = computed(() => {
-    const base = expanded.value ? expandedPx.value : opts.peek
-    return Math.max(opts.peek, Math.min(expandedPx.value, base - dragDelta.value))
+    const base = expanded.value ? expandedPx.value : SHEET_PEEK_PX
+    return Math.max(SHEET_PEEK_PX, Math.min(expandedPx.value, base - dragDelta.value))
   })
   // Height shares the transform's basis so the collapsed peek is exactly `peek`px
   // regardless of how CSS `vh` resolves (vh and the dynamic viewport diverge under mobile
   // toolbars / DevTools emulation, which otherwise hides the collapsed sheet).
   const sheetStyle = computed(() =>
-    isMobile.value
+    narrow.value
       ? {
           height: `${expandedPx.value}px`,
           transform: `translateY(${expandedPx.value - visible.value}px)`,
@@ -68,7 +65,7 @@ export function useBottomSheet(opts: Options) {
   let velocity = 0 // px/ms, positive = downward
 
   function dragStart(clientY: number) {
-    if (!isMobile.value) return
+    if (!narrow.value) return
     dragging.value = true
     startY = clientY
     dragDelta.value = 0
@@ -110,7 +107,7 @@ export function useBottomSheet(opts: Options) {
       // allowTap=false so a small overscroll settles back instead of toggling.
       expanded.value = !expanded.value
     } else {
-      expanded.value = visible.value >= (opts.peek + expandedPx.value) / 2
+      expanded.value = visible.value >= (SHEET_PEEK_PX + expandedPx.value) / 2
     }
     dragDelta.value = 0
   }
@@ -222,13 +219,13 @@ export function useBottomSheet(opts: Options) {
   }
 
   function onContentTouchStart(e: TouchEvent) {
-    if (!isMobile.value) return
+    if (!narrow.value) return
     scrollEl = findScrollable(e.target)
     startedAtTop = !scrollEl || scrollEl.scrollTop <= 0
     anchorY = e.touches[0]!.clientY
   }
   function onContentTouchMove(e: TouchEvent) {
-    if (!isMobile.value) return
+    if (!narrow.value) return
     if (contentDragStep(e.touches[0]!.clientY)) e.preventDefault()
   }
   function onContentTouchEnd() {
@@ -238,7 +235,7 @@ export function useBottomSheet(opts: Options) {
   }
 
   function onContentMouseDown(e: MouseEvent) {
-    if (!isMobile.value) return
+    if (!narrow.value) return
     if (Date.now() - lastTouchEnd < 700) return
     scrollEl = findScrollable(e.target)
     startedAtTop = !scrollEl || scrollEl.scrollTop <= 0
@@ -246,17 +243,24 @@ export function useBottomSheet(opts: Options) {
     runMouseDrag(contentDragStep, () => dragEnd(false))
   }
 
-  function update() {
+  function measure() {
     viewportH.value = dynamicViewportHeight()
-    isMobile.value = window.matchMedia(`(max-width: ${breakpoint}px)`).matches
-    if (!isMobile.value) expanded.value = false
+  }
+
+  // Off a narrow screen there is no sheet to hold open.
+  function settle() {
+    measure()
+    if (!narrow.value) expanded.value = false
   }
 
   // Measure now and again next frame: emulated/mobile viewports can report stale
-  // dimensions without a settled follow-up resize.
+  // dimensions without a settled follow-up resize. During a resize event
+  // `narrow` still holds the width before it (a media query reports its change
+  // after the resize event and before the frame callbacks), so only the
+  // follow-up may collapse the sheet.
   function remeasure() {
-    update()
-    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
+    measure()
+    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(settle)
   }
 
   // A toggle provokes resizes of its own (the scroll unlock, a dismissing
@@ -289,9 +293,10 @@ export function useBottomSheet(opts: Options) {
   }
 
   onMounted(() => {
+    settle()
     remeasure()
     // Reveal opens it (animating up from the CSS peek) only when asked.
-    if (isMobile.value && opts.initialExpanded) expanded.value = true
+    if (narrow.value && opts.initialExpanded) expanded.value = true
     window.addEventListener('resize', onResize)
   })
   onBeforeUnmount(() => {
@@ -300,7 +305,7 @@ export function useBottomSheet(opts: Options) {
   })
 
   return {
-    isMobile,
+    narrow,
     justToggled,
     expanded,
     dragging,

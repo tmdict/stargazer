@@ -138,11 +138,9 @@ const generate = async (): Promise<void> => {
     >
       <IconArrowUpRight :size="14" class="btn-icon" aria-hidden="true" />
     </RouterLink>
-    <Teleport to="body">
-      <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
-        <template #content>{{ tipText }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget">
+      <template #content>{{ tipText }}</template>
+    </TooltipPopup>
   </span>
 </template>
 

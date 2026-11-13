@@ -106,8 +106,6 @@ watch(() => props.position, reposition)
   max-width: 320px;
   max-height: 380px;
   outline: none;
-  /* A column so a consumer's scrollable grid (min-height: 0) gives way to its
-     siblings inside the cap instead of spilling past the panel. */
   display: flex;
   flex-direction: column;
 }

@@ -228,16 +228,13 @@ const hoveredStat = computed(
       </div>
     </div>
 
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="hoveredStatEl && hoveredStat !== 0"
-        :target-element="hoveredStatEl"
-        variant="detailed"
-        max-width="260px"
-      >
-        <template #content>{{ rivalryStatInfo(hoveredStat) }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup
+      v-if="hoveredStatEl && hoveredStat !== 0"
+      :target-element="hoveredStatEl"
+      max-width="260px"
+    >
+      <template #content>{{ rivalryStatInfo(hoveredStat) }}</template>
+    </TooltipPopup>
   </div>
 </template>
 

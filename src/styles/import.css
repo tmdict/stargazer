@@ -1,8 +1,3 @@
-/* The parts both screenshot import modals lay out alike, under the .import
- * class each modal's root takes. The pickers' Remove line renders in a
- * teleported popup outside .import, so it goes by its own class and the
- * popup's palette. */
-
 .import {
   display: flex;
   flex-direction: column;

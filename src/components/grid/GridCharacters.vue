@@ -546,11 +546,9 @@ const liftedMode = computed(() =>
       </div>
     </div>
 
-    <Teleport to="body">
-      <TooltipPopup v-if="hoveredMode && modeAnchor" :target-element="modeAnchor" variant="simple">
-        <template #content>{{ i18n.t(`app.${hoveredMode.name}`) }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="hoveredMode && modeAnchor" :target-element="modeAnchor" variant="simple">
+      <template #content>{{ i18n.t(`app.${hoveredMode.name}`) }}</template>
+    </TooltipPopup>
 
     <CharacterTooltip
       v-if="hoveredEl && hoveredCard?.kind === 'hero'"

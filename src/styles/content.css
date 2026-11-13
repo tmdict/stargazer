@@ -18,13 +18,11 @@
   flex-direction: column;
 }
 
-/* Content styles */
 .content {
   padding: 24px 32px 32px 32px;
   color: var(--reading-text);
 }
 
-/* Text roles */
 .content h1 {
   margin: 0 0 20px 0;
   font-size: var(--reading-title-size);
@@ -65,7 +63,6 @@
   opacity: var(--reading-text-opacity);
 }
 
-/* base.css sizes li directly, so a list's items take the role themselves. */
 .content :is(.reading-secondary, .reading-secondary li) {
   font-size: var(--reading-secondary-size);
 }
@@ -119,8 +116,6 @@
   line-height: 1.6;
 }
 
-/* Skill-text tokens (highlightSkillText / renderRichText output). Unscoped:
-   the search overlay's detail pane renders them outside `.content`. */
 .skill-highlight {
   color: var(--color-accent);
 }
@@ -164,7 +159,6 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .container {
     max-width: 90% !important;

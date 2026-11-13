@@ -53,11 +53,9 @@ const hover = (event: MouseEvent, chip: Chip): void => {
       <UpgradeIcon v-if="chip.icon" class="layer-icon" :kind="chip.icon" />
       <template v-else>{{ i18n.t(chip.name) }}</template>
     </button>
-    <Teleport to="body">
-      <TooltipPopup v-if="tip && tipEl" :target-element="tipEl" variant="detailed">
-        <template #content>{{ tip }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tip && tipEl" :target-element="tipEl">
+      <template #content>{{ tip }}</template>
+    </TooltipPopup>
   </span>
 </template>
 

@@ -36,8 +36,6 @@ const { toasts, remove } = useToast()
   pointer-events: auto;
 }
 
-/* The leaving toast goes absolute so the stack can close the gap while it
-   animates out. */
 .toast-enter-active,
 .toast-leave-active,
 .toast-move {

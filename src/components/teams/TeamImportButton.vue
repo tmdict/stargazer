@@ -64,11 +64,9 @@ const handleImport = (plan: TeamImportPlan, name: string): void => {
     @close="open = false"
     @import-match="handleImport"
   />
-  <Teleport to="body">
-    <TooltipPopup v-if="showTooltip && tipTarget" :target-element="tipTarget" variant="detailed">
-      <template #content>{{ i18n.t('app.import-title') }}</template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup v-if="showTooltip && tipTarget" :target-element="tipTarget">
+    <template #content>{{ i18n.t('app.import-title') }}</template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

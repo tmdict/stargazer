@@ -66,7 +66,7 @@ function onKeydown(e: KeyboardEvent) {
     >
       <IconMinus class="sign" />
     </button>
-    <span class="value" aria-live="polite">
+    <span class="value" :class="{ 'visually-hidden': compact }" aria-live="polite">
       <span>
         <slot>{{ model }}</slot>
       </span>
@@ -201,8 +201,6 @@ function onKeydown(e: KeyboardEvent) {
   padding: var(--chip-dark-padding-block) 2px;
 }
 
-/* ---- compact: the buttons alone ---- */
-
 .compact {
   min-height: var(--chip-height);
   border-width: var(--chip-border);
@@ -223,16 +221,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 .compact .value {
-  position: absolute;
-  width: 1px;
-  height: 1px;
   min-width: 0;
   padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
-
-/* ---- joined: the last part of a pill ---- */
 
 .joins-left {
   border-top-left-radius: 0;

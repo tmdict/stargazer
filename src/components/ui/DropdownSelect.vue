@@ -554,8 +554,6 @@ const pressSegment = (): void => {
   z-index: var(--z-dropdown);
 }
 
-/* Placed by useFloatingPanel. The in-place min width would be the viewport's
-   on <body>. */
 .list.floating {
   position: fixed;
   min-width: 0;
@@ -564,8 +562,6 @@ const pressSegment = (): void => {
 .list.custom {
   max-width: calc(100vw - 2 * var(--spacing-sm));
 }
-
-/* ---- pill ---- */
 
 .pill {
   font-size: var(--control-font-size);
@@ -606,8 +602,6 @@ const pressSegment = (): void => {
   padding-right: 36px;
 }
 
-/* ---- split: a segment on the end of a large pill ---- */
-
 .split {
   --dropdown-segment-reach: calc(var(--pill-segment-width) + var(--pill-large-border));
 }
@@ -633,8 +627,6 @@ const pressSegment = (): void => {
   transition: all var(--transition-fast);
 }
 
-/* A press replaces the sign. As the click's target it would be off the page
-   before the click reaches the host, which could not tell a button was hit. */
 .segment > * {
   pointer-events: none;
 }
@@ -661,8 +653,6 @@ const pressSegment = (): void => {
   right: calc(var(--dropdown-segment-reach) + 8px);
 }
 
-/* ---- tab ---- */
-
 .tab {
   font-size: var(--tab-font-size);
   letter-spacing: 0.05em;
@@ -688,8 +678,6 @@ const pressSegment = (): void => {
 .tab .item {
   padding-block: var(--spacing-md);
 }
-
-/* ---- dark ---- */
 
 .dark {
   font-size: var(--field-dark-font-size);
@@ -752,13 +740,10 @@ const pressSegment = (): void => {
   color: #fff;
 }
 
-/* ---- icon ---- */
-
 .icon {
   font-size: var(--control-font-size);
 }
 
-/* As a block, the root gains a text line's descent under the icon. */
 .dropdown.icon {
   display: inline-flex;
 }
@@ -779,8 +764,6 @@ const pressSegment = (): void => {
   right: 0;
   left: auto;
 }
-
-/* ---- nav ---- */
 
 .nav {
   font-size: var(--control-font-size);

@@ -225,16 +225,9 @@ const {
       </div>
     </Teleport>
 
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="unsavedTipAnchor"
-        :target-element="unsavedTipAnchor"
-        variant="detailed"
-        max-width="260px"
-      >
-        <template #content>{{ titleStatus }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="unsavedTipAnchor" :target-element="unsavedTipAnchor" max-width="260px">
+      <template #content>{{ titleStatus }}</template>
+    </TooltipPopup>
   </div>
 </template>
 

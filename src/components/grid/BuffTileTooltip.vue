@@ -13,13 +13,11 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup :target-element variant="detailed">
-      <template #content>
-        <TooltipCard :name="i18n.t('app.buff-tile')" :hint="i18n.t('app.turn-off-buff-tiles')">
-          <BuffTileText :buff />
-        </TooltipCard>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup :target-element>
+    <template #content>
+      <TooltipCard :name="i18n.t('app.buff-tile')" :hint="i18n.t('app.turn-off-buff-tiles')">
+        <BuffTileText :buff />
+      </TooltipCard>
+    </template>
+  </TooltipPopup>
 </template>

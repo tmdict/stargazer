@@ -2,7 +2,6 @@
 [data-theme='light'] {
   color-scheme: light;
 
-  /* Brand Colors */
   --color-primary: #36958e;
   --color-primary-hover: #2a7a73;
   --color-danger: #c05b4d;
@@ -19,20 +18,17 @@
   --color-accent-active: #3a8a83;
   --color-accent-text: #cdeeea;
 
-  /* Top bar pills */
   --nav-pill-font-size: 0.85rem;
   --nav-pill-padding-block: 4px;
   --nav-pill-radius: 10px;
   --nav-pill-bg: rgba(255, 255, 255, 0.1);
   --nav-pill-bg-hover: rgba(255, 255, 255, 0.18);
 
-  /* Progression ramp */
   --color-tier-1: #b995e2;
   --color-tier-2: #dd9c60;
   --color-tier-3: #dd7a6c;
   --color-tier-4: #b3c9e2;
 
-  /* Hero upgrade pills, read by pillFill (upgradeStats.ts). */
   --upgrade-pill-gray: #cfc8bb;
   --upgrade-pill-gray-text: #4a463d;
   --upgrade-pill-paragon-1: #d6e1f0;
@@ -45,16 +41,13 @@
   --upgrade-pill-refinement-max: #ce756b;
   --upgrade-pill-rim: 0 0 0 1px rgba(255, 255, 255, 0.9);
 
-  /* Upgrade dock */
   --dock-chip-fill: rgba(0, 0, 0, 0.09);
   --dock-chip-fill-hover: rgba(0, 0, 0, 0.14);
   --dock-scale: 1;
 
-  /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
 
-  /* Boards */
   --tile-fill-default: #f0f0f0;
   --tile-fill-ally: #fff;
   --tile-fill-enemy: #ffe8e8;
@@ -86,7 +79,6 @@
   --unit-disc-phantimal: #b0b6bb;
   --unit-ring: #fff;
 
-  /* Skill effects */
   --skill-red: #e57373;
   --skill-crimson: #c83232;
   --skill-rust: #cd7169;
@@ -105,7 +97,6 @@
   --skill-edge: #fff;
   --skill-line-opacity: 0.8;
 
-  /* Boards in BoardThumbnail's crisp look */
   --tile-crisp-fill-void: rgba(255, 255, 255, 0.08);
   --tile-crisp-fill-ally: color-mix(in srgb, var(--color-ally) 35%, transparent);
   --tile-crisp-fill-enemy: color-mix(in srgb, var(--color-enemy) 35%, transparent);
@@ -116,7 +107,6 @@
   --tile-bevel: rgba(0, 0, 0, 0.5);
   --tile-number: #fff;
 
-  /* Boards in BoardThumbnail's card look */
   --tile-card-fill-void: rgba(255, 255, 255, 0.08);
   --tile-card-fill-ally: color-mix(in srgb, var(--color-ally) 35%, transparent);
   --tile-card-fill-enemy: color-mix(in srgb, var(--color-enemy) 35%, transparent);
@@ -124,9 +114,6 @@
   --tile-card-fill-breakable: rgba(128, 128, 128, 0.28);
   --tile-card-stroke-void: var(--tile-stroke);
 
-  /* Screenshot imports: their dark modal's text, surfaces and control
-     height, the review states, and the game's result colours (orange ally,
-     blue enemy). */
   --import-text: #fff;
   --import-text-dim: rgba(255, 255, 255, 0.65);
   --import-label: rgba(255, 255, 255, 0.55);
@@ -146,7 +133,6 @@
   --import-matchup-right: #c8474d;
   --import-roster-hands: #d99a3a;
 
-  /* Status colors */
   --color-success: #36958e;
   --color-warning: #f9a825;
   --color-warning-bg: #fff8e1;
@@ -154,7 +140,6 @@
   --color-info-bg: #f0f8ff;
   --color-info-text: #2c5aa0;
 
-  /* Background Colors */
   --color-bg-page: #20232a;
   --color-bg-primary: #f7f2ec;
   --color-bg-secondary: #ebe6db;
@@ -164,23 +149,18 @@
   --color-bg-inset: rgba(0, 0, 0, 0.05);
   --color-bg-inset-hover: rgba(0, 0, 0, 0.1);
 
-  /* Border Colors */
   --color-border-primary: #d4cfc0;
   --color-border-light: #ddd;
 
-  /* Text Colors */
   --color-text-primary: #333;
   --color-text-secondary: #666;
   --color-text-muted: #484848;
 
-  /* The far end from a panel's colour, mixed into translucent tints and lines on it */
   --color-contrast: #000;
 
-  /* Picker "already placed on the board" state */
   --placed-filter: grayscale(1);
   --placed-overlay: rgba(0, 0, 0, 0.12);
 
-  /* Border Radius */
   --radius-small: 4px;
   --radius-medium: 6px;
   --radius-large: 8px;
@@ -190,7 +170,6 @@
   --panel-edge: transparent;
   --panel-dark-edge: rgba(255, 255, 255, 0.1);
 
-  /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 0.75rem;
@@ -203,7 +182,6 @@
   --font-ui: sans-serif;
   --font-content: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 
-  /* Content text */
   --reading-title-size: 24px;
   --reading-heading-size: 18px;
   --reading-subheading-size: 16px;
@@ -236,10 +214,6 @@
   --toggle-chip-caret-size-tablet: 0.6rem;
   --toggle-chip-caret-gap: 2px;
 
-  /* iOS zooms the page when a text field under 16px gains focus, and the zoom
-     outlives the field. A field sets `font-size: max(<its size>,
-     var(--field-min-font-size))`, which is 1rem on touch screens. The 0px
-     keeps its unit: max() rejects a bare 0. */
   --field-min-font-size: 0px;
 
   --field-dark-font-size: 12px;
@@ -248,18 +222,15 @@
   --field-dark-radius: var(--radius-medium);
   --field-dark-background: rgba(255, 255, 255, 0.08);
 
-  /* Help marks */
   --help-mark-opacity: 0.55;
   --help-target-fill: #e3f2f0;
 
-  /* Large pills */
   --pill-large-height: 36px;
   --pill-large-border: 2px;
   --pill-large-padding: 14px;
   --pill-segment-width: 34px;
   --pill-segment-font-size: 1.15rem;
 
-  /* Filter chips */
   --chip-border: 1.5px;
   --chip-count-gap: 5px;
   --chip-count-opacity: 0.6;
@@ -276,7 +247,6 @@
       (var(--chip-padding-block) + var(--chip-border))
   );
 
-  /* Dropdowns */
   --dropdown-large-width: 12.5rem;
   --dropdown-list-padding: var(--spacing-sm);
   --dropdown-row-radius: var(--radius-small);
@@ -308,18 +278,14 @@
   --tile-targeted-fill: rgba(247, 216, 124, 0.35);
   --invalid-drop-glow: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
 
-  /* Transitions */
   --transition-fast: 0.2s ease;
-  --transition-medium: 0.3s ease;
   --transition-perspective: 0.3s ease-out;
 
-  /* Shadows */
   --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.22);
   --shadow-float: 0 1px 3px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
   --confirm-armed-ring: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
 
-  /* Z-index scale */
   --z-arrows: 15;
   --z-board-controls: calc(var(--z-arrows) + 1);
   --z-dropdown: 9999;

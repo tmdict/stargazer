@@ -128,8 +128,6 @@ onUnmounted(() => {
   width: min(420px, calc(100vw - 32px));
   z-index: 9998;
   background: rgba(20, 20, 20, 0.78);
-  /* No manual -webkit- prefix: the build auto-prefixes, and a hand-written
-     duplicate makes the minifier drop the standard property. */
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-large);

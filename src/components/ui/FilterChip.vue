@@ -112,8 +112,6 @@ defineProps<{
   border-color: var(--chip-dark-border-color);
 }
 
-/* ---- joined: one part of a pill ---- */
-
 .joined,
 .joined:disabled:hover {
   border-color: var(--color-primary);

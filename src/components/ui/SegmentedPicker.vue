@@ -47,11 +47,9 @@ const { anchor, payload: tip, onMouseEnter, onMouseLeave } = useHoverTooltip<str
     >
       <slot :segment>{{ segment.label }}</slot>
     </button>
-    <Teleport to="body">
-      <TooltipPopup v-if="tip && anchor" :target-element="anchor" variant="detailed">
-        <template #content>{{ tip }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tip && anchor" :target-element="anchor">
+      <template #content>{{ tip }}</template>
+    </TooltipPopup>
   </div>
 </template>
 

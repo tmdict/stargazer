@@ -79,11 +79,9 @@ const {
     class="file-input"
     @change="handleFileChosen"
   />
-  <Teleport to="body">
-    <TooltipPopup v-if="tipKey && tipEl" :target-element="tipEl" variant="detailed">
-      <template #content>{{ i18n.t(tipKey) }}</template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup v-if="tipKey && tipEl" :target-element="tipEl">
+    <template #content>{{ i18n.t(tipKey) }}</template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

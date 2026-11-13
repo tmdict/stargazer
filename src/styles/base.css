@@ -57,8 +57,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Per-language typography */
-
 [lang]:lang(ko) {
   word-break: keep-all;
 }
@@ -67,14 +65,9 @@ body {
   word-break: normal;
 }
 
-/* Apple SD Gothic Neo, the Mac's Korean font, sets its letters above the
-   middle of its line box, so the line is measured from a Latin font named
-   first. */
 body:lang(ko) {
   --font-ui: 'Helvetica Neue', sans-serif;
 }
-
-/* Common layout styles */
 
 #app {
   display: flex;
@@ -207,11 +200,19 @@ main {
   font-family: var(--font-content);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .greyed-out {
   filter: var(--placed-filter);
 }
 
-/* The overlay covers the nearest positioned ancestor, so a host sets its own position. */
 .greyed-out::after {
   content: '';
   position: absolute;

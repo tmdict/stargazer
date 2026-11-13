@@ -388,8 +388,6 @@ const panelShift = usePanelClamp(
   margin: 0;
 }
 
-/* The base panel's min-width: max-content would beat max-width and defeat the
-   wrap, running the tray off the phone screen. */
 .panel.tray {
   left: auto;
   right: 0;

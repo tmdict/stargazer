@@ -148,8 +148,6 @@ const onEsc = (event: KeyboardEvent): void => {
   gap: var(--spacing-sm);
 }
 
-/* Not .control-btn, so the control bar's mobile icon-only collapse never
-   applies inside the popover. */
 .popover-btn {
   flex: 1;
   display: inline-flex;

@@ -135,11 +135,9 @@ const tipText = computed((): string => {
         <span class="btn-text">{{ i18n.t('app.save-as-new') }}</span>
       </button>
     </NamePopover>
-    <Teleport to="body">
-      <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
-        <template #content>{{ tipText }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget">
+      <template #content>{{ tipText }}</template>
+    </TooltipPopup>
   </div>
 </template>
 

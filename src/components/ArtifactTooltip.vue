@@ -32,14 +32,12 @@ const rows = computed(() => [
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup :target-element :variant>
-      <template #content>
-        <div v-if="variant === 'simple'" class="simple-tooltip">{{ formattedName }}</div>
-        <TooltipCard v-else :name="formattedName" :rows :hint />
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup :target-element :variant>
+    <template #content>
+      <div v-if="variant === 'simple'" class="simple-tooltip">{{ formattedName }}</div>
+      <TooltipCard v-else :name="formattedName" :rows :hint />
+    </template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

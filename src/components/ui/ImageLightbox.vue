@@ -81,8 +81,6 @@ onBeforeUnmount(() => {
   animation: lightbox-in 0.15s ease;
 }
 
-/* margin: auto rather than centred alignment so a 1:1 image larger than the
-   viewport scrolls to its edges instead of clipping its top and left. */
 .lightbox-image {
   display: block;
   margin: auto;

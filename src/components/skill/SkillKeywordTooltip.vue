@@ -89,13 +89,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Teleport v-if="anchor && tip" to="body">
-    <TooltipPopup :target-element="anchor" variant="detailed" max-width="320px">
-      <template #content>
-        <div class="keyword-tip" :lang>{{ tip }}</div>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup v-if="anchor && tip" :target-element="anchor" max-width="320px">
+    <template #content>
+      <div class="keyword-tip" :lang>{{ tip }}</div>
+    </template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

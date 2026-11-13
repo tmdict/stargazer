@@ -275,11 +275,9 @@ const tipText = computed((): string =>
       </div>
     </div>
 
-    <Teleport to="body">
-      <TooltipPopup v-if="tip && tipAnchor" :target-element="tipAnchor" variant="detailed">
-        <template #content>{{ tipText }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tip && tipAnchor" :target-element="tipAnchor">
+      <template #content>{{ tipText }}</template>
+    </TooltipPopup>
   </span>
 </template>
 

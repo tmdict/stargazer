@@ -21,8 +21,6 @@ defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
   line-height: 1;
 }
 
-/* Digits have no descenders; center them inside a stable line box so font
-   metrics don't change the chip's height or alignment. */
 .upgrade-level-label > span {
   text-box: trim-both cap alphabetic;
 }

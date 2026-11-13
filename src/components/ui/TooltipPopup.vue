@@ -6,8 +6,11 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { clampX } from '@/utils/viewport'
 
+defineOptions({ inheritAttrs: false })
+
 const {
   targetElement,
+  variant = 'detailed',
   offset = 10,
   maxWidth = '300px',
   clearOf,
@@ -17,7 +20,7 @@ const {
   // a box worked out on each read anchor as well as HTML ones. Needed unless
   // `inline`.
   targetElement?: Pick<Element, 'getBoundingClientRect'>
-  variant: 'simple' | 'detailed'
+  variant?: 'simple' | 'detailed'
   offset?: number
   maxWidth?: string
   // A box a tooltip above its trigger stays clear of, like the window's top.
@@ -83,13 +86,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    ref="tooltipRef"
-    :class="['tooltip', `tooltip-${variant}`, { 'tooltip-inline': inline }]"
-    :style="inline ? { maxWidth } : { left: `${position.x}px`, top: `${position.y}px`, maxWidth }"
-  >
-    <slot name="content" />
-  </div>
+  <Teleport to="body" :disabled="inline">
+    <div
+      ref="tooltipRef"
+      v-bind="$attrs"
+      :class="['tooltip', `tooltip-${variant}`, { 'tooltip-inline': inline }]"
+      :style="inline ? { maxWidth } : { left: `${position.x}px`, top: `${position.y}px`, maxWidth }"
+    >
+      <slot name="content" />
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -115,7 +121,6 @@ onUnmounted(() => {
   z-index: auto;
 }
 
-/* Undoes base.css element colours; :where keeps it below callers' classes. */
 :where(.tooltip) :deep(*) {
   color: inherit;
 }

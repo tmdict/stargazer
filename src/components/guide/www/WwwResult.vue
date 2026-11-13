@@ -372,15 +372,13 @@ const warningText = (warning: WwwWarning): string => {
       </div>
     </div>
 
-    <Teleport v-if="warnAnchor" to="body">
-      <TooltipPopup :target-element="warnAnchor" variant="detailed" max-width="290px">
-        <template #content>
-          <span v-for="(warning, i) in panel.warnings" :key="i" class="www-warning">{{
-            warningText(warning)
-          }}</span>
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="warnAnchor" :target-element="warnAnchor" max-width="290px">
+      <template #content>
+        <span v-for="(warning, i) in panel.warnings" :key="i" class="www-warning">{{
+          warningText(warning)
+        }}</span>
+      </template>
+    </TooltipPopup>
   </section>
 </template>
 

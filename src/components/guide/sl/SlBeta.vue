@@ -28,11 +28,9 @@ const { anchor, hoverOpen, hoverClose, toggle } = useInfoTip()
   >
     BETA
   </button>
-  <Teleport v-if="anchor" to="body">
-    <TooltipPopup :target-element="anchor" variant="detailed" max-width="290px">
-      <template #content>{{ i18n.t('app.sl-beta-tip') }}</template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup v-if="anchor" :target-element="anchor" max-width="290px">
+    <template #content>{{ i18n.t('app.sl-beta-tip') }}</template>
+  </TooltipPopup>
 </template>
 
 <style scoped>

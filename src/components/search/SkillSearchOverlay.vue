@@ -577,7 +577,9 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
             <span><kbd>esc</kbd> {{ i18n.t('app.search-close') }}</span>
           </div>
 
-          <span class="sr-only" aria-live="polite">{{ queryActive ? countsText : '' }}</span>
+          <span class="visually-hidden" aria-live="polite">{{
+            queryActive ? countsText : ''
+          }}</span>
         </div>
       </div>
     </Transition>
@@ -916,14 +918,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border-radius: 4px;
   margin-right: 4px;
   color: #9aa0a8;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 
 .sso-enter-active {

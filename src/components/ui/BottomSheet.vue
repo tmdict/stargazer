@@ -1,25 +1,19 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 
-import { useBottomSheet } from '@/composables/useBottomSheet'
+import {
+  SHEET_EXPANDED_FRACTION,
+  SHEET_PEEK_PX,
+  useBottomSheet,
+} from '@/composables/useBottomSheet'
 import { closeDropdowns } from '@/composables/useDropdown'
 import { useScrollLock } from '@/composables/useScrollLock'
 
-// Shared side panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
-// guide (`GuideView`) pages: a card column on desktop, a drag-to-resize
-// pull-up sheet on mobile.
+// Shared side panel: a card column on desktop, a drag-to-resize pull-up sheet
+// on mobile.
 // The slot holds the page's content (tabs / hero list); its own fill + scroll
 // stays in the page since each content component scrolls differently.
-const {
-  peek = 56,
-  expandedFraction = 0.8,
-  initialExpanded = false,
-  desktopRail = true,
-} = defineProps<{
-  /** Collapsed (peek) visible height on mobile, in px. */
-  peek?: number
-  /** Expanded visible height as a fraction of the viewport. */
-  expandedFraction?: number
+const { initialExpanded = false, desktopRail = true } = defineProps<{
   /** Start expanded (vs. peeked) on first mobile mount. */
   initialExpanded?: boolean
   /**
@@ -38,7 +32,7 @@ const emit = defineEmits<{ dismiss: [] }>()
 
 const {
   expanded: sheetExpanded,
-  isMobile,
+  narrow,
   justToggled,
   dragging,
   snapping,
@@ -51,16 +45,15 @@ const {
   onContentTouchMove,
   onContentTouchEnd,
   onContentMouseDown,
-} = useBottomSheet({ peek, expanded: expandedFraction, initialExpanded })
+} = useBottomSheet({ initialExpanded })
 
-// CSS vars so the pre-mount CSS fallback derives from the same props the
-// composable uses (single source of truth; SSR-safe). The composable overrides
-// height/transform inline once mounted. Mirrors its fraction(<1)/px(>=1) units.
-const sheetVars = computed(() => ({
-  '--sheet-peek': `${peek}px`,
-  '--sheet-expanded':
-    expandedFraction < 1 ? `${expandedFraction * 100}vh` : `${expandedFraction}px`,
-}))
+// CSS vars so the pre-mount CSS fallback derives from the same sizes the
+// composable uses (SSR-safe). The composable overrides height/transform inline
+// once mounted.
+const sheetVars = {
+  '--sheet-peek': `${SHEET_PEEK_PX}px`,
+  '--sheet-expanded': `${SHEET_EXPANDED_FRACTION * 100}vh`,
+}
 
 watch(sheetExpanded, (v) => (expanded.value = v))
 watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
@@ -68,13 +61,13 @@ watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
 // A collapsing sheet carries its dropdowns' triggers off screen, and the tap
 // or drag that collapsed it is no click outside them.
 watch(sheetExpanded, (open) => {
-  if (!open && isMobile.value) closeDropdowns()
+  if (!open && narrow.value) closeDropdowns()
 })
 
 // Lock the page behind while the sheet is expanded on mobile, so dragging the
 // scrim (or anywhere off the sheet) can't scroll the page underneath. No-op on
 // desktop, where the sheet is a static column.
-useScrollLock(computed(() => isMobile.value && expanded.value))
+useScrollLock(computed(() => narrow.value && expanded.value))
 
 // The release that expanded the sheet can land its synthesized click on the
 // scrim before the glide reaches the finger, dismissing the sheet it just
@@ -88,7 +81,7 @@ const onScrimClick = () => {
 // Imperative open for "tap the empty content to reveal the panel": a no-op on
 // desktop, where the panel column is always visible (there's no sheet).
 const expand = () => {
-  if (isMobile.value) sheetExpanded.value = true
+  if (narrow.value) sheetExpanded.value = true
 }
 defineExpose({ expand })
 
@@ -102,7 +95,7 @@ defineExpose({ expand })
 // search trigger, a hero) or, after a collapse, re-expand the sheet through
 // the peek branch — so the justToggled branch swallows it.
 const onSheetClickCapture = (e: MouseEvent) => {
-  if (!isMobile.value) return
+  if (!narrow.value) return
   if (justToggled()) {
     e.stopPropagation()
     e.preventDefault()
@@ -116,7 +109,7 @@ const onSheetClickCapture = (e: MouseEvent) => {
 </script>
 
 <template>
-  <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
+  <div v-if="expanded && narrow" class="sheet-scrim" @click="onScrimClick" />
   <div
     class="bottom-sheet"
     :class="{
@@ -155,8 +148,6 @@ const onSheetClickCapture = (e: MouseEvent) => {
 <style scoped>
 .bottom-sheet {
   width: 100%;
-  /* The inset vars are the card's padding; TabView reads them to bleed its
-     strip to the card edge. */
   --tabview-inset-y: 2em;
   --tabview-inset-x: var(--content-padding-x);
   padding: var(--tabview-inset-y) var(--tabview-inset-x);
@@ -200,7 +191,6 @@ const onSheetClickCapture = (e: MouseEvent) => {
   }
 }
 
-/* 768px mirrors TABLET_MAX_WIDTH, the breakpoint useBottomSheet uses. */
 @media (max-width: 768px) {
   .bottom-sheet {
     position: fixed;
@@ -217,18 +207,12 @@ const onSheetClickCapture = (e: MouseEvent) => {
     z-index: 800;
     overflow: hidden;
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
-    /* The duration must stay in sync with useBottomSheet's TRANSITION_MS. */
     transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   }
-  /* A resize (mobile toolbar show/hide) must reposition the sheet instantly, or
-     the collapsed peek jiggles as height (layout) and transform (compositor)
-     animate out of sync. See useBottomSheet's onResize. */
   .bottom-sheet.is-dragging,
   .bottom-sheet.is-snapping {
     transition: none;
   }
-  /* iOS ignores overscroll-behavior on the non-scrollable peek, so without this
-     a swipe there scrolls the page instead of the sheet. */
   .bottom-sheet.is-collapsed {
     touch-action: none;
   }

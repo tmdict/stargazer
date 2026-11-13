@@ -1,4 +1,3 @@
-/* Overlay styles */
 .overlay {
   position: fixed;
   top: 0;
@@ -25,8 +24,6 @@
   outline: none;
 }
 
-/* `.container` uses `margin: auto`, which in a flex parent overrides
-   `align-items`, so the vertical autos are zeroed as well. */
 .overlay.is-top-anchored {
   align-items: flex-start;
 }
@@ -54,7 +51,6 @@
   z-index: 1;
 }
 
-/* Button styles */
 .button,
 .glass-button {
   background: rgba(255, 255, 255, 0.05);
@@ -84,7 +80,6 @@
   transform: scale(0.95);
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .overlay {
     padding: 20px;

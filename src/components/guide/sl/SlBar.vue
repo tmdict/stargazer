@@ -145,11 +145,9 @@ const save = (): void => {
         i18n.t(busy ? 'app.sl-generating' : waiting ? 'app.sl-getting-ready' : 'app.sl-generate')
       }}
     </button>
-    <Teleport to="body">
-      <TooltipPopup v-if="tipShown && tipEl" :target-element="tipEl" variant="detailed">
-        <template #content>{{ i18n.t('app.sl-save-roster-tip') }}</template>
-      </TooltipPopup>
-    </Teleport>
+    <TooltipPopup v-if="tipShown && tipEl" :target-element="tipEl">
+      <template #content>{{ i18n.t('app.sl-save-roster-tip') }}</template>
+    </TooltipPopup>
   </div>
 </template>
 

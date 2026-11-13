@@ -1,6 +1,3 @@
-/* Buttons in popovers and cards must not use this class, or the mobile
-   collapse would hide their text. */
-
 .control-btn,
 .solid-btn {
   border: 2px solid var(--color-primary);

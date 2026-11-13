@@ -35,13 +35,11 @@ const rows = computed(() => [
 </script>
 
 <template>
-  <Teleport to="body">
-    <TooltipPopup :target-element variant="detailed">
-      <template #content>
-        <TooltipCard :name :rows :hint>
-          <slot />
-        </TooltipCard>
-      </template>
-    </TooltipPopup>
-  </Teleport>
+  <TooltipPopup :target-element>
+    <template #content>
+      <TooltipCard :name :rows :hint>
+        <slot />
+      </TooltipCard>
+    </template>
+  </TooltipPopup>
 </template>

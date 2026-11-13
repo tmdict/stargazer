@@ -71,8 +71,6 @@ if (import.meta.env.DEV) {
 
 <style scoped>
 .tab-view {
-  /* Negative margin = the surface's own padding (via --tabview-inset-*), so the
-     strip bleeds to the surface edge. */
   margin: calc(-1 * var(--tabview-inset-y, 0px)) calc(-1 * var(--tabview-inset-x, 0px));
   display: flex;
   flex-direction: column;
