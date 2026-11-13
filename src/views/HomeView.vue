@@ -35,10 +35,11 @@ import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
 import { useBoardRestore } from '@/stores/boardRestore'
 import { useGameDataStore } from '@/stores/gameData'
-import { isNarrowBreakpoint, useGridStore } from '@/stores/grid'
+import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
+import { isNarrowBreakpoint } from '@/utils/breakpoints'
 import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const gridStore = useGridStore()

@@ -13,3 +13,9 @@ export const MOBILE_MAX_WIDTH = 480
 export const TABLET_MAX_WIDTH = 768
 export const SPLIT_MIN_WIDTH = 1220
 export const LAPTOP_MAX_WIDTH = 1599
+
+export type Breakpoint = 'mobile' | 'tablet' | 'laptop' | 'desktop'
+
+// The tiers where the side panel is a bottom sheet.
+export const isNarrowBreakpoint = (breakpoint: Breakpoint): boolean =>
+  breakpoint === 'mobile' || breakpoint === 'tablet'

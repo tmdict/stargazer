@@ -40,7 +40,7 @@ A tile (`GridTile`) has its `characterId` and `team` fields from the moment it i
 
 ## Boards
 
-`createGridContext` (`src/composables/useGridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size and the display flags come from `useGrids`, because every board renders at one size with one set of flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
+`createGridContext` (`src/stores/gridContext.ts`) builds a board. Its computeds and phantimal watcher run in a detached effect scope, and `dispose()` stops it so a rebuilt board leaks no watchers. Hex size and the display flags come from `useGrids`, because every board renders at one size with one set of flags. `switchMap` assigns a fresh `Grid` over the reactive proxy so its identity survives, then resets and re-attaches the `SkillManager` and drops every upgrade record.
 
 Placement operations refresh skill results themselves. Raw tile edits and companion settling do not, so their callers refresh once at the end.
 

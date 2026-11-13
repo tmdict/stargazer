@@ -1,6 +1,5 @@
 import { onMounted, onUnmounted, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 
 /* Sizes a page's single board to a phone's width (the grid store applies it only
@@ -9,7 +8,6 @@ import { useGrids } from '@/stores/grids'
  * board down instead of resizing it. The column's width doesn't depend on the
  * board's size, so the fit never feeds back into itself. */
 export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): void {
-  const gridStore = useGridStore()
   const grids = useGrids()
 
   const fit = (): void => {
@@ -19,7 +17,7 @@ export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): 
     const style = getComputedStyle(columnEl)
     const width =
       columnEl.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
-    gridStore.fitMobileBoard(width / ctx.flatWidthInRadii)
+    grids.fitMobileBoard(width / ctx.flatWidthInRadii)
   }
 
   // A resize applies on the next frame, so the board's new size never lands
@@ -48,6 +46,6 @@ export function useBoardFit(column: MaybeRefOrGetter<HTMLElement | undefined>): 
   onUnmounted(() => {
     cancelAnimationFrame(frame)
     observer?.disconnect()
-    gridStore.fitMobileBoard(null)
+    grids.fitMobileBoard(null)
   })
 }

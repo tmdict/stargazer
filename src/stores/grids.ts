@@ -14,14 +14,9 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
-  createGridContext,
-  findCharacterHex,
-  type CharacterDropPayload,
-  type GridContext,
-} from '@/composables/useGridContext'
-import {
   canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
+  findCharacterHex,
   findTeamPhantimalHex,
   findTeamSynergyHex,
   getAllAvailableTilesForTeam,
@@ -43,7 +38,7 @@ import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { canSwapCharacters } from '@/lib/characters/swap'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
-import type { Point } from '@/lib/layout'
+import { BASE_HEX_RADIUS, type Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { isPermanentArtifactId } from '@/lib/seasonal'
 import type { SkillRow } from '@/lib/skills/skill'
@@ -64,6 +59,8 @@ import {
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import type { Breakpoint } from '@/utils/breakpoints'
+import { createGridContext, type CharacterDropPayload, type GridContext } from './gridContext'
 import { useRosters } from './rosters'
 
 type HexSizeMode = 'breakpoint' | 'fixed-medium'
@@ -99,6 +96,13 @@ interface CapturedSide {
   side: SideLoadBoard
 }
 
+const BREAKPOINT_SIZES: Record<Breakpoint, { x: number; y: number }> = {
+  mobile: { x: 23, y: 23 }, // 57.5% scale
+  tablet: { x: 30, y: 30 }, // 75% scale
+  laptop: { x: 36, y: 36 }, // 90% scale
+  desktop: { x: 40, y: 40 }, // 100% scale
+}
+
 export const useGrids = defineStore('grids', () => {
   const rosters = useRosters()
   const contexts = shallowRef<GridContext[]>([])
@@ -107,6 +111,36 @@ export const useGrids = defineStore('grids', () => {
   // Global, shared by every board.
   const hexSize = ref<Point>({ x: 40, y: 40 })
   const hexSizeMode = ref<HexSizeMode>('breakpoint')
+
+  let breakpoint: Breakpoint = 'desktop'
+  // The hex radius a page fits its single board to on a phone (useBoardFit);
+  // null keeps the mobile size.
+  let mobileFit: number | null = null
+
+  // No-op while the page pins a fixed hex size (the Teams page). A phone's fit
+  // stays between the mobile and tablet sizes.
+  const applySize = (): void => {
+    if (hexSizeMode.value !== 'breakpoint') return
+    const { mobile, tablet } = BREAKPOINT_SIZES
+    const x =
+      breakpoint === 'mobile' && mobileFit !== null
+        ? Math.min(tablet.x, Math.max(mobile.x, mobileFit))
+        : BREAKPOINT_SIZES[breakpoint].x
+    if (hexSize.value.x !== x) hexSize.value = { x, y: x }
+  }
+
+  const updateBreakpoint = (next: Breakpoint): void => {
+    breakpoint = next
+    applySize()
+  }
+
+  const fitMobileBoard = (radius: number | null): void => {
+    mobileFit = radius
+    applySize()
+  }
+
+  const getHexScale = (): number => hexSize.value.x / BASE_HEX_RADIUS
+
   const teamView = ref(false)
   // Renders every board rotated 180 degrees (the Invert toggle): a pure view
   // transform applied at the layout level, content stays canonical.
@@ -1017,6 +1051,9 @@ export const useGrids = defineStore('grids', () => {
     active,
     hexSize,
     hexSizeMode,
+    updateBreakpoint,
+    fitMobileBoard,
+    getHexScale,
     teamView,
     inverted,
     perspective,

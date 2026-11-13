@@ -11,16 +11,15 @@ import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
-import { usePathfindingStore } from '@/stores/pathfinding'
-import { useSkillStore } from '@/stores/skill'
+import { useGrids } from '@/stores/grids'
 import { getStateClass, getStateName } from '@/utils/tileStateFormatting'
 
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()
-const pathfindingStore = usePathfindingStore()
+const grids = useGrids()
+const board = computed(() => grids.active!)
 const artifactStore = useArtifactStore()
 const gameDataStore = useGameDataStore()
-const skillStore = useSkillStore()
 
 const hiddenCharacters = ref<Set<number>>(new Set())
 
@@ -53,7 +52,9 @@ const getSkillTargetsForCharacter = (
   team: Team,
 ): Array<{ key: string; target: SkillTargetInfo }> => {
   const targets: Array<{ key: string; target: SkillTargetInfo }> = []
-  const allTargets = skillStore.getAllSkillTargets
+  // The version read ties this to every skill change.
+  board.value.skillManager.getTargetVersion()
+  const allTargets = board.value.skillManager.getAllSkillTargets()
 
   const standardKey = `${characterId}-${team}`
   if (allTargets.has(standardKey)) {
@@ -170,8 +171,7 @@ defineExpose({
                   >Skill: {{ config.skillName }} ({{ config.characterName }})</span
                 >
                 <span v-if="config.showSymmetry" class="symmetry-info"
-                  >Symmetrical Hex:
-                  {{ getSymmetricalHexId(gridStore._getGrid(), tile.hex.getId()) }}</span
+                  >Symmetrical Hex: {{ getSymmetricalHexId(board.grid, tile.hex.getId()) }}</span
                 >
                 <!-- Reinier: a symmetrical ally/enemy pair instead of one target -->
                 <template v-if="decomposeUnitId(config.characterId).localId === 31">
@@ -224,17 +224,15 @@ defineExpose({
               </div>
             </template>
             <div
-              v-if="
-                tile.team === Team.ALLY && pathfindingStore.closestEnemyMap.has(tile.hex.getId())
-              "
+              v-if="tile.team === Team.ALLY && board.closestEnemyMap.has(tile.hex.getId())"
               class="closest-info"
             >
               <div class="closest-target-line">
                 <span class="closest-enemy">
                   → Enemy at Hex
-                  {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.enemyHexId }}
+                  {{ board.closestEnemyMap.get(tile.hex.getId())?.enemyHexId }}
                   (distance:
-                  {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.distance }})
+                  {{ board.closestEnemyMap.get(tile.hex.getId())?.distance }})
                 </span>
               </div>
               <div class="debug-toggle-line">
@@ -250,17 +248,15 @@ defineExpose({
               </div>
             </div>
             <div
-              v-if="
-                tile.team === Team.ENEMY && pathfindingStore.closestAllyMap.has(tile.hex.getId())
-              "
+              v-if="tile.team === Team.ENEMY && board.closestAllyMap.has(tile.hex.getId())"
               class="closest-info"
             >
               <div class="closest-target-line">
                 <span class="closest-ally">
                   → Ally at Hex
-                  {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.allyHexId }}
+                  {{ board.closestAllyMap.get(tile.hex.getId())?.allyHexId }}
                   (distance:
-                  {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.distance }})
+                  {{ board.closestAllyMap.get(tile.hex.getId())?.distance }})
                 </span>
               </div>
               <div class="debug-toggle-line">

@@ -3,11 +3,12 @@ import { computed, nextTick, ref, watch } from 'vue'
 
 import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
-import { provideGridContext, type GridContext } from '@/composables/useGridContext'
+import { provideGridContext } from '@/composables/useGridContext'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { BOARD_SIZE } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
+import { type GridContext } from '@/stores/gridContext'
 
 interface Props {
   // The board this grid renders; provided to all descendants.

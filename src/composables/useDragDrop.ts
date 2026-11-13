@@ -12,8 +12,7 @@
 import { inject, provide, ref, type InjectionKey } from 'vue'
 
 import type { CharacterType } from '@/lib/types/character'
-import { useGridStore } from '@/stores/grid'
-import type { ArtifactDragPayload } from '@/stores/grids'
+import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
 
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'
@@ -52,8 +51,8 @@ const lastDropHexId = ref<number | null>(null)
 const lastDropGridId = ref<number | null>(null)
 
 const updateDragPosition = (x: number, y: number) => {
-  const gridStore = useGridStore()
-  const scale = gridStore.getHexScale()
+  const grids = useGrids()
+  const scale = grids.getHexScale()
 
   // Centers the preview on the pointer (35px at 100% scale).
   const offset = 35 * scale

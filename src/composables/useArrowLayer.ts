@@ -2,15 +2,15 @@ import { computed } from 'vue'
 
 import { useGridContext } from '@/composables/useGridContext'
 import { BOARD_SIZE, PORTRAIT_RADIUS } from '@/lib/layout'
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 
 /**
  * Stroke sizes shared by arrows and skill lines, so every layer draws them alike.
  */
 export function useArrowStyle() {
-  const gridStore = useGridStore()
+  const grids = useGrids()
   return computed(() => {
-    const scale = gridStore.getHexScale()
+    const scale = grids.getHexScale()
     return {
       strokeWidth: Math.max(2, 3 * scale),
       arrowheadSize: Math.max(4, 6 * scale),
@@ -22,14 +22,14 @@ export function useArrowStyle() {
  * Geometry of the arrow overlay SVG (GridArrowLayer), aligned to the grid.
  */
 export function useArrowLayer() {
-  const gridStore = useGridStore()
+  const grids = useGrids()
   const ctx = useGridContext()
 
   // The layer undoes the board's perspective squash, as portraits do, so strokes
   // and arrowheads keep their shape; the layout's arrow paths come out in these
   // upright coordinates.
   const svgDimensions = computed(() => {
-    const size = BOARD_SIZE * gridStore.getHexScale()
+    const size = BOARD_SIZE * grids.getHexScale()
     return { width: size, height: size * ctx.layout.squash }
   })
 
@@ -43,7 +43,7 @@ export function useArrowLayer() {
   // rise to the portrait centers.
   const layerTransform = computed(() =>
     ctx.perspective
-      ? `translate(0, ${-ctx.layout.standingLift(PORTRAIT_RADIUS * gridStore.getHexScale()) * ctx.layout.squash})`
+      ? `translate(0, ${-ctx.layout.standingLift(PORTRAIT_RADIUS * grids.getHexScale()) * ctx.layout.squash})`
       : '',
   )
 

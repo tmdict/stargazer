@@ -14,9 +14,10 @@ Each system has its own doc under `docs/architecture/`; the index is in `AGENTS.
               ▼                                ▼
 ┌───────────────────────────┐    ┌───────────────────────────┐
 │ Composables               │    │ Stores (Pinia)            │
-│ useGridContext: one board │◀───│ useGrids: N boards        │
-│ useDragDrop, useGridEvents│───▶│ active-board facades,     │
-│ useSelectionState, ...    │    │ gameData, i18n, boardRestore  │
+│ useGridContext: the board │    │ useGrids: N boards, built │
+│ a component stands on     │───▶│ by gridContext            │
+│ useDragDrop, useGridEvents│    │ active-board facades,     │
+│ useSelectionState, ...    │    │ gameData, i18n            │
 └─────────────┬─────────────┘    └─────────────┬─────────────┘
               ▼                                ▼
 ┌────────────────────────────────────────────────────────────┐
@@ -37,15 +38,15 @@ Arrows show import direction.
 | Domain               | `src/lib/`                      | lib, `src/data/` JSON           | Vue, Pinia, stores, composables, components, utils |
 | Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                            |
 
-Three exceptions are deliberate. `src/stores/grids.ts` imports `createGridContext` from a composable, because the store that holds the boards is the one that builds them; no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and `src/utils/teamsBoardSize.ts` imports a type from the grid store; every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
+One exception is deliberate: `src/utils/contentMeta.ts` reads the i18n store, and every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
 
 The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
 
 ## Boards
 
-`createGridContext` (`src/composables/useGridContext.ts`) builds one board: its `Grid`, its `SkillManager`, map, artifact slots, upgrade levels, derived values such as layout and closest targets, and the operations that change it. Its watchers run in their own effect scope, so disposing a board leaves nothing behind.
+`createGridContext` (`src/stores/gridContext.ts`) builds one board: its `Grid`, its `SkillManager`, map, artifact slots, upgrade levels, derived values such as layout and closest targets, and the operations that change it. Its watchers run in their own effect scope, so disposing a board leaves nothing behind.
 
-`useGrids` (`src/stores/grids.ts`) holds the boards, which one is active, the settings every board shares (hex size, team view, invert, perspective), and the rules that span boards: a hero or artifact can appear once per team across the whole page, and a drop may move a unit between boards. The single-board stores (`useGridStore`, `useCharacterStore` and the others) forward to the active board, so Arena code never needs a board id. Board components read their own board with `useGridContext()`.
+`useGrids` (`src/stores/grids.ts`) holds the boards, which one is active, the settings every board shares (hex size, team view, invert, perspective), and the rules that span boards: a hero or artifact can appear once per team across the whole page, and a drop may move a unit between boards. The single-board stores (`useGridStore`, `useCharacterStore`, `useArtifactStore`) forward to the active board, so Arena code never needs a board id. Board components read their own board with `useGridContext()`.
 
 ## From a tap to the screen
 

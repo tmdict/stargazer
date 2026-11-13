@@ -31,13 +31,13 @@ The distance in the third case is the straight hex distance to the source rather
 
 ## Ranges per unit
 
-`getClosestTargetMap` takes a range map keyed by unit id, and a unit missing from it counts as melee. The static range map from game data is keyed by base hero id, so `buildUnitRanges` (`src/composables/useGridContext.ts`) adds an entry for every companion, phantimal and synergy copy on the board, taken from `gameData.getCharacterRange`. Without that, those units would silently fall back to range 1. Where a companion's or phantimal's range comes from is covered in [Companion Skills](./skills/COMPANION.md) and [Seasonal Content](./SEASONAL.md).
+`getClosestTargetMap` takes a range map keyed by unit id, and a unit missing from it counts as melee. The static range map from game data is keyed by base hero id, so `buildUnitRanges` (`src/stores/gridContext.ts`) adds an entry for every companion, phantimal and synergy copy on the board, taken from `gameData.getCharacterRange`. Without that, those units would silently fall back to range 1. Where a companion's or phantimal's range comes from is covered in [Companion Skills](./skills/COMPANION.md) and [Seasonal Content](./SEASONAL.md).
 
 ## Per-board maps
 
-Each board computes two maps, ally to enemy and enemy to ally, as Vue computeds over its tiles and ranges. They recompute whenever a placement, tile state or map changes, so they cannot go stale. The pathfinding store only adapts the active board's maps for the debug panel.
+Each board computes two maps, ally to enemy and enemy to ally, as Vue computeds over its tiles and ranges. They recompute whenever a placement, tile state or map changes, so they cannot go stale.
 
-`findPathAStar` reconstructs an actual path to the chosen target and serves only the debug panel. It uses hex distance as its heuristic, costs every step 1, and gives up once it has discovered more than 1000 nodes.
+`findPathAStar` reconstructs an actual path to the chosen target and serves only the Debug tab's path lines. It uses hex distance as its heuristic, costs every step 1, and gives up once it has discovered more than 1000 nodes.
 
 ## Skill targeting is separate
 

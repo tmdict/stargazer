@@ -10,23 +10,9 @@ import { defineStore } from 'pinia'
 
 import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import { BASE_HEX_RADIUS } from '@/lib/layout'
 import { getMapByKey, type MapConfig } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { useGrids } from './grids'
-
-export type Breakpoint = 'mobile' | 'tablet' | 'laptop' | 'desktop'
-
-// The tiers where the side panel is a bottom sheet.
-export const isNarrowBreakpoint = (breakpoint: Breakpoint): boolean =>
-  breakpoint === 'mobile' || breakpoint === 'tablet'
-
-const BREAKPOINT_SIZES: Record<Breakpoint, { x: number; y: number }> = {
-  mobile: { x: 23, y: 23 }, // 57.5% scale
-  tablet: { x: 30, y: 30 }, // 75% scale
-  laptop: { x: 36, y: 36 }, // 90% scale
-  desktop: { x: 40, y: 40 }, // 100% scale
-}
 
 export const useGridStore = defineStore('grid', () => {
   const grids = useGrids()
@@ -77,35 +63,6 @@ export const useGridStore = defineStore('grid', () => {
 
   const getCurrentMapConfig = (): MapConfig | null => getMapByKey(active().currentMap) ?? null
 
-  let breakpoint: Breakpoint = 'desktop'
-  // The hex radius a page fits its single board to on a phone (useBoardFit);
-  // null keeps the mobile size.
-  let mobileFit: number | null = null
-
-  // No-op while the page pins a fixed hex size (5 v 5). A phone's fit stays
-  // between the mobile and tablet sizes.
-  const applySize = (): void => {
-    if (grids.hexSizeMode !== 'breakpoint') return
-    const { mobile, tablet } = BREAKPOINT_SIZES
-    const x =
-      breakpoint === 'mobile' && mobileFit !== null
-        ? Math.min(tablet.x, Math.max(mobile.x, mobileFit))
-        : BREAKPOINT_SIZES[breakpoint].x
-    if (grids.hexSize.x !== x) grids.hexSize = { x, y: x }
-  }
-
-  const updateBreakpoint = (next: Breakpoint): void => {
-    breakpoint = next
-    applySize()
-  }
-
-  const fitMobileBoard = (radius: number | null): void => {
-    mobileFit = radius
-    applySize()
-  }
-
-  const getHexScale = (): number => grids.hexSize.x / BASE_HEX_RADIUS
-
   return {
     grid,
     layout,
@@ -123,9 +80,5 @@ export const useGridStore = defineStore('grid', () => {
     moveToMap,
     refreshSkills,
     getCurrentMapConfig,
-    updateBreakpoint,
-    fitMobileBoard,
-    getHexScale,
-    _getGrid: () => active().grid,
   }
 })

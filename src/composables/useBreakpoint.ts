@@ -1,12 +1,10 @@
 import { onMounted, onUnmounted, ref, toRef } from 'vue'
 
-import type { Breakpoint } from '@/stores/grid'
-import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
+import type { Breakpoint } from '@/utils/breakpoints'
 import { LAPTOP_MAX_WIDTH, MOBILE_MAX_WIDTH, TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
 export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
-  const gridStore = useGridStore()
   const grids = useGrids()
   const { autoFlattenOnMobile = true } = options
 
@@ -32,7 +30,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
     if (next === currentBreakpoint.value) return
     const previous = currentBreakpoint.value
     currentBreakpoint.value = next
-    gridStore.updateBreakpoint(next)
+    grids.updateBreakpoint(next)
     // Flatten (disable perspective) when entering mobile.
     if (autoFlattenOnMobile && next === 'mobile' && previous !== 'mobile') {
       showPerspective.value = false
@@ -46,7 +44,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
 
     // Initial sync: currentBreakpoint starts at 'desktop', so apply directly.
     currentBreakpoint.value = read()
-    gridStore.updateBreakpoint(currentBreakpoint.value)
+    grids.updateBreakpoint(currentBreakpoint.value)
     if (autoFlattenOnMobile && currentBreakpoint.value === 'mobile') showPerspective.value = false
 
     mqMobile.addEventListener('change', apply)

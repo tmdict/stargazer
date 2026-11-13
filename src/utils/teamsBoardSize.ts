@@ -1,4 +1,4 @@
-import type { Breakpoint } from '@/stores/grid'
+import type { Breakpoint } from '@/utils/breakpoints'
 
 /* 5 v 5 board hex size per breakpoint. The boards row scrolls horizontally, so size
  * isn't bound by fitting five across: tablet and mobile match the Arena's breakpoint

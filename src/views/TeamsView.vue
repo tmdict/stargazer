@@ -43,10 +43,10 @@ import {
 import { canonicalTeamData, holdsUnsavedWork, type SavedTeam } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
-import { isNarrowBreakpoint } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { isNarrowBreakpoint } from '@/utils/breakpoints'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 

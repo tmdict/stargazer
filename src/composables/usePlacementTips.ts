@@ -6,6 +6,7 @@
 
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
 
+import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterTeam } from '@/lib/characters/character'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
@@ -21,7 +22,6 @@ import { Team } from '@/lib/types/team'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { isTouchHover } from '@/utils/pointer'
 import { useDragDrop } from './useDragDrop'
-import { useGridContext } from './useGridContext'
 import type { GridEventAPI } from './useGridEvents'
 import { useSelectionState } from './useSelectionState'
 import { useSlEngine } from './useSlEngine'

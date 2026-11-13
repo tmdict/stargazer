@@ -1,4 +1,4 @@
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { loadImage } from '@/utils/image'
 import { useImageExportActions } from './useImageExportActions'
 
@@ -103,7 +103,7 @@ const MAX_EXPORT_PIXELS = 16_000_000
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
-  const gridStore = useGridStore()
+  const grids = useGrids()
 
   /**
    * Captures the grid as a PNG data URL, trimmed to what it draws
@@ -134,7 +134,7 @@ export function useGridExport() {
 
     const box = containerElement.getBoundingClientRect()
     const pixelRatio = Math.min(
-      FULL_DETAIL_RATIO / gridStore.getHexScale(),
+      FULL_DETAIL_RATIO / grids.getHexScale(),
       Math.sqrt(MAX_EXPORT_PIXELS / (box.width * box.height)),
     )
     const toPngOptions = {
@@ -157,7 +157,7 @@ export function useGridExport() {
       const dataUrl = await capture(containerElement)
       // Whole-pixel spacing keeps the trim from resampling, and so blurring, the image.
       const toImagePixels = (cssPixels: number): number =>
-        Math.round(cssPixels * gridStore.getHexScale() * pixelRatio)
+        Math.round(cssPixels * grids.getHexScale() * pixelRatio)
       return await cropToDrawn(dataUrl, toImagePixels(CROP_MARGIN), toImagePixels(ROW_GAP))
     } finally {
       restores.forEach((restore) => restore())
