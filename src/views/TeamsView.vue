@@ -47,8 +47,8 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { isNarrowBreakpoint } from '@/utils/breakpoints'
+import { getEncodedStateFromUrl } from '@/utils/linkState'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
@@ -199,6 +199,7 @@ const handleLoadTeam = (team: SavedTeam) => {
   const applied = teamsRestore.applyTeamData(team.mode, team.data, team.id)
   pendingName.value = null
   if (applied) success(i18n.t('app.team-loaded'))
+  else error(i18n.t('app.team-load-failed'))
 }
 
 // The previous team is never merged into or overwritten; the modal confirms
@@ -237,12 +238,12 @@ if (gameDataStore.dataLoaded) {
   // can never overwrite the saved team the boards held.
   const generated = takeGeneratedSide()
   const decoded = generated ? decodeTeamData(generated) : null
-  if (
-    generated &&
-    decoded &&
-    teamsRestore.applyTeamData(resolveTeamMode(decoded), generated, null)
-  ) {
-    success(i18n.t('app.team-loaded'))
+  if (generated) {
+    if (decoded && teamsRestore.applyTeamData(resolveTeamMode(decoded), generated, null)) {
+      success(i18n.t('app.team-loaded'))
+    } else {
+      error(i18n.t('app.team-load-failed'))
+    }
   }
 } else {
   // Data failed to load: show the default mode's empty boards, no persistence.

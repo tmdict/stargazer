@@ -138,7 +138,7 @@ Display toggles (skills, perspective, team view, invert, wrap) are device prefer
 
 A record that breaks a rule is dropped with a console warning, and the others still load. A field not in the table is dropped the next time the library is saved. These rules hold across the library:
 
-- A record's `data` is canonical: no viewer state and a fixed key order, so equal content is byte-equal. The store canonicalizes on save instead of trusting callers.
+- A record's `data` is canonical: no viewer state, a fixed key order and no section the serializer would leave out, so equal content is byte-equal. The store canonicalizes on save instead of trusting callers.
 - `teamContentKey` decides whether the boards differ from their saved team. It ignores the season stamp on teams with no seasonal content, so a season change does not mark them as edited.
 - Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS`, so a `GridState` section missing from it is silently dropped from saved teams. A section with units is also read by `preview.ts` and `sideLoad.ts`.
 - Loading validates each record on its own (known mode, matching board count, data that canonicalizes). One bad record is dropped, never the library.

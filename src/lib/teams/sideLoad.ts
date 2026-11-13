@@ -146,12 +146,13 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
 
   // One phantimal per team per board, so the side's first phantimal entry is
   // its phantimal; entries with a companion index are its skill-spawned
-  // companions. An illegal id is carried as a companion here, where c and y
-  // drop it.
+  // companions.
   let phantimal: SideLoadUnit | null = null
   for (const [hexId, localId, team] of board.s ?? []) {
     if (team !== side || hexId === undefined || localId === undefined) continue
-    if (unitRowKind(localId) !== 'main') {
+    const kind = unitRowKind(localId)
+    if (kind === 'illegal') continue
+    if (kind === 'companion') {
       const { ownerLocal } = splitPhantimalBandLocal(localId)
       companions.push({
         unitId: toPhantimalId(localId),

@@ -79,7 +79,7 @@ A hidden unit's paint comes off a copy of the refcounts, so a color another skil
 
 ## Lookups
 
-A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board, because that data lives in the game-data store outside the pure lib.
+A skill that needs data-store facts reads them from `ctx.lookups`, never from the store. `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) is injected into each `SkillManager` by its board (`UNIT_LOOKUPS` in `src/lib/characters/unitData.ts`), so a test can supply hero facts of its own.
 
 `seasonalTargeting` reports whether a phantimal's data file sets `"targeting": true`, which gates its Spirit Mark ([Seasonal Content](./SEASONAL.md#spirit-marks-and-the-targeting-switch)).
 

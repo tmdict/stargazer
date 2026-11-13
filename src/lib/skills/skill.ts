@@ -162,7 +162,7 @@ export class SkillManager {
   // draws them.
   private skillZones: Map<string, number[]> = new Map()
 
-  // Lookups are injected: that data lives in the data store, outside this pure lib.
+  // Lookups are injected so a test can run skills on hero facts of its own.
   constructor(private readonly lookups: SkillLookups) {}
 
   private getSkillKey(characterId: number, team: Team): string {

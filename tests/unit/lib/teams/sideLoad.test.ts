@@ -125,7 +125,7 @@ describe('buildSideLoadPlan', () => {
     expect(plan.boards[0]!.phantimal).toBeNull()
   })
 
-  it('reads each band of ids the same way in c and y, and keeps an illegal s row as a companion', () => {
+  it('reads each band of ids the same way in c, y and s', () => {
     const rows = [
       [1, 11, Team.ALLY],
       [2, 9000, Team.ALLY],
@@ -145,10 +145,7 @@ describe('buildSideLoadPlan', () => {
     expect(board.companions.map((unit) => [unit.unitId, unit.mainUnitId])).toEqual([
       [10011, 11],
       [toSynergyId(10011), toSynergyId(11)],
-      ...[10011, 100005, 200050, 300000].map((localId) => [
-        toPhantimalId(localId),
-        toPhantimalId(localId % 10000),
-      ]),
+      [toPhantimalId(10011), toPhantimalId(11)],
     ])
   })
 })

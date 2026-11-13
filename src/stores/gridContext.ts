@@ -45,6 +45,7 @@ import {
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { decomposeUnitId } from '@/lib/characters/synergy'
+import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
@@ -189,13 +190,7 @@ export function createGridContext(
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
-  const skillManager = reactive(
-    new SkillManager({
-      factionOf: gameDataStore.getCharacterFaction,
-      classOf: gameDataStore.getCharacterClass,
-      seasonalTargeting: gameDataStore.hasSeasonalTargeting,
-    }),
-  ) as SkillManager
+  const skillManager = reactive(new SkillManager(UNIT_LOOKUPS)) as SkillManager
 
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }

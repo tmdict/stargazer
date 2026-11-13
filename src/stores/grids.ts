@@ -851,6 +851,8 @@ export const useGrids = defineStore('grids', () => {
     }
 
     if (sourceGridId === targetCtxId) {
+      // A drag starts over its own tile, which is no swap but must not read as refused.
+      if (sourceHexId === targetHexId) return true
       const { grid } = targetCtx
       if (hasCharacter(grid, targetHexId)) {
         if (!canSwapCharacters(grid, sourceHexId, targetHexId)) return false

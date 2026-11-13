@@ -39,8 +39,7 @@ const availableArtifacts = computed(() =>
 const handleSelect = (artifact: ArtifactType) => {
   // Re-check page-wide per-team uniqueness at pick time; the list filter can be
   // stale by the time the click lands. Close only on a successful placement.
-  if (grids.isArtifactUsed(artifact.id, props.team)) return
-  ctx.setArtifact(props.team, artifact.id)
+  if (!grids.placeArtifact(ctx, artifact.id, props.team)) return
   // Active follows interaction, matching drop routing.
   grids.setActive(ctx.id)
   emit('close')

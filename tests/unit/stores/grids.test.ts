@@ -662,6 +662,14 @@ describe('useGrids.canDropCharacter on one board', () => {
     expect(grids.canDropCharacter(characterId, ctx.id, from, ctx.id, to)).toBe(allowed)
     expect(ctx.handleDrop(dragPayload(ctx.id, from, characterId), to)).toBe(allowed)
   })
+
+  // A drag starts over its own tile, which must not show the refused cue.
+  it('does not refuse the tile a unit is dragged from', () => {
+    const grids = useGrids()
+    const ctx = grids.contexts[0]!
+    ctx.place(1, ALLY_A, Team.ALLY)
+    expect(grids.canDropCharacter(ALLY_A, ctx.id, 1, ctx.id, 1)).toBe(true)
+  })
 })
 
 describe('useGrids synergy', () => {

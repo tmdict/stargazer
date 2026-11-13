@@ -307,8 +307,8 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 }
 
 // Hover runs on readonly boards too: the card is pure information gated by
-// the pref alone, and the event-bus emits just report the pointer; listeners
-// own their interactivity policy (GridTiles ignores these on readonly).
+// the pref alone, and the emits just report the pointer; listeners own their
+// interactivity policy (GridTiles ignores these on readonly).
 // A unit's own card names the buff tile it stands on. A unit with no card of
 // its own shows the buff's card, unless it is an ally whose card is Placement
 // tips', which already names the tile.

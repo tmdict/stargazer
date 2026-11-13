@@ -123,11 +123,14 @@ const startHelpers = (): void => {
 }
 
 async function aside<T>(work: (pool: SlHelpers) => Promise<T>, alone: () => T): Promise<T> {
-  if (helpers) {
+  // Held here because an overlapping request's failure can clear `helpers`
+  // while this one waits.
+  const pool = helpers
+  if (pool) {
     try {
-      return await work(helpers)
+      return await work(pool)
     } catch {
-      if (helpers.stopped()) helpers = null
+      if (pool.stopped() && helpers === pool) helpers = null
     }
   }
   return alone()

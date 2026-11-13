@@ -40,7 +40,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { isNarrowBreakpoint } from '@/utils/breakpoints'
-import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
+import { getEncodedStateFromUrl } from '@/utils/linkState'
 
 const gridStore = useGridStore()
 const grids = useGrids()
