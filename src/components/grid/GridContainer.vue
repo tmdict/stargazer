@@ -2,19 +2,15 @@
 import { computed, nextTick, ref, watch } from 'vue'
 
 import GridManager from './GridManager.vue'
-import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import { provideGridContext } from '@/composables/useGridContext'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { BOARD_SIZE } from '@/lib/layout'
-import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { type GridContext } from '@/stores/gridContext'
 
 interface Props {
   // The board this grid renders; provided to all descendants.
   context: GridContext
-  // Data props
-  characters: readonly CharacterType[]
   // Display toggle props
   info: GridInfoView
   // Debug-tab-only: gates the PathfindingDebug svg (the Arena's Debug tab).
@@ -23,8 +19,6 @@ interface Props {
   // Map editor props
   isMapEditorMode?: boolean
   selectedMapEditorState?: State
-  // Debug props
-  debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
   // The sheet layout's tap-to-place instead of the desktop popup.
@@ -131,13 +125,11 @@ const shiftStyle = computed(() => {
       <div :style="clipStyle">
         <div :style="shiftStyle">
           <GridManager
-            :characters
             :info
             :show-debug
             :show-skills
             :is-map-editor-mode
             :selected-map-editor-state
-            :debug-panel-ref
             :readonly
             :tap-mode
           />

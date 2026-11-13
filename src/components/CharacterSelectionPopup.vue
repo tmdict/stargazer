@@ -13,6 +13,7 @@ import { compareCharacters } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -20,7 +21,6 @@ import { useRosters } from '@/stores/rosters'
 interface Props {
   // The tapped tile: determines the team and where the chosen hero is placed.
   hex: Hex
-  characters: readonly CharacterType[]
   position: { x: number; y: number }
 }
 
@@ -36,6 +36,7 @@ const emit = defineEmits<{
 // on another board can move while the popup is open.
 const ctx = useGridContext()
 const grids = useGrids()
+const gameData = useGameDataStore()
 const i18n = useI18nStore()
 const rosters = useRosters()
 const { requestTab } = useSelectionState()
@@ -48,7 +49,7 @@ const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.
 const availableCharacters = computed(() => {
   const t = team.value
   if (!t) return []
-  return props.characters.filter(
+  return gameData.characters.filter(
     (char) => rosters.isPickable(char) && grids.resolvePick(ctx, char.id, t) !== null,
   )
 })

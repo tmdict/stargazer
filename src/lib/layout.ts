@@ -42,6 +42,10 @@ export interface Point {
   y: number
 }
 
+// Corners as an SVG `points` value.
+export const toPoints = (corners: readonly Point[]): string =>
+  corners.map((p) => `${p.x},${p.y}`).join(' ')
+
 // A full-size board's hex radius. The board and token sizes below are measured at
 // it, and a board scales them by its hexScale (hexSize.x / BASE_HEX_RADIUS).
 export const BASE_HEX_RADIUS = 40
@@ -179,6 +183,11 @@ export class Layout {
       corners.push(this.place({ x: center.x + offset.x, y: center.y + offset.y }))
     }
     return corners
+  }
+
+  // A hex's outline as an SVG `points` value.
+  polygonPoints(hex: Hex): string {
+    return toPoints(this.polygonCorners(hex))
   }
 
   // Curved arrow path between two hexes, in the arrow layers' upright coordinates.

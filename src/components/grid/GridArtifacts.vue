@@ -84,11 +84,7 @@ const allyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ALLY))
 const enemyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ENEMY))
 
 const cellCenter = (hex: Hex) => ctx.layout.hexToPixel(hex)
-const cellPoints = (hex: Hex) =>
-  ctx.layout
-    .polygonCorners(hex)
-    .map((p) => `${p.x},${p.y}`)
-    .join(' ')
+const cellPoints = (hex: Hex) => ctx.layout.polygonPoints(hex)
 
 const allyCenter = computed(() => cellCenter(allyCellHex.value))
 const enemyCenter = computed(() => cellCenter(enemyCellHex.value))

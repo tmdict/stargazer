@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted } from 'vue'
 
+import { useDebugLines } from '@/composables/useDebugLines'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import type { GridTile } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
@@ -21,7 +22,12 @@ const board = computed(() => grids.active!)
 const artifactStore = useArtifactStore()
 const gameDataStore = useGameDataStore()
 
-const hiddenCharacters = ref<Set<number>>(new Set())
+const {
+  shown: shouldShowDebugLines,
+  toggle: toggleCharacterDebugLines,
+  showAll: showAllDebugLines,
+} = useDebugLines()
+onUnmounted(showAllDebugLines)
 
 const getCharacterName = (characterId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
@@ -31,20 +37,6 @@ const getArtifactName = (artifactId: number | null): string => {
   if (artifactId === null) return 'n/a'
   const artifact = gameDataStore.getArtifactById(artifactId)
   return artifact?.name || 'Unknown'
-}
-
-const toggleCharacterDebugLines = (hexId: number) => {
-  if (hiddenCharacters.value.has(hexId)) {
-    hiddenCharacters.value.delete(hexId)
-  } else {
-    hiddenCharacters.value.add(hexId)
-  }
-  // Trigger reactivity
-  hiddenCharacters.value = new Set(hiddenCharacters.value)
-}
-
-const shouldShowDebugLines = (hexId: number): boolean => {
-  return !hiddenCharacters.value.has(hexId)
 }
 
 const getSkillTargetsForCharacter = (
@@ -122,11 +114,6 @@ const activeSkillConfigs = computed(() => {
   }
 
   return configs
-})
-
-// Expose functions for PathfindingDebug component
-defineExpose({
-  shouldShowDebugLines,
 })
 </script>
 

@@ -139,8 +139,6 @@ useBoardFit(boardPanel)
 
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 
-const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
-
 const selectedMapEditorState = ref<State>(State.DEFAULT)
 
 // Opt-in tile painting, off by default: a Map-tab click then places a character like
@@ -302,13 +300,11 @@ const handleResetMap = () => {
           <SeasonNotice />
           <GridContainer
             :context="activeContext"
-            :characters="gameDataStore.characters"
             :info
             :show-debug
             :show-skills
             :is-map-editor-mode="mapEditorActive"
             :selected-map-editor-state
-            :debug-panel-ref
             :tap-mode="isNarrowBreakpoint(currentBreakpoint)"
           />
           <template v-if="info.heroCard">
@@ -356,7 +352,7 @@ const handleResetMap = () => {
               <RosterPanel />
             </template>
             <template #debug>
-              <DebugPanel ref="debugPanelRef" />
+              <DebugPanel />
             </template>
             <template #actions>
               <ArenaDropdown />

@@ -7,7 +7,6 @@ import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
 import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
-import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import SlPlacementCard from '@/components/guide/sl/SlPlacementCard.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
@@ -21,7 +20,6 @@ import { hasCharacter, teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import { BOARD_SIZE } from '@/lib/layout'
 import { buffAt } from '@/lib/maps'
-import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState, State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -30,8 +28,6 @@ import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
-  // Data props
-  characters: readonly CharacterType[]
   // Display toggle props
   info: GridInfoView
   // Debug-tab-only: gates the PathfindingDebug svg (the Arena's Debug tab).
@@ -40,8 +36,6 @@ interface Props {
   // Map editor props
   isMapEditorMode: boolean
   selectedMapEditorState: State
-  // Debug props
-  debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
   // The sheet layout's tap-to-place instead of the desktop popup.
@@ -273,8 +267,6 @@ defineExpose({
     <!-- Grid tiles (base layer) -->
     <GridTiles
       ref="gridTilesRef"
-      :hexes="ctx.visibleHexes"
-      :layout="ctx.layout"
       :show-tile-ids="info.tileIds"
       :show-coordinates="info.coordinates"
       :is-map-editor-mode
@@ -306,7 +298,6 @@ defineExpose({
     <!-- Character layer (above artifacts) -->
     <GridCharacters
       ref="gridCharactersRef"
-      :characters
       :show-hover="info.hover"
       :show-rules="info.rules"
       :faded="rulesFaded"
@@ -331,7 +322,7 @@ defineExpose({
       style="position: absolute; max-width: 100%; pointer-events: none"
     >
       <g>
-        <PathfindingDebug :debug-panel-ref="props.debugPanelRef" />
+        <PathfindingDebug />
       </g>
     </svg>
 
@@ -361,7 +352,6 @@ defineExpose({
     <CharacterSelectionPopup
       v-if="showCharacterModal && modalHex"
       :hex="modalHex"
-      :characters="props.characters"
       :position="modalPosition"
       @close="closeCharacterModal"
     />

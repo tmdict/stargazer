@@ -297,7 +297,6 @@ const handleCopyLink = () => {
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"
                 v-model:wrap="wrapBoards"
-                :characters="gameDataStore.characters"
                 :active-mode
                 :variant
                 :boards-have-content

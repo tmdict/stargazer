@@ -11,7 +11,7 @@ import type { PlacementTip } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
-import { BOARD_SIZE, type Layout, type Point } from '@/lib/layout'
+import { BOARD_SIZE, toPoints, type Point } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -24,8 +24,6 @@ import {
 } from '@/utils/tileStateFormatting'
 
 interface Props {
-  hexes: Hex[]
-  layout: Layout
   showTileIds: boolean
   showCoordinates: boolean
   isMapEditorMode: boolean
@@ -146,10 +144,7 @@ const scaledCorners = (hexId: number, scale = 1): Point[] => {
   }))
 }
 
-const cornerPoints = (hexId: number, scale = 1): string =>
-  scaledCorners(hexId, scale)
-    .map((p) => `${p.x},${p.y}`)
-    .join(' ')
+const cornerPoints = (hexId: number, scale = 1): string => toPoints(scaledCorners(hexId, scale))
 
 const rulesMarks = computed(() => {
   const rules = props.rules
@@ -185,7 +180,7 @@ const toward = (from: Point, to: Point): string =>
 
 const buffMarks = computed(() => {
   if (!props.showBuffTiles) return []
-  const shown = new Set(props.hexes.map((hex) => hex.getId()))
+  const shown = new Set(ctx.visibleHexes.map((hex) => hex.getId()))
   return ctx.buffTiles
     .filter((hexId) => shown.has(hexId))
     .map((hexId) => ({
@@ -397,14 +392,16 @@ const hasSkillHighlight = (hex: Hex) => {
 // of a deployment tile or wall beside it.
 const isOpenGround = (hex: Hex) => ctx.grid.getTile(hex).state === State.DEFAULT
 const regularHexes = computed(() =>
-  props.hexes
+  ctx.visibleHexes
     .filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex))
     .sort((a, b) => Number(isOpenGround(b)) - Number(isOpenGround(a))),
 )
 const elevatedHexes = computed(() =>
-  props.hexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)),
+  ctx.visibleHexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)),
 )
-const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
+const skillHighlightedHexes = computed(() =>
+  ctx.visibleHexes.filter((hex) => hasSkillHighlight(hex)),
+)
 
 // The hatch layer sits under the skill-highlight layer, whose opaque fills
 // would hide it, so a skill-highlighted wall shows its highlight instead.
@@ -414,14 +411,14 @@ const wallHexes = computed(() =>
     const state = ctx.grid.getTile(hex).state
     const stroke = getWallStrokeColor(state)
     if (!stroke) return []
-    const corners = props.layout.polygonCorners(hex)
+    const corners = ctx.layout.polygonCorners(hex)
     return [
       {
         id: hex.getId(),
         state,
         stroke,
         corners,
-        points: corners.map((p) => `${p.x},${p.y}`).join(' '),
+        points: toPoints(corners),
       },
     ]
   }),
@@ -434,7 +431,7 @@ const wallBorderHexes = computed(() =>
 const framedHexes = computed(() =>
   [...regularHexes.value, ...elevatedHexes.value]
     .filter((hex) => !isOpenGround(hex))
-    .map((hex) => ({ id: hex.getId(), corners: props.layout.polygonCorners(hex) })),
+    .map((hex) => ({ id: hex.getId(), corners: ctx.layout.polygonCorners(hex) })),
 )
 
 // A portrait covers its tile, so the board passes the pointer entering and
@@ -467,19 +464,14 @@ defineExpose({ svgEl, unitEnter, unitLeave })
   >
     <defs>
       <slot name="defs" />
-      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" board />
+      <TileHatchPatterns :id="hatchId" :hex-size="ctx.layout.size.x" board />
     </defs>
     <g>
       <g>
         <!-- Regular hexes (render first, behind elevated hexes) -->
         <g v-for="hex in regularHexes" :key="hex.getId()" class="grid-tile">
           <polygon
-            :points="
-              layout
-                .polygonCorners(hex)
-                .map((p) => `${p.x},${p.y}`)
-                .join(' ')
-            "
+            :points="ctx.layout.polygonPoints(hex)"
             :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -497,12 +489,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
         <!-- Elevated hexes (render above regular hexes, but below skill highlights) -->
         <g v-for="hex in elevatedHexes" :key="`elevated-${hex.getId()}`" class="grid-tile">
           <polygon
-            :points="
-              layout
-                .polygonCorners(hex)
-                .map((p) => `${p.x},${p.y}`)
-                .join(' ')
-            "
+            :points="ctx.layout.polygonPoints(hex)"
             :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -534,12 +521,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
         >
           <!-- Outermost stroke (first color) -->
           <polygon
-            :points="
-              layout
-                .polygonCorners(hex)
-                .map((p) => `${p.x},${p.y}`)
-                .join(' ')
-            "
+            :points="ctx.layout.polygonPoints(hex)"
             :style="{ fill: getHexFill(hex), stroke: getHexStroke(hex) }"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -547,12 +529,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
           <polygon
             v-for="(stroke, idx) in getConcentricStrokes(hex)"
             :key="`stroke-${idx}`"
-            :points="
-              layout
-                .polygonCorners(hex)
-                .map((p) => `${p.x},${p.y}`)
-                .join(' ')
-            "
+            :points="ctx.layout.polygonPoints(hex)"
             fill="none"
             :style="{ stroke: stroke.color }"
             :stroke-width="stroke.width"
@@ -577,7 +554,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
         </g>
 
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
-        <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
+        <g v-for="hex in ctx.visibleHexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
             v-if="showTileIds && shouldShowHexId(hex)"
             :x="ctx.layout.hexToPixel(hex).x"
@@ -611,18 +588,13 @@ defineExpose({ svgEl, unitEnter, unitLeave })
              portrait is resolved by DragDropProvider's position-based hex detection
              instead of by this layer. -->
         <g
-          v-for="hex in hexes"
+          v-for="hex in ctx.visibleHexes"
           :key="`event-${hex.getId()}`"
           class="grid-event-layer capture-exclude"
           :class="getHexDropClass(hex)"
         >
           <polygon
-            :points="
-              layout
-                .polygonCorners(hex)
-                .map((p) => `${p.x},${p.y}`)
-                .join(' ')
-            "
+            :points="ctx.layout.polygonPoints(hex)"
             fill="transparent"
             stroke="transparent"
             stroke-width="0"

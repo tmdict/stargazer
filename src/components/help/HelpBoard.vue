@@ -6,6 +6,7 @@ import { computed, useId } from 'vue'
 import TileBevel from '@/components/grid/TileBevel.vue'
 import TileHatch from '@/components/grid/TileHatch.vue'
 import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
+import { toPoints } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGameDataStore } from '@/stores/gameData'
 import {
@@ -64,10 +65,7 @@ const corners = ({ x, y }: { x: number; y: number }) => [
   { x: x - HALF, y: y - R / 2 },
 ]
 
-const points = (center: { x: number; y: number }): string =>
-  corners(center)
-    .map((p) => `${p.x},${p.y}`)
-    .join(' ')
+const points = (center: { x: number; y: number }): string => toPoints(corners(center))
 
 const tiles = computed(() =>
   Array.from({ length: ROWS * COLS }, (_, i) => {

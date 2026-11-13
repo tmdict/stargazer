@@ -40,7 +40,6 @@ import { useI18nStore } from '@/stores/i18n'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
-  characters: readonly CharacterType[]
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
   showHover: boolean
   // Placement tips, whose card the board draws for the ally side, so only an
@@ -95,7 +94,7 @@ const cardAt = (characterId: number): HoverCard | undefined => {
     return phantimal && { kind: 'phantimal', phantimal }
   }
   const { localId } = decomposeUnitId(characterId)
-  const hero = isBaseHeroId(localId) ? props.characters.find((c) => c.id === localId) : undefined
+  const hero = isBaseHeroId(localId) ? gameDataStore.getCharacterById(localId) : undefined
   return hero && { kind: 'hero', hero }
 }
 
@@ -269,7 +268,7 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
     return
   }
 
-  const character = props.characters.find((c) => c.id === toBaseHeroId(characterId))
+  const character = gameDataStore.getCharacterById(toBaseHeroId(characterId))
   if (!character) return
 
   // sourceHexId marks a board-origin drag (the drop handler routes on it), and

@@ -57,11 +57,7 @@ const snippetLayout = computed(() => {
   )
 })
 
-const getHexPolygon = (hex: Hex): string => {
-  const layout = snippetLayout.value
-  const corners = layout.polygonCorners(hex)
-  return corners.map((p) => `${p.x},${p.y}`).join(' ')
-}
+const getHexPolygon = (hex: Hex): string => snippetLayout.value.polygonPoints(hex)
 
 const getHexFill = (tile: GridTile): string => {
   const hexId = tile.hex.getId()
@@ -164,8 +160,7 @@ const imaginaryHexes = computed(() => {
       )
 
       const center = snippetLayout.value.hexToPixel(imaginaryHex)
-      const corners = snippetLayout.value.polygonCorners(imaginaryHex)
-      const points = corners.map((p) => `${p.x},${p.y}`).join(' ')
+      const points = snippetLayout.value.polygonPoints(imaginaryHex)
 
       return {
         hex: imaginaryHex,

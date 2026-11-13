@@ -168,13 +168,7 @@ const editLink = computed(() =>
         <!-- Multi (5 v 5) reuses the Teams boards row, including the 3-2 wrap layout. -->
         <BoardsRow v-if="isMultiBoard" :wrap="wrapBoards" :can-wrap>
           <div v-for="ctx in grids.contexts" :key="ctx.id" class="share-board">
-            <GridContainer
-              :context="ctx"
-              :characters="gameDataStore.characters"
-              :info
-              :show-skills
-              :readonly="true"
-            />
+            <GridContainer :context="ctx" :info :show-skills :readonly="true" />
             <TeamPowerPanel
               v-if="info.heroCard"
               :context="ctx"
@@ -184,13 +178,7 @@ const editLink = computed(() =>
           </div>
         </BoardsRow>
         <div v-else class="share-board">
-          <GridContainer
-            :context="activeContext"
-            :characters="gameDataStore.characters"
-            :info
-            :show-skills
-            :readonly="true"
-          />
+          <GridContainer :context="activeContext" :info :show-skills :readonly="true" />
           <TeamPowerPanel
             v-if="info.heroCard"
             :context="activeContext"

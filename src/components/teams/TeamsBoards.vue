@@ -31,12 +31,10 @@ import {
   type VariantMatch,
 } from '@/lib/teams/modes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
-import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const { sourceName, dirty, pendingName } = defineProps<{
-  characters: readonly CharacterType[]
   activeMode: TeamModeKey
   // The live boards' type (null = custom maps) and whether any board holds
   // anything, for the type picker and its confirm.
@@ -206,7 +204,6 @@ const {
         v-for="ctx in grids.contexts"
         :key="ctx.id"
         :context="ctx"
-        :characters
         :info
         :show-skills
         :tap-mode

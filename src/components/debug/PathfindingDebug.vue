@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type DebugPanel from './DebugPanel.vue'
+import { useDebugLines } from '@/composables/useDebugLines'
 import { getTilesWithCharactersByTeam } from '@/lib/characters/character'
 import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
@@ -11,12 +11,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 
-interface Props {
-  debugPanelRef?: InstanceType<typeof DebugPanel> | null
-}
-
-const props = defineProps<Props>()
-
+const { shown } = useDebugLines()
 const gridStore = useGridStore()
 
 const grids = useGrids()
@@ -52,13 +47,7 @@ const strokeProps = computed(() => {
 
 const pathElements = computed(() => {
   return pathfindingResults.value
-    .filter((result) => {
-      // Filter based on debug panel visibility settings
-      if (props.debugPanelRef?.shouldShowDebugLines) {
-        return props.debugPanelRef.shouldShowDebugLines(result.fromHexId)
-      }
-      return true // Show all if no debug panel ref available
-    })
+    .filter((result) => shown(result.fromHexId))
     .map((result) => {
       const pathPoints = result.path
         .map((hex) => {

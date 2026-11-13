@@ -17,14 +17,12 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useGridExport } from '@/composables/useGridExport'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
-import type { CharacterType } from '@/lib/types/character'
 import type { GridContext } from '@/stores/gridContext'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const { context, info, showSkills, tapMode } = defineProps<{
   context: GridContext
-  characters: readonly CharacterType[]
   info: GridInfoView
   showSkills: boolean
   // Mobile: tap a cell to target it for the picker sheet; desktop: the on-grid
@@ -73,7 +71,7 @@ const handleClear = (): void => {
     :data-grid-board-id="context.id"
     @pointerdown="grids.setActive(context.id)"
   >
-    <GridContainer :context :characters :info :show-skills :tap-mode />
+    <GridContainer :context :info :show-skills :tap-mode />
 
     <template v-if="info.heroCard">
       <TeamPowerPanel :context :show-upgrades="info.upgrades" />

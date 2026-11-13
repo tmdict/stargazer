@@ -5,7 +5,7 @@
 
 import { computed } from 'vue'
 
-import type { Point } from '@/lib/layout'
+import { toPoints, type Point } from '@/lib/layout'
 import type { State } from '@/lib/types/state'
 import { getTileHatchFill, getTileHatchPoints, getWallHatchFill } from '@/utils/tileStateFormatting'
 
@@ -17,7 +17,7 @@ const { patternId, state, corners } = defineProps<{
 
 const light = computed(() => getTileHatchFill(patternId, state))
 const dark = computed(() => getWallHatchFill(`${patternId}-dark`, state))
-const points = computed(() => corners.map((p) => `${p.x},${p.y}`).join(' '))
+const points = computed(() => toPoints(corners))
 const insetPoints = computed(() => getTileHatchPoints(corners))
 </script>
 
