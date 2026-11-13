@@ -85,6 +85,7 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
     for (const entry of board.c ?? []) {
       const [hexId, characterId, team] = entry
       if (hexId === undefined || characterId === undefined || team === undefined) continue
+      if (unitRowKind(characterId) === 'illegal') continue
       units.push({ hexId, team: team as Team, characterId })
     }
     for (const entry of board.s ?? []) {
@@ -98,6 +99,7 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
     for (const entry of board.y ?? []) {
       const [hexId, localId, team] = entry
       if (hexId === undefined || localId === undefined || team === undefined) continue
+      if (unitRowKind(localId) === 'illegal') continue
       units.push({ hexId, team: team as Team, characterId: localId })
     }
     return {

@@ -489,4 +489,25 @@ describe('synergy restore', () => {
     expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     expect(restored.character.charactersPlaced).toBe(0)
   })
+
+  it('skips a unit on a tile the board lacks and restores the rest', () => {
+    const restored = createStores()
+    // Restore replays t; a payload without it restores a blank map.
+    const { t } = serializeGridState(restored.grid.getAllTiles, null, null)
+    const encoded = encodeTeamData({
+      boards: [
+        {
+          t,
+          c: [
+            [0, 601, Team.ALLY],
+            [99, 602, Team.ALLY],
+            [1, 603, Team.ALLY],
+          ],
+        },
+      ],
+    })
+    expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.grid.getTile(1).characterId).toBe(603)
+    expect(restored.character.charactersPlaced).toBe(1)
+  })
 })

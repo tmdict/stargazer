@@ -117,17 +117,20 @@ export const useBoardRestore = defineStore('boardRestore', () => {
       place: (hexId: number, unitId: number, team: number) => boolean = (hexId, unitId, team) =>
         characterStore.placeCharacterOnHex(hexId, unitId, team),
     ): void => {
+      const grid = grids.active!.grid
       const mains: number[][] = []
       const companions: number[][] = []
       entries.forEach((entry) => {
-        const localId = entry[1]
-        if (localId === undefined) return
+        const [hexId, localId] = entry
+        if (hexId === undefined || localId === undefined) return
+        // Placing on a tile the board lacks throws, which would fail the whole
+        // restore after the boards were cleared.
+        if (!grid.getHexByIdOrUndefined(hexId)) return
         const kind = unitRowKind(localId)
         if (kind === 'companion') companions.push(entry)
         else if (kind === 'main') mains.push(entry)
       })
 
-      const grid = grids.active!.grid
       mains.forEach((entry) => {
         const validated = getValidatedCharacterEntry(entry)
         if (!validated) return
