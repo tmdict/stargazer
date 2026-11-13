@@ -73,7 +73,7 @@ The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share 
              └──▶ watchers: phantimal faction check, autosave
 ```
 
-SVG has no z-index, so the board draws its layers in order and puts an invisible layer on top to catch input ([Board Input](./architecture/DRAG_AND_DROP.md)). The event bus only notifies; whoever subscribes owns the state change. `executeTransaction` (`src/lib/characters/transaction.ts`) stops at the first step that fails and undoes the earlier ones in reverse, so a half-finished move never reaches the screen. The board's computed values do not track `SkillManager`'s internal maps; they read a version counter (`targetVersion`) that every skill change bumps.
+SVG has no z-index, so the board draws its layers in order and puts an invisible layer on top to catch input ([Board Input](./architecture/DRAG_AND_DROP.md)). The event bus only notifies; whoever subscribes owns the state change. `executeTransaction` (`src/lib/characters/transaction.ts`) stops at the first step that fails and undoes the earlier ones in reverse, so a half-finished move never reaches the screen. The board wraps `SkillManager` in `reactive`, so its computed values re-read when a skill changes what the manager holds.
 
 ## Where state is stored
 

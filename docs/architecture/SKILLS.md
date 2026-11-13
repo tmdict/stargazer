@@ -17,7 +17,7 @@ Skill text and the skill pages are a separate system, described in [Skill Pages]
            │                           │ creates with              │
            │ computeds                 │ store lookups   activate, │
            │ re-read on                │               deactivate, │
-           │ targetVersion             ▼                    update │
+           │ skill change              ▼                    update │
            │                ┌────────────────────┐                 │
            │                │ SkillManager       │                 │
            └────────────────│ active skills,     │◀────────────────┘
@@ -41,7 +41,7 @@ The registry (`src/lib/skills/registry.ts`) holds one `Skill` per base hero. Ski
 
 A synergy copy runs its base hero's skill. Only the definition lookup strips the synergy band (`decomposeUnitId`), while every piece of instance state stays keyed by the placed id, so a builder must read `ctx.characterId` and never the id in its own config.
 
-`SkillManager` is a plain class, one per board. The board wraps it in `reactive`, and its computeds call `getTargetVersion()` before reading, so every visible mutation bumps `targetVersion` to trigger a re-derive. Instance state is keyed `characterId-team`, so the same unit can be active on both teams.
+`SkillManager` is a plain class, one per board. The board wraps it in `reactive`, so its computeds re-derive when a skill changes the manager's maps. Instance state is keyed `characterId-team`, so the same unit can be active on both teams.
 
 Place, move, swap and remove run their tile changes and skill hooks inside `executeTransaction` (`src/lib/characters/transaction.ts`). When `onActivate` throws, `activateCharacterSkill` drops the entry and returns false, and the transaction rolls the whole operation back. `updateActiveSkills` isolates each skill in its own try/catch so one failure cannot leave the rest stale, and a unit that vanished without going through removal is fully deactivated so its companions and capacity change are not leaked. Companions cannot be placed directly: only a skill creates them ([Companions](./skills/COMPANION.md)).
 
@@ -59,7 +59,7 @@ A tile has two paint channels, `tileColorModifiers` for the border and `tileFill
 
 Lines need no diff: `setSkillLines` replaces the instance's set outright and the renderer draws the flattened list. A `SkillLine` runs between hex centers by default, or between hex corners with `fromCorner` and `toCorner`, which is how tile edges, zone outlines and lane boundaries are drawn.
 
-A skill that acts on a group of tiles it outlines rather than paints, such as Zandrok's band, also returns those tiles from `withEffects`' `calculate` as its `zone`. Nothing draws a zone, so setting one bumps no version. `getMarkedTiles` gives the tiles a skill instance acts on, those it paints and its zone, each once, which the placement engine reads ([Placement](./PLACEMENT.md)).
+A skill that acts on a group of tiles it outlines rather than paints, such as Zandrok's band, also returns those tiles from `withEffects`' `calculate` as its `zone`. Nothing draws a zone. `getMarkedTiles` gives the tiles a skill instance acts on, those it paints and its zone, each once, which the placement engine reads ([Placement](./PLACEMENT.md)).
 
 Every effect color comes from `SKILL_COLORS` (`utils/colors.ts`), referenced by name, so a hue shared across heroes changes in one place. Each entry is a CSS variable with a value for each look (`src/styles/variables.css`), so an effect sets its color through `style`, never an SVG attribute.
 

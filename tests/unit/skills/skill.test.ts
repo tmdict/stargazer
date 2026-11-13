@@ -1,10 +1,11 @@
+import { computed, reactive } from 'vue'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { Grid } from '@/lib/grid'
-import { SkillManager, unitSkillKey } from '@/lib/skills/skill'
+import { SkillManager, unitSkillKey, type SkillBadge } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { ALLY_A, GUNNAR, KULU, PHRAESTO } from '../fixtures/characters'
@@ -146,5 +147,77 @@ describe('skill', () => {
         expect(bigGrid.maxTeamSizes.get(Team.ALLY)).toBe(5)
       })
     })
+  })
+})
+
+// A board wraps its manager in reactive() and its drawings are computeds over
+// these reads, so every write below has to reach them.
+describe('a reactive SkillManager', () => {
+  const watched = () => {
+    const manager = reactive(new SkillManager(NO_LOOKUPS)) as SkillManager
+    const drawn = computed(() => ({
+      borders: [...manager.getTileColorModifiers()],
+      fills: [...manager.getTileFillModifiers()],
+      targets: [...manager.getAllSkillTargets()],
+      lines: manager.getSkillLines(),
+      badges: manager.getSkillBadges(),
+    }))
+    return { manager, drawn }
+  }
+  const target = { targetHexId: 5, targetCharacterId: 2 }
+  const line = { fromHexId: 1, toHexId: 5, color: 'red' }
+  const badge = { hexId: 5, icon: 'mark' as SkillBadge['icon'], color: 'red' }
+
+  it.each<[string, (m: SkillManager) => void, (m: SkillManager) => void]>([
+    [
+      'a border',
+      (m) => m.paintTiles(1, Team.ALLY, [{ hexId: 5, color: 'red' }]),
+      (m) => m.clearPaintedTiles(1, Team.ALLY),
+    ],
+    [
+      'a fill',
+      (m) => m.paintTiles(1, Team.ALLY, [{ hexId: 5, color: 'red', fill: true }]),
+      (m) => m.paintTiles(1, Team.ALLY, []),
+    ],
+    [
+      'a target',
+      (m) => m.setSkillTarget(1, Team.ALLY, target),
+      (m) => m.clearSkillTarget(1, Team.ALLY),
+    ],
+    [
+      'a line',
+      (m) => m.setSkillLines(1, Team.ALLY, [line]),
+      (m) => m.clearSkillLines(1, Team.ALLY),
+    ],
+    [
+      'a badge',
+      (m) => m.setSkillBadges(1, Team.ALLY, [badge]),
+      (m) => m.clearSkillBadges(1, Team.ALLY),
+    ],
+    [
+      'everything, until a reset',
+      (m) => {
+        m.paintTiles(1, Team.ALLY, [{ hexId: 5, color: 'red' }])
+        m.setSkillTarget(1, Team.ALLY, target)
+        m.setSkillLines(1, Team.ALLY, [line])
+      },
+      (m) => m.reset(),
+    ],
+  ])('redraws %s when it is set and when it is cleared', (_name, set, clear) => {
+    const { manager, drawn } = watched()
+    const empty = JSON.stringify(drawn.value)
+    set(manager)
+    const shown = JSON.stringify(drawn.value)
+    expect(shown).not.toBe(empty)
+    clear(manager)
+    expect(JSON.stringify(drawn.value)).toBe(empty)
+  })
+
+  it('redraws a second painter of a tile already painted', () => {
+    const { manager, drawn } = watched()
+    manager.paintTiles(1, Team.ALLY, [{ hexId: 5, color: 'red' }])
+    expect(drawn.value.borders).toEqual([[5, ['red']]])
+    manager.paintTiles(2, Team.ALLY, [{ hexId: 5, color: 'blue' }])
+    expect(drawn.value.borders).toEqual([[5, ['red', 'blue']]])
   })
 })

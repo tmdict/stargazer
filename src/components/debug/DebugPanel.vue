@@ -52,8 +52,6 @@ const getSkillTargetsForCharacter = (
   team: Team,
 ): Array<{ key: string; target: SkillTargetInfo }> => {
   const targets: Array<{ key: string; target: SkillTargetInfo }> = []
-  // The version read ties this to every skill change.
-  board.value.skillManager.getTargetVersion()
   const allTargets = board.value.skillManager.getAllSkillTargets()
 
   const standardKey = `${characterId}-${team}`

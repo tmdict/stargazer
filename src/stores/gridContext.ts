@@ -629,23 +629,18 @@ export function createGridContext(
     // Per-board skill-derived data, read by the tile / character / targeting layers.
     const imageModifiers = computed(() => skillManager.getImageModifiersByCharacterAndTeam())
     const tileColorModifiers = computed(() => {
-      skillManager.getTargetVersion()
       return skillManager.getTileColorModifiers(hiddenSkills.value)
     })
     const tileFillModifiers = computed(() => {
-      skillManager.getTargetVersion()
       return skillManager.getTileFillModifiers(hiddenSkills.value)
     })
     const skillTargets = computed(() => {
-      skillManager.getTargetVersion()
       return skillManager.getAllSkillTargets(hiddenSkills.value)
     })
     const skillLines = computed(() => {
-      skillManager.getTargetVersion()
       return skillManager.getSkillLines(hiddenSkills.value)
     })
     const skillBadges = computed(() => {
-      skillManager.getTargetVersion()
       return skillManager.getSkillBadges(hiddenSkills.value)
     })
     const skillRows = computed<SkillRow[]>(() => [

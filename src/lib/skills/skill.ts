@@ -159,11 +159,8 @@ export class SkillManager {
   // Unit badges each skill instance shows (rendered by GridCharacters)
   private skillBadges: Map<string, SkillBadge[]> = new Map()
   // Tiles each skill instance acts on and outlines rather than paints. Nothing
-  // draws them, so they bump no version.
+  // draws them.
   private skillZones: Map<string, number[]> = new Map()
-  // Bumped on every mutation the UI must see; the board's computeds read it
-  // to re-derive from this non-reactive class.
-  private targetVersion = 0
 
   // Lookups are injected: that data lives in the data store, outside this pure lib.
   constructor(private readonly lookups: SkillLookups) {}
@@ -256,7 +253,6 @@ export class SkillManager {
     this.skillLines.clear()
     this.skillBadges.clear()
     this.skillZones.clear()
-    this.targetVersion++
   }
 
   // Add image modifier for a specific character (used by skills for companions)
@@ -292,7 +288,6 @@ export class SkillManager {
     const counts = map.get(hexId) ?? new Map<string, number>()
     counts.set(color, (counts.get(color) ?? 0) + 1)
     map.set(hexId, counts)
-    this.targetVersion++
   }
 
   private removeTileColor(
@@ -300,7 +295,7 @@ export class SkillManager {
     hexId: number,
     color: string,
   ): void {
-    if (dropTileColor(map, hexId, color)) this.targetVersion++
+    dropTileColor(map, hexId, color)
   }
 
   private isHidden(key: string, hidden: ReadonlySet<string>): boolean {
@@ -380,11 +375,10 @@ export class SkillManager {
     const key = this.getSkillKey(characterId, team)
     if (lines.length) this.skillLines.set(key, lines)
     else this.skillLines.delete(key)
-    this.targetVersion++
   }
 
   clearSkillLines(characterId: number, team: Team): void {
-    if (this.skillLines.delete(this.getSkillKey(characterId, team))) this.targetVersion++
+    this.skillLines.delete(this.getSkillKey(characterId, team))
   }
 
   getSkillLines(hidden = NOTHING_HIDDEN): SkillLine[] {
@@ -397,11 +391,10 @@ export class SkillManager {
     const key = this.getSkillKey(characterId, team)
     if (badges.length) this.skillBadges.set(key, badges)
     else this.skillBadges.delete(key)
-    this.targetVersion++
   }
 
   clearSkillBadges(characterId: number, team: Team): void {
-    if (this.skillBadges.delete(this.getSkillKey(characterId, team))) this.targetVersion++
+    this.skillBadges.delete(this.getSkillKey(characterId, team))
   }
 
   // One badge per hex and icon however many instances show it: a synergy
@@ -440,7 +433,6 @@ export class SkillManager {
   setSkillTarget(characterId: number, team: Team, target: SkillTargetInfo): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.set(key, target)
-    this.targetVersion++
   }
 
   getSkillTarget(characterId: number, team: Team): SkillTargetInfo | undefined {
@@ -451,7 +443,6 @@ export class SkillManager {
   clearSkillTarget(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.delete(key)
-    this.targetVersion++
   }
 
   getAllSkillTargets(hidden = NOTHING_HIDDEN): Map<string, SkillTargetInfo> {
@@ -466,10 +457,6 @@ export class SkillManager {
         !getCharacterSkill(characterId)?.drawsNothing &&
         (!isPhantimalId(characterId) || this.lookups.seasonalTargeting(characterId)),
     )
-  }
-
-  getTargetVersion(): number {
-    return this.targetVersion
   }
 
   // Update all active skills. Each skill is isolated: one throwing onUpdate (or
