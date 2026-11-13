@@ -55,6 +55,40 @@ export const reviewedCharacterId = (
   return cell?.recognised ? (cell.candidates[0]?.characterId ?? null) : null
 }
 
+// One screenshot's reading of a card as reviewed: the reading, and the hero and
+// levels it gives.
+export interface ReviewedCard {
+  shotId: string
+  key: string
+  cell: HeroReading
+  characterId: number | null
+  paragon: number
+  refinement: number
+  state: CellState
+  doubtful: ReviewPart[]
+  edited: boolean
+}
+
+export const reviewedCard = (
+  shotId: string,
+  key: string,
+  cell: HeroReading,
+  override: CellOverride = {},
+): ReviewedCard => {
+  const attrs = reviewedAttrs(cell, override)
+  return {
+    shotId,
+    key,
+    cell,
+    characterId: reviewedCharacterId(cell, override),
+    paragon: attrs[ATTR_PARAGON] ?? 0,
+    refinement: attrs[ATTR_REFINEMENT] ?? 0,
+    state: cellState(cell, override),
+    doubtful: doubtfulParts(cell, override),
+    edited: Object.keys(override).length > 0,
+  }
+}
+
 /* The levels a cell contributes, each the override when one was made, else
  * the reading. */
 export const reviewedAttrs = (

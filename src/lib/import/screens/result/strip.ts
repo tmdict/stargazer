@@ -11,7 +11,7 @@
  * result, not the map's, and are not read. */
 
 import { Team } from '@/lib/types/team'
-import { hsvAt, pixelDistance } from '../../core/image'
+import { hsvAt, median, pixelDistance } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
 import { STRIP, SUMMARY_BAR, TAB_REGION, TABS, type Region } from './layout'
@@ -268,11 +268,6 @@ const colouredFraction = (shot: RgbaImage, y: number, x0: number, x1: number): n
     if (resultColourAt(shot, x, y) !== null) hit++
   }
   return n ? hit / n : 0
-}
-
-const median = (values: number[]): number => {
-  const sorted = [...values].sort((a, b) => a - b)
-  return sorted[sorted.length >> 1]!
 }
 
 interface TabRows {

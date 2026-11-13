@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildArtifactTable } from '@/lib/import/artifact/artifacts'
 import { FRAME_NAMES, prepareFrameRefs } from '@/lib/import/card/frames'
 import { buildHeroTable } from '@/lib/import/card/heroes'
 import type { RgbaImage } from '@/lib/import/core/types'
-import { buildArtifactTable } from '@/lib/import/screens/match/artifacts'
 import { readMatchup } from '@/lib/import/screens/matchup/matchup'
 import { createImage } from '../../../../fixtures/image'
 

@@ -23,7 +23,7 @@ import {
 } from '@/composables/useImportShotList'
 import { isRosterReading } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
-import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/roster'
+import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/layout'
 import type { RosterReading } from '@/lib/import/screens/roster/types'
 import { buildRosterImportPlan, slotKey, type RosterImportPlan } from '@/lib/rosterImport'
 

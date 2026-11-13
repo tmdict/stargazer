@@ -7,15 +7,17 @@
  * scale at which its cards meet the frame templates. */
 
 import { Team } from '@/lib/types/team'
+import { readArtifact } from '../../artifact/artifacts'
+import type { ArtifactReading } from '../../artifact/types'
 import { readCards } from '../../card/card'
-import { heroDescriptor, rankHeroes } from '../../card/heroes'
+import { bestFrameAt } from '../../card/frames'
+import { FACE_ASPECT, heroDescriptor, rankHeroes } from '../../card/heroes'
 import type { StarRow } from '../../card/stars'
 import type { HeroReading } from '../../card/types'
-import { cropResize, maskedNcc, pixelDistance } from '../../core/image'
+import { cropResize, pixelDistance } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
-import { readArtifact } from '../match/artifacts'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
-import type { ArtifactReading, ImportWarning, ReferenceSet } from '../match/types'
+import type { ImportWarning, ReferenceSet } from '../match/types'
 import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
 import type { BoardFit, FormationReading, UnitReading } from './types'
 
@@ -82,7 +84,6 @@ function ringScore(img: RgbaImage, cx: number, cy: number, r: number): number {
   return hit / RING_SAMPLES
 }
 
-const FACE_ASPECT = 0.75
 // Face crops of a portrait in ring radii (width, and top relative to the ring's
 // centre), in the hero table's landscape shape. The first ranks the whole
 // table; the others suit heroes framed wider or higher and re-score the leaders.
@@ -334,8 +335,7 @@ function findRow(shot: RgbaImage, refs: ReferenceSet, fit: BoardFit): Comb | nul
     const key = `${x},${y}`
     let best = cardAt.get(key)
     if (best === undefined) {
-      best = -1
-      for (const ref of refs.frames) best = Math.max(best, maskedNcc(shot, ref.image, x, y, 3))
+      best = bestFrameAt(shot, refs.frames, x, y, 3)
       cardAt.set(key, best)
     }
     return best

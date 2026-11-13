@@ -230,6 +230,18 @@ export function dot(a: Float32Array, b: Float32Array): number {
 // the slowest part of a per-pixel loop.
 export const pixelDistance = (dx: number, dy: number): number => Math.sqrt(dx * dx + dy * dy)
 
+// The brightness of the pixel whose red byte is at `i`.
+export const luma = (data: Uint8ClampedArray, i: number): number =>
+  0.299 * data[i]! + 0.587 * data[i + 1]! + 0.114 * data[i + 2]!
+
+export const median = (xs: readonly number[]): number => {
+  const s = [...xs].sort((a, b) => a - b)
+  return s.length === 0 ? NaN : s[Math.floor(s.length / 2)]!
+}
+
+// A template pixel counts as paint from this alpha up.
+export const PAINT_ALPHA = 200
+
 // A template less visible than this at a crop edge is not scored: a sliver
 // fits any frame.
 const NCC_MIN_COVERAGE = 0.25
@@ -256,7 +268,7 @@ const samplesOf = (template: RgbaImage, step: number): OpaqueSamples => {
   for (let y = 0; y < height; y += step) {
     for (let x = 0; x < width; x += step) {
       const i = (y * width + x) * 4
-      if (data[i + 3]! < 200) continue
+      if (data[i + 3]! < PAINT_ALPHA) continue
       xs.push(x)
       ys.push(y)
       rgb.push(data[i]!, data[i + 1]!, data[i + 2]!)

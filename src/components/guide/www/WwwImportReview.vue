@@ -21,11 +21,11 @@ import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
 import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import type { ShotRef } from '@/composables/useImportShotList'
 import type { WwwImportShot } from '@/composables/useWwwImport'
+import type { ReviewedCard } from '@/lib/import/review'
 import type { Point } from '@/lib/layout'
 import { SIDES, type TeamSide } from '@/lib/pvp/www/panel'
 import {
   filledSlots,
-  type WwwCard,
   type WwwImportPlan,
   type WwwIssue,
   type WwwSlot,
@@ -42,7 +42,7 @@ const { plan, shots } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  setHero: [cards: WwwCard[], characterId: number | null]
+  setHero: [cards: ReviewedCard[], characterId: number | null]
   setLevel: [cards: ShotRef[], field: 'paragon' | 'refinement', level: number]
   setArtifact: [teams: ShotRef[], artifactId: number | null]
   confirmAll: []

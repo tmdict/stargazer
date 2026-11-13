@@ -11,7 +11,7 @@
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
-import { cropResize } from '../../core/image'
+import { cropResize, luma } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
 import { ringGreen } from '../match/ring'
 import type { ImportWarning } from '../match/types'
@@ -74,8 +74,7 @@ const grey = (img: RgbaImage, width: number, height: number): GreyImage => {
   const small = cropResize(img, { x: 0, y: 0, w: img.width, h: img.height }, width, height)
   const data = new Float32Array(width * height)
   for (let i = 0; i < data.length; i++) {
-    const p = i * 4
-    data[i] = 0.299 * small.data[p]! + 0.587 * small.data[p + 1]! + 0.114 * small.data[p + 2]!
+    data[i] = luma(small.data, i * 4)
   }
   return { width, height, data }
 }
@@ -154,7 +153,8 @@ function score(
 }
 
 /* Coarse to fine: every candidate scale and shift on copies at a sixteenth of
- * the reference's size, then the best neighbourhood at a quarter. */
+ * the reference's size, then the best neighbourhood at a quarter. Also called
+ * by external tooling. */
 export function placeReplay(shot: RgbaImage, arena: ArenaRef): ReplayPlacement {
   const guess = shot.width / REPLAY_REFERENCE.width
   // The frame at the arena picture's resolution, as if its scale were the guess.

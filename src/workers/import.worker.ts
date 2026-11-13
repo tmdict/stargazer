@@ -7,6 +7,7 @@
  * add. An opening of an import runs one or more readers, and one more worker
  * that holds only the arena and sorts the screenshots added. */
 
+import { buildArtifactTable } from '@/lib/import/artifact/artifacts'
 import { prepareFrameRefs } from '@/lib/import/card/frames'
 import type { HeroTable, LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
@@ -21,12 +22,11 @@ import {
 import { buildBoardTable, buildImportHeroTable, buildUnitTable } from '@/lib/import/references'
 import { readFormation } from '@/lib/import/screens/formation/formation'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
-import { buildArtifactTable } from '@/lib/import/screens/match/artifacts'
 import type { ReferenceSet } from '@/lib/import/screens/match/types'
 import { readMatchup } from '@/lib/import/screens/matchup/matchup'
 import { prepareArena, readReplay } from '@/lib/import/screens/replay/replay'
 import type { ArenaRef } from '@/lib/import/screens/replay/types'
-import { readScreenshot } from '@/lib/import/screens/result/result'
+import { readResult } from '@/lib/import/screens/result/result'
 import { readRoster } from '@/lib/import/screens/roster/roster'
 import { sortScreenshot } from '@/lib/import/sort'
 
@@ -91,7 +91,7 @@ const has = (part: ReferencePart): boolean => (part === 'heroes' ? card !== null
 
 // The reader for each kind of screenshot; a replay frame needs only the arena.
 const readers: Record<ImportKind, (image: RgbaImage) => ImportReading> = {
-  result: (image) => readScreenshot(image, { ...card!, ...match! }),
+  result: (image) => readResult(image, { ...card!, ...match! }),
   formation: (image) => {
     board ??= buildBoardTable(portraits, boardPictures)
     return readFormation(image, { ...card!, ...match!, board })

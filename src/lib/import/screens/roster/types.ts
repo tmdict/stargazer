@@ -14,7 +14,7 @@ export interface Slot {
   hands: boolean
   box: Rect
   kind: SlotKind
-  // Share of the card's height in view.
+  // Share of the card's height in view. Read by external tooling.
   inView: number
 }
 
@@ -36,6 +36,7 @@ export interface RosterSlot extends Slot {
 }
 
 export interface RosterReading {
+  // Read by external tooling.
   grid: Grid | null
   slots: RosterSlot[]
 }

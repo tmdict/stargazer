@@ -2,6 +2,8 @@
  * how much of each pixel column is ground. The roster reader fits one of six to the
  * grid and one of five to the Hands of Resonance. */
 
+import { median } from '../../core/image'
+
 export interface Comb {
   // The first gutter's centre and the column pitch: column k spans
   // phase + k * pitch to phase + (k + 1) * pitch, its card in the middle.
@@ -78,9 +80,4 @@ export function fitComb(
     widths.push(b - a + 1)
   }
   return { ...best, card: best.pitch - median(widths) }
-}
-
-export const median = (xs: readonly number[]): number => {
-  const s = [...xs].sort((a, b) => a - b)
-  return s.length === 0 ? NaN : s[Math.floor(s.length / 2)]!
 }

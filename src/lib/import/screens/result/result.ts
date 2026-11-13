@@ -6,16 +6,12 @@
  * game's own history view. */
 
 import { Team } from '@/lib/types/team'
+import { readArtifact } from '../../artifact/artifacts'
+import type { ArtifactReading } from '../../artifact/types'
 import { readCards } from '../../card/card'
 import type { FrameRef, HeroReading } from '../../card/types'
 import type { RgbaImage } from '../../core/types'
-import { readArtifact } from '../match/artifacts'
-import type {
-  ArtifactReading,
-  ImportWarning,
-  ReferenceSet,
-  ScreenshotReading,
-} from '../match/types'
+import type { ImportWarning, ReferenceSet, ScreenshotReading } from '../match/types'
 import {
   ANCHOR_FLOOR,
   findPanelAnchor,
@@ -102,7 +98,7 @@ const columnSeeds = (anchor: PanelAnchor): { x: number; y: number }[] =>
     y: Math.round(anchor.y + anchor.pitch * row),
   }))
 
-export function readScreenshot(capture: RgbaImage, refs: ResultReferences): ScreenshotReading {
+export function readResult(capture: RgbaImage, refs: ResultReferences): ScreenshotReading {
   const warnings: ImportWarning[] = []
   const { image: shot, tabs: found } = framePanel(capture)
   const { tabs, anchors, floor } = placeColumns(shot, refs.frames, found)

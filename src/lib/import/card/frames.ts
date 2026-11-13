@@ -4,7 +4,7 @@
  * per-card region is measured from. The frame's crest, its top half compared
  * part by part, tells the levels apart where the whole-frame match cannot. */
 
-import { cropResize, maskedNcc } from '../core/image'
+import { cropResize, maskedNcc, PAINT_ALPHA } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
 import type {
   Crest,
@@ -63,15 +63,17 @@ export const range = (from: number, to: number, step: number): number[] => {
   return out
 }
 
+// `step` is how coarsely each template is sampled.
 export const bestFrameAt = (
   shot: RgbaImage,
   refs: readonly FrameRef[],
   x: number,
   y: number,
+  step = 2,
 ): number => {
   let best = -1
   for (const ref of refs) {
-    const s = maskedNcc(shot, ref.image, x, y)
+    const s = maskedNcc(shot, ref.image, x, y, step)
     if (s > best) best = s
   }
   return best
@@ -167,8 +169,6 @@ export const withFamily = (cell: HeroReading, frame: FrameFamilyReading): HeroRe
   }
 }
 
-// A template pixel is paint from this alpha up.
-const PAINT = 200
 // Two paints differ by more than this, averaged over the channels.
 const REPAINT = 60
 
@@ -210,8 +210,8 @@ export function readCrest(shot: RgbaImage, refs: readonly FrameRef[], box: Rect)
     for (let y = 0; y < t.height / 2; y++) {
       for (let x = 0; x < t.width; x++) {
         const i = (y * t.width + x) * 4
-        if (t.data[i + 3]! < PAINT) continue
-        const bare = plain.data[i + 3]! < PAINT
+        if (t.data[i + 3]! < PAINT_ALPHA) continue
+        const bare = plain.data[i + 3]! < PAINT_ALPHA
         if (part === 'crown' && bare) sum += near(t, i, x, y)
         else if (part === 'tint' && !bare && distance(t.data, i, plain.data, i) > REPAINT)
           sum += near(t, i, x, y) - near(plain, i, x, y)

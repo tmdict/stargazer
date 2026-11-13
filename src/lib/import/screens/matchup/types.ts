@@ -2,9 +2,9 @@
  * games' panels top to bottom, each two teams of up to five hero cards and an
  * artifact. */
 
+import type { ArtifactReading } from '../../artifact/types'
 import type { HeroReading } from '../../card/types'
 import type { Rect } from '../../core/types'
-import type { ArtifactReading } from '../match/types'
 
 // The left team's box sits under a blue bar, the right team's under a red one.
 export type BarColour = 'blue' | 'red'

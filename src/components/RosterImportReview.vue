@@ -18,8 +18,8 @@ import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
 import type { ShotRef } from '@/composables/useImportShotList'
 import type { RosterImportShot } from '@/composables/useRosterImport'
 import { compareCharacters } from '@/lib/filterOrder'
-import type { CellState, ReviewPart } from '@/lib/import/review'
-import type { EntryIssue, RosterCard, RosterImportPlan } from '@/lib/rosterImport'
+import type { CellState, ReviewedCard, ReviewPart } from '@/lib/import/review'
+import type { EntryIssue, RosterImportPlan } from '@/lib/rosterImport'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -40,7 +40,7 @@ const i18n = useI18nStore()
 // One cell of the review: a hero (several cards as one) or one card.
 interface CellView {
   key: string
-  cards: RosterCard[]
+  cards: ReviewedCard[]
   characterId: number | null
   paragon: number
   refinement: number
@@ -54,16 +54,16 @@ interface CellView {
 
 const PARTS: readonly ReviewPart[] = ['hero', 'paragon', 'refinement']
 
-const refs = (cards: readonly RosterCard[]): ShotRef[] =>
+const refs = (cards: readonly ReviewedCard[]): ShotRef[] =>
   cards.map(({ shotId, key }) => ({ shotId, key }))
 
-const cardImage = (card: RosterCard): string =>
+const cardImage = (card: ReviewedCard): string =>
   shots.find((s) => s.id === card.shotId)?.cards[card.key] ?? ''
 
 const shotName = (shotId: string): string => shots.find((s) => s.id === shotId)?.name ?? ''
 
 // A cell per card, named by its screenshot and slot, for cards to be told apart.
-const cardCells = (cards: readonly RosterCard[], issues: EntryIssue[] = []): CellView[] =>
+const cardCells = (cards: readonly ReviewedCard[], issues: EntryIssue[] = []): CellView[] =>
   cards.map((card) => ({
     key: `${card.shotId}:${card.key}`,
     cards: [card],
@@ -79,7 +79,7 @@ const cardCells = (cards: readonly RosterCard[], issues: EntryIssue[] = []): Cel
 
 // One cell for all of a hero's cards, the first one shown, its state the first
 // left to check and its doubts those of any card.
-const heroCell = (cards: RosterCard[]): CellView => {
+const heroCell = (cards: ReviewedCard[]): CellView => {
   const first = cards[0]!
   return {
     key: `${first.shotId}:${first.key}`,

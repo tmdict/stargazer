@@ -35,7 +35,7 @@ The bar for marking a reading sure is that nothing read wrongly is marked sure o
 
 ## Layers
 
-`src/lib/import/` is built in layers, and a layer imports only those below it, so a new screen is a reader on top of what the others share. `core/` holds the RGBA and rectangle types and the image primitives. `card/` reads the game's hero card wherever a screen shows one: the frame match names the paragon level and pins the card's box, the face is ranked against the hero table, and the star row gives the refinement. Cards shown together are settled against each other, since they show different heroes. `screens/` has one reader per screen. On top sit the review rules every import asks of a card, the reference assembly, the learned-face store and the sorter, which tells which import and kind a screenshot shows.
+`src/lib/import/` is built in layers, and a layer imports only those below it, so a new screen is a reader on top of what the others share. `core/` holds the RGBA and rectangle types and the image primitives. `card/` reads the game's hero card wherever a screen shows one: the frame match names the paragon level and pins the card's box, the face is ranked against the hero table, and the star row gives the refinement. Cards shown together are settled against each other, since they show different heroes. `artifact/` reads the artifact icon that the result, formation and matchup screens show. `screens/` has one reader per screen, and `screens/match/` holds what the three match screens share. On top sit the review rules every import asks of a card, the reference assembly, the learned-face store and the sorter, which tells which import and kind a screenshot shows.
 
 ## The engine
 
@@ -104,7 +104,7 @@ The game's Ally tab is always the viewing player, whichever side of the board th
 
 ### Formation screenshots
 
-The formation panel draws every hero at the screenshotting player's own upgrades, never at the match's. So a match's upgrades come only from its result screenshots, and its formation screenshots' cards are not read. `fitBoard` finds the board through the same camera the perspective view draws (`PERSPECTIVE`, [Grid](./GRID.md)), so a fit is only a scale and a centre. The lit tiles tell which team the screenshot shows, and the map is the one whose deployment tiles for that side are exactly the lit tiles.
+The formation panel draws every hero at the screenshotting player's own upgrades, never at the match's. So a match's upgrades come only from its result screenshots, and its formation screenshots' cards are not used. `fitBoard` finds the board through the same camera the perspective view draws (`PERSPECTIVE`, [Grid](./GRID.md)), so a fit is only a scale and a centre. The lit tiles tell which team the screenshot shows, and the map is the one whose deployment tiles for that side are exactly the lit tiles.
 
 Each portrait is taken for one of the units the side can field, best matches first. Units a screenshot does not show are placed by hand on its board, as on a replay frame (`useTilePlacing`).
 

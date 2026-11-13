@@ -9,12 +9,12 @@
  * bottom bar or past the shot's edge, reads no cards: a hidden card row still
  * matches the frames, and its faces can read as heroes on blank ground. */
 
+import { readArtifact } from '../../artifact/artifacts'
 import { readCardBoxes, settleCards, type CardRead } from '../../card/card'
 import { CARD_ASPECT, frameFamily, withFamily } from '../../card/frames'
 import type { HeroReading } from '../../card/types'
 import { hsvAt } from '../../core/image'
 import type { Rect, RgbaImage } from '../../core/types'
-import { readArtifact } from '../match/artifacts'
 import type { ReferenceSet } from '../match/types'
 import { findPanels } from './bars'
 import { CARD_STARS, CARDS, DISC, EMPTY, FOOT } from './layout'

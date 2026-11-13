@@ -6,7 +6,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import RosterImportReview from '@/components/RosterImportReview.vue'
 import type { RosterImportShot } from '@/composables/useRosterImport'
 import type { HeroReading } from '@/lib/import/card/types'
-import type { RosterCard, RosterImportPlan } from '@/lib/rosterImport'
+import type { ReviewedCard } from '@/lib/import/review'
+import type { RosterImportPlan } from '@/lib/rosterImport'
 
 let teardown: (() => void) | undefined
 
@@ -15,7 +16,7 @@ afterEach(() => {
   teardown = undefined
 })
 
-const card = (shotId: string, key: string): RosterCard => ({
+const card = (shotId: string, key: string): ReviewedCard => ({
   shotId,
   key,
   cell: { candidates: [] } as unknown as HeroReading,
@@ -27,7 +28,7 @@ const card = (shotId: string, key: string): RosterCard => ({
   edited: false,
 })
 
-const planOf = (cards: RosterCard[]): RosterImportPlan => ({
+const planOf = (cards: ReviewedCard[]): RosterImportPlan => ({
   entries: [{ characterId: 5, cards, paragon: 4, refinement: 4, issues: [], check: false }],
   confirmable: [],
   unnamed: [],

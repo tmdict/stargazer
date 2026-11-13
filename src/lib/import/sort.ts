@@ -8,7 +8,8 @@ import { isMatchupScreen } from './screens/matchup/bars'
 import { isReplayFrame } from './screens/replay/replay'
 import type { ArenaRef } from './screens/replay/types'
 import { findTabs } from './screens/result/strip'
-import { isRosterScreen, WORK_MAX } from './screens/roster/roster'
+import { WORK_MAX } from './screens/roster/layout'
+import { isRosterScreen } from './screens/roster/roster'
 
 // The roster's grid is told on a copy this wide, as the roster reader finds it;
 // the match screens on one FIT_WIDTH wide.

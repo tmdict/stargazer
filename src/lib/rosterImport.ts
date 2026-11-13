@@ -7,16 +7,7 @@
  * so the screenshots give the same plan whichever is read first. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from './characters/attributes'
-import type { HeroReading } from './import/card/types'
-import {
-  cellState,
-  doubtfulParts,
-  reviewedAttrs,
-  reviewedCharacterId,
-  type CellOverride,
-  type CellState,
-  type ReviewPart,
-} from './import/review'
+import { reviewedCard, type CellOverride, type ReviewedCard } from './import/review'
 import type { RosterReading, Slot } from './import/screens/roster/types'
 
 /* A slot's key: h1 to h5 for the Hands of Resonance, row.col down the grid. */
@@ -30,19 +21,6 @@ export interface RosterShotInput {
   overrides: Readonly<Record<string, CellOverride>>
 }
 
-// A card as reviewed: its reading, and the hero and levels it gives.
-export interface RosterCard {
-  shotId: string
-  key: string
-  cell: HeroReading
-  characterId: number | null
-  paragon: number
-  refinement: number
-  state: CellState
-  doubtful: ReviewPart[]
-  edited: boolean
-}
-
 // What an entry asks about: a repeat with an unsure card, usually a misreading;
 // cards that disagree on the hero's levels; the hero on two cards of one
 // screenshot. The last two hold back Save.
@@ -50,7 +28,7 @@ export type EntryIssue = 'repeat' | 'levels' | 'twice'
 
 export interface RosterEntry {
   characterId: number
-  cards: RosterCard[]
+  cards: ReviewedCard[]
   // The hero's levels; null while its cards disagree.
   paragon: number | null
   refinement: number | null
@@ -66,7 +44,7 @@ export interface RosterImportPlan {
   // no issue (an issue is the reviewer's to settle).
   confirmable: RosterEntry[]
   // Cards no hero is taken for yet.
-  unnamed: RosterCard[]
+  unnamed: ReviewedCard[]
   // What Save writes: each hero's levels, defaults left out.
   heroes: Record<string, AttrRecord>
   blocked: boolean
@@ -80,34 +58,21 @@ export const shotToCheck = (plan: RosterImportPlan, shotId: string): number =>
   plan.entries.filter((e) => e.check && e.cards.some((c) => c.shotId === shotId)).length +
   plan.unnamed.filter((c) => c.shotId === shotId).length
 
-const cardsOf = (shot: RosterShotInput): RosterCard[] =>
+const cardsOf = (shot: RosterShotInput): ReviewedCard[] =>
   shot.reading.slots.flatMap((slot) => {
     if (!slot.cell || !slot.frame) return []
     const key = slotKey(slot)
     const override = shot.overrides[key] ?? {}
     // Removed in review.
     if (override.characterId === null) return []
-    const attrs = reviewedAttrs(slot.cell, override)
-    return [
-      {
-        shotId: shot.id,
-        key,
-        cell: slot.cell,
-        characterId: reviewedCharacterId(slot.cell, override),
-        paragon: attrs[ATTR_PARAGON] ?? 0,
-        refinement: attrs[ATTR_REFINEMENT] ?? 0,
-        state: cellState(slot.cell, override),
-        doubtful: doubtfulParts(slot.cell, override),
-        edited: Object.keys(override).length > 0,
-      },
-    ]
+    return [reviewedCard(shot.id, key, slot.cell, override)]
   })
 
 const only = (values: number[]): number | null => (new Set(values).size === 1 ? values[0]! : null)
 
 export function buildRosterImportPlan(shots: readonly RosterShotInput[]): RosterImportPlan {
-  const byHero = new Map<number, RosterCard[]>()
-  const unnamed: RosterCard[] = []
+  const byHero = new Map<number, ReviewedCard[]>()
+  const unnamed: ReviewedCard[] = []
   for (const shot of shots) {
     for (const card of cardsOf(shot)) {
       if (card.characterId === null) unnamed.push(card)

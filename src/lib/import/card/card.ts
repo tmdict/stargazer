@@ -3,9 +3,10 @@
  * the face gives the refinement. Each card is read on its own, then the cards
  * a screen shows together are settled against each other. */
 
-import { cropResize, maskedNcc, resample } from '../core/image'
+import { cropResize, resample } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
 import {
+  bestFrameAt,
   CARD_ASPECT,
   FRAME_SCALES,
   matchCard,
@@ -13,14 +14,14 @@ import {
   READ_WIDTH,
   readCrest,
 } from './frames'
-import { assignUnique, heroDescriptor, rankHeroes, type Rivals } from './heroes'
+import { assignUnique, FACE_ASPECT, heroDescriptor, rankHeroes, type Rivals } from './heroes'
 import { readStars, type StarRow } from './stars'
 import type { CardReferences, Crest, HeroCandidate, HeroIdentity, HeroReading } from './types'
 
 // The face inside a matched frame: fractions of the frame box. Only the upper
 // part of the art is used, since the badges and the frame's white swirl
 // cover the rest.
-export const ART_BOX = { x: 0.23, y: 0.2, w: 0.69, aspect: 36 / 48 } as const
+export const ART_BOX = { x: 0.23, y: 0.2, w: 0.69, aspect: FACE_ASPECT } as const
 
 // Small offsets of the face crop, centre first, absorbing the frame match's
 // residual error.
@@ -36,6 +37,7 @@ const ALIGNMENTS: readonly [number, number][] = [
   [2, 3],
 ]
 
+// Also called by external tooling.
 export const artBoxOf = (box: Rect): Rect => {
   const w = Math.round(box.w * ART_BOX.w)
   return {
@@ -60,7 +62,7 @@ export interface CardRead {
 /* One card from where it is expected (its frame's top-left): its frame pins
  * its box, and the face, the star row and a crop for the review come from
  * there. Without a trusted placement the box is a guess, and the face is not
- * ranked. */
+ * ranked. Also called by external tooling. */
 export const readCard = (
   shot: RgbaImage,
   refs: CardReferences,
@@ -168,8 +170,7 @@ export function readCardBoxes(
       let b = -1
       for (let dy = -8; dy <= 8; dy += 2) {
         for (let dx = -6; dx <= 6; dx += 2) {
-          for (const r of middle)
-            b = Math.max(b, maskedNcc(scaled, r.image, seed.x + dx, seed.y + dy, 3))
+          b = Math.max(b, bestFrameAt(scaled, middle, seed.x + dx, seed.y + dy, 3))
         }
       }
       sum += b

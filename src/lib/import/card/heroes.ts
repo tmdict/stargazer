@@ -29,7 +29,8 @@ const PORTRAIT_SIZE = { width: 90, height: 124 } as const
 const COSTUME_SCALE = 2
 export const DESCRIPTOR_SIZE = { width: 32, height: 24 } as const
 export const DESCRIPTOR_LENGTH = DESCRIPTOR_SIZE.width * DESCRIPTOR_SIZE.height * 3
-const ASPECT = DESCRIPTOR_SIZE.height / DESCRIPTOR_SIZE.width
+// A face crop's height over its width, the descriptor's shape.
+export const FACE_ASPECT = DESCRIPTOR_SIZE.height / DESCRIPTOR_SIZE.width
 
 // Crop window grids over the half-size portrait. The bundled art frames every
 // hero alike, so its grid is tight; a costume reference is captured from the
@@ -67,7 +68,7 @@ const quantize = (v: Float32Array): Int8Array => {
 }
 
 const windowRect = (w: number, xc: number, yt: number, portrait: RgbaImage): Rect | null => {
-  const h = Math.round(w * ASPECT)
+  const h = Math.round(w * FACE_ASPECT)
   const x = Math.max(0, Math.min(portrait.width - w, Math.round(xc - w / 2)))
   if (w > portrait.width || yt < 0 || yt + h > portrait.height) return null
   return { x, y: yt, w, h }

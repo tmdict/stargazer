@@ -15,8 +15,8 @@
  * lead its nearest one clearly. A player who fields no artifact gets no badge,
  * and that header reads as none. */
 
-import { cropResize, dot, normalizedVectorMasked } from '../../core/image'
-import type { Rect, RgbaImage } from '../../core/types'
+import { cropResize, dot, luma, normalizedVectorMasked } from '../core/image'
+import type { Rect, RgbaImage } from '../core/types'
 import type { ArtifactReading, ArtifactTable } from './types'
 
 const T = 40
@@ -70,16 +70,13 @@ function colourHistogram(img: RgbaImage): Float32Array {
   return h
 }
 
-const luma = (img: RgbaImage, p: number): number =>
-  0.299 * img.data[p * 4]! + 0.587 * img.data[p * 4 + 1]! + 0.114 * img.data[p * 4 + 2]!
-
 // Whether a disc crop has art in it: a black, flat or empty disc does not.
 function holdsArt(img: RgbaImage): boolean {
   let sum = 0
   let sq = 0
   let dark = 0
   for (const p of MASKED) {
-    const l = luma(img, p)
+    const l = luma(img.data, p * 4)
     sum += l
     sq += l * l
     if (l < DARK_LEVEL) dark++
@@ -99,7 +96,7 @@ function darkShare(shot: RgbaImage, cx: number, cy: number, diameter: number): n
   for (let y = Math.max(0, Math.round(cy - half)); y < Math.min(shot.height, cy + half); y++) {
     for (let x = Math.max(0, Math.round(cx - half)); x < Math.min(shot.width, cx + half); x++) {
       n++
-      if (luma(shot, y * shot.width + x) < BADGE_DARK) dark++
+      if (luma(shot.data, (y * shot.width + x) * 4) < BADGE_DARK) dark++
     }
   }
   return n ? dark / n : 0

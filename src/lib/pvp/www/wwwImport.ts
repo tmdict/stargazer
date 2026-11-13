@@ -7,19 +7,16 @@
  * places them against each other. The plan is worked out again from the
  * readings and corrections on every change. */
 
-import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
+import type { ArtifactReading } from '@/lib/import/artifact/types'
 import type { HeroReading } from '@/lib/import/card/types'
 import {
-  cellState,
-  doubtfulParts,
   PART_STATE,
-  reviewedAttrs,
-  reviewedCharacterId,
+  reviewedCard,
   type CellOverride,
   type CellState,
+  type ReviewedCard,
   type ReviewPart,
 } from '@/lib/import/review'
-import type { ArtifactReading } from '@/lib/import/screens/match/types'
 import type { BarColour, MatchupPanel, MatchupReading } from '@/lib/import/screens/matchup/types'
 import { WWW_GAMES, type WwwGame, type WwwTeamState } from './match'
 import type { Pair, TeamSide } from './panel'
@@ -44,26 +41,13 @@ export interface WwwShotInput {
   artifacts: Readonly<Record<string, number | null>>
 }
 
-// One screenshot's reading of a card, as reviewed.
-export interface WwwCard {
-  shotId: string
-  key: string
-  cell: HeroReading
-  characterId: number | null
-  paragon: number
-  refinement: number
-  state: CellState
-  doubtful: ReviewPart[]
-  edited: boolean
-}
-
 // What a card or an artifact asks about: its screenshots read it differently,
 // or its side fields it in two places. Both hold back Save.
 export type WwwIssue = 'differ' | 'twice'
 
 // A card of a game: every screenshot's reading of it and what they settle on.
 export interface WwwSlot {
-  cards: WwwCard[]
+  cards: ReviewedCard[]
   characterId: number | null
   paragon: number
   refinement: number
@@ -117,21 +101,8 @@ export interface WwwImportPlan {
 const inView = (panel: MatchupPanel): boolean =>
   COLOURS.some((colour) => panel[colour].cards !== null)
 
-const cardOf = (shot: WwwShotInput, key: string, cell: HeroReading): WwwCard => {
-  const override = shot.overrides[key] ?? {}
-  const attrs = reviewedAttrs(cell, override)
-  return {
-    shotId: shot.id,
-    key,
-    cell,
-    characterId: reviewedCharacterId(cell, override),
-    paragon: attrs[ATTR_PARAGON] ?? 0,
-    refinement: attrs[ATTR_REFINEMENT] ?? 0,
-    state: cellState(cell, override),
-    doubtful: doubtfulParts(cell, override),
-    edited: Object.keys(override).length > 0,
-  }
-}
+const cardOf = (shot: WwwShotInput, key: string, cell: HeroReading): ReviewedCard =>
+  reviewedCard(shot.id, key, cell, shot.overrides[key])
 
 const badgeOf = (shot: WwwShotInput, panel: number, colour: BarColour): WwwBadge => {
   const key = teamKey(panel, colour)
@@ -251,7 +222,7 @@ function placeShots(shots: readonly WwwShotInput[]): { starts: number[]; fits: b
 /* A card's readings settled into one: for each part, the sure readings stand
  * over the unsure ones, and readings that still disagree are asked about. A
  * reading that recognised nothing says nothing while another names a hero. */
-function slotOf(cards: WwwCard[]): WwwSlot {
+function slotOf(cards: ReviewedCard[]): WwwSlot {
   const edited = cards.some((c) => c.edited)
   const named = cards.filter((c) => c.state !== 'none')
   if (!named.length) {

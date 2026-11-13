@@ -11,7 +11,7 @@
 import type { Hex } from '@/lib/hex'
 import { Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { FULL_GRID, presetHexes } from '@/lib/types/grid'
-import { cropResize } from '../../core/image'
+import { cropResize, luma } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
 import type { BoardFit } from './types'
 
@@ -123,7 +123,7 @@ function lineMap(img: RgbaImage): LineMap {
   const { width: w, height: h, data } = img
   const lum = new Float32Array(w * h)
   for (let i = 0; i < w * h; i++) {
-    lum[i] = 0.299 * data[i * 4]! + 0.587 * data[i * 4 + 1]! + 0.114 * data[i * 4 + 2]!
+    lum[i] = luma(data, i * 4)
   }
   const at = (x: number, y: number): number =>
     x < 0 || y < 0 || x >= w || y >= h ? 255 : lum[y * w + x]!

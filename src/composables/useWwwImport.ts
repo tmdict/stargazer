@@ -23,16 +23,10 @@ import {
 } from '@/composables/useImportShotList'
 import { frameFamily } from '@/lib/import/card/frames'
 import { isMatchupReading } from '@/lib/import/kinds'
-import type { CellOverride } from '@/lib/import/review'
+import type { CellOverride, ReviewedCard } from '@/lib/import/review'
 import { FOOT, MATCHUP_MAX_WIDTH } from '@/lib/import/screens/matchup/layout'
 import type { BarColour, MatchupReading } from '@/lib/import/screens/matchup/types'
-import {
-  buildWwwImportPlan,
-  cardKey,
-  teamKey,
-  type WwwCard,
-  type WwwImportPlan,
-} from '@/lib/pvp/www/wwwImport'
+import { buildWwwImportPlan, cardKey, teamKey, type WwwImportPlan } from '@/lib/pvp/www/wwwImport'
 
 export interface WwwImportShot {
   id: string
@@ -116,7 +110,7 @@ export function useWwwImport(): Omit<ImportShotList, 'engine'> & {
   learnedCount: ComputedRef<number>
   plan: ComputedRef<WwwImportPlan>
   progress: ImportEngine['progress']
-  setHero: (cards: readonly WwwCard[], characterId: number | null) => void
+  setHero: (cards: readonly ReviewedCard[], characterId: number | null) => void
   setArtifact: (teams: readonly ShotRef[], artifactId: number | null) => void
   confirmAll: () => void
   forgetLearned: () => void
@@ -143,7 +137,7 @@ export function useWwwImport(): Omit<ImportShotList, 'engine'> & {
    * surely, whatever its level (a card below S+ never teaches, its face cut
    * from a guessed box; the reader keeps a paragon card's level, so its frame
    * reads again from it). */
-  const setHero = (cards: readonly WwwCard[], characterId: number | null): void => {
+  const setHero = (cards: readonly ReviewedCard[], characterId: number | null): void => {
     const found = cards.filter(({ shotId }) => findShot(shotId))
     for (const { shotId, key } of found) {
       const shot = findShot(shotId)!

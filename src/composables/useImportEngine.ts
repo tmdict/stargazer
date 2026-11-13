@@ -34,7 +34,7 @@ import {
 import { FORMATION_MAX_WIDTH } from '@/lib/import/screens/formation/formation'
 import { MATCHUP_MAX_WIDTH } from '@/lib/import/screens/matchup/layout'
 import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
-import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/roster'
+import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/layout'
 import { SORT_WIDTH } from '@/lib/import/sort'
 import { useGameDataStore } from '@/stores/gameData'
 import { loadImportFrames, loadMatcherPortraits, loadOutfitPortraits } from '@/utils/imageLoader'
