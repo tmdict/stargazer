@@ -11,7 +11,7 @@ import type { Rule, RuleGoal, RuleTeam } from '../types/rule'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { PlacementBoard } from './board'
-import { goalList } from './goals'
+import { goalList, isHardRule } from './goals'
 import { expandList, type ListHeroes } from './lists'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from './reach'
 import type { PlacementData, PlacementTeam } from './types'
@@ -251,12 +251,7 @@ export class PlacementScorer {
       ])
     }
 
-    this.hard = new Set(
-      this.effects.filter(
-        ({ rule: { hard, goal } }) =>
-          hard && typeof goal === 'object' && ('target' in goal || 'exactly' in goal),
-      ),
-    )
+    this.hard = new Set(this.effects.filter(({ rule }) => isHardRule(rule)))
     this.hardRules = this.hard.size
     this.wholeRules = [...this.hard].filter((effect) => this.canBeWhole(effect)).length
 
@@ -292,7 +287,10 @@ export class PlacementScorer {
   // The points the team's own goals earn as the board stands, the buff tile's
   // left out.
   effectPoints(): number {
-    return this.addEffects(0)
+    return this.effects.reduce(
+      (points, effect) => points + effect.weight * (this.meet(effect) ?? 0),
+      0,
+    )
   }
 
   // The points for the enemy units' rules the board blunts, each scaled by how
@@ -396,11 +394,6 @@ export class PlacementScorer {
 
   private oneFaction(units: readonly number[]): boolean {
     return new Set(units.map((unit) => this.board.lookups.factionOf(ruleUnit(unit)))).size === 1
-  }
-
-  private addEffects(points: number): number {
-    for (const effect of this.effects) points += effect.weight * (this.meet(effect) ?? 0)
-    return points
   }
 
   private weightOf(name: string): number {

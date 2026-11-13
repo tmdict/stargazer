@@ -9,7 +9,7 @@ import {
   type WwwSlotHero,
   type WwwTeamState,
 } from '@/lib/pvp/www/match'
-import type { TeamSide } from '@/lib/pvp/www/panel'
+import { SIDES, type TeamSide } from '@/lib/pvp/www/panel'
 import { useRosters } from '@/stores/rosters'
 
 export type WwwMode = 'one' | 'match'
@@ -26,7 +26,6 @@ const emptyTeam = (): WwwTeamState => ({
 })
 const emptyGame = (): WwwGame => ({ a: emptyTeam(), b: emptyTeam() })
 
-const SIDES: readonly TeamSide[] = ['a', 'b']
 const other = (side: TeamSide): TeamSide => (side === 'a' ? 'b' : 'a')
 
 /* Who Would Win?'s games, the mode that shows them and the slot the hero grid

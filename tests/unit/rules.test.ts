@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
-import { ruleUnit } from '@/lib/placement/formationRules'
+import { ruleCards } from '@/lib/placement/formationRules'
 import { effectVerb } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
@@ -188,7 +188,7 @@ describe('placement rules', () => {
     const needed = new Set<string>()
     for (const { name, rules } of owners) {
       for (const rule of rules ?? []) {
-        const card = ruleUnit('hero', name, [rule], {}).cards[0]!
+        const card = ruleCards('hero', name, [rule], {}).cards[0]!
         expect(needed.has(card.note), `two of ${name}'s rules are noted by ${card.note}`).toBe(
           false,
         )

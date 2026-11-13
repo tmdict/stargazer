@@ -35,7 +35,6 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { useWwwGames, type WwwMode, type WwwSlotAt } from '@/components/guide/www/useWwwGames'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
-import { useSlEngine } from '@/composables/useSlEngine'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { Point } from '@/lib/layout'
 import type { TeamSide, WwwTeam } from '@/lib/pvp/www/panel'
@@ -50,9 +49,19 @@ const i18n = useI18nStore()
 setupWwwContentMeta(computed(() => i18n.currentLocale))
 
 const gameData = useGameDataStore()
-gameData.initializeData()
-const { status: engineStatus, predict } = useSlEngine()
-const { file: slFile, heading, locked, failed, mounted } = useSlFile()
+const {
+  file: slFile,
+  engine: { predict },
+  heading,
+  locked,
+  mounted,
+  heroes,
+  ready,
+  waiting,
+  loadFailed,
+  busy,
+  run,
+} = useSlFile()
 const aboutOpen = ref(false)
 
 const {
@@ -74,7 +83,6 @@ const {
   fill,
 } = useWwwGames()
 
-const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
 const sheetExpanded = ref(false)
 
 const MODES: readonly { key: WwwMode; label: string }[] = [
@@ -149,11 +157,8 @@ const pickedArtifact = (id: number): void => {
   artifactPicker.value = null
 }
 
-const ready = computed(() => !!heading.value && engineStatus.value === 'ready')
-
 const results = ref<Record<WwwMode, WwwShown[] | null>>({ one: null, match: null })
 const shown = computed(() => results.value[mode.value])
-const busy = ref(false)
 const resultEl = useTemplateRef<HTMLElement>('result')
 
 // Plain copies: the worker cannot take Vue's reactive objects.
@@ -173,24 +178,20 @@ const predictWinner = async (): Promise<void> => {
   const file = slFile()
   if (!file || !fielded.value) return
   const made = mode.value
-  busy.value = true
-  try {
-    const group = (kind: number | null) => (kind === null ? null : file.families[kind]!)
-    results.value[made] = await Promise.all(
-      showing.value.map(async (game) => {
-        const panel = await predict({ a: teamFor(game, 'a'), b: teamFor(game, 'b') })
-        return { panel, groups: { a: group(panel.kinds.a), b: group(panel.kinds.b) } }
-      }),
-    )
-    failed.value = false
-  } catch {
-    // A file whose parts do not line up passes the shape check and fails in
-    // the worker.
-    results.value[made] = null
-    failed.value = true
-  } finally {
-    busy.value = false
-  }
+  const group = (kind: number | null) => (kind === null ? null : file.families[kind]!)
+  await run(
+    async () => {
+      results.value[made] = await Promise.all(
+        showing.value.map(async (game) => {
+          const panel = await predict({ a: teamFor(game, 'a'), b: teamFor(game, 'b') })
+          return { panel, groups: { a: group(panel.kinds.a), b: group(panel.kinds.b) } }
+        }),
+      )
+    },
+    () => {
+      results.value[made] = null
+    },
+  )
   await nextTick()
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
@@ -208,7 +209,7 @@ const predictWinner = async (): Promise<void> => {
       @close="aboutOpen = false"
     />
     <p v-if="heading?.retired" class="sl-line sl-note">{{ i18n.t('app.www-previous-season') }}</p>
-    <p v-if="failed || engineStatus === 'failed'" class="sl-line sl-note">
+    <p v-if="loadFailed" class="sl-line sl-note">
       {{ i18n.t('app.sl-load-failed') }}
     </p>
 
@@ -248,11 +249,7 @@ const predictWinner = async (): Promise<void> => {
           >
             {{
               i18n.t(
-                busy
-                  ? 'app.www-predicting'
-                  : !failed && engineStatus === 'loading'
-                    ? 'app.sl-getting-ready'
-                    : 'app.www-predict',
+                busy ? 'app.www-predicting' : waiting ? 'app.sl-getting-ready' : 'app.www-predict',
               )
             }}
           </button>

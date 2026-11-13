@@ -4,7 +4,7 @@
  * language. */
 
 import type { Rule, RuleTeam } from '../types/rule'
-import { effectVerb, goalList, goalWord } from './goals'
+import { effectVerb, goalList, goalWord, isHardRule } from './goals'
 import { expandList, type ListSource } from './lists'
 import type { PlacementData, PlacementLookups } from './types'
 
@@ -73,12 +73,12 @@ function ruleCard(file: string, rule: Rule, weights: PlacementData['weights']): 
   if (ally && weight !== undefined && weight !== weights.aim) {
     card.weight = weight > weights.aim! ? 'more' : 'less'
   }
-  if (ally && rule.hard) card.hard = true
+  if (isHardRule(rule)) card.hard = true
   return card
 }
 
 // The rules for our team first, as a unit's page shows them.
-export const ruleUnit = (
+export const ruleCards = (
   kind: RuleUnitKind,
   id: string,
   rules: readonly Rule[],

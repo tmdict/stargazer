@@ -1,6 +1,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { useSlEngine } from '@/composables/useSlEngine'
 import { loadSlData } from '@/lib/pvp/data/codec'
 import { withheldHeroes } from '@/lib/pvp/data/sides'
 import type { SlData, SlSeason } from '@/lib/pvp/data/types'
@@ -21,15 +22,17 @@ interface SlHeading {
   seasons: SlSeason[]
 }
 
-/* The PvP data file for a page that draws from it, read after mount, as the
- * pages are pre-rendered with their heading alone. The file stays plain,
- * never reactive, so the decoded data stays out of anything the console can
- * reach. `locked` holds the heroes kept off teams (withheldHeroes), which
- * the pages' pickers lock. */
+/* The PvP data file and the Supreme League worker for a page that draws from
+ * both. The file is read after mount, as the pages are pre-rendered with their
+ * heading alone, and stays plain, never reactive, so the decoded data stays
+ * out of anything the console can reach. `locked` holds the heroes kept off
+ * teams (withheldHeroes), which the pages' pickers lock. */
 export function useSlFile() {
   const route = useRoute()
   const gameData = useGameDataStore()
+  gameData.initializeData()
   const i18n = useI18nStore()
+  const engine = useSlEngine()
   let data: SlData | null = null
   const heading = ref<SlHeading | null>(null)
   const failed = ref(false)
@@ -72,5 +75,40 @@ export function useSlFile() {
     note: i18n.t('app.sl-withheld'),
   }))
 
-  return { file: (): SlData | null => data, heading, locked, failed, mounted }
+  const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
+  const ready = computed(() => !!heading.value && engine.status.value === 'ready')
+  const waiting = computed(() => !failed.value && engine.status.value === 'loading')
+  const loadFailed = computed(() => failed.value || engine.status.value === 'failed')
+
+  // One of the page's requests to the worker, which `busy` holds for. A file
+  // whose parts do not line up passes the shape check and fails in the worker
+  // or in the page's own work on the answer, and `reset` then clears what the
+  // page shows.
+  const busy = ref(false)
+  const run = async (work: () => Promise<void>, reset: () => void): Promise<void> => {
+    busy.value = true
+    try {
+      await work()
+      failed.value = false
+    } catch {
+      reset()
+      failed.value = true
+    } finally {
+      busy.value = false
+    }
+  }
+
+  return {
+    file: (): SlData | null => data,
+    engine,
+    heading,
+    locked,
+    mounted,
+    heroes,
+    ready,
+    waiting,
+    loadFailed,
+    busy,
+    run,
+  }
 }

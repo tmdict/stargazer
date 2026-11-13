@@ -4,7 +4,7 @@
 import { placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import type { SlData, SlUnit } from '../data/types'
-import { boardPlacement, boardTeam, heldOn } from './formation'
+import { boardTeam, heldOn, placementDataFor } from './formation'
 import type { SlBoard } from './setType'
 import type { SlChoiceTeam } from './types'
 
@@ -34,7 +34,7 @@ export function previewSwap(
   const placed = placeTeam(
     boardTeam(data, heroes, team.artifact),
     board.layout,
-    boardPlacement(data, board, team),
+    placementDataFor(data, board, team),
     PLACEMENT_LOOKUPS,
     { held: heldOn(units) },
   )

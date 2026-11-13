@@ -2,7 +2,10 @@
 /* The PvP team generator's card on the guide index: the first three maps
    of the set the generator gives before a roster is picked, drawn by its own
    map column. Each map keeps its first swap and two heroes to swap in, so the
-   three fit a phone. */
+   three fit a phone. The maps fill the card at the generator's proportions,
+   up to its own size: there, at 1280px, a column is 220 of its pixels wide
+   with 34px portraits 8px apart and 24px between columns, so one of its
+   pixels is a 220th of a column here, and never more than 1px. */
 
 import preview from 'virtual:sl-preview'
 
@@ -52,10 +55,6 @@ const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
 </template>
 
 <style scoped>
-/* The maps fill the card at the generator's proportions, up to its own size.
-   There, at 1280px, a column is 220 of its pixels wide with 34px portraits
-   8px apart and 24px between columns, so one of its pixels is a 220th of a
-   column here, and never more than 1px. */
 .maps {
   --gap: 24px;
   --sl-unit: min(1px, (100cqw - 2 * var(--gap)) / 3 / 220);

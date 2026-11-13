@@ -1,7 +1,7 @@
 /* What a rule's goal asks, read alike by the placement cards, the Formation
  * engine rules page and the rules test. */
 
-import type { RuleGoal } from '../types/rule'
+import type { Rule, RuleGoal } from '../types/rule'
 
 // How a unit's own effect reads: given to heroes, or reaching as much as it can
 // or its own other body. A goal about enemy heroes explains nothing on our side.
@@ -21,6 +21,14 @@ export const goalWord = (goal: RuleGoal): string =>
     : Object.keys(goal).find(
         (key) => !['fallback', 'others', 'sameFaction', 'nonHero', 'least'].includes(key),
       )!
+
+// Hard is for our team's rules on a target or an exactly goal, which the rules
+// test holds every data file to.
+export const isHardRule = ({ hard, team, goal }: Rule): boolean =>
+  hard === true &&
+  team === 'ally' &&
+  typeof goal === 'object' &&
+  ('target' in goal || 'exactly' in goal)
 
 export function goalList(goal: RuleGoal): string | undefined {
   if (typeof goal !== 'object') return undefined

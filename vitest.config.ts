@@ -8,8 +8,8 @@ import { configDefaults, defineConfig } from 'vitest/config'
 const PVP_DATA_TESTS = [
   'tests/unit/content/pvpSeasons.test.ts',
   'tests/unit/placement/listNames.test.ts',
-  'tests/unit/sl/slData.test.ts',
-  'tests/unit/sl/team.test.ts',
+  'tests/unit/pvp/slData.test.ts',
+  'tests/unit/pvp/team.test.ts',
 ]
 const keyFile = statSync(new URL('./src/pack/pvp/pvp.key', import.meta.url), {
   throwIfNoEntry: false,

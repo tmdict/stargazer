@@ -22,7 +22,7 @@ import ImportSideHead from '@/components/import/ImportSideHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { ShotRef, WwwImportShot } from '@/composables/useWwwImport'
 import type { Point } from '@/lib/layout'
-import type { TeamSide } from '@/lib/pvp/www/panel'
+import { SIDES, type TeamSide } from '@/lib/pvp/www/panel'
 import {
   filledSlots,
   type WwwCard,
@@ -51,7 +51,6 @@ const emit = defineEmits<{
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
-const SIDES: readonly TeamSide[] = ['a', 'b']
 const SIDE_LABEL: Record<TeamSide, string> = { a: 'app.www-team-a', b: 'app.www-team-b' }
 
 const ISSUE_TAG: Record<WwwIssue, string> = {

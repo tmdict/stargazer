@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ruleLists, ruleUnit } from '@/lib/placement/formationRules'
+import { ruleCards, ruleLists } from '@/lib/placement/formationRules'
 import type { Rule } from '@/lib/types/rule'
 
 const WEIGHTS = { aim: 10, buff: 3, threat: 20 }
@@ -30,7 +30,7 @@ describe('Formation rules cards', () => {
   // A rule for an enemy hero only settles ties, so its card shows no weight,
   // and its Targets line says where it lands in place of a tile.
   it('word each rule by its file and body, ours first, with only the details that apply', () => {
-    expect(ruleUnit('hero', 'x', RULES, WEIGHTS).cards).toEqual([
+    expect(ruleCards('hero', 'x', RULES, WEIGHTS).cards).toEqual([
       {
         team: 'ally',
         effect: { verb: 'gives', key: 'placement-gives-x' },
@@ -77,7 +77,7 @@ describe('Formation rules lists', () => {
     back: [6, { list: 'loop' }],
   }
   const tanks = { heroesMatching: () => [5, 1] }
-  const shown = ruleLists(lists, [ruleUnit('hero', 'x', RULES, WEIGHTS)], tanks)
+  const shown = ruleLists(lists, [ruleCards('hero', 'x', RULES, WEIGHTS)], tanks)
 
   // Above the line a brought-in list keeps its order and its own line; a hero
   // already placed keeps that first place.

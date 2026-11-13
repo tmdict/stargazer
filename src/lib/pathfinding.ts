@@ -247,7 +247,6 @@ function applyTieBreakingRules(
   candidates: GridTile[],
   sourceHex: Hex,
   sourceTeam?: Team,
-  currentBest: GridTile | null = null,
 ): GridTile {
   if (candidates.length === 0) {
     throw new Error('applyTieBreakingRules: No candidates provided')
@@ -271,10 +270,9 @@ function applyTieBreakingRules(
     })
     throw new Error('Empty candidates array')
   }
-  let bestTarget = currentBest || firstCandidate
-  const startIndex = currentBest ? 0 : 1
+  let bestTarget = firstCandidate
 
-  for (let i = startIndex; i < candidates.length; i++) {
+  for (let i = 1; i < candidates.length; i++) {
     const candidate = candidates[i]
     if (!candidate || !bestTarget) {
       console.warn('pathfinding: Skipping undefined candidate or bestTarget in tie-breaking', {
@@ -383,7 +381,7 @@ export function findClosestTarget(
   }
 
   // Apply tie-breaking rules to select the best target
-  const bestTarget = applyTieBreakingRules(candidateTargets, sourceTile.hex, sourceTile.team, null)
+  const bestTarget = applyTieBreakingRules(candidateTargets, sourceTile.hex, sourceTile.team)
 
   return {
     hexId: bestTarget.hex.getId(),

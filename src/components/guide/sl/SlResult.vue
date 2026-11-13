@@ -175,7 +175,6 @@ const oneBoard = computed(() => shown.teams.length === 1)
   }
 }
 
-/* Six half columns, so a last row of two sits centred. */
 @container (max-width: 1170px) {
   .sl-maps {
     grid-template-columns: repeat(6, minmax(0, 1fr));

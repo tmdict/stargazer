@@ -30,8 +30,8 @@ import { slFit, summonedPhantimal } from '@/lib/pvp/generator/fit'
 import {
   boardDraw,
   boardDraws,
-  boardPlacement,
   boardTeam,
+  placementDataFor,
   shownFormation,
   sideExplanation,
 } from '@/lib/pvp/generator/formation'
@@ -348,7 +348,7 @@ const phantimalMet = (
   units: readonly SlUnit[],
 ): number => {
   const placing = new PlacementBoard(team, board.layout, PLACEMENT_LOOKUPS)
-  const scorer = new PlacementScorer(placing, team, boardPlacement(data, board, choice))
+  const scorer = new PlacementScorer(placing, team, placementDataFor(data, board, choice))
   const tileOf = new Map(units.map(([hexId, unit]) => [unit, hexId]))
   placing.place(placing.units.map((unit) => tileOf.get(unit)!))
   return scorer
@@ -472,7 +472,7 @@ describe('a recorded board', () => {
       const board: SlBoard = { layout: presetLayout(data.maps[source]!.key)!, map: 0, source }
       const team = boardTeam(data, choice.heroes, choice.artifact)
       const placed = new PlacementBoard(team, board.layout, PLACEMENT_LOOKUPS)
-      const scorer = new PlacementScorer(placed, team, boardPlacement(data, board, choice))
+      const scorer = new PlacementScorer(placed, team, placementDataFor(data, board, choice))
       const keptAt = (units: readonly SlUnit[]): number | null => {
         const tiles = new Map(units.map(([hexId, unit]) => [unit, hexId]))
         const positions = placed.units.map((unit) => tiles.get(unit))

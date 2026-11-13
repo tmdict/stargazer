@@ -5,7 +5,7 @@
 import WwwTeamRow from './WwwTeamRow.vue'
 import type { Point } from '@/lib/layout'
 import type { WwwGame, WwwLevelAttr } from '@/lib/pvp/www/match'
-import type { TeamSide } from '@/lib/pvp/www/panel'
+import { SIDES, type TeamSide } from '@/lib/pvp/www/panel'
 import { useI18nStore } from '@/stores/i18n'
 
 const { game, number, target } = defineProps<{
@@ -23,8 +23,6 @@ const emit = defineEmits<{
 }>()
 
 const i18n = useI18nStore()
-
-const SIDES: readonly TeamSide[] = ['a', 'b']
 </script>
 
 <template>

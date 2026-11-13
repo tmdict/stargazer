@@ -80,7 +80,7 @@ export const boardTeam = (
 
 // A map with no records is expected to draw the enemy heroes of the map the
 // team was recorded on.
-export const boardPlacement = (
+export const placementDataFor = (
   data: SlData,
   { layout, source }: SlBoard,
   choice: Pick<SlChoiceTeam, 'source' | 'team'>,
@@ -88,6 +88,9 @@ export const boardPlacement = (
   const from = source ?? homeMap(data, choice)
   return { ...data.placement, pickRates: { [layout.key]: data.maps[from]!.pickRates } }
 }
+
+// The name external tooling calls placementDataFor by.
+export const boardPlacement = placementDataFor
 
 // Units kept on their tiles, by unit id.
 export const heldOn = (units: readonly SlUnit[]): Map<number, number> =>
@@ -192,7 +195,7 @@ export function boardDraw(
 ): BoardDraw {
   const seasonal = boardTeam(data, choice.heroes, choice.artifact)
   const team = nonSeasonal ? { ...seasonal, phantimal: undefined } : seasonal
-  const placement = boardPlacement(data, board, choice)
+  const placement = placementDataFor(data, board, choice)
   const explained = (placed: PlacementResult) =>
     explainPlacement(team, board.layout, placement, PLACEMENT_LOOKUPS, placed)
   const placed = placeTeam(team, board.layout, placement, PLACEMENT_LOOKUPS)

@@ -30,7 +30,7 @@ import { useSlNames } from '@/components/guide/sl/useSlNames'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { WinLoss } from '@/lib/pvp/data/records'
 import { REASONS, type Reason } from '@/lib/pvp/model/types'
-import type { TeamSide, WwwLine, WwwWarning } from '@/lib/pvp/www/panel'
+import { SIDES, type TeamSide, type WwwLine, type WwwWarning } from '@/lib/pvp/www/panel'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
@@ -43,7 +43,6 @@ const i18n = useI18nStore()
 const gameData = useGameDataStore()
 const { groupName } = useSlNames()
 
-const SIDES: readonly TeamSide[] = ['a', 'b']
 const REASON_LABELS: Record<Reason, string> = {
   heroes: 'app.heroes',
   counters: 'app.www-counters',

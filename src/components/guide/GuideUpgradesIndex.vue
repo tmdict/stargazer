@@ -162,7 +162,6 @@ const bands = computed((): Band[] => [
   background: color-mix(in srgb, var(--upgrade-pill-refinement-max) 40%, transparent);
 }
 
-/* Above the bars: the ::after fill comes later in paint order. */
 .track .bead {
   position: absolute;
   z-index: 1;

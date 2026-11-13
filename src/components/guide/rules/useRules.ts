@@ -9,8 +9,8 @@ import formationData from 'virtual:formation-rules'
 import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
 import { CLASS_ORDER, compareCharacters } from '@/lib/filterOrder'
 import {
+  ruleCards,
   ruleLists,
-  ruleUnit,
   type ListGroup,
   type RuleCard,
   type RuleList,
@@ -41,13 +41,13 @@ export const heroOf = (id: number): CharacterType | undefined => heroById.get(id
 
 export const RULE_UNITS: readonly RulesUnit[] = [
   ...RULE_HEROES.flatMap((hero) =>
-    hero.rules?.length ? [ruleUnit('hero', hero.name, hero.rules, weights)] : [],
+    hero.rules?.length ? [ruleCards('hero', hero.name, hero.rules, weights)] : [],
   ),
   ...[...loadPhantimals()]
     .sort((a, b) => a.id - b.id)
     .flatMap((phantimal) =>
       phantimal.rules?.length
-        ? [ruleUnit('phantimal', phantimal.name, phantimal.rules, weights)]
+        ? [ruleCards('phantimal', phantimal.name, phantimal.rules, weights)]
         : [],
     ),
   ...[...loadArtifacts()]
@@ -56,7 +56,7 @@ export const RULE_UNITS: readonly RulesUnit[] = [
       artifact.rules?.length
         ? [
             {
-              ...ruleUnit('artifact', artifact.name, artifact.rules, weights),
+              ...ruleCards('artifact', artifact.name, artifact.rules, weights),
               seasonal: artifact.season > 0,
             },
           ]
@@ -66,7 +66,7 @@ export const RULE_UNITS: readonly RulesUnit[] = [
     charm.rules?.length
       ? [
           {
-            ...ruleUnit('charm', charm.id, charm.rules, weights),
+            ...ruleCards('charm', charm.id, charm.rules, weights),
             holders: RULE_HEROES.filter((hero) => charm.heroes.includes(hero.name)).map(
               (hero) => hero.name,
             ),

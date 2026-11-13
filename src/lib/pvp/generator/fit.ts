@@ -36,6 +36,7 @@ import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { loadPhantimals } from '@/lib/dataLoader'
 import { configTiles, presetLayout, type MapLayout } from '@/lib/maps'
 import { effectPoints } from '@/lib/placement/engine'
+import { isHardRule } from '@/lib/placement/goals'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import type { PlacementTeam } from '@/lib/placement/types'
 import { isRetiredSeason } from '@/lib/seasonal'
@@ -125,7 +126,7 @@ const tilesTaken = ({ heroes, phantimal }: PlacementTeam): number =>
 
 const hasHardRule = ({ heroes, phantimal }: PlacementTeam): boolean =>
   [...heroes, ...(phantimal === undefined ? [] : [phantimal])].some((unit) =>
-    PLACEMENT_LOOKUPS.rulesOf(unit).some((rule) => rule.hard),
+    PLACEMENT_LOOKUPS.rulesOf(unit).some(isHardRule),
   )
 
 export function fitPoints(data: SlData, { heroes, from, home, board, plain }: FitJob): FitPoints {

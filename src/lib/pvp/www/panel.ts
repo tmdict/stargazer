@@ -18,6 +18,8 @@ import type { Reason, ReasonItem } from '../model/types'
 
 export type TeamSide = 'a' | 'b'
 
+export const SIDES: readonly TeamSide[] = ['a', 'b']
+
 export type Pair<T> = Record<TeamSide, T>
 
 export interface WwwTeam {

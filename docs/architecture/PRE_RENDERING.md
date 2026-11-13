@@ -30,7 +30,7 @@ The hard rule is that the client's first render must equal the baked HTML, or th
 
 ## Static input
 
-The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and guide views call it in setup so the hero list's crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
+The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and the guide's content views call it in setup so the hero list's crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views, the PvP team generator and Who Would Win? call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 

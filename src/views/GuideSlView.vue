@@ -29,7 +29,6 @@ import { useSlFile } from '@/components/guide/sl/useSlFile'
 import { useSlRoster } from '@/components/guide/sl/useSlRoster'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readSavedBoards, readTeamsSlot } from '@/composables/useGridPersistence'
-import { useSlEngine } from '@/composables/useSlEngine'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
@@ -64,7 +63,19 @@ const i18n = useI18nStore()
 setupSlContentMeta(computed(() => i18n.currentLocale))
 
 const gameData = useGameDataStore()
-gameData.initializeData()
+const {
+  file: slFile,
+  engine: { generate: generateSet, place: placeSet, swap: previewSwap },
+  heading,
+  locked,
+  mounted,
+  heroes,
+  ready,
+  waiting,
+  loadFailed,
+  busy,
+  run,
+} = useSlFile()
 const rosters = useRosters()
 const library = useTeamLibrary()
 const router = useRouter()
@@ -73,16 +84,7 @@ const router = useRouter()
 const route = useRoute()
 const debug = computed(() => route.query.t === 'debug')
 const { show } = useToast()
-const {
-  status: engineStatus,
-  generate: generateSet,
-  place: placeSet,
-  swap: previewSwap,
-} = useSlEngine()
 
-const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
-
-const { file: slFile, heading, locked, failed, mounted } = useSlFile()
 const aboutOpen = ref(false)
 
 const { levels, edit, dirty, saveRoster, exportShown, report } = useSlRoster(heroes, locked)
@@ -156,7 +158,6 @@ const drawn = computed(
 )
 // How many teams the last Generate could not make; 0 when it made them.
 const noSet = ref(0)
-const busy = ref(false)
 const resultEl = useTemplateRef<HTMLElement>('result')
 
 const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
@@ -165,63 +166,59 @@ const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
 const generate = async (): Promise<void> => {
   const file = slFile()
   if (!file) return
-  busy.value = true
-  try {
-    const picks = picksOf(levels.value)
-    const chosenFor = { mode: mode.value, variant: variant.value }
-    const boards = boardsFor(file)
-    const { set, refused } = await generateSet(picks, boards)
-    const draws = set ? await placeSet(set, boards) : []
-    // Each swap is tried once per set and formation, when first shown.
-    const tried = new Map<string, Promise<SwapPreview | null>>()
-    const teams = (set?.teams ?? []).map((t, index): SlShownTeam => {
-      const board = boards[index]!
-      const family = t.family === null ? null : file.families[t.family]!
-      return {
-        map: board.map,
-        group: family && { name: family.name, core: family.core },
-        comp: t.comp,
-        core: t.core,
-        flex: t.flex,
-        pairs: t.pairs,
-        chance: t.chance,
-        refused: refused[index]!,
-        ...draws[index]!,
-        trySwap: (out: number[], into: number[], engineOn: boolean) => {
-          const key = `${index}|${engineOn}|${out.join()}|${into.join()}`
-          let found = tried.get(key)
-          if (!found) {
-            // Copies, since the page's reactive lists cannot be posted to the worker.
-            const units = shownFormation(teams[index]!, engineOn).units.map(
-              ([hexId, unit]): [number, number] => [hexId, unit],
-            )
-            const swap = { board, team: t, units, out: [...out], into: [...into] }
-            found = previewSwap(swap).catch(() => null)
-            tried.set(key, found)
-          }
-          return found
-        },
+  await run(
+    async () => {
+      const picks = picksOf(levels.value)
+      const chosenFor = { mode: mode.value, variant: variant.value }
+      const boards = boardsFor(file)
+      const { set, refused } = await generateSet(picks, boards)
+      const draws = set ? await placeSet(set, boards) : []
+      // Each swap is tried once per set and formation, when first shown.
+      const tried = new Map<string, Promise<SwapPreview | null>>()
+      const teams = (set?.teams ?? []).map((t, index): SlShownTeam => {
+        const board = boards[index]!
+        const family = t.family === null ? null : file.families[t.family]!
+        return {
+          map: board.map,
+          group: family && { name: family.name, core: family.core },
+          comp: t.comp,
+          core: t.core,
+          flex: t.flex,
+          pairs: t.pairs,
+          chance: t.chance,
+          refused: refused[index]!,
+          ...draws[index]!,
+          trySwap: (out: number[], into: number[], engineOn: boolean) => {
+            const key = `${index}|${engineOn}|${out.join()}|${into.join()}`
+            let found = tried.get(key)
+            if (!found) {
+              // Copies, since the page's reactive lists cannot be posted to the worker.
+              const units = shownFormation(teams[index]!, engineOn).units.map(
+                ([hexId, unit]): [number, number] => [hexId, unit],
+              )
+              const swap = { board, team: t, units, out: [...out], into: [...into] }
+              found = previewSwap(swap).catch(() => null)
+              tried.set(key, found)
+            }
+            return found
+          },
+        }
+      })
+      engineOn.value = []
+      shown.value = set && {
+        ...chosenFor,
+        chance: set.chance,
+        odds: set.odds,
+        teams,
+        encode: (formations) => slTeamData(file, set, picks, boards, formations),
       }
-    })
-    engineOn.value = []
-    shown.value = set && {
-      ...chosenFor,
-      chance: set.chance,
-      odds: set.odds,
-      teams,
-      encode: (formations) => slTeamData(file, set, picks, boards, formations),
-    }
-    noSet.value = set ? 0 : boards.length
-    failed.value = false
-  } catch {
-    // A file whose parts do not line up passes the shape check and fails in
-    // the worker or here.
-    shown.value = null
-    noSet.value = 0
-    failed.value = true
-  } finally {
-    busy.value = false
-  }
+      noSet.value = set ? 0 : boards.length
+    },
+    () => {
+      shown.value = null
+      noSet.value = 0
+    },
+  )
   await nextTick()
   resultEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
@@ -259,9 +256,8 @@ onMounted(() => {
   }
   openMode(mode.value)
 })
-const ready = computed(() => !!heading.value && engineStatus.value === 'ready')
-watch([ready, drawOnArrival], ([isReady, waiting]) => {
-  if (!isReady || !waiting) return
+watch([ready, drawOnArrival], ([isReady, draw]) => {
+  if (!isReady || !draw) return
   drawOnArrival.value = false
   void generate()
 })
@@ -282,7 +278,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
     <p v-if="heading?.newMaps && variant === 'sl'" class="sl-line sl-note">
       {{ i18n.t('app.sl-new-maps') }}
     </p>
-    <p v-if="failed || engineStatus === 'failed'" class="sl-line sl-note">
+    <p v-if="loadFailed" class="sl-line sl-note">
       {{ i18n.t('app.sl-load-failed') }}
     </p>
 
@@ -308,7 +304,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
         :pages="offeredPages"
         :busy
         :ready
-        :waiting="!failed && engineStatus === 'loading'"
+        :waiting
         :dirty
         :new-name="rosters.nextName"
         :export-file="rosters.active ? undefined : exportShown"

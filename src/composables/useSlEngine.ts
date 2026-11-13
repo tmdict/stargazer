@@ -48,8 +48,8 @@ const fail = (): void => {
   waiting.clear()
 }
 
-const start = (): void => {
-  if (worker) return
+const start = (): Worker => {
+  if (worker) return worker
   status.value = 'loading'
   seeded = false
   worker = new Worker(new URL('../workers/sl.worker.ts', import.meta.url), { type: 'module' })
@@ -65,6 +65,7 @@ const start = (): void => {
     }
   }
   worker.onerror = fail
+  return worker
 }
 
 const storedFits = (): StoredFits | null => {
@@ -103,11 +104,10 @@ export function useSlEngine({ startOnMount = true } = {}) {
   // Rejects when the worker cannot answer.
   const ask = (request: (id: number) => SlRequest): Promise<Answer> =>
     new Promise((resolve, reject) => {
-      start()
-      if (!worker) return reject()
+      const started = start()
       const id = nextId++
       waiting.set(id, { resolve, reject })
-      worker.postMessage(request(id))
+      started.postMessage(request(id))
     })
 
   // `refused`: per board, the lineups the visit found its map does not take.
