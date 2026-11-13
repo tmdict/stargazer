@@ -9,8 +9,9 @@
  * row reading no hero's or phantimal's data file but its own units', except
  * through an every entry of a list it reads. */
 
+import { unitData } from '@/lib/characters/unitData'
 import { MAPS } from '@/lib/maps'
-import { PLACEMENT_LOOKUPS, unitData } from '@/lib/placement/lookups'
+import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { teamLeans } from '@/lib/placement/score'
 import type { SlData, SlEveryMapTeam, SlFitSet, SlFitTable } from '../data/types'
 import { slFit, teamOf } from './fit'

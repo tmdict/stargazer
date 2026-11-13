@@ -8,6 +8,7 @@ import {
   phantimalOwnerId,
   toLocalPhantimalId,
 } from '@/lib/characters/phantimal'
+import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
@@ -135,20 +136,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
-  // Whether a phantimal-band unit's seasonal skill targeting is switched on in
-  // its phantimal's data file (a companion answers for its owner).
-  const hasSeasonalTargeting = (unitId: number): boolean =>
-    inPhantimalBand(unitId) && getPhantimalById(phantimalOwnerId(unitId))?.targeting === true
-
-  // A grid unit's faction or class by ID: companions and synergy copies answer
-  // for their base hero, and phantimal-band units for their phantimal.
-  const unitTrait = (unitId: number, trait: 'faction' | 'class'): string | undefined =>
-    inPhantimalBand(unitId)
-      ? getPhantimalById(phantimalOwnerId(unitId))?.[trait]
-      : getCharacterById(toBaseHeroId(unitId))?.[trait]
-  const getCharacterFaction = (characterId: number) => unitTrait(characterId, 'faction')
-  const getCharacterClass = (characterId: number) => unitTrait(characterId, 'class')
-
   // Safe accessors for images and icons
   const getCharacterImage = (name: string): string => {
     // Placeholder units have no portrait; their name doubles as an icon key
@@ -187,9 +174,9 @@ export const useGameDataStore = defineStore('gameData', () => {
     getArtifactById,
     getPhantimalById,
     getPhantimalUnitSlug,
-    hasSeasonalTargeting,
-    getCharacterFaction,
-    getCharacterClass,
+    hasSeasonalTargeting: UNIT_LOOKUPS.seasonalTargeting,
+    getCharacterFaction: UNIT_LOOKUPS.factionOf,
+    getCharacterClass: UNIT_LOOKUPS.classOf,
     getCharacterImage,
     getOutfitImage,
     getArtifactImage,
