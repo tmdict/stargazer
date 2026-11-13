@@ -6,12 +6,16 @@ import {
   ATTR_SKILL_MODE,
   attrRowsFor,
   clampAttr,
+  collapseAttrRows,
   compareAttrRows,
   HERO_ATTRS,
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { SKILL_MODES } from '@/lib/skills/skillModes'
+import { decodeLink, encodeLink } from '@/lib/teams/binaryEncoder'
+import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
+import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 
 /* Contract test: the registry is append-only and shared by the serializer,
@@ -95,5 +99,37 @@ describe('attr rows', () => {
       [Team.ALLY, 30, 2, 1],
       [Team.ENEMY, 20, 1, 2],
     ])
+  })
+})
+
+describe('collapseAttrRows', () => {
+  const rows: AttrRow[] = [
+    [Team.ENEMY, 12, ATTR_PARAGON, 2],
+    [Team.ALLY, 12, ATTR_REFINEMENT, 3],
+    [Team.ALLY, 11, ATTR_PARAGON, 1],
+    [Team.ALLY, 11, ATTR_PARAGON, 99],
+    [Team.ALLY, 12, ATTR_PARAGON, 3],
+    [Team.ALLY, 12, ATTR_PARAGON, 0],
+    [Team.ALLY, 0, ATTR_REFINEMENT, 2],
+    [Team.ENEMY, 11, ATTR_REFINEMENT, 0],
+    [Team.ENEMY, 11, ATTR_REFINEMENT, 2.4],
+  ]
+  const expected: AttrRow[] = [
+    [Team.ALLY, 0, ATTR_REFINEMENT, 2],
+    [Team.ALLY, 11, ATTR_PARAGON, 4],
+    [Team.ALLY, 12, ATTR_REFINEMENT, 3],
+    [Team.ENEMY, 11, ATTR_REFINEMENT, 2],
+    [Team.ENEMY, 12, ATTR_PARAGON, 2],
+  ]
+
+  it('clamps, keeps the last row per team, hero and attribute, drops defaults and sorts', () => {
+    expect(collapseAttrRows(rows)).toEqual(expected)
+  })
+
+  it('gives saved teams and links the same rows', () => {
+    const saved = decodeTeamData(canonicalTeamData(encodeTeamData({ boards: [{ u: rows }] }))!)!
+    const link = decodeLink(encodeLink({ mode: 'arena', d: 0, boards: [{ u: rows }] }))!
+    expect(saved.boards[0]!.u).toEqual(expected)
+    expect(link.boards[0]!.u).toEqual(expected)
   })
 })

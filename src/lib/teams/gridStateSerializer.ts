@@ -5,9 +5,14 @@ import {
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { isBaseHeroId } from '@/lib/characters/character'
-import { inPhantimalBand, isPhantimalId, phantimalBandLocal } from '@/lib/characters/phantimal'
+import {
+  inPhantimalBand,
+  isPhantimalId,
+  PHANTIMAL_ID_OFFSET,
+  phantimalBandLocal,
+} from '@/lib/characters/phantimal'
 import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
-import type { GridTile } from '@/lib/grid'
+import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -23,6 +28,20 @@ export interface GridState {
   d?: number // display flags: bit-packed (wrap, showSkills, showPerspective, inverted, teamView)
 }
 
+/* What a unit row's id (the second field of a c, s or y row) names. The three
+ * sections share one local id space: a main unit below the companion offset
+ * (heroes, placeholders, a phantimal's own local id), a companion as
+ * N * 10000 + its main's id, and nothing at or above the phantimal band. An
+ * illegal id is crafted input, since the JSON codec has no validation pass: a
+ * reader that kept one would match it to a main by its remainder (200050 %
+ * 10000 names hero 50) or place a unit past the phantimal and synergy gates. */
+export type UnitRowKind = 'main' | 'companion' | 'illegal'
+
+export function unitRowKind(localId: number): UnitRowKind {
+  if (localId >= PHANTIMAL_ID_OFFSET) return 'illegal'
+  return localId >= COMPANION_ID_OFFSET ? 'companion' : 'main'
+}
+
 /* The Arena board as its link and autosave hold it: both always carry the display flags. */
 export type ArenaState = GridState & { d: number }
 
@@ -32,7 +51,7 @@ export interface DisplayFlags {
   showSkills?: boolean
   teamView?: boolean
   inverted?: boolean
-  // 5 v 5 only: the 3-2 "wrap" boards layout (vs one row). The Arena never sets it.
+  // Five-board modes only: the 3-2 "wrap" boards layout (vs one row). The Arena never sets it.
   wrap?: boolean
 }
 

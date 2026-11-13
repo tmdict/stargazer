@@ -5,10 +5,10 @@
  * mapping unit-testable headless. */
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { resolveBoardMap } from '@/lib/maps'
 import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
 import { decodeTeamData } from '@/lib/teams/codec'
+import { unitRowKind } from '@/lib/teams/gridStateSerializer'
 import type { Team } from '@/lib/types/team'
 import {
   DEFAULT_VARIANT,
@@ -40,7 +40,7 @@ export function previewUnitId(unit: PreviewUnit): number | undefined {
 
 /* A main-lineup hero: not a phantimal, not a companion summon. */
 export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {
-  return unit.characterId !== undefined && unit.characterId < COMPANION_ID_OFFSET
+  return unit.characterId !== undefined && unitRowKind(unit.characterId) === 'main'
 }
 
 /* Names a hero within one lineup for search highlighting: the saved-team
@@ -145,7 +145,7 @@ export function teamHasSynergy(data: string): boolean {
   const result = !!decoded?.boards.some((board) =>
     (board.y ?? []).some((entry) => {
       const localId = entry[1]
-      return localId !== undefined && localId < COMPANION_ID_OFFSET
+      return localId !== undefined && unitRowKind(localId) === 'main'
     }),
   )
   synergyCache.set(data, result)

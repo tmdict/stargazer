@@ -7,13 +7,7 @@
  * which is what makes the unsaved-changes compare and import dedupe trustworthy.
  */
 
-import {
-  attrDefault,
-  clampAttr,
-  compareAttrRows,
-  isKnownAttrId,
-  type AttrRow,
-} from '@/lib/characters/attributes'
+import { collapseAttrRows, isKnownAttrId, type AttrRow } from '@/lib/characters/attributes'
 import { resolveBoardMap } from '@/lib/maps'
 import { sanitizeName } from '@/lib/names'
 import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
@@ -45,7 +39,7 @@ export interface SavedTeam {
  * it is the reserved team-scope sentinel, mirroring the binary codec. */
 const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
   if (!Array.isArray(rows)) return undefined
-  const byKey = new Map<string, AttrRow>()
+  const valid: AttrRow[] = []
   for (const row of rows) {
     if (!Array.isArray(row) || row.length !== 4) continue
     const [team, characterId, attrId, value] = row as unknown[]
@@ -61,15 +55,10 @@ const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
     ) {
       continue
     }
-    const clamped = clampAttr(attrId, value, characterId)
-    if (clamped !== attrDefault(attrId)) {
-      byKey.set(`${team}:${characterId}:${attrId}`, [team, characterId, attrId, clamped])
-    } else {
-      byKey.delete(`${team}:${characterId}:${attrId}`)
-    }
+    valid.push([team, characterId, attrId, value])
   }
-  if (byKey.size === 0) return undefined
-  return [...byKey.values()].sort(compareAttrRows)
+  const collapsed = collapseAttrRows(valid)
+  return collapsed.length > 0 ? collapsed : undefined
 }
 
 // The serializer writes artifacts as an [ally, enemy] pair, and only when one is set.

@@ -10,6 +10,7 @@ import {
   serializeMultiGridState,
   type DisplayFlags,
 } from '@/lib/teams/gridStateSerializer'
+import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
@@ -375,6 +376,36 @@ describe('boardRestore.restoreMultiFromEncodedState', () => {
 
     expect(s.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
     expect(useGrids().contexts).toHaveLength(MAX_GRID_COUNT)
+  })
+
+  it('drops a malformed unit row on its own and restores the rest of the saved team', () => {
+    const restored = createStores()
+    const encoded = canonicalTeamData(
+      encodeTeamData({
+        boards: [
+          {
+            m: 'arena1',
+            t: [1, 2, 3, 4, 5].map((hexId) => [hexId, State.AVAILABLE_ALLY]),
+            c: [
+              [1, ALLY_A, Team.ALLY],
+              [2],
+              [3, ALLY_B],
+              [4, toSynergyId(ALLY_B), Team.ALLY],
+              [5, ALLY_C, Team.ALLY],
+            ],
+            u: [[Team.ALLY, ALLY_C, ATTR_PARAGON, 2], [Team.ALLY]],
+            a: [1, null],
+          },
+        ],
+      }),
+    )
+
+    expect(restored.boardRestore.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.character.charactersPlaced).toBe(2)
+    expect(restored.grid.getTile(1).characterId).toBe(ALLY_A)
+    expect(restored.grid.getTile(5).characterId).toBe(ALLY_C)
+    expect(useGrids().active!.getAttrs(Team.ALLY, ALLY_C)).toEqual({ [ATTR_PARAGON]: 2 })
+    expect(restored.artifact.allyArtifactId).toBe(1)
   })
 
   it('dedupes a character restored on the same team of two boards, keeping the first', () => {

@@ -18,17 +18,12 @@
  */
 
 import type { AttrRecord } from '@/lib/characters/attributes'
-import { isCompanionUnitId } from '@/lib/characters/character'
-import {
-  PHANTIMAL_ID_OFFSET,
-  splitPhantimalBandLocal,
-  toPhantimalId,
-} from '@/lib/characters/phantimal'
+import { splitPhantimalBandLocal, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { decodeTeamData } from '@/lib/teams/codec'
-import type { GridState, MultiGridState } from '@/lib/teams/gridStateSerializer'
+import { unitRowKind, type GridState, type MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
 
 export interface SideLoadUnit {
@@ -116,11 +111,9 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
   const companions: SideLoadCompanion[] = []
   for (const [hexId, characterId, team] of board.c ?? []) {
     if (team !== side || hexId === undefined || characterId === undefined) continue
-    // Only base and companion values are legal in c; a crafted phantimal- or
-    // synergy-band value would bypass placePhantimal's cap/faction gates and
-    // the mode's synergy strip (the codec has no validation pass).
-    if (characterId >= PHANTIMAL_ID_OFFSET) continue
-    if (isCompanionUnitId(characterId)) {
+    const kind = unitRowKind(characterId)
+    if (kind === 'illegal') continue
+    if (kind === 'companion') {
       companions.push({
         unitId: characterId,
         hexId,
@@ -134,12 +127,13 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
   let leftOut = 0
   for (const [hexId, localId, team] of board.y ?? []) {
     if (team !== side || hexId === undefined || localId === undefined) continue
-    if (localId >= PHANTIMAL_ID_OFFSET) continue
+    const kind = unitRowKind(localId)
+    if (kind === 'illegal') continue
     if (!allowSynergy) {
-      if (localId < COMPANION_ID_OFFSET) leftOut++
+      if (kind === 'main') leftOut++
       continue
     }
-    if (localId >= COMPANION_ID_OFFSET) {
+    if (kind === 'companion') {
       companions.push({
         unitId: toSynergyId(localId),
         hexId,
@@ -152,12 +146,13 @@ export function sideLoadBoard(board: GridState, side: Team, allowSynergy: boolea
 
   // One phantimal per team per board, so the side's first phantimal entry is
   // its phantimal; entries with a companion index are its skill-spawned
-  // companions.
+  // companions. An illegal id is carried as a companion here, where c and y
+  // drop it.
   let phantimal: SideLoadUnit | null = null
   for (const [hexId, localId, team] of board.s ?? []) {
     if (team !== side || hexId === undefined || localId === undefined) continue
-    const { ownerLocal, index } = splitPhantimalBandLocal(localId)
-    if (index > 0) {
+    if (unitRowKind(localId) !== 'main') {
+      const { ownerLocal } = splitPhantimalBandLocal(localId)
       companions.push({
         unitId: toPhantimalId(localId),
         hexId,

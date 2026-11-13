@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 
 import { repositionCompanions } from '@/lib/characters/companion'
-import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { availableState, findMapByTiles, resolveBoardMap } from '@/lib/maps'
 import { decodeGridStateFromUrl, decodeTeamData } from '@/lib/teams/codec'
 import {
+  unitRowKind,
   unpackDisplayFlags,
   type BoardState,
   type DisplayFlags,
@@ -121,13 +122,9 @@ export const useBoardRestore = defineStore('boardRestore', () => {
       entries.forEach((entry) => {
         const localId = entry[1]
         if (localId === undefined) return
-        // Only base and companion locals are legal here; a phantimal- or
-        // synergy-band value would otherwise slip into companion matching below
-        // (200050 % 10000 matches hero 50) and raw-place an orphan. The multi
-        // codec has no validation pass, so crafted values are dropped here.
-        if (localId >= PHANTIMAL_ID_OFFSET) return
-        if (localId >= COMPANION_ID_OFFSET) companions.push(entry)
-        else mains.push(entry)
+        const kind = unitRowKind(localId)
+        if (kind === 'companion') companions.push(entry)
+        else if (kind === 'main') mains.push(entry)
       })
 
       const grid = grids.active!.grid

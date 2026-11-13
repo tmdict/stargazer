@@ -75,6 +75,21 @@ export type AttrRow = [team: Team, characterId: number, attrId: number, value: n
 export const compareAttrRows = (a: AttrRow, b: AttrRow): number =>
   a[0] - b[0] || a[1] - b[1] || a[2] - b[2]
 
+/* The rows a board holds for the given ones, in canonical order: each value
+ * clamped to its range, the last row winning per (team, hero, attribute), and
+ * a row left at its default dropped. Takes rows whose team and attrId the
+ * caller has checked. */
+export function collapseAttrRows(rows: readonly AttrRow[]): AttrRow[] {
+  const byKey = new Map<string, AttrRow>()
+  for (const [team, characterId, attrId, value] of rows) {
+    const clamped = clampAttr(attrId, value, characterId)
+    const key = `${team}:${characterId}:${attrId}`
+    if (clamped !== attrDefault(attrId)) byKey.set(key, [team, characterId, attrId, clamped])
+    else byKey.delete(key)
+  }
+  return [...byKey.values()].sort(compareAttrRows)
+}
+
 /* Sparse rows for one hero's record, unsorted (callers collect across heroes,
  * then sort once with compareAttrRows). */
 export function attrRowsFor(team: Team, characterId: number, attrs: AttrRecord): AttrRow[] {

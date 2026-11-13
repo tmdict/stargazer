@@ -124,6 +124,33 @@ describe('buildSideLoadPlan', () => {
     expect(plan.boards[0]!.companions).toEqual([])
     expect(plan.boards[0]!.phantimal).toBeNull()
   })
+
+  it('reads each band of ids the same way in c and y, and keeps an illegal s row as a companion', () => {
+    const rows = [
+      [1, 11, Team.ALLY],
+      [2, 9000, Team.ALLY],
+      [3, 0, Team.ALLY],
+      [4, -1, Team.ALLY],
+      [5, 10011, Team.ALLY],
+      [6, 100005, Team.ALLY],
+      [7, 200050, Team.ALLY],
+      [8, 300000, Team.ALLY],
+    ]
+    const board = sideLoadBoard({ c: rows, y: rows, s: rows }, Team.ALLY, true)
+    expect(board.mains.map((unit) => unit.unitId)).toEqual([
+      ...[11, 9000, 0, -1],
+      ...[11, 9000, 0, -1].map(toSynergyId),
+    ])
+    expect(board.phantimal).toEqual({ unitId: toPhantimalId(11), hexId: 1 })
+    expect(board.companions.map((unit) => [unit.unitId, unit.mainUnitId])).toEqual([
+      [10011, 11],
+      [toSynergyId(10011), toSynergyId(11)],
+      ...[10011, 100005, 200050, 300000].map((localId) => [
+        toPhantimalId(localId),
+        toPhantimalId(localId % 10000),
+      ]),
+    ])
+  })
 })
 
 describe('sideLoadBoard', () => {

@@ -10,6 +10,7 @@ import {
   BOARD_CONTENT_KEYS,
   serializeGridState,
   serializeMultiGridState,
+  unitRowKind,
   unpackDisplayFlags,
 } from '@/lib/teams/gridStateSerializer'
 import { State } from '@/lib/types/state'
@@ -160,6 +161,28 @@ describe('gridStateSerializer', () => {
       )
       expect(Object.keys(state.boards[0]!).sort()).toEqual([...BOARD_CONTENT_KEYS].sort())
     })
+  })
+})
+
+describe('unitRowKind', () => {
+  it.each([
+    ['a base hero', 11, 'main'],
+    ["a phantimal's own local id", 5, 'main'],
+    ['the first placeholder', 9000, 'main'],
+    ['the last id below the companion offset', 9999, 'main'],
+    ['zero', 0, 'main'],
+    ['a negative id', -1, 'main'],
+    ['the first companion id', 10000, 'companion'],
+    ["a hero's companion", 10011, 'companion'],
+    ["a hero's sixth companion", 60011, 'companion'],
+    ["a phantimal's companion", 30005, 'companion'],
+    ['the last id below the phantimal band', 99999, 'companion'],
+    ['the start of the phantimal band', 100000, 'illegal'],
+    ['a phantimal-band id', 100005, 'illegal'],
+    ['a synergy-band id', 200050, 'illegal'],
+    ['an id above every band', 300000, 'illegal'],
+  ] as const)('reads %s as %s', (_label, localId, kind) => {
+    expect(unitRowKind(localId)).toBe(kind)
   })
 })
 

@@ -1,4 +1,4 @@
-import { attrDefault, clampAttr, compareAttrRows, isKnownAttrId } from '@/lib/characters/attributes'
+import { collapseAttrRows, isKnownAttrId, type AttrRow } from '@/lib/characters/attributes'
 import { joinPhantimalBandLocal, splitPhantimalBandLocal } from '@/lib/characters/phantimal'
 import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
 import type { BoardState, GridState } from './gridStateSerializer'
@@ -222,11 +222,11 @@ function validateGridState(state: GridState): GridState {
 
   // Upgrade rows dedupe last-wins with defaults dropped (charId 0 is the
   // team-scope sentinel; values clamp to the attr's range for that hero rather
-  // than dropping), as canonicalAttrRows does, so a crafted link carrying
-  // duplicate or zero rows can't burn the 63-row cap or persist junk through
-  // the arena autosave's decode/re-encode.
+  // than dropping), so a crafted link carrying duplicate or zero rows can't
+  // burn the 63-row cap or persist junk through the arena autosave's
+  // decode/re-encode.
   if (state.u && Array.isArray(state.u)) {
-    const byKey = new Map<string, [number, number, number, number]>()
+    const rows: AttrRow[] = []
     for (const entry of state.u) {
       const [team, charId, attrId] = entry
       if (
@@ -238,12 +238,9 @@ function validateGridState(state: GridState): GridState {
         console.warn('Invalid upgrade entry:', entry)
         continue
       }
-      const value = clampAttr(attrId, entry[3] ?? 0, charId)
-      const key = `${team}:${charId}:${attrId}`
-      if (value !== attrDefault(attrId)) byKey.set(key, [team, charId, attrId, value])
-      else byKey.delete(key)
+      rows.push([team, charId, attrId, entry[3] ?? 0] as AttrRow)
     }
-    let validUpgrades = [...byKey.values()].sort(compareAttrRows)
+    let validUpgrades = collapseAttrRows(rows)
     if (validUpgrades.length > MAX_UPGRADE_COUNT) {
       console.warn(
         `Too many upgrade entries (${validUpgrades.length}), keeping first ${MAX_UPGRADE_COUNT}`,
