@@ -13,7 +13,8 @@ import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
-import { loadAppLocales, loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
+import { loadCharacterImages } from '@/utils/imageLoader'
+import { loadAppLocales, loadCharacterLocales } from '@/utils/localeLoader'
 import { heroDisplayName } from '@/utils/skillLabels'
 
 /** Provide(true) when rendering skill content inside a modal to suppress page-level meta writes. */

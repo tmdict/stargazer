@@ -4,7 +4,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { presetLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
-import { placeTeam } from '@/lib/placement/engine'
+import { effectPoints, placeTeam } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementData, PlacementTeam } from '@/lib/placement/types'
@@ -26,6 +26,12 @@ const PHRAESTO = 50
 const LUDOVIC = 53
 const EVIE = 113
 const REINIER = 31
+const SAIDA = 87
+const GUNNAR = 106
+const CONTESS = 109
+const FRIEREN = 111
+const HIMMEL = 112
+const CANDLEFLAME = 7
 const WEDGE_OF_MATTER = toPhantimalId(5)
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
 
@@ -281,6 +287,49 @@ describe('placement scoring', () => {
     expect(contractMet(WEDGE_OF_MATTER)).toBe(0)
   })
 
+  // Orion is not on Alna's list, so her goal earns nothing on him, yet her
+  // Winter Warrior still has a hero. Tiles 3 and 5 are the row of tile 4.
+  it('keeps a hard target rule on any hero of the team, and never on a phantimal', () => {
+    const heroes = [ALNA, SYLPHIRA, ORION, PERSEUS, DIONEL]
+    const scoreAt = (team: PlacementTeam, at: Record<number, number>) => {
+      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(board, team, DATA)
+      const free = board.tiles.filter((tile) => !Object.values(at).includes(tile) && tile !== 3)
+      board.place(board.units.map((unit) => at[unit] ?? free.pop()!))
+      return { ...scorer.score(), met: metOf(scorer, ALNA) }
+    }
+    expect(scoreAt({ heroes }, { [ALNA]: 4, [ORION]: 5 })).toMatchObject({ kept: 1, met: 0 })
+    expect(scoreAt({ heroes }, { [ALNA]: 4, [SYLPHIRA]: 5 })).toMatchObject({ kept: 1, met: 1 })
+    const marked = { heroes, phantimal: WEDGE_OF_MATTER }
+    expect(scoreAt(marked, { [ALNA]: 4, [WEDGE_OF_MATTER]: 5 }).kept).toBe(0)
+  })
+
+  // Sylphira and Rolan share a faction, as does the Wedge of Matter; Mehira is
+  // of another. The twins stand on tiles 1 and 10, with tiles 4 and 7 between.
+  it('keeps the twins rule with one hero between them, all there of one faction, and counts two as the whole', () => {
+    const twinsScore = (team: PlacementTeam, between: number[]) => {
+      const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(board, team, DATA)
+      const fixed = new Map([
+        [TWINS, 1],
+        [TWINS + COMPANION_ID_OFFSET, 10],
+        ...between.map((unit, i): [number, number] => [unit, [4, 7][i]!]),
+      ])
+      const free = board.tiles.filter((tile) => ![1, 4, 7, 10].includes(tile))
+      board.place(board.units.map((unit) => fixed.get(unit) ?? free.shift()!))
+      const { kept, whole } = scorer.score()
+      return { kept, whole }
+    }
+    const team = { heroes: [LILY_MAY, TWINS, MEHIRA, SYLPHIRA, ROLAN] }
+    expect(twinsScore(team, [SYLPHIRA, ROLAN])).toEqual({ kept: 1, whole: 1 })
+    expect(twinsScore(team, [SYLPHIRA])).toEqual({ kept: 1, whole: 0 })
+    expect(twinsScore(team, [SYLPHIRA, MEHIRA])).toEqual({ kept: 0, whole: 0 })
+    expect(twinsScore(team, [])).toEqual({ kept: 0, whole: 0 })
+    const wedge = { ...team, phantimal: WEDGE_OF_MATTER }
+    expect(twinsScore(wedge, [ROLAN, WEDGE_OF_MATTER])).toEqual({ kept: 1, whole: 0 })
+    expect(twinsScore(wedge, [WEDGE_OF_MATTER])).toEqual({ kept: 0, whole: 0 })
+  })
+
   // preset-sr3's tile 14 has no way to the enemy until a wall falls.
   it('takes the walled weight off for each melee hero on a tile with no way to the enemy', () => {
     const sr3 = presetLayout('preset-sr3')!
@@ -307,6 +356,65 @@ describe('placement search', () => {
     const full = placeTeam(team, MAP, data, PLACEMENT_LOOKUPS, { full: true })
     expect(searched.best).toEqual(full.best)
     expect(placeTeam(team, MAP, data, PLACEMENT_LOOKUPS).positions).toEqual(searched.positions)
+  })
+
+  // Frieren's magic, the Wedge of Matter's mark and Candleflame all want Gunnar
+  // frontmost, 45 points with nobody behind him and no Hero Party; keeping
+  // both hard rules earns 40.
+  const HARD: PlacementData = {
+    ...DATA,
+    lists: { gunnar: [CONTESS], tank: [GUNNAR], haste: [SAIDA], damage: [SAIDA, FRIEREN] },
+    weights: { ...DATA.weights, gunnar: 20, walled: 5 },
+  }
+  const party = { heroes: [SAIDA, GUNNAR, HIMMEL, FRIEREN, CONTESS] }
+
+  it('keeps every hard rule where the points alone would break one', () => {
+    const map = presetLayout('preset-sr3')!
+    const team = { ...party, phantimal: WEDGE_OF_MATTER, artifact: CANDLEFLAME }
+    const board = new PlacementBoard(team, map, PLACEMENT_LOOKUPS)
+    const scorer = new PlacementScorer(board, team, HARD)
+    const byPoints = new Map([
+      [SAIDA, 8],
+      [GUNNAR, 6],
+      [HIMMEL, 2],
+      [FRIEREN, 14],
+      [CONTESS, 1],
+      [WEDGE_OF_MATTER, 4],
+    ])
+    board.place(board.units.map((unit) => byPoints.get(unit) ?? 11))
+    expect(scorer.score()).toMatchObject({ kept: 1, goals: 45 })
+
+    const searched = placeTeam(team, map, HARD, PLACEMENT_LOOKUPS)
+    expect(searched.best).toMatchObject({ kept: 2, goals: 40 })
+    expect(searched.best).toEqual(
+      placeTeam(team, map, HARD, PLACEMENT_LOOKUPS, { full: true }).best,
+    )
+  })
+
+  // Both Spirit Marks land with a Wedge beside one hero between the twins, 21
+  // points; Sylphira and Rolan between them leave one mark unmet, 20 points.
+  it('puts two heroes of one faction between the twins ahead of the points', () => {
+    const team = { heroes: [ORION, MEHIRA, SYLPHIRA, ROLAN, TWINS], phantimal: WEDGE_OF_MATTER }
+    const data = { ...HARD, lists: { tank: [SYLPHIRA], haste: [ROLAN], damage: [ORION, SYLPHIRA] } }
+    const searched = placeTeam(team, MAP, data, PLACEMENT_LOOKUPS)
+    expect(searched.best).toMatchObject({ kept: 1, whole: 1, goals: 20 })
+    const between = new Set(
+      [SYLPHIRA, ROLAN].map((hero) => searched.positions[searched.units.indexOf(hero)]),
+    )
+    const twins = [TWINS, TWINS + COMPANION_ID_OFFSET]
+      .map((unit) => searched.positions[searched.units.indexOf(unit)]!)
+      .sort((a, b) => a - b)
+    expect(twins).toEqual([1, 10])
+    expect(between).toEqual(new Set([4, 7]))
+  })
+
+  // On preset-sr1 a hero behind Gunnar and Himmel's Hero Party each have a
+  // placement, and none has both.
+  it('says whether a map has a placement that keeps all of a team’s hard rules', () => {
+    const keeps = (map: string) =>
+      effectPoints(party, presetLayout(map)!, HARD, PLACEMENT_LOOKUPS).keeps
+    expect(keeps('preset-sr3')).toBe(true)
+    expect(keeps('preset-sr1')).toBe(false)
   })
 
   it('keeps held units on their tiles and finds the best tiles for the rest', () => {

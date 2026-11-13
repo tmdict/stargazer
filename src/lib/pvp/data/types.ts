@@ -8,12 +8,18 @@ import type { PlacementData } from '@/lib/placement/types'
 // [tile, unit id], tiles numbered from the ally side.
 export type SlUnit = [tile: number, id: number]
 
-interface SlPlacement {
+export interface SlPlacement {
   // Heroes and their companions (N * 10000 + the hero's id).
   c: SlUnit[]
   // The phantimal, then its companions (N * 10000 + the phantimal's id); empty
   // on a board of an earlier season, whose phantimal the generator places.
   s: SlUnit[]
+  // The share of the engine's formation's score the board's own record in the
+  // live season adds when the two are compared; left out when it adds none.
+  b?: number
+  // 1 when every one of the board's live-season games was played without
+  // Spirit Marks.
+  a?: 1
 }
 
 // A lineup's record on one map, or on every map together.
@@ -147,4 +153,30 @@ export interface SlData {
   maps: SlMap[]
   // Each lineup over every map together, in rank order.
   everyMap: SlEveryMapTeam[]
+}
+
+// One set of the fit table: the points each lineup's own goals earn in the
+// placement engine's best placement on each map, and the placements among
+// them that break a hard rule.
+export interface SlFitSet {
+  // A row per lineup, in the order of the data file's `everyMap`, and in each
+  // a number per map of the table; null where the lineup is never placed.
+  points: (number | null)[][]
+  // [row, map], both indexes into `points`.
+  refused: [row: number, map: number][]
+}
+
+// The fit table (pvp/fits.bin in the data pack), as codec.ts reads it: what
+// the generator's fit checks find on the preset maps, worked out by npm run
+// fits (docs/architecture/PLACEMENT.md).
+export interface SlFitTable {
+  // What the table was made from: the data file and the code and game data
+  // the fit check loads.
+  stamp: string
+  // The preset maps by key, one per column of a set's rows.
+  maps: string[]
+  // Lineups placed with the phantimal they summon, and without it for the
+  // boards of a format that fields none.
+  seasonal: SlFitSet
+  plain: SlFitSet
 }

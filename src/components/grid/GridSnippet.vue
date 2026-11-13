@@ -6,7 +6,7 @@ import { Hex } from '@/lib/hex'
 import { Layout, POINTY } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { loadCharacterImages } from '@/utils/dataLoader'
+import { loadCharacterImages } from '@/utils/imageLoader'
 import { teamTint } from '@/utils/tileStateFormatting'
 
 interface GridStyleConfig {

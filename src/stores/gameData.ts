@@ -12,7 +12,13 @@ import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import { loadAllData } from '@/utils/dataLoader'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
+import {
+  loadArtifactImages,
+  loadCharacterImages,
+  loadIcons,
+  loadOutfitImages,
+} from '@/utils/imageLoader'
 
 export const useGameDataStore = defineStore('gameData', () => {
   // Data state
@@ -33,15 +39,15 @@ export const useGameDataStore = defineStore('gameData', () => {
   const characterRanges = ref(new Map<number, number>())
 
   const loadIntoState = () => {
-    const data = loadAllData()
-    characters.value = data.characters
-    artifacts.value = data.artifacts
-    phantimals.value = data.phantimals
-    characterImages.value = data.characterImages
-    outfitImages.value = data.outfitImages
-    artifactImages.value = data.artifactImages
-    icons.value = data.icons
-    characterRanges.value = data.characterRanges
+    const heroes = loadCharacters()
+    characters.value = heroes
+    artifacts.value = loadArtifacts()
+    phantimals.value = loadPhantimals()
+    characterImages.value = loadCharacterImages()
+    outfitImages.value = loadOutfitImages()
+    artifactImages.value = loadArtifactImages()
+    icons.value = loadIcons()
+    characterRanges.value = new Map(heroes.map(({ id, range }) => [id, range]))
     dataLoaded.value = true
   }
 

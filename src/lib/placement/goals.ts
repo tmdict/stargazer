@@ -19,7 +19,7 @@ export const goalWord = (goal: RuleGoal): string =>
   typeof goal === 'string'
     ? goal
     : Object.keys(goal).find(
-        (key) => !['fallback', 'others', 'sameFaction', 'nonHero'].includes(key),
+        (key) => !['fallback', 'others', 'sameFaction', 'nonHero', 'least'].includes(key),
       )!
 
 export function goalList(goal: RuleGoal): string | undefined {

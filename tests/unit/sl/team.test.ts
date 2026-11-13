@@ -21,19 +21,18 @@ import { ruleUnit } from '@/lib/placement/reach'
 import { PlacementScorer } from '@/lib/placement/score'
 import type { PlacementTeam } from '@/lib/placement/types'
 import { loadSlData } from '@/lib/pvp/data/codec'
+import { lineupKey } from '@/lib/pvp/data/sides'
 import type { SlData, SlUnit } from '@/lib/pvp/data/types'
 import { nonSeasonalSet } from '@/lib/pvp/generator/artifacts'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
-import { slFit } from '@/lib/pvp/generator/fit'
+import { slFit, summonedPhantimal } from '@/lib/pvp/generator/fit'
 import {
+  boardDraw,
   boardDraws,
   boardPlacement,
   boardTeam,
-  engineFormation,
-  nonSeasonalUnits,
   shownFormation,
   sideExplanation,
-  summonedPhantimal,
 } from '@/lib/pvp/generator/formation'
 import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import { previewSwap } from '@/lib/pvp/generator/swapPreview'
@@ -76,7 +75,7 @@ const byTile = (a: readonly number[], b: readonly number[]) => a[0]! - b[0]!
 // season draws the same tiles.
 const drawnOf = (file: SlData, chosen: SlChoice, on: SlBoard[] = boards) =>
   chosen.teams.map((team, i) => ({
-    units: recordedUnits(file, team) ?? engineFormation(file, team, on[i]!).units,
+    units: recordedUnits(file, team) ?? boardDraw(file, team, on[i]!).engine.units,
   }))
 const decoded = (season: number) => {
   const file = { ...data, season }
@@ -167,14 +166,17 @@ describe('a set for the Non-Seasonal format', () => {
     })
   })
 
-  it('stands the recorded heroes on their tiles and fields no phantimal', () => {
-    plain.teams.forEach((team, i) => {
-      const units = nonSeasonalUnits(data, team, boards[i]!)
-      expect(units.some(([, unit]) => inPhantimalBand(unit))).toBe(false)
+  it('draws both formations of the heroes alone, the recorded one on its tiles', () => {
+    boardDraws(data, plain, boards, true).forEach((draw, i) => {
+      const team = plain.teams[i]!
       const recorded = recordedUnits(data, team)?.filter(([, unit]) => !inPhantimalBand(unit))
-      expect(units).toEqual(expect.arrayContaining(recorded ?? []))
-      const heroes = units.map(([, unit]) => unit).filter(isBaseHeroId)
-      expect(heroes.sort()).toEqual([...team.heroes].sort())
+      expect(!!draw.played).toBe(!!recorded)
+      expect(draw.played?.units ?? []).toEqual(expect.arrayContaining(recorded ?? []))
+      for (const { units } of draw.played ? [draw.engine, draw.played] : [draw.engine]) {
+        expect(units.some(([, unit]) => inPhantimalBand(unit))).toBe(false)
+        const heroes = units.map(([, unit]) => unit).filter(isBaseHeroId)
+        expect(heroes.sort()).toEqual([...team.heroes].sort())
+      }
     })
   })
 })
@@ -289,7 +291,7 @@ describe('a Map Editor map', () => {
 describe('a side placed by hand', () => {
   const board = boards[0]!
   const choice = set.teams[0]!
-  const { units } = engineFormation(data, choice, board)
+  const { units } = boardDraw(data, choice, board).engine
   const free = [...deploymentTiles(board.layout.key, Team.ALLY)].find(
     (tile) => !units.some(([used]) => used === tile),
   )!
@@ -311,7 +313,7 @@ describe('a side placed by hand', () => {
 
 describe("the engine's formations", () => {
   const engineOf = (file: SlData) =>
-    set.teams.map((team, i) => engineFormation(file, team, boards[i]!))
+    set.teams.map((team, i) => boardDraw(file, team, boards[i]!).engine)
   const suggested = engineOf(data)
 
   it('stand each team on its map with the phantimal its heroes summon', () => {
@@ -409,22 +411,113 @@ describe('a recorded board', () => {
     return { t, choice, board, played }
   }
 
-  it('moves nothing for the Spirit Mark on the Supreme League maps, which play without the marks', () => {
-    // A team whose units the Spirit Mark moves when it stands alone on its map.
-    const mover = boards
-      .flatMap((board, at) =>
-        data.maps[board.source!]!.teams.flatMap((t, index) =>
-          t.placements[0]?.s.length ? [{ at, index, source: board.source! }] : [],
-        ),
-      )
-      .find(({ source, index }) => onOwnMap(source, index).played.moved.length > 0)!
+  // The data file with one team's first placement changed.
+  const withPlacement = (
+    source: number,
+    index: number,
+    change: Partial<SlData['maps'][number]['teams'][number]['placements'][number]>,
+  ): SlData => ({
+    ...data,
+    maps: data.maps.map((m, at) =>
+      at !== source
+        ? m
+        : {
+            ...m,
+            teams: m.teams.map((t, i) =>
+              i !== index
+                ? t
+                : { ...t, placements: t.placements.map((p, n) => (n ? p : { ...p, ...change })) },
+            ),
+          },
+    ),
+  })
+  const drawOn = (file: SlData, source: number, index: number) => {
+    const { choice, board } = onOwnMap(source, index)
+    return boardDraw(file, choice, board)
+  }
+  const recordedTeams = data.maps.flatMap((m, source) =>
+    m.teams.flatMap((t, index) => (t.placements[0]?.s.length ? [{ source, index }] : [])),
+  )
+
+  it('moves nothing in a formation recorded with Spirit Marks', () => {
+    const mover = recordedTeams.find(
+      ({ source, index }) => onOwnMap(source, index).played.moved.length > 0,
+    )!
     expect(mover).toBeDefined()
-    const teams = boards.map((board, i) =>
-      i === mover.at ? choiceOf(mover.source, mover.index) : choiceOf(board.source!, 0),
+    const marked = withPlacement(mover.source, mover.index, { a: undefined })
+    const { played } = drawOn(marked, mover.source, mover.index)
+    expect(played!.moved).toEqual([])
+    expect(played!.units).toEqual(recordedUnits(data, choiceOf(mover.source, mover.index)))
+  })
+
+  it('shows the recorded formation where its record makes up what the rules score it below the engine', () => {
+    const margin = data.placement.weights.margin ?? 0
+    // A team the rules score lower than the engine's, by less than a fifth.
+    const close = recordedTeams.slice(0, 200).find(({ source, index }) => {
+      const { scores } = drawOn(data, source, index)
+      return scores!.played < scores!.engine - margin - 1 && scores!.played >= 0.85 * scores!.engine
+    })!
+    expect(close).toBeDefined()
+    const shows = (b: number | undefined) =>
+      drawOn(withPlacement(close.source, close.index, { b }), close.source, close.index)
+    expect(shows(undefined).showsPlayed).toBe(false)
+    const strong = shows(0.2)
+    expect(strong.showsPlayed).toBe(true)
+    expect(shownFormation(strong)).toBe(strong.played)
+  })
+
+  // The record's points count only between formations that keep as many hard
+  // rules: here they would otherwise lift the recorded one to the engine's.
+  it('never shows a recorded formation that keeps fewer hard rules, whatever its record', () => {
+    const hardHero = (id: number) => PLACEMENT_LOOKUPS.rulesOf(id).some((rule) => rule.hard)
+    const breaker = recordedTeams.find(({ source, index }) => {
+      const choice = choiceOf(source, index)
+      if (!choice.heroes.some(hardHero)) return false
+      const board: SlBoard = { layout: presetLayout(data.maps[source]!.key)!, map: 0, source }
+      const team = boardTeam(data, choice.heroes, choice.artifact)
+      const placed = new PlacementBoard(team, board.layout, PLACEMENT_LOOKUPS)
+      const scorer = new PlacementScorer(placed, team, boardPlacement(data, board, choice))
+      const keptAt = (units: readonly SlUnit[]): number | null => {
+        const tiles = new Map(units.map(([hexId, unit]) => [unit, hexId]))
+        const positions = placed.units.map((unit) => tiles.get(unit))
+        if (positions.includes(undefined)) return null
+        placed.place(positions as number[])
+        return scorer.score().kept
+      }
+      const units = recordedUnits(data, choice)
+      const recorded = units && keptAt(units)
+      if (recorded === null || recorded >= scorer.hardRules) return false
+      const draw = boardDraw(withPlacement(source, index, { b: 0.2 }), choice, board)
+      const played = keptAt(draw.played!.units)
+      const { scores } = draw
+      return (
+        played !== null &&
+        played < keptAt(draw.engine.units)! &&
+        scores!.played + scores!.bonus >= scores!.engine
+      )
+    })!
+    expect(breaker).toBeDefined()
+    const strong = drawOn(
+      withPlacement(breaker.source, breaker.index, { b: 0.2 }),
+      breaker.source,
+      breaker.index,
     )
-    const drawn = boardDraws(data, { chance: 0, odds: [], teams }, boards)
-    expect(drawn.map((draw) => draw.played?.moved ?? [])).toEqual(teams.map(() => []))
-    expect(drawn[mover.at]!.played!.units).toEqual(recordedUnits(data, teams[mover.at]!))
+    expect(strong.showsPlayed).toBe(false)
+    expect(shownFormation(strong)).toBe(strong.engine)
+  })
+
+  // Athalia, Aliceth, Alna, Frieren and Himmel have no support: Wedge of
+  // Matter takes that seat in Himmel's party, and a board without phantimals
+  // has none to give it.
+  it('refuses on a board without phantimals a lineup whose hard rule needs its phantimal', () => {
+    const { heroes } = data.everyMap.find(
+      (row) => lineupKey(row.heroes) === lineupKey([74, 91, 100, 111, 112]),
+    )!
+    const source = data.maps.findIndex((m) => m.key === 'arena1')
+    const board: SlBoard = { layout: presetLayout('arena1')!, map: 0, source }
+    const measured = (plain: boolean) => slFit(data, plain).measure(board, heroes)
+    expect(measured(false)).not.toBeNull()
+    expect(measured(true)).toBeNull()
   })
 
   // The first shipped teams of each map with a recorded phantimal, each on its map.

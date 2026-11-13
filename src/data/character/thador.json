@@ -20,7 +20,8 @@
       "team": "ally",
       "goal": { "target": "ultimate" },
       "weight": "aim",
-      "note": "Thador's lieutenant, the ally behind him, is the hero whose ultimate matters most."
+      "hard": true,
+      "note": "Thador's lieutenant, the ally behind him, is the hero whose ultimate matters most, and a hero always stands there."
     }
   ]
 }

@@ -8,8 +8,8 @@
 // where it redirects, or the paths inside it.
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { argv, env, exit, loadEnvFile } from 'node:process'
+import { join } from 'node:path'
+import { argv, env, exit } from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import {
@@ -17,6 +17,7 @@ import {
   download,
   DownloadError,
   dropMarker,
+  localPack,
   mirror,
   packCommit,
   packProblems,
@@ -26,6 +27,7 @@ import {
   writeGenerated,
   writeStandIns,
 } from './lib/dataPack.ts'
+import { syncFitTable } from './lib/fitTable.ts'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const PACK = join(ROOT, 'src', 'pack')
@@ -48,9 +50,7 @@ function fail(message: string): never {
 const readPin = (): string | null =>
   existsSync(LOCK) ? readFileSync(LOCK, 'utf8').trim() || null : null
 
-const localEnv = join(ROOT, '.env.local')
-if (existsSync(localEnv)) loadEnvFile(localEnv)
-const dir = env.DATA_PACK_DIR ? resolve(ROOT, env.DATA_PACK_DIR) : null
+const dir = localPack(ROOT)
 const { DATA_PACK_URL: url, DATA_PACK_TOKEN: token, DATA_PACK_PATH: path } = env
 const HOST_SETTINGS = ['DATA_PACK_URL', 'DATA_PACK_TOKEN', 'DATA_PACK_PATH']
 const unset = HOST_SETTINGS.filter((name) => !env[name])
@@ -96,6 +96,10 @@ if (dir) {
     `data: no data pack, so the app runs without game pictures or skill text; ${noPackFix}`,
   )
 }
+
+const fits = await syncFitTable(PACK, ROOT)
+if (fits.changed) changed++
+if (fits.note) console.log(`data: ${fits.note}`)
 
 if (changed) rmSync(VITEST_CACHE, { recursive: true, force: true })
 

@@ -11,6 +11,10 @@ export const EPS = 1e-9
 // faction between the twins, is reached only from a start near it, and 16
 // starts miss it for about one Season 8 team in ten that could meet it.
 const STARTS = 32
+// A search whose best placement breaks a hard rule, or leaves one short of its
+// whole goal on a team that can meet it, climbs from this many starts more,
+// stopping at the first placement that does neither.
+const MORE_STARTS = 96
 const EQUAL_CAP = 1000
 
 interface PlacementOptions {
@@ -35,18 +39,30 @@ export interface PlacementResult {
   kept: number[][]
 }
 
-// Negative when `a` is the better score: higher goals, then a higher total.
-function compare(a: PlacementScore, b: PlacementScore): number {
+// Positive when `a` keeps more hard rules than `b`, or as many with more of
+// them met in full.
+const hardAhead = (a: PlacementScore, b: PlacementScore): number =>
+  a.kept - b.kept || a.whole - b.whole
+
+// Negative when `a` is the better score: the hard rules first, then higher
+// goals, then a higher total.
+export function compare(a: PlacementScore, b: PlacementScore): number {
+  const hard = hardAhead(a, b)
+  if (hard) return -hard
   if (Math.abs(a.goals - b.goals) > EPS) return b.goals - a.goals
   if (Math.abs(a.total - b.total) > EPS) return b.total - a.total
   return 0
 }
 
-export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean =>
-  score.goals >= best.goals - margin - EPS
+export const asGoodAs = (score: PlacementScore, best: PlacementScore, margin: number): boolean => {
+  const hard = hardAhead(score, best)
+  return hard ? hard > 0 : score.goals >= best.goals - margin - EPS
+}
 
-export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean =>
-  score.goals > base.goals + margin + EPS
+export const beats = (score: PlacementScore, base: PlacementScore, margin: number): boolean => {
+  const hard = hardAhead(score, base)
+  return hard ? hard > 0 : score.goals > base.goals + margin + EPS
+}
 
 // A generator of numbers in [0, 1) seeded from a string, so one team on one map
 // always searches from the same starts.
@@ -66,6 +82,8 @@ const positionsOf = (key: string): number[] => key.split(',').map(Number)
 
 class Search {
   readonly scores = new Map<string, PlacementScore>()
+  // The best placement scored, the first scored on a tie.
+  private top: [string, PlacementScore] | undefined
 
   constructor(
     private readonly board: PlacementBoard,
@@ -81,6 +99,7 @@ class Search {
       this.board.place(positions)
       score = this.scorer.score()
       this.scores.set(key, score)
+      if (!this.top || compare(score, this.top[1]) < 0) this.top = [key, score]
     }
     return score
   }
@@ -160,15 +179,12 @@ class Search {
     }
   }
 
-  // The best placement scored, the first scored on a tie.
   bestKey(): string {
-    let best: [string, PlacementScore] | undefined
-    for (const entry of this.scores) if (!best || compare(entry[1], best[1]) < 0) best = entry
-    return best![0]
+    return this.top![0]
   }
 
   best(): PlacementScore {
-    return this.scores.get(this.bestKey())!
+    return this.top![1]
   }
 
   // The placements within the margin of the best: those already scored, and
@@ -244,14 +260,19 @@ function searched(
     for (const tiles of everyPlacement(open, movable.length)) search.evaluate(fill(tiles))
   } else {
     const random = seeded(`${layout.key}|${board.units.join(',')}|${team.artifact ?? ''}`)
-    for (let start = 0; start < STARTS; start++) {
+    const short = (): boolean => {
+      const { kept, whole } = search.best()
+      return kept < scorer.hardRules || whole < scorer.wholeRules
+    }
+    for (let start = 0; start < STARTS + MORE_STARTS; start++) {
+      if (start >= STARTS && !short()) break
       const tiles = [...open]
       for (let i = tiles.length - 1; i > 0; i--) {
         const j = Math.floor(random() * (i + 1))
         ;[tiles[i], tiles[j]] = [tiles[j]!, tiles[i]!]
       }
       search.climb(fill(tiles))
-      if (enough !== undefined) {
+      if (enough !== undefined && !short()) {
         board.place(positionsOf(search.bestKey()))
         if (scorer.effectPoints() >= enough - EPS) break
       }
@@ -265,7 +286,8 @@ function searched(
  * units, its artifact and its charms, the map's buff tile and where its heroes
  * lean, and the rules of the enemy units it could face there, and returns the
  * best, with how many were about as good and which tiles each hero kept among
- * them. A rebuild gives the same placement.
+ * them. A placement that keeps more of the team's hard rules is the better one
+ * whatever the rest scores. A rebuild gives the same placement.
  */
 export function placeTeam(
   team: PlacementTeam,
@@ -323,8 +345,9 @@ export function placeTeam(
 
 /**
  * The points a team's own goals earn in the best placement the search finds on
- * a map, the buff tile's left out. With `enough`, the search stops once its
- * best placement earns that many.
+ * a map, the buff tile's left out, and whether that placement keeps every hard
+ * rule of the team. With `enough`, the search stops once its best placement
+ * earns that many and breaks no hard rule.
  */
 export function effectPoints(
   team: PlacementTeam,
@@ -332,8 +355,8 @@ export function effectPoints(
   data: PlacementData,
   lookups: PlacementLookups,
   enough?: number,
-): number {
+): { points: number; keeps: boolean } {
   const { board, scorer, search } = searched(team, layout, data, lookups, {}, enough)
   board.place(positionsOf(search.bestKey()))
-  return scorer.effectPoints()
+  return { points: scorer.effectPoints(), keeps: search.best().kept === scorer.hardRules }
 }

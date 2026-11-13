@@ -15,7 +15,7 @@ import { bitmap, FakeWorker, file, readers, stubImportBrowser } from '../fixture
 vi.mock('@/stores/gameData', () => ({
   useGameDataStore: () => ({ characters: [], artifacts: [], phantimals: [] }),
 }))
-vi.mock('@/utils/dataLoader', () => ({
+vi.mock('@/utils/imageLoader', () => ({
   loadMatcherPortraits: () => ({}),
   loadOutfitPortraits: () => ({}),
   loadImportFrames: () =>

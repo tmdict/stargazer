@@ -7,7 +7,7 @@ import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import type { TagPick } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
-import { hasSkillLocale } from '@/utils/dataLoader'
+import { hasSkillLocale } from '@/utils/skillLocale'
 
 /* The inspect gesture's detail popup (long-press, right-click, the lifted
  * unit's Skills button), shared by the boards and every icon that inspects.

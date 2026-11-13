@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* One rule: a header naming the unit and the team it is on, the effect as a
-   board card words it, the rule's note, then its details on labelled lines. */
+/* One rule: a header naming the unit and the team it is on, with a tag on a
+   hard rule, the effect as a board card words it, the rule's note, then its
+   details on labelled lines. */
 
 import { computed } from 'vue'
 
@@ -37,7 +38,10 @@ const use = computed(() => cardUse(card))
 <template>
   <article class="rules-box" :class="card.team">
     <header class="tag" data-theme="dark">
-      {{ t(card.team === 'ally' ? 'rules-on-our-team' : 'rules-on-enemy-team', { name: who }) }}
+      <span>{{
+        t(card.team === 'ally' ? 'rules-on-our-team' : 'rules-on-enemy-team', { name: who })
+      }}</span>
+      <span v-if="card.hard" class="hard">{{ t('rules-hard') }}</span>
     </header>
     <p v-if="effect" class="effect">
       <b>{{ effect.lead }}</b> {{ effect.text }}
@@ -86,6 +90,10 @@ const use = computed(() => cardUse(card))
 
 <style scoped>
 .tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin: -12px -16px 2px;
   padding: 7px 16px 6px;
   border-bottom: 2px solid var(--panel-dark-edge);
@@ -95,6 +103,15 @@ const use = computed(() => cardUse(card))
   line-height: 1.5;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.hard {
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--color-header-gold);
 }
 
 .ally .tag {

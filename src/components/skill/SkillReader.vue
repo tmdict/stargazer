@@ -7,7 +7,7 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
-import { hasSkillLocale } from '@/utils/dataLoader'
+import { hasSkillLocale } from '@/utils/skillLocale'
 
 import '@/styles/content.css'
 

@@ -1,6 +1,6 @@
 import { PERCENT_STAT_KEYS, type ArtifactStatKey, type ArtifactStats } from '@/lib/types/artifact'
 import type { AppLocale } from '@/lib/types/i18n'
-import { loadGameLocales } from '@/utils/dataLoader'
+import { loadGameLocales } from '@/utils/localeLoader'
 
 export interface FormattedStat {
   key: ArtifactStatKey

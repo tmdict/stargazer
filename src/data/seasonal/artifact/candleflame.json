@@ -11,10 +11,11 @@
     {
       "team": "ally",
       "goal": {
-        "target": "tank"
+        "target": "tank",
+        "others": 0.5
       },
       "weight": "aim",
-      "note": "Candleflame's flame follows the frontmost ally and heals by its HP, best a tank."
+      "note": "Candleflame's flame follows the frontmost ally and heals by its HP, best a tank, and any hero before a phantimal."
     }
   ]
 }

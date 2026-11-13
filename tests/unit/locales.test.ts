@@ -13,7 +13,7 @@ import { formatToCamelCase } from '@/utils/nameFormatting'
  *  3. a hero note could exist in some app locales only, and its page would
  *     silently show another language's
  *
- * Key resolution mirrors dataLoader: app/character/artifact/game keys are flat
+ * Key resolution mirrors localeLoader: app/character/artifact/game keys are flat
  * filenames (subfolders are organizational).
  *
  * Dynamically-built keys (`app.${tag}`) are out of scope here; only literal

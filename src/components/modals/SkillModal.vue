@@ -7,8 +7,8 @@ import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import type { TagPick } from '@/lib/types/skill'
 import { ContentInModalKey } from '@/utils/contentMeta'
-import { hasSkillLocale } from '@/utils/dataLoader'
 import { heroDisplayName } from '@/utils/skillLabels'
+import { hasSkillLocale } from '@/utils/skillLocale'
 
 interface Props {
   show: boolean

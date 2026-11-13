@@ -50,7 +50,7 @@ export async function defaultSlSet(bytes: Uint8Array<ArrayBuffer>): Promise<SlDe
       set,
       picks,
       boards,
-      boardDraws(file, set, boards).map((draw) => shownFormation(draw, false)),
+      boardDraws(file, set, boards).map((draw) => shownFormation(draw)),
     ),
     teams: set.teams.map((t, index) => ({
       map: boards[index]!.map,

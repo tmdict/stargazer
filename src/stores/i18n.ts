@@ -8,8 +8,8 @@ import {
   type LocaleDictionary,
   type SkillLocale,
 } from '@/lib/types/i18n'
-import { loadAllLocales } from '@/utils/dataLoader'
 import { interpolate } from '@/utils/interpolate'
+import { loadAllLocales } from '@/utils/localeLoader'
 import { removeStorage } from '@/utils/storage'
 
 // Constants

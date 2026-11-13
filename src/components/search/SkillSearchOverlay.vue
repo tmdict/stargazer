@@ -11,17 +11,17 @@ import { useVisualViewport } from '@/composables/useVisualViewport'
 import { isSkillLocale, SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { SPLIT_MIN_WIDTH } from '@/utils/breakpoints'
+import { getCharmForHero } from '@/utils/dataLoader'
+import { loadCharacterImages } from '@/utils/imageLoader'
+import { isComposing } from '@/utils/keyboard'
+import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
+import { appLabel, curatedHeroName, slotLabel } from '@/utils/skillLabels'
 import {
-  getCharmForHero,
   getSkillCharms,
   getSkillFile,
   getSkillLocaleDict,
   hasSkillLocale,
-  loadCharacterImages,
-} from '@/utils/dataLoader'
-import { isComposing } from '@/utils/keyboard'
-import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
-import { appLabel, curatedHeroName, slotLabel } from '@/utils/skillLabels'
+} from '@/utils/skillLocale'
 
 // The pane's skill-text tokens are styled by content.css's unscoped rules.
 import '@/styles/content.css'

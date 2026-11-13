@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 
-import { loadAppLocales } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 import { SkillLangKey } from './snippetKeys'
 
 // Callout wrapper inside a hero's snippet file. `titleKey` / `bodyKey` resolve

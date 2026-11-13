@@ -25,6 +25,10 @@ const BELOW_LINE = 0.9
 // The enemy units' rules are left out: they choose only among placements as
 // good on these (threats()).
 export interface PlacementScore {
+  // The team's hard rules the placement keeps, and those kept by fewer heroes
+  // than their whole goal that it meets in full. Both come before the goals.
+  kept: number
+  whole: number
   // The team's goals, and its heroes on buff tiles.
   goals: number
   // The goals and the light preference of where heroes lean.
@@ -49,6 +53,9 @@ export interface OwnGoalCheck extends GoalCheck {
   holder: number | undefined
   on: number[]
   to: number[]
+  // For a hard rule: whether the placement keeps it. `on` then holds the
+  // heroes keeping it where the goal itself counts none.
+  kept?: boolean
 }
 
 // A rule the engine leaves out, and why.
@@ -100,6 +107,15 @@ function walkingSteps(grid: Grid, from: Iterable<number>): Map<number, number> {
   return steps
 }
 
+// The heroes of a team that lean each way.
+export const teamLeans = (
+  leans: PlacementData['leans'],
+  heroes: readonly number[],
+): PlacementData['leans'] => ({
+  front: leans.front.filter((hero) => heroes.includes(hero)),
+  back: leans.back.filter((hero) => heroes.includes(hero)),
+})
+
 const fallsBack = (goal: RuleGoal): boolean =>
   !(typeof goal === 'object' && 'target' in goal && goal.fallback === false)
 
@@ -112,6 +128,11 @@ const fallsBack = (goal: RuleGoal): boolean =>
 export class PlacementScorer {
   readonly skipped: SkippedRule[] = []
   private readonly effects: Effect[] = []
+  private readonly hard: Set<Effect>
+  // How many hard rules the team has, and how many of those that fewer heroes
+  // than their whole goal keep it can meet in full.
+  readonly hardRules: number
+  readonly wholeRules: number
   private readonly threatEffects: Effect[] = []
   // threatEffects' indexes, the heaviest rule first, each with the most the
   // rules after it can add.
@@ -155,8 +176,9 @@ export class PlacementScorer {
         (farthest - (steps.get(hexId) ?? farthest)) / (farthest - nearest || 1),
       ]),
     )
-    this.front = data.leans.front.filter((hero) => team.heroes.includes(hero))
-    this.back = data.leans.back.filter((hero) => team.heroes.includes(hero))
+    const leans = teamLeans(data.leans, team.heroes)
+    this.front = leans.front
+    this.back = leans.back
     this.weights = {
       buff: this.weightOf('buff'),
       lean: this.weightOf('lean'),
@@ -229,6 +251,15 @@ export class PlacementScorer {
       ])
     }
 
+    this.hard = new Set(
+      this.effects.filter(
+        ({ rule: { hard, goal } }) =>
+          hard && typeof goal === 'object' && ('target' in goal || 'exactly' in goal),
+      ),
+    )
+    this.hardRules = this.hard.size
+    this.wholeRules = [...this.hard].filter((effect) => this.canBeWhole(effect)).length
+
     const order = [...this.threatEffects.keys()].sort(
       (a, b) => this.threatEffects[b]!.weight - this.threatEffects[a]!.weight,
     )
@@ -241,10 +272,21 @@ export class PlacementScorer {
   }
 
   score(): PlacementScore {
-    const goals =
-      this.addEffects(this.weights.buff * this.onBuffTiles()) -
-      this.weights.walled * this.walledIn()
-    return { goals, total: goals + this.weights.lean * this.leaning() }
+    let kept = 0
+    let whole = 0
+    let points = this.weights.buff * this.onBuffTiles()
+    // Reading an effect's reach is the costly part, so a hard rule's check
+    // shares the one its goal reads.
+    for (const effect of this.effects) {
+      const reaches = effect.reach(this.board)
+      points += effect.weight * (this.meet(effect, reaches) ?? 0)
+      if (!this.hard.has(effect)) continue
+      const check = this.hardCheck(effect, reaches[0])
+      if (check.kept) kept++
+      if (check.whole) whole++
+    }
+    const goals = points - this.weights.walled * this.walledIn()
+    return { kept, whole, goals, total: goals + this.weights.lean * this.leaning() }
   }
 
   // The points the team's own goals earn as the board stands, the buff tile's
@@ -292,11 +334,13 @@ export class PlacementScorer {
       const { source, owner, holder, rule } = effect
       if (!reach) return { source, owner, holder, rule, met: null, on, to: on }
       const met = this.meetOnce(effect, reach, on)
+      const hard = this.hard.has(effect) ? this.hardCheck(effect, reach) : undefined
+      if (hard?.kept && !on.length) on.push(...hard.heroes)
       const to =
         typeof rule.goal === 'object' && 'target' in rule.goal
           ? [...this.alliesOn([...reach.landed, ...reach.marked], holder, false)]
           : on
-      return { source, owner, holder, rule, met, on, to }
+      return { source, owner, holder, rule, met, on, to, kept: hard?.kept }
     })
   }
 
@@ -311,6 +355,47 @@ export class PlacementScorer {
   leanOf(hero: number): 'front' | 'back' | undefined {
     if (this.front.includes(hero)) return 'front'
     return this.back.includes(hero) ? 'back' : undefined
+  }
+
+  // Whether a hard rule is kept as the board stands, with the heroes keeping
+  // it, and whether its goal is met in full, which counts only where fewer
+  // heroes than the whole goal keep the rule.
+  private hardCheck(
+    effect: Effect,
+    reach: Reach | undefined,
+  ): { kept: boolean; whole: boolean; heroes: number[] } {
+    const { goal } = effect.rule
+    if (!reach || typeof goal !== 'object') return { kept: false, whole: false, heroes: [] }
+    if ('exactly' in goal) {
+      const on = [...this.alliesOn(reach.marked, effect.holder, false)]
+      const heroes = on.filter((unit) => this.heroes.includes(unit))
+      const met = this.meetOnce(effect, reach)
+      if (goal.least === undefined) return { kept: !!met, whole: false, heroes }
+      const kept = heroes.length >= goal.least && (!goal.sameFaction || this.oneFaction(on))
+      return { kept, whole: met === 1, heroes }
+    }
+    const heroes = [...this.hit(effect, reach)].filter((unit) => this.heroes.includes(unit))
+    return { kept: heroes.length > 0, whole: false, heroes }
+  }
+
+  // Whether the team can meet in full a hard rule that fewer heroes keep: a
+  // goal that counts heroes of one faction needs that many of them beside its
+  // holder.
+  private canBeWhole({ rule: { goal }, holder }: Effect): boolean {
+    if (typeof goal !== 'object' || !('exactly' in goal) || goal.least === undefined) return false
+    if (!goal.sameFaction) return true
+    const self = holder === undefined ? undefined : ruleUnit(holder)
+    const counts = new Map<string | undefined, number>()
+    for (const hero of this.heroes) {
+      if (hero === self) continue
+      const faction = this.board.lookups.factionOf(hero)
+      counts.set(faction, (counts.get(faction) ?? 0) + 1)
+    }
+    return Math.max(0, ...counts.values()) >= goal.exactly
+  }
+
+  private oneFaction(units: readonly number[]): boolean {
+    return new Set(units.map((unit) => this.board.lookups.factionOf(ruleUnit(unit)))).size === 1
   }
 
   private addEffects(points: number): number {
@@ -451,10 +536,10 @@ export class PlacementScorer {
   }
 
   // The share met, averaged over the ways the effect can stand where it applies.
-  private meet(effect: Effect): number | null {
+  private meet(effect: Effect, reaches = effect.reach(this.board)): number | null {
     let sum = 0
     let count = 0
-    for (const reach of effect.reach(this.board)) {
+    for (const reach of reaches) {
       const met = this.meetOnce(effect, reach)
       if (met === null) continue
       sum += met
@@ -482,6 +567,19 @@ export class PlacementScorer {
     return units
   }
 
+  // The allies an effect reaches. A hero's lean comes before a Spirit Mark: the
+  // Mark counts only on a hero standing in the half it leans to, or on one with
+  // no lean.
+  private hit({ holder }: Effect, { landed, marked }: Reach): Set<number> {
+    const tiles = [...landed, ...marked]
+    return this.alliesOn(
+      holder !== undefined && inPhantimalBand(holder)
+        ? tiles.filter((hexId) => !this.offSide(hexId))
+        : tiles,
+      holder,
+    )
+  }
+
   // `counted` collects the units the goal is met on.
   private meetOnce(effect: Effect, { landed, marked }: Reach, counted?: number[]): number | null {
     const { rule, holder } = effect
@@ -505,26 +603,14 @@ export class PlacementScorer {
       // the team's heroes, as a phantimal does.
       const on = [...this.alliesOn(marked, holder, false)]
       if (on.length !== goal.exactly) return 0
-      if (
-        goal.sameFaction &&
-        new Set(on.map((unit) => this.board.lookups.factionOf(ruleUnit(unit)))).size !== 1
-      )
-        return 0
+      if (goal.sameFaction && !this.oneFaction(on)) return 0
       counted?.push(...new Set(on.map(ruleUnit)))
       return on.some((unit) => !this.heroes.includes(unit)) ? (goal.nonHero ?? 1) : 1
     }
 
     const { order, above } = this.ranked(goal, self)
     if (!order.length) return null
-    // A hero's lean comes before a Spirit Mark: the Mark counts only on a hero
-    // standing in the half it leans to, or on one with no lean.
-    const tiles = [...landed, ...marked]
-    const hit = this.alliesOn(
-      holder !== undefined && inPhantimalBand(holder)
-        ? tiles.filter((hexId) => !this.offSide(hexId))
-        : tiles,
-      holder,
-    )
+    const hit = this.hit(effect, { landed, marked })
     // With nobody above the line on the team, nobody is worth guarding.
     if ('avoid' in goal) return above ? (hit.has(order[0]!) ? 0 : 1) : null
     if ('target' in goal) {

@@ -5,7 +5,7 @@
 import { inPhantimalBand } from '../characters/phantimal'
 import type { MapLayout } from '../maps'
 import { PlacementBoard } from './board'
-import { asGoodAs, beats, EPS } from './engine'
+import { asGoodAs, beats, compare, EPS } from './engine'
 import { effectVerb } from './goals'
 import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
@@ -93,7 +93,7 @@ export function explainPlacement(
       return { hexId, score: scorer.score() }
     })
     const scores = [own, ...options.map(({ score }) => score)]
-    const top = { goals: Math.max(...scores.map((score) => score.goals)), total: 0 }
+    const top = scores.reduce((best, score) => (compare(score, best) < 0 ? score : best))
     const total = Math.max(
       ...scores.filter((score) => asGoodAs(score, top, margin)).map((score) => score.total),
     )
@@ -125,14 +125,15 @@ export function explainPlacement(
   const units = board.units.map((unit, index): UnitPlacement => {
     const owner = ruleUnit(unit)
     const reasons: PlacementReason[] = []
-    goals.forEach(({ rule, met, on, to }, k) => {
+    // A hard rule kept on a hero its goal does not count is a reason as well.
+    goals.forEach(({ rule, met, kept, on, to }, k) => {
       const verb = effectVerb(rule.goal)
-      if (!met || !verb || !isOwn(k, owner)) return
+      if (!(met || kept) || !verb || !isOwn(k, owner)) return
       if (verb === 'reaches') reasons.push({ verb, effect: effects[k]!, to: [] })
       else if (on.length) reasons.push({ verb, effect: effects[k]!, to })
     })
-    goals.forEach(({ met, on }, k) => {
-      if (met && on.includes(owner) && !isOwn(k, owner))
+    goals.forEach(({ met, kept, on }, k) => {
+      if ((met || kept) && on.includes(owner) && !isOwn(k, owner))
         reasons.push({ verb: 'receives', effect: effects[k]!, to: [] })
     })
     if (onBuff.has(unit)) reasons.push({ verb: 'stands', place: 'buff' })

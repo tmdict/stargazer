@@ -12,7 +12,7 @@ import type { AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
 import type { PlacementExplanation } from '@/lib/placement/explain'
 import type { SlUnit } from '@/lib/pvp/data/types'
-import type { BoardDraw, BoardFormation } from '@/lib/pvp/generator/formation'
+import type { BoardDraw } from '@/lib/pvp/generator/formation'
 import type { SlBoard } from '@/lib/pvp/generator/setType'
 import {
   FITS_KEY,
@@ -21,7 +21,7 @@ import {
   type StoredFits,
 } from '@/lib/pvp/generator/storedFits'
 import type { SwapPreview, SwapRequest } from '@/lib/pvp/generator/swapPreview'
-import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
+import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import type { Pair, WwwPanel, WwwTeam } from '@/lib/pvp/www/panel'
 import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 import type { SlRequest, SlResponse } from '@/workers/sl.worker'
@@ -35,7 +35,7 @@ let nextId = 0
 type Answer = Extract<
   SlResponse,
   {
-    type: 'generated' | 'filled' | 'explained' | 'placed' | 'placedEngine' | 'swapped' | 'predicted'
+    type: 'generated' | 'filled' | 'explained' | 'placed' | 'swapped' | 'predicted'
   }
 >
 const waiting = new Map<number, { resolve: (answer: Answer) => void; reject: () => void }>()
@@ -110,11 +110,15 @@ export function useSlEngine({ startOnMount = true } = {}) {
       worker.postMessage(request(id))
     })
 
-  const generate = async (picks: SlPick[], boards: SlBoard[]): Promise<SlChoice | null> => {
+  // `refused`: per board, the lineups the visit found its map does not take.
+  const generate = async (
+    picks: SlPick[],
+    boards: SlBoard[],
+  ): Promise<{ set: SlChoice | null; refused: number[][][] }> => {
     const answer = await ask((id) => ({ type: 'generate', id, picks, boards, fits: seed() }))
     if (answer.type !== 'generated') throw new Error('The worker answered another request')
     keep(answer.gained)
-    return answer.set
+    return { set: answer.set, refused: answer.refused }
   }
 
   // The set for these boards as a saved team, or null when none can be made.
@@ -148,17 +152,11 @@ export function useSlEngine({ startOnMount = true } = {}) {
     return answer.why
   }
 
-  // Each board of a set as first drawn, and why each unit stands there.
+  // Each board of a set in its formations, and why each unit stands there.
   const place = async (set: SlChoice, boards: SlBoard[]): Promise<BoardDraw[]> => {
     const answer = await ask((id) => ({ type: 'place', id, set, boards }))
     if (answer.type !== 'placed') throw new Error('The worker answered another request')
     return answer.boards
-  }
-
-  const placeEngine = async (team: SlChoiceTeam, board: SlBoard): Promise<BoardFormation> => {
-    const answer = await ask((id) => ({ type: 'placeEngine', id, team, board }))
-    if (answer.type !== 'placedEngine') throw new Error('The worker answered another request')
-    return answer.formation
   }
 
   const swap = async (request: SwapRequest): Promise<SwapPreview> => {
@@ -173,5 +171,5 @@ export function useSlEngine({ startOnMount = true } = {}) {
     return answer.panel
   }
 
-  return { status: readonly(status), generate, fill, explain, place, placeEngine, swap, predict }
+  return { status: readonly(status), generate, fill, explain, place, swap, predict }
 }

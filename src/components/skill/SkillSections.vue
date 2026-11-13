@@ -21,15 +21,11 @@ import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type TagPick, type TagPin } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
-import {
-  getCharmForHero,
-  getSkillLanguage,
-  getSkillNumbers,
-  loadCharacters,
-} from '@/utils/dataLoader'
+import { getCharmForHero, loadCharacters } from '@/utils/dataLoader'
 import { defineLazyComponent } from '@/utils/lazyComponent'
 import { formatToCamelCase } from '@/utils/nameFormatting'
 import { appLabel, headingFor, heroDisplayName, tagPickLabel } from '@/utils/skillLabels'
+import { getSkillLanguage, getSkillNumbers } from '@/utils/skillLocale'
 import { loadTagVocabulary } from '@/utils/tagData'
 import { SkillLangKey } from './snippetKeys'
 

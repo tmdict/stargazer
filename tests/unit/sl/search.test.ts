@@ -388,6 +388,45 @@ describe('the search', () => {
     )
   })
 
+  // The better team's hard rules have no placement on the board's map, which
+  // the search learns only once it measures the team.
+  it('leaves a team off a board whose map breaks its hard rules, known or found on measuring', () => {
+    const team = (heroes: number[]): MadeUpTeam => ({
+      map: 0,
+      family: null,
+      heroes,
+      artifacts: [],
+      decided: 1,
+    })
+    // Hero 5 is the strongest, so its team is the better one.
+    const data = madeUpData(
+      [team([1, 2, 3, 4, 5]), team([1, 2, 3, 4, 6])],
+      madeUpModel({ heroes: { 5: [1, 1, 1, 0] } }),
+      [[]],
+    )
+    const picks: SlPick[] = [1, 2, 3, 4, 5, 6].map((id) => ({
+      id,
+      faction: 'f',
+      paragon: 4,
+      refinement: 4,
+    }))
+    const refused = (heroes: number[]) => heroes.includes(5)
+    const chosen = (fit: SlFit) =>
+      chooseSlSet(data, readSlFile(data), picks, () => true, boardsOn(data, [0]), fit)?.teams.map(
+        (t) => t.heroes,
+      )
+    const whole: SlFit = { stands: () => true, known: () => 1, measure: () => 1 }
+    expect(chosen(whole)).toEqual([[1, 2, 3, 4, 5]])
+    const known: SlFit = { ...whole, known: (_, heroes) => (refused(heroes) ? null : 1) }
+    expect(chosen(known)).toEqual([[1, 2, 3, 4, 6]])
+    const found: SlFit = {
+      stands: () => true,
+      known: () => undefined,
+      measure: (_, heroes) => (refused(heroes) ? null : 1),
+    }
+    expect(chosen(found)).toEqual([[1, 2, 3, 4, 6]])
+  })
+
   it('gives a board whose map’s teams the selection leaves none of the rows of every map, and keeps the others on their own', () => {
     const next = seededRandom(2)
     const team = (map: number, heroes: number[]): MadeUpTeam => ({

@@ -30,6 +30,7 @@ npm run type-check    # vue-tsc
 npm run test          # all tests (test:unit, test:it, test:watch)
 npm run data          # copy the data pack into src/pack/ (dev, test and prep run it first)
 npm run data:pin      # record in data.lock the data pack version the build uses
+npm run fits          # make the data pack's fit table in the DATA_PACK_DIR folder
 ```
 
 ## Common tasks

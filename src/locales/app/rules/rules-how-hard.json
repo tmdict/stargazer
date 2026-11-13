@@ -1,0 +1,5 @@
+{
+  "en": "A few rules are hard rules. The engine keeps every one of them before it weighs anything else: a skill that has to go to a teammate always reaches a hero, never nobody and never only a phantimal. The generator leaves a team off a map where its hard rules cannot all be kept.",
+  "zh": "少数规则是硬性规则。引擎会先满足每一条硬性规则，再权衡其他规则：必须给予队友的技能总会作用到一名英雄，不会落空，也不会只作用到幻灵。如果一支队伍在某张地图上无法满足全部硬性规则，生成器就不会在那张地图上使用它。",
+  "ko": "일부 규칙은 필수 규칙입니다. 엔진은 다른 것을 따지기 전에 필수 규칙을 모두 지킵니다. 아군에게 주어야 하는 스킬은 항상 영웅에게 닿으며, 아무에게도 닿지 않거나 팬텀에게만 닿는 일은 없습니다. 어떤 맵에서 팀의 필수 규칙을 모두 지킬 수 없으면, 생성기는 그 맵에 그 팀을 쓰지 않습니다."
+}

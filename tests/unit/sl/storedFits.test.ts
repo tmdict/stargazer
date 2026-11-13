@@ -39,6 +39,11 @@ describe('kept fits', () => {
   // The points a press gains seed a later visit's store, which then works out
   // the same fit without a check, and lends the home map's points to a check on
   // another board.
+  const points = (home: number, board: number) => ({
+    home: { points: home, keeps: true },
+    board: { points: board, keeps: true },
+  })
+
   it('knows the fits a store is seeded with', () => {
     const data = madeUpData(
       [{ map: 0, family: 0, heroes: [1, 2, 3, 4, 5], artifacts: [], decided: 1 }],
@@ -49,9 +54,9 @@ describe('kept fits', () => {
     const on = (key: string): SlBoard => ({ layout: madeUpLayout(key), map: 0, source: null })
     const first = slFit(data)
     const [job] = first.jobs([{ board: on('new'), heroes }])
-    const gained = first.record(job!, { home: 8, board: 6 })
+    const gained = first.record(job!, points(8, 6))
     expect(gained).toEqual({ 'map-0': { '1,2,3,4,5': 8 }, new: { '1,2,3,4,5': 6 } })
-    expect(first.record(job!, { home: 8, board: 6 })).toEqual({})
+    expect(first.record(job!, points(8, 6))).toEqual({})
 
     const later = slFit(data)
     later.seed(gained)

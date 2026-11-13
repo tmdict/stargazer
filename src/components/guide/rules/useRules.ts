@@ -20,13 +20,8 @@ import type { HeroFilter } from '@/lib/placement/types'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import {
-  loadAppLocales,
-  loadArtifacts,
-  loadCharacters,
-  loadCharms,
-  loadPhantimals,
-} from '@/utils/dataLoader'
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
 import { curatedHeroName } from '@/utils/skillLabels'
 

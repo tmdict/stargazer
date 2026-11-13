@@ -12,7 +12,10 @@ export interface SlShownTeam
   // The map's place in the set's type's list.
   map: number
   group: Pick<SlFamily, 'name' | 'core'> | null
-  // A swap tried on the board in the engine's formation or as first drawn,
+  // The lineups the visit found the board's map does not take, for the debug
+  // view.
+  refused: number[][]
+  // A swap tried on the board in the engine's formation or the recorded one,
   // null when the worker cannot answer.
   trySwap: (out: number[], into: number[], engineOn: boolean) => Promise<SwapPreview | null>
 }
@@ -46,24 +49,30 @@ import { shownFormation } from '@/lib/pvp/generator/formation'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
-// data: the set encoded with each board as drawn.
-const { shown, data, openArmed } = defineProps<{
+// data: the set encoded with each board as drawn. debug: every board with two
+// formations gets the switch between them.
+const { shown, data, openArmed, debug } = defineProps<{
   shown: SlShown
   data: string
   openArmed: boolean
+  debug: boolean
 }>()
 
 const emit = defineEmits<{ open: [] }>()
 
-const engineOn = defineModel<boolean[]>('engineOn', { required: true })
+// A board switched by hand, by index; one left alone shows the comparison's.
+const engineOn = defineModel<(boolean | undefined)[]>('engineOn', { required: true })
 
 const i18n = useI18nStore()
 const boards = computed(() => teamPreviewBoards(data) ?? [])
+const onEngine = computed(() =>
+  shown.teams.map((team, index) => engineOn.value[index] ?? !team.showsPlayed),
+)
 const why = computed(() =>
-  shown.teams.map((team, index) => shownFormation(team, !!engineOn.value[index]).why),
+  shown.teams.map((team, index) => shownFormation(team, onEngine.value[index]).why),
 )
 const switchBoard = (index: number, on: boolean): void => {
-  const next = shown.teams.map((_, i) => !!engineOn.value[i])
+  const next = shown.teams.map((_, i) => engineOn.value[i])
   next[index] = on
   engineOn.value = next
 }
@@ -90,6 +99,7 @@ const oneBoard = computed(() => shown.teams.length === 1)
           <ConfirmLabel :armed="openArmed" :label="i18n.t('app.sl-open-in')" />
         </button>
       </span>
+      <p class="sl-line sl-data-limit">{{ i18n.t('app.sl-data-limit') }}</p>
     </div>
     <div class="sl-maps-box" :class="{ one: oneBoard }">
       <div class="sl-maps">
@@ -99,7 +109,8 @@ const oneBoard = computed(() => shown.teams.length === 1)
           :team
           :board="boards[index]"
           :why="why[index]"
-          :engine-on="!!engineOn[index]"
+          :engine-on="onEngine[index]"
+          :debug
           @switch="switchBoard(index, $event)"
         />
       </div>
@@ -125,9 +136,17 @@ const oneBoard = computed(() => shown.teams.length === 1)
 
 .sl-band-head {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
   padding: 9px 18px;
   background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border-primary);
+}
+
+.sl-band-head .sl-data-limit {
+  margin-left: auto;
+  text-align: right;
 }
 
 .sl-actions {

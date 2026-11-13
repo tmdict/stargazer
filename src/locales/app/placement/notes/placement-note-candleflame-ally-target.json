@@ -1,5 +1,5 @@
 {
-  "en": "Candleflame's flame follows the frontmost ally and heals by its HP, best a tank.",
-  "zh": "明烛术的烛火跟随最靠前的友军，按其生命值进行治疗，最好是坦克。",
-  "ko": "명촉술의 촛불은 가장 앞의 아군을 따라가며 그 아군의 HP에 비례해 치료합니다. 탱커가 가장 좋습니다."
+  "en": "Candleflame's flame follows the frontmost ally and heals by its HP, best a tank, and any hero before a phantimal.",
+  "zh": "明烛术的烛火跟随最靠前的友军，按其生命值进行治疗，最好是坦克，其次是任何英雄，而不是幻灵。",
+  "ko": "명촉술의 촛불은 가장 앞의 아군을 따라가며 그 아군의 HP에 비례해 치료합니다. 탱커가 가장 좋고, 팬텀보다는 어느 영웅이든 낫습니다."
 }

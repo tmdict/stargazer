@@ -1,8 +1,9 @@
 <script setup lang="ts">
-/* One map of the set: the board, its artifact on its cell, the switch between
-   the formation of a recorded game and the engine's on a board that has one,
-   then how many players and games of the comp the map has, the core heroes to
-   keep and the swaps recorded in place of one hero or two. Its host sizes it:
+/* One map of the set: the board, its artifact on its cell, then how many
+   players and games of the comp the map has, the core heroes to keep and the
+   swaps recorded in place of one hero or two. The debug view adds the switch
+   between a board's two formations and the lineups its map does not take. Its
+   host sizes it:
    --pt for the portraits, and --sl-unit, the length of one of the generator
    page's pixels, for the gaps and icons of the core and swap rows (1px there, a
    share of its column's width on the guide index's card, which shows no
@@ -30,13 +31,15 @@ import { useSlNames } from './useSlNames'
 const {
   team,
   engineOn = false,
+  debug = false,
   counts = true,
 } = defineProps<{
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
-    Partial<Pick<SlShownTeam, 'trySwap' | 'played' | 'engine'>>
+    Partial<Pick<SlShownTeam, 'trySwap' | 'played' | 'scores' | 'refused'>>
   board: PreviewBoard | undefined
   why?: PlacementExplanation | null
   engineOn?: boolean
+  debug?: boolean
   counts?: boolean
 }>()
 
@@ -114,11 +117,11 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
     <SlMapBoard v-if="board" ref="board" :board :why :swap="preview" />
     <SlFormationSwitch
-      v-if="board && team.played"
+      v-if="debug && board && team.played && team.scores"
       class="sl-formation-switch"
       :engine-on
-      :ready="!!team.engine"
       :moved="team.played.moved"
+      :scores="team.scores"
       @switch="emit('switch', $event)"
     />
     <SlSwapCard v-if="anchor && tried && preview" :anchor :clear-of="boardBox" :into="tried.into" />
@@ -197,6 +200,12 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
           </span>
         </template>
       </div>
+    </div>
+    <div v-if="debug && team.refused?.length" class="sl-refused">
+      <p class="sl-refused-label">{{ i18n.t('app.sl-refused') }}</p>
+      <span v-for="heroes in team.refused" :key="heroes.join()" class="sl-pair">
+        <SlPortrait v-for="id in heroes" :key="id" :id inspectable />
+      </span>
     </div>
   </article>
 </template>
@@ -304,6 +313,21 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
 
 .sl-try {
   cursor: pointer;
+}
+
+.sl-refused {
+  --pt: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.sl-refused-label {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .sl-arrow {

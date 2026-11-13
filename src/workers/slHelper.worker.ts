@@ -10,7 +10,7 @@ import type { SlChoiceTeam } from '@/lib/pvp/generator/types'
 
 export type HelperTask =
   | { type: 'fit'; job: FitJob }
-  | { type: 'draw'; choice: SlChoiceTeam; board: SlBoard; marks: boolean }
+  | { type: 'draw'; choice: SlChoiceTeam; board: SlBoard; nonSeasonal: boolean }
 
 export type HelperResponse =
   { type: 'fitted'; points: FitPoints } | { type: 'drawn'; draw: BoardDraw } | { type: 'error' }
@@ -31,7 +31,7 @@ scope.addEventListener('message', async (event) => {
     scope.postMessage(
       task.type === 'fit'
         ? { type: 'fitted', points: fitPoints(file, task.job) }
-        : { type: 'drawn', draw: boardDraw(file, task.choice, task.board, task.marks) },
+        : { type: 'drawn', draw: boardDraw(file, task.choice, task.board, task.nonSeasonal) },
     )
   } catch {
     scope.postMessage({ type: 'error' })

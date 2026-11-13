@@ -139,14 +139,7 @@ const meterLine = computed(() => i18n.t('app.sl-explain-meter').split('{scale}')
     <p>{{ i18n.t('app.sl-explain-steps') }}</p>
 
     <h2>{{ i18n.t('app.sl-explain-formation-head') }}</h2>
-    <p>
-      {{
-        i18n.t('app.sl-explain-formation', {
-          recorded: i18n.t('app.sl-formation-recorded'),
-          suggested: i18n.t('app.sl-formation-suggested'),
-        })
-      }}
-    </p>
+    <p>{{ i18n.t('app.sl-explain-formation') }}</p>
     <p class="reading-secondary">{{ i18n.t('app.sl-explain-limits') }}</p>
   </BaseModal>
 </template>

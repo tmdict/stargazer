@@ -3,14 +3,14 @@
  * on the Arena and Teams and Who Would Win?, so neither the search, the
  * placing nor a prediction holds up the page. A press's fit checks and its
  * set's boards go to helpers (slHelpers.ts), started by the visit's first
- * press that has a board without records or needs fit checks. A press takes
- * the points the page kept from earlier visits (storedFits.ts) and answers
- * with those it measured. */
+ * press or set to draw. The build's fit table answers the checks on preset
+ * maps; for the others a press takes the points the page kept from earlier
+ * visits (storedFits.ts) and answers with those it measured. */
 
 import { TOP_LEVELS, type AttrRecord } from '@/lib/characters/attributes'
 import type { MapLayout } from '@/lib/maps'
 import type { PlacementExplanation } from '@/lib/placement/explain'
-import { loadSlData } from '@/lib/pvp/data/codec'
+import { loadSlData, loadSlFits } from '@/lib/pvp/data/codec'
 import { withheldHeroes } from '@/lib/pvp/data/sides'
 import type { SlData, SlUnit } from '@/lib/pvp/data/types'
 import { nonSeasonalSet } from '@/lib/pvp/generator/artifacts'
@@ -18,20 +18,16 @@ import { chooseSlSetAsync } from '@/lib/pvp/generator/chooser'
 import { fitPoints, slFit, type SlFitRequest, type SlFitStore } from '@/lib/pvp/generator/fit'
 import {
   boardDraws,
-  engineFormation,
-  marksCount,
-  nonSeasonalUnits,
   shownFormation,
   sideExplanation,
   type BoardDraw,
-  type BoardFormation,
 } from '@/lib/pvp/generator/formation'
 import { slPicks } from '@/lib/pvp/generator/picks'
 import { layoutBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import type { StoredFits, StoredPoints } from '@/lib/pvp/generator/storedFits'
 import { previewSwap, type SwapPreview, type SwapRequest } from '@/lib/pvp/generator/swapPreview'
 import { slTeamData } from '@/lib/pvp/generator/team'
-import type { SlChoice, SlChoiceTeam, SlPick } from '@/lib/pvp/generator/types'
+import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
 import { wwwPanel, type Pair, type WwwPanel, type WwwTeam } from '@/lib/pvp/www/panel'
 import { artifactSurvives } from '@/lib/seasonal'
@@ -59,7 +55,6 @@ export type SlRequest =
       units: SlUnit[]
       artifact: number | null
     }
-  | { type: 'placeEngine'; id: number; team: SlChoiceTeam; board: SlBoard }
   | { type: 'swap'; id: number; swap: SwapRequest }
   | { type: 'predict'; id: number; teams: Pair<WwwTeam> }
 
@@ -67,13 +62,20 @@ export type SlResponse =
   | { type: 'ready' }
   | { type: 'failed' }
   // `gained`: the points the press measured, null where nothing is kept.
-  | { type: 'generated'; id: number; set: SlChoice | null; gained: StoredFits | null }
+  // `refused`: per board, the lineups the visit asked about that its map does
+  // not take.
+  | {
+      type: 'generated'
+      id: number
+      set: SlChoice | null
+      gained: StoredFits | null
+      refused: number[][][]
+    }
   // The set as a saved team, each board in the formation the generator page
   // draws first; null when no set can be made.
   | { type: 'filled'; id: number; team: string | null; gained: StoredFits | null }
   | { type: 'placed'; id: number; boards: BoardDraw[] }
   | { type: 'explained'; id: number; why: PlacementExplanation | null }
-  | { type: 'placedEngine'; id: number; formation: BoardFormation }
   | { type: 'swapped'; id: number; preview: SwapPreview }
   | { type: 'predicted'; id: number; panel: WwwPanel }
   | { type: 'error'; id: number }
@@ -89,10 +91,17 @@ const heroes = loadCharacters().filter((c) => !c.placeholder)
 const factions = new Map(heroes.map((c) => [c.id, c.faction]))
 const withheld = withheldHeroes(heroes)
 
-const engine = loadSlData().then((data) => ({
+const file = loadSlData()
+// The development server's code changes under a table made for another, so it
+// runs every fit check itself.
+const table = import.meta.env.DEV ? null : loadSlFits(file)
+
+const engine = Promise.all([file, table]).then(([data, table]) => ({
   data,
   reader: readSlFile(data),
-  fit: slFit(data),
+  fit: slFit(data, false, table),
+  // For the boards of a format that fields no phantimal; never seeded or saved.
+  plainFit: slFit(data, true, table),
   counts: (id: number): boolean => artifactSurvives(data.season, id),
 }))
 type Engine = Awaited<typeof engine>
@@ -106,8 +115,8 @@ engine.then(
 // the development server's has none, so nothing is kept there.
 const build = import.meta.env.DEV ? null : (self.location.pathname.split('/').at(-1) ?? null)
 
-// Undefined until a press first needs them; null where the worker works
-// alone, on a device with too few cores or once a helper fails.
+// Undefined until the visit's first press or set to draw; null where the
+// worker works alone, on a device with too few cores or once a helper fails.
 let helpers: SlHelpers | null | undefined
 const startHelpers = (): void => {
   if (helpers === undefined) helpers = startSlHelpers()
@@ -129,7 +138,6 @@ const fitsFor =
   async (requests: SlFitRequest[]): Promise<void> => {
     const jobs = fit.jobs(requests)
     if (!jobs.length) return
-    startHelpers()
     const found = await aside(
       (pool) => pool.fit(jobs),
       () => jobs.map((job) => fitPoints(data, job)),
@@ -141,15 +149,19 @@ const fitsFor =
   }
 
 // Chooses the set with the points the page kept, when they come from this
-// build, and gives back the points measured for it.
+// build, and gives back the points measured for it. A press without
+// phantimals keeps its own points for the visit, and gives none back.
 async function press(
-  { data, reader, fit, counts }: Engine,
+  { data, reader, fit: seasonal, plainFit, counts }: Engine,
   picks: readonly SlPick[],
   boards: readonly SlBoard[],
   fits: StoredFits | null,
+  plain = false,
 ): Promise<{ set: SlChoice | null; gained: StoredFits | null }> {
-  if (build !== null && fits?.build === build) fit.seed(fits.maps)
-  if (boards.some((board) => board.source === null)) startHelpers()
+  // The helpers load the data file while the set is chosen.
+  startHelpers()
+  const fit = plain ? plainFit : seasonal
+  if (!plain && build !== null && fits?.build === build) fit.seed(fits.maps)
   const gained: StoredPoints = {}
   const set = await chooseSlSetAsync(
     data,
@@ -160,15 +172,20 @@ async function press(
     fit,
     fitsFor(data, fit, gained),
   )
-  return { set, gained: build === null ? null : { build, maps: gained } }
+  return { set, gained: plain || build === null ? null : { build, maps: gained } }
 }
 
-const draws = (data: SlData, set: SlChoice, boards: readonly SlBoard[]): Promise<BoardDraw[]> => {
-  const marks = marksCount(boards)
+const draws = (
+  data: SlData,
+  set: SlChoice,
+  boards: readonly SlBoard[],
+  nonSeasonal = false,
+): Promise<BoardDraw[]> => {
+  startHelpers()
   return aside(
     (pool) =>
-      pool.draw(set.teams.map((choice, index) => ({ choice, board: boards[index]!, marks }))),
-    () => boardDraws(data, set, boards),
+      pool.draw(set.teams.map((choice, index) => ({ choice, board: boards[index]!, nonSeasonal }))),
+    () => boardDraws(data, set, boards, nonSeasonal),
   )
 }
 
@@ -179,18 +196,17 @@ scope.addEventListener('message', async (event) => {
     const { data, reader, counts } = loaded
     if (msg.type === 'generate') {
       const { set, gained } = await press(loaded, msg.picks, msg.boards, msg.fits)
-      scope.postMessage({ type: 'generated', id: msg.id, set, gained })
+      const refused = msg.boards.map((board) => loaded.fit.refused(board.layout.key))
+      scope.postMessage({ type: 'generated', id: msg.id, set, gained, refused })
     } else if (msg.type === 'fill') {
       const levels = msg.levels ?? Object.fromEntries(heroes.map((c) => [c.id, TOP_LEVELS]))
       const picks = slPicks(levels, (id) => factions.get(id), withheld)
       const boards = layoutBoards(data, msg.layouts)
-      const { set: chosen, gained } = await press(loaded, picks, boards, msg.fits)
+      const { set: chosen, gained } = await press(loaded, picks, boards, msg.fits, msg.nonSeasonal)
       const set = chosen && msg.nonSeasonal ? nonSeasonalSet(data, chosen) : chosen
-      const formations = !set
-        ? []
-        : msg.nonSeasonal
-          ? set.teams.map((choice, i) => ({ units: nonSeasonalUnits(data, choice, boards[i]!) }))
-          : (await draws(data, set, boards)).map((draw) => shownFormation(draw, false))
+      const formations = set
+        ? (await draws(data, set, boards, msg.nonSeasonal)).map((draw) => shownFormation(draw))
+        : []
       const team = set && slTeamData(data, set, picks, boards, formations)
       scope.postMessage({ type: 'filled', id: msg.id, team, gained })
     } else if (msg.type === 'explain') {
@@ -199,9 +215,6 @@ scope.addEventListener('message', async (event) => {
     } else if (msg.type === 'place') {
       const boards = await draws(data, msg.set, msg.boards)
       scope.postMessage({ type: 'placed', id: msg.id, boards })
-    } else if (msg.type === 'placeEngine') {
-      const formation = engineFormation(data, msg.team, msg.board)
-      scope.postMessage({ type: 'placedEngine', id: msg.id, formation })
     } else if (msg.type === 'swap') {
       const preview = previewSwap(data, msg.swap)
       scope.postMessage({ type: 'swapped', id: msg.id, preview })

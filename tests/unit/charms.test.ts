@@ -7,7 +7,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { pinnedLevels } from '@/lib/tags'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import type { CharmData } from '@/lib/types/skill'
-import { getSkillCharms, loadAppLocales, loadCharacters, loadSkillLocale } from '@/utils/dataLoader'
+import { loadCharacters } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
+import { getSkillCharms, loadSkillLocale } from '@/utils/skillLocale'
 
 // A season whose charms the data pack does not hold yet has no charm file.
 const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {

@@ -30,10 +30,10 @@ import { guidePath } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
-import { loadSkillLocale } from '@/utils/dataLoader'
 import { defineLazyComponent } from '@/utils/lazyComponent'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
+import { loadSkillLocale } from '@/utils/skillLocale'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)

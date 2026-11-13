@@ -1,6 +1,6 @@
 import type { CharacterType } from '@/lib/types/character'
 import type { AppLocale } from '@/lib/types/i18n'
-import { loadPhantimalLocales } from '@/utils/dataLoader'
+import { loadPhantimalLocales } from '@/utils/localeLoader'
 
 /**
  * Localized display name with formatted-slug fallback: the homegrown i18n's

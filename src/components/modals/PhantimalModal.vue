@@ -7,9 +7,9 @@ import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { useI18nStore } from '@/stores/i18n'
-import { getSkillLanguage } from '@/utils/dataLoader'
 import { phantimalDisplayName } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
+import { getSkillLanguage } from '@/utils/skillLocale'
 
 interface Props {
   show: boolean

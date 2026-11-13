@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { describe, expect, it } from 'vitest'
 
 import { matchCharacterNames, useSkillSearch } from '@/composables/useSkillSearch'
-import { loadSkillLocale } from '@/utils/dataLoader'
+import { loadSkillLocale } from '@/utils/skillLocale'
 
 // First in the file: no corpus is warm yet. Skill text loads on demand, and
 // the pickers' name search must not wait for it.

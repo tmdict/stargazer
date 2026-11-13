@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { PARAGON_RAMPS, REFINEMENT_RAMPS } from '@/lib/characters/upgradeStats'
-import { loadAppLocales } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 
 describe('upgradeStats', () => {
   it('names every ramp stat with an app locale entry', () => {

@@ -48,14 +48,12 @@ import { decodeSlData } from '@/lib/pvp/data/codec'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/utils/dataLoader'
 import {
   loadArtifactLocales,
-  loadArtifacts,
   loadCharacterLocales,
-  loadCharacters,
   loadPhantimalLocales,
-  loadPhantimals,
-} from '@/utils/dataLoader'
+} from '@/utils/localeLoader'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 const EXPORTS = process.env.PLACEMENT_EXPORT?.split(delimiter).filter(Boolean) ?? []

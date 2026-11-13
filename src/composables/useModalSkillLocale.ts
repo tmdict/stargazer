@@ -2,7 +2,7 @@ import { ref, watch, type Ref, type WatchSource } from 'vue'
 
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
-import { loadSkillLocale } from '@/utils/dataLoader'
+import { loadSkillLocale } from '@/utils/skillLocale'
 
 /**
  * Modal-local skill-text locale. Seeds from the saved preference (falling

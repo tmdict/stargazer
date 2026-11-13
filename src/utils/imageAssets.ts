@@ -1,6 +1,6 @@
 // The hero portraits' display variants. scripts/guideReports.ts resolves report
 // placeholders from this module's imports alone, which keeps other variants of
-// the same PNGs (dataLoader's matcher portraits) out of the reports. Its
+// the same PNGs (imageLoader's matcher portraits) out of the reports. Its
 // integration test copies this file on its own, so it takes no local imports.
 const byName = (modules: Record<string, string>): Record<string, string> =>
   Object.fromEntries(

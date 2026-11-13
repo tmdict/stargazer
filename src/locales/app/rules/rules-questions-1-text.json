@@ -1,5 +1,5 @@
 {
-  "en": "Not the formation on the board itself. But the generator lowers a team's chance when its skills fit the board's map worse than the map the team played most, even if the team has games on that map. On the map it played most, a team keeps the chance its games give it.",
-  "zh": "棋盘上的布阵本身不会。但如果队伍的技能在这张地图上不如在其最常出战的地图上发挥得好，生成器就会降低其胜率，即使队伍在这张地图上有对局也一样。在其最常出战的地图上，队伍保持其对局得出的胜率。",
-  "ko": "보드에 나온 배치 자체는 승률을 바꾸지 않습니다. 하지만 팀의 스킬이 가장 많이 싸운 맵보다 이 맵에 덜 맞으면, 그 맵에 팀의 전투 기록이 있더라도 생성기가 승률을 낮춥니다. 가장 많이 싸운 맵에서는 팀이 전투 기록이 주는 승률을 그대로 유지합니다."
+  "en": "Not the formation on the board itself. But the generator lowers a team's chance when its skills fit the board's map worse than the map the team played most, even if the team has games on that map. On the map it played most, a team keeps the chance its games give it. A team is left off a map where it cannot keep a hard rule.",
+  "zh": "棋盘上的布阵本身不会。但如果队伍的技能在这张地图上不如在其最常出战的地图上发挥得好，生成器就会降低其胜率，即使队伍在这张地图上有对局也一样。在其最常出战的地图上，队伍保持其对局得出的胜率。如果队伍在某张地图上无法满足硬性规则，生成器就不会在那张地图上使用它。",
+  "ko": "보드에 나온 배치 자체는 승률을 바꾸지 않습니다. 하지만 팀의 스킬이 가장 많이 싸운 맵보다 이 맵에 덜 맞으면, 그 맵에 팀의 전투 기록이 있더라도 생성기가 승률을 낮춥니다. 가장 많이 싸운 맵에서는 팀이 전투 기록이 주는 승률을 그대로 유지합니다. 팀이 필수 규칙을 지킬 수 없는 맵에는 생성기가 그 팀을 쓰지 않습니다."
 }

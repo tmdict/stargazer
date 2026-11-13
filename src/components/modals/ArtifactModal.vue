@@ -8,9 +8,9 @@ import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useI18nStore } from '@/stores/i18n'
 import { formatArtifactStats } from '@/utils/artifactStats'
-import { getSkillLanguage } from '@/utils/dataLoader'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
+import { getSkillLanguage } from '@/utils/skillLocale'
 
 interface Props {
   show: boolean

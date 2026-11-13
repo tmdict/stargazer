@@ -351,12 +351,6 @@ const SKILL = {
           是这个阵容在这张地图上记录的对局数。
         </li>
         <li>
-          <SlIcon name="check" class="inline-icon" />
-          表示这张棋盘的布阵是玩家在记录对局中用过的。点旁边的
-          <SlIcon name="sparkle" class="inline-icon" />
-          可以改看按队伍技能算出的站位，其他棋盘也都是这样摆的。
-        </li>
-        <li>
           <SlIcon name="lock" class="inline-icon" />
           标出核心英雄，这些英雄保留不动。<SlIcon name="swap" class="inline-icon" />
           列出同一阵容的记录队伍中出现过的替换，只用这套阵容没用到的你的英雄：左边的一位或两位英雄可以换成右边任意一个选项，越靠前越好。

@@ -2,16 +2,16 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
+import { getCharmForHero } from '@/utils/dataLoader'
+import { loadCharacterLocales } from '@/utils/localeLoader'
+import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
+import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'
 import {
-  getCharmForHero,
   getSkillCharms,
   getSkillLocaleDict,
   hasSkillLocale,
-  loadCharacterLocales,
   loadSkillLocale,
-} from '@/utils/dataLoader'
-import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
-import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'
+} from '@/utils/skillLocale'
 
 export interface SearchHit {
   loc: 'name' | 'skill-name' | 'description' | 'charm'

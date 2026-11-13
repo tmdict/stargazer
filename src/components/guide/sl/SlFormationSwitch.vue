@@ -1,16 +1,16 @@
 <script setup lang="ts">
-/* The switch on a board drawn from a recorded game: the check shows that
-   game's formation and the sparkle the engine's, the one on show filled. The
-   chip is one button, so a press anywhere on it switches the board and opens
-   the tip of the formation then on show. Hovering a half shows what it is.
-   The sparkle waits until the worker has placed the board, which it does just
-   after the set is drawn; until then a press only shows a half's tip. */
+/* The debug view's switch on a board that has a recorded game's formation,
+   between that formation (the check) and the engine's (the sparkle), the one
+   on show filled, with the comparison's numbers beside it. The chip is one
+   button, so a press anywhere on it switches the board and opens the tip of
+   the formation then on show. Hovering a half shows what it is. */
 
 import { computed } from 'vue'
 
 import SlCard from './SlCard.vue'
 import SlIcon from './SlIcon.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
+import type { FormationScores } from '@/lib/pvp/generator/formation'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { useSlNames } from './useSlNames'
@@ -18,10 +18,10 @@ import { useSlNames } from './useSlNames'
 type Half = 'played' | 'engine'
 
 // moved: the units moved from the recorded game's tiles, the phantimal first.
-const { engineOn, ready, moved } = defineProps<{
+const { engineOn, moved, scores } = defineProps<{
   engineOn: boolean
-  ready: boolean
   moved: number[]
+  scores: FormationScores
 }>()
 
 const emit = defineEmits<{ switch: [engineOn: boolean] }>()
@@ -48,18 +48,13 @@ const HALVES: { half: Half; icon: 'check' | 'sparkle'; label: string; tip: strin
 ]
 
 const shown = computed((): Half => (engineOn ? 'engine' : 'played'))
-const canSwitch = computed(() => engineOn || ready)
+// Rule points: the recorded formation's and what its record adds, against the engine's.
+const points = (value: number): string => String(Math.round(value * 10) / 10)
+const numbers = computed(
+  () => `${points(scores.played)} + ${points(scores.bonus)} / ${points(scores.engine)}`,
+)
 
-const halfAt = (target: EventTarget | null): Half =>
-  HALVES.find(({ half }) => target instanceof Node && halfEl[half]?.contains(target))?.half ??
-  shown.value
-
-const press = (event: MouseEvent): void => {
-  if (!canSwitch.value) {
-    const pressed = halfAt(event.target)
-    toggle(halfEl[pressed]!, pressed)
-    return
-  }
+const press = (): void => {
   const next: Half = engineOn ? 'played' : 'engine'
   emit('switch', next === 'engine')
   // Open, never close: hover has often opened that half's tip already.
@@ -83,7 +78,6 @@ const card = computed(() => {
     type="button"
     class="sl-switch"
     :aria-pressed="engineOn"
-    :aria-disabled="canSwitch ? undefined : 'true'"
     :aria-label="i18n.t('app.sl-formation-suggested')"
     @click="press"
     @focus="hoverOpen(halfEl[shown]!, shown)"
@@ -95,12 +89,13 @@ const card = computed(() => {
       :key="h"
       :ref="(el) => (halfEl[h] = el as Element)"
       class="sl-switch-half"
-      :class="{ on: h === shown, waiting: h === 'engine' && !ready }"
+      :class="{ on: h === shown }"
       @mouseenter="hoverOpen($event, h)"
       @mouseleave="hoverClose"
     >
       <SlIcon :name="icon" />
     </span>
+    <span class="sl-switch-numbers">{{ numbers }}</span>
     <SlCard v-if="anchor && card" :anchor :title="card.title" :lines="card.lines" plain />
   </button>
 </template>
@@ -117,10 +112,6 @@ const card = computed(() => {
   cursor: pointer;
 }
 
-.sl-switch[aria-disabled='true'] {
-  cursor: default;
-}
-
 .sl-switch-half {
   display: grid;
   place-items: center;
@@ -134,8 +125,12 @@ const card = computed(() => {
   color: #fff;
 }
 
-.sl-switch-half.waiting {
-  opacity: 0.45;
+.sl-switch-numbers {
+  align-self: center;
+  padding: 0 6px 0 4px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sl-switch .sl-icon {

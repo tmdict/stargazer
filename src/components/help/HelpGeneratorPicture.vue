@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import SlFormationSwitch from '@/components/guide/sl/SlFormationSwitch.vue'
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import SlMeter from '@/components/guide/sl/SlMeter.vue'
 import SlPortrait from '@/components/guide/sl/SlPortrait.vue'
@@ -88,7 +87,6 @@ const characterId = (slug: string): number =>
     <template #to>
       <HelpMock :caption="interpolate(label('sl-map'), { n: 1 })" data-theme="dark">
         <div class="help-sl-board">
-          <SlFormationSwitch :engine-on="false" ready :moved="[]" />
           <HelpBoard :tokens="TEAM" />
         </div>
         <div class="help-sl-aside">
@@ -120,15 +118,11 @@ const characterId = (slug: string): number =>
 }
 
 .help-sl-board {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
   width: 190px;
   margin: 4px auto 0;
 }
 
-.help-sl-board > :last-child {
+.help-sl-board > * {
   display: block;
   width: 100%;
 }

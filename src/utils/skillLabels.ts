@@ -3,12 +3,8 @@ import { tagPick } from '@/lib/tags'
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { PvpTeam } from '@/lib/types/pvp'
 import type { SkillTerms, SlotKey, SlotNumbers, SlotValues, TagPick } from '@/lib/types/skill'
-import {
-  getSkillFile,
-  loadAppLocales,
-  loadCharacterLocales,
-  loadGameLocales,
-} from '@/utils/dataLoader'
+import { loadAppLocales, loadCharacterLocales, loadGameLocales } from '@/utils/localeLoader'
+import { getSkillFile } from '@/utils/skillLocale'
 import { isHeroModifier, loadTagVocabulary } from '@/utils/tagData'
 
 /** App-locale label for a key (tag name, slot prefix, etc.); falls back to the key. */

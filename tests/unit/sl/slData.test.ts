@@ -6,10 +6,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { companionIdsOf } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { configTiles } from '@/lib/maps'
-import { decodeSlData, loadSlData } from '@/lib/pvp/data/codec'
+import { decodeSlData, decodeSlFits, encodeSlFits, loadSlData } from '@/lib/pvp/data/codec'
 import type { SlData, SlTeam, SlUnit } from '@/lib/pvp/data/types'
 import { chooseSlSet } from '@/lib/pvp/generator/chooser'
 import { slFit, type SlFit } from '@/lib/pvp/generator/fit'
+import { fitRow, fitTable, rowInputs, type FitRow } from '@/lib/pvp/generator/fitTable'
 import { slBoards } from '@/lib/pvp/generator/setType'
 import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
 import { readSlFile } from '@/lib/pvp/model/reader'
@@ -198,6 +199,48 @@ describe('the shipped PvP data', () => {
         (c.maps.flatMap((m) => m.teams).find((t) => t.family === null)!.record = [1, 1] as never),
     ])
       await expect(decodeSlData(sealed(edit))).rejects.toThrow()
+  })
+})
+
+describe('the fit table of the shipped PvP data', () => {
+  const team = data.everyMap[0]!
+  const made = fitRow(data, team.heroes, false)
+  const empty: FitRow = { points: made.row.points.map(() => null), refused: [] }
+  const table = fitTable(
+    'stamp',
+    data.everyMap.map((_, index) => (index === 0 ? made.row : empty)),
+    data.everyMap.map(() => empty),
+  )
+
+  it('gives a store the fits it would measure, on every preset map', () => {
+    const measured = slFit(data)
+    const given = slFit(data, false, table)
+    const presets = slBoards(data, table.maps).filter((board) => fit.stands(board, team.heroes))
+    expect(presets.length).toBeGreaterThan(boards.length)
+    for (const board of presets) {
+      expect(given.known(board, team.heroes)).toBe(measured.measure(board, team.heroes))
+    }
+  })
+
+  it('comes back from its file as written, and not for a data file of other lineups', async () => {
+    const bytes = await encodeSlFits(table)
+    expect(await decodeSlFits(bytes, data)).toEqual(table)
+    const fewer = { ...data, everyMap: data.everyMap.slice(1) }
+    await expect(decodeSlFits(bytes, fewer)).rejects.toThrow()
+  })
+
+  // A kept row is used again while its inputs are the same, so they hold each
+  // list its placements read and none of the others.
+  it('names the lists a row was made from, so only a change to one makes it again', () => {
+    const inputs = (lists: SlData['placement']['lists']): string =>
+      JSON.stringify(
+        rowInputs({ ...data, placement: { ...data.placement, lists } }, team, false, made.reads),
+      )
+    const { lists } = data.placement
+    const unread = Object.keys(lists).find((name) => !made.reads.lists.includes(name))!
+    expect(made.reads.lists.length).toBeGreaterThan(0)
+    expect(inputs({ ...lists, [made.reads.lists[0]!]: [] })).not.toBe(inputs(lists))
+    expect(inputs({ ...lists, [unread]: [] })).toBe(inputs(lists))
   })
 })
 

@@ -13,16 +13,11 @@ import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
 import { Team } from '@/lib/types/team'
-import {
-  loadAppLocales,
-  loadArtifacts,
-  loadCharacters,
-  loadCharms,
-  loadPhantimals,
-} from '@/utils/dataLoader'
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 import { placeOnTile } from './fixtures/skills'
 
-const FIELDS = new Set(['team', 'goal', 'tile', 'distance', 'from', 'weight', 'note'])
+const FIELDS = new Set(['team', 'goal', 'tile', 'distance', 'from', 'weight', 'hard', 'note'])
 const LIST_GOALS = new Set(['target', 'avoid', 'include'])
 const COUNT_GOALS = new Set(['atMost', 'exactly'])
 const MOST_KINDS = new Set(['walls', 'allies'])
@@ -31,7 +26,10 @@ const TILE_WORDS = new Set(['behind', 'front', 'around', 'row', 'mirror-around']
 function goalProblem(goal: unknown): string | null {
   if (goal === 'most' || goal === 'none' || goal === 'companion' || goal === 'back') return null
   if (typeof goal !== 'object' || goal === null) return `the goal ${JSON.stringify(goal)}`
-  const { sameFaction, nonHero, fallback, others, ...words } = goal as Record<string, unknown>
+  const { sameFaction, nonHero, least, fallback, others, ...words } = goal as Record<
+    string,
+    unknown
+  >
   const entries = Object.entries(words)
   if (entries.length !== 1) return 'a goal of more than one word'
   const [word, value] = entries[0]!
@@ -40,6 +38,11 @@ function goalProblem(goal: unknown): string | null {
     return 'sameFaction off an exactly goal'
   if (nonHero !== undefined && (word !== 'exactly' || !isShare(nonHero)))
     return 'nonHero off an exactly goal, or not a share below 1'
+  if (
+    least !== undefined &&
+    (word !== 'exactly' || !Number.isInteger(least) || (least as number) < 1)
+  )
+    return 'least off an exactly goal, or not a whole number above 0'
   if (fallback !== undefined && (word !== 'target' || fallback !== false))
     return 'fallback off a target goal, or not false'
   if (others !== undefined && (word !== 'target' || !isShare(others)))
@@ -90,6 +93,13 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
     if ((rule.goal === 'none') === (rule.weight !== undefined)) {
       problems.push(rule.goal === 'none' ? 'a weight on a goal of none' : 'no weight')
     }
+    if (
+      rule.hard !== undefined &&
+      (rule.hard !== true || rule.team !== 'ally' || !['target', 'exactly'].includes(word!))
+    )
+      problems.push('hard off a target or exactly goal for our team, or not true')
+    if (typeof rule.goal === 'object' && 'least' in rule.goal && !rule.hard)
+      problems.push('least on a rule that is not hard')
     if (typeof rule.note !== 'string' || rule.note === '') problems.push('no note')
   }
   return problems

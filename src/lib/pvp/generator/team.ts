@@ -17,7 +17,7 @@ import { FULL_GRID } from '@/lib/types/grid'
 import { Team } from '@/lib/types/team'
 import { serializeMultiGridState, type BoardInput } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import type { SlData, SlUnit } from '../data/types'
+import type { SlData, SlPlacement, SlUnit } from '../data/types'
 import type { BoardFormation } from './formation'
 import type { SlBoard } from './setType'
 import type { SlChoice, SlChoiceTeam, SlPick } from './types'
@@ -33,14 +33,18 @@ export const homeMap = (data: SlData, { source, team }: ChoiceOf): number =>
 // phantimal and the phantimal's companions. Null for a team whose games
 // recorded no formation, or a row of every map, which the engine places.
 export function recordedUnits(data: SlData, choice: SlChoiceTeam): SlUnit[] | null {
-  if (choice.source === null) return null
-  const placement = data.maps[choice.source]!.teams[choice.team]!.placements[choice.placement]
+  const placement = recordedPlacement(data, choice)
   if (!placement) return null
   const { c, s } = placement
   return isRetiredSeason(data.season)
     ? c
     : [...c, ...s.map(([hexId, local]): SlUnit => [hexId, toPhantimalId(local)])]
 }
+
+export const recordedPlacement = (data: SlData, choice: SlChoiceTeam): SlPlacement | null =>
+  choice.source === null
+    ? null
+    : (data.maps[choice.source]!.teams[choice.team]!.placements[choice.placement] ?? null)
 
 export function slTeamData(
   data: SlData,

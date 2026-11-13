@@ -23,7 +23,8 @@
       "team": "ally",
       "goal": { "target": "alna" },
       "weight": "aim",
-      "note": "Alna's Winter Warrior goes to the teammate her list ranks first."
+      "hard": true,
+      "note": "Alna's Winter Warrior goes to the teammate her list ranks first, and always to a hero."
     }
   ]
 }

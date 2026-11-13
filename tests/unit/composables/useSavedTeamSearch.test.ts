@@ -8,7 +8,7 @@ import { lineupArtifactKey, lineupHeroKey } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { loadSkillLocale } from '@/utils/dataLoader'
+import { loadSkillLocale } from '@/utils/skillLocale'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { GUNNAR } from '../fixtures/characters'
 

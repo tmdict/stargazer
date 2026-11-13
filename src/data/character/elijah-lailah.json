@@ -20,9 +20,10 @@
   "rules": [
     {
       "team": "ally",
-      "goal": { "exactly": 2, "sameFaction": true, "nonHero": 0.1 },
+      "goal": { "exactly": 2, "sameFaction": true, "nonHero": 0.1, "least": 1 },
       "weight": "aim",
-      "note": "Two heroes of one faction stand in a straight line between the twins, sharing the Stellar Bond and its bonus for one faction. A phantimal of that faction there shares it too and counts for a tenth, since a hero gains more from the bond, so it stands there only when nothing better fits."
+      "hard": true,
+      "note": "Heroes of one faction stand in a straight line between the twins, sharing the Stellar Bond and its bonus for one faction. At least one always stands there, and two unless another hard rule needs the second elsewhere. A phantimal of that faction may fill a free tile there, but a hero gains more from the bond."
     }
   ]
 }

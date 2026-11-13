@@ -5,7 +5,6 @@
 import { computed } from 'vue'
 
 import RulesCard from './RulesCard.vue'
-import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import { interpolateParts, type TextPart } from '@/utils/interpolate'
 import { ruleUnitOf, useRulesNames } from './useRules'
 
@@ -15,13 +14,8 @@ const { t, proseName, unitName } = useRulesNames()
 
 const sample = ruleUnitOf('gunnar')
 
-// The generator page marks a Generated board with this sparkle.
-const intro = computed(() =>
-  interpolateParts(t('rules-how-intro'), { sparkle: [{ text: '', marked: true }] }),
-)
-
 const bold = (key: string): TextPart[] => [{ text: t(key), marked: true }]
-const KEYS = ['effect', 'list', 'use', 'enemy', 'tile', 'weight']
+const KEYS = ['effect', 'list', 'use', 'enemy', 'tile', 'weight', 'hard']
 const keys = computed(() =>
   KEYS.map((key) =>
     interpolateParts(t(`rules-how-key-${key}`), {
@@ -32,6 +26,7 @@ const keys = computed(() =>
       keep: bold('rules-row-keep-away'),
       tile: bold('rules-row-tile'),
       weight: bold('rules-row-weight'),
+      hard: bold('rules-hard'),
     }),
   ),
 )
@@ -40,14 +35,9 @@ const keys = computed(() =>
 <template>
   <section class="rules-view">
     <h2>{{ t('rules-how') }}</h2>
-    <p>
-      <template v-for="(part, i) in intro" :key="i"
-        ><SlIcon v-if="part.marked" name="sparkle" class="inline-icon" /><template v-else>{{
-          part.text
-        }}</template></template
-      >
-    </p>
+    <p>{{ t('rules-how-intro') }}</p>
     <p>{{ t('rules-how-best') }}</p>
+    <p>{{ t('rules-how-hard') }}</p>
 
     <h2>{{ t('rules-how-reading') }}</h2>
     <RulesCard

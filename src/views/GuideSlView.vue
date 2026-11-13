@@ -18,7 +18,7 @@
    after mount. */
 
 import { computed, nextTick, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import SlAbout from '@/components/guide/sl/SlAbout.vue'
 import SlBar, { type MapsChoice } from '@/components/guide/sl/SlBar.vue'
@@ -34,13 +34,13 @@ import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { tilesLayout, type MapLayout } from '@/lib/maps'
 import type { SlData } from '@/lib/pvp/data/types'
-import { shownFormation, type BoardFormation } from '@/lib/pvp/generator/formation'
+import { shownFormation } from '@/lib/pvp/generator/formation'
 import { generatorMode, isGeneratorFrom, type GeneratorFrom } from '@/lib/pvp/generator/handover'
 import { slPicks } from '@/lib/pvp/generator/picks'
 import { layoutBoards, slBoards, type SlBoard } from '@/lib/pvp/generator/setType'
 import type { SwapPreview } from '@/lib/pvp/generator/swapPreview'
 import { slTeamData } from '@/lib/pvp/generator/team'
-import type { SlChoice, SlPick } from '@/lib/pvp/generator/types'
+import type { SlPick } from '@/lib/pvp/generator/types'
 import {
   DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
@@ -68,12 +68,15 @@ gameData.initializeData()
 const rosters = useRosters()
 const library = useTeamLibrary()
 const router = useRouter()
+// The debug view (?t=debug, as the Arena's Debug tab) puts a switch between a
+// board's two formations on every board that has both, with their scores.
+const route = useRoute()
+const debug = computed(() => route.query.t === 'debug')
 const { show } = useToast()
 const {
   status: engineStatus,
   generate: generateSet,
   place: placeSet,
-  placeEngine,
   swap: previewSwap,
 } = useSlEngine()
 
@@ -141,17 +144,16 @@ const boardsFor = (file: SlData): SlBoard[] => {
 }
 
 const shown = ref<SlShown | null>(null)
-// The boards switched to the engine's formation, by index.
-const engineOn = ref<boolean[]>([])
+// The boards switched by hand to the engine's formation or the recorded one,
+// by index, which only the debug view's switches set.
+const engineOn = ref<(boolean | undefined)[]>([])
 const drawn = computed(
   () =>
     shown.value &&
     shown.value.encode(
-      shown.value.teams.map((team, index) => shownFormation(team, !!engineOn.value[index])),
+      shown.value.teams.map((team, index) => shownFormation(team, engineOn.value[index])),
     ),
 )
-// Counts Generate presses, so a formation worked out for an earlier set is dropped.
-let generations = 0
 // How many teams the last Generate could not make; 0 when it made them.
 const noSet = ref(0)
 const busy = ref(false)
@@ -160,37 +162,15 @@ const resultEl = useTemplateRef<HTMLElement>('result')
 const picksOf = (levels: Record<string, AttrRecord>): SlPick[] =>
   slPicks(levels, (id) => gameData.getCharacterById(id)?.faction, locked.value.ids)
 
-// One board at a time, so each switch is ready once its own formation is and a
-// new Generate waits behind one board's work at most. A worker that cannot
-// answer leaves the switches on the recorded games.
-const fillEngine = async (
-  generation: number,
-  set: SlChoice,
-  boards: SlBoard[],
-  which: number[],
-): Promise<void> => {
-  for (const index of which) {
-    let found: BoardFormation
-    try {
-      found = await placeEngine(set.teams[index]!, boards[index]!)
-    } catch {
-      return
-    }
-    if (generation !== generations || !shown.value) return
-    shown.value.teams[index]!.engine = found
-  }
-}
-
 const generate = async (): Promise<void> => {
   const file = slFile()
   if (!file) return
   busy.value = true
-  const generation = ++generations
   try {
     const picks = picksOf(levels.value)
     const chosenFor = { mode: mode.value, variant: variant.value }
     const boards = boardsFor(file)
-    const set = await generateSet(picks, boards)
+    const { set, refused } = await generateSet(picks, boards)
     const draws = set ? await placeSet(set, boards) : []
     // Each swap is tried once per set and formation, when first shown.
     const tried = new Map<string, Promise<SwapPreview | null>>()
@@ -205,6 +185,7 @@ const generate = async (): Promise<void> => {
         flex: t.flex,
         pairs: t.pairs,
         chance: t.chance,
+        refused: refused[index]!,
         ...draws[index]!,
         trySwap: (out: number[], into: number[], engineOn: boolean) => {
           const key = `${index}|${engineOn}|${out.join()}|${into.join()}`
@@ -232,8 +213,6 @@ const generate = async (): Promise<void> => {
     }
     noSet.value = set ? 0 : boards.length
     failed.value = false
-    const which = draws.flatMap((draw, index) => (draw.engine ? [] : [index]))
-    if (set && which.length) void fillEngine(generation, set, boards, which)
   } catch {
     // A file whose parts do not line up passes the shape check and fails in
     // the worker or here.
@@ -311,6 +290,7 @@ watch([ready, drawOnArrival], ([isReady, waiting]) => {
       <SlResult
         v-if="shown && drawn"
         v-model:engine-on="engineOn"
+        :debug
         :shown
         :data="drawn"
         :open-armed

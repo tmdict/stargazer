@@ -6,6 +6,7 @@
   "scripts": {
     "data": "tsx scripts/data.ts",
     "data:pin": "tsx scripts/data.ts pin",
+    "fits": "npm run data && tsx scripts/fits.ts",
     "dev": "npm run data && vite",
     "build": "tsx scripts/data.ts build && vue-tsc --build && vite-ssg build",
     "build:ssg": "tsx scripts/data.ts build && vite-ssg build",

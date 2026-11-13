@@ -22,8 +22,9 @@ export type RuleGoal =
   | { atMost: number }
   // sameFaction: the units counted also share one faction. nonHero: the share of
   // the goal met when a unit other than the team's heroes, such as a phantimal,
-  // is among them, all of it when unset.
-  | { exactly: number; sameFaction?: true; nonHero?: number }
+  // is among them, all of it when unset. least: how many of the team's heroes
+  // among the units counted keep a hard rule, the whole goal when unset.
+  | { exactly: number; sameFaction?: true; nonHero?: number; least?: number }
   // A bare most counts the enemy tiles among the tiles the effect marks, walls
   // the walls on the enemy's side among them, and allies our units on them.
   | 'most'
@@ -47,5 +48,13 @@ export interface Rule {
   from?: 'companion'
   // Absent only for a goal of none, which scores nothing.
   weight?: string
+  // A hard rule, on a target or an exactly goal: a placement that keeps it
+  // comes before every placement that breaks it, whatever the weights say, and
+  // a generated team stands only on a map where one placement keeps all of its
+  // hard rules. A target keeps it by reaching any hero of the team, whose other
+  // body counts as the hero and a phantimal never; an exactly goal by the units
+  // it counts, or with `least` by that many heroes among them, where meeting
+  // the whole goal then comes next, still ahead of the weights.
+  hard?: true
   note: string
 }

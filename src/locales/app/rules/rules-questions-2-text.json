@@ -1,5 +1,5 @@
 {
-  "en": "A Recorded board shows the formation players actually used with that team on that map. The switch in its corner shows where the rules would put the heroes.",
-  "zh": "“实战记录”棋盘显示玩家在这张地图上用这支队伍时实际的布阵。点棋盘角上的切换可以查看按规则安排的站位。",
-  "ko": "‘기록’ 보드에는 플레이어가 그 맵에서 이 팀으로 실제 쓴 배치가 나옵니다. 보드 모서리의 전환 버튼을 누르면 규칙에 따른 배치를 볼 수 있습니다."
+  "en": "A board can show a formation players won with in recorded games, when it does about as well by these rules. It never shows one that breaks a hard rule.",
+  "zh": "如果玩家在记录对局中用过并取胜的布阵，按这些规则算也差不多好，棋盘就会采用它。违反硬性规则的布阵不会被采用。",
+  "ko": "플레이어가 기록된 전투에서 써서 이긴 배치가 이 규칙으로도 비슷하게 좋으면, 보드에 그 배치가 나옵니다. 필수 규칙을 어기는 배치는 나오지 않습니다."
 }

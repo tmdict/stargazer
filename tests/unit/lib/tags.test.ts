@@ -14,7 +14,8 @@ import {
   toTagQuery,
 } from '@/lib/tags'
 import { SLOT_ORDER, type CharacterTags, type TagPick } from '@/lib/types/skill'
-import { loadAppLocales, loadCharacters } from '@/utils/dataLoader'
+import { loadCharacters } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 import { isHeroModifier } from '@/utils/tagData'
 
 const pick = (tag: string, ...mods: string[]): TagPick => ({ tag, mods })

@@ -1,32 +1,60 @@
-/* Reads the PvP data file (pvp/pvp.bin in the data pack).
- * The file is the JSON compressed with raw deflate, then encrypted with AES-GCM,
- * so it is noise in the browser's network panel. The key comes from pvp/pvp.key,
- * new with each export, and the repository holds neither. It deters a casual
- * look, nothing more: Vite writes pvp.key into this script, which every visitor
- * downloads. The decoded data is held here and handed to the page as a plain
- * object, never put in a store or on window. */
+/* Reads the PvP data file (pvp/pvp.bin in the data pack) and the fit table
+ * beside it (pvp/fits.bin), and writes the table for npm run fits.
+ * Each file is its JSON compressed with raw deflate, then encrypted with
+ * AES-GCM, so it is noise in the browser's network panel. The key comes from
+ * pvp/pvp.key, new with each export, and the repository holds neither. It
+ * deters a casual look, nothing more: Vite writes pvp.key into this script,
+ * which every visitor downloads. The decoded data is held here and handed to
+ * the page as a plain object, never put in a store or on window. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { CLASS_ORDER } from '@/lib/filterOrder'
 import { MAPS } from '@/lib/maps'
+import fitsFileUrl from '@/pack/pvp/fits'
 import pvpFileUrl from '@/pack/pvp/pvp.bin?url'
 import pvpKey from '@/pack/pvp/pvp.key?raw'
-import type { SlData, SlMap } from './types'
+import type { SlData, SlFitTable, SlMap } from './types'
 
 // The writer combines pvp.key with the same text, so what the script stores is
 // not itself the key.
 const KEY_MIX = 'stargazer-pvp'
 
-async function decrypt(file: Uint8Array<ArrayBuffer>): Promise<ArrayBuffer> {
+// A file opens with the cipher's starting value.
+const IV_BYTES = 12
+
+async function cipherKey(usage: 'encrypt' | 'decrypt'): Promise<CryptoKey> {
   const material = new TextEncoder().encode(`${pvpKey.trim()}${KEY_MIX}`)
   const digest = await crypto.subtle.digest('SHA-256', material)
-  const key = await crypto.subtle.importKey('raw', digest, 'AES-GCM', false, ['decrypt'])
-  // The file opens with the cipher's 12-byte starting value.
-  return crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: file.subarray(0, 12) },
-    key,
-    file.subarray(12),
+  return crypto.subtle.importKey('raw', digest, 'AES-GCM', false, [usage])
+}
+
+const through = (bytes: BlobPart, stream: CompressionStream | DecompressionStream): Response =>
+  new Response(new Blob([bytes]).stream().pipeThrough(stream))
+
+async function unwrap(file: Uint8Array<ArrayBuffer>): Promise<unknown> {
+  const packed = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: file.subarray(0, IV_BYTES) },
+    await cipherKey('decrypt'),
+    file.subarray(IV_BYTES),
   )
+  return JSON.parse(await through(packed, new DecompressionStream('deflate-raw')).text())
+}
+
+async function wrap(value: unknown): Promise<Uint8Array<ArrayBuffer>> {
+  const packed = await through(
+    JSON.stringify(value),
+    new CompressionStream('deflate-raw'),
+  ).arrayBuffer()
+  const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES))
+  const sealed = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    await cipherKey('encrypt'),
+    packed,
+  )
+  const file = new Uint8Array(IV_BYTES + sealed.byteLength)
+  file.set(iv)
+  file.set(new Uint8Array(sealed), IV_BYTES)
+  return file
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -178,13 +206,51 @@ function isSlData(value: unknown): value is SlData {
 }
 
 export async function decodeSlData(bytes: Uint8Array<ArrayBuffer>): Promise<SlData> {
-  const stream = new Blob([await decrypt(bytes)])
-    .stream()
-    .pipeThrough(new DecompressionStream('deflate-raw'))
-  const data: unknown = JSON.parse(await new Response(stream).text())
+  const data = await unwrap(bytes)
   if (!isSlData(data)) throw new Error('The PvP data is not in the expected format')
   return data
 }
+
+const isFitSet = (value: unknown, rows: number, maps: number): boolean =>
+  isObject(value) &&
+  Array.isArray(value.points) &&
+  value.points.length === rows &&
+  value.points.every(
+    (row: unknown) =>
+      Array.isArray(row) &&
+      row.length === maps &&
+      row.every((points) => points === null || typeof points === 'number'),
+  ) &&
+  Array.isArray(value.refused) &&
+  value.refused.every(
+    (pair: unknown) =>
+      Array.isArray(pair) && pair.length === 2 && isIndex(pair[0], rows) && isIndex(pair[1], maps),
+  )
+
+// A table's rows stand for the data file's lineups in their order, so one
+// with another count of rows was made for another file.
+function isSlFits(value: unknown, data: SlData): value is SlFitTable {
+  if (!isObject(value) || !Array.isArray(value.maps)) return false
+  const rows = data.everyMap.length
+  const maps = value.maps.length
+  return (
+    typeof value.stamp === 'string' &&
+    value.maps.every((key) => typeof key === 'string') &&
+    isFitSet(value.seasonal, rows, maps) &&
+    isFitSet(value.plain, rows, maps)
+  )
+}
+
+export async function decodeSlFits(
+  bytes: Uint8Array<ArrayBuffer>,
+  data: SlData,
+): Promise<SlFitTable> {
+  const table = await unwrap(bytes)
+  if (!isSlFits(table, data)) throw new Error('The fit table is not in the expected format')
+  return table
+}
+
+export const encodeSlFits = (table: SlFitTable): Promise<Uint8Array<ArrayBuffer>> => wrap(table)
 
 // Only a load that worked is kept, so a failed one can be tried again.
 let loaded: SlData | null = null
@@ -195,4 +261,18 @@ export async function loadSlData(): Promise<SlData> {
   if (!response.ok) throw new Error(`The PvP data answered ${response.status}`)
   loaded = await decodeSlData(new Uint8Array(await response.arrayBuffer()))
   return loaded
+}
+
+/* The fit table for `data`, or null: a build has none where the pack lacks it
+ * or holds one made from other code or data (scripts/lib/fitTable.ts), and one
+ * that cannot be fetched or read leaves the fit checks to the browser. */
+export async function loadSlFits(data: Promise<SlData>): Promise<SlFitTable | null> {
+  if (fitsFileUrl === null) return null
+  try {
+    const response = await fetch(fitsFileUrl)
+    if (!response.ok) return null
+    return await decodeSlFits(new Uint8Array(await response.arrayBuffer()), await data)
+  } catch {
+    return null
+  }
 }

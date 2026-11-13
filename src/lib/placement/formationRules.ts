@@ -28,6 +28,7 @@ export interface RuleCard {
   distance?: number
   // A weight other than a skill's main effect's.
   weight?: 'more' | 'less'
+  hard?: true
 }
 
 export interface RuleUnit {
@@ -72,6 +73,7 @@ function ruleCard(file: string, rule: Rule, weights: PlacementData['weights']): 
   if (ally && weight !== undefined && weight !== weights.aim) {
     card.weight = weight > weights.aim! ? 'more' : 'less'
   }
+  if (ally && rule.hard) card.hard = true
   return card
 }
 

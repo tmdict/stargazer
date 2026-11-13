@@ -415,11 +415,6 @@ const SKILL = {
           수입니다.
         </li>
         <li>
-          <SlIcon name="check" class="inline-icon" /> 표시가 있는 보드는 플레이어가 기록된 전투에서
-          사용한 배치입니다. 옆의 <SlIcon name="sparkle" class="inline-icon" />을 누르면 팀의 스킬에
-          따라 정한 자리를 볼 수 있으며, 다른 보드는 모두 이렇게 배치됩니다.
-        </li>
-        <li>
           <SlIcon name="lock" class="inline-icon" /> 표시 옆의 영웅은 바뀌지 않는 핵심 영웅입니다.
           <SlIcon name="swap" class="inline-icon" /> 표시 옆에는 같은 조합의 기록된 팀에서 나온
           교체가 나옵니다. 세트에서 쓰지 않은 내 영웅으로, 왼쪽의 영웅 하나나 두 영웅을 오른쪽의

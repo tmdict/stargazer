@@ -414,11 +414,6 @@ const SKILL = {
           there.
         </li>
         <li>
-          <SlIcon name="check" class="inline-icon" /> on a board marks a formation players used in a
-          recorded game. <SlIcon name="sparkle" class="inline-icon" /> next to it shows where each
-          hero would stand by the team's skills, which is how every other board is placed.
-        </li>
-        <li>
           <SlIcon name="lock" class="inline-icon" /> marks the core heroes, which stay.
           <SlIcon name="swap" class="inline-icon" /> lists swaps taken from recorded teams of the
           same comp, using your heroes the set leaves free: the hero or pair on the left for any on

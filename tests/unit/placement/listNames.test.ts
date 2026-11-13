@@ -6,13 +6,8 @@ import { describe, expect, it } from 'vitest'
 
 import { goalList } from '@/lib/placement/goals'
 import { decodeSlData } from '@/lib/pvp/data/codec'
-import {
-  loadAppLocales,
-  loadArtifacts,
-  loadCharacters,
-  loadCharms,
-  loadPhantimals,
-} from '@/utils/dataLoader'
+import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/utils/dataLoader'
+import { loadAppLocales } from '@/utils/localeLoader'
 
 const { placement } = await decodeSlData(
   readFileSync(new URL('../../../src/pack/pvp/pvp.bin', import.meta.url)),

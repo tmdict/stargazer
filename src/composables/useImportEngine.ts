@@ -37,7 +37,7 @@ import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
 import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/roster'
 import { SORT_WIDTH } from '@/lib/import/sort'
 import { useGameDataStore } from '@/stores/gameData'
-import { loadImportFrames, loadMatcherPortraits, loadOutfitPortraits } from '@/utils/dataLoader'
+import { loadImportFrames, loadMatcherPortraits, loadOutfitPortraits } from '@/utils/imageLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
 import type {
   HeroReferences,

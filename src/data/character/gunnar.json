@@ -24,7 +24,8 @@
       "team": "ally",
       "goal": { "target": "gunnar" },
       "weight": "gunnar",
-      "note": "Gunnar's Doomfield goes to the ally behind him, the teammate his list ranks first."
+      "hard": true,
+      "note": "Gunnar's Doomfield goes to the ally behind him, the teammate his list ranks first, and a hero always stands there."
     }
   ]
 }

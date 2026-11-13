@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { loadSkillLocale } from '@/utils/dataLoader'
+import { loadSkillLocale } from '@/utils/skillLocale'
 
 // The per-language underscore files ship in the same folders and chunks as the
 // hero files and must stay out of the hero dicts, where the search index would

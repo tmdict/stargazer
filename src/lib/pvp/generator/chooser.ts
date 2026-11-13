@@ -7,7 +7,8 @@
  * records, or whose map's teams make no set even under the last evidence
  * rule, takes each lineup's record over every map instead. Each team's chance
  * is the model's, against a typical opponent at the top levels, with its odds
- * scaled by the share of its own effects its board's map leaves it (fit.ts). */
+ * scaled by the share of its own effects its board's map leaves it, and a
+ * board takes no team whose hard rules no placement on its map keeps (fit.ts). */
 
 import type { SlData, SlEvidence, SlRecord, SlTeam } from '../data/types'
 import { oddsInto, winsNeeded } from '../model/odds'
@@ -36,10 +37,11 @@ interface Option {
   family: number | null
   claim: ArtifactClaim
   // Its chance on the board at that index with the artifact, or -1 on a board
-  // whose map has no tile for each of its units.
+  // that does not take it: one whose map has no tile for each of its units, or
+  // where no placement found keeps its hard rules.
   chanceOn: (board: number, artifact: number | null) => number
   // The best chance any artifact it can end up with gives it on any board
-  // its pool serves.
+  // its pool serves, or -1 once none of them takes it.
   best: number
   // What measuring its fit on the board at that index needs, if not known yet.
   pending: (board: number) => SlFitRequest[]
@@ -136,7 +138,9 @@ function searcher(
           }
           const shares = new Map<string, number | undefined>()
           for (const [layout, b] of served) {
-            if (fit.stands(b, t.heroes)) shares.set(layout, fit.known(b, t.heroes))
+            if (!fit.stands(b, t.heroes)) continue
+            const share = fit.known(b, t.heroes)
+            if (share !== null) shares.set(layout, share)
           }
           if (!shares.size) continue
           const claim = claimOf(t)
@@ -159,6 +163,10 @@ function searcher(
           ]
           // The other teams hold one artifact each at most.
           if (reachable.length < boards.length) reachable.push(null)
+          const waits = (i: number): boolean => {
+            const layout = boards[i]!.layout.key
+            return shares.has(layout) && shares.get(layout) === undefined
+          }
           const bestNow = (): number =>
             Math.max(
               ...[...shares.values()].flatMap((share) => reachable.map((a) => chanceAt(share, a))),
@@ -175,17 +183,15 @@ function searcher(
               return shares.has(layout) ? chanceAt(shares.get(layout), artifact) : -1
             },
             best: bestNow(),
-            pending: (i) =>
-              shares.get(boards[i]!.layout.key) === undefined
-                ? [{ board: boards[i]!, heroes: t.heroes }]
-                : [],
+            pending: (i) => (waits(i) ? [{ board: boards[i]!, heroes: t.heroes }] : []),
             refit: (i) => {
+              if (!waits(i)) return false
               const layout = boards[i]!.layout.key
-              if (shares.get(layout) !== undefined) return false
               const share = fit.measure(boards[i]!, t.heroes)
-              shares.set(layout, share)
+              if (share === null) shares.delete(layout)
+              else shares.set(layout, share)
               if (share === 1) return false
-              option.best = bestNow()
+              option.best = shares.size ? bestNow() : -1
               return true
             },
           }
@@ -386,7 +392,14 @@ function searcher(
           const pending = set.teams.flatMap((t, i) => t.pending(i))
           if (pending.length) yield pending
           if (!set.teams.map((t, i) => t.refit(i)).some(Boolean)) break
-          for (const pool of new Set(pools)) pool.sort(byBest)
+          // A team that no board takes leaves its pool, in place, since boards
+          // share one.
+          for (const pool of new Set(pools)) {
+            let left = 0
+            for (const t of pool) if (t.best >= 0) pool[left++] = t
+            pool.length = left
+            pool.sort(byBest)
+          }
           set = bestSet(pools, unrecorded)
         }
         if (set) return answer(set)
