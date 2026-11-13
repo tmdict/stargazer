@@ -13,6 +13,17 @@ import { Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { FULL_GRID, presetHexes } from '@/lib/types/grid'
 import { cropResize, luma } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
+import {
+  FIT_WIDTH,
+  LINE_FLOOR,
+  LINE_REACH,
+  MIN_WIDTH,
+  OFF_LINE,
+  POOL,
+  REFINE,
+  SCALE_STEP,
+  SUPPORT_FLOOR,
+} from './layout'
 import type { BoardFit } from './types'
 
 export const BOARD_HEXES: readonly Hex[] = presetHexes(FULL_GRID)
@@ -31,13 +42,6 @@ export const hexCentre = (fit: BoardFit, hex: Hex): Point => toScreen(fit, UNIT.
 export const hexCorners = (fit: BoardFit, hex: Hex): Point[] =>
   UNIT.polygonCorners(hex).map((p) => toScreen(fit, p))
 
-// A portrait stands on its tile with its pointer's tip at the tile centre, so
-// its ring sits RING_RISE hex radii above that centre on every row, and is
-// RING_RADIUS across. Measured on 128 units over four capture sets: rise 0.75
-// to 0.91, radius 0.63.
-export const RING_RISE = 0.83
-export const RING_RADIUS = 0.63
-
 // ---------- the outline ----------
 
 // Points on the board's outline and just off it (either side of each sample
@@ -47,8 +51,6 @@ interface Samples {
   on: Point[]
   off: Point[]
 }
-
-const OFF_LINE = 0.3
 
 function outlineSamples(perEdge: number): Samples {
   const edges = new Map<string, [Point, Point] | null>()
@@ -114,11 +116,6 @@ const toLineMap = (w: number, h: number, r: Float32Array): LineMap => {
   return { w, h, r, near }
 }
 
-// How far each pixel's luminance stands above the brighter of its two
-// neighbours LINE_REACH pixels away, best over four directions: high on a thin
-// light line, low on flat areas and broad light regions.
-const LINE_REACH = 3
-
 function lineMap(img: RgbaImage): LineMap {
   const { width: w, height: h, data } = img
   const lum = new Float32Array(w * h)
@@ -181,9 +178,6 @@ function meanAt(m: LineMap, pts: readonly Point[], s: number, ox: number, oy: nu
 const score = (m: LineMap, set: Samples, s: number, ox: number, oy: number): number =>
   meanAt(m, set.on, s, ox, oy) - meanAt(m, set.off, s, ox, oy)
 
-// A sample counts as found on a line this much above its surroundings.
-const LINE_FLOOR = 20
-
 function support(m: LineMap, s: number, ox: number, oy: number): number {
   let found = 0
   for (const p of FINE.on) {
@@ -195,24 +189,6 @@ function support(m: LineMap, s: number, ox: number, oy: number): number {
 }
 
 // ---------- the search ----------
-
-// The fit runs on a copy this wide (or the shot itself when narrower), pooled
-// by POOL for the coarse pass. Boards from MIN_WIDTH of the copy's width up to
-// all of it are tried, in SCALE_STEP increments.
-export const FIT_WIDTH = 480
-const POOL = 4
-const MIN_WIDTH = 0.35
-const SCALE_STEP = 0.015
-// Refinement windows on the copy, widest first: scale (px per hex radius)
-// and centre shift ranges with their steps.
-const REFINE = [
-  { scale: 1.5, scaleStep: 0.25, shift: 6, shiftStep: 1 },
-  { scale: 0.3, scaleStep: 0.05, shift: 1, shiftStep: 0.25 },
-] as const
-// Below this share of the outline on a line there is no board: measured 0.47
-// to 0.73 on formation captures (portraits standing on the far rows hide part
-// of it), and at most 0.25 on result screens, where the best fit is chance.
-const SUPPORT_FLOOR = 0.4
 
 /* The board in the shot, or null when no whole board is found there. */
 export function fitBoard(shot: RgbaImage): BoardFit | null {

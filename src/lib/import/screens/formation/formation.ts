@@ -12,18 +12,43 @@ import type { ArtifactReading } from '../../artifact/types'
 import { readCards } from '../../card/card'
 import { bestFrameAt } from '../../card/frames'
 import { FACE_ASPECT, heroDescriptor, rankHeroes } from '../../card/heroes'
-import type { StarRow } from '../../card/stars'
 import type { HeroReading } from '../../card/types'
 import { cropResize, pixelDistance } from '../../core/image'
 import type { RgbaImage } from '../../core/types'
 import { GREEN_RING_FLOOR, isGreen, ringGreen } from '../match/ring'
 import type { ImportWarning, ReferenceSet } from '../match/types'
-import { BOARD_HEXES, fitBoard, hexCentre, hexCorners, RING_RADIUS, RING_RISE } from './board'
+import { BOARD_HEXES, fitBoard, hexCentre, hexCorners } from './board'
+import {
+  ARTIFACT,
+  CARD_COUNT,
+  CARD_PITCH,
+  CARD_PITCH_SLACK,
+  CARD_SCALE,
+  CARD_SLACK,
+  CARD_STARS,
+  CARD_STARTS,
+  CARD_TOP,
+  FACE_BOXES,
+  LIT_GAP,
+  NUMERAL_DISC,
+  NUMERAL_FLOOR,
+  RING_CONTRAST,
+  RING_FLOOR,
+  RING_GREY,
+  RING_LIGHT,
+  RING_RADIUS,
+  RING_REACH,
+  RING_RISE,
+  RING_SAMPLES,
+  RING_STEP,
+  ROW_FLOOR,
+  STRIP,
+  STRIP_POSITIONS,
+  TILE_MIN_SHARE,
+  UNIT_CANDIDATES,
+  UNIT_CARD,
+} from './layout'
 import type { BoardFit, FormationReading, UnitReading } from './types'
-
-// A formation shot is read at its own size, which the board fit measures, up
-// to a width that keeps a full-resolution phone capture quick to read.
-export const FORMATION_MAX_WIDTH = 1200
 
 const luminance = (img: RgbaImage, x: number, y: number): number => {
   const xi = Math.round(x)
@@ -45,19 +70,6 @@ const saturation = (img: RgbaImage, x: number, y: number): number => {
 }
 
 // ---------- units ----------
-
-// Each tile's ring is searched this far either side of its nominal centre.
-const RING_REACH = 0.3
-const RING_STEP = 0.04
-const RING_SAMPLES = 48
-// The ring is light and grey, brighter than the portrait inside it and the
-// board outside. A tile holds a unit when this share of its circle reads so:
-// 0.54 to 0.98 on units (a nearer portrait can cover part of a far one's ring),
-// at most 0.29 on empty tiles.
-const RING_FLOOR = 0.4
-const RING_LIGHT = 180
-const RING_CONTRAST = 12
-const RING_GREY = 45
 
 function ringScore(img: RgbaImage, cx: number, cy: number, r: number): number {
   const d = Math.max(3, r * 0.12)
@@ -83,25 +95,6 @@ function ringScore(img: RgbaImage, cx: number, cy: number, r: number): number {
   }
   return hit / RING_SAMPLES
 }
-
-// Face crops of a portrait in ring radii (width, and top relative to the ring's
-// centre), in the hero table's landscape shape. The first ranks the whole
-// table; the others suit heroes framed wider or higher and re-score the leaders.
-// Each takes FACE_MARGIN times the face's framing about its centre, which puts
-// a board face mid-way in the table's window grid rather than at its edge.
-const FACE_MARGIN = 1.3
-const FACE_BOXES = [
-  { w: 1.0, top: -0.45 },
-  { w: 1.2, top: -0.5 },
-  { w: 1.1, top: -0.6 },
-  { w: 1.2, top: -0.62 },
-].map(({ w, top }) => ({
-  w: w * FACE_MARGIN,
-  top: top - (FACE_ASPECT / 2) * w * (FACE_MARGIN - 1),
-}))
-// Enough candidates that a lineup read elsewhere still finds its hero among them.
-const UNIT_CANDIDATES = 60
-const UNIT_CARD = 64
 
 type FoundUnit = Omit<UnitReading, 'candidates' | 'card'>
 
@@ -167,10 +160,6 @@ const TILE_SAMPLES = (() => {
 })()
 // Corners of a pointy-top hex: 0 lower right, 1 bottom, 2 lower left.
 const COS_30 = Math.cos(Math.PI / 6)
-const TILE_MIN_SHARE = 0.25
-// Lit tiles read about 135 and over, the others 115 and under. The split goes
-// in the widest gap between the board's own tile readings, when it is this wide.
-const LIT_GAP = 12
 
 function readTiles(
   shot: RgbaImage,
@@ -223,16 +212,6 @@ function sideOf(hexIds: readonly number[]): Team | null {
 }
 
 // ---------- slot strip ----------
-
-// The numbered circles under the board, measured on four capture sets: their
-// centres STRIP.below hex radii below the board's centre, STRIP.pitch apart
-// about STRIP.centre, the selected one ringed in green of radius STRIP.ring.
-// A circle is there when its numeral is: white pixels fill 0.24 to 0.41 of
-// its inner disc, and none where a strip has no circle.
-const STRIP = { below: 5.73, pitch: 1.87, centre: -0.05, ring: 0.71, band: 0.55 } as const
-const STRIP_POSITIONS = [-2, -1, 0, 1, 2] as const
-const NUMERAL_DISC = 0.3
-const NUMERAL_FLOOR = 0.1
 
 function numeralShare(shot: RgbaImage, cx: number, cy: number, r: number): number {
   let n = 0
@@ -291,34 +270,6 @@ function readSlot(shot: RgbaImage, fit: BoardFit): { index: number; count: numbe
 }
 
 // ---------- card row ----------
-
-// The hero cards sit in a row under the strip, their tops CARD_TOP hex radii
-// below the board's centre and CARD_PITCH apart. The row starts at one of two
-// places, as the phantimal slot before the artifact card is there or not:
-// measured on four capture sets, 2.45 to 2.51 hex radii left of the board's
-// centre with it and 3.38 to 3.44 without. Each start is searched CARD_SLACK
-// either way and the stronger frame comb wins, since the other start puts
-// every card half a card off its frame. Read on a copy where the board is
-// CARD_SCALE px per hex radius, the scale at which the cards meet the frame
-// templates.
-const CARD_SCALE = 46.2
-const CARD_TOP = 7.2
-const CARD_STARTS = [-2.49, -3.41] as const
-const CARD_SLACK = 0.2
-const CARD_PITCH = 1.58
-const CARD_PITCH_SLACK = 2
-const CARD_COUNT = 5
-// The comb mean a row must reach to be read at all.
-const ROW_FLOOR = 0.27
-// The star row of a card read at CARD_SCALE, larger than a result card's: on
-// the twenty formation shots a full row's stars are 10.4 to 10.5 px apart,
-// centred from 0.1 px right to 0.3 px left of the box's middle, and a seven-row
-// band centred on them starts 39 to 40.2 px above the box's centre.
-const CARD_STARS: StarRow = { above: 39, pitch: 10.5, left: 0.2 }
-// The artifact card before the row: its art disc's centre from the first
-// card's top-left and its diameter, in hex radii. Placed so on four capture
-// sets, where it reads all ten labelled artifacts.
-const ARTIFACT = { dx: -1.25, dy: 0.85, diameter: 0.78 } as const
 
 interface Comb {
   mean: number

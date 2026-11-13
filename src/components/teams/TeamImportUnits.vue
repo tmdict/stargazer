@@ -29,13 +29,8 @@ import { missingPlacing, type FormationUnits, type ImportShot } from '@/composab
 import { useTilePlacing, type PickerItem } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { isBaseHeroId } from '@/lib/characters/character'
-import {
-  BOARD_HEXES,
-  hexCentre,
-  hexCorners,
-  RING_RADIUS,
-  RING_RISE,
-} from '@/lib/import/screens/formation/board'
+import { BOARD_HEXES, hexCentre, hexCorners } from '@/lib/import/screens/formation/board'
+import { RING_RADIUS, RING_RISE } from '@/lib/import/screens/formation/layout'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { deploymentTiles } from '@/lib/maps'
 import { portraitOptions, type UnitAssignment } from '@/lib/teams/formationImport'

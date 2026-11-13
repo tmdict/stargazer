@@ -31,7 +31,7 @@ import {
   parseLearnedIcons,
   serializeLearnedIcons,
 } from '@/lib/import/learned'
-import { FORMATION_MAX_WIDTH } from '@/lib/import/screens/formation/formation'
+import { FORMATION_MAX_WIDTH } from '@/lib/import/screens/formation/layout'
 import { MATCHUP_MAX_WIDTH } from '@/lib/import/screens/matchup/layout'
 import { RESULT_MAX_WIDTH } from '@/lib/import/screens/result/layout'
 import { ROSTER_MAX_WIDTH } from '@/lib/import/screens/roster/layout'
