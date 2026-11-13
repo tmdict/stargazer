@@ -2,7 +2,7 @@
  * name, a hero's companion by its owner's name, marked, and a phantimal and the
  * companion it brings by their own art (Wedge of Power). */
 
-import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
+import { isCompanionId, toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand } from '@/lib/characters/phantimal'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -34,7 +34,7 @@ export function useUnitLabels(): {
       return phantimalDisplayName(i18n.currentLocale, gameData.getPhantimalUnitSlug(unitId) ?? '')
     }
     const name = heroName(toBaseHeroId(unitId))
-    return isCompanionUnitId(unitId) ? i18n.t('app.import-companion', { name }) : name
+    return isCompanionId(unitId) ? i18n.t('app.import-companion', { name }) : name
   }
 
   const unitImage = (unitId: number | null): string => {

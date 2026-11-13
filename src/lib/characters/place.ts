@@ -11,16 +11,12 @@ import {
   getCharacterTeam,
   hasCharacter,
   isCharacterOnTeam,
+  isCompanionId,
   resolvePlacement,
   setCharacterOnTile,
   synergySlotFree,
 } from './character'
-import {
-  getMainCharacterId,
-  isCompanionId,
-  restoreCompanions,
-  storeCompanionPositions,
-} from './companion'
+import { getMainCharacterId, restoreCompanions, storeCompanionPositions } from './companion'
 import { isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
 import { performRemove } from './remove'
@@ -37,7 +33,7 @@ export function executePlaceCharacter(
   team: Team = Team.ALLY,
 ): boolean {
   // Companions cannot be placed directly (only created via skills)
-  if (isCompanionId(grid, characterId)) {
+  if (isCompanionId(characterId)) {
     return false
   }
 
@@ -49,8 +45,8 @@ export function executePlaceCharacter(
   const occupantTeam = getCharacterTeam(grid, hexId)
   let anchorId = occupantId
   let anchorHex = hexId
-  if (occupantId !== undefined && occupantTeam !== undefined && isCompanionId(grid, occupantId)) {
-    const mainCharId = getMainCharacterId(grid, occupantId)
+  if (occupantId !== undefined && occupantTeam !== undefined && isCompanionId(occupantId)) {
+    const mainCharId = getMainCharacterId(occupantId)
     const mainHexId = findCharacterHex(grid, mainCharId, occupantTeam)
     if (mainHexId !== null) {
       anchorId = mainCharId
@@ -116,8 +112,8 @@ export function executePlaceCharacter(
   )
 
   // Trigger skill updates after successful transaction
-  if (result && grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
+  if (result) {
+    skillManager.updateActiveSkills(grid)
   }
 
   return result
@@ -140,7 +136,7 @@ export function resolveReplacement(
   const occupantId = getCharacter(grid, targetHexId)
   if (occupantId === undefined) return resolvePlacement(grid, baseId, team, synergyOn)
 
-  const anchorId = getMainCharacterId(grid, occupantId)
+  const anchorId = getMainCharacterId(occupantId)
   const freesSlot = isSynergyHeroId(anchorId)
   const freesCapacity = !freesSlot && !isPhantimalId(anchorId)
   // The vacating hero no longer counts as a duplicate of itself.
@@ -208,9 +204,7 @@ export function executeAutoPlaceCharacter(
   }
 
   // Trigger skill updates after successful placement
-  if (grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
-  }
+  skillManager.updateActiveSkills(grid)
 
   return true
 }

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCharacterHex, getMaxTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -23,9 +24,6 @@ describe('move.ts', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
     skillManager = new SkillManager(NO_LOOKUPS)
-    // executeMoveCharacter notifies skills through grid.skillManager, so this
-    // wiring is load-bearing
-    grid.skillManager = skillManager
   })
 
   describe('executeMoveCharacter - basic validation', () => {
@@ -148,7 +146,7 @@ describe('move.ts', () => {
 
   describe('executeMoveCharacter - companion handling', () => {
     it('should prevent companions from changing teams', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       performPlace(grid, 1, companionId, Team.ALLY)
 
       const result = executeMoveCharacter(grid, skillManager, 1, 4, companionId)
@@ -159,7 +157,7 @@ describe('move.ts', () => {
     })
 
     it('should allow companions to move within same team', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       performPlace(grid, 1, companionId, Team.ALLY)
 
       const result = executeMoveCharacter(grid, skillManager, 1, 2, companionId)

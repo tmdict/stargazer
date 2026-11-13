@@ -21,15 +21,16 @@ import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'n
 import { delimiter, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
+import { isCompanionId, toBaseHeroId } from '@/lib/characters/character'
 import {
   inPhantimalBand,
   isPhantimalId,
   toLocalPhantimalId,
   toPhantimalId,
 } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
-import { COMPANION_ID_OFFSET, Grid, rotatedHexId } from '@/lib/grid'
+import { Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
 import {
   buffTilesOf,
@@ -385,7 +386,7 @@ function boardSvg(map: string, units: number[], positions: number[]): string {
     const label =
       unit === undefined
         ? ''
-        : `<text x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" class="${isCompanionUnitId(unit) || inPhantimalBand(unit) ? 'pt' : 'ht'}"><title>${esc(nameOf(unit))}</title>${esc(nameOf(unit).slice(0, 7))}</text>`
+        : `<text x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" class="${isCompanionId(unit) || inPhantimalBand(unit) ? 'pt' : 'ht'}"><title>${esc(nameOf(unit))}</title>${esc(nameOf(unit).slice(0, 7))}</text>`
     return `<polygon points="${corners}" class="${kind}${buffs.has(id) ? ' buff' : ''}${unit === undefined ? '' : ' held'}"/>${label}`
   })
   return `<svg viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}" role="img">${cells.join('')}</svg>${LEGEND}`

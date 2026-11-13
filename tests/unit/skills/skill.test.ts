@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager, unitSkillKey, type SkillBadge } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -56,7 +57,6 @@ describe('skill', () => {
 
       beforeEach(() => {
         grid = new Grid()
-        grid.skillManager = skillManager
       })
 
       it('takes only the hidden side off a tile both Kulu zones paint', () => {
@@ -109,7 +109,6 @@ describe('skill', () => {
             seasonalTargeting: () => seasonalTargeting,
           })
           const board = new Grid()
-          board.skillManager = manager
           executePlaceCharacter(board, manager, 16, WEDGE_OF_MATTER, Team.ALLY)
           return manager.getUnitsAbleToDraw().map((unit) => unit.characterId)
         }
@@ -128,7 +127,7 @@ describe('skill', () => {
         expect(skillManager.activateCharacterSkill(50, 1, Team.ALLY, bigGrid)).toBe(true)
         const companionTile = bigGrid
           .getAllTiles()
-          .find((t) => t.characterId === bigGrid.companionIdOffset + 50)
+          .find((t) => t.characterId === COMPANION_ID_OFFSET + 50)
         expect(companionTile).toBeDefined()
         expect(bigGrid.maxTeamSizes.get(Team.ALLY)).toBe(6)
 

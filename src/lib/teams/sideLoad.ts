@@ -20,7 +20,7 @@
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { splitPhantimalBandLocal, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { decodeTeamData } from '@/lib/teams/codec'
 import { unitRowKind, type GridState, type MultiGridState } from '@/lib/teams/gridStateSerializer'

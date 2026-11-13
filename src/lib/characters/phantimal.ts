@@ -1,15 +1,15 @@
 // Phantimals share the grid's single unit slot with characters, tagged by an ID
-// namespace (the same trick as companionIdOffset). A tile whose characterId is
+// namespace. A tile whose characterId is
 // in the phantimal band holds a phantimal, so occupancy, move, targeting
 // and pathfinding treat it like any other unit for free. The differences are
 // enforced elsewhere and are deliberately small: phantimals are exempt from the
 // team-size limit (canPlaceCharacterOnTeam), capped at one per team by the
 // character store's placement helpers, and swappable only within their own
 // team (executeSwapCharacters).
-// Keeping these as pure id-math (no Grid dependency) makes this a leaf module
-// the serializer and grid can both import.
+// Keeping these as pure id-math (no Grid dependency) lets the serializer
+// import them.
 //
-// Sits well above the companion band (N * companionIdOffset + characterId) so a
+// Sits well above the companion band (N * COMPANION_ID_OFFSET + characterId) so a
 // character with several companions never spills into the phantimal namespace.
 //
 // The band mirrors the base namespace like the synergy band: the phantimal at
@@ -17,15 +17,11 @@
 // generic companion arithmetic (createCompanionSkill, getMainCharacterId)
 // works unchanged inside it. The band's id math lives in this module (callers
 // use the helpers below); without a phantimal companion skill registered, no
-// id above the phantimals themselves is ever produced. The stride is a literal
-// because COMPANION_ID_OFFSET lives in grid.ts, which imports this leaf; a
-// test pins the two equal.
-import { decomposeUnitId, SYNERGY_ID_OFFSET } from './synergy'
+// id above the phantimals themselves is ever produced.
+import { decomposeUnitId } from './synergy'
+import { COMPANION_ID_OFFSET, PHANTIMAL_ID_OFFSET, SYNERGY_ID_OFFSET } from './unitIds'
 
-export const PHANTIMAL_ID_OFFSET = 100000
-const PHANTIMAL_COMPANION_STRIDE = 10000
-
-// A phantimal or a companion it spawned. Bounded above like isCompanionId: the
+// A phantimal or a companion it spawned. Bounded above: the
 // synergy band starts at SYNERGY_ID_OFFSET and must not read as phantimals.
 export function inPhantimalBand(id: number): boolean {
   return id >= PHANTIMAL_ID_OFFSET && id < SYNERGY_ID_OFFSET
@@ -38,12 +34,12 @@ export function phantimalBandLocal(id: number): number {
 
 // The phantimal itself, as opposed to a companion it spawned.
 export function isPhantimalId(id: number): boolean {
-  return inPhantimalBand(id) && phantimalBandLocal(id) < PHANTIMAL_COMPANION_STRIDE
+  return inPhantimalBand(id) && phantimalBandLocal(id) < COMPANION_ID_OFFSET
 }
 
 // The phantimal a band unit belongs to (itself for a phantimal).
 export function phantimalOwnerId(id: number): number {
-  return PHANTIMAL_ID_OFFSET + (phantimalBandLocal(id) % PHANTIMAL_COMPANION_STRIDE)
+  return PHANTIMAL_ID_OFFSET + (phantimalBandLocal(id) % COMPANION_ID_OFFSET)
 }
 
 export function toPhantimalId(localId: number): number {
@@ -51,7 +47,7 @@ export function toPhantimalId(localId: number): number {
 }
 
 export function toLocalPhantimalId(id: number): number {
-  return phantimalBandLocal(id) % PHANTIMAL_COMPANION_STRIDE
+  return phantimalBandLocal(id) % COMPANION_ID_OFFSET
 }
 
 // A band-local value as the owning phantimal's local id plus the companion
@@ -59,13 +55,13 @@ export function toLocalPhantimalId(id: number): number {
 // the binary companion section) are built from these.
 export function splitPhantimalBandLocal(bandLocal: number): { ownerLocal: number; index: number } {
   return {
-    ownerLocal: bandLocal % PHANTIMAL_COMPANION_STRIDE,
-    index: Math.floor(bandLocal / PHANTIMAL_COMPANION_STRIDE),
+    ownerLocal: bandLocal % COMPANION_ID_OFFSET,
+    index: Math.floor(bandLocal / COMPANION_ID_OFFSET),
   }
 }
 
 export function joinPhantimalBandLocal(ownerLocal: number, index: number): number {
-  return index * PHANTIMAL_COMPANION_STRIDE + ownerLocal
+  return index * COMPANION_ID_OFFSET + ownerLocal
 }
 
 // The id with its band offset stripped, so N * 10000 + base classifies the

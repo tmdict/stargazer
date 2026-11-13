@@ -69,7 +69,6 @@ export function buildScenarioGrid(
   const map = MAPS[key]
   const grid = new Grid(undefined, map)
   const skillManager = new SkillManager(NO_LOOKUPS)
-  grid.skillManager = skillManager
 
   for (const hexId of targetHexIds) {
     const tile = grid.getTileById(hexId)

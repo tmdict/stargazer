@@ -12,6 +12,7 @@ import {
   executeRemoveCharacter,
   performRemove,
 } from '@/lib/characters/remove'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -31,7 +32,6 @@ describe('remove.ts', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   describe('performRemove', () => {
@@ -82,7 +82,7 @@ describe('remove.ts', () => {
     })
 
     it('should remove orphaned companion directly', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
 
       // Place only companion (no main character)
       performPlace(grid, 2, companionId, Team.ALLY)

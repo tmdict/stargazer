@@ -1,4 +1,4 @@
-import { isCompanionId } from '../../characters/companion'
+import { isCompanionId } from '../../characters/character'
 import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
@@ -16,7 +16,7 @@ registerSkill(
       rowScan(ctx, {
         team: ctx.team,
         rowDirection: ScanDirection.REARMOST,
-        filter: (id) => !isCompanionId(ctx.grid, id),
+        filter: (id) => !isCompanionId(id),
       }),
   }),
 )

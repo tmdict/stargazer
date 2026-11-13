@@ -4,15 +4,17 @@ import {
   canPlaceCharacterOnTeam,
   findTeamSynergyHex,
   getAvailableTeamSize,
+  isCompanionId,
   resolvePlacement,
   synergySlotFree,
 } from '@/lib/characters/character'
-import { getMainCharacterId, isCompanionId } from '@/lib/characters/companion'
+import { getMainCharacterId } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, resolveReplacement } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { decomposeUnitId, isSynergyHeroId, toSynergyId } from '@/lib/characters/synergy'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
@@ -50,14 +52,13 @@ describe('synergy id namespace', () => {
   })
 
   it('classifies companions in either band and cascades within it', () => {
-    const grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-    expect(isCompanionId(grid, 20089)).toBe(true)
-    expect(isCompanionId(grid, 210050)).toBe(true)
-    expect(isCompanionId(grid, 200050)).toBe(false)
-    expect(isCompanionId(grid, 100005)).toBe(false)
-    expect(getMainCharacterId(grid, 20089)).toBe(89)
-    expect(getMainCharacterId(grid, 210050)).toBe(200050)
-    expect(getMainCharacterId(grid, 200050)).toBe(200050)
+    expect(isCompanionId(20089)).toBe(true)
+    expect(isCompanionId(210050)).toBe(true)
+    expect(isCompanionId(200050)).toBe(false)
+    expect(isCompanionId(100005)).toBe(false)
+    expect(getMainCharacterId(20089)).toBe(89)
+    expect(getMainCharacterId(210050)).toBe(200050)
+    expect(getMainCharacterId(200050)).toBe(200050)
   })
 })
 
@@ -163,7 +164,7 @@ describe('resolveReplacement', () => {
     expect(executePlaceCharacter(grid, sm, 1, PHRAESTO, Team.ALLY)).toBe(true)
     const companionHex = grid
       .getAllTiles()
-      .find((tile) => tile.characterId === PHRAESTO + grid.companionIdOffset)!
+      .find((tile) => tile.characterId === PHRAESTO + COMPANION_ID_OFFSET)!
       .hex.getId()
     expect(resolveReplacement(grid, PHRAESTO, Team.ALLY, 1, true)).toBe(null)
     expect(resolveReplacement(grid, PHRAESTO, Team.ALLY, companionHex, true)).toBe(null)

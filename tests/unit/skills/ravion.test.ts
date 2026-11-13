@@ -20,7 +20,6 @@ describe('ravion (Designated Duty)', () => {
   beforeEach(() => {
     grid = new Grid()
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   const availableIds = (state: State) =>

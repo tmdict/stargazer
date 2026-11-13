@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { availableState, findMapByTiles, resolveBoardMap } from '@/lib/maps'
 import { decodeGridStateFromUrl, decodeTeamData } from '@/lib/teams/codec'
 import {

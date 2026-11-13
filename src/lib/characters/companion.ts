@@ -1,11 +1,12 @@
-import { COMPANION_ID_OFFSET, type Grid } from '../grid'
+import { type Grid } from '../grid'
 import { getRegisteredSkills } from '../skills/registry'
 import { getCharacterSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
-import { findCharacterHex } from './character'
+import { findCharacterHex, isCompanionId } from './character'
 import { companionLocalId } from './phantimal'
 import { performPlace } from './place'
 import { performRemove } from './remove'
+import { COMPANION_ID_OFFSET } from './unitIds'
 
 export interface CompanionPosition {
   companionId: number
@@ -43,22 +44,14 @@ export function ownerImages(): { unitId: number; image: string }[] {
   )
 }
 
-export function isCompanionId(grid: Grid, characterId: number): boolean {
-  // Classified on the band-local id, so companions of synergy heroes and
-  // phantimals (offset + N * 10000 + owner) count too. An id above every band
-  // comes back unstripped, and the upper bound stops it reading as a companion.
-  const localId = companionLocalId(characterId)
-  return localId >= grid.companionIdOffset && localId < grid.phantimalIdOffset
-}
-
-export function getMainCharacterId(grid: Grid, companionId: number): number {
-  if (!isCompanionId(grid, companionId)) {
+export function getMainCharacterId(companionId: number): number {
+  if (!isCompanionId(companionId)) {
     return companionId
   }
   // Subtraction rather than modulo keeps the main in the companion's own band:
   // a synergy companion cascades to the synergy main, never the base hero.
   const localId = companionLocalId(companionId)
-  return companionId - Math.floor(localId / grid.companionIdOffset) * grid.companionIdOffset
+  return companionId - Math.floor(localId / COMPANION_ID_OFFSET) * COMPANION_ID_OFFSET
 }
 
 export function getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number> {

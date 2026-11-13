@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { getMaxTeamSize } from '@/lib/characters/character'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { SkillManager, type SkillContext, type SkillTargetInfo } from '@/lib/skills/skill'
 import {
@@ -119,7 +120,6 @@ describe('createCompanionSkill', () => {
   beforeEach(() => {
     grid = new Grid()
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   const makeSkill = (overrides: Partial<Parameters<typeof createCompanionSkill>[0]> = {}) =>
@@ -147,8 +147,8 @@ describe('createCompanionSkill', () => {
 
     const placed = companionTiles()
     expect(placed.map((t) => t.characterId).sort((a, b) => a! - b!)).toEqual([
-      grid.companionIdOffset + CHARACTER_ID,
-      2 * grid.companionIdOffset + CHARACTER_ID,
+      COMPANION_ID_OFFSET + CHARACTER_ID,
+      2 * COMPANION_ID_OFFSET + CHARACTER_ID,
     ])
     expect(new Set(placed.map((t) => t.hex.getId())).size).toBe(2)
     expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE + 2)

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import type { FormationReading, UnitReading } from '@/lib/import/screens/formation/types'
 import {
   assignUnits,

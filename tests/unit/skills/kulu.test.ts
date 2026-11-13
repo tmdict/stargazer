@@ -23,7 +23,6 @@ describe('kulu (Demolition Zone)', () => {
   beforeEach(() => {
     grid = new Grid()
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   it('paints its zone on activation and clears it on removal, leaving tile state untouched', () => {

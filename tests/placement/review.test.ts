@@ -16,7 +16,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { isCompanionUnitId } from '@/lib/characters/character'
+import { isCompanionId } from '@/lib/characters/character'
 import { repositionCompanions } from '@/lib/characters/companion'
 import {
   inPhantimalBand,
@@ -26,8 +26,9 @@ import {
 } from '@/lib/characters/phantimal'
 import { executePlaceCharacter } from '@/lib/characters/place'
 import { toSynergyId } from '@/lib/characters/synergy'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { getCharmForHero, loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
-import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
+import { Grid } from '@/lib/grid'
 import { availableState, deploymentTiles, getMapByKey, resolveBoardMap } from '@/lib/maps'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { artifactReach, ruleUnit, skillReach, tileReach, type Reach } from '@/lib/placement/reach'
@@ -65,10 +66,15 @@ const unitName = (id: number): string => {
 // The boardRestore restore's order: each main, then its companions onto their
 // saved tiles at once, so a spawned companion never squats on a tile a later
 // main needs.
-function restoreBand(grid: Grid, entries: number[][], toUnitId: (local: number) => number) {
+function restoreBand(
+  grid: Grid,
+  skillManager: SkillManager,
+  entries: number[][],
+  toUnitId: (local: number) => number,
+) {
   for (const [hexId, local, team] of entries) {
     if (local! >= COMPANION_ID_OFFSET) continue
-    if (!executePlaceCharacter(grid, grid.skillManager!, hexId!, toUnitId(local!), team!)) {
+    if (!executePlaceCharacter(grid, skillManager, hexId!, toUnitId(local!), team!)) {
       throw new Error(`could not place unit ${local} on tile ${hexId}`)
     }
     const companions = entries
@@ -81,17 +87,17 @@ function restoreBand(grid: Grid, entries: number[][], toUnitId: (local: number) 
   }
 }
 
-function rebuild(board: BoardState): Grid {
+function rebuild(board: BoardState): { grid: Grid; manager: SkillManager } {
   const grid = new Grid(FULL_GRID, getMapByKey(resolveBoardMap(board)))
-  grid.skillManager = new SkillManager(PLACEMENT_LOOKUPS)
   for (const [hexId, state] of board.t ?? []) {
     grid.setState(grid.getHexById(hexId!), availableState(state!))
   }
-  restoreBand(grid, board.c ?? [], (local) => local)
-  restoreBand(grid, board.y ?? [], toSynergyId)
-  restoreBand(grid, board.s ?? [], toPhantimalId)
-  grid.skillManager.updateActiveSkills(grid)
-  return grid
+  const manager = new SkillManager(PLACEMENT_LOOKUPS)
+  restoreBand(grid, manager, board.c ?? [], (local) => local)
+  restoreBand(grid, manager, board.y ?? [], toSynergyId)
+  restoreBand(grid, manager, board.s ?? [], toPhantimalId)
+  manager.updateActiveSkills(grid)
+  return { grid, manager }
 }
 
 // What one effect did on one recorded side: the unit that holds it (none for
@@ -113,8 +119,7 @@ interface Side {
 }
 
 function sidesOf(board: BoardState): Side[] {
-  const grid = rebuild(board)
-  const manager = grid.skillManager!
+  const { grid, manager } = rebuild(board)
   const map = resolveBoardMap(board)
   const landing = (
     owner: string,
@@ -165,7 +170,7 @@ function sidesOf(board: BoardState): Side[] {
       const id = tile.characterId!
       const name = unitName(id)
       const hexId = tile.hex.getId()
-      const isHero = !inPhantimalBand(id) && !isCompanionUnitId(id)
+      const isHero = !inPhantimalBand(id) && !isCompanionId(id)
       if (isHero) side.heroes.push(name)
       if (isPhantimalId(id)) side.phantimal = name
 

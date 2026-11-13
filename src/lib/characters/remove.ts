@@ -7,8 +7,9 @@ import {
   getCharacterTeam,
   getTilesWithCharacters,
   hasCharacter,
+  isCompanionId,
 } from './character'
-import { getMainCharacterId, isCompanionId } from './companion'
+import { getMainCharacterId } from './companion'
 import { performPlace } from './place'
 import { executeTransaction } from './transaction'
 
@@ -25,8 +26,8 @@ export function executeRemoveCharacter(
   if (!characterId || !team) return true
 
   // Check if this is a companion - if so, we need to remove both companion and main character
-  if (isCompanionId(grid, characterId)) {
-    const mainCharId = getMainCharacterId(grid, characterId)
+  if (isCompanionId(characterId)) {
+    const mainCharId = getMainCharacterId(characterId)
 
     // Find the main character's hex on the same team as the companion
     const mainHexId = findCharacterHex(grid, mainCharId, team)
@@ -68,7 +69,7 @@ export function executeClearAllCharacters(grid: Grid, skillManager: SkillManager
   skillManager.deactivateAllSkills(grid)
 
   // Clear all characters
-  return performClearAll(grid)
+  return performClearAll(grid, skillManager)
 }
 
 // Atomic operations
@@ -88,7 +89,7 @@ export function performRemove(grid: Grid, hexId: number): boolean {
 }
 
 // Performs atomic clear of all characters
-function performClearAll(grid: Grid): boolean {
+function performClearAll(grid: Grid, skillManager: SkillManager): boolean {
   // Collect all current placements for potential rollback
   const currentPlacements = getTilesWithCharacters(grid).map((tile) => ({
     hexId: tile.hex.getId(),
@@ -124,8 +125,8 @@ function performClearAll(grid: Grid): boolean {
   )
 
   // Trigger skill updates after successful transaction
-  if (result && grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
+  if (result) {
+    skillManager.updateActiveSkills(grid)
   }
 
   return result

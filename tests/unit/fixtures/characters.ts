@@ -1,11 +1,11 @@
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
+
 /**
  * Character ids shared by suites that run against the real skill registry.
  * The ALLY_/ENEMY_ ids have no registered skill, so placement has no side
  * effects; the named heroes are code-registered and usable without loaded
  * game data.
  */
-
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
 
 export const ALLY_A = 11
 export const ALLY_B = 12

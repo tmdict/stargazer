@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { presetLayout } from '@/lib/maps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { explainPlacement } from '@/lib/placement/explain'

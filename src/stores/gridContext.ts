@@ -196,7 +196,6 @@ export function createGridContext(
       seasonalTargeting: gameDataStore.hasSeasonalTargeting,
     }),
   ) as SkillManager
-  grid.skillManager = skillManager
 
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
@@ -441,14 +440,12 @@ export function createGridContext(
   const refreshSkills = (): void => skillManager.updateActiveSkills(grid)
 
   // Rebuild the grid for the new map. Object.assign preserves the reactive proxy
-  // identity; the skill manager must be re-attached and reset because the rebuilt
-  // grid drops it.
+  // identity; the skill manager is reset because its state names the old tiles.
   const switchMap = (mapKey: string): boolean => {
     const config = getMapByKey(mapKey)
     if (!config) return false
     Object.assign(grid, new Grid(FULL_GRID, config))
     skillManager.reset()
-    grid.skillManager = skillManager
     currentMap.value = mapKey
     pruneAttrs()
     return true

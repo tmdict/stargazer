@@ -1,8 +1,7 @@
 import type { Grid } from '../grid'
 import type { PhantimalType } from '../types/phantimal'
 import type { Team } from '../types/team'
-import { getTilesWithCharacters } from './character'
-import { isCompanionId } from './companion'
+import { getTilesWithCharacters, isCompanionId } from './character'
 import { isPhantimalId } from './phantimal'
 
 // A phantimal can only be on a team that fields at least this many characters of
@@ -38,7 +37,7 @@ const teamHeroIds = (grid: Grid, team: Team): number[] =>
     owner === team &&
     characterId !== undefined &&
     !isPhantimalId(characterId) &&
-    !isCompanionId(grid, characterId)
+    !isCompanionId(characterId)
       ? [characterId]
       : [],
   )

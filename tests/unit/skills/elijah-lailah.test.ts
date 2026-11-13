@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { addCompanionLink } from '@/lib/characters/companion'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
@@ -30,7 +31,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   // Place the twins collinearly and link them, without the random companion spawn
   // so the span between them is deterministic.
   const placeTwins = (companionHex = COMPANION_HEX) => {
-    const companionId = grid.companionIdOffset + ELIJAH
+    const companionId = COMPANION_ID_OFFSET + ELIJAH
     placeOnTile(grid, ELIJAH_HEX, ELIJAH, Team.ALLY)
     placeOnTile(grid, companionHex, companionId, Team.ALLY)
     addCompanionLink(grid, ELIJAH, companionId, Team.ALLY)

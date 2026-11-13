@@ -7,7 +7,7 @@ export interface SkillBase<Context = unknown> {
   // The picture a board draws the owner with in place of its portrait (Elijah
   // alone, beside Lailah).
   imageModifier?: string
-  // How many companions the skill spawns, each N * companionIdOffset + its
+  // How many companions the skill spawns, each N * COMPANION_ID_OFFSET + its
   // owner (N from 1); absent when it spawns none.
   companionCount?: number
   // The picture a board draws the companions with.

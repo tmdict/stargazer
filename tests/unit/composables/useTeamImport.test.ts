@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { DESCRIPTOR_LENGTH } from '@/lib/import/card/heroes'
 import { readLearnedIcons } from '@/lib/import/learned'
 import type { FormationReading } from '@/lib/import/screens/formation/types'

@@ -2,8 +2,14 @@ import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { getTeamFromTileState } from '../types/state'
 import { Team } from '../types/team'
-import { canPlaceCharacterOnTeam, getCharacter, getCharacterTeam, hasCharacter } from './character'
-import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
+import {
+  canPlaceCharacterOnTeam,
+  getCharacter,
+  getCharacterTeam,
+  hasCharacter,
+  isCompanionId,
+} from './character'
+import { restoreCompanions, storeCompanionPositions } from './companion'
 import { performPlace } from './place'
 import { performRemove } from './remove'
 import { isSynergyHeroId } from './synergy'
@@ -30,7 +36,7 @@ export function canMoveCharacter(
 
   // Companions can't change teams, and neither can a synergy hero: the
   // destination team's assist slot may already be taken.
-  if (isCompanionId(grid, characterId) || isSynergyHeroId(characterId)) return false
+  if (isCompanionId(characterId) || isSynergyHeroId(characterId)) return false
   return canPlaceCharacterOnTeam(grid, characterId, toTeam)
 }
 
@@ -53,8 +59,8 @@ export function executeMoveCharacter(
   if (!needsSkillHandling) {
     const result = performMove(grid, fromHexId, toHexId, characterId, toTeam, fromTeam)
 
-    if (result && grid.skillManager) {
-      grid.skillManager.updateActiveSkills(grid)
+    if (result) {
+      skillManager.updateActiveSkills(grid)
     }
     return result
   }
@@ -70,8 +76,8 @@ export function executeMoveCharacter(
     fromTeam,
   )
 
-  if (result && grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
+  if (result) {
+    skillManager.updateActiveSkills(grid)
   }
   return result
 }

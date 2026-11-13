@@ -1,14 +1,8 @@
-import { PHANTIMAL_ID_OFFSET } from './characters/phantimal'
 import { Hex } from './hex'
 import { DEFAULT_MAP, type MapConfig } from './maps'
-import type { SkillManager } from './skills/skill'
 import { FULL_GRID, presetHexes } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
-
-// Companions are namespaced as N * COMPANION_ID_OFFSET + mainCharacterId (N >= 1),
-// occupying the band between regular characters and PHANTIMAL_ID_OFFSET.
-export const COMPANION_ID_OFFSET = 10000
 
 // Per-team unit capacity before any skill raises it (companion skills bump it
 // by their companion count while active)
@@ -35,13 +29,8 @@ export class Grid {
     [Team.ENEMY, BASE_TEAM_SIZE],
   ])
 
-  companionIdOffset = COMPANION_ID_OFFSET
-  // Phantimals occupy the same unit slot as characters, namespaced above companions.
-  phantimalIdOffset = PHANTIMAL_ID_OFFSET
   // Key format: `${mainCharacterId}-${team}` → set of companion character IDs
   companionLinks: Map<string, Set<number>> = new Map()
-
-  skillManager?: SkillManager
 
   constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
     this.storage = new Map()

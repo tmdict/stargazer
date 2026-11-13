@@ -51,7 +51,7 @@ Place, move, swap and remove run their tile changes and skill hooks inside `exec
 
 The registry allows one skill per character, so a hero with several behaviors decorates a base skill. `withEffects` writes the tile paints, lines and unit badges its `calculate` returns after the base hooks on activate and update, and clears them before the base on deactivate. Elijah-Lailah, for example, is a companion skill decorated with its tiles and lines. `createEffectsSkill` is the same decorator over an empty base, and a skill with a lifecycle of its own, such as Kulu's, passes a hand-written object to `registerSkill`.
 
-A companion's id is `N × grid.companionIdOffset + characterId`, so lookups resolve it to its main hero. The synergy and phantimal bands mirror this arithmetic, so it holds inside them too ([Seasonal Content](./SEASONAL.md)). `createCompanionSkill` raises team capacity by its count unless `raisesCapacity: false`, which a phantimal uses because it holds no team slot.
+A companion's id is `N × COMPANION_ID_OFFSET + characterId`, so lookups resolve it to its main hero. The synergy and phantimal bands mirror this arithmetic, so it holds inside them too ([Seasonal Content](./SEASONAL.md)). `createCompanionSkill` raises team capacity by its count unless `raisesCapacity: false`, which a phantimal uses because it holds no team slot.
 
 ## Paint channels and lines
 

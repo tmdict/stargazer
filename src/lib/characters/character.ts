@@ -1,9 +1,10 @@
-import { COMPANION_ID_OFFSET, type Grid, type GridTile } from '../grid'
+import { type Grid, type GridTile } from '../grid'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { companionLocalId, inPhantimalBand, isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
 import { decomposeUnitId, isSynergyHeroId, toSynergyId } from './synergy'
+import { COMPANION_ID_OFFSET, PHANTIMAL_ID_OFFSET } from './unitIds'
 
 // Character queries
 
@@ -74,11 +75,12 @@ export function isRealHeroId(characterId: number): boolean {
   return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
 }
 
-// A skill-spawned companion in any band (base, phantimal or synergy). The
-// grid-free twin of companion.ts's isCompanionId for surfaces that have no Grid
-// at hand.
-export function isCompanionUnitId(unitId: number): boolean {
-  return companionLocalId(unitId) >= COMPANION_ID_OFFSET
+// A skill-spawned companion in any band (base, phantimal or synergy), read on
+// the band-local id. An id above every band comes back unstripped, and the
+// upper bound stops it reading as a companion.
+export function isCompanionId(unitId: number): boolean {
+  const localId = companionLocalId(unitId)
+  return localId >= COMPANION_ID_OFFSET && localId < PHANTIMAL_ID_OFFSET
 }
 
 // The hero a unit identifies as on every surface (name, art, faction, class):

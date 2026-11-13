@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import {
-  isCompanionId,
-  restoreCompanions,
-  type CompanionPosition,
-} from '@/lib/characters/companion'
+import { isCompanionId } from '@/lib/characters/character'
+import { restoreCompanions, type CompanionPosition } from '@/lib/characters/companion'
+import { PHANTIMAL_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
@@ -22,16 +20,16 @@ describe('companion', () => {
 
   describe('isCompanionId', () => {
     it('identifies companion IDs correctly', () => {
-      expect(isCompanionId(grid, 10000)).toBe(true)
-      expect(isCompanionId(grid, 10001)).toBe(true)
+      expect(isCompanionId(10000)).toBe(true)
+      expect(isCompanionId(10001)).toBe(true)
       // A phantimal reads on its band-local id, below the companion range.
-      expect(isCompanionId(grid, grid.phantimalIdOffset - 1)).toBe(true)
-      expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
-      expect(isCompanionId(grid, grid.phantimalIdOffset + 5)).toBe(false)
+      expect(isCompanionId(PHANTIMAL_ID_OFFSET - 1)).toBe(true)
+      expect(isCompanionId(PHANTIMAL_ID_OFFSET)).toBe(false)
+      expect(isCompanionId(PHANTIMAL_ID_OFFSET + 5)).toBe(false)
 
-      expect(isCompanionId(grid, 100)).toBe(false)
-      expect(isCompanionId(grid, 9999)).toBe(false)
-      expect(isCompanionId(grid, 1)).toBe(false)
+      expect(isCompanionId(100)).toBe(false)
+      expect(isCompanionId(9999)).toBe(false)
+      expect(isCompanionId(1)).toBe(false)
     })
   })
 

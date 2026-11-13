@@ -1,7 +1,7 @@
 import { computed, readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
+import { isCompanionId, toBaseHeroId } from '@/lib/characters/character'
 import {
   inPhantimalBand,
   isPhantimalId,
@@ -89,7 +89,7 @@ export const useGameDataStore = defineStore('gameData', () => {
       return companionRange ?? getPhantimalById(ownerId)?.range ?? 1
     }
     const baseId = toBaseHeroId(characterId)
-    if (isCompanionUnitId(characterId)) {
+    if (isCompanionId(characterId)) {
       const companionRange = getCharacterSkill(baseId)?.companionRange
       if (companionRange !== undefined) return companionRange
     }
@@ -121,9 +121,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   const getCharacterImageNameById = (characterId: number): string | undefined => {
     if (inPhantimalBand(characterId)) return getPhantimalUnitSlug(characterId)
     const skill = getCharacterSkill(toBaseHeroId(characterId))
-    const own = isCompanionUnitId(characterId)
-      ? skill?.companionImageModifier
-      : skill?.imageModifier
+    const own = isCompanionId(characterId) ? skill?.companionImageModifier : skill?.imageModifier
     return own ?? getCharacterNameById(characterId)
   }
 

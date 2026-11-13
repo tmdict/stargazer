@@ -5,14 +5,10 @@ import {
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { isBaseHeroId } from '@/lib/characters/character'
-import {
-  inPhantimalBand,
-  isPhantimalId,
-  PHANTIMAL_ID_OFFSET,
-  phantimalBandLocal,
-} from '@/lib/characters/phantimal'
+import { inPhantimalBand, isPhantimalId, phantimalBandLocal } from '@/lib/characters/phantimal'
 import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
+import { COMPANION_ID_OFFSET, PHANTIMAL_ID_OFFSET } from '@/lib/characters/unitIds'
+import { type GridTile } from '@/lib/grid'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'

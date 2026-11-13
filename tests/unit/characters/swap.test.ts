@@ -9,6 +9,7 @@ import {
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -37,7 +38,6 @@ describe('swap.ts', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   describe('executeSwapCharacters - same team swaps', () => {
@@ -181,7 +181,7 @@ describe('swap.ts', () => {
 
   describe('executeSwapCharacters - companion handling', () => {
     it('should prevent companion swap across teams', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       performPlace(grid, 1, companionId, Team.ALLY)
       performPlace(grid, 4, ENEMY_A, Team.ENEMY)
 
@@ -193,7 +193,7 @@ describe('swap.ts', () => {
     })
 
     it('should prevent swap with companion across teams', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       performPlace(grid, 1, ALLY_A, Team.ALLY)
       performPlace(grid, 4, companionId, Team.ENEMY)
 
@@ -205,7 +205,7 @@ describe('swap.ts', () => {
     })
 
     it('should allow companion swap within same team', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       performPlace(grid, 1, companionId, Team.ALLY)
       performPlace(grid, 2, ALLY_B, Team.ALLY)
 

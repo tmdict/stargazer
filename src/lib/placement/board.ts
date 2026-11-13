@@ -36,7 +36,6 @@ export class PlacementBoard {
   ) {
     this.grid = new Grid(FULL_GRID, layout.config)
     this.manager = new SkillManager(lookups)
-    this.grid.skillManager = this.manager
     this.tiles = [...configTiles(layout.config, Team.ALLY)].sort((a, b) => a - b)
 
     const mains = team.phantimal === undefined ? team.heroes : [...team.heroes, team.phantimal]

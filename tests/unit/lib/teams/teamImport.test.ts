@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import type { HeroReading } from '@/lib/import/card/types'
 import type { CellOverride, CellState } from '@/lib/import/review'
 import type { UnitReading } from '@/lib/import/screens/formation/types'

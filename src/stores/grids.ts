@@ -27,7 +27,7 @@ import {
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
-  isCompanionUnitId,
+  isCompanionId,
   resolvePlacement,
 } from '@/lib/characters/character'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
@@ -433,7 +433,7 @@ export const useGrids = defineStore('grids', () => {
         const characterId = tile.characterId
         if (characterId === undefined || tile.team === undefined) continue
         if (
-          isCompanionUnitId(characterId) ||
+          isCompanionId(characterId) ||
           isPhantimalId(characterId) ||
           isPlaceholderId(characterId)
         )
@@ -869,7 +869,7 @@ export const useGrids = defineStore('grids', () => {
     if (movingId === undefined || sourceTeam === undefined) return false
     // Companions can't leave their main's board; the synergy hero belongs to
     // its board's assist slot and can't leave either.
-    if (isCompanionUnitId(movingId) || isSynergyHeroId(movingId)) return false
+    if (isCompanionId(movingId) || isSynergyHeroId(movingId)) return false
 
     const residentId = getCharacter(targetCtx.grid, targetHexId)
     if (residentId === undefined) {
@@ -885,7 +885,7 @@ export const useGrids = defineStore('grids', () => {
     // the same character when one hero's two legal placements are swapped).
     const residentTeam = getCharacterTeam(targetCtx.grid, targetHexId)
     if (residentTeam === undefined) return false
-    if (isCompanionUnitId(residentId) || isSynergyHeroId(residentId)) return false
+    if (isCompanionId(residentId) || isSynergyHeroId(residentId)) return false
     if (isPhantimalId(movingId) && !targetCtx.phantimalCanJoinTeam(movingId, residentTeam)) {
       return false
     }

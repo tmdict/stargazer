@@ -6,6 +6,7 @@ import {
   executePlaceCharacter,
   performPlace,
 } from '@/lib/characters/place'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -34,7 +35,6 @@ describe('place.ts', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
     skillManager = new SkillManager(NO_LOOKUPS)
-    grid.skillManager = skillManager
   })
 
   describe('performPlace', () => {
@@ -96,7 +96,7 @@ describe('place.ts', () => {
 
   describe('executePlaceCharacter', () => {
     it('should reject companion IDs', () => {
-      const companionId = grid.companionIdOffset + ALLY_A
+      const companionId = COMPANION_ID_OFFSET + ALLY_A
       const result = executePlaceCharacter(grid, skillManager, 1, companionId, Team.ALLY)
 
       expect(result).toBe(false)

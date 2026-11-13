@@ -4,7 +4,8 @@ import { addCompanionLink } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter } from '@/lib/characters/place'
-import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
+import { Grid } from '@/lib/grid'
 import {
   getCharacterSkill,
   registerSkill,

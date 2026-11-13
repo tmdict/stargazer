@@ -1,8 +1,14 @@
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
-import { getCharacter, getCharacterTeam, hasCharacter, isCharacterOnTeam } from './character'
-import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
+import {
+  getCharacter,
+  getCharacterTeam,
+  hasCharacter,
+  isCharacterOnTeam,
+  isCompanionId,
+} from './character'
+import { restoreCompanions, storeCompanionPositions } from './companion'
 import { isPhantimalId } from './phantimal'
 import { performPlace } from './place'
 import { isPlaceholderId } from './placeholder'
@@ -32,8 +38,8 @@ export function canSwapCharacters(grid: Grid, fromHexId: number, toHexId: number
     fromTeam !== toTeam &&
     (isPhantimalId(fromChar) ||
       isPhantimalId(toChar) ||
-      isCompanionId(grid, fromChar) ||
-      isCompanionId(grid, toChar) ||
+      isCompanionId(fromChar) ||
+      isCompanionId(toChar) ||
       isSynergyHeroId(fromChar) ||
       isSynergyHeroId(toChar))
   ) {
@@ -86,8 +92,8 @@ export function executeSwapCharacters(
     )
 
     // Trigger skill updates after successful transaction
-    if (result && grid.skillManager) {
-      grid.skillManager.updateActiveSkills(grid)
+    if (result) {
+      skillManager.updateActiveSkills(grid)
     }
 
     return result
@@ -275,8 +281,8 @@ function performCrossTeamSwap(
   )
 
   // Trigger skill updates after successful transaction
-  if (result && grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
+  if (result) {
+    skillManager.updateActiveSkills(grid)
   }
 
   return result

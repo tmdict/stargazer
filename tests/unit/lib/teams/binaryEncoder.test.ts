@@ -19,7 +19,7 @@ describe('binaryEncoder', () => {
           c: [
             [10, 89, 1],
             [11, 10089, 1],
-            [12, 20089, 1], // Zanie's second turret: 2 * companionIdOffset + 89
+            [12, 20089, 1], // Zanie's second turret: 2 * COMPANION_ID_OFFSET + 89
           ],
         },
       ],

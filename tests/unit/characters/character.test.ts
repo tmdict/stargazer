@@ -5,6 +5,7 @@ import {
   canPlaceCharacterOnTile,
   setMaxTeamSize,
 } from '@/lib/characters/character'
+import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -39,7 +40,7 @@ describe('character.ts', () => {
 
   describe('Edge cases', () => {
     it('should count companions toward the team-size limit', () => {
-      const companionId = grid.companionIdOffset + 100
+      const companionId = COMPANION_ID_OFFSET + 100
 
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
       expect(canPlaceCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(true)

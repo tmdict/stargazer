@@ -21,6 +21,7 @@ import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../../characte
 import { addCompanionLink, clearCompanionLinks, getCompanions } from '../../characters/companion'
 import { performPlace } from '../../characters/place'
 import { performRemove } from '../../characters/remove'
+import { COMPANION_ID_OFFSET } from '../../characters/unitIds'
 import { BASE_TEAM_SIZE } from '../../grid'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
@@ -227,7 +228,7 @@ interface CompanionSkillConfig {
  * Skill that spawns companion units on random free tiles.
  *
  * Activation raises the team capacity by `count`, places the companions
- * (IDs namespaced as N * companionIdOffset + characterId), links them to the
+ * (IDs namespaced as N * COMPANION_ID_OFFSET + characterId), links them to the
  * main character, and gives them their picture. A placement failure
  * rolls back already-placed companions and the capacity bump, then throws so
  * the surrounding placement transaction fails as a whole. Deactivation
@@ -256,7 +257,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
       const { grid, team, skillManager, characterId } = ctx
       const companionIds = Array.from(
         { length: count },
-        (_, i) => (i + 1) * grid.companionIdOffset + characterId,
+        (_, i) => (i + 1) * COMPANION_ID_OFFSET + characterId,
       )
 
       const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY

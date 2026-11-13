@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { PHANTIMAL_ID_OFFSET } from '@/lib/characters/phantimal'
+import { PHANTIMAL_ID_OFFSET } from '@/lib/characters/unitIds'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'

@@ -13,25 +13,23 @@ import {
   findCharacterHex,
   getAvailableTeamSize,
   getMaxTeamSize,
-  isCompanionUnitId,
+  isCompanionId,
 } from '@/lib/characters/character'
-import { getMainCharacterId, isCompanionId } from '@/lib/characters/companion'
+import { getMainCharacterId } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import {
   companionLocalId,
   inPhantimalBand,
   isPhantimalId,
-  joinPhantimalBandLocal,
   phantimalBandLocal,
   phantimalOwnerId,
-  splitPhantimalBandLocal,
   toLocalPhantimalId,
   toPhantimalId,
 } from '@/lib/characters/phantimal'
 import { countTeamFaction } from '@/lib/characters/phantimalFaction'
 import { executePlaceCharacter } from '@/lib/characters/place'
 import { executeRemoveCharacter } from '@/lib/characters/remove'
-import { BASE_TEAM_SIZE, COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
+import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { registerSkill, SkillManager } from '@/lib/skills/skill'
 import { createCompanionSkill } from '@/lib/skills/utils/builders'
@@ -68,8 +66,6 @@ const allyHexes = (grid: Grid): number[] =>
     .map((tile) => tile.hex.getId())
 
 describe('phantimal companion ids', () => {
-  const grid = new Grid()
-
   it('splits the band into the phantimal and the companions it spawns', () => {
     expect(inPhantimalBand(OWNER)).toBe(true)
     expect(inPhantimalBand(COMPANION)).toBe(true)
@@ -81,23 +77,11 @@ describe('phantimal companion ids', () => {
     expect(toLocalPhantimalId(COMPANION)).toBe(OWNER_LOCAL)
   })
 
-  // The leaf module spells the stride as a literal; the generic companion
-  // arithmetic uses COMPANION_ID_OFFSET, so the two must agree.
-  it('mirrors the companion stride of the base band', () => {
-    expect(splitPhantimalBandLocal(COMPANION_ID_OFFSET + OWNER_LOCAL)).toEqual({
-      ownerLocal: OWNER_LOCAL,
-      index: 1,
-    })
-    expect(joinPhantimalBandLocal(OWNER_LOCAL, 1)).toBe(COMPANION_ID_OFFSET + OWNER_LOCAL)
-  })
-
   it('classifies the companion like any companion, owned by its phantimal', () => {
     expect(companionLocalId(COMPANION)).toBe(10000 + OWNER_LOCAL)
-    expect(isCompanionId(grid, COMPANION)).toBe(true)
-    expect(isCompanionUnitId(COMPANION)).toBe(true)
-    expect(getMainCharacterId(grid, COMPANION)).toBe(OWNER)
-    expect(isCompanionId(grid, OWNER)).toBe(false)
-    expect(isCompanionUnitId(OWNER)).toBe(false)
+    expect(isCompanionId(COMPANION)).toBe(true)
+    expect(getMainCharacterId(COMPANION)).toBe(OWNER)
+    expect(isCompanionId(OWNER)).toBe(false)
   })
 })
 
