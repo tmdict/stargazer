@@ -70,8 +70,6 @@ const handleImport = (plan: TeamImportPlan, name: string): void => {
 </template>
 
 <style scoped>
-/* The widths below mirror .control-btn's sizes at each breakpoint, since this
-   scoped rule outranks its collapse to a round icon button. */
 .import-btn {
   padding: 0;
   width: var(--control-height);

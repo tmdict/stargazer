@@ -15,7 +15,8 @@ import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
 import ImportCellState from '@/components/import/ImportCellState.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
 import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
-import type { CardRef, RosterImportShot } from '@/composables/useRosterImport'
+import type { ShotRef } from '@/composables/useImportShotList'
+import type { RosterImportShot } from '@/composables/useRosterImport'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { CellState, ReviewPart } from '@/lib/import/review'
 import type { EntryIssue, RosterCard, RosterImportPlan } from '@/lib/rosterImport'
@@ -28,8 +29,8 @@ const { plan, shots } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  setHero: [cards: CardRef[], characterId: number | null]
-  setLevel: [cards: CardRef[], field: 'paragon' | 'refinement', level: number]
+  setHero: [cards: ShotRef[], characterId: number | null]
+  setLevel: [cards: ShotRef[], field: 'paragon' | 'refinement', level: number]
   confirmAll: []
 }>()
 
@@ -53,7 +54,7 @@ interface CellView {
 
 const PARTS: readonly ReviewPart[] = ['hero', 'paragon', 'refinement']
 
-const refs = (cards: readonly RosterCard[]): CardRef[] =>
+const refs = (cards: readonly RosterCard[]): ShotRef[] =>
   cards.map(({ shotId, key }) => ({ shotId, key }))
 
 const cardImage = (card: RosterCard): string =>
@@ -136,9 +137,9 @@ const legend = computed(() =>
 
 // The picker follows the card it opened on, so a screenshot read while it is
 // open, which can reorder or regroup that hero's cards, never loses its cell.
-const picker = ref<{ card: CardRef; position: { x: number; y: number } } | null>(null)
+const picker = ref<{ card: ShotRef; position: { x: number; y: number } } | null>(null)
 
-const holds = (cell: CellView, card: CardRef): boolean =>
+const holds = (cell: CellView, card: ShotRef): boolean =>
   cell.cards.some((c) => c.shotId === card.shotId && c.key === card.key)
 
 const pickerCell = computed(() => {

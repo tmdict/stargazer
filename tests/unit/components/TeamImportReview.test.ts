@@ -66,7 +66,7 @@ const mountFormation = async (withPortrait = true, state: 'sure' | 'review' = 's
   }
   const api = holdTeamImport(
     () => '5v5',
-    () => false,
+    () => null,
   )
   api.shots.value = [
     {

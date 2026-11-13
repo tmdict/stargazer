@@ -1,15 +1,13 @@
 <script setup lang="ts">
-/* Image intake shared by the Image Stitcher and the match import: drop,
-   paste, or pick, emitting the image files. Paste is window-level so it works
-   without focusing the zone, which is why `pasteActive` exists: the Stitcher
-   stays mounted behind the Teams tab, and a paste meant for the import modal
-   must not feed it too. */
+/* Image intake shared by the Image Stitcher and the screenshot imports: drop
+   or pick, emitting the image files. A paste is its host's to take
+   (usePasteImages), since a host with several zones sorts it between them. */
 
-import { onMounted, onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 
 import IconImage from '@/components/ui/IconImage.vue'
 import { useI18nStore } from '@/stores/i18n'
-import { imageFilesFromDrop, imageFilesFromInput, imageFilesFromPaste } from '@/utils/imageFile'
+import { imageFilesFromDrop, imageFilesFromInput } from '@/utils/imageFile'
 
 const i18n = useI18nStore()
 
@@ -17,14 +15,12 @@ const emit = defineEmits<{
   add: [files: File[]]
 }>()
 
-const { pasteActive = true, disabled = false } = defineProps<{
+const { disabled = false } = defineProps<{
   // Slim "add more" affordance once the list is populated; full panel when empty.
   compact?: boolean
-  // Whether window-level pastes belong to this zone right now.
-  pasteActive?: boolean
   // Frosted variant for the dark modal surfaces, where the page's cream fill glares.
   dark?: boolean
-  // Takes no files: no picker, drop or paste.
+  // Takes no files: no picker or drop.
   disabled?: boolean
 }>()
 
@@ -47,18 +43,6 @@ const handleDrop = (event: DragEvent) => {
   const files = imageFilesFromDrop(event)
   if (files.length) emit('add', files)
 }
-
-const handlePaste = (event: ClipboardEvent) => {
-  if (!pasteActive || disabled) return
-  const files = imageFilesFromPaste(event)
-  if (files.length) {
-    event.preventDefault()
-    emit('add', files)
-  }
-}
-
-onMounted(() => window.addEventListener('paste', handlePaste))
-onUnmounted(() => window.removeEventListener('paste', handlePaste))
 </script>
 
 <template>

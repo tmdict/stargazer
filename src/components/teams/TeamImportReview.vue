@@ -10,16 +10,15 @@
 
 import { computed, ref } from 'vue'
 
-import ArtifactImage from '@/components/ArtifactImage.vue'
-import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
+import ImportArtifactButton from '@/components/import/ImportArtifactButton.vue'
+import ImportArtifactPicker from '@/components/import/ImportArtifactPicker.vue'
 import ImportCellGrid from '@/components/import/ImportCellGrid.vue'
 import ImportCellState from '@/components/import/ImportCellState.vue'
 import ImportHeroCell from '@/components/import/ImportHeroCell.vue'
 import ImportHeroPicker from '@/components/import/ImportHeroPicker.vue'
 import ImportSideHead from '@/components/import/ImportSideHead.vue'
-import TeamImportUnits, { type FormationUnits } from '@/components/teams/TeamImportUnits.vue'
-import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import type { ImportShot } from '@/composables/useTeamImport'
+import TeamImportUnits from '@/components/teams/TeamImportUnits.vue'
+import type { FormationUnits, ImportShot } from '@/composables/useTeamImport'
 import { getOpposingTeam } from '@/lib/characters/character'
 import type { HeroReading } from '@/lib/import/card/types'
 import { doubtfulParts, type CellState, type ReviewPart } from '@/lib/import/review'
@@ -206,29 +205,15 @@ const closePickers = (event: MouseEvent): void => {
         <span v-if="swapSides" class="side-board">
           {{ i18n.t('app.import-board-side', { side: sideLabel(getOpposingTeam(team)) }) }}
         </span>
-        <span class="artifact">
-          <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
-          <img
-            v-if="shot.artifactCards[team]"
-            class="artifact-card"
-            :src="shot.artifactCards[team]"
-            alt=""
-          />
-          <button
-            type="button"
-            class="artifact-btn"
-            :class="{ unsure: !sideArtifacts[team].sure, open: artifactPicker?.team === team }"
-            :title="artifactName(sideArtifacts[team].artifact)"
-            @click="toggleArtifactPicker(team, $event)"
-          >
-            <span class="artifact-icon" :class="{ empty: sideArtifacts[team].artifact === null }">
-              <ArtifactImage
-                v-if="sideArtifacts[team].artifact"
-                :artifact="sideArtifacts[team].artifact!"
-              />
-            </span>
-            <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
-          </button>
+        <ImportArtifactButton
+          :label="i18n.t('app.import-artifact')"
+          :card="shot.artifactCards[team] || undefined"
+          :artifact="sideArtifacts[team].artifact"
+          :name="artifactName(sideArtifacts[team].artifact)"
+          :unsure="!sideArtifacts[team].sure"
+          :open="artifactPicker?.team === team"
+          @pick="toggleArtifactPicker(team, $event)"
+        >
           <ImportCellState
             v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
             state="review"
@@ -237,7 +222,7 @@ const closePickers = (event: MouseEvent): void => {
           />
           <ImportCellState v-else-if="!sideArtifacts[team].sure" state="review" />
           <ImportCellState v-else-if="sideArtifacts[team].edited" state="edited" />
-        </span>
+        </ImportArtifactButton>
       </ImportSideHead>
       <ImportCellGrid>
         <ImportHeroCell
@@ -275,32 +260,13 @@ const closePickers = (event: MouseEvent): void => {
       @pick="setPicked"
       @close="picker = null"
     />
-    <!-- Outside the modal's container, so its clicks and Escape are stopped
-         here rather than reaching the modal's own close listeners on document. -->
-    <Teleport to="body">
-      <SelectionPopup
-        v-if="artifactPicker"
-        :position="artifactPicker.position"
-        over-modal
-        keep-on-leave
-        @close="artifactPicker = null"
-        @click.stop
-        @keydown.esc.stop="artifactPicker = null"
-      >
-        <ArtifactSelectionPalette
-          :artifacts="gameData.pickerArtifacts"
-          @pick="setArtifactPicked($event.id)"
-        />
-        <button
-          v-if="sideArtifacts[artifactPicker.team].artifact !== null"
-          type="button"
-          class="picker-remove"
-          @click="setArtifactPicked(null)"
-        >
-          {{ i18n.t('app.remove-artifact') }}
-        </button>
-      </SelectionPopup>
-    </Teleport>
+    <ImportArtifactPicker
+      v-if="artifactPicker"
+      :position="artifactPicker.position"
+      :removable="sideArtifacts[artifactPicker.team].artifact !== null"
+      @pick="setArtifactPicked"
+      @close="artifactPicker = null"
+    />
   </div>
 </template>
 
@@ -326,76 +292,5 @@ const closePickers = (event: MouseEvent): void => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.artifact {
-  margin-left: auto;
-  max-width: 100%;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  font-size: 0.75rem;
-  color: var(--import-text-dim);
-}
-
-.artifact-card {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  object-fit: cover;
-  border-radius: var(--radius-medium);
-}
-
-.artifact-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 200px;
-  min-width: 0;
-  padding: 3px 8px 3px 3px;
-  border: 1px solid var(--import-border);
-  border-radius: 999px;
-  background: var(--import-surface);
-  color: var(--import-text);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.artifact-btn:hover,
-.artifact-btn:focus-visible,
-.artifact-btn.open {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.artifact-btn.unsure {
-  border-color: var(--import-warn);
-  background: var(--import-warn-tint);
-}
-
-.artifact-icon {
-  position: relative;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #fff;
-}
-
-.artifact-icon.empty {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.artifact-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>

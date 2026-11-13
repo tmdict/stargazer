@@ -10,7 +10,7 @@ import ImportShotCard from '@/components/import/ImportShotCard.vue'
 import { unreadStatus, type ShotStatusView } from '@/components/import/shotStatus'
 import { shotMapIndex, shotWinner, type ImportShot } from '@/composables/useTeamImport'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
-import { artifactState, reviewStates, SIDES } from '@/lib/teams/teamImport'
+import { SIDES } from '@/lib/teams/teamImport'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -29,12 +29,11 @@ const {
   formation?: boolean
   // Replay frames: no winner.
   replay?: boolean
-  // What a card still asks about, when its owner counts it (a formation shot's
-  // units come from the plan); else its cells and artifacts.
-  reviewCount?: (shot: ImportShot) => number
-  // Units still without a tile, counted once nothing is left to review, since
-  // a correction can change which units are missing.
-  placeCount?: (shot: ImportShot) => number
+  // What a card still asks about.
+  reviewCount: (shot: ImportShot) => number
+  // Units still without a tile, shown once nothing is left to review, since a
+  // correction can change which units are missing.
+  placeCount: (shot: ImportShot) => number
   // Why a mapped card adds nothing to the import, when its owner says so.
   notice?: (shot: ImportShot) => string | null
 }>()
@@ -68,20 +67,6 @@ const duplicated = (shot: ImportShot): boolean => {
   )
 }
 
-// Cells and artifacts still to look at, as the review shows them: an edit
-// settles its cell or artifact.
-const cellReviewCount = (shot: ImportShot): number => {
-  const reading = shot.reading
-  if (!reading) return 0
-  return SIDES.reduce(
-    (n, team) =>
-      n +
-      reviewStates(reading, team, shot.overrides).filter((s) => s !== 'sure').length +
-      (artifactState(reading, team, shot.artifactOverrides) === 'review' ? 1 : 0),
-    0,
-  )
-}
-
 const status = (shot: ImportShot): ShotStatusView => {
   const unread = unreadStatus(shot, i18n.t)
   if (unread) return unread
@@ -99,9 +84,9 @@ const status = (shot: ImportShot): ShotStatusView => {
   if (mapIndexOf(shot) === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
   const unused = notice?.(shot)
   if (unused) return { text: unused, tone: 'warn' }
-  const review = (reviewCount ?? cellReviewCount)(shot)
+  const review = reviewCount(shot)
   if (review) return { text: i18n.t('app.import-to-review', { count: review }), tone: 'warn' }
-  const place = placeCount?.(shot) ?? 0
+  const place = placeCount(shot)
   if (place) return { text: i18n.t('app.import-to-place', { count: place }), tone: 'warn' }
   return { text: i18n.t('app.import-ready'), tone: 'done' }
 }

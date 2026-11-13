@@ -25,8 +25,8 @@ import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import { useBoardPopup } from '@/composables/useBoardPopup'
-import type { ImportShot } from '@/composables/useTeamImport'
-import { useTilePlacing, type PickerItem, type PlacingSide } from '@/composables/useTilePlacing'
+import { missingPlacing, type FormationUnits, type ImportShot } from '@/composables/useTeamImport'
+import { useTilePlacing, type PickerItem } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { isBaseHeroId } from '@/lib/characters/character'
 import {
@@ -38,23 +38,9 @@ import {
 } from '@/lib/import/screens/formation/board'
 import { isFormationReading } from '@/lib/import/screens/formation/types'
 import { deploymentTiles } from '@/lib/maps'
-import {
-  assignedPortraits,
-  missingUnits,
-  portraitOptions,
-  type UnitAssignment,
-} from '@/lib/teams/formationImport'
-import type { SideLoadBoard } from '@/lib/teams/sideLoad'
+import { portraitOptions, type UnitAssignment } from '@/lib/teams/formationImport'
 import { Team, teamLabelKey } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
-
-// Who each portrait is taken for, the units its side can field, and the side
-// as the plan places it, on its map.
-export interface FormationUnits {
-  assignments: readonly UnitAssignment[]
-  options: readonly number[]
-  placed: { mapKey: string; team: Team; side: SideLoadBoard } | null
-}
 
 const { shot, units } = defineProps<{
   shot: ImportShot
@@ -176,18 +162,7 @@ const shotTiles = computed(() => {
   }
 })
 
-const missing = computed((): PlacingSide | null => {
-  const tiles = shotTiles.value
-  const placed = units.placed
-  const reading = shot.reading
-  if (!placed || !tiles || !reading || !isFormationReading(reading)) return null
-  const portraits = assignedPortraits(reading.units, units.assignments)
-  const lineup = placed.side.mains.map((unit) => unit.unitId)
-  const side = missingUnits(lineup, portraits, units.options, shot.tilePicks[tiles.team] ?? {})
-  if (side.order.length === 0 && side.picks.size === 0) return null
-  const heroes = lineup.filter((unitId) => !portraits.some((u) => u.unitId === unitId))
-  return { ...side, heroes }
-})
+const missing = computed(() => missingPlacing(shot, units))
 
 const {
   nextUnits,

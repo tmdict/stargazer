@@ -6,6 +6,7 @@ import StitchSettings from './StitchSettings.vue'
 import StitchThumbnailList from './StitchThumbnailList.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useImageStitch } from '@/composables/useImageStitch'
+import { usePasteImages } from '@/composables/usePasteImages'
 import { useToast } from '@/composables/useToast'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -37,6 +38,11 @@ const handleAdd = async (files: File[]) => {
   const added = await addFiles(files)
   if (added === 0) error(i18n.t('app.no-valid-images'))
 }
+
+usePasteImages(
+  () => pasteActive,
+  (files) => void handleAdd(files),
+)
 </script>
 
 <template>
@@ -48,7 +54,7 @@ const handleAdd = async (files: File[]) => {
       v-model:fit="settings.fit"
     />
 
-    <ImageDropZone :compact="hasImages" :paste-active @add="handleAdd" />
+    <ImageDropZone :compact="hasImages" @add="handleAdd" />
 
     <StitchThumbnailList v-if="hasImages" :images @remove="removeImage" @reorder="reorder" />
 

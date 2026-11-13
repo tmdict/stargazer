@@ -54,7 +54,7 @@ const mountReplay = async (
   }
   const api = holdTeamImport(
     () => '5v5',
-    () => true,
+    () => 'sl',
   )
   api.shots.value = [
     {

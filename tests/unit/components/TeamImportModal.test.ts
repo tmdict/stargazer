@@ -82,7 +82,7 @@ const mountImport = async () => {
   useGameDataStore().initializeContentData()
   const api = holdTeamImport(
     () => '3v3',
-    () => false,
+    () => null,
   )
   api.shots.value = [reactive(sample())]
   Object.assign(api.names, { prefix: '', left: '', right: '' })

@@ -25,6 +25,8 @@ import {
   type ShotSession,
   type ShotStatus,
 } from '@/composables/useImportEngine'
+import type { PlacingSide } from '@/composables/useTilePlacing'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { frameTrusted } from '@/lib/import/card/frames'
 import { isMatchupReading, isRosterReading } from '@/lib/import/kinds'
@@ -32,15 +34,26 @@ import type { CellOverride } from '@/lib/import/review'
 import { isFormationReading, type FormationReading } from '@/lib/import/screens/formation/types'
 import type { ScreenshotReading, ShotKind } from '@/lib/import/screens/match/types'
 import { isReplayReading, type ReplayReading } from '@/lib/import/screens/replay/types'
+import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { CURRENT_SEASON } from '@/lib/seasonal'
-import { withTilePick } from '@/lib/teams/formationImport'
-import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
+  assignedPortraits,
+  fieldableUnits,
+  missingUnits,
+  replayPlacing,
+  withTilePick,
+  type UnitAssignment,
+} from '@/lib/teams/formationImport'
+import { newTeamMaps, TEAM_MODES, type TeamModeKey, type VariantMatch } from '@/lib/teams/modes'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
+import {
+  artifactState,
   buildTeamImportPlan,
   formationsSwapped,
   overrideKey,
+  reviewStates,
+  SIDES,
   type FormationAssignment,
-  type PlanInputs,
   type RecordNames,
   type ReplayAssignment,
   type ShotAssignment,
@@ -96,6 +109,53 @@ export const shotWinner = (shot: ImportShot): Team | null =>
   shot.resultOverrides.winner !== undefined
     ? shot.resultOverrides.winner
     : (shot.reading?.winner ?? null)
+
+// Who each portrait of a formation shot is taken for, the units its side can
+// field, and the side as the plan places it, on its map.
+export interface FormationUnits {
+  assignments: readonly UnitAssignment[]
+  options: readonly number[]
+  placed: { mapKey: string; team: Team; side: SideLoadBoard } | null
+}
+
+// A board side of a replay frame: the heroes the plan puts there, and every
+// unit it can field.
+export interface ReplaySide {
+  heroes: readonly number[]
+  options: readonly number[]
+}
+
+/* The placing of a replay frame's board side: its order and the picks that
+ * count. The frame's review places by it and its card counts from it. */
+export const replaySidePlacing = (
+  shot: ImportShot,
+  side: Team,
+  { heroes, options }: ReplaySide,
+): PlacingSide => ({
+  ...replayPlacing(heroes, options, shot.tilePicks[side] ?? {}),
+  heroes,
+  options,
+})
+
+/* The placing of the units a formation shot's side fields and its portraits
+ * miss; null with none. The shot's review places by it and its card counts
+ * from it. */
+export const missingPlacing = (shot: ImportShot, units: FormationUnits): PlacingSide | null => {
+  const placed = units.placed
+  const reading = shot.reading
+  if (!placed || !reading || !isFormationReading(reading)) return null
+  const portraits = assignedPortraits(reading.units, units.assignments)
+  const lineup = placed.side.mains.map((unit) => unit.unitId)
+  const side = missingUnits(lineup, portraits, units.options, shot.tilePicks[placed.team] ?? {})
+  if (side.order.length === 0 && side.picks.size === 0) return null
+  const heroes = lineup.filter((unitId) => !portraits.some((u) => u.unitId === unitId))
+  return { ...side, heroes }
+}
+
+const unplaced = ({ order, picks }: PlacingSide): number => {
+  const picked = [...picks.values()]
+  return order.filter((id) => !picked.includes(id)).length
+}
 
 const shots = ref<ImportShot[]>([])
 const defaultNames = (): RecordNames => ({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
@@ -161,11 +221,12 @@ const session: ShotSession = {
   },
 }
 
-/* `replayMode`: whether replay frames can be read for the boards' type; only
- * Supreme League is fought in the arena they are matched against. */
+/* `variant`: the live boards' type. It names the maps a new team starts on,
+ * and replay frames are read for Supreme League alone, the one fought in the
+ * arena they are matched against. */
 export function useTeamImport(
   mode: () => TeamModeKey,
-  replayMode: () => boolean,
+  variant: () => VariantMatch,
 ): {
   shots: typeof shots
   referenceStatus: ImportEngine['referenceStatus']
@@ -174,8 +235,28 @@ export function useTeamImport(
   formationSwap: ComputedRef<boolean | null>
   learnedCount: ComputedRef<number>
   plan: ComputedRef<TeamImportPlan>
-  unitsOf: (id: string) => TeamImportPlan['units'][number]
-  phantimalFits: PlanInputs['phantimalFits']
+  mapCount: ComputedRef<number>
+  // Result shots make the import a match, whose formation shots only place its
+  // heroes; formation shots dropped first are imported alone.
+  matchImport: ComputedRef<boolean>
+  // Whether the result columns land on the opposite board sides.
+  sidesSwapped: ComputedRef<boolean>
+  // In a match import, a formation shot or replay frame of a map with no
+  // result shot places nothing.
+  noResult: (shot: ImportShot) => boolean
+  // The map a shot's board stands on; null while it has no board.
+  boardMap: (shot: ImportShot) => string | null
+  // The sides whose cards a shot's review shows.
+  cardSides: (shot: ImportShot) => readonly Team[]
+  formationUnits: (shot: ImportShot) => FormationUnits
+  replaySides: (shot: ImportShot) => Record<Team, ReplaySide>
+  // A shot's board sides as the plan places them; null without a board.
+  placedSides: (shot: ImportShot) => Partial<Record<Team, SideLoadBoard>> | null
+  // What a shot's card still asks about, as its review shows it: an edit
+  // settles its cell, artifact or unit.
+  reviewCount: (shot: ImportShot) => number
+  // A shot's units still without a tile.
+  placeCount: (shot: ImportShot) => number
   // Files of no stated kind ('sort': a paste) go to the section of the kind
   // they show. `onAdd` hears each shot added, before it is read.
   addFiles: (
@@ -234,7 +315,7 @@ export function useTeamImport(
   // formation shot places them, and close the formation drop until removed.
   const replayOpen = computed(
     () =>
-      replayMode() &&
+      variant() === 'sl' &&
       shots.value.some((s) => s.kind === 'result') &&
       !shots.value.some((s) => s.kind === 'formation'),
   )
@@ -316,14 +397,11 @@ export function useTeamImport(
     if (!shot || !cell) return
     const key = overrideKey(team, row)
     shot.overrides[key] = { ...shot.overrides[key], characterId }
-    // A correction on a cell the reader was unsure about teaches it that
-    // face, provided the frame match was trustworthy (else the crop may be
-    // off the face). Picking the reader's own top candidate, or no hero,
-    // takes back whatever the face was taught before. Lessons come from
-    // result screens only, whose card crops the learned store holds.
-    if (shot.kind !== 'result' || !frameTrusted(cell.paragon) || cell.sure) return
-    const teach = characterId !== null && cell.candidates[0]?.characterId !== characterId
-    engine.learnFace(teach ? characterId : null, cell.descriptor)
+    // Lessons come from result screens only, whose card crops the learned
+    // store holds.
+    if (shot.kind === 'result' && frameTrusted(cell.paragon)) {
+      engine.learnCorrection([cell], characterId)
+    }
   }
 
   const setLevel = (
@@ -410,6 +488,13 @@ export function useTeamImport(
   const phantimalFits = (phantimalId: number, heroIds: readonly number[]): boolean =>
     lineupQualifies(gameData.getPhantimalById(phantimalId), heroIds, gameData.getCharacterFaction)
 
+  // A result shot that failed to read still makes the import a match, so
+  // formations never fall back to their own upgrades.
+  const matchImport = computed(() => shots.value.some((s) => s.kind === 'result'))
+  // Formation shots alone have no result columns to swap, whatever the toggle
+  // held before their results were removed.
+  const sidesSwapped = computed(() => matchImport.value && swapSides.value)
+
   const plan = computed<TeamImportPlan>(() => {
     // A frame the arena was not found in has no board to place, and its card
     // says so.
@@ -422,22 +507,112 @@ export function useTeamImport(
           s.reading.placement !== null,
       )
       .map((s) => ({ mapIndex: shotMapIndex(s, boardCount()), picks: s.tilePicks }))
-    // A result shot that failed to read still makes the import a match, as the
-    // modal shows it, so formations never fall back to their own upgrades.
-    const match = shots.value.some((s) => s.kind === 'result')
     return buildTeamImportPlan(resultAssignments.value, mode(), names, {
       swapSides: swapSides.value,
       formations: formationAssignments.value,
       replays,
-      matchImport: match,
+      matchImport: matchImport.value,
       phantimalFits,
     })
   })
+
+  // ---- Each shot against the plan ----
+
+  const mapIndexOf = (shot: ImportShot): number | null => shotMapIndex(shot, boardCount())
+
+  const noResult = (shot: ImportShot): boolean => {
+    if (!matchImport.value) return false
+    const mapIndex = mapIndexOf(shot)
+    return !shots.value.some((s) => s.kind === 'result' && mapIndexOf(s) === mapIndex)
+  }
+
+  // The map its formation shots name, else the new team's for that board.
+  const boardMap = (shot: ImportShot): string | null => {
+    const mapIndex = mapIndexOf(shot)
+    return mapIndex === null
+      ? null
+      : (plan.value.boards[mapIndex]?.map ?? newTeamMaps(mode(), variant())[mapIndex] ?? null)
+  }
+
+  const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
+    mapIndex === null || side === null
+      ? []
+      : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
+
+  const fieldable = (heroes: readonly number[]): number[] =>
+    fieldableUnits(
+      heroes,
+      gameData.phantimals.map(({ id }) => toPhantimalId(id)),
+      (id) => phantimalFits(id, heroes),
+    )
+
+  // The board side a formation shot fills: the half its team fought from,
+  // swapped or not.
+  const formationSide = (shot: ImportShot): Team | null =>
+    shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
+
+  // A formation shot's own cards give the lineup only when imported alone.
+  const cardSides = (shot: ImportShot): readonly Team[] => {
+    if (shot.kind !== 'formation') return SIDES
+    const side = formationSide(shot)
+    return side === null || matchImport.value ? [] : [side]
+  }
 
   // Who each unit of a formation shot is taken for, from the plan.
   const unitsOf = (id: string): TeamImportPlan['units'][number] => {
     const i = formationShots.value.findIndex((s) => s.id === id)
     return i < 0 ? [] : (plan.value.units[i] ?? [])
+  }
+
+  const placedSide = (shot: ImportShot): FormationUnits['placed'] => {
+    const mapIndex = mapIndexOf(shot)
+    const team = formationSide(shot)
+    if (mapIndex === null || team === null) return null
+    const side = plan.value.boards[mapIndex]?.sides[team]
+    return side ? { mapKey: boardMap(shot) ?? DEFAULT_MAP_KEY, team, side } : null
+  }
+
+  const formationUnits = (shot: ImportShot): FormationUnits => ({
+    assignments: unitsOf(shot.id),
+    options: fieldable(boardHeroes(mapIndexOf(shot), formationSide(shot))),
+    placed: placedSide(shot),
+  })
+
+  const replaySides = (shot: ImportShot): Record<Team, ReplaySide> => {
+    const side = (team: Team): ReplaySide => {
+      const heroes = boardHeroes(mapIndexOf(shot), team)
+      return { heroes, options: fieldable(heroes) }
+    }
+    return { [Team.ALLY]: side(Team.ALLY), [Team.ENEMY]: side(Team.ENEMY) }
+  }
+
+  const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | null => {
+    const mapIndex = mapIndexOf(shot)
+    return (mapIndex === null ? null : plan.value.boards[mapIndex]?.sides) ?? null
+  }
+
+  const reviewCount = (shot: ImportShot): number => {
+    const reading = shot.reading
+    if (!reading) return 0
+    const units =
+      shot.kind === 'formation' ? unitsOf(shot.id).filter((u) => u.state !== 'sure').length : 0
+    return cardSides(shot).reduce(
+      (n, side) =>
+        n +
+        reviewStates(reading, side, shot.overrides).filter((st) => st !== 'sure').length +
+        (artifactState(reading, side, shot.artifactOverrides) === 'review' ? 1 : 0),
+      units,
+    )
+  }
+
+  const placeCount = (shot: ImportShot): number => {
+    if (shot.kind === 'formation') {
+      const missing = missingPlacing(shot, formationUnits(shot))
+      return missing ? unplaced(missing) : 0
+    }
+    if (shot.kind !== 'replay') return 0
+    const sides = replaySides(shot)
+    return SIDES.reduce((n, side) => n + unplaced(replaySidePlacing(shot, side, sides[side])), 0)
   }
 
   return {
@@ -448,8 +623,17 @@ export function useTeamImport(
     formationSwap,
     learnedCount: engine.learnedCount,
     plan,
-    unitsOf,
-    phantimalFits,
+    mapCount: computed(boardCount),
+    matchImport,
+    sidesSwapped,
+    noResult,
+    boardMap,
+    cardSides,
+    formationUnits,
+    replaySides,
+    placedSides,
+    reviewCount,
+    placeCount,
     addFiles,
     progress: engine.progress,
     resultsClosed,

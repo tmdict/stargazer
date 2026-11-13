@@ -5,25 +5,22 @@
  * useRosterImport: the shots belong to one opening of the modal, and closing it
  * (clearImport) drops them and releases the engine. */
 
-import {
-  computed,
-  getCurrentScope,
-  onScopeDispose,
-  reactive,
-  ref,
-  watch,
-  type ComputedRef,
-} from 'vue'
+import { computed, reactive, ref, watch, type ComputedRef } from 'vue'
 
 import {
   imageToDataUrl,
-  useImportEngine,
   type ImportEngine,
-  type IntakeResult,
   type ShotError,
   type ShotSession,
   type ShotStatus,
 } from '@/composables/useImportEngine'
+import {
+  markShot,
+  newShotFields,
+  useImportShotList,
+  type ImportShotList,
+  type ShotRef,
+} from '@/composables/useImportShotList'
 import { frameFamily } from '@/lib/import/card/frames'
 import { isMatchupReading } from '@/lib/import/kinds'
 import type { CellOverride } from '@/lib/import/review'
@@ -61,63 +58,29 @@ export interface WwwImportShot {
   badges: Record<string, string>
 }
 
-// A card, or a team's artifact, of a screenshot, as the review's edits name it.
-export interface ShotRef {
-  shotId: string
-  key: string
-}
-
 const shots = ref<WwwImportShot[]>([])
 let nextId = 1
-// A team whose cards were read is outlined in yellow; one whose cards are out
-// of view, in grey and dashed, so a game counted as cut off can be found.
-const READ_COLOUR = '#ffd54a'
-const SKIPPED_COLOUR = '#b8b8b8'
 const COLOURS: readonly BarColour[] = ['blue', 'red']
 
 const findShot = (id: string): WwwImportShot | undefined => shots.value.find((s) => s.id === id)
 
 /* The screenshot as the review numbers it: each team box outlined down to its
- * foot, and each panel labelled with the game it fills. Boxes are in the
- * decoded image's pixels, which a wide capture was drawn down to. */
+ * foot, and each panel labelled with the game it fills. */
 const markPanels = async (
   shot: WwwImportShot,
   reading: MatchupReading,
   numbers: readonly number[],
 ): Promise<void> => {
   const drawn = numbers.join()
-  const image = new Image()
-  image.src = shot.thumb
-  await image.decode()
-  const canvas = document.createElement('canvas')
-  canvas.width = image.naturalWidth
-  canvas.height = image.naturalHeight
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-  ctx.drawImage(image, 0, 0)
-  const scale = image.naturalWidth / Math.min(image.naturalWidth, MATCHUP_MAX_WIDTH)
-  const unit = Math.max(2, Math.round(canvas.width / 400))
-  ctx.font = `700 ${unit * 9}px sans-serif`
-  ctx.textBaseline = 'top'
-  reading.panels.forEach((panel, p) => {
-    for (const colour of COLOURS) {
-      const { bar, cards } = panel[colour]
-      ctx.lineWidth = unit
-      ctx.strokeStyle = cards ? READ_COLOUR : SKIPPED_COLOUR
-      ctx.setLineDash(cards ? [] : [unit * 3, unit * 2])
-      ctx.strokeRect(bar.x * scale, bar.y * scale, bar.w * scale, FOOT.to * bar.w * scale)
-    }
-    const { bar, cards } = panel.blue
-    const label = String(numbers[p])
-    const at = { x: bar.x * scale + unit, y: bar.y * scale + unit }
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(at.x, at.y, ctx.measureText(label).width + unit * 2, unit * 11)
-    ctx.fillStyle = cards ? READ_COLOUR : SKIPPED_COLOUR
-    ctx.fillText(label, at.x + unit, at.y + unit)
+  const blob = await markShot(shot.thumb, MATCHUP_MAX_WIDTH, { fine: 400, text: 9 }, (pen) => {
+    reading.panels.forEach((panel, p) => {
+      for (const colour of COLOURS) {
+        const { bar, cards } = panel[colour]
+        pen.outline({ x: bar.x, y: bar.y, w: bar.w, h: FOOT.to * bar.w }, cards !== null)
+      }
+      pen.label(String(numbers[p]), panel.blue.bar, panel.blue.cards !== null)
+    })
   })
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, 'image/jpeg', 0.85),
-  )
   // Removed, renumbered, or the import closed, while it was drawn.
   if (!blob || findShot(shot.id) !== shot || shot.markedFor !== drawn) return
   if (shot.marked) URL.revokeObjectURL(shot.marked)
@@ -147,103 +110,54 @@ const session: ShotSession = {
   },
 }
 
-const dropUrls = (shot: WwwImportShot): void => {
-  URL.revokeObjectURL(shot.thumb)
-  if (shot.marked) URL.revokeObjectURL(shot.marked)
-}
-
-export function useWwwImport(): {
+export function useWwwImport(): Omit<ImportShotList, 'engine'> & {
   shots: typeof shots
   referenceStatus: ImportEngine['referenceStatus']
   learnedCount: ComputedRef<number>
   plan: ComputedRef<WwwImportPlan>
   progress: ImportEngine['progress']
-  addFiles: (files: File[]) => Promise<IntakeResult>
-  removeShot: (id: string) => void
-  clearImport: () => void
   setHero: (cards: readonly WwwCard[], characterId: number | null) => void
-  setLevel: (cards: readonly ShotRef[], field: 'paragon' | 'refinement', level: number) => void
   setArtifact: (teams: readonly ShotRef[], artifactId: number | null) => void
   confirmAll: () => void
   forgetLearned: () => void
   ensureReferences: () => Promise<void>
 } {
-  const engine = useImportEngine(session)
+  const { engine, ...list } = useImportShotList(
+    shots,
+    session,
+    'matchup',
+    (file) =>
+      reactive({
+        id: `matchup-${nextId++}`,
+        kind: 'matchup',
+        ...newShotFields(file),
+        markedFor: null,
+        artifacts: {},
+        badges: {},
+      }) as WwwImportShot,
+  )
+  const { setLevel } = list
 
-  const clearImport = (): void => {
-    engine.release()
-    shots.value.forEach(dropUrls)
-    shots.value = []
-  }
-  if (getCurrentScope()) onScopeDispose(clearImport)
-
-  // One the sorter finds to be another import's is refused and counted by
-  // kind; one it cannot place is read as a matchup list.
-  const addFiles = (files: File[]): Promise<IntakeResult> =>
-    engine.addFiles(files, {
-      replay: () => true,
-      place: (sorted) =>
-        sorted && sorted !== 'matchup' ? { refused: sorted } : { kind: 'matchup' as const },
-      add: (file) => {
-        const shot = reactive({
-          id: `matchup-${nextId++}`,
-          kind: 'matchup',
-          name: file.name,
-          size: file.size,
-          thumb: URL.createObjectURL(file),
-          marked: null,
-          markedFor: null,
-          status: 'waiting',
-          error: null,
-          reading: null,
-          overrides: {},
-          artifacts: {},
-          cards: {},
-          badges: {},
-        }) as WwwImportShot
-        shots.value = [...shots.value, shot]
-        return shot
-      },
-    })
-
-  const removeShot = (id: string): void => {
-    const shot = findShot(id)
-    if (shot) dropUrls(shot)
-    engine.dropShot(id)
-    shots.value = shots.value.filter((s) => s.id !== id)
-  }
-
-  /* Take the cards for a hero, or for none. A correction of a card the reader
-   * was unsure of teaches its face, when a paragon frame placed it surely,
-   * whatever its level (a card below S+ never teaches, its face cut from a
-   * guessed box; the reader keeps a paragon card's level, so its frame reads
-   * again from it); picking the reader's own top candidate, or no hero, takes
-   * back what it was taught. The cards given are one card seen again, so the
-   * first teaches and the others take back what each was taught on its own. */
+  /* Take the cards for a hero, or for none. The cards given are one card seen
+   * again, and the correction teaches from those a paragon frame placed
+   * surely, whatever its level (a card below S+ never teaches, its face cut
+   * from a guessed box; the reader keeps a paragon card's level, so its frame
+   * reads again from it). */
   const setHero = (cards: readonly WwwCard[], characterId: number | null): void => {
-    let first = true
-    for (const { shotId, key, cell } of cards) {
-      const shot = findShot(shotId)
-      if (!shot) continue
+    const found = cards.filter(({ shotId }) => findShot(shotId))
+    for (const { shotId, key } of found) {
+      const shot = findShot(shotId)!
       shot.overrides[key] = { ...shot.overrides[key], characterId }
-      const frame = frameFamily(cell.paragon)
-      if (cell.sure || frame.family !== 'paragon' || !frame.sure) continue
-      const teach = first && characterId !== null && cell.candidates[0]?.characterId !== characterId
-      engine.learnFace(teach ? characterId : null, cell.descriptor)
-      first = false
     }
-  }
-
-  // A level set for a card is written to each of its readings.
-  const setLevel = (
-    cards: readonly ShotRef[],
-    field: 'paragon' | 'refinement',
-    level: number,
-  ): void => {
-    for (const card of cards) {
-      const shot = findShot(card.shotId)
-      if (shot) shot.overrides[card.key] = { ...shot.overrides[card.key], [field]: level }
-    }
+    engine.learnCorrection(
+      found
+        .map(({ cell }) => cell)
+        .filter((cell) => {
+          const frame = frameFamily(cell.paragon)
+          return frame.family === 'paragon' && frame.sure
+        }),
+      characterId,
+    )
   }
 
   // An artifact picked for a team is written to each of its readings.
@@ -304,11 +218,8 @@ export function useWwwImport(): {
     learnedCount: engine.learnedCount,
     plan,
     progress: engine.progress,
-    addFiles,
-    removeShot,
-    clearImport,
+    ...list,
     setHero,
-    setLevel,
     setArtifact,
     confirmAll,
     forgetLearned: engine.forgetLearned,

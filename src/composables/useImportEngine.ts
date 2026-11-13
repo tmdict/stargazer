@@ -17,7 +17,7 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { companionImages, ownerImages } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { FRAME_NAMES } from '@/lib/import/card/frames'
-import type { LearnedIcon, PortraitRef } from '@/lib/import/card/types'
+import type { HeroReading, LearnedIcon, PortraitRef } from '@/lib/import/card/types'
 import type { RgbaImage } from '@/lib/import/core/types'
 import {
   partsOf,
@@ -632,6 +632,25 @@ const learnFace = (characterId: number | null, descriptor: Float32Array): void =
   if (next.length !== learned.value.length) saveLearned(next)
 }
 
+/* What a hero correction teaches. `cells` are one card as each screenshot
+ * shows it, those whose frame placed the face surely by the import's own test
+ * (else the crop may be off the face). A card the reader was sure of teaches
+ * nothing. Of the others the first teaches its face, unless the pick is the
+ * reader's own top candidate or no hero, which takes back what the face was
+ * taught; the rest take back what each was taught on its own. */
+const learnCorrection = (
+  cells: readonly Pick<HeroReading, 'sure' | 'candidates' | 'descriptor'>[],
+  characterId: number | null,
+): void => {
+  cells
+    .filter((cell) => !cell.sure)
+    .forEach((cell, i) => {
+      const teach =
+        i === 0 && characterId !== null && cell.candidates[0]?.characterId !== characterId
+      learnFace(teach ? characterId : null, cell.descriptor)
+    })
+}
+
 const forgetLearned = (): void => saveLearned([])
 
 /* Stop the workers and drop their references and every waiting read, so a
@@ -674,7 +693,7 @@ export interface ImportEngine {
   ) => Promise<IntakeResult>
   dropShot: (id: string) => void
   release: () => void
-  learnFace: (characterId: number | null, descriptor: Float32Array) => void
+  learnCorrection: typeof learnCorrection
   forgetLearned: () => void
 }
 
@@ -787,7 +806,7 @@ export function useImportEngine(session: ShotSession): ImportEngine {
     addFiles,
     dropShot,
     release,
-    learnFace,
+    learnCorrection,
     forgetLearned,
   }
 }

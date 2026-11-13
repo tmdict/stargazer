@@ -66,7 +66,7 @@ const shot = (): ImportShot => ({
 const hold = () =>
   holdTeamImport(
     () => '5v5',
-    () => false,
+    () => null,
   )
 
 beforeEach(() => setActivePinia(createPinia()))

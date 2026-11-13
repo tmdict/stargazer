@@ -5,11 +5,11 @@
    heroes on their tiles, review what was read, name the record, pick the
    board sides, and save it as a new team. Or formation screenshots alone,
    each one team with the levels it shows, which closes the result drop until
-   they are removed. State lives in useTeamImport, and closing the modal
-   clears it, so each opening is a new import. The modal only renders and
-   emits the finished plan upward. */
+   they are removed. State and everything worked out from the plan live in
+   useTeamImport, and closing the modal clears it, so each opening is a new
+   import. The modal only renders and emits the finished plan upward. */
 
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
@@ -21,34 +21,21 @@ import TeamImportShotList from '@/components/teams/TeamImportShotList.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { shotMapIndex, useTeamImport, type ImportShot } from '@/composables/useTeamImport'
+import { usePasteImages } from '@/composables/usePasteImages'
+import { useTeamImport, type ImportShot } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
-import { toPhantimalId } from '@/lib/characters/phantimal'
-import { isFormationReading } from '@/lib/import/screens/formation/types'
 import type { ShotKind } from '@/lib/import/screens/match/types'
-import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
-  assignedPortraits,
-  fieldableUnits,
-  missingUnits,
-  replayPlacing,
-} from '@/lib/teams/formationImport'
-import {
   DEFAULT_VARIANT,
-  newTeamMaps,
   TEAM_MODES,
   TEAM_VARIANTS,
   type TeamModeKey,
   type VariantMatch,
 } from '@/lib/teams/modes'
-import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import {
-  artifactState,
   isBlockingIssue,
   NAME_FORBIDDEN,
-  reviewStates,
-  SIDES,
   type PlanIssue,
   type TeamImportPlan,
 } from '@/lib/teams/teamImport'
@@ -56,7 +43,6 @@ import { Team, teamLabelKey } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { imageFilesFromPaste } from '@/utils/imageFile'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
 import '@/styles/import.css'
@@ -85,6 +71,17 @@ const {
   formationSwap,
   learnedCount,
   plan,
+  mapCount,
+  matchImport,
+  sidesSwapped,
+  noResult,
+  boardMap,
+  cardSides,
+  formationUnits,
+  replaySides,
+  placedSides,
+  reviewCount,
+  placeCount,
   addFiles,
   progress,
   removeShot,
@@ -96,8 +93,6 @@ const {
   setArtifact,
   setUnit,
   setTilePick,
-  unitsOf,
-  phantimalFits,
   resultsClosed,
   formationsClosed,
   replayOpen,
@@ -106,133 +101,17 @@ const {
   ensureReferences,
 } = useTeamImport(
   () => activeMode,
-  // Replay frames are read in the Supreme League arena alone.
-  () => variant === 'sl',
+  () => variant,
 )
 
-const mapCount = computed(() => TEAM_MODES[activeMode].boardCount)
 const selectedId = ref<string | null>(null)
 const selected = computed(() => shots.value.find((s) => s.id === selectedId.value) ?? null)
 const resultShots = computed(() => shots.value.filter((s) => s.kind === 'result'))
 const formationShots = computed(() => shots.value.filter((s) => s.kind === 'formation'))
 const replayShots = computed(() => shots.value.filter((s) => s.kind === 'replay'))
-// Result shots make the import a match, whose formation shots only place its
-// heroes; formation shots dropped first are imported alone.
-const matchImport = computed(() => resultShots.value.length > 0)
-// Formation shots alone have no result columns to swap, whatever the toggle
-// held before their results were removed.
-const sidesSwapped = computed(() => matchImport.value && swapSides.value)
 
-// ---------- formation shots ----------
-
-// The board side a formation shot fills: the half its team fought from,
-// swapped or not.
-const formationSide = (shot: ImportShot): Team | null =>
-  shot.reading && isFormationReading(shot.reading) ? shot.reading.side : null
-
-// In a match import, a formation shot or replay frame of a map with no result
-// shot places nothing.
-const noResultNotice = (shot: ImportShot): string | null => {
-  if (!matchImport.value) return null
-  const mapIndex = shotMapIndex(shot, mapCount.value)
-  const hasResult = resultShots.value.some((s) => shotMapIndex(s, mapCount.value) === mapIndex)
-  return hasResult ? null : i18n.t('app.import-no-result')
-}
-
-const boardHeroes = (mapIndex: number | null, side: Team | null): number[] =>
-  mapIndex === null || side === null
-    ? []
-    : (plan.value.boards[mapIndex]?.sides[side]?.mains.map((unit) => unit.unitId) ?? [])
-
-const fieldable = (heroes: readonly number[]): number[] =>
-  fieldableUnits(
-    heroes,
-    gameData.phantimals.map(({ id }) => toPhantimalId(id)),
-    (id) => phantimalFits(id, heroes),
-  )
-
-// The units a formation shot's portraits can be.
-const unitOptions = (shot: ImportShot): number[] =>
-  fieldable(boardHeroes(shotMapIndex(shot, mapCount.value), formationSide(shot)))
-
-// A formation shot's own cards give the lineup only when imported alone.
-const cardSides = (shot: ImportShot): Team[] => {
-  const side = formationSide(shot)
-  return side === null || matchImport.value ? [] : [side]
-}
-
-// The side a formation shot fills, as the plan places it, on the map it lands on.
-const placedSide = (
-  shot: ImportShot,
-): { mapKey: string; team: Team; side: SideLoadBoard } | null => {
-  const mapIndex = shotMapIndex(shot, mapCount.value)
-  const team = formationSide(shot)
-  if (mapIndex === null || team === null) return null
-  const board = plan.value.boards[mapIndex]
-  const side = board?.sides[team]
-  if (!board || !side) return null
-  return { mapKey: boardMap(mapIndex) ?? DEFAULT_MAP_KEY, team, side }
-}
-
-// ---------- replay frames ----------
-
-// The map a board stands on: the one its formation shots name, else the new
-// team's for that board.
-const boardMap = (mapIndex: number | null): string | null =>
-  mapIndex === null
-    ? null
-    : (plan.value.boards[mapIndex]?.map ?? newTeamMaps(activeMode, variant)[mapIndex] ?? null)
-
-const replaySides = (shot: ImportShot): Record<Team, { heroes: number[]; options: number[] }> => {
-  const mapIndex = shotMapIndex(shot, mapCount.value)
-  const side = (team: Team) => {
-    const heroes = boardHeroes(mapIndex, team)
-    return { heroes, options: fieldable(heroes) }
-  }
-  return { [Team.ALLY]: side(Team.ALLY), [Team.ENEMY]: side(Team.ENEMY) }
-}
-
-const placedSides = (shot: ImportShot): Partial<Record<Team, SideLoadBoard>> | null => {
-  const mapIndex = shotMapIndex(shot, mapCount.value)
-  return (mapIndex === null ? null : plan.value.boards[mapIndex]?.sides) ?? null
-}
-
-// Units of a frame's placing order not yet on a tile, as its review counts them.
-const replayToPlace = (shot: ImportShot): number => {
-  const sides = replaySides(shot)
-  return SIDES.reduce((n, side) => {
-    const { heroes, options } = sides[side]
-    const { order, picks } = replayPlacing(heroes, options, shot.tilePicks[side] ?? {})
-    const picked = [...picks.values()]
-    return n + order.filter((id) => !picked.includes(id)).length
-  }, 0)
-}
-
-// Units a formation shot misses, as its review lists them, not yet on a tile.
-const formationToPlace = (shot: ImportShot): number => {
-  const placed = placedSide(shot)
-  const reading = shot.reading
-  if (!placed || !reading || !isFormationReading(reading)) return 0
-  const { order, picks } = missingUnits(
-    placed.side.mains.map((unit) => unit.unitId),
-    assignedPortraits(reading.units, unitsOf(shot.id)),
-    unitOptions(shot),
-    shot.tilePicks[placed.team] ?? {},
-  )
-  const picked = [...picks.values()]
-  return order.filter((id) => !picked.includes(id)).length
-}
-
-const formationReview = (shot: ImportShot): number => {
-  const units = unitsOf(shot.id).filter((u) => u.state !== 'sure').length
-  return cardSides(shot).reduce(
-    (n, side) =>
-      n +
-      reviewStates(shot.reading!, side, shot.overrides).filter((st) => st !== 'sure').length +
-      (artifactState(shot.reading!, side, shot.artifactOverrides) === 'review' ? 1 : 0),
-    units,
-  )
-}
+const noResultNotice = (shot: ImportShot): string | null =>
+  noResult(shot) ? i18n.t('app.import-no-result') : null
 
 // Keep a card selected while there are cards.
 watch(
@@ -297,16 +176,10 @@ const handleAdd = async (files: File[], kind: ShotKind | 'sort' = 'result'): Pro
 
 // A paste lands in no drop area, so each pasted screenshot goes to the
 // section of the kind it shows.
-const handlePaste = (event: ClipboardEvent): void => {
-  if (!show) return
-  const files = imageFilesFromPaste(event)
-  if (!files.length) return
-  event.preventDefault()
-  void handleAdd(files, 'sort')
-}
-
-onMounted(() => window.addEventListener('paste', handlePaste))
-onUnmounted(() => window.removeEventListener('paste', handlePaste))
+usePasteImages(
+  () => show,
+  (files) => void handleAdd(files, 'sort'),
+)
 
 const nameInvalid = computed(
   () =>
@@ -448,7 +321,6 @@ const handleForgetLearned = (): void => {
         <ImageDropZone
           dark
           :compact="shots.length > 0"
-          :paste-active="false"
           :disabled="resultsClosed"
           @add="handleAdd"
         />
@@ -459,6 +331,8 @@ const handleForgetLearned = (): void => {
           v-model:selected-id="selectedId"
           :shots="resultShots"
           :map-count
+          :review-count
+          :place-count
           @set-map="setMap"
           @set-winner="setWinner"
           @remove="removeShot"
@@ -476,7 +350,6 @@ const handleForgetLearned = (): void => {
         <ImageDropZone
           dark
           :compact="shots.length > 0"
-          :paste-active="false"
           :disabled="formationsClosed"
           @add="(files) => handleAdd(files, 'formation')"
         />
@@ -489,8 +362,8 @@ const handleForgetLearned = (): void => {
           :shots="formationShots"
           :map-count
           formation
-          :review-count="formationReview"
-          :place-count="formationToPlace"
+          :review-count
+          :place-count
           :notice="noResultNotice"
           @set-map="setMap"
           @remove="removeShot"
@@ -508,7 +381,6 @@ const handleForgetLearned = (): void => {
         <ImageDropZone
           dark
           compact
-          :paste-active="false"
           :disabled="!replayOpen"
           @add="(files) => handleAdd(files, 'replay')"
         />
@@ -518,7 +390,8 @@ const handleForgetLearned = (): void => {
           :shots="replayShots"
           :map-count
           replay
-          :place-count="replayToPlace"
+          :review-count
+          :place-count
           :notice="noResultNotice"
           @set-map="setMap"
           @remove="removeShot"
@@ -615,7 +488,7 @@ const handleForgetLearned = (): void => {
           v-else-if="selected.kind === 'replay'"
           :key="`${selected.id}-replay`"
           :shot="selected"
-          :map-key="boardMap(shotMapIndex(selected, mapCount))"
+          :map-key="boardMap(selected)"
           :sides="replaySides(selected)"
           :placed="placedSides(selected)"
           @set-pick="setTilePick"
@@ -627,11 +500,7 @@ const handleForgetLearned = (): void => {
           :names
           :swap-sides="sidesSwapped"
           :sides="cardSides(selected)"
-          :units="{
-            assignments: unitsOf(selected.id),
-            options: unitOptions(selected),
-            placed: placedSide(selected),
-          }"
+          :units="formationUnits(selected)"
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"

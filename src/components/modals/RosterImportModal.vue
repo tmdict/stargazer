@@ -5,7 +5,7 @@
    opening is a new import. The modal only renders and emits the finished
    roster upward. */
 
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import ImportLearnedReset from '@/components/import/ImportLearnedReset.vue'
@@ -16,6 +16,7 @@ import RosterImportReview from '@/components/RosterImportReview.vue'
 import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { readStatus, unreadStatus, type ShotStatusView } from '@/components/import/shotStatus'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { usePasteImages } from '@/composables/usePasteImages'
 import { useRosterImport, type RosterImportShot } from '@/composables/useRosterImport'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
@@ -23,7 +24,6 @@ import { MAX_NAME_LENGTH } from '@/lib/names'
 import { shotToCheck } from '@/lib/rosterImport'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
-import { imageFilesFromPaste } from '@/utils/imageFile'
 
 import '@/styles/import.css'
 
@@ -78,16 +78,10 @@ const handleAdd = async (files: File[]): Promise<void> => {
   else if (added === 0 && skipped === 0 && !closed) error(i18n.t('app.no-valid-images'))
 }
 
-const handlePaste = (event: ClipboardEvent): void => {
-  if (!show) return
-  const files = imageFilesFromPaste(event)
-  if (!files.length) return
-  event.preventDefault()
-  void handleAdd(files)
-}
-
-onMounted(() => window.addEventListener('paste', handlePaste))
-onUnmounted(() => window.removeEventListener('paste', handlePaste))
+usePasteImages(
+  () => show,
+  (files) => void handleAdd(files),
+)
 
 // A screenshot's card: unread, failed, or the cards it gave, those the scroll
 // cut, which another screenshot has to show whole, and what the review asks
@@ -150,7 +144,7 @@ const handleForgetLearned = (): void => {
       </header>
 
       <section class="drop-section">
-        <ImageDropZone dark :compact="shots.length > 0" :paste-active="false" @add="handleAdd" />
+        <ImageDropZone dark :compact="shots.length > 0" @add="handleAdd" />
         <ImportProgress v-if="progress" v-bind="progress" />
         <div v-if="shots.length" class="shot-list">
           <ImportShotCard

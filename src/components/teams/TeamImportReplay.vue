@@ -21,14 +21,13 @@ import TeamImportTileBox from '@/components/teams/TeamImportTileBox.vue'
 import TeamImportTileMark from '@/components/teams/TeamImportTileMark.vue'
 import TeamImportTileNumber from '@/components/teams/TeamImportTileNumber.vue'
 import TeamImportTilePicker from '@/components/teams/TeamImportTilePicker.vue'
-import type { ImportShot } from '@/composables/useTeamImport'
+import { replaySidePlacing, type ImportShot, type ReplaySide } from '@/composables/useTeamImport'
 import { useTilePlacing, type PlacingSide } from '@/composables/useTilePlacing'
 import { useUnitLabels } from '@/composables/useUnitLabels'
 import { BOARD_HEXES } from '@/lib/import/screens/formation/board'
 import { replayHexCentre, replayHexCorners } from '@/lib/import/screens/replay/replay'
 import { isReplayReading } from '@/lib/import/screens/replay/types'
 import { MAPS } from '@/lib/maps'
-import { replayPlacing } from '@/lib/teams/formationImport'
 import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import { SIDES } from '@/lib/teams/teamImport'
 import { State } from '@/lib/types/state'
@@ -41,8 +40,7 @@ const { shot, mapKey, sides, placed } = defineProps<{
   mapKey: string | null
   // The frame's board sides as the plan places them; null without a board.
   placed: Partial<Record<Team, SideLoadBoard>> | null
-  // Per board side: the heroes the plan puts there, and every unit it can field.
-  sides: Record<Team, { heroes: readonly number[]; options: readonly number[] }>
+  sides: Record<Team, ReplaySide>
 }>()
 
 const emit = defineEmits<{
@@ -95,13 +93,9 @@ interface TileView {
   unitId: number | null
 }
 
-const sidePlacing = (side: Team): PlacingSide => {
-  const { heroes, options } = sides[side]
-  return { ...replayPlacing(heroes, options, shot.tilePicks[side] ?? {}), heroes, options }
-}
 const placings = computed((): Record<Team, PlacingSide> => ({
-  [Team.ALLY]: sidePlacing(Team.ALLY),
-  [Team.ENEMY]: sidePlacing(Team.ENEMY),
+  [Team.ALLY]: replaySidePlacing(shot, Team.ALLY, sides[Team.ALLY]),
+  [Team.ENEMY]: replaySidePlacing(shot, Team.ENEMY, sides[Team.ENEMY]),
 }))
 
 const view = computed(() => {
