@@ -1,4 +1,4 @@
-/* How a list off the board names and pictures a unit: a hero by its localised
+/* How a unit is named and pictured by its id: a hero by its localised
  * name, a hero's companion by its owner's name, marked, and a phantimal and the
  * companion it brings by their own art (Wedge of Power). */
 
@@ -6,7 +6,7 @@ import { isCompanionId, toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand } from '@/lib/characters/phantimal'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
+import { characterDisplayName, phantimalDisplayName } from '@/utils/nameFormatting'
 
 export function useUnitLabels(): {
   heroName: (characterId: number | null) => string
@@ -19,8 +19,8 @@ export function useUnitLabels(): {
 
   const heroName = (characterId: number | null): string => {
     if (characterId === null) return i18n.t('app.import-none')
-    const slug = gameData.getCharacterNameById(characterId)
-    return slug ? localizedDisplayName(i18n.t, 'character', slug) : String(characterId)
+    const hero = gameData.getCharacterById(toBaseHeroId(characterId))
+    return hero ? characterDisplayName(i18n.t, hero) : String(characterId)
   }
 
   const heroImage = (characterId: number | null): string => {

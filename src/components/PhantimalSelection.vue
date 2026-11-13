@@ -15,6 +15,7 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { phantimalDisplayName } from '@/utils/nameFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
   phantimals: readonly PhantimalType[]
@@ -173,7 +174,7 @@ const {
         >
           <img
             :src="gameDataStore.getCharacterImage(phantimal.name)"
-            :alt="phantimal.name"
+            :alt="phantimalDisplayName(i18n.currentLocale, phantimal.name)"
             class="portrait"
             loading="lazy"
             decoding="async"

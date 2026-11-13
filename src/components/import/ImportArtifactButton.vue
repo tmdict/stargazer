@@ -34,7 +34,7 @@ const emit = defineEmits<{ pick: [event: MouseEvent] }>()
       @click="emit('pick', $event)"
     >
       <span class="artifact-icon" :class="{ empty: artifact === null }">
-        <ArtifactImage v-if="artifact" :artifact />
+        <ArtifactImage v-if="artifact" :artifact decorative />
       </span>
       <span class="artifact-name">{{ name }}</span>
     </button>

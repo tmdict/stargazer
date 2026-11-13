@@ -42,9 +42,9 @@ const props = defineProps<{
   // Greyed and never picked: hovering, a click or a tap shows this line under
   // the hero's name instead.
   lockedNote?: string
-  // The portrait's description in place of the site-language name, and the
-  // language it is written in: a link holding only the portrait is read out
-  // and indexed by it.
+  // The name that describes the portrait, and stands in for a missing one, in
+  // place of the site-language name, and the language it is written in: a link
+  // holding only the portrait is read out and indexed by it.
   alt?: string
   altLang?: string
 }>()
@@ -182,7 +182,7 @@ const handleDragEnd = (event: DragEvent) => {
           :draggable="isDraggable"
           @error="onImageError"
         />
-        <span v-else class="portrait-name">{{ displayName }}</span>
+        <span v-else class="portrait-name" :lang="altLang">{{ alt ?? displayName }}</span>
       </div>
       <HoldRing v-if="pressing" />
       <span v-if="tickable" class="tick" :class="{ on: ticked }" aria-hidden="true">

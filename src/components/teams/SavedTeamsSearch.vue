@@ -99,7 +99,7 @@ const onKeydown = (event: KeyboardEvent): void => {
       <span v-for="pick in picks" :key="`${pick.kind}:${pick.slug}`" class="pick-pill">
         <img v-if="portrait(pick)" :src="portrait(pick)" alt="" class="pill-portrait" />
         <span v-else-if="artifactOf(pick)" class="pill-portrait">
-          <ArtifactImage :artifact="artifactOf(pick)!" />
+          <ArtifactImage :artifact="artifactOf(pick)!" decorative />
         </span>
         {{ pick.label }}
         <button
@@ -162,7 +162,7 @@ const onKeydown = (event: KeyboardEvent): void => {
       >
         <img v-if="portrait(pick)" :src="portrait(pick)" alt="" class="option-portrait" />
         <span v-else-if="artifactOf(pick)" class="option-portrait">
-          <ArtifactImage :artifact="artifactOf(pick)!" />
+          <ArtifactImage :artifact="artifactOf(pick)!" decorative />
         </span>
         {{ pick.label }}
       </li>

@@ -14,6 +14,7 @@ import { holdTeamImport, leaveTeamImport } from '../fixtures/teamImport'
 vi.mock('@/stores/gameData', () => ({
   useGameDataStore: () => ({
     characters: [],
+    getCharacterById: (id: number) => ({ name: `hero${id}` }),
     getCharacterNameById: (id: number) => `hero${id}`,
     getCharacterImageNameById: () => undefined,
     getCharacterImage: () => '',

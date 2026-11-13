@@ -267,7 +267,7 @@ const warningText = (warning: WwwWarning): string => {
                     <span v-if="line.record" class="www-rec">{{ recordText(line.record) }}</span>
                     <span class="www-name">{{ artifactName(line.id) }}</span>
                     <span v-if="artifactOf(line.id)" class="www-mini www-mini-artifact">
-                      <ArtifactImage :artifact="artifactOf(line.id)!" />
+                      <ArtifactImage :artifact="artifactOf(line.id)!" decorative />
                     </span>
                   </span>
                   <template v-if="line.record">

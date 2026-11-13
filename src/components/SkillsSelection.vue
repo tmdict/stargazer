@@ -13,6 +13,7 @@ import { skillPath } from '@/lib/skillPath'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { heroDisplayName } from '@/utils/skillLabels'
+import { getSkillLanguage } from '@/utils/skillLocale'
 import { loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{
@@ -29,6 +30,8 @@ const props = defineProps<{
 }>()
 
 const heroName = (character: CharacterType) => heroDisplayName(character.name, props.linkLocale)
+// Names fall back to English until the language's text has loaded.
+const nameLang = computed(() => (getSkillLanguage(props.linkLocale) ? props.linkLocale : 'en'))
 
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
@@ -76,7 +79,7 @@ watch(mechanicFilter, (pick) => {
       :mechanic-pool
     />
 
-    <CharacterGrid :class="{ 'hero-names': namesOnly }" :lang="namesOnly ? linkLocale : undefined">
+    <CharacterGrid :class="{ 'hero-names': namesOnly }" :lang="namesOnly ? nameLang : undefined">
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -92,7 +95,7 @@ watch(mechanicFilter, (pick) => {
           :show-energy="energyPicked"
           show-outfit
           :alt="heroName(character)"
-          :alt-lang="linkLocale"
+          :alt-lang="nameLang"
         />
       </RouterLink>
     </CharacterGrid>

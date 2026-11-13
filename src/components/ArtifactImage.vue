@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
-defineProps<{ artifact: ArtifactType }>()
+defineProps<{
+  artifact: ArtifactType
+  /** Leaves the picture undescribed, for use beside the artifact's printed name. */
+  decorative?: boolean
+}>()
 
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
 </script>
 
 <template>
@@ -13,7 +20,7 @@ const gameDataStore = useGameDataStore()
   <img
     class="artifact-img"
     :src="gameDataStore.getArtifactImage(artifact.name)"
-    :alt="artifact.name"
+    :alt="decorative ? '' : localizedDisplayName(i18n.t, 'artifact', artifact.name)"
     loading="lazy"
     decoding="async"
     draggable="false"
