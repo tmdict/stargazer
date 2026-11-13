@@ -411,6 +411,15 @@ export const useGrids = defineStore('grids', () => {
     return placement !== null && placement.ctxId !== exceptCtxId
   }
 
+  // The one way an artifact reaches a slot from a pick, a loaded team or an
+  // import: refused when its team already holds it on any board, or the format
+  // leaves it out.
+  const placeArtifact = (ctx: GridContext, artifactId: number, team: Team): boolean => {
+    if (isArtifactUsed(artifactId, team) || !allowsArtifact(artifactId)) return false
+    ctx.setArtifact(team, artifactId)
+    return true
+  }
+
   const removeArtifactFromAnyBoard = (artifactId: number, team: Team): boolean => {
     const placement = findArtifactPlacement(artifactId, team)
     if (!placement) return false
@@ -736,10 +745,8 @@ export const useGrids = defineStore('grids', () => {
       const result = placeSide(ctx, board, dest, invert)
       placed += result.placed
       skipped += result.skipped
-      // Per-team artifact uniqueness spans boards; a crafted duplicate drops.
-      if (board.artifact !== null && !isArtifactUsed(board.artifact, dest)) {
-        ctx.setArtifact(dest, board.artifact)
-      }
+      // A crafted duplicate of another board's artifact drops.
+      if (board.artifact !== null) placeArtifact(ctx, board.artifact, dest)
       finishPlacing(ctx)
     }
     deriveSynergy()
@@ -777,8 +784,7 @@ export const useGrids = defineStore('grids', () => {
         placed += landed
         skipped += side.mains.length - landed
         if (side.artifact === null) continue
-        if (isArtifactUsed(side.artifact, team)) skipped++
-        else ctx.setArtifact(team, side.artifact)
+        if (!placeArtifact(ctx, side.artifact, team)) skipped++
       }
       for (const team of board.formations) ctx.seedPhantimalBaseline(team)
       // Companion settling leaves skill paint stale.
@@ -1080,6 +1086,7 @@ export const useGrids = defineStore('grids', () => {
     dedupeCharacters,
     findArtifactPlacement,
     isArtifactUsed,
+    placeArtifact,
     removeArtifactFromAnyBoard,
     canDropCharacter,
     routeDrop,
