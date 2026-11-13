@@ -94,13 +94,6 @@ const {
   transition: transform var(--transition-fast);
 }
 
-/* A long-press is the inspect gesture: iOS would otherwise answer it with the
-   image callout, and every touch browser with text selection. */
-.artifact.inspectable {
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
 .artifact::before {
   content: '';
   position: absolute;

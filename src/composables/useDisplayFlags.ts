@@ -5,7 +5,7 @@ import type { DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { useGrids } from '@/stores/grids'
 
 /**
- * Grid display state shared by the Arena and 5 v 5 views: the toggle flags
+ * Grid display state shared by the Arena and Teams pages: the toggle flags
  * (serialized together as DisplayFlags for the share link + autosave) plus the
  * breakpoint-driven perspective. teamView/inverted/perspective live in the grids
  * store (their single source of truth), perspective reached through

@@ -463,7 +463,6 @@ defineExpose({ svgEl, unitEnter, unitLeave })
     @mouseleave="handleMapEditorMouseUp"
   >
     <defs>
-      <slot name="defs" />
       <TileHatchPatterns :id="hatchId" :hex-size="ctx.layout.size.x" board />
     </defs>
     <g>

@@ -201,7 +201,7 @@ const unitCardAnchor = computed(() => {
 <template>
   <BoardThumbnail
     ref="thumbnail"
-    class="sl-board"
+    class="sl-board inspectable"
     :map-key="board.mapKey"
     :tiles="board.tiles"
     :units
@@ -233,8 +233,6 @@ const unitCardAnchor = computed(() => {
 .sl-board {
   width: 100%;
   height: auto;
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 .sl-hold {

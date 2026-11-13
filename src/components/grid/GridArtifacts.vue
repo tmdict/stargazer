@@ -313,7 +313,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
          whichever cell renders at the near (screen-bottom) edge. -->
     <div
       v-if="allyArtifact || allyRetired"
-      class="grid-artifact"
+      class="grid-artifact inspectable"
       :class="[
         { readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) },
         rulesMark && `rules-${rulesMark}`,
@@ -343,7 +343,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
          (DOM order) unless the inverted view rotates it to the near edge. -->
     <div
       v-if="(enemyArtifact || enemyRetired) && enemySlotVisible"
-      class="grid-artifact"
+      class="grid-artifact inspectable"
       :class="{ readonly, front: enemySlotInFront, 'invalid-drop': invalidDrop(Team.ENEMY) }"
       :style="getEnemyStyles"
       :draggable="canDrag && !!enemyArtifact"
@@ -440,14 +440,10 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   opacity: 0.55;
 }
 
-/* Long-press inspects: iOS would otherwise answer it with the image callout,
-   and every touch browser with text selection. */
 .grid-artifact {
   position: absolute;
   cursor: pointer;
   pointer-events: auto;
-  -webkit-touch-callout: none;
-  user-select: none;
   transform-origin: center;
 }
 

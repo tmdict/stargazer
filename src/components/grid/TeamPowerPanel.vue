@@ -193,7 +193,7 @@ const hoveredStat = computed(
           v-for="hero in side.heroes"
           :key="hero.characterId"
           type="button"
-          class="hero"
+          class="hero inspectable"
           :class="{ static: !canEdit }"
           :aria-label="heroAria(hero)"
           :title="canEdit ? i18n.t('app.upgrade-cycle') : undefined"
@@ -337,10 +337,6 @@ const hoveredStat = computed(
   background: none;
   cursor: pointer;
   font: inherit;
-  /* A long-press is the inspect gesture: iOS would otherwise answer it with the
-     image callout, and every touch browser with text selection. */
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 .portrait-frame {
   position: relative;

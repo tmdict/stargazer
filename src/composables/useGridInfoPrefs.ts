@@ -5,7 +5,8 @@
  * The first call seeds storage synchronously. The reactive prefs themselves
  * render as the defaults and adopt the stored values in onMounted: '/' and
  * /share are SSG-prerendered with the defaults, so a setup-time adoption
- * would hydration-mismatch for any user whose stored prefs differ.
+ * would make the first client render differ from the pre-rendered page for
+ * any user whose stored prefs differ.
  *
  * Enabling a child auto-enables what it needs to take effect (master; Upgrades
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a

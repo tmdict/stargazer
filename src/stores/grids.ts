@@ -7,7 +7,7 @@
  * (page-wide character + artifact uniqueness, drop routing and its validation
  * gates, place-on-active, remove-from-any-board).
  *
- * The single-grid Arena is setGridCount(1); the 5 v 5 page is setGridCount(5).
+ * The single-grid Arena is setGridCount(1); the Teams page sets one per board of its mode.
  */
 
 import { computed, ref, shallowRef, watch } from 'vue'

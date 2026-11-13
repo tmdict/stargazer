@@ -340,8 +340,6 @@ nav {
   margin: 0;
 }
 
-/* base.css's li margins and line height would otherwise set the icons off the
-   row's centre. */
 .menu > li {
   margin: 0;
   display: flex;

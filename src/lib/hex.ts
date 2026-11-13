@@ -74,8 +74,4 @@ export class Hex {
     }
     return neighbors
   }
-
-  static fromAxial(q: number, r: number): Hex {
-    return new Hex(q, r, -q - r)
-  }
 }

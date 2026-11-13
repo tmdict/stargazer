@@ -17,9 +17,10 @@ interface Options {
  * Drag-to-resize bottom-sheet state for a `position: fixed` panel.
  *
  * SSR-safe and progressive: the panel's collapsed/expanded *layout* is expected
- * to come from CSS (so SSG markup and hydration match); this composable only
- * adds the interactive drag (and a tap-to-toggle) once mounted on a touch
- * viewport. `sheetStyle` is `undefined` on desktop so the CSS column layout wins.
+ * to come from CSS (so the pre-rendered page and the first client render match);
+ * this composable only adds the interactive drag (and a tap-to-toggle) once
+ * mounted on a touch viewport. `sheetStyle` is `undefined` on desktop so the CSS
+ * column layout wins.
  */
 export function useBottomSheet(opts: Options) {
   // Called before this composable's own onMounted, so `narrow` is read there

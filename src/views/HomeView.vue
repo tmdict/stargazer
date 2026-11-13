@@ -46,7 +46,7 @@ const gridStore = useGridStore()
 const grids = useGrids()
 // The Arena is the single-board case. Start from a clean single board and default
 // display globals so it never inherits state left in the shared store by /share
-// or the 5 v 5 page; the saved arena (or a ?g= link) is applied on top below.
+// or the Teams page; the saved arena (or a ?g= link) is applied on top below.
 grids.setGridCount(1)
 grids.hexSizeMode = 'breakpoint'
 grids.teamView = false
@@ -241,9 +241,9 @@ if (sharedLink) {
 applyTabResets(activeTab.value)
 
 // No restored share link: restore the saved arena. Done on mount because
-// localStorage is unavailable during SSG, so the pre-rendered empty grid hydrates
-// cleanly first. Autosave starts after the restore so the restore isn't what
-// triggers a write.
+// localStorage is unavailable during SSG, so the first client render matches the
+// pre-rendered empty grid. Autosave starts after the restore so the restore
+// isn't what triggers a write.
 onMounted(() => {
   if (!sharedLinkRestored && gameDataStore.dataLoaded) {
     const saved = arenaPersistence.load()

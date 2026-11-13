@@ -160,7 +160,7 @@ const {
     <div class="phantimals">
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
-          class="phantimal"
+          class="phantimal inspectable"
           :class="{ draggable: isDraggable, 'greyed-out': isDimmed(phantimal) }"
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
@@ -234,10 +234,6 @@ const {
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);
-  /* A long-press is the inspect gesture: iOS would otherwise answer it with
-     the image callout, and every touch browser with text selection. */
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 .phantimal.draggable {

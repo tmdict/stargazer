@@ -53,7 +53,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   }
 
   // Client-only loader for the interactive game (home/share): skipped during
-  // SSG so the pre-rendered grid stays empty until hydration.
+  // SSG so the pre-rendered grid stays empty.
   const initializeData = () => {
     if (dataLoaded.value || import.meta.env.SSR) {
       return
@@ -67,7 +67,7 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // SSG-safe loader for content pages (the skill browser): runs during SSG too
   // so the character grid (and its crawlable skill links) is baked into the
-  // static HTML and hydrates without a mismatch.
+  // static HTML.
   const initializeContentData = () => {
     if (dataLoaded.value) {
       return

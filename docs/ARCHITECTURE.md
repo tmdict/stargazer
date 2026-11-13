@@ -38,7 +38,7 @@ Arrows show import direction.
 | Domain               | `src/lib/`                      | lib, `src/data/` JSON           | Vue, Pinia, stores, composables, components, utils |
 | Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                            |
 
-Two exceptions are deliberate. `src/stores/mapEditor.ts` imports the `useArenaPick` composable, which holds the Arena's map pick, and no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/`.
+Two exceptions are deliberate. `src/stores/mapEditor.ts` imports the `useArenaPick` composable, which holds the Arena's map pick, and no other store imports a composable. `src/utils/contentMeta.ts` reads the i18n store, and every other utility is store-free. The domain imports no utility, so it knows nothing of the browser page around it; the temporary site-move code in `src/lib/move/` is the one exception, reading storage through `src/utils/` and the saved-team and roster stores.
 
 The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share is split by job into `data/` (the data file and its shape check), `model/` (the model's answers), `generator/` (the set search) and `www/` (Who Would Win?'s result). Each folder imports only from the folders before it in that order, so both pages read the file and the model through the same code.
 
@@ -96,7 +96,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.fits`                                                        | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                 |
 | `stargazer.placement.lists`                                             | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                 |
 
-The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them, except in `stargazer.prefs`, where a write keeps every field but its own.
+Of the two `sessionStorage` keys, `stargazer.chunk-recovery` is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md) and `stargazer.recoveryRequested` belongs to the temporary site-move code (`src/lib/move/config.ts`). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them, except in `stargazer.prefs`, where a write keeps every field but its own.
 
 `stargazer.prefs` holds two fields, `gridInfo` for Grid Info and `theme` for the site's look. In `gridInfo` a missing or non-boolean field takes its default, and `hover` and `rules` are never both true: a stored value with both true reads as `hover` on and `rules` off. `theme` is `"light"` or `"dark"`, written only when the visitor picks a look. While it is missing or holds anything else, the site follows the device's setting. The example shows the Grid Info defaults with the dark look picked:
 

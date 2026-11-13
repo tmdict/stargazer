@@ -293,13 +293,6 @@ const handleDragEnd = (event: DragEvent) => {
   cursor: grab;
 }
 
-/* A long-press is the inspect gesture: iOS would otherwise answer it with the
-   image callout, and every touch browser with text selection. */
-.inspectable {
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
 .character-display.locked {
   cursor: not-allowed;
 }

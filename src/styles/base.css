@@ -209,6 +209,11 @@ main {
   white-space: nowrap;
 }
 
+.inspectable {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 .greyed-out {
   filter: var(--placed-filter);
 }

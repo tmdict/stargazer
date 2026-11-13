@@ -256,10 +256,6 @@ onUnmounted(() => {
   unregisterHexDetector(ctx.id)
   unregisterDropHandler(ctx.id)
 })
-
-defineExpose({
-  findHexUnderMouse,
-})
 </script>
 
 <template>

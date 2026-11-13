@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* One board on the 5 v 5 page: the active-ring chrome around a reused
+/* One board on the Teams page: the active-ring chrome around a reused
    GridContainer, plus a per-board clear. Interacting with the board (anywhere)
    makes it the active board, which is what picker clicks and the Maps preset
    target. GridContainer provides the board's context to its descendants. */

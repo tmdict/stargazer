@@ -4,7 +4,7 @@
  * artifact slots) with the values derived from them (layout, team-view crop,
  * pathfinding target maps) and the operations that mutate them
  * (place / remove / move / swap / phantimal / map switch / clear). The single
- * Arena board is the N=1 case; the 5 v 5 page holds five of these.
+ * Arena board is the N=1 case; the Teams page holds up to five of these.
  *
  * Reactive effects live in a detached effectScope so a board can be torn down
  * (e.g. when the grid count changes) without leaking watchers. Each board owns

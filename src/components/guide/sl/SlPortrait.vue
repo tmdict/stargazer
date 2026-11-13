@@ -55,11 +55,6 @@ const { pressing, start, onContextMenu } = useLongPress<InspectTarget>(
   flex: none;
 }
 
-.inspectable {
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
 .pt {
   display: inline-flex;
   align-items: center;

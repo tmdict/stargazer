@@ -419,7 +419,7 @@ const liftedMode = computed(() =>
     <div
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
-      class="character"
+      class="character inspectable"
       :class="{
         'map-editor-disabled': isMapEditorMode,
         readonly: readonly,
@@ -572,8 +572,6 @@ const liftedMode = computed(() =>
 .character {
   pointer-events: auto;
   cursor: grab;
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 .switching .character,
