@@ -2,10 +2,10 @@
 /* The PvP team generator's card on the guide index: the first three maps
    of an example set, drawn by the generator's own map column. Each map keeps
    its first swap and two heroes to swap in, so the three fit a phone. The
-   maps fill the card at the generator's proportions,
-   up to its own size: there, at 1280px, a column is 220 of its pixels wide
-   with 34px portraits 8px apart and 24px between columns, so one of its
-   pixels is a 220th of a column here, and never more than 1px. */
+   maps fill the card at the generator's proportions, up to its own size:
+   there, at 1280px, a column is 220 of its pixels wide with 34px portraits
+   8px apart and 24px between columns, so one of its pixels is a 220th of a
+   column here, and never more than 1px. */
 
 import SlBeta from './SlBeta.vue'
 import SlMapColumn from './SlMapColumn.vue'
