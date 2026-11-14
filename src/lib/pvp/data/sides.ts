@@ -18,7 +18,7 @@ export const lineupKey = (heroes: readonly number[]): string =>
 
 // The heroes the generator, Generate on the Arena and Teams, and Who Would Win?
 // keep off teams whatever their records, by hero file name.
-const WITHHELD = new Set<string>()
+const WITHHELD = new Set<string>(['thane'])
 
 export const withheldHeroes = (heroes: readonly { id: number; name: string }[]): Set<number> =>
   new Set(heroes.filter((h) => WITHHELD.has(h.name)).map((h) => h.id))
