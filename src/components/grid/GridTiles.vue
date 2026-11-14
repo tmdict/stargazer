@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, useId, watchEffect } from 'vue'
 
+import BuffTileMarks from './BuffTileMarks.vue'
 import TileBevel from './TileBevel.vue'
 import TileHatch from './TileHatch.vue'
 import TileHatchPatterns from './TileHatchPatterns.vue'
@@ -11,7 +12,7 @@ import type { PlacementTip } from '@/composables/usePlacementTips'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
-import { BOARD_SIZE, toPoints, type Point } from '@/lib/layout'
+import { BASE_HEX_RADIUS, BOARD_SIZE, toPoints, type Point } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -170,28 +171,12 @@ const rulesMarks = computed(() => {
   }
 })
 
-// A buff tile's marks: a stroke at each corner of an outline inside the tile's
-// border, running this share of the way along both edges.
-const BUFF_MARK_SCALE = 0.88
-const BUFF_MARK_REACH = 0.24
-
-const toward = (from: Point, to: Point): string =>
-  `${from.x + (to.x - from.x) * BUFF_MARK_REACH},${from.y + (to.y - from.y) * BUFF_MARK_REACH}`
-
 const buffMarks = computed(() => {
   if (!props.showBuffTiles) return []
-  const shown = new Set(ctx.visibleHexes.map((hex) => hex.getId()))
-  return ctx.buffTiles
-    .filter((hexId) => shown.has(hexId))
-    .map((hexId) => ({
-      hexId,
-      strokes: scaledCorners(hexId, BUFF_MARK_SCALE)
-        .map((p, i, all) => {
-          const [before, after] = [all.at(i - 1)!, all[(i + 1) % all.length]!]
-          return `M${toward(p, before)} L${p.x},${p.y} L${toward(p, after)}`
-        })
-        .join(' '),
-    }))
+  const buffed = new Set(ctx.buffTiles)
+  return ctx.visibleHexes
+    .filter((hex) => buffed.has(hex.getId()))
+    .map((hex) => ({ hexId: hex.getId(), corners: ctx.layout.polygonCorners(hex) }))
 })
 
 let blockHoverTimeout: number | null = null
@@ -540,17 +525,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
 
         <!-- Board information like the tile numbers, so it stays in exported images.
              The image keeps a shape's own attributes, not its stylesheet's caps. -->
-        <g v-if="buffMarks.length" class="buff-marks">
-          <path
-            v-for="mark in buffMarks"
-            :key="`buff-${mark.hexId}`"
-            class="buff-corners"
-            :d="mark.strokes"
-            :stroke-width="3 * ctx.hexScale"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </g>
+        <BuffTileMarks :tiles="buffMarks" :hex-size="ctx.hexScale * BASE_HEX_RADIUS" />
 
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
         <g v-for="hex in ctx.visibleHexes" :key="`text-${hex.getId()}`" class="hex-text">
@@ -682,15 +657,6 @@ defineExpose({ svgEl, unitEnter, unitLeave })
 
 .rules-ring.focus {
   stroke: var(--placement-ring-focus);
-}
-
-.buff-marks {
-  pointer-events: none;
-}
-
-.buff-corners {
-  fill: none;
-  stroke: var(--buff-tile);
 }
 
 .tile-id {

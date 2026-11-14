@@ -12,6 +12,7 @@ import SlMapColumn from './SlMapColumn.vue'
 import LinkHeading from '@/components/ui/LinkHeading.vue'
 import { SL_PREVIEW } from '@/content/pvp/slPreview'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
+import { buffTilesOf, modeBuffs } from '@/lib/maps'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import type { AppLocale } from '@/lib/types/i18n'
 import { appLabel } from '@/utils/skillLabels'
@@ -25,8 +26,10 @@ const boards = teamPreviewBoards(SL_PREVIEW.data) ?? []
 const maps = SL_PREVIEW.teams.slice(0, MAPS).map((team, index) => {
   const [flex] = team.flex
   const [pair] = team.pairs
+  const board = boards[index]
   return {
-    board: boards[index],
+    board,
+    buffTiles: board ? buffTilesOf(modeBuffs('sl', board.mapKey)) : [],
     team: {
       map: team.map,
       comp: null,
@@ -47,7 +50,14 @@ const maps = SL_PREVIEW.teams.slice(0, MAPS).map((team, index) => {
       <p class="guide-blurb">{{ appLabel('sl-blurb', lang) }}</p>
       <!-- In the generator's board colours, which its page keeps in both looks. -->
       <div v-if="maps.length" class="maps" data-theme="dark">
-        <SlMapColumn v-for="{ team, board } in maps" :key="team.map" :team :board :counts="false" />
+        <SlMapColumn
+          v-for="{ team, board, buffTiles } in maps"
+          :key="team.map"
+          :team
+          :board
+          :buff-tiles
+          :counts="false"
+        />
       </div>
     </section>
   </article>

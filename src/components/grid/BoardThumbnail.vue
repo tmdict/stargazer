@@ -1,6 +1,7 @@
 <script lang="ts">
 import { computed, useId, useTemplateRef } from 'vue'
 
+import BuffTileMarks from './BuffTileMarks.vue'
 import TileHatchPatterns from './TileHatchPatterns.vue'
 import { artifactHostHex, Grid } from '@/lib/grid'
 import { Layout, POINTY, type Point } from '@/lib/layout'
@@ -46,6 +47,7 @@ export interface ThumbnailArtifact {
 
 interface Geometry {
   viewBox: string
+  corners: Map<number, Point[]>
   points: Map<number, string>
   hatches: Map<number, string>
   centers: Map<number, Point>
@@ -68,6 +70,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
   const layout = new Layout(POINTY, { x: hexSize, y: hexSize }, { x: origin, y: origin })
   const grid = new Grid()
 
+  const tileCorners = new Map<number, Point[]>()
   const points = new Map<number, string>()
   const hatches = new Map<number, string>()
   const centers = new Map<number, Point>()
@@ -83,6 +86,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
       if (corner.y < minY) minY = corner.y
       if (corner.y > maxY) maxY = corner.y
     }
+    tileCorners.set(hex.getId(), corners)
     points.set(hex.getId(), corners.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '))
     hatches.set(hex.getId(), getTileHatchPoints(corners))
     centers.set(hex.getId(), layout.hexToPixel(hex))
@@ -99,6 +103,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
     viewBox: viewBoxSize
       ? `0 0 ${viewBoxSize} ${viewBoxSize}`
       : `${(minX - 1).toFixed(1)} ${(minY - 1).toFixed(1)} ${(maxX - minX + 2).toFixed(1)} ${(maxY - minY + 2).toFixed(1)}`,
+    corners: tileCorners,
     points,
     hatches,
     centers,
@@ -194,6 +199,7 @@ const {
   numbered = false,
   outlined = [],
   better = [],
+  buffTiles = [],
   fineRing = false,
 } = defineProps<{
   mapKey: string
@@ -215,6 +221,7 @@ const {
   // Tiles drawn with a dashed outline, and with a solid green one.
   outlined?: number[]
   better?: number[]
+  buffTiles?: readonly number[]
   fineRing?: boolean
 }>()
 
@@ -289,6 +296,13 @@ const outlinedTiles = computed(() =>
           },
         ]
       : []
+  }),
+)
+
+const buffMarks = computed(() =>
+  buffTiles.flatMap((hexId) => {
+    const corners = geometry.value.corners.get(hexId)
+    return corners ? [{ hexId, corners }] : []
   }),
 )
 
@@ -559,6 +573,9 @@ defineExpose({ zoneBox, itemBox })
         stroke-width="1"
       />
     </g>
+
+    <!-- Over the units: a portrait fills its tile. -->
+    <BuffTileMarks :tiles="buffMarks" :hex-size />
 
     <template v-if="numbered">
       <text

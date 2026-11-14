@@ -45,7 +45,9 @@ import SlMapColumn from './SlMapColumn.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconArrowUpRight from '@/components/ui/IconArrowUpRight.vue'
 import IconHelpSmall from '@/components/ui/IconHelpSmall.vue'
+import { buffTilesOf, modeBuffs } from '@/lib/maps'
 import { shownFormation } from '@/lib/pvp/generator/formation'
+import { DEFAULT_VARIANT } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -65,6 +67,15 @@ const engineOn = defineModel<(boolean | undefined)[]>('engineOn', { required: tr
 
 const i18n = useI18nStore()
 const boards = computed(() => teamPreviewBoards(data) ?? [])
+// A board has buff tiles only on a mode's own map list.
+const buffTiles = computed(() => {
+  const { variant } = shown
+  return boards.value.map((board) =>
+    variant === null || variant === DEFAULT_VARIANT
+      ? []
+      : buffTilesOf(modeBuffs(variant, board.mapKey)),
+  )
+})
 const onEngine = computed(() =>
   shown.teams.map((team, index) => engineOn.value[index] ?? !team.showsPlayed),
 )
@@ -108,6 +119,7 @@ const oneBoard = computed(() => shown.teams.length === 1)
           :key="index"
           :team
           :board="boards[index]"
+          :buff-tiles="buffTiles[index]"
           :why="why[index]"
           :engine-on="onEngine[index]"
           :debug

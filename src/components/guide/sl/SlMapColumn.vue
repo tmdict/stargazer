@@ -30,6 +30,7 @@ import { useSlNames } from './useSlNames'
 
 const {
   team,
+  buffTiles = [],
   engineOn = false,
   debug = false,
   counts = true,
@@ -37,6 +38,7 @@ const {
   team: Pick<SlShownTeam, 'map' | 'comp' | 'core' | 'flex' | 'pairs'> &
     Partial<Pick<SlShownTeam, 'trySwap' | 'played' | 'scores' | 'refused'>>
   board: PreviewBoard | undefined
+  buffTiles?: readonly number[]
   why?: PlacementExplanation | null
   engineOn?: boolean
   debug?: boolean
@@ -111,7 +113,7 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
 
 <template>
   <article class="sl-col" :aria-label="i18n.t('app.sl-map', { n: team.map + 1 })">
-    <SlMapBoard v-if="board" ref="board" :board :why :swap="preview" />
+    <SlMapBoard v-if="board" ref="board" :board :buff-tiles :why :swap="preview" />
     <SlFormationSwitch
       v-if="debug && board && team.played && team.scores"
       class="sl-formation-switch"

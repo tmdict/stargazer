@@ -30,10 +30,12 @@ import { useGameDataStore } from '@/stores/gameData'
 
 const {
   board,
+  buffTiles = [],
   why = null,
   swap = null,
 } = defineProps<{
   board: PreviewBoard
+  buffTiles?: readonly number[]
   why?: PlacementExplanation | null
   swap?: SwapPreview | null
 }>()
@@ -211,6 +213,7 @@ const unitCardAnchor = computed(() => {
     fine-ring
     :outlined="shown?.alsoFine"
     :better="shown?.better"
+    :buff-tiles
     @mouseover="onOver"
     @mouseout="hoverClose"
     @click="onClick"
