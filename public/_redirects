@@ -1,4 +1,4 @@
-https://afkj-stargazer.netlify.app/* https://afkstargazer.com/:splat 301!
+https://afkstargazer.netlify.app/* https://afkstargazer.com/:splat 301!
 # The old address's recovery page; the app's fallback would otherwise answer.
 https://stargazer.tmdict.com/backup /move-recovery.html 200!
 https://stargazer.tmdict.com/* https://afkstargazer.com/:splat 301!
