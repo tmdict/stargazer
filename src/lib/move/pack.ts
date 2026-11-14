@@ -2,7 +2,7 @@
  * names and their stored text, compressed with raw deflate and written in
  * link-safe base64 without padding. */
 
-import { TRAVEL_KEYS } from './config'
+import { TRAVEL_KEYS } from './config.ts'
 
 /* The `#` part an old page leaves with: the mark and the packed items, the mark
  * alone when they cannot travel, or null when there is nothing to carry.

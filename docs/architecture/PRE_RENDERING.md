@@ -74,7 +74,7 @@ The build fails on a placeholder naming a missing image, a placeholder left unre
 
 Each report comes with a summary, which the guide index shows. The external report generator writes it with the report and owns its format, so nothing here derives or edits its numbers. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) finds the summaries newest first, so a new season needs no entry in the code.
 
-The guide index's card for the PvP team generator (`virtual:sl-preview`), and the Formation engine rules page and the Hero lists page (`virtual:formation-rules`), show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so they are in the baked HTML and no page loads the file.
+The Formation engine rules page and the Hero lists page (`virtual:formation-rules`) show parts of the PvP data file worked out once per build by `packModule` (`scripts/packModule.ts`), so they are in the baked HTML and neither page loads the file. The guide index's card for the PvP team generator draws a fixed example set (`src/content/pvp/slPreview.ts`).
 
 ## Hosting
 

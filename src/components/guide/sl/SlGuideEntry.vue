@@ -1,17 +1,16 @@
 <script setup lang="ts">
 /* The PvP team generator's card on the guide index: the first three maps
-   of the set the generator gives before a roster is picked, drawn by its own
-   map column. Each map keeps its first swap and two heroes to swap in, so the
-   three fit a phone. The maps fill the card at the generator's proportions,
+   of an example set, drawn by the generator's own map column. Each map keeps
+   its first swap and two heroes to swap in, so the three fit a phone. The
+   maps fill the card at the generator's proportions,
    up to its own size: there, at 1280px, a column is 220 of its pixels wide
    with 34px portraits 8px apart and 24px between columns, so one of its
    pixels is a 220th of a column here, and never more than 1px. */
 
-import preview from 'virtual:sl-preview'
-
 import SlBeta from './SlBeta.vue'
 import SlMapColumn from './SlMapColumn.vue'
 import LinkHeading from '@/components/ui/LinkHeading.vue'
+import { SL_PREVIEW } from '@/content/pvp/slPreview'
 import { SL_GENERATOR_PATH } from '@/lib/guide'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import type { AppLocale } from '@/lib/types/i18n'
@@ -22,8 +21,8 @@ const { lang } = defineProps<{ lang: AppLocale }>()
 const MAPS = 3
 const OPTIONS = 2
 
-const boards = preview ? (teamPreviewBoards(preview.data) ?? []) : []
-const maps = (preview?.teams ?? []).slice(0, MAPS).map((team, index) => {
+const boards = teamPreviewBoards(SL_PREVIEW.data) ?? []
+const maps = SL_PREVIEW.teams.slice(0, MAPS).map((team, index) => {
   const [flex] = team.flex
   const [pair] = team.pairs
   return {

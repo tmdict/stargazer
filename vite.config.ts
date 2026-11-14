@@ -195,12 +195,6 @@ export default defineConfig({
       },
     },
     packModule({
-      name: 'sl-preview',
-      entry: 'src/lib/pvp/generator/defaultSet.ts',
-      run: 'defaultSlSet',
-      without: 'the guide index shows no preview',
-    }),
-    packModule({
       name: 'formation-rules',
       entry: 'src/lib/pvp/data/formationRulesData.ts',
       run: 'formationRulesData',
