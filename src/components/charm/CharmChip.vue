@@ -56,10 +56,10 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
       @mouseleave="onMouseLeave"
     >
       <span class="count">{{ heroes.length }}</span>
-      <span v-if="older" class="older">+{{ older }}</span>
       <span class="faces">
         <GuidePortrait v-for="slug in newest" :key="slug" :slug :lang="i18n.currentLocale" />
       </span>
+      <span v-if="older" class="older">+{{ older }}</span>
     </button>
     <HoldRing v-if="pressing" class="ring" />
 
