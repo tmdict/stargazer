@@ -47,6 +47,15 @@ export const artifactImages = byName(
   ),
 )
 
+// Shown at up to the tooltip's width, so they keep their own size.
+export const keywordImages = byName(
+  import.meta.glob<string>('@/pack/images/keyword/*.png', {
+    query: { format: 'webp', quality: 80 },
+    eager: true,
+    import: 'default',
+  }),
+)
+
 export const charmTypeImages = byName(
   import.meta.glob<string>('@/pack/images/seasonal/charm/*.png', {
     query: { format: 'webp', quality: 80, w: 100 },
