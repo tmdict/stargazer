@@ -26,8 +26,11 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+
+const { open: openContact } = useContactForm()
 
 const SKILL = {
   hero: 'frieren',
@@ -659,6 +662,7 @@ const SKILL = {
   </section>
 
   <p class="help-foot reading-meta">
-    Something not working? Send feedback with the envelope icon at the top.
+    Something not working?
+    <button type="button" class="link-button" @click="openContact">Send feedback</button>
   </p>
 </template>

@@ -11,10 +11,10 @@
    Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
    the tab strip, list right-aligned), `dark` (translucent, inside the dark
    on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
-   accessible name, list dark and right-aligned), `nav` (the owner's own
-   `trigger` slot on dark chrome, such as a top bar link, list dark). The
-   owner can fix the trigger width with `--dropdown-trigger-width` or give it
-   a floor with `--dropdown-trigger-min-width`.
+   accessible name, list dark and centred under the icon), `nav` (the
+   owner's own `trigger` slot on dark chrome, such as a top bar link, list
+   dark). The owner can fix the trigger width with `--dropdown-trigger-width`
+   or give it a floor with `--dropdown-trigger-min-width`.
 
    `floating` moves the list to <body>, for a dropdown inside a scrolling
    panel that would otherwise cut the list off. `clickOnly` and the `open`
@@ -715,7 +715,10 @@ const pressSegment = (): void => {
 .icon .item,
 .icon .item-action,
 .nav .item,
-.nav .item-action {
+.nav .item-action,
+.dark :slotted(.row),
+.icon :slotted(.row),
+.nav :slotted(.row) {
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -728,14 +731,20 @@ const pressSegment = (): void => {
 
 .dark .item:hover,
 .icon .item:hover,
-.nav .item:hover {
+.nav .item:hover,
+.dark :slotted(.row:hover),
+.icon :slotted(.row:hover),
+.nav :slotted(.row:hover) {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
 .dark .item.selected,
 .icon .item.selected,
-.nav .item.selected {
+.nav .item.selected,
+.dark :slotted(.row.selected),
+.icon :slotted(.row.selected),
+.nav :slotted(.row.selected) {
   background: var(--color-primary);
   color: #fff;
 }
@@ -761,8 +770,8 @@ const pressSegment = (): void => {
 }
 
 .icon .list {
-  right: 0;
-  left: auto;
+  left: 50%;
+  translate: -50% 0;
 }
 
 .nav {

@@ -77,14 +77,24 @@
   margin-bottom: 8px;
 }
 
-.content a {
+.content .link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.content a,
+.content .link-button {
   color: var(--color-accent);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
-.content a:hover {
+.content a:hover,
+.content .link-button:hover {
   color: var(--color-danger-text);
   text-decoration: underline;
 }

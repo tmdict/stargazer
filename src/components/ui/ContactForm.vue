@@ -4,19 +4,13 @@
 
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useContactForm } from '@/composables/useContactForm'
 import { useToast } from '@/composables/useToast'
 import { useI18nStore } from '@/stores/i18n'
 
 const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/732e046a45752d1b51ca4fda51e1f045'
 
-const { trigger = null } = defineProps<{
-  // The header button that toggles the panel. Its presses are excluded from
-  // the outside-press dismissal so the button's own click handler keeps
-  // toggle semantics (close would otherwise fire first and the click reopen).
-  trigger?: Element | null
-}>()
-
-const open = defineModel<boolean>('open', { required: true })
+const { isOpen: open } = useContactForm()
 
 const i18n = useI18nStore()
 const { success, error } = useToast()
@@ -67,7 +61,7 @@ const submit = async (): Promise<void> => {
 
 const onDocPointerDown = (e: PointerEvent): void => {
   if (!open.value || !(e.target instanceof Node)) return
-  if (panelEl.value?.contains(e.target) || trigger?.contains(e.target)) return
+  if (panelEl.value?.contains(e.target)) return
   open.value = false
 }
 

@@ -26,8 +26,11 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+
+const { open: openContact } = useContactForm()
 
 const SKILL = {
   hero: 'frieren',
@@ -549,5 +552,7 @@ const SKILL = {
     </ul>
   </section>
 
-  <p class="help-foot reading-meta">遇到问题？点页面顶部的信封图标反馈。</p>
+  <p class="help-foot reading-meta">
+    遇到问题？<button type="button" class="link-button" @click="openContact">发送反馈</button>
+  </p>
 </template>

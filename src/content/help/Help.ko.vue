@@ -26,8 +26,11 @@ import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+
+const { open: openContact } = useContactForm()
 
 const SKILL = {
   hero: 'frieren',
@@ -665,5 +668,8 @@ const SKILL = {
     </ul>
   </section>
 
-  <p class="help-foot reading-meta">문제가 있나요? 위쪽의 봉투 아이콘으로 의견을 보내 주세요.</p>
+  <p class="help-foot reading-meta">
+    문제가 있나요?
+    <button type="button" class="link-button" @click="openContact">의견 보내기</button>
+  </p>
 </template>
