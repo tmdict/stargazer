@@ -216,7 +216,7 @@ const {
 }
 
 .phantimal {
-  background: var(--unit-disc-phantimal);
+  background: var(--seasonal-disc-phantimal);
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);

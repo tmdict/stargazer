@@ -240,7 +240,7 @@ main {
 }
 
 .icon-disc {
-  border: 2px solid var(--color-bg-raised);
+  border: 2px solid var(--hero-icon-ring);
   border-radius: var(--radius-round);
   background: var(--color-bg-raised);
   cursor: pointer;
@@ -315,10 +315,10 @@ main {
   height: var(--hero-icon-size);
   position: relative;
   border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-raised);
+  border: 2px solid var(--hero-icon-ring);
   background: var(--color-bg-raised);
   overflow: hidden;
-  box-shadow: 0 0 0 2px var(--color-bg-raised);
+  box-shadow: 0 0 0 2px var(--hero-icon-ring);
 }
 
 .icon-groups {
