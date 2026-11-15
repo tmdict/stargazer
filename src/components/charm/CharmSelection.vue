@@ -7,11 +7,11 @@ import { computed } from 'vue'
 
 import CharmChip from './CharmChip.vue'
 import CharmTypeIcon from './CharmTypeIcon.vue'
+import { oldestFirst } from '@/lib/heroAge'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import type { CharmData } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { getSkillLanguage } from '@/utils/skillLocale'
-import { oldestFirst } from './charmHeroes'
 
 const { charms, showTypes } = defineProps<{
   charms: readonly CharmData[]

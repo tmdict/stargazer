@@ -16,12 +16,13 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <ul class="charm-heroes">
-    <li v-for="slug in heroes" :key="slug">
+  <!-- Not a ul: popup text styles dim every li, and these hold portraits. -->
+  <div class="charm-heroes" role="list">
+    <div v-for="slug in heroes" :key="slug" class="hero" role="listitem">
       <GuidePortrait :slug :lang="i18n.currentLocale" />
-      <span class="name">{{ heroDisplayName(slug, lang) }}</span>
-    </li>
-  </ul>
+      <span class="name reading-meta">{{ heroDisplayName(slug, lang) }}</span>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -31,25 +32,19 @@ const i18n = useI18nStore()
   display: flex;
   flex-wrap: wrap;
   gap: 12px 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.charm-heroes li {
+.hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
   width: 72px;
-  margin: 0;
 }
 
 .name {
   overflow-wrap: anywhere;
-  font-size: var(--reading-small-size);
   line-height: 1.2;
   text-align: center;
-  color: var(--reading-muted);
 }
 </style>

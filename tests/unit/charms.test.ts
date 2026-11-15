@@ -5,8 +5,9 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { loadCharacters, loadCharms, loadHeroCharms } from '@/lib/dataLoader'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import { pinnedLevels } from '@/lib/tags'
-import { APP_LOCALES } from '@/lib/types/i18n'
+import { APP_LOCALES, SKILL_LOCALE_CODES } from '@/lib/types/i18n'
 import type { CharmFile } from '@/lib/types/skill'
 import { loadCharmTypeImages } from '@/utils/imageLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
@@ -26,6 +27,13 @@ describe('charm data', () => {
 
   // A season can ship before its charm text, so no charms is legitimate (a
   // pack update retires them with their season); a hero list without text, or
+  // The tab heads the charms with the current season, which only their ids
+  // can confirm.
+  it('belongs to the current season', () => {
+    const prefix = `s${CURRENT_SEASON}-`
+    expect(charms.map(({ id }) => id).filter((id) => !id.startsWith(prefix))).toEqual([])
+  })
+
   // text without a hero list, is a half-applied pack update.
   it('is either fully present or fully retired', () => {
     for (const lang of APP_LOCALES) {
@@ -73,9 +81,10 @@ describe('charm types', () => {
     }
   })
 
-  it('name the same types in every site language', () => {
+  it('name the same types in every skill language', async () => {
+    await Promise.all(SKILL_LOCALE_CODES.map((lang) => loadSkillLocale(lang)))
     const english = Object.keys(getSkillLanguage('en')!.charmTypes)
-    for (const lang of APP_LOCALES) {
+    for (const lang of SKILL_LOCALE_CODES) {
       expect({ lang, types: Object.keys(getSkillLanguage(lang)!.charmTypes) }).toEqual({
         lang,
         types: english,

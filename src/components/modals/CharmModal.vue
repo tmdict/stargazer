@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import CharmHeroList from '@/components/charm/CharmHeroList.vue'
 import SkillCharmSection from '@/components/skill/SkillCharmSection.vue'
+import SkillKeywordTooltip from '@/components/skill/SkillKeywordTooltip.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
-import { oldestFirst } from '@/components/charm/charmHeroes'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
+import { oldestFirst } from '@/lib/heroAge'
 import type { CharmData } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { getSkillLanguage } from '@/utils/skillLocale'
@@ -28,7 +29,9 @@ const { selected, applied, failed, apply } = useModalSkillLocale(() => props.sho
 const title = computed(() => i18n.t('app.charm'))
 const heroes = computed(() => oldestFirst(props.charm.heroes))
 
-const text = computed(() => (applied.value ? getSkillLanguage(applied.value)?.charms : undefined))
+const language = computed(() => (applied.value ? getSkillLanguage(applied.value) : undefined))
+const text = computed(() => language.value?.charms ?? undefined)
+const tiersEl = ref<HTMLElement | null>(null)
 const tiers = computed(() =>
   (text.value?.charms[props.charm.id] ?? []).map((description, i) => ({
     tier: i + 1,
@@ -47,7 +50,15 @@ const tiers = computed(() =>
       <h1 class="detail-title" :lang="i18n.currentLocale">{{ title }}</h1>
       <template v-if="applied || failed">
         <CharmHeroList v-if="applied" class="heroes" :heroes :lang="applied" />
-        <SkillCharmSection v-if="text && tiers.length" :tier-names="text.tiers" :tiers />
+        <div v-if="text && tiers.length" ref="tiersEl">
+          <SkillCharmSection :tier-names="text.tiers" :tiers />
+          <SkillKeywordTooltip
+            v-if="applied && language"
+            :lang="applied"
+            :keywords="language.keywords"
+            :container="tiersEl"
+          />
+        </div>
         <p v-else class="details-pending" :lang="i18n.currentLocale">
           {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
         </p>

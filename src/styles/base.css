@@ -233,6 +233,24 @@ main {
   width: 84px;
 }
 
+.icon-disc-frame {
+  position: relative;
+  width: fit-content;
+  margin-top: var(--spacing-xs);
+}
+
+.icon-disc {
+  border: 2px solid var(--color-bg-raised);
+  border-radius: var(--radius-round);
+  background: var(--color-bg-raised);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.icon-disc:hover {
+  transform: scale(1.05);
+}
+
 .seasonal-cell-name {
   display: -webkit-box;
   -webkit-box-orient: vertical;

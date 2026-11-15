@@ -9,6 +9,8 @@ import { isTouchClick } from '@/utils/pointer'
  *   - a press released before the ring delay stays an ordinary click or tap;
  *   - moving past the tolerance, or a drag starting, abandons the hold;
  *   - once the ring shows, releasing does nothing, and a completed hold opens.
+ *     A surface whose click also opens (`releaseOpens`) opens on that release
+ *     instead, so a slow click is not lost.
  * Both endings swallow the click the release produces. The hold may open a
  * modal under the pointer, so that click would land outside it and trip its
  * click-outside close; the swallow is a document capture listener so it runs
@@ -52,7 +54,10 @@ function armClickSwallow(): void {
   swallowTimer = setTimeout(disarmClickSwallow, SWALLOW_WINDOW_MS)
 }
 
-export function useLongPress<T>(onHold: (target: T) => void) {
+export function useLongPress<T>(
+  onHold: (target: T) => void,
+  { releaseOpens = false }: { releaseOpens?: boolean } = {},
+) {
   // The target whose ring is showing: set after the ring delay, cleared when
   // the hold ends either way.
   const pressing = shallowRef<T | null>(null)
@@ -90,7 +95,9 @@ export function useLongPress<T>(onHold: (target: T) => void) {
 
   function onUp(event: PointerEvent): void {
     if (event.pointerId !== pointerId) return
-    if (pressing.value !== null) armClickSwallow()
+    if (pressing.value === null) return stop()
+    if (releaseOpens) return fire()
+    armClickSwallow()
     stop()
   }
 

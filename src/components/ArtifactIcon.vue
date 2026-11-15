@@ -42,10 +42,10 @@ const {
 
 <template>
   <!-- The frame holds the hold ring outside the icon's clipped circle. -->
-  <div class="artifact-frame">
+  <div class="icon-disc-frame">
     <div
       ref="artifactElement"
-      class="artifact"
+      class="artifact icon-disc"
       :class="{ 'greyed-out': dimmed, inspectable }"
       @click="emit('artifactClick', artifact)"
       @pointerdown="inspectable && startHold($event, artifact)"
@@ -68,18 +68,9 @@ const {
 </template>
 
 <style scoped>
-.artifact-frame {
-  position: relative;
-  width: fit-content;
-  margin-top: var(--spacing-xs);
-}
-
 .artifact {
   width: 58px;
   height: 58px;
-  border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-raised);
-  background: var(--color-bg-raised);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -90,8 +81,6 @@ const {
   font-weight: 600;
   text-align: center;
   color: var(--color-text-primary);
-  cursor: pointer;
-  transition: transform var(--transition-fast);
 }
 
 .artifact::before {
@@ -100,10 +89,6 @@ const {
   inset: 0;
   border-radius: var(--radius-round);
   background: #fff4;
-}
-
-.artifact:hover {
-  transform: scale(1.05);
 }
 
 @media (max-width: 480px) {

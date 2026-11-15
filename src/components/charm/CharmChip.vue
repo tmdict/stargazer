@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /* A season charm on the Seasonal tab: how many heroes share it and its newest
-   heroes, with its text and every hero in a hover card. A charm cannot go on a
-   board, so a click opens its details as a right-click or a hold does. */
+   heroes, with its text and every hero in a hover card. */
 
 import { computed, ref } from 'vue'
 
@@ -9,12 +8,11 @@ import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { useInspect } from '@/composables/useInspect'
-import { useLongPress } from '@/composables/useLongPress'
+import { useInspectOnClick } from '@/composables/useInspectOnClick'
 import type { SkillLocale } from '@/lib/types/i18n'
 import type { CharmData } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
+import { curatedHeroName } from '@/utils/skillLabels'
 import { highlightSkillText } from '@/utils/textHighlight'
 
 const SHOWN = 6
@@ -34,15 +32,14 @@ const newest = computed(() => heroes.slice(-SHOWN))
 const older = computed(() => heroes.length - newest.value.length)
 const html = computed(() => (text ? highlightSkillText(text) : ''))
 
-const { showTooltip, onMouseEnter, onMouseLeave } = useHoverTooltip()
-const chip = ref<HTMLElement>()
+const label = computed(
+  () =>
+    `${i18n.t('app.charm')}: ${heroes.map((slug) => curatedHeroName(slug, i18n.currentLocale)).join(', ')}`,
+)
 
-const { inspect } = useInspect()
-const open = (): void => {
-  showTooltip.value = false
-  void inspect({ kind: 'charm', charm })
-}
-const { pressing, start: startHold, onContextMenu } = useLongPress<CharmData>(open)
+const chip = ref<HTMLElement>()
+const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, onContextMenu } =
+  useInspectOnClick(() => ({ kind: 'charm', charm }))
 </script>
 
 <template>
@@ -51,9 +48,10 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<CharmData>(op
       ref="chip"
       type="button"
       class="charm-chip inspectable"
+      :aria-label="label"
       @click="open"
-      @pointerdown="startHold($event, charm)"
-      @contextmenu="onContextMenu($event, charm)"
+      @pointerdown="onPointerDown"
+      @contextmenu="onContextMenu"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
     >
@@ -124,6 +122,7 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<CharmData>(op
   --disc-ring: var(--color-bg-raised);
   display: inline-flex;
   flex: none;
+  pointer-events: none;
 }
 
 .faces > * + * {
