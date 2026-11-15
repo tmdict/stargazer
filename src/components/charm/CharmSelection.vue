@@ -90,7 +90,7 @@ const heading = (label: string): string =>
 
 @media (max-width: 768px) {
   .charm-chips {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) var(--spacing-md);
   }
 }
 
@@ -100,7 +100,7 @@ const heading = (label: string): string =>
   }
 
   .charm-chips {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
   }
 }
 </style>
