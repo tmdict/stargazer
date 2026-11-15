@@ -29,6 +29,8 @@ export default defineConfig({
     // The tests over real data and screenshots take seconds, and several times
     // that on a busy machine, so the default of 5 s fails them for load alone.
     testTimeout: 30_000,
+    // A git worktree nested in this folder carries its own copy of the tests.
+    include: ['tests/**/*.test.ts'],
     exclude: packed ? configDefaults.exclude : [...configDefaults.exclude, ...PACK_DATA_TESTS],
   },
   resolve: {
