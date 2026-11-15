@@ -67,7 +67,7 @@ Equally good placements are those that keep the hard rules the best one keeps, w
 
 `explainPlacement` (`explain.ts`) gives the reasons for a placement, which the PvP team generator shows on each unit of a board and Placement tips shows for an ally side placed by hand (`sideExplanation` in `formation.ts`, run in the Supreme League worker). The enemy units' rules give no reasons, since they only choose among placements as good.
 
-A reason names units by id and an effect by the data file its rule sits in. Its words are locale keys built from that file name, `placement-gives-<file>`, `placement-receives-<file>` and `placement-reaches-<file>` in `src/locales/app/placement/effects/`, and the rules test fails when a weighted rule has no words or words name no rule.
+A reason names units by id and an effect by the data file its rule sits in. Its words are locale keys built from that file name, `placement-gives-<file>`, `placement-receives-<file>` and `placement-reaches-<file>` in `src/locales/app/placement/effects/`, and the rules test fails when a weighted rule has no words or words name no rule. A `most` rule that counts walls or allies adds that word to the name (`placement-reaches-<file>-walls`, and `-most-walls` in its note's key), so a unit can hold a `most` rule for each thing it counts.
 
 ## The Formation engine rules page
 

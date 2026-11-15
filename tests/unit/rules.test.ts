@@ -9,7 +9,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { ruleCards } from '@/lib/placement/formationRules'
-import { effectVerb } from '@/lib/placement/goals'
+import { effectName, effectVerb } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
@@ -63,14 +63,15 @@ function goalProblem(goal: unknown): string | null {
 function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may'): string[] {
   const problems: string[] = []
   // One effect can have two aims, each its own rule, but never two of one goal
-  // word for one team from one body.
+  // word for one team from one body. What a most goal counts is part of its word.
   const aims = new Set<string>()
   for (const rule of rules) {
     for (const field of Object.keys(rule))
       if (!FIELDS.has(field)) problems.push(`the field ${field}`)
     if (rule.team !== 'ally' && rule.team !== 'enemy') problems.push(`the team ${rule.team}`)
     const word = typeof rule.goal === 'string' ? rule.goal : Object.keys(rule.goal)[0]
-    const aim = `${rule.team} ${word}${rule.from ? ` from ${rule.from}` : ''}`
+    const counted = typeof rule.goal === 'object' && 'most' in rule.goal ? ` ${rule.goal.most}` : ''
+    const aim = `${rule.team} ${word}${counted}${rule.from ? ` from ${rule.from}` : ''}`
     if (aims.has(aim)) problems.push(`two ${aim} rules`)
     aims.add(aim)
     const goal = goalProblem(rule.goal)
@@ -162,10 +163,9 @@ describe('placement rules', () => {
     }
   })
 
-  // A placement card words an effect by the file its rule sits in, with
-  // -companion for the effect a unit's other body gives: what a goal for heroes
-  // (target, include, exactly) gives and what a hero receives, or what a most or
-  // companion goal reaches.
+  // A placement card words an effect by its name (effectName): what a goal for
+  // heroes (target, include, exactly) gives and what a hero receives, or what a
+  // most or companion goal reaches.
   it('each have the words a placement card names their effect with, and no words outlive one', () => {
     const needed = new Set<string>()
     for (const { name, rules } of owners) {
@@ -173,8 +173,7 @@ describe('placement rules', () => {
         if (rule.team !== 'ally' || rule.weight === undefined) continue
         const verb = effectVerb(rule.goal)
         const kinds = verb === 'gives' ? ['gives', 'receives'] : verb ? [verb] : []
-        const file = rule.from === 'companion' ? `${name}-companion` : name
-        for (const key of kinds.map((kind) => `placement-${kind}-${file}`)) {
+        for (const key of kinds.map((kind) => `placement-${kind}-${effectName(name, rule)}`)) {
           expect(needed.has(key), `two of ${name}'s rules are worded by ${key}`).toBe(false)
           needed.add(key)
         }

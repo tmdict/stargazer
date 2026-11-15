@@ -4,7 +4,7 @@
  * language. */
 
 import type { Rule, RuleTeam } from '../types/rule'
-import { effectVerb, goalList, goalWord, isHardRule } from './goals'
+import { effectName, effectVerb, goalList, goalWord, isHardRule } from './goals'
 import { expandList, type ListSource } from './lists'
 import type { PlacementData, PlacementLookups } from './types'
 
@@ -53,10 +53,7 @@ function ruleCard(file: string, rule: Rule, weights: PlacementData['weights']): 
   const card: RuleCard = { team, effect: null, note: noteKey(file, rule) }
   const verb = ally ? effectVerb(goal) : undefined
   if (goal === 'back') card.effect = 'back'
-  else if (verb) {
-    const effectFile = rule.from === 'companion' ? `${file}-companion` : file
-    card.effect = { verb, key: `placement-${verb}-${effectFile}` }
-  }
+  else if (verb) card.effect = { verb, key: `placement-${verb}-${effectName(file, rule)}` }
   const list = goalList(goal)
   if (list !== undefined && typeof goal === 'object') {
     card.list = list
