@@ -88,9 +88,9 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
   gap: 10px;
   width: 228px;
   max-width: 100%;
-  padding: 4px 10px 4px 12px;
+  padding: 5px 10px 5px 12px;
   border: 1px solid var(--color-border-light);
-  border-radius: 22px;
+  border-radius: 999px;
   background: var(--color-bg-raised);
   color: var(--color-text-primary);
   font-family: var(--font-ui);
@@ -130,7 +130,7 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
 }
 
 .ring {
-  top: -4px;
+  top: calc(50% - 25px);
   left: calc(50% - 25px);
   width: 50px;
   height: 50px;
