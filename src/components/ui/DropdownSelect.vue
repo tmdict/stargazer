@@ -715,10 +715,7 @@ const pressSegment = (): void => {
 .icon .item,
 .icon .item-action,
 .nav .item,
-.nav .item-action,
-.dark :slotted(.row),
-.icon :slotted(.row),
-.nav :slotted(.row) {
+.nav .item-action {
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -731,20 +728,14 @@ const pressSegment = (): void => {
 
 .dark .item:hover,
 .icon .item:hover,
-.nav .item:hover,
-.dark :slotted(.row:hover),
-.icon :slotted(.row:hover),
-.nav :slotted(.row:hover) {
+.nav .item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
 .dark .item.selected,
 .icon .item.selected,
-.nav .item.selected,
-.dark :slotted(.row.selected),
-.icon :slotted(.row.selected),
-.nav :slotted(.row.selected) {
+.nav .item.selected {
   background: var(--color-primary);
   color: #fff;
 }

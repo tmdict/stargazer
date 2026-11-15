@@ -1,8 +1,7 @@
 <script setup lang="ts">
-/* One row of a dropdown's list: a label, an optional icon before it, and an
-   optional trailing detail such as a count. A button, or a link when it has
-   somewhere to go. Every DropdownSelect list is built from these, so their
-   rows cannot differ. */
+/* One row of a dropdown's list: a label and an optional trailing detail such
+   as a count. A button, or a link when it has somewhere to go. Every
+   DropdownSelect list is built from these, so their rows cannot differ. */
 
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
 
@@ -21,8 +20,6 @@ defineProps<{
   // A page outside the app's routes.
   href?: string
 }>()
-
-defineSlots<{ icon?(): unknown }>()
 </script>
 
 <template>
@@ -35,7 +32,6 @@ defineSlots<{ icon?(): unknown }>()
     :class="{ selected, sub, action }"
   >
     <span class="label"
-      ><span v-if="$slots.icon" class="row-icon"><slot name="icon" /></span
       ><span v-if="lead" class="lead">{{ lead }}</span
       >{{ label }}</span
     >
@@ -119,13 +115,6 @@ defineSlots<{ icon?(): unknown }>()
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.row-icon {
-  display: inline-flex;
-  margin-right: 10px;
-  vertical-align: -3px;
-  opacity: 0.85;
 }
 
 .lead {
