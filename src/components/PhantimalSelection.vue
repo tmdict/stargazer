@@ -220,10 +220,10 @@ const {
   height: var(--hero-icon-size);
   position: relative;
   border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-raised);
+  border: 2px solid var(--hero-icon-ring);
   background: var(--seasonal-disc-phantimal);
   overflow: hidden;
-  box-shadow: 0 0 0 2px var(--color-bg-raised);
+  box-shadow: 0 0 0 2px var(--hero-icon-ring);
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);

@@ -240,7 +240,7 @@ main {
 }
 
 .icon-disc {
-  border: 2px solid var(--color-bg-raised);
+  border: 2px solid var(--hero-icon-ring);
   border-radius: var(--radius-round);
   background: var(--color-bg-raised);
   cursor: pointer;
