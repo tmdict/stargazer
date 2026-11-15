@@ -62,7 +62,7 @@ const {
       :artifact
       :target-element="artifactElement"
       :variant="showSimpleTooltip ? 'simple' : 'detailed'"
-      :hint="inspectable ? i18n.t('app.hold-for-skills') : undefined"
+      :hint="inspectable ? i18n.t('app.hold-for-details') : undefined"
     />
   </div>
 </template>
