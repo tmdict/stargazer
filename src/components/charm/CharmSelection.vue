@@ -82,21 +82,10 @@ const heading = (label: string): string =>
 }
 
 .charm-chips {
-  container-type: inline-size;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(228px, 100%), 1fr));
   gap: 10px;
   padding: var(--spacing-lg);
-}
-
-.charm-chips > * {
-  width: 228px;
-}
-
-@container (max-width: 465px) {
-  .charm-chips > * {
-    width: 100%;
-  }
 }
 
 @media (max-width: 768px) {
