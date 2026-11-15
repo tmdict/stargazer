@@ -413,10 +413,10 @@ const handleResetMap = () => {
   }
 }
 
-@media (min-width: 1220px) and (max-width: 1599px) {
+@media (min-width: 1600px) {
   .sections-container > .section:first-child {
-    flex-basis: 640px;
-    width: 640px;
+    flex-basis: 720px;
+    width: 720px;
   }
 }
 </style>

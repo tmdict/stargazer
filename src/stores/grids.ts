@@ -101,6 +101,7 @@ const BREAKPOINT_SIZES: Record<Breakpoint, { x: number; y: number }> = {
   tablet: { x: 30, y: 30 }, // 75% scale
   laptop: { x: 36, y: 36 }, // 90% scale
   desktop: { x: 40, y: 40 }, // 100% scale
+  wide: { x: 44, y: 44 }, // 110% scale
 }
 
 export const useGrids = defineStore('grids', () => {
