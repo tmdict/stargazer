@@ -83,9 +83,9 @@ const heading = (label: string): string =>
 
 .charm-chips {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(228px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(222px, 100%), 1fr));
   gap: 10px;
-  padding: var(--spacing-lg) var(--spacing-2xl) var(--spacing-lg) var(--spacing-lg);
+  padding: var(--spacing-lg) 40px var(--spacing-lg) var(--spacing-lg);
 }
 
 @media (max-width: 768px) {
