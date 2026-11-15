@@ -52,7 +52,7 @@ describe('rosters store', () => {
     expect(rosters.active?.id).toBe(own.id)
   })
 
-  it('exports, and on a refresh lists, the rosters another tab saved since this one loaded', () => {
+  it("exports the rosters another tab saved, and lists them on that tab's storage event", () => {
     const rosters = useRosters()
     rosters.create({ name: 'Main account' })
     const stored = JSON.parse(storage.get('stargazer.rosters')!) as { name: string }[]
@@ -63,7 +63,7 @@ describe('rosters store', () => {
 
     expect(rosters.exportRosters().rosters.map((r) => r.name)).toEqual(['Main account', 'Alt'])
     expect(rosters.count).toBe(1)
-    rosters.refresh()
+    window.dispatchEvent(new StorageEvent('storage', { key: 'stargazer.rosters' }))
     expect(rosters.count).toBe(2)
   })
 })

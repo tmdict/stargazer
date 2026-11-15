@@ -2,8 +2,10 @@
  * the levels they start with (lib/rosters). No active roster means All heroes.
  *
  * Like the saved-team library, this store returns typed results and leaves
- * user feedback to components, re-reads storage before every change, and keeps
- * working in memory when a write fails (`persisted` reports it). */
+ * user feedback to components, re-reads storage before every change, follows
+ * another tab's writes to the library, and keeps working in memory when a
+ * write fails (`persisted` reports it). The active roster is each tab's own
+ * until a reload. */
 
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
@@ -22,7 +24,7 @@ import {
   type RostersExportFile,
 } from '@/lib/rosters'
 import type { CharacterType } from '@/lib/types/character'
-import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
+import { readStorage, removeStorage, watchStorage, writeStorage } from '@/utils/storage'
 
 const ROSTERS_KEY = 'stargazer.rosters'
 const ACTIVE_KEY = 'stargazer.rosters.active'
@@ -78,10 +80,9 @@ export const useRosters = defineStore('rosters', () => {
     return result
   }
 
-  // Shows what another tab has saved since this list was read.
-  const refresh = (): void => {
+  watchStorage(ROSTERS_KEY, () => {
     rosters.value = stored()
-  }
+  })
 
   const setActive = (id: string | null): void => {
     activeId.value = id
@@ -169,7 +170,6 @@ export const useRosters = defineStore('rosters', () => {
     active,
     count,
     nextName,
-    refresh,
     setActive,
     create,
     rename,

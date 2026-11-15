@@ -3,7 +3,7 @@
    library's backup file, the same Export and Import the Teams page and the
    Rosters tab offer. */
 
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -13,7 +13,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 
-const { show } = defineProps<{ show: boolean }>()
+defineProps<{ show: boolean }>()
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -24,18 +24,6 @@ const library = useTeamLibrary()
 const rosters = useRosters()
 const teamsTransfer = useTeamsTransfer()
 const rostersTransfer = useRostersTransfer({ activate: false })
-
-// Export saves what storage holds, so each opening re-reads it: the counts
-// then match the files in a tab that another tab has saved past.
-watch(
-  () => show,
-  (open) => {
-    if (!open) return
-    library.refresh()
-    rosters.refresh()
-  },
-  { immediate: true },
-)
 
 const cards = computed(() => [
   {

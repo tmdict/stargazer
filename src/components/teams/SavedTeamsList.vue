@@ -258,8 +258,6 @@ const filterSummary = computed(() =>
 )
 
 const handleExport = (): void => {
-  // The file and the list it is drawn from both include what another tab saved.
-  library.refresh()
   const selection = exportFiltered.value
     ? visibleTeams.value.map(({ team }) => team)
     : library.teams

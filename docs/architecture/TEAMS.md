@@ -143,7 +143,7 @@ A record that breaks a rule is dropped with a console warning, and the others st
 - Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS`, so a `GridState` section missing from it is silently dropped from saved teams. A section with units is also read by `preview.ts` and `sideLoad.ts`.
 - Loading validates each record on its own (known mode, matching board count, data that canonicalizes). One bad record is dropped, never the library.
 - Records on removed maps or with other seasons' content stay valid. Loading strips the old content from the boards while the record keeps it.
-- Every change re-reads the stored library first. If a write fails, the store keeps working in memory and reports the loss, instead of claiming the save worked. The store never shows messages; components do.
+- Every change re-reads the stored library first, and an open tab's list follows what another tab saves. If a write fails, the store keeps working in memory and reports the loss, instead of claiming the save worked. The store never shows messages; components do.
 - The library holds at most `MAX_SAVED_TEAMS`.
 
 ## Loading one side

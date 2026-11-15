@@ -7,6 +7,7 @@
 import { onMounted, onUnmounted, readonly, ref, type Ref } from 'vue'
 
 import { PREFS_KEY, readPrefs, writePref } from '@/utils/prefs'
+import { watchStorage } from '@/utils/storage'
 
 type Theme = 'light' | 'dark'
 
@@ -40,19 +41,17 @@ const sync = (): void => apply(resolveTheme())
 
 export function useTheme(): { theme: Readonly<Ref<Theme>>; toggle: () => void } {
   let device: MediaQueryList | undefined
-  const onStorage = (event: StorageEvent): void => {
-    if (event.key === PREFS_KEY || event.key === null) sync()
-  }
+  let stopStorage: (() => void) | undefined
 
   onMounted(() => {
     theme.value = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-    window.addEventListener('storage', onStorage)
+    stopStorage = watchStorage(PREFS_KEY, sync)
     device = matchMedia(DARK_QUERY)
     device.addEventListener('change', sync)
   })
 
   onUnmounted(() => {
-    window.removeEventListener('storage', onStorage)
+    stopStorage?.()
     device?.removeEventListener('change', sync)
   })
 
