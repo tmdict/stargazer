@@ -16,8 +16,8 @@ const items = computed<DropdownItem[]>(() => [
   { key: 'about', label: i18n.t('app.about'), selected: false },
   { key: 'help', label: i18n.t('app.help'), selected: false, to: helpPath(i18n.currentLocale) },
   {
-    key: 'source-code',
-    label: i18n.t('app.source-code'),
+    key: 'github',
+    label: i18n.t('app.github'),
     selected: false,
     href: 'https://github.com/tmdict/stargazer/',
   },
