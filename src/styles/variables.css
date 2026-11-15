@@ -77,7 +77,7 @@
   --unit-frame-enemy: var(--color-enemy);
   --unit-disc: #c4baa6;
   --unit-disc-phantimal: #b0b6bb;
-  --seasonal-disc-phantimal: #d7d7d6;
+  --round-icon-fill: #d7d7d6;
   --unit-ring: #fff;
 
   --skill-red: #e57373;
@@ -335,7 +335,7 @@
   --unit-frame-enemy: #e2686f;
   --unit-disc: #2a313b;
   --unit-disc-phantimal: #3d4654;
-  --seasonal-disc-phantimal: var(--unit-disc-phantimal);
+  --round-icon-fill: var(--color-bg-secondary);
   --unit-ring: #98a3b9;
 
   --skill-red: #f6918e;

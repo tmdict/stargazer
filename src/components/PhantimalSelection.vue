@@ -221,7 +221,7 @@ const {
   position: relative;
   border-radius: var(--radius-round);
   border: 2px solid var(--hero-icon-ring);
-  background: var(--seasonal-disc-phantimal);
+  background: var(--round-icon-fill);
   overflow: hidden;
   box-shadow: 0 0 0 2px var(--hero-icon-ring);
   padding: 0;
