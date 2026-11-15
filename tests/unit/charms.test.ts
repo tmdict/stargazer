@@ -4,12 +4,13 @@
 // without runtime checks.
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { loadCharacters, loadCharms } from '@/lib/dataLoader'
+import { loadCharacters, loadCharms, loadHeroCharms } from '@/lib/dataLoader'
 import { pinnedLevels } from '@/lib/tags'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import type { CharmFile } from '@/lib/types/skill'
+import { loadCharmTypeImages } from '@/utils/imageLoader'
 import { loadAppLocales } from '@/utils/localeLoader'
-import { getSkillCharms, loadSkillLocale } from '@/utils/skillLocale'
+import { getSkillCharms, getSkillLanguage, loadSkillLocale } from '@/utils/skillLocale'
 
 const charmFiles = import.meta.glob<CharmFile>('@/data/seasonal/charm/*.json', {
   eager: true,
@@ -51,6 +52,34 @@ describe('charm data', () => {
       expect(path.endsWith(`/${file.id}.json`), `${path} holds ${file.id}`).toBe(true)
       expect(listed.has(file.id), `${file.id} is not a charm of the pack's hero list`).toBe(true)
       expect(file.tags ?? file.rules, `${file.id} has neither tags nor rules`).toBeDefined()
+    }
+  })
+})
+
+describe('charm types', () => {
+  beforeAll(async () => {
+    await Promise.all(APP_LOCALES.map((lang) => loadSkillLocale(lang)))
+  })
+
+  it('give every hero types the type text names, with a picture, and a recommended one of them', () => {
+    const pictures = loadCharmTypeImages()
+    const types = getSkillLanguage('en')!.charmTypes
+    for (const [hero, { types: own = [], recommended }] of Object.entries(loadHeroCharms())) {
+      for (const type of own) {
+        expect(types[type], `${hero}: ${type} has no text`).toBeDefined()
+        expect(pictures[type], `${type} has no picture`).toBeDefined()
+      }
+      expect(recommended ? own : [undefined], `${hero}'s recommended type`).toContain(recommended)
+    }
+  })
+
+  it('name the same types in every site language', () => {
+    const english = Object.keys(getSkillLanguage('en')!.charmTypes)
+    for (const lang of APP_LOCALES) {
+      expect({ lang, types: Object.keys(getSkillLanguage(lang)!.charmTypes) }).toEqual({
+        lang,
+        types: english,
+      })
     }
   })
 })

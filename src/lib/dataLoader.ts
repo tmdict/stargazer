@@ -7,7 +7,7 @@ import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import type { CharmData, CharmFile, HeroCharms, TagAttachment } from '@/lib/types/skill'
+import type { CharmData, CharmFile, HeroCharm, HeroCharms, TagAttachment } from '@/lib/types/skill'
 
 let characters: CharacterType[] | null = null
 let artifacts: ArtifactType[] | null = null
@@ -71,18 +71,23 @@ function withCharmTags(character: CharacterType): CharacterType {
   return { ...character, tags }
 }
 
-/** The season's charms in id order, each with the heroes the data pack lists
- * for it and the tags and rules of its own file. None without the pack's list,
- * which leaves the glob matching no file: a copy with no pack, or a season
- * whose charms are retired. */
-export function loadCharms(): CharmData[] {
-  if (charms) return charms
+/** Each hero's charm, charm types and recommended type, by hero. Empty without
+ * the data pack's list, which leaves the glob matching no file: a copy with no
+ * pack, or a season whose charms are retired. */
+export function loadHeroCharms(): Readonly<Record<string, HeroCharm>> {
   const [list] = Object.values(
     import.meta.glob<HeroCharms>('@/pack/text/skill/hero-charms.json', {
       eager: true,
       import: 'default',
     }),
   )
+  return list?.heroes ?? {}
+}
+
+/** The season's charms in id order, each with the heroes the data pack lists
+ * for it and the tags and rules of its own file. */
+export function loadCharms(): CharmData[] {
+  if (charms) return charms
   const files = new Map(
     Object.values(
       import.meta.glob<CharmFile>('@/data/seasonal/charm/*.json', {
@@ -92,7 +97,7 @@ export function loadCharms(): CharmData[] {
     ).map((file) => [file.id, file]),
   )
   const byId = new Map<string, CharmData>()
-  for (const [hero, { charm }] of Object.entries(list?.heroes ?? {})) {
+  for (const [hero, { charm }] of Object.entries(loadHeroCharms())) {
     if (!byId.has(charm)) byId.set(charm, { ...files.get(charm), id: charm, heroes: [] })
     byId.get(charm)!.heroes.push(hero)
   }

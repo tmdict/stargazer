@@ -123,6 +123,14 @@ describe('build checks', () => {
     ])
   })
 
+  it('stop on a charm type with no picture', () => {
+    put('pack/text/skill/en/_charm-types.json', '{ "acute": {}, "arcane": {} }')
+    put('pack/images/seasonal/charm/acute.png')
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
+      'the charm type arcane has no picture in the pack',
+    ])
+  })
+
   it('stop on a missing paragon frame', () => {
     rmSync(join(dir, 'pack/screenshot-import/frame-p4-crown.png'))
     expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([

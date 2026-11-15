@@ -87,10 +87,4 @@ const effectLevels = computed(() =>
   color: #fff;
   font-weight: 600;
 }
-
-.details-pending {
-  margin: 16px 0 0;
-  color: rgba(255, 255, 255, 0.55);
-  font-style: italic;
-}
 </style>

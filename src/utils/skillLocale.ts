@@ -8,6 +8,7 @@ import type { SkillLocale } from '@/lib/types/i18n'
 import type {
   SkillArtifacts,
   SkillCharms,
+  SkillCharmTypes,
   SkillKeywords,
   SkillLanguage,
   SkillLocaleFile,
@@ -27,6 +28,7 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
     _terms: SkillTerms
     _keywords?: SkillKeywords
     _charms?: SkillCharms
+    '_charm-types'?: SkillCharmTypes
     _artifacts?: SkillArtifacts
     _phantimals?: SkillPhantimals
   }
@@ -35,6 +37,7 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
     terms: reserved._terms,
     keywords: reserved._keywords ?? {},
     charms: reserved._charms ?? null,
+    charmTypes: reserved['_charm-types'] ?? {},
     artifacts: reserved._artifacts ?? {},
     phantimals: reserved._phantimals ?? {},
   }

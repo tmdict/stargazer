@@ -276,6 +276,11 @@ export function packProblems(
       ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
       : {}
   }
+  // A charm type's picture comes with its season, as a seasonal unit's does.
+  for (const type of Object.keys(textIn('_charm-types.json'))) {
+    if (!existsSync(join(pack, 'images/seasonal/charm', `${type}.png`)))
+      problems.push(`the charm type ${type} has no picture in the pack`)
+  }
   const artifactText = textIn('_artifacts.json')
   const sets = [
     ['src/data/artifact', 'images/artifact', artifactText, problems],

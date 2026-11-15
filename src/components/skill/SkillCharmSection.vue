@@ -7,8 +7,8 @@ import { highlightSkillText } from '@/utils/textHighlight'
 
 const props = defineProps<{
   /** In the app locale, like `sharedLabel`; the tiers and names are in the
-   * skill text's language. */
-  heading: string
+   * skill text's language. Left out where the host titles the charm itself. */
+  heading?: string
   slotTags?: string[]
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]
@@ -38,7 +38,7 @@ const rows = computed(() =>
 
 <template>
   <section class="charm-section">
-    <SkillSectionHeader :heading :slot-tags :lang="i18n.currentLocale" />
+    <SkillSectionHeader v-if="heading" :heading :slot-tags :lang="i18n.currentLocale" />
     <div class="charm-tiers">
       <div v-for="row in rows" :key="row.tier" class="charm-tier" :class="{ tagged: row.isTagged }">
         <span class="charm-tier-badge" :class="row.tierClass">{{ row.name }}</span>

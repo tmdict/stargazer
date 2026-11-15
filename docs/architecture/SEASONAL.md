@@ -125,6 +125,10 @@ Which hero holds which charm comes from the data pack, in `text/skill/hero-charm
 
 `loadCharms` (`src/lib/dataLoader.ts`) groups the list into charms, each with the heroes sharing it. A copy of the site without the data pack has no list, so it runs with no charms, and none of the tags and rules below. A build stops when the pack holds charm text without this list, or the list without charm text.
 
+A charm type is a set of stat bonuses a hero's charm can take at its top tier. Each language's skill text folder names the types in `_charm-types.json`, keyed by type, each with a `name` and its `bonus` lines, and `images/seasonal/charm/<type>.png` holds a type's symbol. A build stops when a named type has no picture.
+
+The Seasonal tab lists both under the artifacts (`src/components/charm/CharmSelection.vue`): the season's charm types, each symbol painted in the site's teal through a CSS mask, then one chip per charm with the number of heroes sharing it and its six newest heroes. Names and text follow the reader's skill-text language, so the types appear once that language has loaded. Neither goes on a board, so a click opens the details as a right-click or a hold does ([Board Input](./DRAG_AND_DROP.md)): a type's popup shows its bonuses, the heroes the game recommends it for and the other heroes who can use it, and a charm's popup its heroes and four tiers. A tag filter keeps the charms carrying the tag and hides the types, which have no tags.
+
 What is written by hand about a charm sits in `src/data/seasonal/charm/<id>.json`, a file that exists only for a charm with tags or rules:
 
 ```json
