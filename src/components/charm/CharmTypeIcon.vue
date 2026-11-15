@@ -56,7 +56,7 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
     >
-      <!-- The edges are shadows of the masked shape, so they sit on its parent:
+      <!-- The shadow is cast by the masked shape, so it sits on its parent:
            a filter on the masked element itself is cut off by the mask. -->
       <span v-if="symbol" class="symbol-edges">
         <span class="symbol" :style="{ maskImage: `url(${symbol})` }" />
@@ -99,14 +99,13 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
 .symbol-edges {
   position: absolute;
   inset: 9%;
-  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.75))
-    drop-shadow(0 1.5px 0 rgba(0, 45, 42, 0.7)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.28));
 }
 
 .symbol {
   position: absolute;
   inset: 0;
-  background: linear-gradient(#52bfb5, #2c8780);
+  background: var(--color-primary);
   mask: center / contain no-repeat;
 }
 
