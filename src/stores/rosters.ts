@@ -78,6 +78,11 @@ export const useRosters = defineStore('rosters', () => {
     return result
   }
 
+  // Shows what another tab has saved since this list was read.
+  const refresh = (): void => {
+    rosters.value = stored()
+  }
+
   const setActive = (id: string | null): void => {
     activeId.value = id
     if (id === null) removeStorage(ACTIVE_KEY)
@@ -164,6 +169,7 @@ export const useRosters = defineStore('rosters', () => {
     active,
     count,
     nextName,
+    refresh,
     setActive,
     create,
     rename,

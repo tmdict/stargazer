@@ -74,6 +74,11 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     return result
   }
 
+  // Shows what another tab has saved since this list was read.
+  const refresh = (): void => {
+    teams.value = stored()
+  }
+
   /* An empty/absent name falls back to the next auto-name; null when at cap
    * or when the data doesn't canonicalize. Canonical `data` is this store's
    * invariant, so it is enforced here rather than trusted from callers
@@ -163,6 +168,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     persisted,
     count,
     get,
+    refresh,
     saveAsNew,
     update,
     rename,
