@@ -5,7 +5,7 @@
  * toasts belong to the calling components/composables (stores must not call
  * composables). Mutations re-read the stored blob first (read-modify-write) so
  * two same-origin tabs clobber each other per-mutation rather than resurrecting
- * whole stale arrays; full cross-tab sync is deliberately out of scope. Once a
+ * whole stale arrays, and the list follows another tab's writes. Once a
  * write fails the in-memory list is the only copy, so mutations build on it
  * until a write lands again, and `persisted` lets callers report the loss.
  */
@@ -18,7 +18,7 @@ import { duplicateName, nextAutoName, sanitizeName } from '@/lib/names'
 import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
 import { canonicalTeamData, validateSavedTeam, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildExport, parseImport, type TeamsExportFile } from '@/lib/teams/transfer'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { readStorage, watchStorage, writeStorage } from '@/utils/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
 
@@ -61,15 +61,22 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const get = (id: string | null): SavedTeam | undefined =>
     id === null ? undefined : teams.value.find((team) => team.id === id)
 
-  // Mutations re-read the stored blob first so a second tab's writes survive
-  // (clobber window narrows to one mutation).
+  // Mutations and the full export start from the stored blob, so a second
+  // tab's writes survive a change and reach a backup (the clobber window
+  // narrows to one mutation).
+  const stored = (): SavedTeam[] => (persisted.value ? readLibrary() : [...teams.value])
+
   const mutate = <T>(action: (fresh: SavedTeam[]) => T): T => {
-    const fresh = persisted.value ? readLibrary() : [...teams.value]
+    const fresh = stored()
     const result = action(fresh)
     persisted.value = writeLibrary(fresh)
     teams.value = fresh
     return result
   }
+
+  watchStorage(LIBRARY_KEY, () => {
+    teams.value = stored()
+  })
 
   /* An empty/absent name falls back to the next auto-name; null when at cap
    * or when the data doesn't canonicalize. Canonical `data` is this store's
@@ -148,7 +155,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return copy
     })
 
-  const exportTeams = (selection: readonly SavedTeam[] = teams.value): TeamsExportFile =>
+  const exportTeams = (selection: readonly SavedTeam[] = stored()): TeamsExportFile =>
     buildExport(selection, new Date().toISOString())
 
   // Merge-only (lib/exportFile).

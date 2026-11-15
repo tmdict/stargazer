@@ -31,7 +31,7 @@ describe('rosters store', () => {
     expect(rosters.create({ name: ' ' })?.name).toBe('Roster 3')
   })
 
-  it('makes the first roster a file adds the active one, and leaves it alone when it adds none', () => {
+  it('makes the first roster a file adds the active one unless told not to, and leaves it alone when it adds none', () => {
     const rosters = useRosters()
     const own = rosters.create({ name: 'Main account' })!
     const file = (names: string[]) =>
@@ -48,5 +48,22 @@ describe('rosters store', () => {
     rosters.setActive(own.id)
     expect(rosters.importRosters(file(['Alt', 'Friend'])).imported).toBe(0)
     expect(rosters.active?.id).toBe(own.id)
+    expect(rosters.importRosters(file(['Third']), { activate: false }).imported).toBe(1)
+    expect(rosters.active?.id).toBe(own.id)
+  })
+
+  it("exports the rosters another tab saved, and lists them on that tab's storage event", () => {
+    const rosters = useRosters()
+    rosters.create({ name: 'Main account' })
+    const stored = JSON.parse(storage.get('stargazer.rosters')!) as { name: string }[]
+    storage.set(
+      'stargazer.rosters',
+      JSON.stringify([...stored, { ...stored[0], id: 'other-tab', name: 'Alt' }]),
+    )
+
+    expect(rosters.exportRosters().rosters.map((r) => r.name)).toEqual(['Main account', 'Alt'])
+    expect(rosters.count).toBe(1)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'stargazer.rosters' }))
+    expect(rosters.count).toBe(2)
   })
 })

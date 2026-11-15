@@ -2,8 +2,10 @@
  * the levels they start with (lib/rosters). No active roster means All heroes.
  *
  * Like the saved-team library, this store returns typed results and leaves
- * user feedback to components, re-reads storage before every change, and keeps
- * working in memory when a write fails (`persisted` reports it). */
+ * user feedback to components, re-reads storage before every change, follows
+ * another tab's writes to the library, and keeps working in memory when a
+ * write fails (`persisted` reports it). The active roster is each tab's own
+ * until a reload. */
 
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
@@ -22,7 +24,7 @@ import {
   type RostersExportFile,
 } from '@/lib/rosters'
 import type { CharacterType } from '@/lib/types/character'
-import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
+import { readStorage, removeStorage, watchStorage, writeStorage } from '@/utils/storage'
 
 const ROSTERS_KEY = 'stargazer.rosters'
 const ACTIVE_KEY = 'stargazer.rosters.active'
@@ -66,13 +68,21 @@ export const useRosters = defineStore('rosters', () => {
   // The name a roster saved without one gets.
   const nextName = computed(() => autoName(rosters.value))
 
+  // Changes and the export start from storage, so a second tab's writes
+  // survive a change and reach a backup.
+  const stored = (): Roster[] => (persisted.value ? readRosters() : [...rosters.value])
+
   const mutate = <T>(action: (fresh: Roster[]) => T): T => {
-    const fresh = persisted.value ? readRosters() : [...rosters.value]
+    const fresh = stored()
     const result = action(fresh)
     persisted.value = writeRosters(fresh)
     rosters.value = fresh
     return result
   }
+
+  watchStorage(ROSTERS_KEY, () => {
+    rosters.value = stored()
+  })
 
   const setActive = (id: string | null): void => {
     activeId.value = id
@@ -136,11 +146,12 @@ export const useRosters = defineStore('rosters', () => {
     Object.hasOwn(active.value.heroes, String(character.id))
 
   const exportRosters = (): RostersExportFile =>
-    buildRostersExport(rosters.value, new Date().toISOString())
+    buildRostersExport(stored(), new Date().toISOString())
 
-  // Merge-only (lib/exportFile). The first roster the file adds becomes the
-  // active one, as a created roster does; a file that adds none changes nothing.
-  const importRosters = (raw: string): ImportOutcome => {
+  // Merge-only (lib/exportFile). Unless `activate` is false, the first roster
+  // the file adds becomes the active one, as a created roster does; a file that
+  // adds none changes nothing.
+  const importRosters = (raw: string, { activate = true } = {}): ImportOutcome => {
     let added: string | undefined
     const outcome = mutate((fresh) => {
       const before = fresh.length
@@ -148,7 +159,7 @@ export const useRosters = defineStore('rosters', () => {
       added = fresh[before]?.id
       return result
     })
-    if (added) setActive(added)
+    if (activate && added) setActive(added)
     return outcome
   }
 

@@ -32,10 +32,8 @@ const title = computed(() => i18n.t(answer.value ? 'app.move-bring' : 'app.move-
 // "12 saved teams, 3 rosters": a kind with none is left out.
 const counted = (teams: number, rosters: number, joiner: string): string =>
   [
-    teams ? i18n.t(teams === 1 ? 'app.move-count-team' : 'app.move-count-teams', { n: teams }) : '',
-    rosters
-      ? i18n.t(rosters === 1 ? 'app.move-count-roster' : 'app.move-count-rosters', { n: rosters })
-      : '',
+    teams ? i18n.t(teams === 1 ? 'app.n-saved-team' : 'app.n-saved-teams', { n: teams }) : '',
+    rosters ? i18n.t(rosters === 1 ? 'app.n-roster' : 'app.n-rosters', { n: rosters }) : '',
   ]
     .filter(Boolean)
     .join(i18n.t(joiner))

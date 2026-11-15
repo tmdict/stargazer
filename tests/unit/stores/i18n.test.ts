@@ -47,9 +47,9 @@ describe('i18nStore', () => {
       expect([document.documentElement.lang, document.body.lang]).toEqual(['ko', 'ko'])
     })
 
-    it('a site-language pick resets the skill-text language, a ?l= link keeps it', () => {
+    it('a site-language pick resets the skill-text language, a ?lang= link keeps it', () => {
       store.setSkillLocale('ja')
-      vi.stubGlobal('window', { location: { search: '?l=zh' } })
+      vi.stubGlobal('window', { location: { search: '?lang=zh' } })
       store.initializeLocale({ readQuery: true })
       expect(store.effectiveSkillLocale).toBe('ja')
 
@@ -84,9 +84,9 @@ describe('i18nStore', () => {
       expect(localStorage.getItem('stargazer.locale')).toBe('ko')
     })
 
-    it('initializeLocale lets ?l= override the saved preference', () => {
+    it('initializeLocale lets ?lang= override the saved preference', () => {
       localStorage.setItem('stargazer.locale', 'zh')
-      vi.stubGlobal('window', { location: { search: '?l=en' } })
+      vi.stubGlobal('window', { location: { search: '?lang=en' } })
 
       store.initializeLocale({ readQuery: true })
 
@@ -94,8 +94,8 @@ describe('i18nStore', () => {
       expect(localStorage.getItem('stargazer.locale')).toBe('en')
     })
 
-    it('initializeLocale ignores an invalid ?l= param', () => {
-      vi.stubGlobal('window', { location: { search: '?l=fr' } })
+    it('initializeLocale ignores an invalid ?lang= param', () => {
+      vi.stubGlobal('window', { location: { search: '?lang=fr' } })
 
       store.initializeLocale({ readQuery: true })
 

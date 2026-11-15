@@ -5,6 +5,7 @@ import type {
   RouterScrollBehavior,
 } from 'vue-router'
 
+import { installPopupLinkGuard } from '@/composables/usePopupLink'
 import { guidePath, SL_GENERATOR_PATH, SL_LISTS_PATH, SL_RULES_PATH, WWW_PATH } from '@/lib/guide'
 import { helpPath } from '@/lib/help'
 import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
@@ -67,6 +68,7 @@ export function installRouterGuards(router: Router): void {
   // Awaited by each pre-render's navigation, so baked pages carry real text.
   router.beforeResolve(warmSkillLocale)
   installChunkErrorRecovery(router)
+  installPopupLinkGuard(router)
 }
 
 // Back/forward restores the reader's position (providing scrollBehavior at

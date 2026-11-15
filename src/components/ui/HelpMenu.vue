@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The top bar's help menu: the site's About, Help, source code and Contact. */
+/* The top bar's help menu: the site's About, Help, Data, source code and Contact. */
 
 import { computed } from 'vue'
 
@@ -8,13 +8,14 @@ import IconHelp from './IconHelp.vue'
 import { helpPath } from '@/lib/help'
 import { useI18nStore } from '@/stores/i18n'
 
-const emit = defineEmits<{ about: []; contact: [] }>()
+const emit = defineEmits<{ about: []; data: []; contact: [] }>()
 
 const i18n = useI18nStore()
 
 const items = computed<DropdownItem[]>(() => [
   { key: 'about', label: i18n.t('app.about'), selected: false },
   { key: 'help', label: i18n.t('app.help'), selected: false, to: helpPath(i18n.currentLocale) },
+  { key: 'data', label: i18n.t('app.data'), selected: false },
   {
     key: 'github',
     label: i18n.t('app.github'),
@@ -26,6 +27,7 @@ const items = computed<DropdownItem[]>(() => [
 
 const select = (key: string): void => {
   if (key === 'about') emit('about')
+  else if (key === 'data') emit('data')
   else if (key === 'contact') emit('contact')
 }
 </script>

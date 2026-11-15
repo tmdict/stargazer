@@ -64,7 +64,7 @@ Initial energy has a separate source: the hero data file's first `energy` number
 
 ## Pages and meta
 
-Hero-list links retain a hero page's text locale; elsewhere they use `effectiveSkillLocale`: the saved globe choice, else the chrome locale. Picking a site language clears the globe preference and switches a skill page's URL. A `?l=` link sets only the chrome locale. Prefix and saved-language precedence are defined in [Pre-Rendering](./PRE_RENDERING.md#two-locale-axes).
+Hero-list links retain a hero page's text locale; elsewhere they use `effectiveSkillLocale`: the saved globe choice, else the chrome locale. Picking a site language clears the globe preference and switches a skill page's URL. A `?lang=` link sets only the chrome locale. Prefix and saved-language precedence are defined in [Pre-Rendering](./PRE_RENDERING.md#two-locale-axes).
 
 `setupSkillContentMeta` sets page titles, Open Graph tags, canonical URLs and language alternates. It owns `<html lang>` through a token so an older reader's unmount cannot clear a newer reader's language. Modals provide `ContentInModalKey` to leave the host page's head untouched.
 

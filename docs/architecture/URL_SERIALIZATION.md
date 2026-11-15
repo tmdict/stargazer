@@ -99,6 +99,8 @@ Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena
 
 Display flags travel with every link, and a `?g=` restore applies them. A payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 
+The Arena also reads `?tab=` for its side panel: `characters` (the default), `seasonal`, `mapEditor`, `rosters` or `debug`. Each tab switch writes it as a step for Back, and `?tab=skills` goes to `/skills`.
+
 ## Restoring a board
 
 `applyGridState` (`src/stores/boardRestore.ts`) first picks the map. A payload without `m` (Arena links and the autosave) adopts the preset its tiles reproduce, found by `findMapByTiles`, and otherwise every tile resets. Multi-board restores build each board on `resolveBoardMap`, the same rule canonicalization uses. It then restores in this order, each step for a reason:

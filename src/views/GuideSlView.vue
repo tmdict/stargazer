@@ -79,10 +79,10 @@ const {
 const rosters = useRosters()
 const library = useTeamLibrary()
 const router = useRouter()
-// The debug view (?t=debug, as the Arena's Debug tab) puts a switch between a
+// The debug view (?tab=debug, as the Arena's Debug tab) puts a switch between a
 // board's two formations on every board that has both, with their scores.
 const route = useRoute()
-const debug = computed(() => route.query.t === 'debug')
+const debug = computed(() => route.query.tab === 'debug')
 const { show } = useToast()
 
 const aboutOpen = ref(false)

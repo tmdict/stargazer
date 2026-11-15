@@ -70,8 +70,8 @@ const shareLink = useShareLink()
 const validTabs = ['characters', 'seasonal', 'honorDuel', 'mapEditor', 'rosters', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
-// The `?t=skills` query param resolves to the dedicated /skills route.
-if (route.query.t === 'skills') {
+// The `?tab=skills` query param resolves to the dedicated /skills route.
+if (route.query.tab === 'skills') {
   router.replace('/skills')
 }
 
@@ -79,13 +79,13 @@ const isValidTab = (tab: unknown): tab is ValidTab =>
   validTabs.includes(tab as ValidTab) && (tab !== 'honorDuel' || HONOR_DUEL_IN_PACK)
 
 const getInitialTab = (): string => {
-  const tabParam = route.query.t
+  const tabParam = route.query.tab
   return isValidTab(tabParam) ? tabParam : 'characters'
 }
 
 const activeTab = ref(getInitialTab())
 
-// Side panel tabs. Debug has no entry point on the page: `?t=debug` opens it,
+// Side panel tabs. Debug has no entry point on the page: `?tab=debug` opens it,
 // and its tab is in the strip only while it is open.
 const tabs = computed(() => [
   {
@@ -178,7 +178,7 @@ const handleTabChange = (tab: string) => {
   router.push({
     query: {
       ...route.query,
-      t: tab,
+      tab,
     },
   })
 
@@ -202,9 +202,9 @@ watch(
 )
 
 // Browser back/forward (and the push above) change the query; mirror it onto the
-// active tab. Landing back on a bare `/` (no `?t=`) restores the default.
+// active tab. Landing back on a bare `/` (no `?tab=`) restores the default.
 watch(
-  () => route.query.t,
+  () => route.query.tab,
   (newTab) => {
     const tab = isValidTab(newTab) ? newTab : 'characters'
     activeTab.value = tab
@@ -238,9 +238,9 @@ if (sharedLink) {
   }
 }
 
-// The initial tab comes straight from ?t= without passing through handleTabChange,
+// The initial tab comes straight from ?tab= without passing through handleTabChange,
 // so enforce its display resets here, after a restore, which can introduce the
-// conflicting flags (e.g. team view in a share link while ?t=debug).
+// conflicting flags (e.g. team view in a share link while ?tab=debug).
 applyTabResets(activeTab.value)
 
 // No restored share link: restore the saved arena. Done on mount because

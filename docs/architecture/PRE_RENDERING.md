@@ -50,7 +50,7 @@ A page whose prose is its content carries its language in its address: the skill
 | Skill page under an app locale, `/zh/skill/...` | the saved preference, else the prefix                  |
 | Anything else, `/`, `/guide`, `/ja/skill/...`   | the saved preference, else the locale in use           |
 
-A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so the first render matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
+A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so the first render matches the baked HTML before text and link hrefs swap. `?lang=<app locale>` on an unprefixed URL (`?lang=en`, `?lang=zh`, `?lang=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
 
 ## Head tags
 
@@ -78,7 +78,7 @@ The Formation engine rules page and the Hero lists page (`virtual:formation-rule
 
 ## Hosting
 
-The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?l=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
+The host serves `dist/` as static files first and applies `public/_redirects` to the rest. The deploy subdomain redirects to the canonical host with a forced rule. Retired paths redirect to their current pages, and a retired Chinese or Korean guide address keeps its language as `?lang=`. Everything else falls back to `/index.html` with status 200, which serves `/teams` and sends unknown paths home through the router.
 
 `public/_headers` caches `/assets/*` as `immutable` for a year, since hashed output never changes behind a URL. Unhashed files keep the host's revalidate default. `/site.webmanifest` gets an explicit `application/manifest+json` type, because the host has no mapping for that extension.
 

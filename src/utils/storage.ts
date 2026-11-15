@@ -38,6 +38,18 @@ export const writeStorage = (key: string, value: string): boolean => {
   }
 }
 
+// Runs `onChange` when another tab writes `key` or clears the site's storage;
+// the browser sends no event to the tab that made the change. Returns the
+// call that stops it.
+export const watchStorage = (key: string, onChange: () => void): (() => void) => {
+  if (typeof window === 'undefined') return () => {}
+  const onStorage = (event: StorageEvent): void => {
+    if (event.key === key || event.key === null) onChange()
+  }
+  window.addEventListener('storage', onStorage)
+  return () => window.removeEventListener('storage', onStorage)
+}
+
 export const removeStorage = (key: string): void => {
   if (import.meta.env.SSR) return
   try {

@@ -1,19 +1,20 @@
-import { ref } from 'vue'
-
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
+import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useToast } from '@/composables/useToast'
 import type { ImportOutcome } from '@/lib/exportFile'
 import { useI18nStore } from '@/stores/i18n'
+import { useRosters } from '@/stores/rosters'
+import { useTeamLibrary } from '@/stores/teamLibrary'
 import { downloadBlob, timestampedName } from '@/utils/download'
 
-/* Backup-file buttons for a user library (saved teams, rosters): the download
- * and the hidden file input's import, with the outcome toasts. Bind `fileInput`
- * to an `<input type="file">` whose change runs `handleFileChosen`.
+/* A user library's backup file (saved teams, rosters): the download, and the
+ * import of a file input's chosen file, with the outcome toasts.
  *
  * `report` is the library's success reporter: the store applies an import in
  * memory even when its write fails, so it shows the storage error in place of
  * the success message. The message keys take `imported` and `skipped`, and
  * the conflicts one also `conflicts` (records renamed "(imported)"). */
-export function useLibraryTransfer({
+function useLibraryTransfer({
   filePrefix,
   importFile,
   report,
@@ -26,7 +27,6 @@ export function useLibraryTransfer({
 }) {
   const i18n = useI18nStore()
   const { error } = useToast()
-  const fileInput = ref<HTMLInputElement>()
 
   const download = (file: object): void => {
     downloadBlob(
@@ -52,5 +52,35 @@ export function useLibraryTransfer({
     )
   }
 
-  return { fileInput, download, handleFileChosen }
+  return { download, handleFileChosen }
+}
+
+export function useTeamsTransfer() {
+  const library = useTeamLibrary()
+  const { report } = useTeamLibraryFeedback()
+  return useLibraryTransfer({
+    filePrefix: 'stargazer-teams',
+    importFile: library.importTeams,
+    report,
+    messages: {
+      invalid: 'app.import-invalid',
+      success: 'app.import-success',
+      successConflicts: 'app.import-success-conflicts',
+    },
+  })
+}
+
+export function useRostersTransfer({ activate = true } = {}) {
+  const rosters = useRosters()
+  const { report } = useRosterFeedback()
+  return useLibraryTransfer({
+    filePrefix: 'stargazer-rosters',
+    importFile: (raw) => rosters.importRosters(raw, { activate }),
+    report,
+    messages: {
+      invalid: 'app.rosters-import-invalid',
+      success: 'app.rosters-import-success',
+      successConflicts: 'app.rosters-import-success-conflicts',
+    },
+  })
 }

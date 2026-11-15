@@ -20,6 +20,7 @@ import rowanSvg from '@/assets/rowan.svg'
 import { useContactForm } from '@/composables/useContactForm'
 import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
 import { useMove } from '@/composables/useMove'
+import { usePopupLink } from '@/composables/usePopupLink'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
@@ -41,7 +42,10 @@ const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/What
 const whatsNewMounted = ref(false)
 const MoveModal = defineLazyComponent(() => import('@/components/modals/MoveModal.vue'))
 const moveModalMounted = ref(false)
-const { open: openContact } = useContactForm()
+const DataModal = defineLazyComponent(() => import('@/components/modals/DataModal.vue'))
+const dataModalMounted = ref(false)
+const showDataModal = ref(false)
+const { isOpen: contactOpen, open: openContact } = useContactForm()
 const i18n = useI18nStore()
 const route = useRoute()
 const router = useRouter()
@@ -65,6 +69,11 @@ watch(movePopupShown, (shown) => {
 const openWhatsNew = () => {
   whatsNewMounted.value = true
   showWhatsNew.value = true
+}
+
+const openData = () => {
+  dataModalMounted.value = true
+  showDataModal.value = true
 }
 
 // Root setup runs before any route child's persistence reads, and the arena
@@ -102,6 +111,16 @@ watch(
   (lang) => {
     if (lang) void loadSkillLocale(lang).catch(() => {})
   },
+)
+
+usePopupLink(
+  {
+    about: { shown: showAboutModal, open: () => (showAboutModal.value = true) },
+    data: { shown: showDataModal, open: openData },
+    contact: { shown: contactOpen, open: openContact },
+    whatsNew: { shown: showWhatsNew, open: openWhatsNew },
+  },
+  routeSettled,
 )
 
 // Saved preferences are read only after mount, so the first render matches the
@@ -194,7 +213,7 @@ onUnmounted(() => {
             </button>
           </li>
           <li class="menu-dropdown">
-            <HelpMenu @about="showAboutModal = true" @contact="openContact" />
+            <HelpMenu @about="showAboutModal = true" @data="openData" @contact="openContact" />
           </li>
           <li class="menu-dropdown">
             <LocaleMenu
@@ -220,6 +239,8 @@ onUnmounted(() => {
 
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
+
+  <DataModal v-if="dataModalMounted" :show="showDataModal" @close="showDataModal = false" />
 
   <WhatsNewModal
     v-if="whatsNewMounted"
