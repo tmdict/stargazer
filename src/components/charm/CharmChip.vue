@@ -134,6 +134,12 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
   border-color: var(--color-accent);
 }
 
+@media (max-width: 768px) {
+  .charm-chip {
+    padding-right: var(--spacing-2xl);
+  }
+}
+
 .count {
   flex: none;
   min-width: 20px;
