@@ -1,59 +1,62 @@
-// Charm data integrity: the generated charm files and locale files must
-// stay mutually consistent, and every referenced hero must exist in the
-// hero list. Guards a pack update's charm outputs the UI consumes without
-// runtime checks.
+// Charm data integrity: the data pack's list of each hero's charms, its charm
+// text and the charm files written by hand must stay mutually consistent, and
+// every listed hero must exist in the hero list. Guards what the UI consumes
+// without runtime checks.
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { loadCharacters } from '@/lib/dataLoader'
+import { loadCharacters, loadCharms } from '@/lib/dataLoader'
 import { pinnedLevels } from '@/lib/tags'
 import { APP_LOCALES } from '@/lib/types/i18n'
-import type { CharmData } from '@/lib/types/skill'
+import type { CharmFile } from '@/lib/types/skill'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { getSkillCharms, loadSkillLocale } from '@/utils/skillLocale'
 
-// A season whose charms the data pack does not hold yet has no charm file.
-const charmFiles = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
+const charmFiles = import.meta.glob<CharmFile>('@/data/seasonal/charm/*.json', {
   eager: true,
   import: 'default',
 })
 
 describe('charm data', () => {
-  const charms = Object.entries(charmFiles)
+  const charms = loadCharms()
 
   beforeAll(async () => {
     await Promise.all(APP_LOCALES.map((lang) => loadSkillLocale(lang)))
   })
 
-  // A season can ship before its charm text, so no charm file is legitimate
-  // (a pack update retires charms with their season); charm files without text,
-  // or text without charm files, is a half-applied pack update.
+  // A season can ship before its charm text, so no charms is legitimate (a
+  // pack update retires them with their season); a hero list without text, or
+  // text without a hero list, is a half-applied pack update.
   it('is either fully present or fully retired', () => {
     for (const lang of APP_LOCALES) {
-      expect(getSkillCharms(lang) !== null, `${lang} _charms.json vs the charm files`).toBe(
+      expect(getSkillCharms(lang) !== null, `${lang} _charms.json vs the hero list`).toBe(
         charms.length > 0,
       )
     }
   })
 
-  it.runIf(charms.length > 0)(
-    'names each file by its id, with known heroes, each hero on at most one charm',
-    () => {
-      const heroNames = new Set(loadCharacters().map((c) => c.name))
-      const seen = new Set<string>()
-      for (const [path, charm] of charms) {
-        expect(path.endsWith(`/${charm.id}.json`), `${path} holds ${charm.id}`).toBe(true)
-        for (const hero of charm.heroes) {
-          expect(heroNames.has(hero), `${charm.id}: ${hero} not in the hero list`).toBe(true)
-          expect(seen.has(hero), `${hero} appears on two charms`).toBe(false)
-          seen.add(hero)
-        }
+  it('lists only known heroes', () => {
+    const heroNames = new Set(loadCharacters().map((c) => c.name))
+    for (const { id, heroes } of charms) {
+      for (const hero of heroes) {
+        expect(heroNames.has(hero), `${id}: ${hero} not in the hero list`).toBe(true)
       }
-    },
-  )
+    }
+  })
+
+  // Charm ids change with the season, so a file left from the last one names
+  // a charm the pack no longer lists and its tags and rules reach no hero.
+  it('names each file by its id, a charm the pack lists, with tags or rules', () => {
+    const listed = new Set(charms.map((charm) => charm.id))
+    for (const [path, file] of Object.entries(charmFiles)) {
+      expect(path.endsWith(`/${file.id}.json`), `${path} holds ${file.id}`).toBe(true)
+      expect(listed.has(file.id), `${file.id} is not a charm of the pack's hero list`).toBe(true)
+      expect(file.tags ?? file.rules, `${file.id} has neither tags nor rules`).toBeDefined()
+    }
+  })
 })
 
 describe('charm tags', () => {
-  const tagged = Object.values(charmFiles).filter((charm) => charm.tags)
+  const tagged = loadCharms().filter((charm) => charm.tags)
 
   it.runIf(tagged.length > 0)('have labelled tags and real tiers', () => {
     const labels = loadAppLocales()

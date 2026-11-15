@@ -261,6 +261,13 @@ export function packProblems(
     }
   }
 
+  // Charm text and the list of who holds each charm arrive and retire
+  // together; one without the other is a half-applied pack update.
+  const charmText = existsSync(join(pack, SKILL, 'en', '_charms.json'))
+  const charmHeroes = existsSync(join(pack, SKILL, 'hero-charms.json'))
+  if (charmText && !charmHeroes) problems.push('the pack has charm text but no hero-charms.json')
+  if (charmHeroes && !charmText) problems.push('the pack has hero-charms.json but no charm text')
+
   // A pack update writes every language's artifact and phantimal text
   // alike, so English answers for all.
   const textIn = (file: string): Record<string, unknown> => {

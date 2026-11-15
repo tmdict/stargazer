@@ -6,13 +6,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { loadArtifacts, loadCharacters, loadCharms, loadPhantimals } from '@/lib/dataLoader'
+import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { ruleCards } from '@/lib/placement/formationRules'
 import { effectVerb } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
+import type { CharmFile } from '@/lib/types/skill'
 import { Team } from '@/lib/types/team'
 import { loadAppLocales } from '@/utils/localeLoader'
 import { placeOnTile } from './fixtures/skills'
@@ -138,8 +139,13 @@ const units = [
   })),
 ].filter((unit) => unit.rules)
 
+// Read as files, since the charms the app loads are those the data pack lists.
+const charmFiles = Object.values(
+  import.meta.glob<CharmFile>('@/data/seasonal/charm/*.json', { eager: true, import: 'default' }),
+)
+
 // Every file with rules, by the name the words of its rules go by.
-const owners = [...units, ...loadCharms().map((charm) => ({ name: charm.id, rules: charm.rules }))]
+const owners = [...units, ...charmFiles.map((charm) => ({ name: charm.id, rules: charm.rules }))]
 const words = loadAppLocales()
 
 describe('placement rules', () => {
@@ -151,7 +157,7 @@ describe('placement rules', () => {
   })
 
   it('keep the contract on every charm, each naming its tile', () => {
-    for (const charm of loadCharms()) {
+    for (const charm of charmFiles) {
       expect(shapeProblems(charm.rules ?? [], 'always'), `${charm.id}'s rules`).toEqual([])
     }
   })

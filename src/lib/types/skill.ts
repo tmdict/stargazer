@@ -120,16 +120,33 @@ export interface SkillLanguage {
   phantimals: SkillPhantimals
 }
 
-// On-disk shape of src/data/seasonal/charm/<id>.json: a pack update writes
-// the id, season and the heroes sharing the charm, and keeps the fields
-// written by hand within the season. The inverse hero → charm lookup is
-// derived at load time.
-export interface CharmData {
+// On-disk shape of src/pack/text/skill/hero-charms.json (written by a pack
+// update), one file for every language: each hero's season charm, the id its
+// text is filed under in _charms.json. `types` is the hero's charm types in the
+// game's order and `recommended` the one the game marks; a hero with no types
+// has neither.
+export interface HeroCharm {
+  charm: string
+  types?: string[]
+  recommended?: string
+}
+
+export interface HeroCharms {
+  heroes: Record<string, HeroCharm>
+}
+
+// On-disk shape of src/data/seasonal/charm/<id>.json, written by hand: a file
+// exists only for a charm with tags or rules.
+export interface CharmFile {
   id: string
-  season: number
-  heroes: string[]
   tags?: CharmTags
   rules?: readonly Rule[]
+}
+
+// A charm of the pack's hero list with the heroes sharing it, and its file's
+// fields when it has one.
+export interface CharmData extends CharmFile {
+  heroes: string[]
 }
 
 // A charm's hand-written tags: tag → every tier (1-4) whose text carries the

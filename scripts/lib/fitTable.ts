@@ -18,14 +18,19 @@ const CACHE = 'node_modules/.cache/fits'
 const DATA_FILE = 'pvp/pvp.bin'
 const KEY_FILE = 'pvp/pvp.key'
 
-// The pack's files stay out of a stamp's file list: a stamp takes the data
+// These pack files stay out of a stamp's file list: a stamp takes the data
 // file by itself, the key changes only with it, and the table's address is in
-// the build or not by the stamp. Any other pack file in the fit code would
-// change a table's rows without changing its stamp.
+// the build or not by the stamp. Any pack file in the fit code that is neither
+// one of these nor PACK_GAME_DATA would change a table's rows without changing
+// its stamp.
 const PACK_COPY = 'src/pack/'
 const PACK_FILES = [DATA_FILE, KEY_FILE, FITS_FILE, FITS_MODULE].map(
   (file) => `${PACK_COPY}${file}`,
 )
+
+// Game data the fit check reads from the pack: who holds which charm decides
+// whose charm rules apply. A stamp takes it as it takes this repo's files.
+const PACK_GAME_DATA = [`${PACK_COPY}text/skill/hero-charms.json`]
 
 // The hero and phantimal data files, which a row reads through the app's
 // `rowInputs`.
@@ -82,9 +87,15 @@ export async function buildFitCode(
     const ids = code.moduleIds.map((id) =>
       relative(root, id.replace(/\?.*$/, '')).split(sep).join('/'),
     )
-    const other = ids.find((file) => file.startsWith(PACK_COPY) && !PACK_FILES.includes(file))
+    const other = ids.find(
+      (file) =>
+        file.startsWith(PACK_COPY) && !PACK_FILES.includes(file) && !PACK_GAME_DATA.includes(file),
+    )
     if (other) throw new Error(`The fit code reads ${other}, which no stamp covers`)
-    const files = ids.filter((file) => file.startsWith('src/') && !file.startsWith(PACK_COPY))
+    const files = ids.filter(
+      (file) =>
+        file.startsWith('src/') && (!file.startsWith(PACK_COPY) || PACK_GAME_DATA.includes(file)),
+    )
     return { file: join(outDir, code.fileName), files: [...new Set(files)].sort(), drop }
   } catch (error) {
     drop()

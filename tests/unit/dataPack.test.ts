@@ -111,6 +111,18 @@ describe('build checks', () => {
     ])
   })
 
+  it('stop on charm text and the charm hero list arriving apart', () => {
+    put('pack/text/skill/en/_charms.json')
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
+      'the pack has charm text but no hero-charms.json',
+    ])
+    rmSync(join(dir, 'pack/text/skill/en/_charms.json'))
+    put('pack/text/skill/hero-charms.json')
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([
+      'the pack has hero-charms.json but no charm text',
+    ])
+  })
+
   it('stop on a missing paragon frame', () => {
     rmSync(join(dir, 'pack/screenshot-import/frame-p4-crown.png'))
     expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems).toEqual([

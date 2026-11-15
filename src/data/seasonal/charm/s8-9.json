@@ -1,7 +1,5 @@
 {
   "id": "s8-9",
-  "season": 8,
-  "heroes": ["lyca", "smokey-meerky"],
   "tags": {
     "haste": {
       "tiers": [1, 2, 3, 4]
