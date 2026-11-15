@@ -86,19 +86,19 @@ const seasonLabel = (season: number): string =>
 </script>
 
 <template>
-  <div class="artifact-selection">
-    <section v-for="group in seasonGroups" :key="group.season" class="artifact-group">
-      <h3 class="artifact-group-title">{{ seasonLabel(group.season) }}</h3>
-      <div class="artifacts">
+  <div class="icon-groups">
+    <section v-for="group in seasonGroups" :key="group.season" class="icon-group">
+      <h3 class="icon-group-title">{{ seasonLabel(group.season) }}</h3>
+      <div class="icon-grid">
         <!-- Named: artifacts rotate each season, so their icons are hard to learn. -->
-        <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-cell">
+        <div v-for="artifact in group.artifacts" :key="artifact.id" class="icon-cell">
           <ArtifactIcon
             :artifact
             :dimmed="isDimmed(artifact.id)"
             inspectable
             @artifact-click="handleArtifactClick"
           />
-          <span class="artifact-name">
+          <span class="icon-cell-name">
             {{ localizedDisplayName(i18n.t, 'artifact', artifact.name) }}
           </span>
         </div>
@@ -106,74 +106,3 @@ const seasonLabel = (season: number): string =>
     </section>
   </div>
 </template>
-
-<style scoped>
-.artifact-selection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.artifact-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.artifact-group-title {
-  margin: 0;
-  padding: 0 var(--spacing-lg);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, var(--color-text-primary));
-}
-
-.artifacts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-lg) var(--spacing-sm);
-  justify-content: flex-start;
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-large);
-}
-
-.artifact-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  width: 84px;
-}
-
-.artifact-name {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.2;
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
-@media (max-width: 768px) {
-  .artifacts {
-    gap: var(--spacing-md) var(--spacing-xs);
-    padding: var(--spacing-md);
-  }
-}
-
-@media (max-width: 480px) {
-  .artifact-selection {
-    gap: var(--spacing-md);
-  }
-
-  .artifacts {
-    gap: var(--spacing-md) var(--spacing-xs);
-    padding: var(--spacing-sm);
-  }
-}
-</style>

@@ -12,12 +12,14 @@ import { computed, ref, watch } from 'vue'
 
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
+import HonorDuelTab from '@/components/honorDuel/HonorDuelTab.vue'
 import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import SavedTeamsList from '@/components/teams/SavedTeamsList.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { HONOR_DUEL_IN_PACK } from '@/lib/honorDuelPack'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -45,6 +47,7 @@ const activeTab = ref('saved')
 const tabs = computed(() => [
   { key: 'characters', label: i18n.t('app.characters'), shortLabel: i18n.t('app.heroes') },
   { key: 'seasonal', label: i18n.t('app.seasonal') },
+  ...(HONOR_DUEL_IN_PACK ? [{ key: 'honorDuel', label: i18n.t('app.honor-duel') }] : []),
   { key: 'maps', label: i18n.t('app.maps') },
   { key: 'rosters', label: i18n.t('app.rosters') },
   {
@@ -98,6 +101,9 @@ const handleArenaSelected = (mapKey: string) => {
       </template>
       <template #seasonal>
         <SeasonalSelection :artifacts :phantimals :is-draggable="true" :scrollable="false" />
+      </template>
+      <template #honorDuel="{ active }">
+        <HonorDuelTab :active="active === 'honorDuel'" :scrollable="false" />
       </template>
       <template #maps>
         <div class="maps-tab">

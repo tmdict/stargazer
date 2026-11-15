@@ -71,11 +71,3 @@ const skills = computed(() =>
     </template>
   </BaseModal>
 </template>
-
-<style scoped>
-.details-pending {
-  margin: 16px 0 0;
-  color: rgba(255, 255, 255, 0.55);
-  font-style: italic;
-}
-</style>

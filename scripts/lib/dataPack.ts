@@ -219,7 +219,9 @@ export async function boardPictures(root: string): Promise<string[]> {
  * seasonal unit with no text yet. A seasonal unit's pictures come with its
  * season, so a missing one is what a season shipped without a new pin looks
  * like, and stops the build. A board picture the pack lacks is a note, since
- * the unit is still drawn, without a picture. */
+ * the unit is still drawn, without a picture. Honor Duel's entries are notes
+ * too, one line per list: the app leaves the tab out of a pack with none of
+ * them, and names an entry the pack lacks. */
 export function packProblems(
   pack: string,
   root: string,
@@ -280,6 +282,23 @@ export function packProblems(
       if (!existsSync(join(pack, images, `${name}.png`)))
         problems.push(`${name} has no picture in the pack`)
       if (!(name in text)) missingText.push(`${name} has no text in the pack`)
+    }
+  }
+
+  for (const [kind, file] of [
+    ['equipment', 'equipment.json'],
+    ['artifact', 'artifacts.json'],
+  ] as const) {
+    const path = join(pack, 'text/honor-duel/en', file)
+    const text = existsSync(path)
+      ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
+      : {}
+    const bare = jsonNames(join(root, 'src/data/honor-duel', kind)).filter(
+      (name) =>
+        !(name in text) || !existsSync(join(pack, 'images/honor-duel', kind, `${name}.png`)),
+    )
+    if (bare.length > 0) {
+      notes.push(`${bare.length} Honor Duel ${kind} entries have no picture or text in the pack`)
     }
   }
 

@@ -58,6 +58,7 @@ System docs:
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library, rosters
 - [Screenshot Import](./docs/architecture/IMPORT.md) - The team, roster and matchup imports, the engine and references they share, and their limits
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
+- [Honor Duel](./docs/architecture/HONOR_DUEL.md) - The mode's equipment and artifacts: files, ids, loading, formats
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Placement](./docs/architecture/PLACEMENT.md) - The placement engine: rules, scoring and search, the Formation engine rules page, and a visitor's lists
 - [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, PvP reports and summaries, hosting

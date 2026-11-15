@@ -11,6 +11,7 @@ import GridControls from '@/components/grid/GridControls.vue'
 import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
+import HonorDuelTab from '@/components/honorDuel/HonorDuelTab.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
@@ -29,6 +30,7 @@ import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { useToast } from '@/composables/useToast'
+import { HONOR_DUEL_IN_PACK } from '@/lib/honorDuelPack'
 import { encodeGridStateToUrl } from '@/lib/teams/codec'
 import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import { State } from '@/lib/types/state'
@@ -65,7 +67,7 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 const shareLink = useShareLink()
 
 // Tab state management
-const validTabs = ['characters', 'seasonal', 'mapEditor', 'rosters', 'debug'] as const
+const validTabs = ['characters', 'seasonal', 'honorDuel', 'mapEditor', 'rosters', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
 // The `?t=skills` query param resolves to the dedicated /skills route.
@@ -73,12 +75,12 @@ if (route.query.t === 'skills') {
   router.replace('/skills')
 }
 
+const isValidTab = (tab: unknown): tab is ValidTab =>
+  validTabs.includes(tab as ValidTab) && (tab !== 'honorDuel' || HONOR_DUEL_IN_PACK)
+
 const getInitialTab = (): string => {
-  const tabParam = route.query.t as string | undefined
-  if (tabParam && validTabs.includes(tabParam as ValidTab)) {
-    return tabParam
-  }
-  return 'characters'
+  const tabParam = route.query.t
+  return isValidTab(tabParam) ? tabParam : 'characters'
 }
 
 const activeTab = ref(getInitialTab())
@@ -92,6 +94,7 @@ const tabs = computed(() => [
     shortLabel: i18nStore.t('app.heroes'),
   },
   { key: 'seasonal', label: i18nStore.t('app.seasonal') },
+  ...(HONOR_DUEL_IN_PACK ? [{ key: 'honorDuel', label: i18nStore.t('app.honor-duel') }] : []),
   { key: 'mapEditor', label: i18nStore.t('app.maps') },
   { key: 'rosters', label: i18nStore.t('app.rosters') },
   ...(activeTab.value === 'debug' ? [{ key: 'debug', label: i18nStore.t('app.debug') }] : []),
@@ -203,7 +206,7 @@ watch(
 watch(
   () => route.query.t,
   (newTab) => {
-    const tab = newTab && validTabs.includes(newTab as ValidTab) ? (newTab as string) : 'characters'
+    const tab = isValidTab(newTab) ? newTab : 'characters'
     activeTab.value = tab
     applyTabResets(tab)
   },
@@ -338,6 +341,9 @@ const handleResetMap = () => {
                 :phantimals="gameDataStore.phantimals"
                 :is-draggable="true"
               />
+            </template>
+            <template #honorDuel="{ active }">
+              <HonorDuelTab :active="active === 'honorDuel'" />
             </template>
             <template #mapEditor>
               <MapEditor

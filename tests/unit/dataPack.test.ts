@@ -94,6 +94,18 @@ describe('build checks', () => {
     })
   })
 
+  it('note Honor Duel entries the pack lacks in one line per list', () => {
+    for (const name of ['cloak', 'bow', 'blade'])
+      put(`repo/src/data/honor-duel/equipment/${name}.json`)
+    put('pack/text/honor-duel/en/equipment.json', '{"cloak":{},"bow":{}}')
+    put('pack/images/honor-duel/equipment/cloak.png')
+    put('pack/images/honor-duel/equipment/blade.png')
+
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), []).notes).toContain(
+      '2 Honor Duel equipment entries have no picture or text in the pack',
+    )
+  })
+
   it('note a board picture in neither picture folder', () => {
     expect(
       packProblems(join(dir, 'pack'), join(dir, 'repo'), ['odie', 'beetle', 'turret']).notes,

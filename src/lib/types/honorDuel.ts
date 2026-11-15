@@ -1,0 +1,33 @@
+export const EQUIPMENT_TIERS = ['rare', 'elite', 'epic', 'legendary'] as const
+
+export type EquipmentTier = (typeof EQUIPMENT_TIERS)[number]
+
+export interface DuelEquipment {
+  id: number
+  name: string
+  tier: EquipmentTier
+}
+
+export interface DuelArtifact {
+  id: number
+  name: string
+}
+
+export type HonorDuelItem =
+  { kind: 'equipment'; item: DuelEquipment } | { kind: 'artifact'; item: DuelArtifact }
+
+export interface DuelEquipmentText {
+  name: string
+  description: string
+}
+
+export interface DuelArtifactText {
+  name: string
+  levels: string[]
+}
+
+/** One language's Honor Duel text, each list keyed by the entry's file name. */
+export interface HonorDuelText {
+  equipment: Record<string, DuelEquipmentText>
+  artifacts: Record<string, DuelArtifactText>
+}
