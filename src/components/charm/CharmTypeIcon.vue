@@ -56,11 +56,7 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
     >
-      <!-- The shadow is cast by the masked shape, so it sits on its parent:
-           a filter on the masked element itself is cut off by the mask. -->
-      <span v-if="symbol" class="symbol-edges">
-        <span class="symbol" :style="{ maskImage: `url(${symbol})` }" />
-      </span>
+      <span v-if="symbol" class="symbol" :style="{ maskImage: `url(${symbol})` }" />
     </button>
     <HoldRing v-if="pressing" />
 
@@ -82,8 +78,8 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
 .charm-type {
   position: relative;
   display: block;
-  width: 58px;
-  height: 58px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   border: 2px solid var(--color-bg-raised);
   border-radius: var(--radius-round);
@@ -96,23 +92,10 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
   transform: scale(1.05);
 }
 
-.symbol-edges {
-  position: absolute;
-  inset: 9%;
-  filter: drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.28));
-}
-
 .symbol {
   position: absolute;
-  inset: 0;
+  inset: 9%;
   background: var(--color-primary);
   mask: center / contain no-repeat;
-}
-
-@media (max-width: 480px) {
-  .charm-type {
-    width: var(--hero-icon-size);
-    height: var(--hero-icon-size);
-  }
 }
 </style>
