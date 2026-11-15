@@ -79,15 +79,13 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
 <style scoped>
 .charm-chip-frame {
   position: relative;
-  max-width: 100%;
 }
 
 .charm-chip {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 228px;
-  max-width: 100%;
+  width: 100%;
   padding: 5px 10px 5px 12px;
   border: 1px solid var(--color-border-light);
   border-radius: 999px;
