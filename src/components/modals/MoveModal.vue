@@ -14,7 +14,7 @@ import { useI18nStore } from '@/stores/i18n'
 const props = defineProps<{
   show: boolean
   result: HandOverResult | null
-  onArrival: boolean
+  openedOnArrival: boolean
   requested: boolean
 }>()
 
@@ -26,7 +26,7 @@ const welcome = computed(() => i18n.t('app.move-welcome').split('{site}'))
 
 // The answer to the popup's own button comes back seconds after its welcome,
 // so it is the result alone, under the button's name.
-const answer = computed(() => props.onArrival && props.requested)
+const answer = computed(() => props.openedOnArrival && props.requested)
 const title = computed(() => i18n.t(answer.value ? 'app.move-bring' : 'app.move-title'))
 
 // "12 saved teams, 3 rosters": a kind with none is left out.
@@ -59,7 +59,7 @@ const filesOffered = computed(() => !!props.result && (!props.result.ok || left.
 
 // A full library has no room for another hand-over, and the popup that tells
 // what arrived has nothing more to bring.
-const bringOffered = computed(() => !props.result?.ok || (!props.onArrival && !left.value))
+const bringOffered = computed(() => !props.result?.ok || (!props.openedOnArrival && !left.value))
 </script>
 
 <template>
@@ -70,7 +70,7 @@ const bringOffered = computed(() => !props.result?.ok || (!props.onArrival && !l
       >{{ welcome[1] }}
     </p>
 
-    <template v-if="result?.ok && (left || onArrival)">
+    <template v-if="result?.ok && (left || openedOnArrival)">
       <p v-if="arrivedList">
         {{ i18n.t(left ? 'app.move-arrived-part' : 'app.move-arrived', { list: arrivedList }) }}
       </p>
