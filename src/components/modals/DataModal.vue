@@ -23,7 +23,7 @@ const i18n = useI18nStore()
 const library = useTeamLibrary()
 const rosters = useRosters()
 const teamsTransfer = useTeamsTransfer()
-const rostersTransfer = useRostersTransfer()
+const rostersTransfer = useRostersTransfer({ activate: false })
 
 const cards = computed(() => [
   {
@@ -103,7 +103,7 @@ const onFileChosen = (event: Event): void => {
 <style scoped>
 .data-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 16px;
   margin-top: 20px;
 }

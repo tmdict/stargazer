@@ -140,7 +140,7 @@ The light and dark looks are colour tokens in `src/styles/variables.css`, with l
 
 Every modal uses `useScrollLock`, `useFocusTrap` and `useOverlay` through `BaseModal`: page scrolling locks while it is open, focus stays inside and returns to the opener, and Escape or a click outside closes it.
 
-The four popups that have no page of their own open from a link on any page: `?popup=` followed by `about`, `data`, `contact` or `whatsNew`, as in `/teams?popup=data` or `/?lang=zh&popup=about` (`src/composables/usePopupLink.ts`). While one is open the address carries its name, and closing it takes the name out; both are replacements, so Back is unchanged. Any other value, or `popup` given twice, opens nothing.
+Four popups open from a link on any page: `?popup=` followed by `about`, `data`, `contact` or `whatsNew`, as in `/teams?popup=data` or `/?lang=zh&popup=about` (`src/composables/usePopupLink.ts`). While one is open the address carries its name, and closing it takes the name out. The name never enters the router's location: a guard takes it off the navigation that brings it, and the address bar gets it through `history.replaceState`. So opening or closing a popup adds no step for Back, and Back never lands on a popup. Any other value, or `popup` given twice, opens nothing.
 
 A tap never shows an action button's tooltip; info-only triggers show theirs on tap (`useHoverTooltip`, `useInfoTip`). Touch is decided for each event (`isTouchHover` in `src/utils/pointer.ts`), so a mouse keeps its hover on a device that also has a touchscreen.
 

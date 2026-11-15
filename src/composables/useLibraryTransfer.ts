@@ -17,7 +17,7 @@ import { downloadBlob, timestampedName } from '@/utils/download'
  * memory even when its write fails, so it shows the storage error in place of
  * the success message. The message keys take `imported` and `skipped`, and
  * the conflicts one also `conflicts` (records renamed "(imported)"). */
-export function useLibraryTransfer({
+function useLibraryTransfer({
   filePrefix,
   importFile,
   report,
@@ -74,12 +74,12 @@ export function useTeamsTransfer() {
   })
 }
 
-export function useRostersTransfer() {
+export function useRostersTransfer({ activate = true } = {}) {
   const rosters = useRosters()
   const { report } = useRosterFeedback()
   return useLibraryTransfer({
     filePrefix: 'stargazer-rosters',
-    importFile: rosters.importRosters,
+    importFile: (raw) => rosters.importRosters(raw, { activate }),
     report,
     messages: {
       invalid: 'app.rosters-import-invalid',

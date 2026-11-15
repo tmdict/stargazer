@@ -66,8 +66,12 @@ export const useRosters = defineStore('rosters', () => {
   // The name a roster saved without one gets.
   const nextName = computed(() => autoName(rosters.value))
 
+  // Changes and the export start from storage, so a second tab's writes
+  // survive a change and reach a backup.
+  const stored = (): Roster[] => (persisted.value ? readRosters() : [...rosters.value])
+
   const mutate = <T>(action: (fresh: Roster[]) => T): T => {
-    const fresh = persisted.value ? readRosters() : [...rosters.value]
+    const fresh = stored()
     const result = action(fresh)
     persisted.value = writeRosters(fresh)
     rosters.value = fresh
@@ -136,11 +140,12 @@ export const useRosters = defineStore('rosters', () => {
     Object.hasOwn(active.value.heroes, String(character.id))
 
   const exportRosters = (): RostersExportFile =>
-    buildRostersExport(rosters.value, new Date().toISOString())
+    buildRostersExport(stored(), new Date().toISOString())
 
-  // Merge-only (lib/exportFile). The first roster the file adds becomes the
-  // active one, as a created roster does; a file that adds none changes nothing.
-  const importRosters = (raw: string): ImportOutcome => {
+  // Merge-only (lib/exportFile). Unless `activate` is false, the first roster
+  // the file adds becomes the active one, as a created roster does; a file that
+  // adds none changes nothing.
+  const importRosters = (raw: string, { activate = true } = {}): ImportOutcome => {
     let added: string | undefined
     const outcome = mutate((fresh) => {
       const before = fresh.length
@@ -148,7 +153,7 @@ export const useRosters = defineStore('rosters', () => {
       added = fresh[before]?.id
       return result
     })
-    if (added) setActive(added)
+    if (activate && added) setActive(added)
     return outcome
   }
 

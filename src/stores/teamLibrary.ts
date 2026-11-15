@@ -61,10 +61,13 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const get = (id: string | null): SavedTeam | undefined =>
     id === null ? undefined : teams.value.find((team) => team.id === id)
 
-  // Mutations re-read the stored blob first so a second tab's writes survive
-  // (clobber window narrows to one mutation).
+  // Mutations and the full export start from the stored blob, so a second
+  // tab's writes survive a change and reach a backup (the clobber window
+  // narrows to one mutation).
+  const stored = (): SavedTeam[] => (persisted.value ? readLibrary() : [...teams.value])
+
   const mutate = <T>(action: (fresh: SavedTeam[]) => T): T => {
-    const fresh = persisted.value ? readLibrary() : [...teams.value]
+    const fresh = stored()
     const result = action(fresh)
     persisted.value = writeLibrary(fresh)
     teams.value = fresh
@@ -148,7 +151,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return copy
     })
 
-  const exportTeams = (selection: readonly SavedTeam[] = teams.value): TeamsExportFile =>
+  const exportTeams = (selection: readonly SavedTeam[] = stored()): TeamsExportFile =>
     buildExport(selection, new Date().toISOString())
 
   // Merge-only (lib/exportFile).
