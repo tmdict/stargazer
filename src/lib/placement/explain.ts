@@ -11,11 +11,10 @@ import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
-// One of the team's effects: the name its rule's effect is worded by, which is
-// the data file the rule sits in (the unit's, the charm's id or the artifact's)
-// for all but a companion's effect and a most goal that counts walls or allies
-// (effectName), and the unit giving it, the charm's holder for a charm and none
-// for the artifact.
+// One of the team's effects: the name its words go by (effectName), from the
+// data file its rule sits in (the unit's, the charm's id or the artifact's),
+// and the unit giving it, the charm's holder for a charm and none for the
+// artifact.
 export interface PlacedEffect {
   source: OwnGoalCheck['source']
   file: string
