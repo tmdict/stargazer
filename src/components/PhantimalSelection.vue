@@ -221,7 +221,7 @@ const {
   position: relative;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-raised);
-  background: var(--color-bg-raised);
+  background: var(--unit-disc-phantimal);
   overflow: hidden;
   box-shadow: 0 0 0 2px var(--color-bg-raised);
   padding: 0;

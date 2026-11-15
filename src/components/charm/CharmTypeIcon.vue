@@ -67,6 +67,7 @@ const { showTooltip, onMouseEnter, onMouseLeave, open, pressing, onPointerDown, 
   width: 46px;
   height: 46px;
   padding: 0;
+  background: var(--color-bg-secondary);
 }
 
 .symbol {
