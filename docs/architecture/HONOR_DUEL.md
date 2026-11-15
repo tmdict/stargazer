@@ -1,6 +1,6 @@
 # Honor Duel
 
-Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, equipment by tier and then the artifacts, and each one opens a popup with its effect text. Nothing in the tab goes on a board.
+Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts and then equipment by tier, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. Nothing in the tab goes on a board.
 
 ## Where the content comes from
 

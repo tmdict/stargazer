@@ -239,6 +239,17 @@ main {
   }
 }
 
+.round-icon {
+  width: var(--hero-icon-size);
+  height: var(--hero-icon-size);
+  position: relative;
+  border-radius: var(--radius-round);
+  border: 2px solid var(--color-bg-raised);
+  background: var(--color-bg-raised);
+  overflow: hidden;
+  box-shadow: 0 0 0 2px var(--color-bg-raised);
+}
+
 .icon-groups {
   display: flex;
   flex-direction: column;
@@ -281,8 +292,10 @@ main {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  max-width: 100%;
+  min-width: min-content;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.2;

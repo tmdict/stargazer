@@ -161,7 +161,7 @@ const {
     <div class="phantimals">
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
-          class="phantimal inspectable"
+          class="phantimal round-icon inspectable"
           :class="{ draggable: isDraggable, 'greyed-out': isDimmed(phantimal) }"
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
@@ -224,14 +224,6 @@ const {
 }
 
 .phantimal {
-  width: var(--hero-icon-size);
-  height: var(--hero-icon-size);
-  position: relative;
-  border-radius: var(--radius-round);
-  border: 2px solid var(--color-bg-raised);
-  background: var(--color-bg-raised);
-  overflow: hidden;
-  box-shadow: 0 0 0 2px var(--color-bg-raised);
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);
