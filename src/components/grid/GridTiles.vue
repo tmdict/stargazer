@@ -523,8 +523,7 @@ defineExpose({ svgEl, unitEnter, unitLeave })
         <!-- Skill zone outlines and lane boundaries: on the tiles, so under the portraits -->
         <SkillCornerLines v-if="showSkills" />
 
-        <!-- Board information like the tile numbers, so it stays in exported images.
-             The image keeps a shape's own attributes, not its stylesheet's caps. -->
+        <!-- Board information like the tile numbers, so it stays in exported images. -->
         <BuffTileMarks :tiles="buffMarks" :hex-size="ctx.hexScale * BASE_HEX_RADIUS" />
 
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
