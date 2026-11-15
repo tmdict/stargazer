@@ -546,7 +546,7 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" /><span
           >在竞技场页面的网址后面加上
-          <kbd>?t=debug</kbd>，可以打开隐藏的<b>调试</b>标签页，查看每个英雄走向目标的路径。</span
+          <kbd>?tab=debug</kbd>，可以打开隐藏的<b>调试</b>标签页，查看每个英雄走向目标的路径。</span
         >
       </li>
     </ul>

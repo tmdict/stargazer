@@ -3,18 +3,18 @@ https://afkstargazer.netlify.app/* https://afkstargazer.com/:splat 301!
 https://stargazer.tmdict.com/backup /move-recovery.html 200!
 https://stargazer.tmdict.com/* https://afkstargazer.com/:splat 301!
 # Retired paths; each guide page has one address, and a Chinese or Korean
-# link keeps its language through ?l=.
+# link keeps its language through ?lang=.
 /en/guide /guide 301
-/zh/guide /guide?l=zh 301
-/ko/guide /guide?l=ko 301
+/zh/guide /guide?lang=zh 301
+/ko/guide /guide?lang=ko 301
 /en/guide/upgrades /guide/upgrades 301
-/zh/guide/upgrades /guide/upgrades?l=zh 301
-/ko/guide/upgrades /guide/upgrades?l=ko 301
+/zh/guide/upgrades /guide/upgrades?lang=zh 301
+/ko/guide/upgrades /guide/upgrades?lang=ko 301
 /en/guide/mechanics /guide/mechanics 301
-/zh/guide/mechanics /guide/mechanics?l=zh 301
-/ko/guide/mechanics /guide/mechanics?l=ko 301
+/zh/guide/mechanics /guide/mechanics?lang=zh 301
+/ko/guide/mechanics /guide/mechanics?lang=ko 301
 /en/mechanics /guide/mechanics 301
-/zh/mechanics /guide/mechanics?l=zh 301
+/zh/mechanics /guide/mechanics?lang=zh 301
 # Retired feature; no replacement page.
 /wandwars / 301
 /* /index.html 200

@@ -654,8 +654,8 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>
-          Add <kbd>?t=debug</kbd> to the Arena's address for a hidden <b>Debug</b> tab, which draws
-          the path each hero takes to its target.
+          Add <kbd>?tab=debug</kbd> to the Arena's address for a hidden <b>Debug</b> tab, which
+          draws the path each hero takes to its target.
         </span>
       </li>
     </ul>

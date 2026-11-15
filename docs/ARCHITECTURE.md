@@ -140,7 +140,7 @@ The light and dark looks are colour tokens in `src/styles/variables.css`, with l
 
 Every modal uses `useScrollLock`, `useFocusTrap` and `useOverlay` through `BaseModal`: page scrolling locks while it is open, focus stays inside and returns to the opener, and Escape or a click outside closes it.
 
-The four popups that have no page of their own open from a link on any page: `?popup=` followed by `about`, `data`, `contact` or `whatsNew`, as in `/teams?popup=data` or `/?l=zh&popup=about` (`src/composables/usePopupLink.ts`). While one is open the address carries its name, and closing it takes the name out; both are replacements, so Back is unchanged. Any other value, or `popup` given twice, opens nothing.
+The four popups that have no page of their own open from a link on any page: `?popup=` followed by `about`, `data`, `contact` or `whatsNew`, as in `/teams?popup=data` or `/?lang=zh&popup=about` (`src/composables/usePopupLink.ts`). While one is open the address carries its name, and closing it takes the name out; both are replacements, so Back is unchanged. Any other value, or `popup` given twice, opens nothing.
 
 A tap never shows an action button's tooltip; info-only triggers show theirs on tap (`useHoverTooltip`, `useInfoTip`). Touch is decided for each event (`isTouchHover` in `src/utils/pointer.ts`), so a mouse keeps its hover on a device that also has a touchscreen.
 

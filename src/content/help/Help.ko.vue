@@ -661,7 +661,7 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>
-          아레나 주소에 <kbd>?t=debug</kbd>를 붙이면 숨겨진 <b>디버그</b> 탭이 나타나며, 각 영웅이
+          아레나 주소에 <kbd>?tab=debug</kbd>를 붙이면 숨겨진 <b>디버그</b> 탭이 나타나며, 각 영웅이
           대상까지 이동하는 경로를 그려 줍니다.
         </span>
       </li>

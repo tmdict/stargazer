@@ -63,7 +63,7 @@ export const useI18nStore = defineStore('i18n', () => {
     writeStorage(LOCALE_STORAGE_KEY, locale)
   }
 
-  // Reads the saved locale, then the `?l=` query param where `readQuery`
+  // Reads the saved locale, then the `?lang=` query param where `readQuery`
   // allows it. Called after mount: the pages are pre-rendered without a saved
   // locale, so an earlier read would mismatch the baked HTML.
   const initializeLocale = ({ readQuery }: { readQuery: boolean }) => {
@@ -73,10 +73,10 @@ export const useI18nStore = defineStore('i18n', () => {
     if (saved && isAppLocale(saved)) savedLocale.value = saved
 
     if (!readQuery) return
-    // `?l=` is an intentional external contract: a shared link like `/?l=zh`
+    // `?lang=` is an intentional external contract: a shared link like `/?lang=zh`
     // pins the app language for the recipient and persists it as their saved
     // preference.
-    const localeParam = new URLSearchParams(window.location.search).get('l')
+    const localeParam = new URLSearchParams(window.location.search).get('lang')
     if (localeParam && isAppLocale(localeParam)) setLocale(localeParam)
   }
 
