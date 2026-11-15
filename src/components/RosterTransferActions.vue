@@ -10,8 +10,7 @@ import IconDownload from '@/components/ui/IconDownload.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
-import { useRosterFeedback } from '@/composables/useRosterFeedback'
+import { useRostersTransfer } from '@/composables/useLibraryTransfer'
 import type { RostersExportFile } from '@/lib/rosters'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -20,18 +19,8 @@ const { exportFile } = defineProps<{ exportFile?: () => RostersExportFile }>()
 
 const rosters = useRosters()
 const i18n = useI18nStore()
-const { report } = useRosterFeedback()
 
-const { fileInput, download, handleFileChosen } = useLibraryTransfer({
-  filePrefix: 'stargazer-rosters',
-  importFile: rosters.importRosters,
-  report,
-  messages: {
-    invalid: 'app.rosters-import-invalid',
-    success: 'app.rosters-import-success',
-    successConflicts: 'app.rosters-import-success-conflicts',
-  },
-})
+const { fileInput, download, handleFileChosen } = useRostersTransfer()
 
 const {
   anchor: tipEl,

@@ -24,7 +24,7 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
-import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
+import { useTeamsTransfer } from '@/composables/useLibraryTransfer'
 import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
 import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
@@ -237,16 +237,7 @@ const {
 // they belong in this panel rather than the boards' action row. Import merges
 // into the library and never replaces it; "replace everything" is Delete all
 // followed by Import.
-const { fileInput, download, handleFileChosen } = useLibraryTransfer({
-  filePrefix: 'stargazer-teams',
-  importFile: library.importTeams,
-  report,
-  messages: {
-    invalid: 'app.import-invalid',
-    success: 'app.import-success',
-    successConflicts: 'app.import-success-conflicts',
-  },
-})
+const { fileInput, download, handleFileChosen } = useTeamsTransfer()
 
 // A filtered export names its criteria back to the user (button label and
 // tooltip before, toast after), so a partial backup can't pass for a full one.

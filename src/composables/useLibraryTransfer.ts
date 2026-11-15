@@ -1,8 +1,12 @@
 import { ref } from 'vue'
 
+import { useRosterFeedback } from '@/composables/useRosterFeedback'
+import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useToast } from '@/composables/useToast'
 import type { ImportOutcome } from '@/lib/exportFile'
 import { useI18nStore } from '@/stores/i18n'
+import { useRosters } from '@/stores/rosters'
+import { useTeamLibrary } from '@/stores/teamLibrary'
 import { downloadBlob, timestampedName } from '@/utils/download'
 
 /* Backup-file buttons for a user library (saved teams, rosters): the download
@@ -53,4 +57,34 @@ export function useLibraryTransfer({
   }
 
   return { fileInput, download, handleFileChosen }
+}
+
+export function useTeamsTransfer() {
+  const library = useTeamLibrary()
+  const { report } = useTeamLibraryFeedback()
+  return useLibraryTransfer({
+    filePrefix: 'stargazer-teams',
+    importFile: library.importTeams,
+    report,
+    messages: {
+      invalid: 'app.import-invalid',
+      success: 'app.import-success',
+      successConflicts: 'app.import-success-conflicts',
+    },
+  })
+}
+
+export function useRostersTransfer() {
+  const rosters = useRosters()
+  const { report } = useRosterFeedback()
+  return useLibraryTransfer({
+    filePrefix: 'stargazer-rosters',
+    importFile: rosters.importRosters,
+    report,
+    messages: {
+      invalid: 'app.rosters-import-invalid',
+      success: 'app.rosters-import-success',
+      successConflicts: 'app.rosters-import-success-conflicts',
+    },
+  })
 }

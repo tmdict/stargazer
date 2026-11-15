@@ -41,6 +41,9 @@ const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/What
 const whatsNewMounted = ref(false)
 const MoveModal = defineLazyComponent(() => import('@/components/modals/MoveModal.vue'))
 const moveModalMounted = ref(false)
+const DataModal = defineLazyComponent(() => import('@/components/modals/DataModal.vue'))
+const dataModalMounted = ref(false)
+const showDataModal = ref(false)
 const { open: openContact } = useContactForm()
 const i18n = useI18nStore()
 const route = useRoute()
@@ -65,6 +68,11 @@ watch(movePopupShown, (shown) => {
 const openWhatsNew = () => {
   whatsNewMounted.value = true
   showWhatsNew.value = true
+}
+
+const openData = () => {
+  dataModalMounted.value = true
+  showDataModal.value = true
 }
 
 // Root setup runs before any route child's persistence reads, and the arena
@@ -194,7 +202,7 @@ onUnmounted(() => {
             </button>
           </li>
           <li class="menu-dropdown">
-            <HelpMenu @about="showAboutModal = true" @contact="openContact" />
+            <HelpMenu @about="showAboutModal = true" @data="openData" @contact="openContact" />
           </li>
           <li class="menu-dropdown">
             <LocaleMenu
@@ -220,6 +228,8 @@ onUnmounted(() => {
 
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
+
+  <DataModal v-if="dataModalMounted" :show="showDataModal" @close="showDataModal = false" />
 
   <WhatsNewModal
     v-if="whatsNewMounted"
