@@ -5,9 +5,8 @@
    it. Export writes every saved roster unless the host hands it a file of its
    own: the generator does, under All heroes, for the heroes on its screen. */
 
+import LibraryTransferButtons from './LibraryTransferButtons.vue'
 import RosterImportButton from './RosterImportButton.vue'
-import IconDownload from '@/components/ui/IconDownload.vue'
-import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useRostersTransfer } from '@/composables/useLibraryTransfer'
@@ -20,61 +19,23 @@ const { exportFile } = defineProps<{ exportFile?: () => RostersExportFile }>()
 const rosters = useRosters()
 const i18n = useI18nStore()
 
-const { fileInput, download, handleFileChosen } = useRostersTransfer()
+const { download, handleFileChosen } = useRostersTransfer()
 
-const {
-  anchor: tipEl,
-  payload: tipKey,
-  onMouseEnter: showTip,
-  onMouseLeave: hideTip,
-} = useHoverTooltip<string>()
+const { anchor: tipEl, onMouseEnter: showTip, onMouseLeave: hideTip } = useHoverTooltip()
 </script>
 
 <template>
-  <RosterImportButton
-    @click="hideTip"
-    @mouseenter="showTip($event, 'app.tooltip-roster-import')"
-    @mouseleave="hideTip"
-  />
-  <button
-    type="button"
-    class="control-btn compact secondary"
-    :aria-label="i18n.t('app.import')"
-    @click="fileInput?.click()"
-    @mouseenter="showTip($event, 'app.tooltip-rosters-import')"
-    @mouseleave="hideTip"
-  >
-    <IconUpload :size="13" class="btn-icon" />
-    <span class="btn-text">{{ i18n.t('app.import') }}</span>
-  </button>
-  <button
-    v-if="exportFile || rosters.count > 0"
-    type="button"
-    class="control-btn compact secondary"
-    :aria-label="i18n.t('app.export')"
-    @click="download(exportFile ? exportFile() : rosters.exportRosters())"
-    @mouseenter="
-      showTip($event, exportFile ? 'app.tooltip-roster-export-shown' : 'app.tooltip-rosters-export')
+  <RosterImportButton @click="hideTip" @mouseenter="showTip" @mouseleave="hideTip" />
+  <LibraryTransferButtons
+    :import-tip="i18n.t('app.tooltip-rosters-import')"
+    :export-tip="
+      i18n.t(exportFile ? 'app.tooltip-roster-export-shown' : 'app.tooltip-rosters-export')
     "
-    @mouseleave="hideTip"
-  >
-    <IconDownload :size="13" class="btn-icon" />
-    <span class="btn-text">{{ i18n.t('app.export') }}</span>
-  </button>
-  <input
-    ref="fileInput"
-    type="file"
-    accept="application/json,.json"
-    class="file-input"
-    @change="handleFileChosen"
+    :can-export="!!exportFile || rosters.count > 0"
+    @export="download(exportFile ? exportFile() : rosters.exportRosters())"
+    @file="handleFileChosen"
   />
-  <TooltipPopup v-if="tipKey && tipEl" :target-element="tipEl">
-    <template #content>{{ i18n.t(tipKey) }}</template>
+  <TooltipPopup v-if="tipEl" :target-element="tipEl">
+    <template #content>{{ i18n.t('app.tooltip-roster-import') }}</template>
   </TooltipPopup>
 </template>
-
-<style scoped>
-.file-input {
-  display: none;
-}
-</style>

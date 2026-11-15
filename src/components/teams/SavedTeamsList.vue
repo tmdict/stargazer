@@ -9,6 +9,7 @@
 
 import { computed, ref, watch } from 'vue'
 
+import LibraryTransferButtons from '@/components/LibraryTransferButtons.vue'
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
 import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
 import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
@@ -16,12 +17,12 @@ import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import IconTrash from '@/components/ui/IconTrash.vue'
 import MountOnVisible from '@/components/ui/MountOnVisible.vue'
 import RenameButton from '@/components/ui/RenameButton.vue'
 import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { useTeamsTransfer } from '@/composables/useLibraryTransfer'
@@ -237,7 +238,7 @@ const {
 // they belong in this panel rather than the boards' action row. Import merges
 // into the library and never replaces it; "replace everything" is Delete all
 // followed by Import.
-const { fileInput, download, handleFileChosen } = useTeamsTransfer()
+const { download, handleFileChosen } = useTeamsTransfer()
 
 // A filtered export names its criteria back to the user (button label and
 // tooltip before, toast after), so a partial backup can't pass for a full one.
@@ -282,21 +283,11 @@ const handleExport = (): void => {
   }
 }
 
-// Hover-only, unlike the storage hint: these act on tap, so the composable
-// suppresses the tooltip on touch.
-const {
-  anchor: actionTipAnchor,
-  payload: actionTip,
-  onMouseEnter: showActionTip,
-  onMouseLeave: hideActionTip,
-} = useHoverTooltip<'import' | 'export'>()
-
-const actionTipText = computed((): string => {
-  if (!actionTip.value) return ''
-  return actionTip.value === 'export' && exportFiltered.value
+const exportTip = computed((): string =>
+  exportFiltered.value
     ? i18n.t('app.tooltip-export-filtered', { filters: filterSummary.value })
-    : i18n.t(`app.tooltip-${actionTip.value}`)
-})
+    : i18n.t('app.tooltip-export'),
+)
 </script>
 
 <template>
@@ -340,45 +331,31 @@ const actionTipText = computed((): string => {
       <span class="library-actions">
         <!-- Import stays visible at zero teams: restoring a backup into an empty
              library is exactly when it's needed. -->
-        <button
-          type="button"
-          class="library-btn solid-btn"
-          @click="fileInput?.click()"
-          @mouseenter="showActionTip($event, 'import')"
-          @mouseleave="hideActionTip"
-        >
-          {{ i18n.t('app.import') }}
-        </button>
-        <button
-          v-if="library.count > 0"
-          type="button"
-          class="library-btn solid-btn"
-          @click="handleExport"
-          @mouseenter="showActionTip($event, 'export')"
-          @mouseleave="hideActionTip"
-        >
-          {{
+        <LibraryTransferButtons
+          :import-tip="i18n.t('app.tooltip-import')"
+          :export-tip
+          :can-export="library.count > 0"
+          :export-label="
             exportFiltered
               ? i18n.t('app.export-count', { count: visibleTeams.length, total: library.count })
-              : i18n.t('app.export')
-          }}
-        </button>
+              : undefined
+          "
+          @export="handleExport"
+          @file="handleFileChosen"
+        />
         <button
           v-if="library.count > 0"
           type="button"
-          class="library-btn solid-btn delete-all-btn"
+          class="control-btn compact danger"
           :class="{ 'confirm-armed': armed === 'all' }"
+          :aria-label="i18n.t('app.delete-all')"
           @click="handleDeleteAll"
         >
-          <ConfirmLabel :armed="armed === 'all'" :label="i18n.t('app.delete-all')" />
+          <IconTrash :size="13" class="btn-icon" />
+          <span class="btn-text">
+            <ConfirmLabel :armed="armed === 'all'" :label="i18n.t('app.delete-all')" />
+          </span>
         </button>
-        <input
-          ref="fileInput"
-          type="file"
-          accept="application/json,.json"
-          class="file-input"
-          @change="handleFileChosen"
-        />
       </span>
     </div>
 
@@ -528,9 +505,6 @@ const actionTipText = computed((): string => {
     <TooltipPopup v-if="storageHintAnchor" :target-element="storageHintAnchor" max-width="320px">
       <template #content>{{ i18n.t('app.storage-hint') }}</template>
     </TooltipPopup>
-    <TooltipPopup v-if="actionTip && actionTipAnchor" :target-element="actionTipAnchor">
-      <template #content>{{ actionTipText }}</template>
-    </TooltipPopup>
   </div>
 </template>
 
@@ -667,27 +641,6 @@ const actionTipText = computed((): string => {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
-}
-
-.library-btn {
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.delete-all-btn {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-}
-
-.delete-all-btn:hover,
-.delete-all-btn.confirm-armed {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-}
-
-.file-input {
-  display: none;
 }
 
 .empty-state {
