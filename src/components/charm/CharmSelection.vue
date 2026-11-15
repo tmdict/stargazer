@@ -85,12 +85,12 @@ const heading = (label: string): string =>
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(228px, 100%), 1fr));
   gap: 10px;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-2xl) var(--spacing-lg) var(--spacing-lg);
 }
 
 @media (max-width: 768px) {
   .charm-chips {
-    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+    padding: var(--spacing-md);
   }
 }
 
@@ -100,7 +100,7 @@ const heading = (label: string): string =>
   }
 
   .charm-chips {
-    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
+    padding: var(--spacing-sm);
   }
 }
 </style>
