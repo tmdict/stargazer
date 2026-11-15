@@ -72,12 +72,13 @@ export function installRouterGuards(router: Router): void {
 // Back/forward restores the reader's position (providing scrollBehavior at
 // all flips history.scrollRestoration to manual, so the saved position must
 // win even on hash-bearing URLs); fresh hash links (search-overlay deep
-// links to a skill section) scroll to their anchor. Everything else is left
-// alone, so hero-to-hero browsing from the hero list keeps the current scroll.
-// Shared by both entries like the routes and the warm-up guard.
-export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
+// links to a skill section) scroll to their anchor, unless only the query
+// changed (a tab, a filter, a popup) and the page stays where it is. Everything
+// else is left alone, so hero-to-hero browsing from the hero list keeps the
+// current scroll. Shared by both entries like the routes and the warm-up guard.
+export const scrollBehavior: RouterScrollBehavior = (to, from, savedPosition) => {
   if (savedPosition) return savedPosition
-  if (to.hash) return { el: to.hash }
+  if (to.hash && (to.path !== from.path || to.hash !== from.hash)) return { el: to.hash }
   return false
 }
 
