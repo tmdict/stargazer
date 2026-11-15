@@ -46,3 +46,11 @@ export const artifactImages = byName(
     },
   ),
 )
+
+export const charmTypeImages = byName(
+  import.meta.glob<string>('@/pack/images/seasonal/charm/*.png', {
+    query: { format: 'webp', quality: 80, w: 100 },
+    eager: true,
+    import: 'default',
+  }),
+)

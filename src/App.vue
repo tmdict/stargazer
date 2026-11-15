@@ -10,16 +10,14 @@ import MoveBanner from '@/components/move/MoveBanner.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
-import IconGitHub from '@/components/ui/IconGitHub.vue'
-import IconHelp from '@/components/ui/IconHelp.vue'
-import IconInfo from '@/components/ui/IconInfo.vue'
-import IconMail from '@/components/ui/IconMail.vue'
+import HelpMenu from '@/components/ui/HelpMenu.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import LocaleMenu from '@/components/ui/LocaleMenu.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
+import { useContactForm } from '@/composables/useContactForm'
 import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
 import { useMove } from '@/composables/useMove'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
@@ -27,7 +25,6 @@ import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
 import { useWhatsNew } from '@/composables/useWhatsNew'
 import { guidePath } from '@/lib/guide'
-import { helpPath } from '@/lib/help'
 import { APP_LOCALES } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { defineLazyComponent } from '@/utils/lazyComponent'
@@ -44,8 +41,7 @@ const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/What
 const whatsNewMounted = ref(false)
 const MoveModal = defineLazyComponent(() => import('@/components/modals/MoveModal.vue'))
 const moveModalMounted = ref(false)
-const contactOpen = ref(false)
-const contactButton = ref<HTMLElement | null>(null)
+const { open: openContact } = useContactForm()
 const i18n = useI18nStore()
 const route = useRoute()
 const router = useRouter()
@@ -197,49 +193,10 @@ onUnmounted(() => {
               <IconSearch :size="22" />
             </button>
           </li>
-          <li>
-            <button
-              @click="showAboutModal = true"
-              class="icon-link icon-button"
-              :title="i18n.t('app.about')"
-            >
-              <IconInfo />
-            </button>
+          <li class="menu-dropdown">
+            <HelpMenu @about="showAboutModal = true" @contact="openContact" />
           </li>
-          <li>
-            <RouterLink
-              :to="helpPath(i18n.currentLocale)"
-              class="icon-link"
-              :title="i18n.t('app.help')"
-              :aria-label="i18n.t('app.help')"
-            >
-              <IconHelp aria-hidden="true" />
-            </RouterLink>
-          </li>
-          <li>
-            <a
-              href="https://github.com/tmdict/stargazer/"
-              class="icon-link"
-              :title="i18n.t('app.code')"
-              :aria-label="i18n.t('app.code')"
-            >
-              <IconGitHub aria-hidden="true" />
-            </a>
-          </li>
-          <li>
-            <button
-              ref="contactButton"
-              type="button"
-              class="icon-link icon-button"
-              :title="i18n.t('app.contact')"
-              :aria-label="i18n.t('app.contact')"
-              :aria-expanded="contactOpen"
-              @click="contactOpen = !contactOpen"
-            >
-              <IconMail />
-            </button>
-          </li>
-          <li class="menu-locale">
+          <li class="menu-dropdown">
             <LocaleMenu
               :current="i18n.currentLocale"
               :link-to="localeTarget"
@@ -281,7 +238,7 @@ onUnmounted(() => {
     @bring="bringOldData"
   />
 
-  <ContactForm v-model:open="contactOpen" :trigger="contactButton" />
+  <ContactForm />
 
   <ToastContainer />
 
@@ -345,23 +302,19 @@ nav {
   display: flex;
 }
 
-.menu a,
 .menu button,
-.menu-locale {
+.menu-dropdown {
   color: #ddd;
-  text-decoration: none;
   font-weight: 600;
   border-radius: 6px;
 }
 
-.menu a,
 .menu button {
   font-size: 1.1rem;
 }
 
-.menu a:hover,
 .menu button:hover,
-.menu-locale:hover {
+.menu-dropdown:hover {
   color: var(--color-header-gold);
 }
 
@@ -511,7 +464,6 @@ nav {
     gap: 0.8rem;
   }
 
-  .menu a,
   .menu button {
     font-size: 1rem;
   }

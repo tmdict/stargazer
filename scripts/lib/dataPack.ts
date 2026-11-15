@@ -263,6 +263,13 @@ export function packProblems(
     }
   }
 
+  // Charm text and the list of who holds each charm arrive and retire
+  // together; one without the other is a half-applied pack update.
+  const charmText = existsSync(join(pack, SKILL, 'en', '_charms.json'))
+  const charmHeroes = existsSync(join(pack, SKILL, 'hero-charms.json'))
+  if (charmText && !charmHeroes) problems.push('the pack has charm text but no hero-charms.json')
+  if (charmHeroes && !charmText) problems.push('the pack has hero-charms.json but no charm text')
+
   // A pack update writes every language's artifact and phantimal text
   // alike, so English answers for all.
   const textIn = (file: string): Record<string, unknown> => {
@@ -270,6 +277,11 @@ export function packProblems(
     return existsSync(path)
       ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
       : {}
+  }
+  // A charm type's picture comes with its season, as a seasonal unit's does.
+  for (const type of Object.keys(textIn('_charm-types.json'))) {
+    if (!existsSync(join(pack, 'images/seasonal/charm', `${type}.png`)))
+      problems.push(`the charm type ${type} has no picture in the pack`)
   }
   const artifactText = textIn('_artifacts.json')
   const sets = [

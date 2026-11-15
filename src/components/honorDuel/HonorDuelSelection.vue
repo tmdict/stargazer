@@ -105,20 +105,20 @@ const groups = computed(() => {
     :class="{ 'panel-fill': scrollable }"
   >
     <section v-for="group in groups" :key="group.key" class="icon-group">
-      <h3 class="icon-group-title">{{ group.title }}</h3>
-      <div class="icon-grid">
+      <h3 class="seasonal-title">{{ group.title }}</h3>
+      <div class="seasonal-cells">
         <button
           v-for="{ item, name, image } in group.items"
           :key="item.item.id"
           type="button"
-          class="icon-cell duel-item"
+          class="seasonal-cell duel-item"
           @click="open(item)"
           @pointerdown="startHold($event, item)"
           @contextmenu="onContextMenu($event, item)"
           @mouseenter="onMouseEnter($event, item)"
           @mouseleave="onMouseLeave"
         >
-          <span class="duel-frame">
+          <span class="icon-disc-frame">
             <span class="duel-icon round-icon">
               <img
                 v-if="image"
@@ -131,7 +131,7 @@ const groups = computed(() => {
             </span>
             <HoldRing v-if="pressing === item" />
           </span>
-          <span class="icon-cell-name">{{ name }}</span>
+          <span class="seasonal-cell-name">{{ name }}</span>
         </button>
       </div>
     </section>
@@ -152,12 +152,6 @@ const groups = computed(() => {
   background: none;
   font: inherit;
   cursor: pointer;
-}
-
-/* Positioned so the hold ring can sit outside the icon's clipped circle. */
-.duel-frame {
-  position: relative;
-  margin-top: var(--spacing-xs);
 }
 
 .duel-icon {

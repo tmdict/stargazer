@@ -12,7 +12,7 @@ import { getRegisteredSkills } from '@/lib/skills/registry'
 // Side effect: registers every skill file, the seasonal ones included.
 import '@/lib/skills/skill'
 
-import { loadArtifacts, loadCharms, loadPhantimals } from '@/lib/dataLoader'
+import { loadArtifacts, loadPhantimals } from '@/lib/dataLoader'
 import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'
 import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import { normalizeTeamPayload } from '@/lib/teams/modes'
@@ -136,9 +136,6 @@ describe('season data contract', () => {
     }
     for (const phantimal of loadPhantimals()) {
       expect(phantimal.season).toBe(CURRENT_SEASON)
-    }
-    for (const charm of loadCharms()) {
-      expect(charm.season).toBe(CURRENT_SEASON)
     }
   })
 

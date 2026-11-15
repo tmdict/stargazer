@@ -6,7 +6,7 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { HonorDuelItem } from '@/lib/types/honorDuel'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import type { TagPick } from '@/lib/types/skill'
+import type { CharmData, TagPick } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { hasSkillLocale } from '@/utils/skillLocale'
 
@@ -22,6 +22,8 @@ export type InspectTarget =
   | { kind: 'phantimal'; phantimal: PhantimalType }
   | { kind: 'artifact'; artifact: ArtifactType }
   | { kind: 'honorDuel'; item: HonorDuelItem }
+  | { kind: 'charm'; charm: CharmData }
+  | { kind: 'charm-type'; type: string }
 
 const target = shallowRef<InspectTarget | null>(null)
 const open = ref(false)

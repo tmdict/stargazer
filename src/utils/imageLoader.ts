@@ -4,7 +4,7 @@
 
 import { outfitOf } from '@/lib/characters/outfit'
 import { fileStem } from './fileStem'
-import { artifactImages, characterImages, outfitImages } from './imageAssets'
+import { artifactImages, characterImages, charmTypeImages, outfitImages } from './imageAssets'
 
 let icons: Record<string, string> | null = null
 
@@ -17,6 +17,10 @@ export function loadCharacterImages(): Record<string, string> {
 
 export function loadArtifactImages(): Record<string, string> {
   return artifactImages
+}
+
+export function loadCharmTypeImages(): Record<string, string> {
+  return charmTypeImages
 }
 
 // Each picture's first outfit at the portraits' display size, keyed by the

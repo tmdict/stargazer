@@ -157,7 +157,7 @@ const {
 
 <template>
   <section v-if="sorted.length" class="phantimal-section">
-    <h3 class="phantimal-section-title">{{ heading }}</h3>
+    <h3 class="seasonal-title">{{ heading }}</h3>
     <div class="phantimals">
       <div v-for="phantimal in sorted" :key="phantimal.id" class="phantimal-profile">
         <div
@@ -201,14 +201,6 @@ const {
   gap: var(--spacing-sm);
 }
 
-.phantimal-section-title {
-  margin: 0;
-  padding: 0 var(--spacing-lg);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, var(--color-text-primary));
-}
-
 .phantimals {
   display: flex;
   flex-wrap: wrap;
@@ -224,6 +216,7 @@ const {
 }
 
 .phantimal {
+  background: var(--unit-disc-phantimal);
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);

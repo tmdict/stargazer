@@ -2,8 +2,10 @@
 import { computed, ref } from 'vue'
 
 import ArtifactSelection from './ArtifactSelection.vue'
+import CharmSelection from './charm/CharmSelection.vue'
 import PhantimalSelection from './PhantimalSelection.vue'
 import FilterChip from './ui/FilterChip.vue'
+import { loadCharms } from '@/lib/dataLoader'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { useI18nStore } from '@/stores/i18n'
@@ -34,8 +36,12 @@ const toggle = (tag: string) => {
     : [...picked.value, tag]
 }
 
+// A charm's tags are keyed by tag, each with its tiers; the filter asks only
+// which tags it has.
+const charms = loadCharms().map((charm) => ({ charm, tags: Object.keys(charm.tags ?? {}) }))
+
 const chips = computed(() => {
-  const items: Tagged[] = [...phantimals, ...artifacts]
+  const items: Tagged[] = [...phantimals, ...artifacts, ...charms]
   const tags = [...new Set(items.flatMap((item) => item.tags ?? []))].sort()
   return tags.map((tag) => ({
     tag,
@@ -51,6 +57,7 @@ const shown = <T extends Tagged>(items: readonly T[]): readonly T[] =>
 
 const shownPhantimals = computed(() => shown(phantimals))
 const shownArtifacts = computed(() => shown(artifacts))
+const shownCharms = computed(() => shown(charms).map(({ charm }) => charm))
 </script>
 
 <template>
@@ -72,6 +79,8 @@ const shownArtifacts = computed(() => shown(artifacts))
     </div>
     <PhantimalSelection :phantimals="shownPhantimals" :is-draggable />
     <ArtifactSelection :artifacts="shownArtifacts" />
+    <!-- A charm type has no tags, so a filter hides them all. -->
+    <CharmSelection :charms="shownCharms" :show-types="!picked.length" />
   </div>
 </template>
 

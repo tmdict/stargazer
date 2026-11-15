@@ -131,7 +131,7 @@ Export writes the changed lists the rules can read, entries only, to a file, and
 
 The data pack's fit table holds what the generator's fit checks find for every lineup of the PvP data file on every preset map, so a visit runs a fit check only on a Map Editor map. `npm run fits` makes it with the app's own fit check (`src/lib/pvp/generator/fitTable.ts`) and writes it into the pack folder, wrapped like the data file and with its key. The Supreme League worker loads the table beside the data file and hands it to its fit stores, which read a placement from it before placing a lineup. The development server uses no table, since its code changes under one.
 
-A table is used only while its `stamp` is the one the build works out: a digest of the data file and of the repo's files the fit check is built of, its code and game data alike (`scripts/lib/fitTable.ts`). `npm run data` compares the two each time it fills `src/pack/`. Where they differ, or the pack has no table, it prints a line and the app is built without one, so the generator checks fits in the browser until `npm run fits` has run again.
+A table is used only while its `stamp` is the one the build works out: a digest of the data file, of the repo's files the fit check is built of, its code and game data alike, and of the data pack's list of each hero's charms (`scripts/lib/fitTable.ts`). `npm run data` compares the two each time it fills `src/pack/`. Where they differ, or the pack has no table, it prints a line and the app is built without one, so the generator checks fits in the browser until `npm run fits` has run again.
 
 ```json
 {

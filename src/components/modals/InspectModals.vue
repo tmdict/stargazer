@@ -7,6 +7,8 @@ import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import ArtifactModal from './ArtifactModal.vue'
+import CharmModal from './CharmModal.vue'
+import CharmTypeModal from './CharmTypeModal.vue'
 import PhantimalModal from './PhantimalModal.vue'
 import SkillModal from './SkillModal.vue'
 import { useInspect } from '@/composables/useInspect'
@@ -53,6 +55,18 @@ watch(
     v-else-if="target?.kind === 'honorDuel'"
     :show="open"
     :item="target.item"
+    @close="close"
+  />
+  <CharmModal
+    v-else-if="target?.kind === 'charm'"
+    :show="open"
+    :charm="target.charm"
+    @close="close"
+  />
+  <CharmTypeModal
+    v-else-if="target?.kind === 'charm-type'"
+    :show="open"
+    :type="target.type"
     @close="close"
   />
 </template>

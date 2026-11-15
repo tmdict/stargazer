@@ -1,7 +1,5 @@
 {
   "id": "s8-13",
-  "season": 8,
-  "heroes": ["elijah-lailah", "phraesto", "shakir", "sonja", "thoran"],
   "tags": {
     "temp-buff": {
       "tiers": [1, 2, 3, 4],

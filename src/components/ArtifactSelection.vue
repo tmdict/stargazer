@@ -88,17 +88,17 @@ const seasonLabel = (season: number): string =>
 <template>
   <div class="icon-groups">
     <section v-for="group in seasonGroups" :key="group.season" class="icon-group">
-      <h3 class="icon-group-title">{{ seasonLabel(group.season) }}</h3>
-      <div class="icon-grid">
+      <h3 class="seasonal-title">{{ seasonLabel(group.season) }}</h3>
+      <div class="seasonal-cells">
         <!-- Named: artifacts rotate each season, so their icons are hard to learn. -->
-        <div v-for="artifact in group.artifacts" :key="artifact.id" class="icon-cell">
+        <div v-for="artifact in group.artifacts" :key="artifact.id" class="seasonal-cell">
           <ArtifactIcon
             :artifact
             :dimmed="isDimmed(artifact.id)"
             inspectable
             @artifact-click="handleArtifactClick"
           />
-          <span class="icon-cell-name">
+          <span class="seasonal-cell-name">
             {{ localizedDisplayName(i18n.t, 'artifact', artifact.name) }}
           </span>
         </div>
