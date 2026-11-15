@@ -67,7 +67,7 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<CharmData>(op
 
     <TooltipPopup v-if="showTooltip && chip" :target-element="chip" max-width="340px">
       <template #content>
-        <TooltipCard :hint="i18n.t('app.hold-for-skills')">
+        <TooltipCard :hint="i18n.t('app.hold-for-details')">
           <div v-if="html" class="text" :lang v-html="html" />
           <div class="everyone">
             <GuidePortrait v-for="slug in heroes" :key="slug" :slug :lang="i18n.currentLocale" />

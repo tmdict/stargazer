@@ -3,7 +3,7 @@
    a hover card. A charm type cannot go on a board, so a click opens its
    details as a right-click or a hold does. */
 
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import HoldRing from '@/components/ui/HoldRing.vue'
 import TooltipCard from '@/components/ui/TooltipCard.vue'
@@ -11,20 +11,25 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
-import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { loadCharmTypeImages } from '@/utils/imageLoader'
 
-const { type } = defineProps<{
+const { type, bonus } = defineProps<{
   type: string
   name: string
   bonus: readonly string[]
-  // The language of the name and bonuses.
-  lang: SkillLocale
 }>()
 
 const i18n = useI18nStore()
 const symbol = loadCharmTypeImages()[type]
+
+// A bonus line is a stat and its amount: "Skill Power +4".
+const rows = computed(() =>
+  bonus.map((line) => {
+    const cut = line.lastIndexOf(' ')
+    return { label: line.slice(0, cut), value: line.slice(cut + 1) }
+  }),
+)
 
 const { showTooltip, onMouseEnter, onMouseLeave } = useHoverTooltip()
 const chip = ref<HTMLElement>()
@@ -61,11 +66,7 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
 
     <TooltipPopup v-if="showTooltip && chip" :target-element="chip">
       <template #content>
-        <TooltipCard :name :hint="i18n.t('app.hold-for-skills')">
-          <div class="bonus" :lang>
-            <div v-for="line in bonus" :key="line">{{ line }}</div>
-          </div>
-        </TooltipCard>
+        <TooltipCard :name :rows :hint="i18n.t('app.hold-for-details')" />
       </template>
     </TooltipPopup>
   </div>
@@ -98,19 +99,15 @@ const { pressing, start: startHold, onContextMenu } = useLongPress<string>(open)
 .symbol-edges {
   position: absolute;
   inset: 9%;
-  filter: drop-shadow(0 -1px 0 rgba(0, 30, 28, 0.6)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.75))
+    drop-shadow(0 1.5px 0 rgba(0, 45, 42, 0.7)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.25));
 }
 
 .symbol {
   position: absolute;
   inset: 0;
-  background: linear-gradient(#256f69, #3a9a92);
+  background: linear-gradient(#52bfb5, #2c8780);
   mask: center / contain no-repeat;
-}
-
-.bonus {
-  font-weight: 500;
-  text-align: center;
 }
 
 @media (max-width: 480px) {

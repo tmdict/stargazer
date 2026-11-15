@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The Seasonal tab's charm part: the season's charm types, then its charms.
+/* The Seasonal tab's charm part: the season's charms, then its charm types.
    Names and text come from the skill text, so they show in the reader's skill
    language once the app has fetched it. */
 
@@ -43,15 +43,6 @@ const heading = (label: string): string =>
 
 <template>
   <div v-if="types.length || rows.length" class="charm-selection">
-    <section v-if="types.length" class="charm-group">
-      <h3 class="seasonal-title">{{ heading('app.mythic-charm-types') }}</h3>
-      <div class="seasonal-cells">
-        <div v-for="{ type, name, bonus } in types" :key="type" class="seasonal-cell">
-          <CharmTypeIcon :type :name :bonus :lang />
-          <span class="seasonal-cell-name" :lang>{{ name }}</span>
-        </div>
-      </div>
-    </section>
     <section v-if="rows.length" class="charm-group">
       <h3 class="seasonal-title">{{ heading('app.charms') }}</h3>
       <div class="charm-chips">
@@ -63,6 +54,15 @@ const heading = (label: string): string =>
           :text
           :lang
         />
+      </div>
+    </section>
+    <section v-if="types.length" class="charm-group">
+      <h3 class="seasonal-title">{{ heading('app.mythic-charm-types') }}</h3>
+      <div class="seasonal-cells">
+        <div v-for="{ type, name, bonus } in types" :key="type" class="seasonal-cell">
+          <CharmTypeIcon :type :name :bonus />
+          <span class="seasonal-cell-name" :lang>{{ name }}</span>
+        </div>
       </div>
     </section>
   </div>
