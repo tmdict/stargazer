@@ -3,7 +3,6 @@ import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import CharmHeroList from '@/components/charm/CharmHeroList.vue'
-import IconThumbsUp from '@/components/ui/IconThumbsUp.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import { loadHeroCharms } from '@/lib/dataLoader'
@@ -22,7 +21,7 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 // The name, bonuses and hero names follow the skill-text language, as in the
-// skill modal; the group headings are chrome, in the site language.
+// skill modal.
 const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
 
 const text = computed(() =>
@@ -30,18 +29,13 @@ const text = computed(() =>
 )
 const title = computed(() => text.value?.name ?? i18n.t('app.mythic-charm-types'))
 
-const heroes = computed(() => {
-  const users = Object.entries(loadHeroCharms()).filter(([, hero]) =>
-    hero.types?.includes(props.type),
-  )
-  const named = (recommended: boolean): string[] =>
-    oldestFirst(
-      users
-        .filter(([, hero]) => (hero.recommended === props.type) === recommended)
-        .map(([slug]) => slug),
-    )
-  return { recommended: named(true), others: named(false) }
-})
+const users = computed(() =>
+  Object.entries(loadHeroCharms()).filter(([, hero]) => hero.types?.includes(props.type)),
+)
+const heroes = computed(() => oldestFirst(users.value.map(([slug]) => slug)))
+const recommended = computed(() =>
+  users.value.filter(([, hero]) => hero.recommended === props.type).map(([slug]) => slug),
+)
 </script>
 
 <template>
@@ -57,16 +51,7 @@ const heroes = computed(() => {
           <div class="bonuses meta-chips">
             <span v-for="line in text.bonus" :key="line" class="meta-chip">{{ line }}</span>
           </div>
-          <section v-if="heroes.recommended.length">
-            <h2 :lang="i18n.currentLocale">
-              <IconThumbsUp :size="18" class="thumb" />{{ i18n.t('app.recommended') }}
-            </h2>
-            <CharmHeroList :heroes="heroes.recommended" :lang="applied" />
-          </section>
-          <section v-if="heroes.others.length">
-            <h2 :lang="i18n.currentLocale">{{ i18n.t('app.other-heroes') }}</h2>
-            <CharmHeroList :heroes="heroes.others" :lang="applied" />
-          </section>
+          <CharmHeroList v-if="heroes.length" class="heroes" :heroes :recommended :lang="applied" />
         </template>
         <p v-else class="details-pending" :lang="i18n.currentLocale">
           {{ i18n.t(failed ? 'app.skill-load-failed' : 'app.skill-details-pending') }}
@@ -82,9 +67,7 @@ const heroes = computed(() => {
   border-bottom: 2px solid var(--color-border-primary);
 }
 
-.thumb {
-  margin-right: 6px;
-  vertical-align: -0.15em;
-  color: var(--color-accent);
+.heroes {
+  padding-top: 16px;
 }
 </style>
