@@ -630,10 +630,20 @@ const exportTip = computed((): string =>
 }
 
 @media (max-width: 768px) {
+  .library-bar {
+    column-gap: var(--spacing-sm);
+  }
+  .library-info {
+    display: contents;
+  }
   .team-search {
+    order: 1;
     flex-basis: 100%;
     max-width: none;
     margin-left: 0;
+  }
+  .library-actions {
+    margin-left: auto;
   }
 }
 
