@@ -16,6 +16,7 @@ import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
+import IconHelp from '@/components/ui/IconHelp.vue'
 import IconImage from '@/components/ui/IconImage.vue'
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
@@ -177,6 +178,10 @@ const SKILL = {
           screenshots, as <a href="#import">Import from screenshots</a> shows.
         </li>
         <li>Saved teams stay in your browser. <b>Export</b> makes a backup file.</li>
+        <li>
+          <b>Data</b>, under <span class="help-inline-btn"><IconHelp :size="13" /></span> at the
+          top, backs up saved teams and rosters from any page.
+        </li>
       </ul>
     </div>
   </section>
@@ -564,7 +569,7 @@ const SKILL = {
           <span class="help-tab">Characters</span>
           <p>All heroes, with filters for faction, class and mechanics</p>
           <span class="help-tab">Seasonal</span>
-          <p>This season's phantimals and artifacts</p>
+          <p>This season's phantimals, artifacts and charms</p>
           <span class="help-tab">Maps</span>
           <p>Pick another arena, or draw your own</p>
           <span class="help-tab">Rosters</span>

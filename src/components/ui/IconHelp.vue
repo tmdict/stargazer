@@ -1,11 +1,11 @@
 <script setup lang="ts">
-interface Props {
-  size?: number
-}
+import { useId } from 'vue'
 
-withDefaults(defineProps<Props>(), {
-  size: 24,
-})
+const { size = 24 } = defineProps<{
+  size?: number
+}>()
+
+const id = useId()
 </script>
 
 <template>
@@ -18,7 +18,7 @@ withDefaults(defineProps<Props>(), {
   >
     <!-- Stroke and dot sizes match IconInfo's. -->
     <defs>
-      <mask id="help-mask">
+      <mask :id>
         <rect x="0" y="0" width="24" height="24" fill="white" />
         <path
           d="M10.1 9.9a1.95 1.95 0 1 1 2.8 1.75c-.55.28-.9.72-.9 1.35v.9"
@@ -29,6 +29,6 @@ withDefaults(defineProps<Props>(), {
         <rect x="11" y="15" width="2" height="2" fill="black" />
       </mask>
     </defs>
-    <circle cx="12" cy="12" r="10" mask="url(#help-mask)" />
+    <circle cx="12" cy="12" r="10" :mask="`url(#${id})`" />
   </svg>
 </template>
