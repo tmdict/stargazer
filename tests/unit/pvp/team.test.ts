@@ -359,22 +359,30 @@ const phantimalMet = (
     .reduce((sum, { met }) => sum + (met ?? 0), 0)
 }
 
-const keepsUnmoved = (recorded: readonly SlUnit[], drawn: readonly SlUnit[], moved: number[]) => {
+// The recorded units a draw stands off their recorded tiles, each as a rule
+// names it.
+const movedOff = (recorded: readonly SlUnit[], drawn: readonly SlUnit[]): number[] => {
   const drawnTile = new Map(drawn.map(([hexId, unit]) => [unit, hexId]))
-  return recorded.every(
-    ([hexId, unit]) => moved.includes(ruleUnit(unit)) || drawnTile.get(unit) === hexId,
-  )
+  return [
+    ...new Set(
+      recorded.flatMap(([hexId, unit]) => (drawnTile.get(unit) === hexId ? [] : [ruleUnit(unit)])),
+    ),
+  ]
 }
 
 describe('a recorded board', () => {
-  it('keeps every unit on its recorded tile but those moved for the Spirit Mark, and is explained as drawn', () => {
+  it('keeps every unit on its recorded tile but the phantimal and at most one hero, and is explained as drawn', () => {
     expect(boards.some((board) => board.source !== null)).toBe(true)
     set.teams.forEach((team, index) => {
       const played = draws[index]!.played
       expect(!!played).toBe(boards[index]!.source !== null && !!recordedUnits(data, team))
       if (!played) return
-      const { units, why, moved } = played
-      expect(keepsUnmoved(recordedUnits(data, team)!, units, moved)).toBe(true)
+      const { units, why } = played
+      const phantimal = summonedPhantimal(data, team.heroes)
+      const heroesMoved = movedOff(recordedUnits(data, team)!, units).filter(
+        (unit) => unit !== phantimal,
+      )
+      expect(heroesMoved.length).toBeLessThanOrEqual(1)
       const explained = why.units.map(({ unit, tile }) => [tile, unit])
       expect(explained.sort(byTile)).toEqual([...units].sort(byTile))
     })
@@ -436,13 +444,13 @@ describe('a recorded board', () => {
   )
 
   it('moves nothing in a formation recorded with Spirit Marks', () => {
-    const mover = recordedTeams.find(
-      ({ source, index }) => onOwnMap(source, index).played.moved.length > 0,
-    )!
+    const mover = recordedTeams.find(({ source, index }) => {
+      const { choice, played } = onOwnMap(source, index)
+      return movedOff(recordedUnits(data, choice)!, played.units).length > 0
+    })!
     expect(mover).toBeDefined()
     const marked = withPlacement(mover.source, mover.index, { a: undefined })
     const { played } = drawOn(marked, mover.source, mover.index)
-    expect(played!.moved).toEqual([])
     expect(played!.units).toEqual(recordedUnits(data, choiceOf(mover.source, mover.index)))
   })
 
@@ -528,12 +536,11 @@ describe('a recorded board', () => {
       const team = boardTeam(data, choice.heroes, choice.artifact)
       const recorded = recordedUnits(data, choice)!
       if (!recorded.some(([, unit]) => unit === team.phantimal)) return []
-      const { units, moved } = played
+      const { units } = played
       return [
         {
-          moved,
+          moved: movedOff(recorded, units),
           phantimal: team.phantimal,
-          kept: keepsUnmoved(recorded, units, moved),
           asRecorded: JSON.stringify(units) === JSON.stringify(recorded),
           gain:
             phantimalMet(team, choice, board, units) - phantimalMet(team, choice, board, recorded),
@@ -544,20 +551,17 @@ describe('a recorded board', () => {
     const keeps = drawn.filter(({ moved }) => !moved.length)
     expect(moves.length).toBeGreaterThan(0)
     expect(keeps.length).toBeGreaterThan(0)
-    expect(drawn.every(({ kept }) => kept)).toBe(true)
     expect(
       moves.every(
         ({ moved, phantimal, gain }) =>
-          moved.filter((unit) => unit !== phantimal).length <= 1 &&
-          (!moved.includes(phantimal!) || moved[0] === phantimal) &&
-          gain > 0,
+          moved.filter((unit) => unit !== phantimal).length <= 1 && gain > 0,
       ),
     ).toBe(true)
     expect(keeps.every(({ asRecorded }) => asRecorded)).toBe(true)
   })
 
   // A board of an earlier season recorded no phantimal.
-  it('places the phantimal its heroes summon on a board that recorded none, without listing it as moved', () => {
+  it('places the phantimal its heroes summon on a board that recorded none, moving at most one hero', () => {
     const tried = data.maps.flatMap((m, source) =>
       m.teams
         .flatMap((t, index) =>
@@ -575,9 +579,7 @@ describe('a recorded board', () => {
       const phantimal = summonedPhantimal(data, t.heroes)!
       const recorded = recordedUnits(data, choice)!
       expect(played.units.some(([, unit]) => unit === phantimal)).toBe(true)
-      expect(played.moved).not.toContain(phantimal)
-      expect(played.moved.length).toBeLessThanOrEqual(1)
-      expect(keepsUnmoved(recorded, played.units, played.moved)).toBe(true)
+      expect(movedOff(recorded, played.units).length).toBeLessThanOrEqual(1)
     }
   })
 })

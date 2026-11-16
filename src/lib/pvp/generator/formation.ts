@@ -39,13 +39,6 @@ export interface BoardFormation {
   why: PlacementExplanation
 }
 
-// A recorded game's formation as drawn, with the units the engine moved in it
-// for the phantimal's Spirit Mark, the phantimal first; none when it is drawn
-// as recorded. A phantimal the game did not record is placed, not moved.
-interface PlayedFormation extends BoardFormation {
-  moved: number[]
-}
-
 // What the comparison weighed, in rule points: the recorded formation's score,
 // the points its win record adds, and the engine's formation's score.
 export interface FormationScores {
@@ -58,7 +51,7 @@ export interface FormationScores {
 // was recorded on its map, with the comparison's numbers and whether the
 // recorded one is the board's.
 export interface BoardDraw {
-  played: PlayedFormation | null
+  played: BoardFormation | null
   engine: BoardFormation
   scores: FormationScores | null
   showsPlayed: boolean
@@ -134,7 +127,7 @@ function playedPlacement(
   team: PlacementTeam,
   placement: PlacementData,
   marksAt: (positions: number[]) => number | null,
-): { placed: PlacementResult; units: SlUnit[]; moved: number[] } | null {
+): { placed: PlacementResult; units: SlUnit[] } | null {
   const units = choice.source === board.source ? recordedUnits(data, choice) : null
   if (!units) return null
   const { phantimal } = team
@@ -147,37 +140,29 @@ function playedPlacement(
   const asIs = {
     placed: asRecorded,
     units: asRecorded.units.every((unit) => held.has(unit)) ? recorded : unitsOf(asRecorded),
-    moved: [],
   }
   if (phantimal === undefined || !recordedPlacement(data, choice)!.a) return asIs
   const recordedMet = marksAt(asRecorded.positions)
   if (recordedMet === null) return asIs
 
-  let best: { placed: PlacementResult; met: number; moved: number[] } | undefined
+  let best: { placed: PlacementResult; met: number; moved: number } | undefined
   for (const free of [[phantimal], ...team.heroes.map((hero) => [phantimal, hero])]) {
     const placed = place(new Map([...held].filter(([unit]) => !free.includes(ruleUnit(unit)))))
     const met = marksAt(placed.positions)!
     if (met <= recordedMet + EPS) continue
     // A freed unit can land back on its recorded tile, so a try is ranked by
     // the units it moved, not the ones it freed.
-    const moved = [
-      ...new Set(
-        unitsOf(placed).flatMap(([hexId, unit]) =>
-          held.has(unit) && held.get(unit) !== hexId ? [ruleUnit(unit)] : [],
-        ),
+    const moved = new Set(
+      unitsOf(placed).flatMap(([hexId, unit]) =>
+        held.has(unit) && held.get(unit) !== hexId ? [ruleUnit(unit)] : [],
       ),
-    ]
+    ).size
     const tie = best && Math.abs(met - best.met) <= EPS
-    if (!best || met > best.met + EPS || (tie && moved.length < best.moved.length)) {
+    if (!best || met > best.met + EPS || (tie && moved < best.moved)) {
       best = { placed, met, moved }
     }
   }
-  if (!best) return asIs
-  return {
-    placed: best.placed,
-    units: unitsOf(best.placed),
-    moved: best.moved.sort((a, b) => Number(b === phantimal) - Number(a === phantimal)),
-  }
+  return best ? { placed: best.placed, units: unitsOf(best.placed) } : asIs
 }
 
 // A board's two formations and which it shows. The recorded one is the board's
@@ -206,7 +191,7 @@ export function boardDraw(
   const bonus = (recordedPlacement(data, choice)!.b ?? 0) * Math.max(0, engineScore.goals)
   const margin = placement.weights.margin ?? 0
   return {
-    played: { units: played.units, why: explained(played.placed), moved: played.moved },
+    played: { units: played.units, why: explained(played.placed) },
     engine,
     scores: { played: playedScore.goals, bonus, engine: engineScore.goals },
     showsPlayed:
