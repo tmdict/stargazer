@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { configTiles, findMapByTiles, MAPS, tilesLayout } from '@/lib/maps'
+import { configTiles, findMapByTiles, MAPS, resolveBoardMap, tilesLayout } from '@/lib/maps'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -32,6 +32,16 @@ describe('findMapByTiles', () => {
     expect(findMapByTiles([...tilesOf('arena1'), [20, State.BLOCKED]])).toBeUndefined()
     expect(findMapByTiles(tilesOf('arena1').slice(1))).toBeUndefined()
     expect(findMapByTiles([])).toBeUndefined()
+  })
+})
+
+describe('resolveBoardMap', () => {
+  it('names a board on a map that no longer exists by the preset its tiles reproduce', () => {
+    const t = tilesOf('preset-sr1')
+    expect(resolveBoardMap({ m: 'retired-map', t })).toBe('preset-sr1')
+    expect(resolveBoardMap({ m: 'retired-map', t: [[20, State.BLOCKED]] })).toBe('retired-map')
+    // An edited board on a live map keeps that map.
+    expect(resolveBoardMap({ m: 'arena1', t })).toBe('arena1')
   })
 })
 
