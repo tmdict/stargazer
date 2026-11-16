@@ -27,6 +27,7 @@ import { useShopEngine } from '@/composables/useShopEngine'
 import { compareCharacters } from '@/lib/filterOrder'
 import { duelEquipment } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import type { Move } from '@/lib/hd/shop/types'
 import type { Point } from '@/lib/layout'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -42,7 +43,12 @@ const gameData = useGameDataStore()
 gameData.initializeContentData()
 
 const engine = useShopEngine()
-const form = useShopForm(engine.clear)
+// The move the answers on screen start from, when the player chose one.
+const basis = ref<Move | null>(null)
+const form = useShopForm(() => {
+  basis.value = null
+  engine.clear()
+})
 
 const mounted = ref(false)
 onMounted(() => (mounted.value = true))
@@ -89,6 +95,21 @@ const impossible = computed(() => {
 const answersEl = useTemplateRef<HTMLElement>('answers')
 const calculate = (): void => {
   if (form.wanted.value) engine.calculate(form.request())
+}
+// Runs the calculation again from a recommended move. A reroll's locks are set
+// on the shop itself; a purchase leaves the shop and the badges as entered, and
+// the comparison starts from buying it first.
+const recalculate = async (move: Move): Promise<void> => {
+  if (move.kind === 'reroll') {
+    form.setLocks(move.locks)
+    // The form's watcher clears the answers on the next tick.
+    await nextTick()
+    basis.value = null
+    calculate()
+    return
+  }
+  basis.value = move
+  engine.calculate({ ...form.request(), startFrom: move })
 }
 // The first answers of a press are brought into view; the later stages only
 // narrow figures already on screen.
@@ -154,10 +175,12 @@ watch(
           v-else-if="answers"
           :answers
           :cards="form.cards.value"
+          :basis
           :heroes="form.heroes.value"
           :level="form.level.value"
           :badges="form.badges.value"
           :working="engine.working.value"
+          @recalculate="recalculate"
         />
       </div>
     </div>

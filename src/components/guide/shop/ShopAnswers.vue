@@ -3,17 +3,20 @@
 
 import ShopAnswerCard from './ShopAnswerCard.vue'
 import type { ShopAnswer, WantedHero } from '@/lib/hd/shop/calculate'
-import type { ShopCard } from '@/lib/hd/shop/types'
+import type { Move, ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 
 const { heroes } = defineProps<{
   answers: readonly ShopAnswer[]
   cards: readonly ShopCard[]
+  basis: Move | null
   heroes: readonly WantedHero[]
   level: number
   badges: number
   working: boolean
 }>()
+
+const emit = defineEmits<{ recalculate: [move: Move] }>()
 
 const i18n = useI18nStore()
 
@@ -38,8 +41,10 @@ const keyOf = ({ goal }: ShopAnswer): string =>
         :key="keyOf(answer)"
         :answer
         :cards
+        :basis
         :copies="copiesOf(answer)"
         :working
+        @recalculate="emit('recalculate', $event)"
       />
     </div>
     <p class="shop-note">{{ i18n.t('app.shop-answers-note') }}</p>

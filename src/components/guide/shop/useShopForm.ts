@@ -48,6 +48,12 @@ export function useShopForm(changed: () => void) {
     if (card && !card.bought) card.locked = !card.locked
   }
 
+  const setLocks = (locks: readonly number[]): void => {
+    cards.value.forEach((card, index) => {
+      if (!card.bought) card.locked = locks.includes(index)
+    })
+  }
+
   const without = (list: string[], name: string): string[] => list.filter((one) => one !== name)
 
   const addHero = (name: string): void => {
@@ -132,6 +138,7 @@ export function useShopForm(changed: () => void) {
     setBadges,
     setCard,
     toggleLock,
+    setLocks,
     addHero,
     setCopies,
     removeHero,

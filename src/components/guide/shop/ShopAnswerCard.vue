@@ -10,22 +10,38 @@ import { computed } from 'vue'
 import ShopSteps from './ShopSteps.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import { duelEquipment, duelItemImage, equipmentTierLabel } from '@/lib/hd/catalog'
+import { sameMove } from '@/lib/hd/shop/advice'
 import { SHOWN_RANGE, type ShopAnswer } from '@/lib/hd/shop/calculate'
-import type { ChanceRange, CostRange, ShopCard } from '@/lib/hd/shop/types'
+import type { ChanceRange, CostRange, Move, ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
 import { cardLabel, moveSteps, pieceName, stopSteps } from './shopGoods'
 
-const { answer, cards, copies } = defineProps<{
+const { answer, cards, copies, basis } = defineProps<{
   answer: ShopAnswer
   cards: readonly ShopCard[]
+  // The move the answers start from, when the player chose one over the shop as entered.
+  basis: Move | null
   // The copies wanted of the goal's hero.
   copies?: number
   // Whether the search is still narrowing the chances.
   working: boolean
 }>()
 
+const emit = defineEmits<{ recalculate: [move: Move] }>()
+
 const i18n = useI18nStore()
+
+// The best move, when the answers do not already start from it.
+const untried = computed(() => {
+  const best = answer.chance.best?.move
+  if (!best) return null
+  const entered: Move = {
+    kind: 'reroll',
+    locks: cards.flatMap((card, index) => (card.locked && !card.bought ? [index] : [])),
+  }
+  return sameMove(best, basis ?? entered) ? null : best
+})
 
 const piece = computed(() =>
   answer.goal.kind === 'equipment'
@@ -71,9 +87,9 @@ const chanceRows = computed(() => {
       steps: moveSteps(keepLocks.move, cards),
     },
     current && {
-      label: i18n.t('app.shop-alt-current'),
+      label: i18n.t(current.move.kind === 'buy' ? 'app.shop-alt-basis' : 'app.shop-alt-current'),
       figure: chanceText(current.chance),
-      steps: [],
+      steps: current.move.kind === 'buy' ? moveSteps(current.move, cards) : [],
     },
     offers &&
       offers.first !== null && {
@@ -155,6 +171,14 @@ const idle = computed(() =>
       <p v-if="!answer.chance.certain" class="shop-note">
         {{ i18n.t(working ? 'app.shop-narrowing' : 'app.shop-unsure') }}
       </p>
+      <button
+        v-if="untried"
+        type="button"
+        class="shop-popup-button retry"
+        @click="emit('recalculate', untried)"
+      >
+        {{ i18n.t('app.shop-recalculate-best') }}
+      </button>
     </section>
     <section v-else class="part">
       <p class="shop-label warn">{{ i18n.t('app.shop-stop') }}</p>
@@ -266,6 +290,11 @@ h3 small {
 
 .shop-label.warn {
   color: var(--import-warn);
+}
+
+.retry {
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .figure,
