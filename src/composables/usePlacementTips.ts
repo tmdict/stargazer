@@ -10,8 +10,8 @@ import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterTeam } from '@/lib/characters/character'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
+import { gridLayout } from '@/lib/mapLookup'
 import { configTiles } from '@/lib/maps'
-import { gridLayout } from '@/lib/modeMaps'
 import {
   cardRings,
   hasCard,

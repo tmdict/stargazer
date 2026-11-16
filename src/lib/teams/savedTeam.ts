@@ -8,7 +8,7 @@
  */
 
 import { collapseAttrRows, isKnownAttrId, type AttrRow } from '@/lib/characters/attributes'
-import { resolveBoardMap } from '@/lib/modeMaps'
+import { resolveBoardMap } from '@/lib/mapLookup'
 import { sanitizeName } from '@/lib/names'
 import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
 import { decodeTeamData, encodeTeamData } from '@/lib/teams/codec'

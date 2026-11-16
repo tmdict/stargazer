@@ -1,7 +1,7 @@
 /* The arena map registry. teams/wire.ts reads map ids from here for the binary
    link codec, and the generator's fit check reads the maps' tiles from here, so
    this file loads only the map JSON and stays free of the mode lists
-   (modeMaps.ts), dataLoader and Vue. */
+   (mapModeLists.ts), dataLoader and Vue. */
 
 import { fileStem } from '@/utils/fileStem'
 import { State } from './types/state'

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { findMapByTiles, resolveBoardMap, tilesLayout } from '@/lib/mapLookup'
 import { configTiles, MAPS } from '@/lib/maps'
-import { findMapByTiles, resolveBoardMap, tilesLayout } from '@/lib/modeMaps'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'

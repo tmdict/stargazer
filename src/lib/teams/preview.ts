@@ -5,7 +5,7 @@
  * mapping unit-testable headless. */
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { resolveBoardMap } from '@/lib/modeMaps'
+import { resolveBoardMap } from '@/lib/mapLookup'
 import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
 import { decodeTeamData } from '@/lib/teams/codec'
 import { unitRowKind } from '@/lib/teams/gridStateSerializer'
