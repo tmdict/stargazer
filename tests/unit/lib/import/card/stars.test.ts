@@ -91,18 +91,40 @@ describe('readStars', () => {
     ).toMatchObject({ family: 'white', level: 0, sure: true })
   })
 
-  // Headwear beside an unrefined row tints its end stars: the row still reads
-  // as refined, but not surely.
-  it('is not sure of a refined reading that only part of the row supports', () => {
+  // An R4 row whose stars' lilac lower edge falls inside the band: about 30% of
+  // its bright pixels purple, short of an R1 row's.
+  it('reads a rainbow row with a lilac lower edge as R4', () => {
+    const f = frameWithStars(6, [250, 240, 170])
+    const top = f.box.y + Math.round(f.box.h / 2) - ROW.above + 1
+    for (let x = f.box.x; x < f.box.x + f.box.w; x++) {
+      if (f.shot.data[(top * f.shot.width + x) * 4] !== 250) continue
+      f.shot.data.set([250, 200, 245], ((top + 2) * f.shot.width + x) * 4)
+      f.shot.data.set([215, 190, 245], ((top + 3) * f.shot.width + x) * 4)
+      f.shot.data.set(x % 2 ? [215, 190, 245] : [190, 230, 250], ((top + 4) * f.shot.width + x) * 4)
+    }
+    expect(readStars(...args(f))).toMatchObject({ family: 'white', level: 4, sure: true })
+  })
+
+  // Headwear beside or over a row tints part of it: the row may read as another
+  // level, but not surely.
+  it('is not sure of a row that headwear tints in part', () => {
     const white: Rgb = [225, 240, 250]
     const purple: Rgb = [200, 150, 245]
     const pink: Rgb = [250, 200, 245]
     expect(
       readStars(...args(frameWithStars(6, [purple, white, white, white, white, purple]))),
-    ).toMatchObject({ level: 1, sure: false })
+    ).toMatchObject({ level: 0, sure: false })
     expect(
       readStars(...args(frameWithStars(6, [pink, white, white, white, white, pink]))),
     ).toMatchObject({ level: 4, sure: false })
+    // An R1 row with pink over its lower stars, about 30% purple.
+    const f = frameWithStars(6, purple)
+    const top = f.box.y + Math.round(f.box.h / 2) - ROW.above + 1
+    for (let y = top + 1; y < top + 5; y++)
+      for (let x = f.box.x; x < f.box.x + f.box.w; x++)
+        if (f.shot.data[(y * f.shot.width + x) * 4] === 200 && (y > top + 1 || x % 2))
+          f.shot.data.set(pink, (y * f.shot.width + x) * 4)
+    expect(readStars(...args(f))).toMatchObject({ sure: false })
   })
 
   // An R4 row whose tint a browser's resampling has faded below the R4 share

@@ -67,6 +67,12 @@ const PINK = 0.03
 // hold 27% yellow or more and stars at most 43% blue, and every R0 row has a
 // star 78% blue or more.
 const RAINBOW = { warm: 0.2, blue: 0.6 } as const
+// Purple shares of a row's bright pixels. From `r1` the row is R1's purple: on
+// labelled screenshots R1 rows measure 0.58 or more, and R4 rows up to 0.22,
+// the highest where the stars' lilac lower edge falls inside the band. A white
+// row (R0 or R4) from `mixed` may be an R1 row that headwear tints or a capture
+// fades, so it is sure only as R4 by its rainbow.
+const PURPLE = { r1: 0.4, mixed: 0.2 } as const
 
 /* Where a screen's cards hold their star row, measured from the card's box: the
  * row's top `above` pixels over the box's centre, and a full row's six stars
@@ -212,10 +218,11 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
   } else if (chroma >= 0.25 && red >= 0.3) {
     family = 'red'
     level = 3
-  } else if (purple >= 0.2) {
+  } else if (purple >= PURPLE.r1) {
     family = 'purple'
     level = 1
   }
+  const mixed = purple >= PURPLE.mixed
   const refined =
     level === 1
       ? purple >= SURE.purple
@@ -223,7 +230,8 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
         ? chroma >= SURE.chroma && gold >= SURE.gold
         : level === 3
           ? red >= SURE.red
-          : level === 4 && (pinkStars >= SURE.pinkStars || (rainbow && bluest <= SURE.rainbowBlue))
+          : level === 4 &&
+            ((!mixed && pinkStars >= SURE.pinkStars) || (rainbow && bluest <= SURE.rainbowBlue))
   if (!full) {
     const fadedR4 = magenta >= SURE.r0Pink && fullNearby(shot, band, stars)
     return { level: 0, full, family, sure: !refined && !fadedR4 }
@@ -232,6 +240,6 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
     level,
     full,
     family,
-    sure: level === 0 ? magenta < SURE.r0Pink && bluest >= SURE.whiteBlue : refined,
+    sure: level === 0 ? !mixed && magenta < SURE.r0Pink && bluest >= SURE.whiteBlue : refined,
   }
 }
