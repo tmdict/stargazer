@@ -7,8 +7,7 @@ import { computed, ref, watch } from 'vue'
 
 import BaseModal from '@/components/modals/BaseModal.vue'
 import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
-import measured from '@/data/hd/shop/odds.json'
-import type { OddsTable } from '@/lib/hd/shop/types'
+import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import { useI18nStore } from '@/stores/i18n'
 import { goodName } from './shopGoods'
 
@@ -21,8 +20,6 @@ const { show, level } = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const i18n = useI18nStore()
-const table = measured as OddsTable
-
 const shown = ref(level)
 watch(
   () => show,
@@ -32,14 +29,14 @@ watch(
 )
 
 const levels = computed(() =>
-  table.levels.map((_, index) => ({
+  MEASURED_ODDS.levels.map((_, index) => ({
     key: String(index + 1),
     label: i18n.t('app.shop-level', { level: index + 1 }),
     selected: shown.value === index + 1,
   })),
 )
 
-const sources = computed(() => table.levels[shown.value - 1] ?? [])
+const sources = computed(() => MEASURED_ODDS.levels[shown.value - 1] ?? [])
 </script>
 
 <template>
@@ -56,9 +53,6 @@ const sources = computed(() => table.levels[shown.value - 1] ?? [])
         <tr v-for="(entries, index) in sources" :key="index">
           <th scope="row">{{ i18n.t('app.shop-odds-source', { n: index + 1 }) }}</th>
           <td>
-            <span v-if="!entries.length" class="reading-meta">
-              {{ i18n.t('app.shop-odds-none') }}
-            </span>
             <span v-for="entry in entries" :key="entry.good" class="entry">
               <span>{{ goodName(entry.good, i18n.currentLocale) }}</span>
               <b>{{ entry.percent }}%</b>

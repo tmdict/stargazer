@@ -8,8 +8,10 @@ import { computed, ref, watch } from 'vue'
 import { duelEquipment } from '@/lib/hd/catalog'
 import { SHOP_LIMITS, type ShopRequest, type WantedHero } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import { levelOfRound, SOURCES } from '@/lib/hd/shop/odds'
 import { shopPools } from '@/lib/hd/shop/pools'
+import { sampleShop } from '@/lib/hd/shop/sample'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
 
@@ -48,6 +50,21 @@ export function useShopForm(changed: () => void) {
   const setLocks = (locks: readonly number[]): void => {
     cards.value.forEach((card, index) => {
       if (!card.bought) card.locked = locks.includes(index)
+    })
+  }
+
+  const clearCards = (): void => {
+    cards.value = Array.from({ length: SOURCES }, blank)
+  }
+
+  // An example of what the level can show, drawn from the table the odds view
+  // shows. A data pack's table lists the same products for every source, so the
+  // calculator can read the example whichever table it uses.
+  const fillExample = (): void => {
+    const out = new Set(mythic.value)
+    cards.value = sampleShop(MEASURED_ODDS.levels[level.value - 1]!, SHOP_FACTS, {
+      heroes: SHOP_FACTS.heroes.filter((name) => !out.has(name)),
+      equipment: duelEquipment.filter((piece) => piece.shop),
     })
   }
 
@@ -136,6 +153,8 @@ export function useShopForm(changed: () => void) {
     setCard,
     toggleLock,
     setLocks,
+    clearCards,
+    fillExample,
     addHero,
     setCopies,
     removeHero,

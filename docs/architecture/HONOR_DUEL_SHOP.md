@@ -20,7 +20,11 @@ The hard part is that a player does not see everything that decides the next sho
 
 A press of Calculate sends one request to the shop worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. A shop no source assignment explains is refused as impossible. It then makes one goal for each wanted item, and goals for "any wanted hero", "any wanted piece" and "any target" when every hero needs a single copy.
 
-A shop level follows from the round. When the level rises next round, stopping is measured against the next level's sources.
+A shop level follows from the round, which the form offers as buttons grouped by level. When the level rises next round, stopping is measured against the next level's sources, and the form says so beside Calculate.
+
+Random fills the shop window with an example shop of the level (`sampleShop`): one card from each source at the repo table's odds, in a random order. Clear empties the window.
+
+An answer can be recalculated from a move it recommends. For a reroll, the page sets the recommended locks on the shop and calculates again. For a purchase, the shop stays as entered and the request names the purchase in `startFrom`, so every comparison starts from buying it first.
 
 ### Best chance
 
@@ -46,7 +50,7 @@ Answers arrive in stages. The first stage has every number at once, with a range
 
 The work runs in one worker. The tables depend on the goal's useful kinds, their prices and what each source makes of them, and not on the cards entered or the badges held. The worker keeps them between requests, so a later press on the same shop visit mostly reads what an earlier one filled.
 
-A worker at work hears no messages, so the page ends a request by ending the worker and starting another. Cancel keeps the answers already shown; an edit to the form clears them, because they no longer belong to what is entered. Both lose the kept tables.
+A worker at work hears no messages, so the calculation pauses: after each goal is prepared, after each stage, and every `SLICE_MS` of search. At a pause the worker takes in what the page has sent and drops a request the page no longer wants. A slice of search that runs out of time starts again from its first move and finds every shop it had finished already answered, so slicing changes no answer. Cancel keeps the answers already shown; an edit to the form clears them, because they no longer belong to what is entered. Neither loses the kept tables. The worker ends when the page is left.
 
 The page stores nothing. What a player enters lasts for the visit to the page.
 
@@ -54,7 +58,7 @@ The odds view always shows the measured table in this repo, with its measured ra
 
 ## Rules
 
-- The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the repo's. Nothing on the page reads the pack's table.
+- The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the repo's. Nothing on the page reads the pack's table. The odds view and Random use the repo's table, and the build stops unless both tables list the same products for every source, so an example shop can come up under either.
 - Each answer carries its request's number, and the page drops an answer whose number is not the newest. An answer to earlier inputs is never shown.
 - Every set of answers a stage sends is whole and replaces the last.
 - `SHOP_LIMITS` bounds a request (badges and copies). The tables' time and memory grow with both, so a higher limit needs the speed of the heaviest request measured again.
@@ -64,6 +68,6 @@ The odds view always shows the measured table in this repo, with its measured ra
 
 - A locked card keeps its source number when the shop level rises. The stopping answer depends on it: a lock kept across the level change blocks that source in the next level's table.
 - Copies of different heroes are never added together. The goals that span heroes exist only when every wanted hero needs one copy.
-- A source may make nothing the calculator follows at some level. A pack table lists such a source as an empty list.
+- A source may only ever show Artifact EXP at some level. A pack table may list such a source as an empty list; `checkOdds` returns the table with Artifact EXP listed for it, because the card is on show all the same and reading the shop has to match it to a source.
 - The three pictures the cards use (the badge, the Artifact XP icon and the random card) come from the data pack. A build without them draws text in their place.
 - Vitest has no worker thread. The engine's tests stand in for the worker; the real one is exercised in a browser.

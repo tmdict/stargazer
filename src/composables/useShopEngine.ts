@@ -1,9 +1,10 @@
-/* The Honor Duel shop worker for the visit (workers/shop.worker.ts): started
- * when the calculator page mounts and kept while it only waits, so a later
- * request finds the tables an earlier one filled. A worker at work hears
- * nothing, so a request is ended by ending its worker and starting another.
- * Only the newest request's answers are shown: each carries its request's
- * number, and one from an earlier request is dropped. */
+/* The Honor Duel shop worker (workers/shop.worker.ts): started when the
+ * calculator page mounts and kept until it is left, so a later request finds
+ * the tables an earlier one filled. A request is ended by telling the worker
+ * to stop, or by sending the next one; the worker drops the old one at its
+ * next pause and keeps its tables. Only the newest request's answers are
+ * shown: each carries its request's number, and one from an earlier request
+ * is dropped. */
 
 import { onMounted, onUnmounted, readonly, ref, shallowReadonly, shallowRef } from 'vue'
 
@@ -15,7 +16,7 @@ let nextId = 0
 // The request still being answered, with where its answers go.
 let active: { id: number; take: (response: ShopWorkerResponse | null) => void } | null = null
 
-const stop = (): void => {
+const endWorker = (): void => {
   if (worker) worker.onmessage = worker.onerror = null
   worker?.terminate()
   worker = null
@@ -30,7 +31,7 @@ const start = (): Worker => {
     if (event.data.id === active?.id) active.take(event.data)
   }
   started.onerror = () => {
-    stop()
+    endWorker()
     active?.take(null)
   }
   worker = started
@@ -43,26 +44,24 @@ export function useShopEngine() {
   const working = ref(false)
   const failed = ref(false)
 
-  const end = (): void => {
+  // Ends the request at work, keeping the answers it has given.
+  const cancel = (): void => {
     if (!working.value) return
     working.value = false
     active = null
-    stop()
-    start()
+    worker?.postMessage({ type: 'stop' } satisfies ShopWorkerRequest)
   }
-
-  // Ends the request at work, keeping the answers it has given.
-  const cancel = end
 
   // For a change to what was entered: the answers shown no longer belong to it.
   const clear = (): void => {
-    end()
+    cancel()
     result.value = null
     failed.value = false
   }
 
   const calculate = (request: ShopRequest): void => {
-    clear()
+    result.value = null
+    failed.value = false
     const id = nextId++
     working.value = true
     active = {
@@ -81,11 +80,15 @@ export function useShopEngine() {
         }
       },
     }
-    start().postMessage({ id, request } satisfies ShopWorkerRequest)
+    start().postMessage({ type: 'calculate', id, request } satisfies ShopWorkerRequest)
   }
 
   onMounted(start)
-  onUnmounted(clear)
+  // The tables go with the worker: nothing entered outlasts the page either.
+  onUnmounted(() => {
+    clear()
+    endWorker()
+  })
 
   return {
     result: shallowReadonly(result),

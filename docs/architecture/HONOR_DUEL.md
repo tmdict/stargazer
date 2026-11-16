@@ -107,4 +107,4 @@ The odds, `src/data/hd/shop/odds.json`, are Toto's measured table, kept by hand.
 }
 ```
 
-A data pack may carry a table of its own, `hd/shop/odds.json`, holding `levels` alone in the same shape, where a source that makes nothing the calculator follows is an empty list. `npm run build` stops when that file cannot be read as an odds table, or lists other goods for a source than the repo's table does (`checkOdds` and `oddsMismatch` in `src/lib/hd/shop/odds.ts`).
+A data pack may carry a table of its own, `hd/shop/odds.json`, holding `levels` alone in the same shape, where a source that only ever shows Artifact EXP may be an empty list. `npm run build` stops when that file cannot be read as an odds table, or lists other goods for a source than the repo's table does (`checkOdds` and `oddsMismatch` in `src/lib/hd/shop/odds.ts`).

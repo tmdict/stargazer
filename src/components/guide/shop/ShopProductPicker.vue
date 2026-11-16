@@ -115,13 +115,13 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
       </div>
     </template>
     <div class="foot">
-      <button type="button" class="shop-popup-button" @click="empty">
+      <button type="button" class="shop-pill-button" @click="empty">
         {{ i18n.t('app.shop-picker-empty') }}
       </button>
       <button
         v-if="good"
         type="button"
-        class="shop-popup-button"
+        class="shop-pill-button"
         :aria-pressed="card.bought"
         @click="toggleBought"
       >
@@ -132,7 +132,7 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
   <div v-else class="shop-popup">
     <p class="shop-popup-title">
       {{ i18n.t(step === 'hero' ? 'app.shop-picker-which-hero' : 'app.shop-picker-which-piece') }}
-      <button type="button" class="shop-popup-button" @click="emit('close')">
+      <button type="button" class="shop-pill-button" @click="emit('close')">
         {{ i18n.t('app.shop-picker-skip') }}
       </button>
     </p>

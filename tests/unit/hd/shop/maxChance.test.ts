@@ -107,15 +107,15 @@ describe('a table where one source always makes a pack', () => {
     expect(solve(39).chance(buy(0))).toBeCloseTo(57 / 64, 9)
   })
 
-  it('treats a source with nothing listed as one that never helps', () => {
+  it('reads a source with nothing listed as one that only shows Artifact EXP', () => {
     const empty: LevelOdds = [odds[0]!, ...Array.from({ length: 7 }, () => [])]
     const table: OddsTable = { levels: Array.from({ length: 5 }, () => empty) }
-    expect(checkOdds(table, FACTS)).toBe(table)
-    const cardsShown = [card('random-pack'), ...Array.from({ length: 7 }, () => card())]
+    const checked = checkOdds(table, FACTS).levels[0]!
+    // The seven Artifact EXP cards are on show whether or not the table lists them.
     const solved = solveMaxChance(
-      { badges: 39, cards: cardsShown },
+      { badges: 39, cards: shop },
       hero('L1', 2),
-      empty,
+      checked,
       pools([], two),
       FACTS,
     )!
@@ -123,7 +123,7 @@ describe('a table where one source always makes a pack', () => {
     // The pack can only have come from the one source that makes it.
     const blocked = [card(), card('random-pack'), card('random-pack')]
     expect(
-      solveMaxChance({ badges: 39, cards: blocked }, hero('L1'), empty, pools(), FACTS),
+      solveMaxChance({ badges: 39, cards: blocked }, hero('L1'), checked, pools(), FACTS),
     ).toBeNull()
   })
 })

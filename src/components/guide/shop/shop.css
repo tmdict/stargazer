@@ -113,7 +113,7 @@
   font-weight: 700;
 }
 
-.shop-popup-button {
+.shop-pill-button {
   padding: 3px 10px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
@@ -125,10 +125,17 @@
   cursor: pointer;
 }
 
-.shop-popup-button:hover,
-.shop-popup-button[aria-pressed='true'] {
+.shop-pill-button:hover,
+.shop-pill-button[aria-pressed='true'] {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.shop-pill-button:disabled {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.45;
+  cursor: default;
 }
 
 @media (min-width: 1100px) {

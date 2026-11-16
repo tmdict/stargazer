@@ -143,6 +143,8 @@ watch(
           (card, under) => (popup = { kind: 'card', card, step: 'product', position: below(under) })
         "
         @lock="form.toggleLock"
+        @random="form.fillExample"
+        @clear="form.clearCards"
       />
       <ShopForm
         v-model:round="form.round.value"

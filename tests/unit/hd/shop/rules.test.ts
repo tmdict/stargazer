@@ -4,8 +4,9 @@ import odds from '@/data/hd/shop/odds.json'
 import { checkShopFacts, SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { goalModel } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
+import { sampleShop } from '@/lib/hd/shop/sample'
 import { readShop } from '@/lib/hd/shop/sources'
-import type { OddsTable } from '@/lib/hd/shop/types'
+import type { OddsTable, ShopCard } from '@/lib/hd/shop/types'
 import { card, cards, FACTS, hero, HEROES, levelOdds, ODDS, pools } from '../../fixtures/hdShop'
 
 describe('reading the shop', () => {
@@ -38,6 +39,36 @@ describe('reading the shop', () => {
     const odds = [[{ good: 'hero', percent: 100 }], [{ good: 'random-pack', percent: 100 }]]
     const reading = readShop(odds, [card(null, { locked: true }), card('hero')])!
     expect(reading.worlds).toEqual([{ origins: [1, 0], chance: 1 }])
+  })
+})
+
+describe('an example shop', () => {
+  // Stands in for Math.random with numbers that repeat, so a failure can be run again.
+  const repeating = (seed: number) => () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0
+    return seed / 2 ** 32
+  }
+  const names = {
+    heroes: HEROES.map((one) => one.name),
+    equipment: (['rare', 'elite', 'epic'] as const).map((tier) => ({ name: `${tier}-1`, tier })),
+  }
+
+  it('is one its level can show, each hero or piece taken from the lists given', () => {
+    const random = repeating(1)
+    // What a card should name: one of the heroes, the piece of its rarity, or nothing.
+    const named = (shown: ShopCard): boolean => {
+      const good = FACTS.goods.find((one) => one.name === shown.good)!
+      if (good.kind === 'hero') return names.heroes.includes(shown.hero ?? '')
+      if (good.kind === 'equipment') return shown.equipment === `${good.tier}-1`
+      return !shown.hero && !shown.equipment
+    }
+    for (let level = 1; level <= 5; level++) {
+      for (let n = 0; n < 40; n++) {
+        const shop = sampleShop(levelOdds(level), FACTS, names, random)
+        expect(readShop(levelOdds(level), shop)).not.toBeNull()
+        expect(shop.filter((shown) => !named(shown))).toEqual([])
+      }
+    }
   })
 })
 

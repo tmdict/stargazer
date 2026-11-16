@@ -226,8 +226,8 @@ function shopOddsProblem(pack: string, root: string): string | null {
   try {
     const facts = read<ShopFacts>(join(root, 'src/data/hd/shop/shop.json'))
     const odds = checkOdds(read<OddsTable>(path), facts)
-    const own = read<OddsTable>(join(root, 'src/data/hd/shop/odds.json'))
-    const where = oddsMismatch(odds, own, facts)
+    const own = checkOdds(read<OddsTable>(join(root, 'src/data/hd/shop/odds.json')), facts)
+    const where = oddsMismatch(odds, own)
     return where ? `the pack's shop odds list other products at ${where}` : null
   } catch (error) {
     return `the pack's shop odds cannot be used: ${(error as Error).message}`

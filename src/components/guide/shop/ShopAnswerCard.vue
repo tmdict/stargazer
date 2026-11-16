@@ -168,7 +168,7 @@ const idle = computed(() =>
             <button
               v-if="row.retry"
               type="button"
-              class="shop-popup-button retry"
+              class="shop-pill-button retry"
               @click="emit('recalculate', row.retry)"
             >
               {{ i18n.t('app.shop-recalculate-keep-locks') }}
@@ -182,7 +182,7 @@ const idle = computed(() =>
       <button
         v-if="untried(answer.chance.best.move)"
         type="button"
-        class="shop-popup-button retry"
+        class="shop-pill-button retry"
         @click="emit('recalculate', answer.chance.best.move)"
       >
         {{ i18n.t('app.shop-recalculate-best') }}

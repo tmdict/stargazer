@@ -176,16 +176,25 @@ function layout(model: GoalModel): Layout {
     }
   })
 
+  // For each source that can show something useful, the codes in which it does not.
+  const bare = sources.map((source, i) =>
+    Int32Array.from(
+      source.kinds.length
+        ? cards.flatMap((list, code) => (list.some((card) => card.source === i) ? [] : [code]))
+        : [],
+    ),
+  )
+
   const fold = (values: Float64Array, held = 0): Float64Array => {
     const folded = Float64Array.from(values)
-    sources.forEach((source, i) => {
-      if (!source.kinds.length || (held >> i) & 1) return
-      for (let code = 0; code < size; code++) {
-        if (Math.floor(code / place[i]) % radix[i]) continue
-        let sum = source.none * folded[code]
-        for (let k = 0; k < source.chances.length; k++) {
-          sum += source.chances[k] * folded[code + (k + 1) * place[i]]
-        }
+    sources.forEach(({ kinds, chances, none }, i) => {
+      if (!kinds.length || (held >> i) & 1) return
+      const codes = bare[i]
+      const step = place[i]
+      for (let j = 0; j < codes.length; j++) {
+        const code = codes[j]
+        let sum = none * folded[code]
+        for (let k = 0; k < chances.length; k++) sum += chances[k] * folded[code + (k + 1) * step]
         folded[code] = sum
       }
     })
@@ -201,6 +210,7 @@ function layout(model: GoalModel): Layout {
   const shownCards = cards.reduce((sum, list) => sum + list.length, 0)
   const numbers =
     2 * size +
+    bare.reduce((sum, codes) => sum + codes.length, 0) +
     lockSets.reduce((sum, sets) => sum + sets.length, 0) +
     classes.reduce((sum, group) => sum + group.kept.length + group.keptFrom.length, 0)
   const bytes = 4 * numbers + 140 * shownCards + 680 * size
@@ -263,41 +273,58 @@ export function createTables(model: GoalModel): Tables {
   const rolledCeiling: Float64Array[][] = [[]]
   const rolledFloor: Float64Array[][] = [[]]
 
-  const at = (table: Float64Array[][], n: number, badges: number, code: number) =>
-    n <= 0 ? 1 : badges < 0 ? 0 : table[n][badges][code]
-  const buy = (
-    table: Float64Array[][],
-    n: number,
-    badges: number,
-    code: number,
-    card: ShownCard,
-  ) => {
-    const kind = kinds[card.kind]
-    const left = badges - kind.good.price
+  const certain = new Float64Array(size).fill(1)
+  const hopeless = new Float64Array(size)
+
+  // For each kind, the row each result of buying it reads, with `n` targets
+  // needed and `badges` in hand.
+  const rowsAfter = (table: Float64Array[][], n: number, badges: number) =>
+    kinds.map(({ good, outcomes }) => {
+      const left = badges - good.price
+      return outcomes.map((outcome) => {
+        if (n - outcome.gain <= 0) return certain
+        return left + outcome.refund < 0 ? hopeless : table[n - outcome.gain][left + outcome.refund]
+      })
+    })
+  const buy = (rows: Float64Array[][], card: ShownCard, code: number) => {
+    const { outcomes } = kinds[card.kind]
+    const read = rows[card.kind]
+    const rest = code - card.add
     let sum = 0
-    for (const outcome of kind.outcomes) {
-      sum += outcome.chance * at(table, n - outcome.gain, left + outcome.refund, code - card.add)
-    }
+    for (let i = 0; i < outcomes.length; i++) sum += outcomes[i].chance * read[i][rest]
     return sum
   }
 
-  // Per price band, the codes of each class that are their own answer.
-  const liveByBand = new Map<Int32Array, { group: CodeClass; live: number[] }[]>()
+  // Per price band, the codes of each class that are their own answer, with
+  // the chance a fresh shop shows each.
+  interface LiveClass {
+    group: CodeClass
+    live: number[]
+    weights: Float64Array
+  }
+  const liveByBand = new Map<Int32Array, LiveClass[]>()
   const liveClasses = (reach: Int32Array) => {
     let list = liveByBand.get(reach)
     if (!list) {
       list = classes
-        .map((group) => ({
-          group,
-          live: group.codes.flatMap((code, slot) => (reach[code] === code ? [slot] : [])),
-        }))
+        .map((group) => {
+          const live = group.codes.flatMap((code, slot) => (reach[code] === code ? [slot] : []))
+          return {
+            group,
+            live,
+            weights: Float64Array.from(live, (slot) => weight[group.codes[slot]]),
+          }
+        })
         .filter(({ live }) => live.length)
       liveByBand.set(reach, list)
     }
     return list
   }
 
-  const certain = new Float64Array(size).fill(1)
+  // Scratch for the floor's plans, one value per code of a class.
+  const widest = classes.reduce((most, group) => Math.max(most, group.codes.length), 0)
+  const plans = [new Float64Array(widest), new Float64Array(widest)]
+
   const sure: ({ floor: Float64Array; rolledFloor: Float64Array } | undefined)[] = []
   let rowsFilled = 0
 
@@ -319,11 +346,13 @@ export function createTables(model: GoalModel): Tables {
     const paid = badges - reroll
     const rolledHigh = paid >= 0 ? rolledCeiling[n][paid] : null
     const rolledLow = paid >= 0 ? rolledFloor[n][paid] : null
+    const highRows = rowsAfter(ceiling, n, badges)
+    const lowRows = rowsAfter(floor, n, badges)
 
     for (let code = 0; code < size; code++) {
       if (reach[code] !== code) continue
       let best = 0
-      for (const card of cards[code]) best = Math.max(best, buy(ceiling, n, badges, code, card))
+      for (const card of cards[code]) best = Math.max(best, buy(highRows, card, code))
       if (rolledHigh) {
         const sets = lockSets[code]
         for (let i = 0; i < sets.length; i++) best = Math.max(best, rolledHigh[sets[i]])
@@ -331,14 +360,13 @@ export function createTables(model: GoalModel): Tables {
       high[code] = Math.min(1, best)
     }
 
-    for (const { group, live } of liveClasses(reach)) {
+    for (const { group, live, weights } of liveClasses(reach)) {
       const { codes, sameKind, keeps, kept, keptFrom } = group
       let bestScore = -1
-      let tried = new Float64Array(live.length)
-      let best = new Float64Array(live.length)
+      let [tried, best] = plans
       const consider = () => {
         let score = 0
-        for (let j = 0; j < live.length; j++) score += weight[codes[live[j]]] * tried[j]
+        for (let j = 0; j < live.length; j++) score += weights[j] * tried[j]
         if (score > bestScore + 1e-15) {
           bestScore = score
           const spare = best
@@ -350,7 +378,7 @@ export function createTables(model: GoalModel): Tables {
         for (let j = 0; j < live.length; j++) {
           const mine = same[live[j]]
           let sum = 0
-          for (const card of mine) sum += buy(floor, n, badges, codes[live[j]], card)
+          for (const card of mine) sum += buy(lowRows, card, codes[live[j]])
           tried[j] = sum / mine.length
         }
         consider()

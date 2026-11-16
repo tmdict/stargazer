@@ -46,15 +46,20 @@ const request = (asked: Asked): ShopRequest => ({
   startFrom: asked.startFrom,
 })
 
-const stages = (asked: Asked, searchMs?: number): ShopResult[] => [
+// Every step of a calculation: its results, and a null for each pause.
+const steps = (asked: Asked, searchMs?: number, sliceMs?: number): (ShopResult | null)[] => [
   ...calculateShop(
     request(asked),
     asked.odds ? everyLevel(asked.odds) : ODDS,
     FACTS,
     createSolverCache(),
     searchMs,
+    sliceMs,
   ),
 ]
+
+const stages = (asked: Asked, searchMs?: number): ShopResult[] =>
+  steps(asked, searchMs).filter((step) => step !== null)
 
 /** The settled answers, by the wanted item's name or the kind of an "any" goal. */
 function answers(asked: Asked): Record<string, ShopAnswer> {
@@ -328,6 +333,18 @@ describe('answers in stages', () => {
     const [first, last] = stages(heavy, 0)
     expect(last).toMatchObject({ settled: true })
     expect(best(last!)).toEqual(best(first!))
+  })
+
+  it('gives the same answers when the search is cut into slices', () => {
+    const sliced = steps(heavy, undefined, 1)
+    expect(sliced.filter((step) => step === null).length).toBeGreaterThan(1)
+    expect(sliced.at(-1)).toEqual(stages(heavy).at(-1))
+  })
+
+  it('pauses after each goal is prepared, before the first answers', () => {
+    const [first, second, third] = steps({ heroes: [['L1'], ['L2']] })
+    expect([first, second]).toEqual([null, null])
+    expect(third).toMatchObject({ settled: expect.any(Boolean) })
   })
 
   it('settles at once when the tables leave nothing to search', () => {

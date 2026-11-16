@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /* The calculator's form beside the shop window: the round, as buttons under
-   the shop level each round belongs to, the badges in hand, the heroes and equipment looked for, the link to the heroes to sell
-   and the Mythic heroes, and Calculate. While a calculation runs, Calculate
-   gives way to Cancel. The last level never ends, so it has one button for
-   its first round and every round after. */
+   the shop level each round belongs to, the badges in hand, the heroes and
+   equipment looked for, the link to the heroes to sell and the Mythic heroes,
+   and Calculate. While a calculation runs, Calculate gives way to Cancel. The
+   last level never ends, so it has one button for its first round and every
+   round after. A level's last round carries a mark, and says in its label
+   that the shop level rises next. */
 
 import { nextTick } from 'vue'
 
@@ -62,6 +64,9 @@ const levels = SHOP_FACTS.levelRounds.map((first, index, firsts) => {
   }
 })
 
+const lastLabel = (lastRound: number, level: number): string =>
+  i18n.t('app.shop-round-last', { round: lastRound, level: level + 1 })
+
 // The box is written back after the page has taken the number, so a number
 // out of range shows as the one kept.
 const enterBadges = async (event: Event): Promise<void> => {
@@ -90,6 +95,8 @@ const under = (event: MouseEvent): DOMRect =>
               class="round"
               :class="{ last: item.last }"
               :aria-pressed="item.round === round"
+              :aria-label="item.last ? lastLabel(item.round, one.level) : undefined"
+              :title="item.last ? lastLabel(item.round, one.level) : undefined"
               @click="round = item.round"
             >
               {{ item.label }}

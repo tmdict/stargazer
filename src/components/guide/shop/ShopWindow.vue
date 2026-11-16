@@ -1,6 +1,9 @@
 <script setup lang="ts">
 /* The shop window as the game lays it out: its level, the price of a reroll,
-   and the eight cards in two rows. */
+   and the eight cards in two rows. Random fills it with an example shop of the
+   level, and Clear empties it. */
+
+import { computed } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopWindowCard from './ShopWindowCard.vue'
@@ -8,14 +11,21 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 
-defineProps<{
+const { cards } = defineProps<{
   cards: readonly ShopCard[]
   level: number
 }>()
 
-const emit = defineEmits<{ pick: [card: number, under: DOMRect]; lock: [card: number] }>()
+const emit = defineEmits<{
+  pick: [card: number, under: DOMRect]
+  lock: [card: number]
+  random: []
+  clear: []
+}>()
 
 const i18n = useI18nStore()
+
+const blank = computed(() => cards.every((card) => !card.good && !card.locked))
 </script>
 
 <template>
@@ -28,6 +38,25 @@ const i18n = useI18nStore()
       <span class="reroll">
         {{ i18n.t('app.shop-reroll') }}
         <ShopBadges :count="SHOP_FACTS.reroll" />
+      </span>
+      <span class="tools">
+        <button
+          type="button"
+          class="shop-pill-button"
+          :title="i18n.t('app.shop-random-hint')"
+          @click="emit('random')"
+        >
+          {{ i18n.t('app.shop-random') }}
+        </button>
+        <button
+          type="button"
+          class="shop-pill-button"
+          :title="i18n.t('app.shop-clear-hint')"
+          :disabled="blank"
+          @click="emit('clear')"
+        >
+          {{ i18n.t('app.clear') }}
+        </button>
       </span>
     </header>
     <div class="cards">
@@ -71,6 +100,11 @@ const i18n = useI18nStore()
 
 .reroll :deep(.shop-badges) {
   color: var(--color-header-gold);
+}
+
+.tools {
+  display: inline-flex;
+  gap: 6px;
 }
 
 .cards {

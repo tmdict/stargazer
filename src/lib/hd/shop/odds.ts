@@ -1,6 +1,6 @@
 // The odds table: what each of the eight sources makes at each shop level.
 
-import type { OddsTable, ShopFacts } from './types'
+import type { OddsTable, ShopFacts, SourceEntry } from './types'
 
 export const SHOP_LEVELS = 5
 export const SOURCES = 8
@@ -9,18 +9,26 @@ export const SOURCES = 8
 // little without being wrong.
 const SUM_TOLERANCE = 0.05
 
-/** Returns the table unchanged, or throws naming the first thing wrong with it. */
+/**
+ * Returns the table ready for use, or throws naming the first thing wrong with
+ * it. A source may list nothing, which stands for one that only ever shows the
+ * product no goal uses. The table returned lists that product for it: the card
+ * is on show all the same, and reading the shop has to match it to a source.
+ */
 export function checkOdds(table: OddsTable, facts: ShopFacts): OddsTable {
   const known = new Set(facts.goods.map((good) => good.name))
+  const idle = facts.goods.find((good) => good.kind === 'exp')
   if (table.levels.length !== SHOP_LEVELS) {
     throw new Error(`odds: ${table.levels.length} levels, expected ${SHOP_LEVELS}`)
   }
-  table.levels.forEach((sources, level) => {
+  const levels = table.levels.map((sources, level) => {
     const at = `odds: level ${level + 1}`
     if (sources.length !== SOURCES) throw new Error(`${at} has ${sources.length} sources`)
-    sources.forEach((entries, source) => {
-      // A source with nothing listed makes no product the calculator follows.
-      if (!entries.length) return
+    return sources.map((entries, source): SourceEntry[] => {
+      if (!entries.length) {
+        if (!idle) throw new Error(`${at}, source ${source + 1} lists nothing`)
+        return [{ good: idle.name, percent: 100 }]
+      }
       let total = 0
       for (const entry of entries) {
         if (!known.has(entry.good)) {
@@ -34,22 +42,21 @@ export function checkOdds(table: OddsTable, facts: ShopFacts): OddsTable {
       if (Math.abs(total - 100) > SUM_TOLERANCE) {
         throw new Error(`${at}, source ${source + 1} adds up to ${total}`)
       }
+      return entries
     })
   })
-  return table
+  return { ...table, levels }
 }
 
 /**
- * Names the first source where two tables list different products, or returns
- * null. A source one table leaves empty matches one that makes only a product
- * of no use to any goal.
+ * Names the first source where two checked tables list different products, or
+ * returns null. A shop that can come up under one table can then come up under
+ * the other.
  */
-export function oddsMismatch(table: OddsTable, other: OddsTable, facts: ShopFacts): string | null {
-  const idle = new Set(facts.goods.filter((good) => good.kind === 'exp').map((good) => good.name))
-  const made = (entries: readonly { good: string }[]): string =>
+export function oddsMismatch(table: OddsTable, other: OddsTable): string | null {
+  const made = (entries: readonly SourceEntry[]): string =>
     entries
       .map((entry) => entry.good)
-      .filter((good) => !idle.has(good))
       .sort()
       .join()
   for (let level = 0; level < SHOP_LEVELS; level++) {

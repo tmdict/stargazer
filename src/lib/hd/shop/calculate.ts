@@ -5,6 +5,10 @@
 // range where the tables alone do not settle it. The search then narrows the
 // ranges that decide what a goal shows, one goal at a time, until none is left
 // or its time is up; a range not reached by then stays a range.
+//
+// The work also pauses between stages, where whoever runs it can end it: after
+// each goal is prepared, and after each slice of search. Everything worked out
+// up to a pause is in the cache, so ending there loses nothing.
 
 import {
   adviseBadges,
@@ -46,6 +50,9 @@ export const SHOP_LIMITS = { badges: 500, copies: 4 }
 
 /** How long the search may run for one request, in milliseconds. */
 export const SEARCH_MS = 5000
+
+/** How long the search runs between two pauses, in milliseconds. */
+export const SLICE_MS = 50
 
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
@@ -328,9 +335,31 @@ function unsettled(work: Work, shop: EnteredShop): ChanceRow | null {
 }
 
 /**
+ * The chance after a move, searched a slice at a time with a pause after each.
+ * A slice that runs out of time starts again from the move, and finds every
+ * shop it had finished already answered. Throws `OutOfTime` at the deadline.
+ */
+function* searchInSlices(
+  max: MaxChance,
+  move: Move,
+  deadline: number,
+  sliceMs: number,
+): Generator<null, number> {
+  for (;;) {
+    try {
+      return max.chance(move, Math.min(deadline, performance.now() + sliceMs))
+    } catch (error) {
+      if (!(error instanceof OutOfTime) || performance.now() >= deadline) throw error
+      yield null
+    }
+  }
+}
+
+/**
  * Yields the answers as they stand: once with every row, then after each goal
- * the search has narrowed. The last result is marked settled. Throws for a
- * request the form would not send.
+ * the search has narrowed. The last result is marked settled. A null in between
+ * is a pause, with nothing new to show. Throws for a request the form would not
+ * send.
  */
 export function* calculateShop(
   request: ShopRequest,
@@ -338,7 +367,8 @@ export function* calculateShop(
   facts: ShopFacts,
   cache: SolverCache,
   searchMs = SEARCH_MS,
-): Generator<ShopResult, void> {
+  sliceMs = SLICE_MS,
+): Generator<ShopResult | null, void> {
   checkRequest(request)
   const { shop } = request
   const level = levelOfRound(request.round, facts.levelRounds)
@@ -350,9 +380,13 @@ export function* calculateShop(
     return
   }
 
-  const works = goalsOf(request).map((goal) =>
-    prepare(request, goal, reading, odds, rises ? table.levels[level] : null, facts, cache),
-  )
+  const works: Work[] = []
+  for (const goal of goalsOf(request)) {
+    if (works.length) yield null
+    works.push(
+      prepare(request, goal, reading, odds, rises ? table.levels[level] : null, facts, cache),
+    )
+  }
   const answers = works.map((work) => answer(work, shop, facts))
   const waiting = works.map((work) => unsettled(work, shop) !== null)
   if (!waiting.includes(true)) {
@@ -366,7 +400,7 @@ export function* calculateShop(
     for (const [index, work] of works.entries()) {
       if (!waiting[index]) continue
       for (let row = unsettled(work, shop); row; row = unsettled(work, shop)) {
-        const chance = work.max.chance(row.move, deadline)
+        const chance = yield* searchInSlices(work.max, row.move, deadline, sliceMs)
         row.chance = { floor: chance, ceiling: chance }
       }
       answers[index] = answer(work, shop, facts)
