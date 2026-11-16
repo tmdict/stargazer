@@ -32,15 +32,8 @@ import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { Grid, rotatedHexId } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
-import {
-  buffTilesOf,
-  deploymentTiles,
-  getMapByKey,
-  modeBuffs,
-  presetLayout,
-  resolveBoardMap,
-  type MapLayout,
-} from '@/lib/maps'
+import { deploymentTiles, getMapByKey, presetLayout, type MapLayout } from '@/lib/maps'
+import { buffTilesOf, modeBuffs, resolveBoardMap } from '@/lib/modeMaps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { placeTeam, type PlacementResult } from '@/lib/placement/engine'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'

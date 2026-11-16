@@ -61,7 +61,7 @@ The lists also carry the buff tiles, since the game gives a buff to a mode's boa
 | `buffs[].id`    | string          | The name of the buff's text under `src/locales/buff/`: the game's own sentence for it in each app locale.    |
 | `buffs[].tiles` | list of numbers | The tiles it sits on, each an ally or enemy tile of the map and in no other buff of the board, in any order. |
 
-`src/lib/maps.ts` refuses a list that breaks a rule when it loads.
+`src/lib/modeMaps.ts` refuses a list that breaks a rule when it loads.
 
 A board's serialized tile states (`t`) are authoritative. Restoring resets every tile and replays `t`, so a team on a map that no longer exists still loads, previews and exports. For a board saved without a map key, or with the key of a map that no longer exists, `resolveBoardMap` picks the preset its tiles reproduce; failing that the board keeps its key, or takes the default map when it has none.
 

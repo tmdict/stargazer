@@ -4,7 +4,8 @@ import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/characters/unitIds'
-import { availableState, findMapByTiles, resolveBoardMap } from '@/lib/maps'
+import { availableState } from '@/lib/maps'
+import { findMapByTiles, resolveBoardMap } from '@/lib/modeMaps'
 import { decodeGridStateFromUrl, decodeTeamData } from '@/lib/teams/codec'
 import {
   unitRowKind,

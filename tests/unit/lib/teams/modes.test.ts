@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_MAP_KEY, findMapByTiles, mapTileRows } from '@/lib/maps'
+import { DEFAULT_MAP_KEY, mapTileRows } from '@/lib/maps'
+import { findMapByTiles } from '@/lib/modeMaps'
 import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
 import {
   DEFAULT_VARIANT,

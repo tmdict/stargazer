@@ -8,14 +8,8 @@ import { inPhantimalBand, isPhantimalId, toPhantimalId } from '@/lib/characters/
 import { lineupQualifies } from '@/lib/characters/phantimalFaction'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { loadCharacters, loadPhantimals } from '@/lib/dataLoader'
-import {
-  configTiles,
-  deploymentTiles,
-  MAPS,
-  presetLayout,
-  tilesLayout,
-  type MapLayout,
-} from '@/lib/maps'
+import { configTiles, deploymentTiles, MAPS, presetLayout, type MapLayout } from '@/lib/maps'
+import { tilesLayout } from '@/lib/modeMaps'
 import { PlacementBoard } from '@/lib/placement/board'
 import { PLACEMENT_LOOKUPS } from '@/lib/placement/lookups'
 import { ruleUnit } from '@/lib/placement/reach'
