@@ -38,7 +38,6 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
     const previous = currentBreakpoint.value
     currentBreakpoint.value = next
     grids.updateBreakpoint(next)
-    // Flatten (disable perspective) when entering mobile.
     if (autoFlattenOnMobile && next === 'mobile' && previous !== 'mobile') {
       showPerspective.value = false
     }

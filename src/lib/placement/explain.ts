@@ -11,10 +11,8 @@ import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
-// One of the team's effects: the name its words go by (effectName), from the
-// data file its rule sits in (the unit's, the charm's id or the artifact's),
-// and the unit giving it, the charm's holder for a charm and none for the
-// artifact.
+// One of the team's effects: the name its words go by (effectName), and the
+// unit giving it, the charm's holder for a charm and none for the artifact.
 export interface PlacedEffect {
   source: OwnGoalCheck['source']
   file: string

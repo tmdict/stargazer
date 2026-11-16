@@ -9,7 +9,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { ruleCards } from '@/lib/placement/formationRules'
-import { effectName, effectVerb } from '@/lib/placement/goals'
+import { effectName, effectVerb, goalWord } from '@/lib/placement/goals'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { hasSkill } from '@/lib/skills/skill'
 import type { Rule } from '@/lib/types/rule'
@@ -63,15 +63,14 @@ function goalProblem(goal: unknown): string | null {
 function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may'): string[] {
   const problems: string[] = []
   // One effect can have two aims, each its own rule, but never two of one goal
-  // word for one team from one body. What a most goal counts is part of its word.
+  // word for one team from one body.
   const aims = new Set<string>()
   for (const rule of rules) {
     for (const field of Object.keys(rule))
       if (!FIELDS.has(field)) problems.push(`the field ${field}`)
     if (rule.team !== 'ally' && rule.team !== 'enemy') problems.push(`the team ${rule.team}`)
-    const word = typeof rule.goal === 'string' ? rule.goal : Object.keys(rule.goal)[0]
-    const counted = typeof rule.goal === 'object' && 'most' in rule.goal ? ` ${rule.goal.most}` : ''
-    const aim = `${rule.team} ${word}${counted}${rule.from ? ` from ${rule.from}` : ''}`
+    const word = goalWord(rule.goal)
+    const aim = `${rule.team} ${word}${rule.from ? ` from ${rule.from}` : ''}`
     if (aims.has(aim)) problems.push(`two ${aim} rules`)
     aims.add(aim)
     const goal = goalProblem(rule.goal)
@@ -97,7 +96,7 @@ function shapeProblems(rules: readonly Rule[], tile: 'always' | 'never' | 'may')
     }
     if (
       rule.hard !== undefined &&
-      (rule.hard !== true || rule.team !== 'ally' || !['target', 'exactly'].includes(word!))
+      (rule.hard !== true || rule.team !== 'ally' || !['target', 'exactly'].includes(word))
     )
       problems.push('hard off a target or exactly goal for our team, or not true')
     if (typeof rule.goal === 'object' && 'least' in rule.goal && !rule.hard)
