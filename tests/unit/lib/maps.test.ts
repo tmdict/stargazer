@@ -38,10 +38,10 @@ describe('findMapByTiles', () => {
 describe('tilesLayout', () => {
   // Buff tiles belong to a mode's board, so a map alone carries none.
   it("gives a preset's tiles that preset's key and only the buff tiles it is handed", () => {
-    const layout = tilesLayout(tilesOf('preset-sr1'))
-    expect(layout.key).toBe('preset-sr1')
+    const layout = tilesLayout(tilesOf('preset-sr3'))
+    expect(layout.key).toBe('preset-sr3')
     expect(layout.buffTiles).toEqual([])
-    expect(tilesLayout(tilesOf('preset-sr1'), [2, 44]).buffTiles).toEqual([2, 44])
+    expect(tilesLayout(tilesOf('preset-sr3'), [14, 32]).buffTiles).toEqual([14, 32])
   })
 
   // The key seeds the engine's search and keys its cached fits, so a board
