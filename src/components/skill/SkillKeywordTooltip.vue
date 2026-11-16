@@ -3,7 +3,7 @@
    rendered by highlightSkillText as `[data-kw]` spans). The spans live in
    v-html output, so per-span bindings are impossible: one host per
    SkillSections delegates on the article container and feeds useInfoTip the
-   resolved span. */
+   resolved span. A keyword has glossary text, a picture, or both. */
 
 import { computed, onUnmounted, watch } from 'vue'
 
@@ -11,6 +11,7 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { SkillLocale } from '@/lib/types/i18n'
 import type { SkillKeywords } from '@/lib/types/skill'
+import { loadKeywordImages } from '@/utils/imageLoader'
 
 const props = defineProps<{
   // Language of the surrounding skill text, and its glossary.
@@ -23,6 +24,7 @@ const props = defineProps<{
 const { anchor, payload: kwKey, hoverOpen, hoverClose, toggle, close } = useInfoTip<string>()
 
 const tip = computed(() => (kwKey.value ? (props.keywords[kwKey.value] ?? null) : null))
+const picture = computed(() => (kwKey.value ? (loadKeywordImages()[kwKey.value] ?? null) : null))
 
 const keywordAt = (e: Event): HTMLElement | null => {
   const target = e.target
@@ -89,14 +91,33 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TooltipPopup v-if="anchor && tip" :target-element="anchor" max-width="320px">
+  <TooltipPopup v-if="anchor && (tip || picture)" :target-element="anchor" max-width="320px">
     <template #content>
-      <div class="keyword-tip" :lang>{{ tip }}</div>
+      <img
+        v-if="picture"
+        class="keyword-picture"
+        :src="picture"
+        :alt="tip ? '' : (anchor.textContent ?? '')"
+        width="464"
+        height="348"
+      />
+      <div v-if="tip" class="keyword-tip" :lang>{{ tip }}</div>
     </template>
   </TooltipPopup>
 </template>
 
 <style scoped>
+.keyword-picture {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-small);
+}
+
+.keyword-picture + .keyword-tip {
+  margin-top: 8px;
+}
+
 .keyword-tip {
   white-space: pre-line;
 }

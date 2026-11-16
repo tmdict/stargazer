@@ -28,7 +28,7 @@ import {
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
-import { buffAt } from '@/lib/maps'
+import { buffAt } from '@/lib/mapModeLists'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'

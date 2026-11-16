@@ -97,8 +97,7 @@ export interface SkillCharms {
 
 // On-disk shape of src/pack/text/skill/<lang>/_charm-types.json (written by a
 // pack update): the season's charm types in the game's order, each with its
-// name and its bonus lines. Absent once the
-// season's charms are retired.
+// name and its bonus lines. Absent once the season's charms are retired.
 export type SkillCharmTypes = Record<string, { name: string; bonus: string[] }>
 
 // On-disk shape of src/pack/text/skill/<lang>/_artifacts.json (written by a

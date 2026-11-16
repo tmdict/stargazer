@@ -16,7 +16,8 @@
  */
 
 import type { MultiGridState } from '@/lib/teams/gridStateSerializer'
-import { DEFAULT_MAP_KEY, mapTileRows, MODE_BOARDS, type ModeListKey } from '../maps'
+import { MODE_BOARDS, type ModeListKey } from '../mapModeLists'
+import { DEFAULT_MAP_KEY, mapTileRows } from '../maps'
 import { stripRetiredSeasonal } from '../seasonal'
 
 export type TeamModeKey = '1v1' | '3v3' | '5v5'

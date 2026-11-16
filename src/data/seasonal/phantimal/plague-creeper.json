@@ -14,7 +14,7 @@
       "goal": {
         "target": "melee"
       },
-      "weight": "aim",
+      "weight": "mark",
       "note": "Plague Creeper's Spirit Mark shields the allied hero in front of it and adds melee damage, best a melee hero."
     }
   ]

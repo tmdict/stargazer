@@ -16,6 +16,7 @@ import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
+import IconHelp from '@/components/ui/IconHelp.vue'
 import IconImage from '@/components/ui/IconImage.vue'
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
@@ -179,6 +180,10 @@ const SKILL = {
         </li>
         <li>
           저장한 진형은 브라우저에 보관됩니다. <b>내보내기</b>로 백업 파일을 만들 수 있습니다.
+        </li>
+        <li>
+          상단 <span class="help-inline-btn"><IconHelp :size="13" /></span>의 <b>데이터</b>에서는
+          어느 페이지에서든 저장한 진형과 로스터를 백업할 수 있습니다.
         </li>
       </ul>
     </div>
@@ -570,7 +575,7 @@ const SKILL = {
           <span class="help-tab">영웅</span>
           <p>모든 영웅과 진영, 직업, 메커니즘 필터</p>
           <span class="help-tab">시즌</span>
-          <p>이번 시즌의 팬텀과 메아리</p>
+          <p>이번 시즌의 팬텀, 메아리, 주문석</p>
           <span class="help-tab">맵</span>
           <p>다른 아레나를 선택하거나 직접 그립니다</p>
           <span class="help-tab">영웅 로스터</span>
@@ -638,7 +643,10 @@ const SKILL = {
       </li>
       <li>
         <IconGlobe :size="18" />
-        <span>스킬 페이지는 16개 언어로 읽을 수 있습니다. 페이지 위쪽의 메뉴를 이용하세요.</span>
+        <span
+          >스킬 페이지는 메아리와 팬텀 설명까지 16개 언어로 읽을 수 있습니다. 페이지 위쪽의 메뉴를
+          이용하세요.</span
+        >
       </li>
       <li>
         <IconImage :size="18" />

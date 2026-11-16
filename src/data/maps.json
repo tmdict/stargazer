@@ -1,9 +1,9 @@
 {
   "sl": [
     { "map": "arena1" },
-    { "map": "arena2" },
+    { "map": "preset-sr11", "buffs": [{ "id": "swift-shadow", "tiles": [28, 18] }] },
     { "map": "arena3", "buffs": [{ "id": "swift-shadow", "tiles": [21, 25] }] },
-    { "map": "preset-sr1", "buffs": [{ "id": "battle-fervor", "tiles": [2, 44] }] },
+    { "map": "preset-sr2", "buffs": [{ "id": "battle-fervor", "tiles": [21, 25] }] },
     { "map": "preset-sr3", "buffs": [{ "id": "battle-fervor", "tiles": [14, 32] }] }
   ],
   "gd": [

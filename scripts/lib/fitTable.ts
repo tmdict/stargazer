@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import ts from 'typescript'
 import { build } from 'vite'
 
 import { FITS_FILE, FITS_MODULE, writeFitsModule } from './dataPack.ts'
@@ -103,8 +104,28 @@ export async function buildFitCode(
   }
 }
 
+// A file as a digest takes it: a script without its comments, types and
+// layout, and a JSON file's values, so an edit to those alone leaves a table
+// and its kept rows in use.
+function content(file: string, text: string): string {
+  if (file.endsWith('.json')) return JSON.stringify(JSON.parse(text))
+  if (!file.endsWith('.ts')) return text
+  return ts.transpileModule(text, {
+    compilerOptions: {
+      removeComments: true,
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+    },
+  }).outputText
+}
+
 const digestFiles = (root: string, files: readonly string[]): string =>
-  digest(...files.flatMap((file) => [file, digest(readFileSync(join(root, file)))]))
+  digest(
+    ...files.flatMap((file) => [
+      file,
+      digest(content(file, readFileSync(join(root, file), 'utf8'))),
+    ]),
+  )
 
 /** What a table is made from, as its stamp: the data file and the files the
  * fit code is built of. */
@@ -153,8 +174,7 @@ export async function syncFitTable(
       const data = await code.decodeSlData(dataFile)
       stamp = (await code.decodeSlFits(readFileSync(table), data)).stamp
     } catch {
-      // A table sealed with another export's key or made for other lineups, or
-      // fit code that does not load here.
+      // A table made for another data file, or fit code that does not load here.
     }
     if (stamp === fitStamp(root, built.files, dataFile)) return use(true)
     return use(

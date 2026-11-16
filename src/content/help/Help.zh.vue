@@ -16,6 +16,7 @@ import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilter from '@/components/ui/IconFilter.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
+import IconHelp from '@/components/ui/IconHelp.vue'
 import IconImage from '@/components/ui/IconImage.vue'
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import IconLink from '@/components/ui/IconLink.vue'
@@ -156,6 +157,10 @@ const SKILL = {
           可以从对战截图导入整场对局，详见<a href="#import">从截图导入</a>。
         </li>
         <li>保存的阵容存在你的浏览器里，用<b>导出</b>可以备份成文件。</li>
+        <li>
+          在任意页面点顶部 <span class="help-inline-btn"><IconHelp :size="13" /></span>
+          里的<b>数据</b>，可以备份保存的阵容和英雄池。
+        </li>
       </ul>
     </div>
   </section>
@@ -479,7 +484,7 @@ const SKILL = {
           <span class="help-tab">英雄</span>
           <p>所有英雄，可按阵营、职业和机制筛选</p>
           <span class="help-tab">赛季</span>
-          <p>本赛季的幻灵和神器</p>
+          <p>本赛季的幻灵、神器和魔法配饰</p>
           <span class="help-tab">地图</span>
           <p>换一张竞技场地图，或自己画一张</p>
           <span class="help-tab">英雄池</span>
@@ -533,7 +538,11 @@ const SKILL = {
           ><b>攻略</b>的机制页列出了每种机制的全部英雄，同时选两种以上，可以看到谁全都有。</span
         >
       </li>
-      <li><IconGlobe :size="18" /><span>技能页面支持 16 种语言，在页面顶部的菜单里切换。</span></li>
+      <li>
+        <IconGlobe :size="18" /><span
+          >技能页面支持 16 种语言，神器和幻灵的文字也一样，在页面顶部的菜单里切换。</span
+        >
+      </li>
       <li>
         <IconImage :size="18" /><span>阵容页面有<b>图片拼接</b>工具，可以把多张截图拼成一张。</span>
       </li>

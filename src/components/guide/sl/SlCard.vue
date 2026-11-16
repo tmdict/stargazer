@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* A card on a generator page or a board's Placement tips: a title, then
-   lines, bulleted unless plain, or a sentence. Names show in the colour that
-   rings the units a card names on its board, and in a line on better tiles,
-   the word for them in their colour. */
+   lines, or a sentence. Names show in the colour that rings the units a card
+   names on its board, and in a line on better tiles, the word for them in
+   their colour. */
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
@@ -15,8 +15,6 @@ defineProps<{
   offset?: number
   title?: TextPart[]
   lines?: { lead?: string; parts: TextPart[]; better?: boolean }[]
-  // Lines without bullets, for a card of a sentence or two.
-  plain?: boolean
   text?: string
   // The board it explains follows the page's light or dark look, where the
   // generator's boards are dark in both; the card is teleported, so it cannot
@@ -44,7 +42,7 @@ defineProps<{
           }}</span>
         </div>
         <div v-if="text">{{ text }}</div>
-        <ul v-if="lines?.length" class="sl-card-lines" :class="{ plain }">
+        <ul v-if="lines?.length" class="sl-card-lines">
           <li v-for="(line, index) in lines" :key="index" :class="{ better: line.better }">
             <template v-if="line.lead"
               ><b>{{ line.lead }}</b
@@ -77,11 +75,6 @@ defineProps<{
   color: inherit;
   font-size: inherit;
   line-height: inherit;
-}
-
-.sl-card-lines.plain {
-  padding-left: 0;
-  list-style: none;
 }
 
 .sl-card-lines li {

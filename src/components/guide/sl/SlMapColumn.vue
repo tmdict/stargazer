@@ -118,7 +118,6 @@ const games = computed(() => (team.comp ? team.comp[1] + team.comp[2] : 0))
       v-if="debug && board && team.played && team.scores"
       class="sl-formation-switch"
       :engine-on
-      :moved="team.played.moved"
       :scores="team.scores"
       @switch="emit('switch', $event)"
     />

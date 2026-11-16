@@ -253,7 +253,7 @@ onUnmounted(() => {
     v-if="moveModalMounted"
     :show="movePopupShown"
     :result="moveResult"
-    :on-arrival="movePopupOnArrival"
+    :opened-on-arrival="movePopupOnArrival"
     :requested="moveResultRequested"
     @close="movePopupShown = false"
     @bring="bringOldData"

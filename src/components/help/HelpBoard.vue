@@ -9,6 +9,7 @@ import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
 import { toPoints } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGameDataStore } from '@/stores/gameData'
+import { BACKDROP_STOPS, heroTier } from '@/utils/tierBackdrop'
 import {
   compareWallDrawOrder,
   getTileFillColor,
@@ -100,11 +101,13 @@ const placed = computed(() =>
     return {
       ...token,
       ...center(token.at),
-      backdrop: gameData.getIcon(`bg-${level}`),
+      tier: heroTier(level),
       portrait: gameData.getCharacterImage(token.slug),
     }
   }),
 )
+
+const tiers = computed(() => [...new Set(placed.value.flatMap(({ tier }) => tier ?? []))])
 
 const ringed = computed(() => placed.value.filter((token) => token.slug === ring))
 
@@ -147,6 +150,20 @@ const arrowKinds = computed(() => [...new Set(arrows.map((a) => a.kind))])
   >
     <defs>
       <clipPath :id="`${id}-clip`"><circle r="7.4" /></clipPath>
+      <linearGradient
+        v-for="tier in tiers"
+        :id="`${id}-backdrop-${tier}`"
+        :key="tier"
+        x2="0"
+        y2="1"
+      >
+        <stop
+          v-for="[color, at] in BACKDROP_STOPS[tier]"
+          :key="at"
+          :offset="`${at}%`"
+          :stop-color="color"
+        />
+      </linearGradient>
       <filter
         v-if="ringed.length"
         :id="`${id}-ring-edge`"
@@ -216,13 +233,13 @@ const arrowKinds = computed(() => [...new Set(arrows.map((a) => a.kind))])
     >
       <circle :r="RING" class="help-board-token-ring" />
       <g :clip-path="`url(#${id}-clip)`">
-        <image
-          :href="token.backdrop"
+        <rect
+          v-if="token.tier"
           x="-7.5"
           y="-7.5"
           width="15"
           height="15"
-          preserveAspectRatio="xMidYMid slice"
+          :fill="`url(#${id}-backdrop-${token.tier})`"
         />
         <image
           :href="token.portrait"

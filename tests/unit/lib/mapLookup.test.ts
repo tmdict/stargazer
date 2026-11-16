@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { configTiles, findMapByTiles, MAPS, tilesLayout } from '@/lib/maps'
+import { findMapByTiles, resolveBoardMap, tilesLayout } from '@/lib/mapLookup'
+import { configTiles, MAPS } from '@/lib/maps'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -35,13 +36,23 @@ describe('findMapByTiles', () => {
   })
 })
 
+describe('resolveBoardMap', () => {
+  it('names a board on a map that no longer exists by the preset its tiles reproduce', () => {
+    const t = tilesOf('preset-sr1')
+    expect(resolveBoardMap({ m: 'retired-map', t })).toBe('preset-sr1')
+    expect(resolveBoardMap({ m: 'retired-map', t: [[20, State.BLOCKED]] })).toBe('retired-map')
+    // An edited board on a live map keeps that map.
+    expect(resolveBoardMap({ m: 'arena1', t })).toBe('arena1')
+  })
+})
+
 describe('tilesLayout', () => {
   // Buff tiles belong to a mode's board, so a map alone carries none.
   it("gives a preset's tiles that preset's key and only the buff tiles it is handed", () => {
-    const layout = tilesLayout(tilesOf('preset-sr1'))
-    expect(layout.key).toBe('preset-sr1')
+    const layout = tilesLayout(tilesOf('preset-sr3'))
+    expect(layout.key).toBe('preset-sr3')
     expect(layout.buffTiles).toEqual([])
-    expect(tilesLayout(tilesOf('preset-sr1'), [2, 44]).buffTiles).toEqual([2, 44])
+    expect(tilesLayout(tilesOf('preset-sr3'), [14, 32]).buffTiles).toEqual([14, 32])
   })
 
   // The key seeds the engine's search and keys its cached fits, so a board

@@ -41,6 +41,8 @@ A list names heroes best first and can bring in another list's heroes at that po
 
 A placement's score has four parts, compared in this order. `kept` and `whole` count the team's hard rules, below. `goals` adds each rule's weight times how much of its goal is met, plus the buff weight for each hero on an ally buff tile, less the `walled` weight for each melee hero on a tile with no way to the enemy. `total` adds to the goals how far toward the side it leans each hero stands, times the `lean` weight.
 
+A phantimal's rule counts a hero only while the hero stands in the half it leans to, the middle being in both halves, so a lean decides whether a Spirit Mark on that hero scores. Every other rule counts a hero wherever it stands.
+
 ### Hard rules
 
 A rule with `hard: true`, on a `target` or an `exactly` goal of the team's own, comes before the weights: a placement that keeps more of the team's hard rules (`kept`) is the better one whatever its goals score. The rule still scores its weight as any other does.
@@ -67,7 +69,7 @@ Equally good placements are those that keep the hard rules the best one keeps, w
 
 `explainPlacement` (`explain.ts`) gives the reasons for a placement, which the PvP team generator shows on each unit of a board and Placement tips shows for an ally side placed by hand (`sideExplanation` in `formation.ts`, run in the Supreme League worker). The enemy units' rules give no reasons, since they only choose among placements as good.
 
-A reason names units by id and an effect by the data file its rule sits in. Its words are locale keys built from that file name, `placement-gives-<file>`, `placement-receives-<file>` and `placement-reaches-<file>` in `src/locales/app/placement/effects/`, and the rules test fails when a weighted rule has no words or words name no rule.
+A reason names units by id and an effect by the data file its rule sits in. Its words are locale keys built from that file name, `placement-gives-<file>`, `placement-receives-<file>` and `placement-reaches-<file>` in `src/locales/app/placement/effects/`, and the rules test fails when a weighted rule has no words or words name no rule. A `most` rule that counts walls or allies adds that word to the name (`placement-reaches-<file>-walls`, and `-most-walls` in its note's key), so a unit can hold a `most` rule for each thing it counts.
 
 ## The Formation engine rules page
 
@@ -129,9 +131,9 @@ Export writes the changed lists the rules can read, entries only, to a file, and
 
 ## The fit table
 
-The data pack's fit table holds what the generator's fit checks find for every lineup of the PvP data file on every preset map, so a visit runs a fit check only on a Map Editor map. `npm run fits` makes it with the app's own fit check (`src/lib/pvp/generator/fitTable.ts`) and writes it into the pack folder, wrapped like the data file and with its key. The Supreme League worker loads the table beside the data file and hands it to its fit stores, which read a placement from it before placing a lineup. The development server uses no table, since its code changes under one.
+The data pack's fit table holds what the generator's fit checks find for every lineup of the PvP data file on every preset map, so a visit runs a fit check only on a Map Editor map. `npm run fits` makes it with the app's own fit check (`src/lib/pvp/generator/fitTable.ts`) and writes it into the pack folder. The Supreme League worker loads the table beside the data file and hands it to its fit stores, which read a placement from it before placing a lineup. The development server uses no table, since its code changes under one.
 
-A table is used only while its `stamp` is the one the build works out: a digest of the data file, of the repo's files the fit check is built of, its code and game data alike, and of the data pack's list of each hero's charms (`scripts/lib/fitTable.ts`). `npm run data` compares the two each time it fills `src/pack/`. Where they differ, or the pack has no table, it prints a line and the app is built without one, so the generator checks fits in the browser until `npm run fits` has run again.
+A table is used only while its `stamp` is the one the build works out: a digest of the data file, of the repo's files the fit check is built of, its code and game data alike, and of the data pack's list of each hero's charms (`scripts/lib/fitTable.ts`). A file counts by its code without comments, types and layout, or by its JSON values, so an edit to those alone leaves the table in use. The fit check loads the map files but not the mode lists (`src/data/maps.json`), so a rotation leaves it in use too. `npm run data` compares the two each time it fills `src/pack/`. Where they differ, or the pack has no table, it prints a line and the app is built without one, so the generator checks fits in the browser until `npm run fits` has run again.
 
 ```json
 {

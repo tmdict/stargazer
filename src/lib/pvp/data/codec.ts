@@ -1,11 +1,5 @@
 /* Reads the PvP data file (pvp/pvp.bin in the data pack) and the fit table
- * beside it (pvp/fits.bin), and writes the table for npm run fits.
- * Each file is its JSON compressed with raw deflate, then encrypted with
- * AES-GCM, so it is noise in the browser's network panel. The key comes from
- * pvp/pvp.key, new with each export, and the repository holds neither. It
- * deters a casual look, nothing more: Vite writes pvp.key into this script,
- * which every visitor downloads. The decoded data is held here and handed to
- * the page as a plain object, never put in a store or on window. */
+ * beside it (pvp/fits.bin), and writes the table for npm run fits. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { CLASS_ORDER } from '@/lib/filterOrder'
@@ -15,11 +9,9 @@ import pvpFileUrl from '@/pack/pvp/pvp.bin?url'
 import pvpKey from '@/pack/pvp/pvp.key?raw'
 import type { SlData, SlFitTable, SlMap } from './types'
 
-// The writer combines pvp.key with the same text, so what the script stores is
-// not itself the key.
+// Shared with the external report generator.
 const KEY_MIX = 'stargazer-pvp'
 
-// A file opens with the cipher's starting value.
 const IV_BYTES = 12
 
 async function cipherKey(usage: 'encrypt' | 'decrypt'): Promise<CryptoKey> {

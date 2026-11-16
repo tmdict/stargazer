@@ -6,15 +6,13 @@ import { inPhantimalBand } from '../characters/phantimal'
 import type { MapLayout } from '../maps'
 import { PlacementBoard } from './board'
 import { asGoodAs, beats, compare, EPS } from './engine'
-import { effectVerb } from './goals'
+import { effectName, effectVerb } from './goals'
 import { ruleUnit } from './reach'
 import { PlacementScorer, type OwnGoalCheck, type PlacementScore } from './score'
 import type { PlacementData, PlacementLookups, PlacementTeam } from './types'
 
-// One of the team's effects: the data file its rule sits in (the unit's, the
-// charm's id or the artifact's), with -companion after a unit's for the effect
-// its other body gives, and the unit giving it, the charm's holder for a charm
-// and none for the artifact.
+// One of the team's effects: the name its words go by (effectName), and the
+// unit giving it, the charm's holder for a charm and none for the artifact.
 export interface PlacedEffect {
   source: OwnGoalCheck['source']
   file: string
@@ -68,11 +66,7 @@ export function explainPlacement(
   const effects = goals.map((goal): PlacedEffect => {
     const file =
       typeof goal.owner === 'string' ? goal.owner : (lookups.nameOf(goal.owner) ?? `${goal.owner}`)
-    return {
-      source: goal.source,
-      file: goal.rule.from === 'companion' ? `${file}-companion` : file,
-      giver: goal.holder,
-    }
+    return { source: goal.source, file: effectName(file, goal.rule), giver: goal.holder }
   })
   const leans = new Map(team.heroes.map((hero) => [hero, scorer.leanOf(hero)]))
   const onBuff = new Set(board.units.filter((unit) => scorer.onBuffTile(unit)))

@@ -20,8 +20,8 @@
  * faint pink tint, which resampling can halve and a phone's JPEG can erase,
  * and by its colours: an unrefined row's stars are tinted blue, while no
  * rainbow star is mostly blue and the row leans yellow. Either sign makes a
- * full white row R4, and R0 is sure only when the row has no pink and a star
- * that is mostly blue. */
+ * full white row R4, and R0 is sure only when the row has no pink, little
+ * purple and a star that is mostly blue. */
 
 import { hsvAt } from '../core/image'
 import type { Rect, RgbaImage } from '../core/types'
@@ -44,13 +44,13 @@ const FULL = { lead: 1, even: 0.7 } as const
 // Colour is read within this many pixels of each place.
 const STAR_REACH = 4
 // Evidence a refined reading needs to be sure, about 85% of the weakest
-// correctly read row of each level on labelled screenshots: the purple share
-// (R1), colour strength and gold share (R2), red share (R3), and the share of
-// stars that carry the pink tint on their own (R4). An R4 row read by its
-// rainbow is sure when no star's coloured pixels are more than `rainbowBlue`
-// blue. A full R0 row is sure under a pink share of `r0Pink` (unrefined rows
-// measure below 0.005, R4 rows above 0.04) and with a star at least
-// `whiteBlue` blue.
+// correctly read row of each level on labelled screenshots, and for R1 just
+// under it: the purple share (R1), colour strength and gold share (R2), red
+// share (R3), and the share of stars that carry the pink tint on their own
+// (R4). An R4 row read by its rainbow is sure when no star's coloured pixels
+// are more than `rainbowBlue` blue. A full R0 row is sure under a pink share of
+// `r0Pink` (unrefined rows measure below 0.005, R4 rows above 0.04) and with a
+// star at least `whiteBlue` blue.
 const SURE = {
   purple: 0.58,
   chroma: 0.29,
@@ -67,6 +67,17 @@ const PINK = 0.03
 // hold 27% yellow or more and stars at most 43% blue, and every R0 row has a
 // star 78% blue or more.
 const RAINBOW = { warm: 0.2, blue: 0.6 } as const
+// Purple shares of a row's bright pixels. From `r1` the row is R1's purple: on
+// result screenshots R1 rows measure 0.584 or more, and R4 rows up to 0.22, the
+// highest where the stars' lilac lower edge falls inside the band. A white row
+// (R0 or R4) from `mixed` may be an R1 row that headwear tints or a capture
+// fades, so it is sure only as R4 by its rainbow, with at least `starWarm` of
+// every star's coloured pixels yellow: a frame arc can lend an R1 row's outer
+// stars yellow, not its inner ones. On result screenshots the R4 rows in this
+// range hold 16% yellow or more in every star, and every R1 row has a star with
+// none. A phone's JPEG can leave a star of an R4 row with none, so rows below
+// `mixed` do without it.
+const PURPLE = { r1: 0.4, mixed: 0.2, starWarm: 0.04 } as const
 
 /* Where a screen's cards hold their star row, measured from the card's box: the
  * row's top `above` pixels over the box's centre, and a full row's six stars
@@ -133,20 +144,23 @@ const fullNearby = (shot: RgbaImage, band: Rect, { places, gaps }: StarPlaces): 
 }
 
 /* Each star's own tint, from the bright pixels around its place: the share of
- * the row's stars that carry the pink tint, and the largest share of blue
- * among any one star's coloured pixels. */
+ * the row's stars that carry the pink tint, and the largest share of blue and
+ * smallest share of yellow among any one star's coloured pixels (a star with
+ * none holds no yellow). */
 const starTints = (
   shot: RgbaImage,
   band: Rect,
   places: readonly number[],
-): { pinkStars: number; bluest: number } => {
+): { pinkStars: number; bluest: number; leastWarm: number } => {
   let pink = 0
   let bluest = 0
+  let leastWarm = 1
   for (const p of places) {
     let n = 0
     let coloured = 0
     let m = 0
     let blue = 0
+    let yellow = 0
     for (let y = band.y; y < band.y + band.h; y++) {
       for (let x = p - STAR_REACH; x <= p + STAR_REACH; x++) {
         if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
@@ -157,12 +171,14 @@ const starTints = (
         coloured++
         if (h >= 300) m++
         else if (h >= 180 && h < 240) blue++
+        else if (h >= 30 && h < 90) yellow++
       }
     }
     if (n && m / n >= PINK) pink++
     if (coloured) bluest = Math.max(bluest, blue / coloured)
+    leastWarm = Math.min(leastWarm, coloured ? yellow / coloured : 0)
   }
-  return { pinkStars: pink / places.length, bluest }
+  return { pinkStars: pink / places.length, bluest, leastWarm }
 }
 
 export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementReading {
@@ -201,7 +217,7 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
   const magenta = share[10]! + share[11]!
   const coloured = hist.reduce((sum, c) => sum + c, 0)
   const warm = coloured ? (hist[1]! + hist[2]!) / coloured : 0
-  const { pinkStars, bluest } = starTints(shot, band, places)
+  const { pinkStars, bluest, leastWarm } = starTints(shot, band, places)
   const rainbow = warm >= RAINBOW.warm && bluest < RAINBOW.blue
 
   let family: StarFamily = 'white'
@@ -212,10 +228,11 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
   } else if (chroma >= 0.25 && red >= 0.3) {
     family = 'red'
     level = 3
-  } else if (purple >= 0.2) {
+  } else if (purple >= PURPLE.r1) {
     family = 'purple'
     level = 1
   }
+  const mixed = purple >= PURPLE.mixed
   const refined =
     level === 1
       ? purple >= SURE.purple
@@ -223,7 +240,10 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
         ? chroma >= SURE.chroma && gold >= SURE.gold
         : level === 3
           ? red >= SURE.red
-          : level === 4 && (pinkStars >= SURE.pinkStars || (rainbow && bluest <= SURE.rainbowBlue))
+          : level === 4 &&
+            (mixed
+              ? rainbow && bluest <= SURE.rainbowBlue && leastWarm >= PURPLE.starWarm
+              : pinkStars >= SURE.pinkStars || (rainbow && bluest <= SURE.rainbowBlue))
   if (!full) {
     const fadedR4 = magenta >= SURE.r0Pink && fullNearby(shot, band, stars)
     return { level: 0, full, family, sure: !refined && !fadedR4 }
@@ -232,6 +252,6 @@ export function readStars(shot: RgbaImage, box: Rect, row: StarRow): RefinementR
     level,
     full,
     family,
-    sure: level === 0 ? magenta < SURE.r0Pink && bluest >= SURE.whiteBlue : refined,
+    sure: level === 0 ? !mixed && magenta < SURE.r0Pink && bluest >= SURE.whiteBlue : refined,
   }
 }

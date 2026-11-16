@@ -31,7 +31,9 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { readSavedBoards, readTeamsSlot } from '@/composables/useGridPersistence'
 import { useToast } from '@/composables/useToast'
 import type { AttrRecord } from '@/lib/characters/attributes'
-import { tilesLayout, type MapLayout } from '@/lib/maps'
+import { tilesLayout } from '@/lib/mapLookup'
+import { modeLayout } from '@/lib/mapModeLists'
+import type { MapLayout } from '@/lib/maps'
 import type { SlData } from '@/lib/pvp/data/types'
 import { shownFormation } from '@/lib/pvp/generator/formation'
 import { generatorMode, isGeneratorFrom, type GeneratorFrom } from '@/lib/pvp/generator/handover'
@@ -136,12 +138,14 @@ watch(mode, openMode)
 
 const boardsFor = (file: SlData): SlBoard[] => {
   const own = pageBoards.value.find((boards) => boards.page === maps.value)
-  return own
-    ? layoutBoards(file, own.layouts)
-    : slBoards(
+  if (own) return layoutBoards(file, own.layouts)
+  const list = variant.value ?? DEFAULT_VARIANT
+  const keys = variantMaps(mode.value, list)
+  return list === DEFAULT_VARIANT
+    ? slBoards(file, keys)
+    : layoutBoards(
         file,
-        variantMaps(mode.value, variant.value ?? DEFAULT_VARIANT),
-        variant.value === null || variant.value === DEFAULT_VARIANT ? undefined : variant.value,
+        keys.map((key) => modeLayout(list, key)!),
       )
 }
 

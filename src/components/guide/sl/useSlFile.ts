@@ -24,9 +24,8 @@ interface SlHeading {
 
 /* The PvP data file and the Supreme League worker for a page that draws from
  * both. The file is read after mount, as the pages are pre-rendered with their
- * heading alone, and stays plain, never reactive, so the decoded data stays
- * out of anything the console can reach. `locked` holds the heroes kept off
- * teams (withheldHeroes), which the pages' pickers lock. */
+ * heading alone. `locked` holds the heroes kept off teams (withheldHeroes),
+ * which the pages' pickers lock. */
 export function useSlFile() {
   const route = useRoute()
   const gameData = useGameDataStore()

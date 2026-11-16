@@ -14,7 +14,7 @@ const { size, backdrop } = defineProps<{ size?: number; backdrop?: string }>()
     class="disc"
     :style="{
       '--size': size ? `${size}px` : undefined,
-      backgroundImage: backdrop ? `url(${backdrop})` : undefined,
+      background: backdrop,
     }"
   >
     <slot />
@@ -33,8 +33,6 @@ const { size, backdrop } = defineProps<{ size?: number; backdrop?: string }>()
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 0 0 2px var(--disc-ring, #fff);
-  background-size: cover;
-  background-position: center;
 }
 .disc::before {
   content: '';

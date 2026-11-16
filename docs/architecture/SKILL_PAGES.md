@@ -52,7 +52,7 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Text and names
 
-`src/utils/textHighlight.ts` defines the shared grammar: `[[value]]` highlights, `[[label|key]]` looks up a glossary tooltip, and `{atk}`-style tags render stat pills. Search, import validation and description extraction share its token parser. `SkillKeywordTooltip` delegates events from the reader's article because keyword spans come from `v-html`.
+`src/utils/textHighlight.ts` defines the shared grammar: `[[value]]` highlights, `[[label|key]]` opens a tooltip with the key's glossary text, its picture from the data pack's keyword pictures, or both, and `{atk}`-style tags render stat pills. Search, import validation and description extraction share its token parser. `SkillKeywordTooltip` delegates events from the reader's article because keyword spans come from `v-html`.
 
 `heroDisplayName` falls back from `_hero.name` in the text locale to the curated English name, then the slug. Chrome names also serve as search aliases.
 

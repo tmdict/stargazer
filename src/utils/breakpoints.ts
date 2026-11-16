@@ -4,9 +4,10 @@
 // (CSS can't reference these consts), and the two must match.
 //
 //   480 / 768   mobile / tablet
-//   1220        two-column stack point (arena, /skills)
+//   1220        two-column stack point (arena, /skills); the board's desktop size
 //   1280        desktop-chrome boundary (padding, gaps, font tuning)
-//   1599        laptop: board, portrait and control sizes a step under desktop
+//   1599        portrait and control sizes a step under those of wider screens
+//   1600        the board's wide size
 //   1600 / 1920 reader-column width steps (SkillsBrowser)
 //
 // Other widths (374, 420, 640, 700, 720, 920, 1100, 1320) are local to the
@@ -15,9 +16,9 @@
 export const MOBILE_MAX_WIDTH = 480
 export const TABLET_MAX_WIDTH = 768
 export const SPLIT_MIN_WIDTH = 1220
-export const LAPTOP_MAX_WIDTH = 1599
+export const DESKTOP_MAX_WIDTH = 1599
 
-export type Breakpoint = 'mobile' | 'tablet' | 'laptop' | 'desktop'
+export type Breakpoint = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'wide'
 
 // The tiers where the side panel is a bottom sheet.
 export const isNarrowBreakpoint = (breakpoint: Breakpoint): boolean =>

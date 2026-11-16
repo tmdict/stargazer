@@ -30,7 +30,7 @@ const title = computed(() => i18n.t('app.charm'))
 const heroes = computed(() => oldestFirst(props.charm.heroes))
 
 const language = computed(() => (applied.value ? getSkillLanguage(applied.value) : undefined))
-const text = computed(() => language.value?.charms ?? undefined)
+const text = computed(() => language.value?.charms)
 const tiersEl = ref<HTMLElement | null>(null)
 const tiers = computed(() =>
   (text.value?.charms[props.charm.id] ?? []).map((description, i) => ({
