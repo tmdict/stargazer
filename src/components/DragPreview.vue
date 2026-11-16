@@ -2,18 +2,16 @@
 import { computed } from 'vue'
 
 import { useDragDrop } from '@/composables/useDragDrop'
-import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { characterDisplayName } from '@/utils/nameFormatting'
+import { heroBackdrop } from '@/utils/tierBackdrop'
 
 const { isDragging, draggedUnit, draggedImageSrc, dragPreviewPosition } = useDragDrop()
-const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
-const backgroundImage = computed(() => {
+const backdrop = computed(() => {
   const level = draggedUnit.value?.hero?.level
-  const bgImage = gameData.icons[`bg-${level}`]
-  return bgImage ? `url(${bgImage})` : ''
+  return level === undefined ? undefined : heroBackdrop(level)
 })
 </script>
 
@@ -27,14 +25,7 @@ const backgroundImage = computed(() => {
         top: `${dragPreviewPosition.y}px`,
       }"
     >
-      <div
-        class="character-preview"
-        :style="{
-          backgroundImage: backgroundImage,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }"
-      >
+      <div class="character-preview" :style="{ background: backdrop }">
         <img
           :src="draggedImageSrc"
           :alt="draggedUnit.hero ? characterDisplayName(i18n.t, draggedUnit.hero) : ''"

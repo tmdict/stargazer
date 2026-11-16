@@ -14,6 +14,7 @@ import type { TagPick } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { characterDisplayName } from '@/utils/nameFormatting'
+import { heroBackdrop } from '@/utils/tierBackdrop'
 
 const props = defineProps<{
   character: CharacterType
@@ -155,9 +156,7 @@ const handleDragEnd = (event: DragEvent) => {
           ticked: tickable && ticked,
           inspectable: inspectTarget,
         }"
-        :style="{
-          background: `url(${gameDataStore.getIcon(`bg-${character.level}`)}) center/cover`,
-        }"
+        :style="{ background: heroBackdrop(character.level) }"
         :draggable="isDraggable"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"

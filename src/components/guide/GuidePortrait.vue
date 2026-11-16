@@ -8,6 +8,7 @@ import GuideDisc from './GuideDisc.vue'
 import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { curatedHeroName } from '@/utils/skillLabels'
+import { heroBackdrop } from '@/utils/tierBackdrop'
 
 const { slug, lang, size } = defineProps<{ slug: string; lang: AppLocale; size?: number }>()
 
@@ -17,7 +18,7 @@ const level = computed(() => gameData.characters.find((c) => c.name === slug)?.l
 </script>
 
 <template>
-  <GuideDisc :size :backdrop="gameData.getIcon(`bg-${level}`)" :title="curatedHeroName(slug, lang)">
+  <GuideDisc :size :backdrop="heroBackdrop(level)" :title="curatedHeroName(slug, lang)">
     <img :src="gameData.getCharacterImage(slug)" alt="" />
   </GuideDisc>
 </template>
