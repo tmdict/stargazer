@@ -6,7 +6,17 @@ import { firstMoves } from '@/lib/hd/shop/moves'
 import { solveNextRound, stopReason } from '@/lib/hd/shop/nextRound'
 import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import type { Goal, LevelOdds, Move, Pools, ShopCard } from '@/lib/hd/shop/types'
-import { card, cards, FACTS, hero, HEROES, levelOdds, pools, REROLL } from '../../fixtures/hdShop'
+import {
+  card,
+  cards,
+  FACTS,
+  hero,
+  HEROES,
+  levelOdds,
+  pools,
+  read,
+  REROLL,
+} from '../../fixtures/hdShop'
 
 const buy = (at: number): Move => ({ kind: 'buy', card: at })
 const lock = (...locks: number[]): Move => ({ kind: 'reroll', locks })
@@ -31,8 +41,9 @@ function solve(asked: Asked) {
   }
   const moves = firstMoves({ ...shop, badges: Infinity }, wanted, FACTS)
   const pool = asked.pools ?? pools()
-  const min = solveMinBadges(shop, asked.goal, asked.odds, pool, FACTS)!
-  const stop = solveNextRound(shop, asked.goal, asked.odds, asked.next ?? null, pool, FACTS)!
+  const reading = read(asked.odds, shop.cards)
+  const min = solveMinBadges(shop, asked.goal, reading, pool, FACTS)
+  const stop = solveNextRound(shop, asked.goal, reading, asked.next ?? null, pool, FACTS)
   const best = min.best(moves)
   const plan = stop.best(moves)
   return {
@@ -42,7 +53,7 @@ function solve(asked: Asked) {
     best,
     plan,
     get reason() {
-      const chance = solveMaxChance(shop, asked.goal, asked.odds, pool, FACTS)!
+      const chance = solveMaxChance(shop, asked.goal, reading, pool, FACTS)
       const wait = asked.next ? plan : null
       return best && stopReason(best, shop, FACTS, (move) => chance.chance(move), wait)
     },
@@ -124,12 +135,6 @@ describe('the check cases', () => {
     expect(best!.move).toEqual(REROLL)
     expect(best!.cost.ceiling).toBeCloseTo(3 / (1 - miss) + 40, 6)
     expect(best!.cost.ceiling).toBeCloseTo(156.0991, 3)
-  })
-
-  it('E7: a shop that cannot happen has no answer', () => {
-    const shop = { badges: 60, cards: cards(...Array(8).fill(card('epic-equipment'))) }
-    expect(solveMinBadges(shop, hero('L1'), levelOdds(1), pools(), FACTS)).toBeNull()
-    expect(solveNextRound(shop, hero('L1'), levelOdds(1), null, pools(), FACTS)).toBeNull()
   })
 
   it('E8: stops when the badges cannot finish this round, and costs the wait at level 3', () => {
@@ -387,8 +392,9 @@ describe('rules that always hold', () => {
     const shop = { badges: 60, cards: busy }
     for (const copies of [1, 3, 2, 4]) {
       const goal = hero('L1', copies)
-      const visit = solveMinBadges(shop, goal, levelOdds(5), pools(), FACTS, kept)!
-      const fresh = solveMinBadges(shop, goal, levelOdds(5), pools(), FACTS)!
+      const reading = read(levelOdds(5), busy)
+      const visit = solveMinBadges(shop, goal, reading, pools(), FACTS, kept)
+      const fresh = solveMinBadges(shop, goal, reading, pools(), FACTS)
       for (const move of [REROLL, lock(0), buy(2), buy(3)]) {
         expect(visit.cost(move)).toEqual(fresh.cost(move))
       }

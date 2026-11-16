@@ -4,8 +4,8 @@
 import { goalModel } from './moves'
 import type { Outlook } from './search'
 import { createSolverCache, type SolverCache } from './solverCache'
-import { readShop } from './sources'
-import type { ChanceRange, EnteredShop, Goal, LevelOdds, Move, Pools, ShopFacts } from './types'
+import { sourcesOf, type ShopReading } from './sources'
+import type { ChanceRange, EnteredShop, Goal, Move, Pools, ShopFacts } from './types'
 
 export interface MaxChance {
   /** What the tables alone say about a first move. Quick, and never wrong. */
@@ -18,38 +18,37 @@ export interface MaxChance {
 }
 
 /**
- * Null when the shop as entered cannot happen at this level. A cache passed in
- * `kept` carries the tables and the searched shops from one call to the next.
+ * `reading` is the shop's cards as read at its level. A cache passed in `kept`
+ * carries the tables and the searched shops from one call to the next.
  */
 export function solveMaxChance(
   shop: EnteredShop,
   goal: Goal,
-  odds: LevelOdds,
+  reading: ShopReading,
   pools: Pools,
   facts: ShopFacts,
   kept: SolverCache = createSolverCache(),
-): MaxChance | null {
-  const reading = readShop(odds, shop.cards)
-  if (!reading) return null
-  const model = goalModel(goal, odds, pools, facts)
+): MaxChance {
+  const model = goalModel(goal, reading.odds, pools, facts)
   const badges = Math.max(0, shop.badges)
   const { search } = kept.solver(model, badges)
   const prices = new Map(facts.goods.map((good) => [good.name, good.price]))
 
   const at = new Map(reading.cards.map((card, i) => [card, i]))
-  const start = search.board(
-    reading.cards.map((card) => model.kindOf(shop.cards[card])),
-    reading.worlds,
-  )
+  const kinds = reading.cards.map((card) => model.kindOf(shop.cards[card]))
+  const boardOf = (chosen: number[]) =>
+    search.board(
+      chosen.map((i) => kinds[i]),
+      sourcesOf(reading, chosen),
+    )
+  const every = kinds.map((_, i) => i)
+  const start = boardOf(every)
 
   const after = (move: Move, next: Outlook): number => {
     if (move.kind === 'reroll') {
       if (badges < model.reroll) return 0
-      const locked = search.project(
-        start,
-        move.locks.flatMap((card) => at.get(card) ?? []),
-      )
-      return next.afterRoll(locked, badges - model.reroll, model.need)
+      const locked = move.locks.flatMap((card) => at.get(card) ?? []).sort((a, b) => a - b)
+      return next.afterRoll(boardOf(locked), badges - model.reroll, model.need)
     }
     const card = shop.cards[move.card]
     const i = at.get(move.card)
@@ -59,10 +58,7 @@ export function solveMaxChance(
     // hand badges back for the heroes it gives.
     const left = badges - (prices.get(card.good) ?? Infinity)
     if (left < 0) return 0
-    const rest = search.project(
-      start,
-      start.items.map((_, j) => j).filter((j) => j !== i),
-    )
+    const rest = boardOf(every.filter((j) => j !== i))
     return model
       .wasted(card)
       .reduce((sum, o) => sum + o.chance * next.from(rest, left + o.refund, model.need), 0)

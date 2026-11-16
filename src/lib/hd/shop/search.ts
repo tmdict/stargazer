@@ -46,7 +46,6 @@ export interface Outlook {
 
 export interface Search {
   board: (items: number[], worlds: World[]) => Board
-  project: (board: Board, cards: number[]) => Board
   /** The best chance, within the tolerance. */
   value: Outlook
   /** What the tables alone say. */
@@ -103,20 +102,16 @@ export function createSearch(model: GoalModel, tables: Tables, tolerance: number
     return { items, worlds: list }
   }
 
-  const project = (from: Board, chosen: number[]): Board =>
-    board(
-      chosen.map((i) => from.items[i]),
+  const without = (from: Board, card: number): Board => {
+    const rest = from.items.map((_, i) => i).filter((i) => i !== card)
+    return board(
+      rest.map((i) => from.items[i]),
       from.worlds.map((world) => ({
-        origins: chosen.map((i) => world.origins[i]),
+        origins: rest.map((i) => world.origins[i]),
         chance: world.chance,
       })),
     )
-
-  const without = (from: Board, card: number) =>
-    project(
-      from,
-      from.items.map((_, i) => i).filter((i) => i !== card),
-    )
+  }
 
   // ---- Beliefs ----
 
@@ -386,7 +381,6 @@ export function createSearch(model: GoalModel, tables: Tables, tolerance: number
 
   return {
     board,
-    project,
     value: outlook(searched),
     floor: outlook(floorAt),
     ceiling: outlook(ceilingAt),

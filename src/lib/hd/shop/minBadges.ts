@@ -5,8 +5,8 @@
 import type { Costs } from './costs'
 import { goalModel, type GoalModel } from './moves'
 import { createSolverCache, type SolverCache } from './solverCache'
-import { readShop, type ShopReading } from './sources'
-import type { CostRange, EnteredShop, Goal, LevelOdds, Move, Pools, ShopFacts } from './types'
+import { sourcesOf, type ShopReading } from './sources'
+import type { CostRange, EnteredShop, Goal, Move, Pools, ShopFacts } from './types'
 
 /** Costs this close count as equal when a move is picked. */
 export const NEAR_TIE = 0.05
@@ -49,18 +49,18 @@ export function costView(
   const kindOf = (card: number) => kinds[at.get(card) ?? -1] ?? -1
 
   // The chance of each code the chosen cards can form, together with the
-  // sources behind the chosen cards that cannot help.
+  // sources behind the chosen cards that cannot help. `chosen` is in ascending order.
   const spread = (chosen: readonly number[]) => {
     const merged = new Map<number, number>()
-    for (const world of reading.worlds) {
+    for (const world of sourcesOf(reading, chosen)) {
       let code = 0
       let held = 0
-      for (const i of chosen) {
-        const source = world.origins[i]
-        const add = kinds[i] >= 0 ? addOf[source].get(kinds[i]) : undefined
+      world.origins.forEach((source, n) => {
+        const kind = kinds[chosen[n]]
+        const add = kind >= 0 ? addOf[source].get(kind) : undefined
         if (add === undefined) held |= 1 << source
         else code += add
-      }
+      })
       const key = code * 256 + held
       merged.set(key, (merged.get(key) ?? 0) + world.chance)
     }
@@ -85,7 +85,8 @@ export function costView(
       if (need <= 0) return FREE
       let floor = 0
       let ceiling = 0
-      for (const [key, chance] of spread(locks.flatMap((card) => at.get(card) ?? []))) {
+      const kept = locks.flatMap((card) => at.get(card) ?? []).sort((a, b) => a - b)
+      for (const [key, chance] of spread(kept)) {
         const rolled = costs.rolled(need, key % 256)
         const code = Math.floor(key / 256)
         floor += chance * rolled.floor[code]
@@ -139,18 +140,16 @@ export interface MinBadges {
   best: (moves: readonly Move[]) => CostRow | null
 }
 
-/** Null when the shop as entered cannot happen at this level. */
+/** `reading` is the shop's cards as read at its level. */
 export function solveMinBadges(
   shop: EnteredShop,
   goal: Goal,
-  odds: LevelOdds,
+  reading: ShopReading,
   pools: Pools,
   facts: ShopFacts,
   kept: SolverCache = createSolverCache(),
-): MinBadges | null {
-  const reading = readShop(odds, shop.cards)
-  if (!reading) return null
-  const model = goalModel(goal, odds, pools, facts)
+): MinBadges {
+  const model = goalModel(goal, reading.odds, pools, facts)
   const costs = kept.costs(model)
   const view = costView(shop, reading, model, costs, facts)
 

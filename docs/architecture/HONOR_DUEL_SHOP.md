@@ -18,7 +18,7 @@ The hard part is that a player does not see everything that decides the next sho
                                         └─────────────────────────────────┘
 ```
 
-A press of Calculate sends one request to the shop worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. A shop no source assignment explains is refused as impossible. It then makes one goal for each wanted item, a goal for "any wanted piece", and goals for "any wanted hero" and "any target" when every hero needs a single copy.
+A press of Calculate sends one request to the shop worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. A shop no source assignment explains is refused as impossible. A locked card of a product the level never sells was kept from a lower level, and is read against the nearest level that sells it. It then makes one goal for each wanted item, a goal for "any wanted piece", and goals for "any wanted hero" and "any target" when every hero needs a single copy.
 
 A shop level follows from the round, which the form offers as buttons grouped by level. When the level rises next round, stopping is measured against the next level's sources, and the form says so beside Calculate.
 
@@ -66,7 +66,8 @@ The odds view always shows the measured table in this repo, with its measured ra
 
 ## Gotchas
 
-- A locked card keeps its source number when the shop level rises. The stopping answer depends on it: a lock kept across the level change blocks that source in the next level's table.
+- A locked card keeps its source number when the shop level rises. The stopping answer depends on it: a lock kept across the level change blocks that source in the next level's table. The reading of a later round depends on it too: `ShopReading.odds` lists a carried card's product at 0% for each source that may hold it, so the card can be bought or kept without changing any draw. Only a locked card is read this way, so the same card with its lock taken off is refused.
+- Locked cards with no product named are interchangeable. A reading lists the set of sources they hold once, in place of every way to hand those sources out, and `sourcesOf` spreads a move that keeps only some of them over every subset of that size.
 - Copies of different heroes are never added together. The goals that span heroes exist only when every wanted hero needs one copy.
 - A source may only ever show Artifact EXP at some level. A pack table may list such a source as an empty list; `checkOdds` returns the table with Artifact EXP listed for it, because the card is on show all the same and reading the shop has to match it to a source.
 - The three pictures the cards use (the badge, the Artifact XP icon and the random card) come from the data pack. A build without them draws a gold dot for the badge and text for the other two.

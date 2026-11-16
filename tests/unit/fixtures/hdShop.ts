@@ -7,6 +7,7 @@
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { solveMaxChance } from '@/lib/hd/shop/maxChance'
 import { checkOdds } from '@/lib/hd/shop/odds'
+import { readShop, type ShopReading } from '@/lib/hd/shop/sources'
 import type {
   Goal,
   LevelOdds,
@@ -50,6 +51,13 @@ export const cards = (...shown: ShopCard[]): ShopCard[] => [
   ...Array.from({ length: 8 - shown.length }, () => card()),
 ]
 
+/** The cards as read at a level, for a shop the level can show. */
+export function read(odds: LevelOdds, shown: readonly ShopCard[]): ShopReading {
+  const reading = readShop(odds, shown)
+  if (!reading) throw new Error('the shop cannot happen at this level')
+  return reading
+}
+
 export const hero = (name: string, copies = 1): Goal => ({ heroes: [name], equipment: [], copies })
 
 export const REROLL: Move = { kind: 'reroll', locks: [] }
@@ -64,13 +72,12 @@ export interface Asked {
 
 /** The chance after `move`, searched to the end. */
 export function chance(asked: Asked, move: Move = REROLL): number {
-  const solved = solveMaxChance(
-    { badges: asked.badges, cards: asked.cards ?? cards() },
+  const shop = { badges: asked.badges, cards: asked.cards ?? cards() }
+  return solveMaxChance(
+    shop,
     asked.goal,
-    levelOdds(asked.level),
+    read(levelOdds(asked.level), shop.cards),
     pools(asked.sell),
     FACTS,
-  )
-  if (!solved) throw new Error('the shop cannot happen at this level')
-  return solved.chance(move)
+  ).chance(move)
 }

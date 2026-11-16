@@ -5,7 +5,7 @@
 import { cheaper, costView, NEAR_TIE, type CostRow } from './minBadges'
 import { goalModel } from './moves'
 import { createSolverCache, type SolverCache } from './solverCache'
-import { readShop, type ShopReading } from './sources'
+import type { ShopReading } from './sources'
 import type {
   CostRange,
   EnteredShop,
@@ -46,9 +46,7 @@ export interface NextRound {
 
 /**
  * The next level's odds with a place for every card that may be carried into
- * it. A locked card keeps its source number when the level rises, so a source
- * can sit behind a product it never makes at the new level. Listing that
- * product at 0% gives the card a code there without changing any draw.
+ * it, as `ShopReading.odds` has for the cards carried into this one.
  */
 function carriedOdds(next: LevelOdds, cards: readonly ShopCard[], reading: ShopReading): LevelOdds {
   const extra: SourceEntry[][] = next.map(() => [])
@@ -65,21 +63,19 @@ function carriedOdds(next: LevelOdds, cards: readonly ShopCard[], reading: ShopR
 }
 
 /**
- * `nextOdds` is the next level's table when the shop level rises next round,
- * else null. Null when the shop as entered cannot happen at this level.
+ * `reading` is the shop's cards as read at its level. `nextOdds` is the next
+ * level's table when the shop level rises next round, else null.
  */
 export function solveNextRound(
   shop: EnteredShop,
   goal: Goal,
-  odds: LevelOdds,
+  reading: ShopReading,
   nextOdds: LevelOdds | null,
   pools: Pools,
   facts: ShopFacts,
   kept: SolverCache = createSolverCache(),
-): NextRound | null {
-  const reading = readShop(odds, shop.cards)
-  if (!reading) return null
-  const then = nextOdds ? carriedOdds(nextOdds, shop.cards, reading) : odds
+): NextRound {
+  const then = nextOdds ? carriedOdds(nextOdds, shop.cards, reading) : reading.odds
   const model = goalModel(goal, then, pools, facts)
   const view = costView(shop, reading, model, kept.costs(model), facts)
   const prices = new Map(facts.goods.map((good) => [good.name, good.price]))

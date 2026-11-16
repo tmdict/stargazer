@@ -185,17 +185,15 @@ function prepare(
   request: ShopRequest,
   { name, goal }: { name: AnswerGoal; goal: Goal },
   reading: ShopReading,
-  odds: LevelOdds,
   nextOdds: LevelOdds | null,
   facts: ShopFacts,
   cache: SolverCache,
 ): Work {
   const { shop, pools, startFrom } = request
   const { cards } = shop
-  const model = goalModel(goal, odds, pools, facts)
-  // The shop was read before any goal was prepared, so none of these is null.
-  const max = solveMaxChance(shop, goal, odds, pools, facts, cache)!
-  const min = solveMinBadges(shop, goal, odds, pools, facts, cache)!
+  const model = goalModel(goal, reading.odds, pools, facts)
+  const max = solveMaxChance(shop, goal, reading, pools, facts, cache)
+  const min = solveMinBadges(shop, goal, reading, pools, facts, cache)
 
   const wanted = {
     heroes: new Set(request.heroes.map((hero) => hero.name)),
@@ -246,7 +244,7 @@ function prepare(
     rises: nextOdds !== null,
     plan: () => {
       if (plan !== undefined) return plan
-      const next = solveNextRound(shop, goal, odds, nextOdds, pools, facts, cache)!
+      const next = solveNextRound(shop, goal, reading, nextOdds, pools, facts, cache)
       const ways = [
         { kind: 'reroll', locks: existing } as Move,
         ...firstMoves({ ...shop, badges: Infinity }, wanted, facts),
@@ -373,9 +371,9 @@ export function* calculateShop(
   checkRequest(request)
   const { shop } = request
   const level = levelOfRound(request.round, facts.levelRounds)
-  const odds = table.levels[level - 1]
   const rises = levelOfRound(request.round + 1, facts.levelRounds) > level
-  const reading = readShop(odds, shop.cards)
+  const lower = table.levels.slice(0, level - 1).reverse()
+  const reading = readShop(table.levels[level - 1], shop.cards, lower)
   if (!reading) {
     yield { error: 'impossible-shop' }
     return
@@ -383,9 +381,7 @@ export function* calculateShop(
 
   const works: Work[] = []
   for (const goal of goalsOf(request)) {
-    works.push(
-      prepare(request, goal, reading, odds, rises ? table.levels[level] : null, facts, cache),
-    )
+    works.push(prepare(request, goal, reading, rises ? table.levels[level] : null, facts, cache))
     yield null
   }
   // A goal's way to stop into a higher level fills that level's cost tables,

@@ -5,6 +5,7 @@ import { firstMoves } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { OutOfTime } from '@/lib/hd/shop/search'
 import { createSolverCache } from '@/lib/hd/shop/solverCache'
+import { readShop } from '@/lib/hd/shop/sources'
 import type { Goal, LevelOdds, Move, OddsTable, PoolHero, ShopCard } from '@/lib/hd/shop/types'
 import {
   card,
@@ -16,6 +17,7 @@ import {
   levelOdds,
   ODDS,
   pools,
+  read,
   REROLL,
   type Asked,
 } from '../../fixtures/hdShop'
@@ -99,7 +101,7 @@ describe('a table where one source always makes a pack', () => {
   const shop = [card('random-pack'), ...Array.from({ length: 7 }, () => card('artifact-exp'))]
   const two = HEROES.slice(0, 2)
   const solve = (badges: number) =>
-    solveMaxChance({ badges, cards: shop }, hero('L1', 2), odds, pools([], two), FACTS)!
+    solveMaxChance({ badges, cards: shop }, hero('L1', 2), read(odds, shop), pools([], two), FACTS)
 
   it('gives one pack to 18 badges and to 36, and a second pack to 39', () => {
     expect(solve(18).chance(buy(0))).toBeCloseTo(1 / 2, 9)
@@ -115,16 +117,14 @@ describe('a table where one source always makes a pack', () => {
     const solved = solveMaxChance(
       { badges: 39, cards: shop },
       hero('L1', 2),
-      checked,
+      read(checked, shop),
       pools([], two),
       FACTS,
-    )!
+    )
     expect(solved.chance(buy(0))).toBeCloseTo(57 / 64, 9)
     // The pack can only have come from the one source that makes it.
     const blocked = [card(), card('random-pack'), card('random-pack')]
-    expect(
-      solveMaxChance({ badges: 39, cards: blocked }, hero('L1'), checked, pools(), FACTS),
-    ).toBeNull()
+    expect(readShop(checked, blocked)).toBeNull()
   })
 })
 
@@ -255,10 +255,10 @@ describe('against a counter that follows every outcome', () => {
     const solved = solveMaxChance(
       { badges, cards: shop },
       hero('L1', need),
-      odds,
+      read(odds, shop),
       pools(sell, three),
       FACTS,
-    )!
+    )
     return Math.max(
       ...moves.map((move) => Math.abs(solved.chance(move) - counter(need, badges, shown, move))),
     )
@@ -352,10 +352,10 @@ describe('rules that always hold', () => {
     const solved = solveMaxChance(
       { badges: 48, cards: shop },
       hero('L1', 2),
-      levelOdds(3),
+      read(levelOdds(3), shop),
       pools(),
       FACTS,
-    )!
+    )
     const wanted = { heroes: new Set(['L1']), equipment: new Set<string>() }
     const moves = firstMoves({ badges: 48, cards: shop }, wanted, FACTS)
     expect(moves.length).toBeGreaterThan(8)
@@ -383,10 +383,10 @@ describe('heavier requests', () => {
     const solved = solveMaxChance(
       { badges: 150, cards: cards() },
       hero('L1', 4),
-      ODDS.levels[4]!,
+      read(ODDS.levels[4]!, cards()),
       pools(),
       FACTS,
-    )!
+    )
     expect(() => solved.chance(REROLL, 0)).toThrow(OutOfTime)
     const { floor, ceiling } = solved.range(REROLL)
     expect(floor).toBeLessThan(ceiling)
@@ -402,10 +402,11 @@ describe('a cache kept through a shop visit', () => {
   )
   const moves = [REROLL, lock(0), lock(0, 1), buy(0), buy(1)]
   const pressed = (asked: Asked, kept = createSolverCache()) => {
+    const shown = asked.cards ?? cards()
     const solved = solveMaxChance(
-      { badges: asked.badges, cards: asked.cards ?? cards() },
+      { badges: asked.badges, cards: shown },
       asked.goal,
-      levelOdds(asked.level),
+      read(levelOdds(asked.level), shown),
       pools(asked.sell),
       FACTS,
       kept,

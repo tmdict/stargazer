@@ -102,6 +102,21 @@ describe('the goals of a request', () => {
       { error: 'impossible-shop' },
     ])
   })
+
+  it('buys a wanted piece kept locked into a level that no longer sells its rarity', () => {
+    const piece: WantedEquipment = { name: 'r1', tier: 'rare' }
+    const shop = cards(card('rare-equipment', { equipment: 'r1', locked: true }), card('hero'))
+    const { r1 } = answers({
+      round: 6,
+      cards: shop,
+      heroes: [],
+      equipment: [piece],
+      pools: pools(),
+    })
+    expect(r1!.chance.best!.move).toEqual(buy(0))
+    expect(r1!.chance.best!.chance.floor).toBe(1)
+    expect(r1!.badges.best!.move).toEqual(buy(0))
+  })
 })
 
 // One source always makes a hero card, of L1 or L2, and the rest never help.

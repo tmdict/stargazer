@@ -5,7 +5,7 @@ import { checkShopFacts, SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { goalModel } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { sampleShop } from '@/lib/hd/shop/sample'
-import { readShop } from '@/lib/hd/shop/sources'
+import { readShop, sourcesOf } from '@/lib/hd/shop/sources'
 import type { OddsTable, ShopCard } from '@/lib/hd/shop/types'
 import { card, cards, FACTS, hero, HEROES, levelOdds, ODDS, pools } from '../../fixtures/hdShop'
 
@@ -38,7 +38,62 @@ describe('reading the shop', () => {
   it('lets a locked blank card hold a source', () => {
     const odds = [[{ good: 'hero', percent: 100 }], [{ good: 'random-pack', percent: 100 }]]
     const reading = readShop(odds, [card(null, { locked: true }), card('hero')])!
-    expect(reading.worlds).toEqual([{ origins: [1, 0], chance: 1 }])
+    expect(reading.cards).toEqual([1, 0])
+    expect(reading.worlds).toEqual([{ origins: [0, 1], chance: 1 }])
+  })
+
+  it('keeps some of the locked blank cards as every way of handing out their sources would', () => {
+    const odds = levelOdds(2)
+    const blank = card(null, { locked: true })
+    const reading = readShop(odds, [blank, card('hero'), blank, blank, card('rare-equipment')])!
+    expect(reading.cards).toEqual([1, 4, 0, 2, 3])
+
+    // The hero card, and the first two blank cards for the sources they hold together.
+    const seen = (hero: number, held: number[]) => `${hero}|${held.sort().join()}`
+    const share = (good: string, source: number) =>
+      odds[source]!.reduce((sum, entry) => sum + (entry.good === good ? entry.percent : 0), 0)
+    const expected = new Map<string, number>()
+    let total = 0
+    const sources = odds.map((_, source) => source)
+    for (const hero of sources) {
+      for (const piece of sources) {
+        for (const a of sources) {
+          for (const b of sources) {
+            for (const c of sources) {
+              if (new Set([hero, piece, a, b, c]).size < 5) continue
+              const weight = share('hero', hero) * share('rare-equipment', piece)
+              expected.set(seen(hero, [a, b]), (expected.get(seen(hero, [a, b])) ?? 0) + weight)
+              total += weight
+            }
+          }
+        }
+      }
+    }
+
+    const found = new Map<string, number>()
+    for (const world of sourcesOf(reading, [0, 2, 3])) {
+      const key = seen(world.origins[0]!, world.origins.slice(1))
+      found.set(key, (found.get(key) ?? 0) + world.chance)
+    }
+    expect([...found.keys()].sort()).toEqual(
+      [...expected.keys()].filter((key) => expected.get(key)).sort(),
+    )
+    for (const [key, chance] of found) expect(chance).toBeCloseTo(expected.get(key)! / total, 12)
+  })
+
+  it('reads a locked card of a product its level never makes against the level below', () => {
+    const lower = [levelOdds(3), levelOdds(2), levelOdds(1)]
+    const kept = cards(card('rare-equipment', { locked: true }), card('hero'))
+    expect(readShop(levelOdds(4), kept)).toBeNull()
+
+    // At level 3 only the first and the fifth source make Rare equipment.
+    const reading = readShop(levelOdds(4), kept, lower)!
+    expect(new Set(reading.worlds.map((world) => world.origins[0]))).toEqual(new Set([0, 4]))
+    expect(reading.odds[0]).toContainEqual({ good: 'rare-equipment', percent: 0 })
+    expect(reading.odds[1]).toEqual(levelOdds(4)[1])
+
+    const open = cards(card('rare-equipment'), card('hero'))
+    expect(readShop(levelOdds(4), open, lower)).toBeNull()
   })
 })
 
