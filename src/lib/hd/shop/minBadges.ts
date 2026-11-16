@@ -119,6 +119,14 @@ export interface MinBadges {
   /** Whether a reroll can ever show something that helps the goal. */
   reachable: boolean
   /**
+   * The first moves compared, in groups of moves that differ only in locks of
+   * no use to this goal. Buying each different card that can help is a group
+   * of one. A reroll may keep cards of the wanted hero that together hold fewer
+   * copies than are still needed, and a group holds the rerolls that keep the
+   * same such cards, one for each choice among the other locks already set.
+   */
+  options: Move[][]
+  /**
    * The average cost after a first move. The true figure lies in the range, and
    * the ceiling is the one a player can count on.
    */
@@ -159,8 +167,44 @@ export function solveMinBadges(
     move.kind === 'buy' ? others.length : others.filter((card) => move.locks.includes(card)).length
   const locks = (move: Move) => (move.kind === 'buy' ? 0 : move.locks.length)
 
+  // Cards of one kind are interchangeable, so a reroll keeps the first few.
+  const partial = new Map<number, number[]>()
+  const offers = new Map<string, number>()
+  shop.cards.forEach((card, index) => {
+    const kind = view.kindOf(index)
+    if (kind < 0) return
+    const key = JSON.stringify([card.good, card.hero, card.equipment])
+    if (!offers.has(key)) offers.set(key, index)
+    if (model.kinds[kind].certain) partial.set(kind, [...(partial.get(kind) ?? []), index])
+  })
+  let own: { cards: number[]; gain: number }[] = [{ cards: [], gain: 0 }]
+  for (const [kind, held] of partial) {
+    const each = model.kinds[kind].outcomes[0].gain
+    own = own.flatMap((set) =>
+      held
+        .flatMap((_, count) => {
+          const gain = set.gain + each * (count + 1)
+          return gain < model.need
+            ? [{ cards: [...set.cards, ...held.slice(0, count + 1)], gain }]
+            : []
+        })
+        .concat(set),
+    )
+  }
+  const spare = Array.from({ length: 1 << others.length }, (_, mask) =>
+    others.filter((_, bit) => (mask >> bit) & 1),
+  )
+  const options: Move[][] = [...offers.values()].map((card) => [{ kind: 'buy', card }])
+  for (const set of own) {
+    const rerolls = spare
+      .map((extra) => [...set.cards, ...extra].sort((a, b) => a - b))
+      .filter((locks) => locks.length < shop.cards.length)
+    if (rerolls.length) options.push(rerolls.map((locks) => ({ kind: 'reroll', locks })))
+  }
+
   return {
     reachable: costs.reachable,
+    options,
     cost,
     best(moves) {
       const rows = moves
