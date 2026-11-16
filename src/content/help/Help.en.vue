@@ -636,7 +636,10 @@ const SKILL = {
       </li>
       <li>
         <IconGlobe :size="18" />
-        <span>Skill pages can be read in 16 languages. Use the menu at the top of the page.</span>
+        <span
+          >Skill pages can be read in 16 languages, artifact and phantimal text included. Use the
+          menu at the top of the page.</span
+        >
       </li>
       <li>
         <IconImage :size="18" />

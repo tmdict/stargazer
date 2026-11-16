@@ -538,7 +538,11 @@ const SKILL = {
           ><b>攻略</b>的机制页列出了每种机制的全部英雄，同时选两种以上，可以看到谁全都有。</span
         >
       </li>
-      <li><IconGlobe :size="18" /><span>技能页面支持 16 种语言，在页面顶部的菜单里切换。</span></li>
+      <li>
+        <IconGlobe :size="18" /><span
+          >技能页面支持 16 种语言，神器和幻灵的文字也一样，在页面顶部的菜单里切换。</span
+        >
+      </li>
       <li>
         <IconImage :size="18" /><span>阵容页面有<b>图片拼接</b>工具，可以把多张截图拼成一张。</span>
       </li>
