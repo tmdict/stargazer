@@ -5,8 +5,10 @@
 // the cards entered, the badges held or how many targets are still needed, so
 // a later press whose model is the same number for number picks them up and
 // fills only the rows it lacks. Two wanted items with the same model share them
-// within one press as well.
+// within one press as well. The cost tables of fewest badges are made the first
+// time a model is asked for them.
 
+import { createCosts, type Costs } from './costs'
 import type { GoalModel } from './moves'
 import { createSearch, type Search } from './search'
 import { createTables, type Tables } from './tables'
@@ -14,11 +16,14 @@ import { createTables, type Tables } from './tables'
 export interface Solver {
   tables: Tables
   search: Search
+  costs?: Costs
 }
 
 export interface SolverCache {
   /** The solver for a model, its tables filled for `model.need` targets and `badges`. */
   solver: (model: GoalModel, badges: number) => Solver
+  /** The cost tables for a model, filled for `model.need` targets. */
+  costs: (model: GoalModel) => Costs
   /** An estimate of the size in memory of everything kept. */
   readonly bytes: number
 }
@@ -48,28 +53,46 @@ export function createSolverCache({
 
   const bytes = () => {
     let sum = 0
-    for (const { tables, search } of solvers.values()) sum += tables.bytes + search.bytes
+    for (const { tables, search, costs } of solvers.values()) {
+      sum += tables.bytes + search.bytes + (costs?.bytes ?? 0)
+    }
     return sum
+  }
+
+  const recent = (model: GoalModel): Solver => {
+    const key = modelKey(model)
+    let solver = solvers.get(key)
+    if (solver) {
+      solvers.delete(key)
+    } else {
+      const tables = createTables(model)
+      solver = { tables, search: createSearch(model, tables, tolerance) }
+    }
+    solvers.set(key, solver)
+    return solver
+  }
+
+  // A solver dropped here still serves the press that holds it.
+  const trim = () => {
+    for (const oldest of solvers.keys()) {
+      if (solvers.size <= maxSolvers && bytes() <= maxBytes) break
+      solvers.delete(oldest)
+    }
   }
 
   return {
     solver(model, badges) {
-      const key = modelKey(model)
-      let solver = solvers.get(key)
-      if (solver) {
-        solvers.delete(key)
-      } else {
-        const tables = createTables(model)
-        solver = { tables, search: createSearch(model, tables, tolerance) }
-      }
-      solvers.set(key, solver)
+      const solver = recent(model)
       solver.tables.cover(model.need, badges)
-      // A solver dropped here still serves the press that holds it.
-      for (const oldest of solvers.keys()) {
-        if (solvers.size <= maxSolvers && bytes() <= maxBytes) break
-        solvers.delete(oldest)
-      }
+      trim()
       return solver
+    },
+    costs(model) {
+      const solver = recent(model)
+      const costs = (solver.costs ??= createCosts(model, solver.tables.layout))
+      costs.cover(model.need)
+      trim()
+      return costs
     },
     get bytes() {
       return bytes()

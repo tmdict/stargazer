@@ -369,7 +369,7 @@ describe('rules that always hold', () => {
 })
 
 describe('heavier requests', () => {
-  // HD Lab gives 64.5977% and 88.0006% here: it always keeps a wanted card
+  // Toto's calculator gives 64.5977% and 88.0006% here: it always keeps a wanted card
   // through a reroll, which is not always the best move.
   it('three and four copies', () => {
     expect(chance({ level: 5, badges: 100, goal: hero('L1', 3) })).toBeCloseTo(0.646006, 5)

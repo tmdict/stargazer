@@ -95,3 +95,9 @@ export interface ChanceRange {
   floor: number
   ceiling: number
 }
+
+/** Badges spent on average: the true figure is no lower than `floor`, no higher than `ceiling`. */
+export interface CostRange {
+  floor: number
+  ceiling: number
+}

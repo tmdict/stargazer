@@ -54,8 +54,12 @@ export interface Layout {
   classes: CodeClass[]
   /** For each source, what a card of each kind adds to a code. */
   addOf: Map<number, number>[]
-  /** Turns values of full shops into values of kept cards: each free source shows a new card. */
-  fold: (values: Float64Array) => Float64Array
+  /**
+   * Turns values of full shops into values of kept cards: each free source shows
+   * a new card. A source in the bit mask `held` sits behind a kept card that
+   * cannot help, and shows nothing new.
+   */
+  fold: (values: Float64Array, held?: number) => Float64Array
   /** An estimate of its size in memory. */
   bytes: number
 }
@@ -172,10 +176,10 @@ function layout(model: GoalModel): Layout {
     }
   })
 
-  const fold = (values: Float64Array): Float64Array => {
+  const fold = (values: Float64Array, held = 0): Float64Array => {
     const folded = Float64Array.from(values)
     sources.forEach((source, i) => {
-      if (!source.kinds.length) return
+      if (!source.kinds.length || (held >> i) & 1) return
       for (let code = 0; code < size; code++) {
         if (Math.floor(code / place[i]) % radix[i]) continue
         let sum = source.none * folded[code]
