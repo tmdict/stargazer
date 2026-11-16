@@ -1,6 +1,6 @@
 # Architecture
 
-Stargazer is an AFK Journey arena planner built with Vue 3, TypeScript, Pinia and vite-ssg. Two ideas organize the code. Game rules live in `src/lib/` and import no Vue or Pinia, so they run unchanged in tests and in the screenshot-import web worker. And each board is one self-contained object, so the Arena (one board) and the Teams page (up to five) share all of their board code.
+Stargazer is an AFK Journey arena planner built with Vue 3, TypeScript, Pinia and vite-ssg. Two ideas organize the code. Game rules live in `src/lib/` and import no Vue or Pinia, so they run unchanged in tests and in the web workers. And each board is one self-contained object, so the Arena (one board) and the Teams page (up to five) share all of their board code.
 
 Each system has its own doc under `docs/architecture/`; the index is in `AGENTS.md`.
 

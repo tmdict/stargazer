@@ -1,7 +1,7 @@
 // Honor Duel's equipment and artifacts: the data files, display names and
 // pictures, and the data pack's text, one lazy chunk per language. Only the
-// Honor Duel tab and its popup import this module, so none of it loads until
-// the tab is opened.
+// Honor Duel tab, its popup and the shop calculator page import this module,
+// so none of it loads until one of them is opened.
 
 import type {
   DuelArtifact,

@@ -7,7 +7,8 @@
 // or its time is up; a range not reached by then stays a range.
 //
 // The work also pauses between stages, where whoever runs it can end it: after
-// each goal is prepared, and after each slice of search. Everything worked out
+// each goal is prepared, after each goal's first answer, and after each slice
+// of search. Everything worked out
 // up to a pause is in the cache, so ending there loses nothing.
 
 import {
@@ -382,12 +383,18 @@ export function* calculateShop(
 
   const works: Work[] = []
   for (const goal of goalsOf(request)) {
-    if (works.length) yield null
     works.push(
       prepare(request, goal, reading, odds, rises ? table.levels[level] : null, facts, cache),
     )
+    yield null
   }
-  const answers = works.map((work) => answer(work, shop, facts))
+  // A goal's way to stop into a higher level fills that level's cost tables,
+  // the longest single piece of a request.
+  const answers: ReturnType<typeof answer>[] = []
+  for (const work of works) {
+    if (answers.length) yield null
+    answers.push(answer(work, shop, facts))
+  }
   const waiting = works.map((work) => unsettled(work, shop) !== null)
   if (!waiting.includes(true)) {
     yield { answers, settled: true }

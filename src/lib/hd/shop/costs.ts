@@ -31,8 +31,10 @@ export interface Costs {
 
 // A table is settled once no number moves by more than this in a pass.
 const SETTLED = 1e-10
-// A plan that never reaches the goal would otherwise be redone for ever.
+// A plan that never reaches the goal would otherwise be redone for ever. Its
+// values either blow up, or climb by the same step every pass: one more reroll.
 const RUNAWAY = 1e9
+const STALLED_PASSES = 1000
 // How many times the plan is picked again from its own cost.
 const PLAN_ROUNDS = 8
 // Passes shrink the distance to the answer by a steady share once they settle
@@ -50,11 +52,14 @@ function settle(values: Float64Array, pass: () => number): boolean {
   const before = new Float64Array(values.length)
   let last = Infinity
   let lastShare = Infinity
+  let stalled = 0
   for (;;) {
     before.set(values)
     const change = pass()
     if (change < SETTLED) return true
     if (!(change < RUNAWAY)) return false
+    stalled = change < last ? 0 : stalled + 1
+    if (stalled > STALLED_PASSES) return false
     const share = change / last
     if (share < 1 - STEADY && Math.abs(share - lastShare) < STEADY) {
       const rest = share / (1 - share)
@@ -228,8 +233,15 @@ export function createCosts(model: GoalModel, layout: Layout): Costs {
         ceiling.push(floor[n])
         continue
       }
+      // The ceiling's plan reads the floor's row. A ceiling that cannot be
+      // made takes that row back out, so the two tables stay the same length.
       floor.push(fillFloor(n))
-      ceiling.push(fillCeiling(n))
+      try {
+        ceiling.push(fillCeiling(n))
+      } catch (error) {
+        floor.pop()
+        throw error
+      }
     }
   }
 

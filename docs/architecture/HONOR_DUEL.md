@@ -20,7 +20,7 @@ An entry's `id` is Stargazer's own number, counted from 1 in the game's listing 
 
 ## Loading
 
-`src/lib/hd/catalog.ts` holds every glob of the content: the data files, the names, the pictures and the text. Only the tab's list and the popup import it, and both are fetched on first use, so a visit that never opens the tab downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/lib/hd/catalog.ts` holds every glob of the content: the data files, the names, the pictures and the text. The tab's list, its popup and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
 
 The text loads one language at a time, in the reader's skill-text language, when a popup opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 

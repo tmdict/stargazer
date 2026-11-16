@@ -96,7 +96,9 @@ const impossible = computed(() => {
 
 const answersEl = useTemplateRef<HTMLElement>('answers')
 const calculate = (): void => {
-  if (form.wanted.value) engine.calculate(form.request())
+  if (!form.wanted.value) return
+  basis.value = null
+  engine.calculate(form.request())
 }
 // Runs the calculation again from a recommended move. A reroll's locks are set
 // on the shop itself; a purchase leaves the shop and the badges as entered, and

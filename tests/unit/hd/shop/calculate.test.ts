@@ -341,10 +341,12 @@ describe('answers in stages', () => {
     expect(sliced.at(-1)).toEqual(stages(heavy).at(-1))
   })
 
-  it('pauses after each goal is prepared, before the first answers', () => {
-    const [first, second, third] = steps({ heroes: [['L1'], ['L2']] })
-    expect([first, second]).toEqual([null, null])
-    expect(third).toMatchObject({ settled: expect.any(Boolean) })
+  it('pauses after each goal is prepared and between their first answers', () => {
+    const all = steps({ heroes: [['L1'], ['L2']] })
+    const goals = all.find((step) => step !== null && 'answers' in step)
+    const count = goals && 'answers' in goals ? goals.answers.length : 0
+    expect(count).toBeGreaterThan(1)
+    expect(all.findIndex((step) => step !== null)).toBe(2 * count - 1)
   })
 
   it('settles at once when the tables leave nothing to search', () => {
