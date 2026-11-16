@@ -153,8 +153,7 @@ export async function syncFitTable(
       const data = await code.decodeSlData(dataFile)
       stamp = (await code.decodeSlFits(readFileSync(table), data)).stamp
     } catch {
-      // A table sealed with another export's key or made for other lineups, or
-      // fit code that does not load here.
+      // A table made for another data file, or fit code that does not load here.
     }
     if (stamp === fitStamp(root, built.files, dataFile)) return use(true)
     return use(

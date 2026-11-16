@@ -231,7 +231,7 @@ if (existsSync(target)) {
     const before = await code.decodeSlFits(readFileSync(target), data)
     unchanged = JSON.stringify(before) === JSON.stringify(table)
   } catch {
-    // A table sealed with another export's key, or made for other lineups.
+    // A table made for another data file.
   }
 }
 if (unchanged) console.log('fits: the fit table in the pack folder is already this one')

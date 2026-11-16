@@ -169,7 +169,7 @@ describe('the shipped PvP data', () => {
     expect(rated.filter((id) => !artifacts.has(id))).toEqual([])
   })
 
-  // An edited copy, sealed with the pack's key as the writer seals the file.
+  // An edited copy of the data file.
   const sealed = (edit: (copy: SlData) => void): Uint8Array<ArrayBuffer> => {
     const copy = structuredClone(data)
     edit(copy)
