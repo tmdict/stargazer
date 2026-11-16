@@ -1,6 +1,4 @@
 <script setup lang="ts">
-/* The top bar's help menu: the site's About, Help, Data, source code and Contact. */
-
 import { computed } from 'vue'
 
 import DropdownSelect, { type DropdownItem } from './DropdownSelect.vue'
