@@ -11,8 +11,6 @@ import { useI18nStore } from '@/stores/i18n'
 defineProps<{
   cards: readonly ShopCard[]
   level: number
-  // Whether the shop level goes up next round.
-  rises: boolean
 }>()
 
 const emit = defineEmits<{ pick: [card: number, under: DOMRect]; lock: [card: number] }>()
@@ -27,7 +25,6 @@ const i18n = useI18nStore()
         {{ i18n.t('app.shop-window') }}
         <span class="level">{{ i18n.t('app.shop-level', { level }) }}</span>
       </h2>
-      <span v-if="rises" class="shop-dim">{{ i18n.t('app.shop-level-rises') }}</span>
       <span class="reroll">
         {{ i18n.t('app.shop-reroll') }}
         <ShopBadges :count="SHOP_FACTS.reroll" />

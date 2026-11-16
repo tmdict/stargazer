@@ -3,7 +3,8 @@
 
 import { computed } from 'vue'
 
-import { duelEquipment, duelItemImage, duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
+import ShopPieceDisc from './ShopPieceDisc.vue'
+import { duelEquipment, duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
 import { EQUIPMENT_TIERS, type EquipmentTier } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -28,7 +29,6 @@ const groups = computed(() =>
         .map((item) => ({
           name: item.name,
           label: duelItemName({ kind: 'equipment', item }, i18n.currentLocale),
-          image: duelItemImage({ kind: 'equipment', item }),
         })),
     }))
     .filter((group) => group.pieces.length > 0),
@@ -47,9 +47,7 @@ const groups = computed(() =>
           class="piece"
           @click="emit('pick', piece.name)"
         >
-          <span class="icon">
-            <img v-if="piece.image" :src="piece.image" alt="" loading="lazy" draggable="false" />
-          </span>
+          <ShopPieceDisc :name="piece.name" :size="44" />
           <span class="label">{{ piece.label }}</span>
         </button>
       </div>
@@ -59,6 +57,7 @@ const groups = computed(() =>
 
 <style scoped>
 .shop-equipment {
+  --disc-ring: rgba(255, 255, 255, 0.5);
   flex: none;
   display: flex;
   flex-direction: column;
@@ -95,21 +94,6 @@ h3 {
 
 .piece:hover {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 2px var(--shop-tier);
-}
-
-.icon img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
 }
 
 .label {

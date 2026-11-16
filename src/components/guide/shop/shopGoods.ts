@@ -49,6 +49,8 @@ export function cardLabel(card: ShopCard, locale: AppLocale): string {
   return goodName(good.name, locale)
 }
 
+export type ShopPickerStep = 'product' | 'hero' | 'piece'
+
 export type ShopPicture = 'badge' | 'artifact-exp' | 'random-card'
 
 /** A shop picture, or undefined where the data pack holds none. */

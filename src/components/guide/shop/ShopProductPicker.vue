@@ -1,21 +1,23 @@
 <script setup lang="ts">
 /* The popup that sets what a shop card shows: one of the shop's products or
    nothing, then, for a hero card or an equipment card, which hero or piece it
-   is. Naming the hero or piece is optional, since a card that is not one
-   looked for needs no name. A product is set as soon as it is picked, so the
-   popup can be left at any step. */
+   is. The products are rows under a heading for each kind, and a row drops the
+   words its heading already says. Naming the hero or piece is optional, since
+   a card that is not one looked for needs no name. A product is set as soon as
+   it is picked, so the popup can be left at any step. */
 
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopEquipmentList from './ShopEquipmentList.vue'
 import ShopGoodArt from './ShopGoodArt.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
-import type { Good, ShopCard } from '@/lib/hd/shop/types'
+import type { Good, GoodKind, ShopCard } from '@/lib/hd/shop/types'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
-import { goodName, SHOP_GOODS } from './shopGoods'
+import { gameLabel } from '@/utils/skillLabels'
+import { goodName, goodTier, SHOP_GOODS, type ShopPickerStep } from './shopGoods'
 
 const { card } = defineProps<{
   card: ShopCard
@@ -27,8 +29,48 @@ const emit = defineEmits<{ set: [card: ShopCard]; close: [] }>()
 
 const i18n = useI18nStore()
 
-const step = ref<'product' | 'hero' | 'piece'>('product')
+// Which of the popup's steps is shown: the products, or naming the hero or piece.
+const step = defineModel<ShopPickerStep>('step', { required: true })
 const good = computed(() => SHOP_GOODS.get(card.good ?? ''))
+
+const GROUPS: readonly (readonly GoodKind[])[] = [
+  ['hero', 'legendary'],
+  ['pack'],
+  ['equipment'],
+  ['trial'],
+  ['exp'],
+]
+
+const heading = (kind: GoodKind, goods: readonly Good[]): string => {
+  if (kind === 'hero') return i18n.t('app.heroes')
+  if (kind === 'pack') return i18n.t('app.shop-group-packs', { draws: goods[0]?.draws ?? 0 })
+  if (kind === 'equipment') return gameLabel('equipment', i18n.currentLocale)
+  return i18n.t(kind === 'trial' ? 'app.shop-group-trial' : 'app.shop-group-other')
+}
+
+const TIER_KEYS: Record<string, string> = {
+  mythic: 'app.shop-tier-mythic',
+  supreme: 'app.shop-tier-supreme',
+}
+
+const rowName = (one: Good): string => {
+  const locale = i18n.currentLocale
+  if (one.kind === 'pack') {
+    return one.faction ? gameLabel(one.faction, locale) : i18n.t('app.shop-pack-random')
+  }
+  const tier = goodTier(one)
+  if (tier) {
+    return TIER_KEYS[tier] ? i18n.t(TIER_KEYS[tier]) : gameLabel(tier, locale)
+  }
+  return goodName(one.name, locale)
+}
+
+const groups = computed(() =>
+  GROUPS.map((kinds) => {
+    const goods = SHOP_FACTS.goods.filter((one) => kinds.includes(one.kind))
+    return { key: kinds[0]!, heading: heading(kinds[0]!, goods), goods }
+  }).filter((group) => group.goods.length),
+)
 
 const choose = (picked: Good): void => {
   emit('set', { good: picked.name, locked: card.locked, bought: false })
@@ -53,21 +95,25 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
 </script>
 
 <template>
-  <div v-if="step === 'product'" class="shop-popup">
-    <div class="goods">
-      <button
-        v-for="one in SHOP_FACTS.goods"
-        :key="one.name"
-        type="button"
-        class="good"
-        :class="{ on: one.name === card.good }"
-        @click="choose(one)"
-      >
-        <span class="art"><ShopGoodArt :good="one" /></span>
-        <span class="label">{{ goodName(one.name, i18n.currentLocale) }}</span>
-        <ShopBadges class="price" :count="one.price" />
-      </button>
-    </div>
+  <div v-if="step === 'product'" class="shop-popup products">
+    <template v-for="group in groups" :key="group.key">
+      <p class="group">{{ group.heading }}</p>
+      <div class="goods">
+        <button
+          v-for="one in group.goods"
+          :key="one.name"
+          type="button"
+          class="good"
+          :class="{ on: one.name === card.good }"
+          :aria-pressed="one.name === card.good"
+          @click="choose(one)"
+        >
+          <span class="art"><ShopGoodArt :good="one" icon /></span>
+          <span class="label">{{ rowName(one) }}</span>
+          <ShopBadges class="price" :count="one.price" />
+        </button>
+      </div>
+    </template>
     <div class="foot">
       <button type="button" class="shop-popup-button" @click="empty">
         {{ i18n.t('app.shop-picker-empty') }}
@@ -101,18 +147,38 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
 </template>
 
 <style scoped>
+.products {
+  gap: 4px;
+}
+
+.group {
+  margin: 4px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.group:first-child {
+  margin-top: 0;
+}
+
 .goods {
   flex: none;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
 }
 
 .good {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
-  padding: 0;
+  min-height: 38px;
+  padding: 3px 7px 3px 4px;
   border: 1px solid transparent;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.07);
@@ -131,23 +197,23 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
 }
 
 .art {
+  --shop-frame: 2px;
   flex: none;
   display: block;
-  border-radius: 6px 6px 0 0;
+  width: 30px;
+  border-radius: 6px;
 }
 
 .label {
-  flex: none;
-  box-sizing: content-box;
-  height: 3.6em;
-  padding: 3px 4px 0;
-  overflow: hidden;
-  font-size: 10.5px;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .price {
-  padding: 1px 4px 4px;
+  flex: none;
   font-size: 12px;
   color: var(--color-header-gold);
 }
@@ -157,5 +223,6 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  margin-top: 4px;
 }
 </style>

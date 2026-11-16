@@ -103,8 +103,8 @@ watch(() => props.position, reposition)
     var(--shadow-float),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   z-index: 1000;
-  max-width: 320px;
-  max-height: 380px;
+  max-width: var(--selection-popup-max-width, 320px);
+  max-height: var(--selection-popup-max-height, 380px);
   outline: none;
   display: flex;
   flex-direction: column;

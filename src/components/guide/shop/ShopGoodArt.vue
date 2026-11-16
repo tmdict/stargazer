@@ -2,7 +2,9 @@
 /* A product's picture as a square: the hero or piece a card names, else the
    game's question-mark card, with a chip for what it gives, a faction pack's
    faction in the corner, and a frame in its tier's colour. Without the data
-   pack's pictures a plain mark stands in. */
+   pack's pictures a plain mark stands in. As a list's icon it is told apart
+   by the picture alone: a faction pack is its faction, an equipment card a
+   piece of its tier, and the chip is left out. */
 
 import { computed } from 'vue'
 
@@ -12,10 +14,11 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { goodTier, shopPicture } from './shopGoods'
 
-const { good, hero, equipment } = defineProps<{
+const { good, hero, equipment, icon } = defineProps<{
   good: Good
   hero?: string
   equipment?: string
+  icon?: boolean
 }>()
 
 const gameData = useGameDataStore()
@@ -25,8 +28,13 @@ const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain'
   if (good.kind === 'hero' && hero) {
     return { src: gameData.getCharacterImage(hero), fit: 'portrait' }
   }
-  if (good.kind === 'equipment' && equipment) {
-    const item = duelEquipment.find((piece) => piece.name === equipment)
+  if (icon && good.faction) {
+    return { src: gameData.getIcon(`faction-${good.faction}`), fit: 'plain' }
+  }
+  if (good.kind === 'equipment' && (equipment || icon)) {
+    const item = duelEquipment.find((piece) =>
+      equipment ? piece.name === equipment : piece.shop && piece.tier === good.tier,
+    )
     const src = item && duelItemImage({ kind: 'equipment', item })
     if (src) return { src, fit: 'plain' }
   }
@@ -36,12 +44,13 @@ const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain'
 })
 
 const chip = computed(() => {
+  if (icon) return null
   if (good.kind === 'trial') return i18n.t('app.shop-chip-trial')
   return (good.copies ?? 1) > 1 ? `×${good.copies}` : null
 })
 
 const tier = computed(() => goodTier(good))
-const faction = computed(() => good.faction && gameData.getIcon(`faction-${good.faction}`))
+const faction = computed(() => !icon && good.faction && gameData.getIcon(`faction-${good.faction}`))
 </script>
 
 <template>
@@ -76,7 +85,7 @@ const faction = computed(() => good.faction && gameData.getIcon(`faction-${good.
   content: '';
   position: absolute;
   inset: 0;
-  border: 3px solid var(--shop-tier);
+  border: var(--shop-frame, 3px) solid var(--shop-tier);
   border-radius: inherit;
   pointer-events: none;
 }

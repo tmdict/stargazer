@@ -13,9 +13,6 @@ import { shopPools } from '@/lib/hd/shop/pools'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
 
-/** The last round a duel can reach. */
-export const LAST_ROUND = 11
-
 const blank = (): ShopCard => ({ good: null, locked: false, bought: false })
 
 export function useShopForm(changed: () => void) {

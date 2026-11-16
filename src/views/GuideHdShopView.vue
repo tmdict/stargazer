@@ -22,6 +22,7 @@ import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
+import type { ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { compareCharacters } from '@/lib/filterOrder'
@@ -67,7 +68,8 @@ const moreEquipment = computed(() =>
 )
 
 type Popup =
-  { kind: 'card'; card: number; position: Point } | { kind: 'hero' | 'equipment'; position: Point }
+  | { kind: 'card'; card: number; step: ShopPickerStep; position: Point }
+  | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
 const below = (under: DOMRect): Point => ({ x: under.left, y: under.bottom + 4 })
 
@@ -137,12 +139,15 @@ watch(
       <ShopWindow
         :cards="form.cards.value"
         :level="form.level.value"
-        :rises="form.rises.value"
-        @pick="(card, under) => (popup = { kind: 'card', card, position: below(under) })"
+        @pick="
+          (card, under) => (popup = { kind: 'card', card, step: 'product', position: below(under) })
+        "
         @lock="form.toggleLock"
       />
       <ShopForm
         v-model:round="form.round.value"
+        :level="form.level.value"
+        :rises="form.rises.value"
         :badges="form.badges.value"
         :heroes="form.heroes.value"
         :equipment="form.equipment.value"
@@ -196,10 +201,18 @@ watch(
     />
 
     <Teleport to="body">
-      <SelectionPopup v-if="popup" :position="popup.position" keep-on-leave @close="popup = null">
+      <SelectionPopup
+        v-if="popup"
+        :key="popup.kind === 'card' ? popup.step : popup.kind"
+        class="shop-picker-popup"
+        :position="popup.position"
+        keep-on-leave
+        @close="popup = null"
+      >
         <ShopProductPicker
           v-if="popup.kind === 'card'"
           :key="popup.card"
+          v-model:step="popup.step"
           :card="form.cards.value[popup.card]!"
           :heroes="drawn"
           @set="(card) => popup?.kind === 'card' && form.setCard(popup.card, card)"

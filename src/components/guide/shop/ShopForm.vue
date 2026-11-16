@@ -1,21 +1,24 @@
 <script setup lang="ts">
-/* The calculator's form beside the shop window: the round, the badges in
-   hand, the heroes and equipment looked for, the link to the heroes to sell
+/* The calculator's form beside the shop window: the round, as buttons under
+   the shop level each round belongs to, the badges in hand, the heroes and equipment looked for, the link to the heroes to sell
    and the Mythic heroes, and Calculate. While a calculation runs, Calculate
-   gives way to Cancel. */
+   gives way to Cancel. The last level never ends, so it has one button for
+   its first round and every round after. */
 
 import { nextTick } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopWant from './ShopWant.vue'
-import FilterStepper from '@/components/ui/FilterStepper.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
 import { SHOP_LIMITS, type WantedHero } from '@/lib/hd/shop/calculate'
+import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
-import { LAST_ROUND } from './useShopForm'
 
 const props = defineProps<{
+  level: number
+  // Whether the shop level goes up next round.
+  rises: boolean
   badges: number
   heroes: readonly WantedHero[]
   equipment: readonly string[]
@@ -44,6 +47,21 @@ const round = defineModel<number>('round', { required: true })
 
 const i18n = useI18nStore()
 
+const levels = SHOP_FACTS.levelRounds.map((first, index, firsts) => {
+  const next = firsts[index + 1]
+  return {
+    level: index + 1,
+    rounds:
+      next === undefined
+        ? [{ round: first, label: `${first}+`, last: false }]
+        : Array.from({ length: next - first }, (_, i) => ({
+            round: first + i,
+            label: String(first + i),
+            last: first + i === next - 1,
+          })),
+  }
+})
+
 // The box is written back after the page has taken the number, so a number
 // out of range shows as the one kept.
 const enterBadges = async (event: Event): Promise<void> => {
@@ -60,19 +78,25 @@ const under = (event: MouseEvent): DOMRect =>
 <template>
   <section class="sl-panel shop-box shop-form">
     <div class="top">
-      <span class="set">
+      <div class="rounds" role="group" :aria-label="i18n.t('app.shop-round')">
         <span class="shop-label">{{ i18n.t('app.shop-round') }}</span>
-        <FilterStepper
-          v-model="round"
-          dark
-          :label="i18n.t('app.shop-round')"
-          :lower-label="i18n.t('app.shop-round-lower')"
-          :raise-label="i18n.t('app.shop-round-raise')"
-          :min="1"
-          :max="LAST_ROUND"
-          :step="1"
-        />
-      </span>
+        <span v-for="one in levels" :key="one.level" class="level">
+          <span class="shop-dim">{{ i18n.t('app.shop-level', { level: one.level }) }}</span>
+          <span class="list">
+            <button
+              v-for="item in one.rounds"
+              :key="item.round"
+              type="button"
+              class="round"
+              :class="{ last: item.last }"
+              :aria-pressed="item.round === round"
+              @click="round = item.round"
+            >
+              {{ item.label }}
+            </button>
+          </span>
+        </span>
+      </div>
       <label class="set">
         <span class="shop-label">{{ i18n.t('app.shop-badges') }}</span>
         <span class="field">
@@ -129,6 +153,9 @@ const under = (event: MouseEvent): DOMRect =>
       </button>
     </div>
 
+    <p v-if="rises" class="notice">
+      {{ i18n.t('app.shop-level-notice', { level: level + 1 }) }}
+    </p>
     <div class="foot">
       <button type="button" class="more" @click="emit('more')">
         {{ i18n.t('app.shop-more') }}<template v-if="set"> ({{ set }})</template>
@@ -160,8 +187,84 @@ const under = (event: MouseEvent): DOMRect =>
 .top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 22px;
+  align-items: flex-end;
+  gap: 12px 22px;
+}
+
+.rounds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+
+.rounds > .shop-label {
+  align-self: center;
+}
+
+.level {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.level .shop-dim {
+  font-size: 12px;
+}
+
+.list {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.round {
+  position: relative;
+  min-width: 34px;
+  height: 32px;
+  padding: 0 8px;
+  border: var(--field-dark-border);
+  border-radius: var(--field-dark-radius);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--import-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.round:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.round[aria-pressed='true'] {
+  border-color: var(--color-header-gold);
+  background: var(--import-warn-tint);
+  color: var(--color-header-gold);
+}
+
+.round.last::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  border: 3px solid transparent;
+  border-top: 0;
+  border-bottom: 5px solid var(--color-header-gold);
+}
+
+.notice {
+  margin: auto 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-header-gold);
+  border-radius: var(--radius-medium);
+  background: var(--import-warn-tint);
+  color: var(--color-header-gold);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notice + .foot {
+  margin-top: 0;
 }
 
 .set {

@@ -4,11 +4,11 @@
 
 import { computed } from 'vue'
 
+import ShopPieceDisc from './ShopPieceDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconMinus from '@/components/ui/IconMinus.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
-import { duelEquipment, duelItemImage } from '@/lib/hd/catalog'
 import { SHOP_LIMITS } from '@/lib/hd/shop/calculate'
 import { useI18nStore } from '@/stores/i18n'
 import { curatedHeroName } from '@/utils/skillLabels'
@@ -23,8 +23,6 @@ const copies = defineModel<number>('copies')
 
 const i18n = useI18nStore()
 
-const piece = computed(() => duelEquipment.find((one) => one.name === name))
-const image = computed(() => piece.value && duelItemImage({ kind: 'equipment', item: piece.value }))
 const label = computed(() =>
   kind === 'hero' ? curatedHeroName(name, i18n.currentLocale) : pieceName(name, i18n.currentLocale),
 )
@@ -36,9 +34,9 @@ const step = (by: 1 | -1): void => {
 </script>
 
 <template>
-  <span class="shop-want" :class="piece && `shop-tier-${piece.tier}`">
+  <span class="shop-want">
     <GuidePortrait v-if="kind === 'hero'" :slug="name" :lang="i18n.currentLocale" :size="40" />
-    <span v-else class="icon"><img v-if="image" :src="image" alt="" draggable="false" /></span>
+    <ShopPieceDisc v-else :name :size="40" />
     <span class="label">{{ label }}</span>
     <span v-if="copies !== undefined" class="copies" role="group">
       <button
@@ -84,22 +82,6 @@ const step = (by: 1 | -1): void => {
   background: rgba(0, 0, 0, 0.18);
   color: var(--import-text);
   font-weight: 600;
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px var(--shop-tier);
-}
-
-.icon img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
 }
 
 .copies {

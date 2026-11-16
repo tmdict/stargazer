@@ -7,9 +7,10 @@
 
 import { computed } from 'vue'
 
+import ShopPieceDisc from './ShopPieceDisc.vue'
 import ShopSteps from './ShopSteps.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import { duelEquipment, duelItemImage, equipmentTierLabel } from '@/lib/hd/catalog'
+import { duelEquipment, equipmentTierLabel } from '@/lib/hd/catalog'
 import { sameMove } from '@/lib/hd/shop/advice'
 import { SHOWN_RANGE, type ShopAnswer } from '@/lib/hd/shop/calculate'
 import type { ChanceRange, CostRange, Move, ShopCard } from '@/lib/hd/shop/types'
@@ -32,16 +33,18 @@ const emit = defineEmits<{ recalculate: [move: Move] }>()
 
 const i18n = useI18nStore()
 
-// The best move, when the answers do not already start from it.
-const untried = computed(() => {
-  const best = answer.chance.best?.move
-  if (!best) return null
-  const entered: Move = {
-    kind: 'reroll',
-    locks: cards.flatMap((card, index) => (card.locked && !card.bought ? [index] : [])),
-  }
-  return sameMove(best, basis ?? entered) ? null : best
-})
+// The move the answers start from: the one chosen, else a reroll with the locks as entered.
+const start = computed(
+  (): Move =>
+    basis ?? {
+      kind: 'reroll',
+      locks: cards.flatMap((card, index) => (card.locked && !card.bought ? [index] : [])),
+    },
+)
+
+// A move worth recalculating from: null when the answers already start from it.
+const untried = (move: Move | undefined): Move | null =>
+  move && !sameMove(move, start.value) ? move : null
 
 const piece = computed(() =>
   answer.goal.kind === 'equipment'
@@ -85,17 +88,20 @@ const chanceRows = computed(() => {
       label: i18n.t('app.shop-alt-keep-locks'),
       figure: chanceText(keepLocks.chance),
       steps: moveSteps(keepLocks.move, cards),
+      retry: untried(keepLocks.move),
     },
     current && {
       label: i18n.t(current.move.kind === 'buy' ? 'app.shop-alt-basis' : 'app.shop-alt-current'),
       figure: chanceText(current.chance),
       steps: current.move.kind === 'buy' ? moveSteps(current.move, cards) : [],
+      retry: null,
     },
     offers &&
       offers.first !== null && {
         label: i18n.t('app.shop-alt-offers'),
         figure: percent(offers.chance),
         steps: moveSteps({ kind: 'buy', card: offers.first }, cards),
+        retry: null,
       },
   ].filter((row) => !!row)
 })
@@ -131,7 +137,7 @@ const idle = computed(() =>
 </script>
 
 <template>
-  <article class="shop-answer" :class="piece && `shop-tier-${piece.tier}`">
+  <article class="shop-answer">
     <header>
       <GuidePortrait
         v-if="answer.goal.kind === 'hero'"
@@ -139,13 +145,7 @@ const idle = computed(() =>
         :lang="i18n.currentLocale"
         :size="44"
       />
-      <span v-else-if="piece" class="icon">
-        <img
-          v-if="duelItemImage({ kind: 'equipment', item: piece })"
-          :src="duelItemImage({ kind: 'equipment', item: piece })"
-          alt=""
-        />
-      </span>
+      <ShopPieceDisc v-else-if="piece" :name="piece.name" :size="44" />
       <h3>
         {{ head.title }}
         <small v-if="head.sub">{{ head.sub }}</small>
@@ -165,6 +165,14 @@ const idle = computed(() =>
           <dd>
             <b>{{ row.figure }}</b>
             <ShopSteps v-if="row.steps.length" :steps="row.steps" :cards />
+            <button
+              v-if="row.retry"
+              type="button"
+              class="shop-popup-button retry"
+              @click="emit('recalculate', row.retry)"
+            >
+              {{ i18n.t('app.shop-recalculate-keep-locks') }}
+            </button>
           </dd>
         </template>
       </dl>
@@ -172,10 +180,10 @@ const idle = computed(() =>
         {{ i18n.t(working ? 'app.shop-narrowing' : 'app.shop-unsure') }}
       </p>
       <button
-        v-if="untried"
+        v-if="untried(answer.chance.best.move)"
         type="button"
         class="shop-popup-button retry"
-        @click="emit('recalculate', untried)"
+        @click="emit('recalculate', answer.chance.best.move)"
       >
         {{ i18n.t('app.shop-recalculate-best') }}
       </button>
@@ -258,22 +266,6 @@ h3 small {
   font-size: 12px;
   font-weight: 400;
   color: var(--import-text-dim);
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  box-shadow: inset 0 0 0 2px var(--shop-tier);
-}
-
-.icon img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
 }
 
 .part {
