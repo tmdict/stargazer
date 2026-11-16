@@ -4,6 +4,7 @@ import { solveMaxChance } from '@/lib/hd/shop/maxChance'
 import { firstMoves } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { OutOfTime } from '@/lib/hd/shop/search'
+import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import type { Goal, LevelOdds, Move, OddsTable, PoolHero, ShopCard } from '@/lib/hd/shop/types'
 import {
   card,
@@ -386,10 +387,76 @@ describe('heavier requests', () => {
       pools(),
       FACTS,
     )!
-    solved.search.stats.deadline = 0
-    expect(() => solved.chance(REROLL)).toThrow(OutOfTime)
+    expect(() => solved.chance(REROLL, 0)).toThrow(OutOfTime)
     const { floor, ceiling } = solved.range(REROLL)
     expect(floor).toBeLessThan(ceiling)
     expect(ceiling - floor).toBeLessThan(0.01)
+  })
+})
+
+describe('a cache kept through a shop visit', () => {
+  const shop = cards(
+    card('hero', { hero: 'L1' }),
+    card('random-pack'),
+    card('hero', { hero: 'M2' }),
+  )
+  const moves = [REROLL, lock(0), lock(0, 1), buy(0), buy(1)]
+  const pressed = (asked: Asked, kept = createSolverCache()) => {
+    const solved = solveMaxChance(
+      { badges: asked.badges, cards: asked.cards ?? cards() },
+      asked.goal,
+      levelOdds(asked.level),
+      pools(asked.sell),
+      FACTS,
+      kept,
+    )!
+    return moves.flatMap((move) => [...Object.values(solved.range(move)), solved.chance(move)])
+  }
+  const furthestApart = (one: number[], other: number[]) =>
+    Math.max(...one.map((value, i) => Math.abs(value - other[i]!)))
+
+  it('answers every press as a fresh solve does, as badges fall and then rise', () => {
+    const kept = createSolverCache()
+    const visit: Asked[] = [
+      { level: 3, badges: 60, goal: hero('L1', 3), cards: shop },
+      { level: 3, badges: 57, goal: hero('L1', 3) },
+      { level: 3, badges: 39, goal: hero('L1', 2), cards: shop },
+      { level: 3, badges: 90, goal: hero('L1', 3), cards: shop },
+      { level: 5, badges: 90, goal: hero('L1', 3), cards: cards(card('hero', { hero: 'L1' })) },
+      { level: 3, badges: 21, goal: hero('L1', 3), cards: shop },
+    ]
+    for (const asked of visit) {
+      expect(furthestApart(pressed(asked, kept), pressed(asked))).toBeLessThan(1e-9)
+    }
+  })
+
+  it('adds nothing for a second wanted item that the shop treats the same', () => {
+    const kept = createSolverCache()
+    const first = pressed({ level: 4, badges: 60, goal: hero('L1', 2) }, kept)
+    const held = kept.bytes
+    const second = pressed({ level: 4, badges: 60, goal: hero('M1', 2) }, kept)
+    expect(kept.bytes).toBe(held)
+    expect(furthestApart(second, first)).toBeLessThan(1e-9)
+    expect(
+      furthestApart(second, pressed({ level: 4, badges: 60, goal: hero('M1', 2) })),
+    ).toBeLessThan(1e-9)
+    pressed(
+      { level: 4, badges: 60, goal: { heroes: ['L1', 'M1'], equipment: [], copies: 1 } },
+      kept,
+    )
+    expect(kept.bytes).toBeGreaterThan(held)
+  })
+
+  it('drops what was used longest ago once over its limit, and still answers', () => {
+    const one: Asked = { level: 3, badges: 60, goal: hero('L1', 2), cards: shop }
+    const other: Asked = { level: 5, badges: 60, goal: hero('L1', 2) }
+    const both = createSolverCache()
+    const kept = createSolverCache({ maxSolvers: 1 })
+    const first = pressed(one, kept)
+    const alone = kept.bytes
+    for (const cache of [both, kept]) for (const asked of [one, other]) pressed(asked, cache)
+    expect(kept.bytes).toBe(both.bytes - alone)
+    expect(furthestApart(pressed(one, kept), first)).toBeLessThan(1e-9)
+    expect(kept.bytes).toBe(alone)
   })
 })

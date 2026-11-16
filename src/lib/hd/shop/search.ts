@@ -1,13 +1,13 @@
 // The search that closes the gap between the two tables.
 //
 // The shop as entered is a board: the cards on show, and every way the sources
-// could have made them, each with its chance. The first move is played on the
-// board. From then on a situation is a belief, a spread of chances over table
-// codes, in which cards of one kind are not told apart. A belief is opened only
-// when the tables disagree about it by more than the tolerance.
+// could have made them, each with its chance. Only the first move is played on a
+// board. Every shop after it is a belief: chances over the codes of one class,
+// in which cards of one kind are not told apart. A belief is opened only when
+// the tables disagree about it by more than the tolerance.
 
 import type { GoalModel } from './moves'
-import { keepCounts, keptOptions, type Tables } from './tables'
+import type { Tables } from './tables'
 
 /** Thrown when the deadline passes; the caller keeps the range it already has. */
 export class OutOfTime extends Error {}
@@ -22,36 +22,51 @@ interface World {
 export interface Board {
   items: number[]
   worlds: World[]
-  key: string
 }
 
-type Belief = Map<number, number>
+/**
+ * Chances over the codes of the class `group`, in the order the class lists
+ * them. They add up to the chance of the shop being one of these codes at all.
+ */
+interface Belief {
+  group: number
+  chances: Float64Array
+}
 
-/** The chance of reaching the goal from a board, with `badges` in hand and `need` targets to go. */
-export type Outlook = (board: Board, badges: number, need: number) => number
+/** The chance of reaching the goal from a belief, times the chance of the belief itself. */
+type Reading = (need: number, badges: number, belief: Belief) => number
+
+/** The chance of reaching the goal with `badges` in hand and `need` targets to go. */
+export interface Outlook {
+  from: (board: Board, badges: number, need: number) => number
+  /** After a paid reroll that keeps the cards of `kept`, with `badges` left after the fee. */
+  afterRoll: (kept: Board, badges: number, need: number) => number
+  afterBuy: (board: Board, card: number, badges: number, need: number) => number
+}
 
 export interface Search {
   board: (items: number[], worlds: World[]) => Board
   project: (board: Board, cards: number[]) => Board
-  afterRoll: (kept: Board, badges: number, need: number, next: Outlook) => number
-  afterBuy: (board: Board, card: number, badges: number, need: number, next: Outlook) => number
+  /** The best chance, within the tolerance. */
   value: Outlook
+  /** What the tables alone say. */
   floor: Outlook
   ceiling: Outlook
   stats: { opened: number; deadline: number }
+  /** An estimate of the size in memory of the answers kept. */
+  readonly bytes: number
 }
 
-function permutations(values: number[]): number[][] {
-  if (values.length < 2) return [values]
-  return values.flatMap((value, i) =>
-    permutations(values.filter((_, j) => j !== i)).map((rest) => [value, ...rest]),
-  )
-}
+// Chances are rounded to this step in an answer's key, so beliefs that differ
+// only by rounding share an answer.
+const KEY_STEPS = 2 ** 40
+// What a kept answer takes besides its key's text.
+const ANSWER_BYTES = 80
 
-export function makeSearch(model: GoalModel, tables: Tables, tolerance = 1e-6): Search {
+export function createSearch(model: GoalModel, tables: Tables, tolerance: number): Search {
   const { kinds, sources, twins, reroll } = model
   const { ceiling, floor, rolledCeiling, affordable } = tables
-  const { cards, shown, addOf } = tables.layout
+  const { size, place, cards, classes, classOf, slotOf, addOf } = tables.layout
   const stats = { opened: 0, deadline: Infinity }
   const opening = () => {
     if ((++stats.opened & 127) === 0 && performance.now() > stats.deadline) throw new OutOfTime()
@@ -72,21 +87,20 @@ export function makeSearch(model: GoalModel, tables: Tables, tolerance = 1e-6): 
   }
 
   const board = (items: number[], worlds: World[]): Board => {
-    if (!items.length) return { items, worlds: [{ origins: [], chance: 1 }], key: '' }
+    if (!items.length) return { items, worlds: [{ origins: [], chance: 1 }] }
     const merged = new Map<string, World>()
     let total = 0
     for (const world of worlds) {
       const origins = canon(world.origins)
-      const key = origins.join('.')
+      const key = origins.join()
       const known = merged.get(key)
       if (known) known.chance += world.chance
       else merged.set(key, { origins, chance: world.chance })
       total += world.chance
     }
-    const list = [...merged].sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    for (const [, world] of list) world.chance /= total
-    const text = list.map(([key, world]) => `${key}:${world.chance.toPrecision(12)}`).join(';')
-    return { items, worlds: list.map(([, world]) => world), key: `${items.join(',')}|${text}` }
+    const list = [...merged.values()]
+    for (const world of list) world.chance /= total
+    return { items, worlds: list }
   }
 
   const project = (from: Board, chosen: number[]): Board =>
@@ -104,262 +118,191 @@ export function makeSearch(model: GoalModel, tables: Tables, tolerance = 1e-6): 
       from.items.map((_, i) => i).filter((i) => i !== card),
     )
 
-  /** The useful cards the badges can buy, sorted by kind. */
-  const reachable = (from: Board, badges: number): Board => {
-    const keep = from.items
-      .map((kind, i) => (kind >= 0 && kinds[kind].good.price <= badges ? i : -1))
-      .filter((i) => i >= 0)
-      .sort((a, b) => from.items[a] - from.items[b] || a - b)
-    if (keep.length === from.items.length && keep.every((card, i) => card === i)) return from
-    return project(from, keep)
+  // ---- Beliefs ----
+
+  const blank = (group: number): Belief => ({
+    group,
+    chances: new Float64Array(classes[group].codes.length),
+  })
+
+  /** The code each world of a board makes of the useful cards the badges can buy. */
+  const codesOf = (from: Board, badges: number) => {
+    const counts = from.items.map((kind) => kind >= 0 && kinds[kind].good.price <= badges)
+    return from.worlds.map((world) =>
+      from.items.reduce(
+        (code, kind, i) => (counts[i] ? code + (addOf[world.origins[i]].get(kind) ?? 0) : code),
+        0,
+      ),
+    )
   }
 
-  const codeOf = (items: number[], origins: number[]) => {
-    let code = 0
-    for (let i = 0; i < items.length; i++) code += addOf[origins[i]].get(items[i]) ?? 0
-    return code
+  const view = (from: Board, badges: number): Belief => {
+    const codes = codesOf(from, badges)
+    const belief = blank(classOf[codes[0]])
+    from.worlds.forEach((world, i) => (belief.chances[slotOf[codes[i]]] += world.chance))
+    return belief
   }
 
-  /** Whether cards of wanted heroes or pieces already on show are enough, and affordable. */
-  const canFinish = (items: number[], badges: number, need: number) => {
-    const cost = new Array<number>(need + 1).fill(Infinity)
-    cost[0] = 0
-    for (const item of items) {
-      if (item < 0 || !kinds[item].certain) continue
-      const { gain } = kinds[item].outcomes[0]
-      for (let have = need - 1; have >= 0; have--) {
-        const to = Math.min(need, have + gain)
-        cost[to] = Math.min(cost[to], cost[have] + kinds[item].good.price)
-      }
+  // Scratch for `deal`, all zero between calls: chances by code, and the codes that hold one.
+  const spread = new Float64Array(size)
+  const touched = new Int32Array(size)
+
+  /**
+   * Deals a new card from every free source onto the kept cards of `codes`, and
+   * adds the shops that result to `looks`, one belief per class, with the cards
+   * out of `reach` ignored. A source in `held` deals nothing, even for a code
+   * that shows no card of it.
+   */
+  const deal = (
+    looks: Map<number, Belief>,
+    codes: ArrayLike<number>,
+    chances: ArrayLike<number>,
+    reach: Int32Array,
+    held?: ReadonlySet<number>,
+  ) => {
+    let count = 0
+    for (let j = 0; j < codes.length; j++) {
+      if (!chances[j]) continue
+      spread[codes[j]] = chances[j]
+      touched[count++] = codes[j]
     }
-    return cost[need] <= badges
-  }
-
-  const bound =
-    (table: Float64Array[][]): Outlook =>
-    (from, badges, need) => {
-      if (need <= 0 || canFinish(from.items, badges, need)) return 1
-      if (badges < 0) return 0
-      const seen = reachable(from, badges)
-      const row = table[need][badges]
-      return seen.worlds.reduce((sum, w) => sum + w.chance * row[codeOf(seen.items, w.origins)], 0)
-    }
-
-  // ---- The first move, on the board ----
-
-  const rolls = new Map<string, { chance: number; board: Board }[]>()
-  /** Every shop a paid reroll that keeps `kept` can show, with `badges` left after the fee. */
-  const roll = (kept: Board, badges: number) => {
-    const key = `${badges}|${kept.key}`
-    const known = rolls.get(key)
-    if (known) return known
-    const stay = kept.items
-      .map((kind, i) => (kind >= 0 && kinds[kind].good.price <= badges ? i : -1))
-      .filter((i) => i >= 0)
-    const stayItems = stay.map((i) => kept.items[i])
-    const seen = new Map<string, { chance: number; items: number[]; worlds: World[] }>()
-    for (const world of kept.worlds) {
-      const free = sources.flatMap((source, s) =>
-        !world.origins.includes(s) && source.kinds.length ? [s] : [],
-      )
-      const base = stay.map((i) => world.origins[i])
-      const fresh: [kind: number, source: number][] = []
-      const emit = (index: number, chance: number) => {
-        if (chance <= 0) return
-        if (index < free.length) {
-          const source = sources[free[index]]
-          let none = source.none
-          source.kinds.forEach((kind, j) => {
-            if (kinds[kind].good.price > badges) {
-              none += source.chances[j]
-              return
-            }
-            fresh.push([kind, free[index]])
-            emit(index + 1, chance * source.chances[j])
-            fresh.pop()
-          })
-          emit(index + 1, chance * none)
-          return
-        }
-        const ordered = [...fresh].sort((a, b) => a[0] - b[0])
-        const look = ordered.map(([kind]) => kind).join(',')
-        let entry = seen.get(look)
-        if (!entry) {
-          entry = { chance: 0, items: [...stayItems, ...ordered.map(([kind]) => kind)], worlds: [] }
-          seen.set(look, entry)
-        }
-        entry.chance += chance
-        // New cards of one kind arrive together, and which source made which is not known.
-        let orders = [base]
-        for (let i = 0; i < ordered.length;) {
-          let end = i + 1
-          while (end < ordered.length && ordered[end][0] === ordered[i][0]) end++
-          const same = permutations(ordered.slice(i, end).map(([, source]) => source))
-          orders = orders.flatMap((order) => same.map((more) => [...order, ...more]))
-          i = end
-        }
-        for (const origins of orders) entry.worlds.push({ origins, chance: chance / orders.length })
-      }
-      emit(0, world.chance)
-    }
-    const merged = new Map<string, { chance: number; board: Board }>()
-    for (const entry of seen.values()) {
-      const next = board(entry.items, entry.worlds)
-      const same = merged.get(next.key)
-      if (same) same.chance += entry.chance
-      else merged.set(next.key, { chance: entry.chance, board: next })
-    }
-    const result = [...merged.values()]
-    rolls.set(key, result)
-    return result
-  }
-
-  const afterRoll = (kept: Board, badges: number, need: number, next: Outlook) => {
-    if (badges < 0) return 0
-    let sum = 0
-    for (const shop of roll(kept, badges)) sum += shop.chance * next(shop.board, badges, need)
-    return Math.min(1, sum)
-  }
-
-  const afterBuy = (from: Board, card: number, badges: number, need: number, next: Outlook) => {
-    const kind = kinds[from.items[card]]
-    const left = badges - kind.good.price
-    if (left < 0) return 0
-    const rest = without(from, card)
-    let sum = 0
-    for (const outcome of kind.outcomes) {
-      const togo = need - outcome.gain
-      sum += outcome.chance * (togo <= 0 ? 1 : next(rest, left + outcome.refund, togo))
-    }
-    return Math.min(1, sum)
-  }
-
-  // ---- Later moves, on beliefs ----
-
-  const known = new Map<string, number>()
-  const freshMemo = new Map<number, [code: number, chance: number][]>()
-  /** Every full shop the kept cards of `kept` can become, with its chance. */
-  const fresh = (kept: number) => {
-    let list = freshMemo.get(kept)
-    if (list) return list
-    list = [[kept, 1]]
-    const taken = new Set(cards[kept].map((card) => card.source))
     sources.forEach((source, s) => {
-      if (!source.kinds.length || taken.has(s)) return
-      const next: [number, number][] = []
-      for (const [code, chance] of list!) {
-        // A source that always shows something useful leaves no shop without it.
-        if (source.none > 0) next.push([code, chance * source.none])
-        source.kinds.forEach((kind, k) =>
-          next.push([code + addOf[s].get(kind)!, chance * source.chances[k]]),
-        )
+      if (!source.kinds.length || held?.has(s)) return
+      const radix = source.kinds.length + 1
+      const had = count
+      for (let t = 0; t < had; t++) {
+        const code = touched[t]
+        if (Math.floor(code / place[s]) % radix) continue
+        const chance = spread[code]
+        for (let k = 0; k < source.chances.length; k++) {
+          const share = source.chances[k] * chance
+          if (!share) continue
+          const to = code + (k + 1) * place[s]
+          if (!spread[to]) touched[count++] = to
+          spread[to] += share
+        }
+        spread[code] = source.none * chance
       }
-      list = next
     })
-    freshMemo.set(kept, list)
-    return list
+    for (let t = 0; t < count; t++) {
+      const chance = spread[touched[t]]
+      spread[touched[t]] = 0
+      if (!chance) continue
+      const seen = reach[touched[t]]
+      let look = looks.get(classOf[seen])
+      if (!look) {
+        look = blank(classOf[seen])
+        looks.set(look.group, look)
+      }
+      look.chances[slotOf[seen]] += chance
+    }
   }
 
+  // A row holds a value for every code, so cards out of reach need no care here.
   const tableAt = (table: Float64Array[][], need: number, badges: number, belief: Belief) => {
-    if (need <= 0) return 1
-    if (badges < 0) return 0
     const row = table[need][badges]
+    const { codes } = classes[belief.group]
     let sum = 0
-    for (const [code, chance] of belief) sum += chance * row[code]
+    for (let j = 0; j < codes.length; j++) sum += belief.chances[j] * row[codes[j]]
     return sum
   }
 
-  function beliefValue(need: number, badges: number, raw: Belief): number {
-    if (need <= 0) return 1
-    if (badges < 0) return 0
-    const reach = affordable(badges)
-    const belief: Belief = new Map()
-    let total = 0
-    for (const [code, chance] of raw) {
-      belief.set(reach[code], (belief.get(reach[code]) ?? 0) + chance)
-      total += chance
-    }
-    if (total !== 1) for (const [code, chance] of belief) belief.set(code, chance / total)
-    const low = tableAt(floor, need, badges, belief)
-    const high = tableAt(ceiling, need, badges, belief)
-    if (high - low <= tolerance) return low
-    const key = `${need}|${badges}|${[...belief]
-      .sort((a, b) => a[0] - b[0])
-      .map(([code, chance]) => `${code}:${chance.toPrecision(12)}`)
-      .join(';')}`
-    const answer = known.get(key)
-    if (answer !== undefined) return answer
-    opening()
+  const floorAt: Reading = (need, badges, belief) => tableAt(floor, need, badges, belief)
+  const ceilingAt: Reading = (need, badges, belief) => tableAt(ceiling, need, badges, belief)
 
-    // Every code of a belief shows the same kinds.
-    const first = belief.keys().next().value as number
-    const present = [...new Set(cards[first].map((card) => card.kind))]
+  // ---- The search, on beliefs ----
+
+  const known = new Map<string, number>()
+  let knownBytes = 0
+
+  // An answer's key is the bytes of these numbers, read as text.
+  const largest = classes.reduce((most, group) => Math.max(most, group.codes.length), 0)
+  const keyNumbers = new Float64Array(3 + largest)
+  const keyText = new Uint16Array(keyNumbers.buffer)
+  const keyOf = (need: number, badges: number, belief: Belief): string => {
+    const { chances } = belief
+    keyNumbers[0] = need
+    keyNumbers[1] = badges
+    keyNumbers[2] = belief.group
+    for (let j = 0; j < chances.length; j++) keyNumbers[3 + j] = Math.round(chances[j] * KEY_STEPS)
+    return Reflect.apply(String.fromCharCode, null, keyText.subarray(0, 4 * (3 + chances.length)))
+  }
+
+  function searched(need: number, badges: number, raw: Belief): number {
+    const from = classes[raw.group].codes
+    const floorRow = floor[need][badges]
+    const ceilingRow = ceiling[need][badges]
+    let total = 0
+    let low = 0
+    let high = 0
+    for (let j = 0; j < from.length; j++) {
+      const chance = raw.chances[j]
+      total += chance
+      low += chance * floorRow[from[j]]
+      high += chance * ceilingRow[from[j]]
+    }
+    if (high - low <= tolerance * total) return low
+
+    // Cards the badges cannot buy are ignored, and the chances scaled to add up
+    // to 1, so that every belief with the same answer has the same key.
+    const reach = affordable(badges)
+    const belief = blank(classOf[reach[from[0]]])
+    for (let j = 0; j < from.length; j++) {
+      belief.chances[slotOf[reach[from[j]]]] += raw.chances[j] / total
+    }
+    const key = keyOf(need, badges, belief)
+    let best = known.get(key)
+    if (best === undefined) {
+      opening()
+      best = open(need, badges, belief, low / total)
+      known.set(key, best)
+      knownBytes += 2 * key.length + ANSWER_BYTES
+    }
+    return total * best
+  }
+
+  /** The best chance from a belief whose chances add up to 1, the tables' floor being `low`. */
+  function open(need: number, badges: number, belief: Belief, low: number): number {
+    const { codes, present, sameKind, keeps, kept, keptFrom } = classes[belief.group]
+    const { chances } = belief
     const moves: { ceiling: number; run: () => number }[] = []
 
-    for (const kind of present) {
+    present.forEach((kind, i) => {
       const { good, outcomes } = kinds[kind]
-      const results = new Map<
-        string,
-        { need: number; badges: number; chance: number; belief: Belief }
-      >()
-      for (const [code, chance] of belief) {
-        const same = cards[code].filter((card) => card.kind === kind)
+      // The cards of one kind look the same, so the one bought is any of them.
+      const rest = blank(classOf[codes[0] - sameKind[i][0][0].add])
+      for (let j = 0; j < codes.length; j++) {
+        if (!chances[j]) continue
+        const same = sameKind[i][j]
         for (const card of same) {
-          for (const outcome of outcomes) {
-            const togo = need - outcome.gain
-            const left = badges - good.price + outcome.refund
-            const at = togo <= 0 ? 'done' : `${togo}|${left}`
-            let result = results.get(at)
-            if (!result) {
-              result = { need: togo, badges: left, chance: 0, belief: new Map() }
-              results.set(at, result)
-            }
-            const share = (chance * outcome.chance) / same.length
-            const rest = code - card.add
-            result.chance += share
-            result.belief.set(rest, (result.belief.get(rest) ?? 0) + share)
-          }
+          rest.chances[slotOf[codes[j] - card.add]] += chances[j] / same.length
         }
       }
-      let top = 0
-      for (const result of results.values()) {
-        if (result.need <= 0) {
-          top += result.chance
-          continue
+      const left = badges - good.price
+      const bought = (then: Reading) => {
+        let sum = 0
+        for (const outcome of outcomes) {
+          const togo = need - outcome.gain
+          sum += outcome.chance * (togo <= 0 ? 1 : then(togo, left + outcome.refund, rest))
         }
-        const then = affordable(result.badges)
-        const row = ceiling[result.need][result.badges]
-        for (const [code, chance] of result.belief) top += chance * row[then[code]]
+        return sum
       }
-      moves.push({
-        ceiling: top,
-        run: () => {
-          let value = 0
-          for (const result of results.values()) {
-            value +=
-              result.need <= 0
-                ? result.chance
-                : result.chance * beliefValue(result.need, result.badges, result.belief)
-          }
-          return value
-        },
-      })
-    }
+      moves.push({ ceiling: bought(ceilingAt), run: () => bought(searched) })
+    })
 
     const paid = badges - reroll
     if (paid >= 0) {
-      const counts = present.map((kind) => cards[first].filter((c) => c.kind === kind).length)
-      for (const keep of keepCounts(counts)) {
-        const kept: Belief = new Map()
-        for (const [code, chance] of belief) {
-          const options = keptOptions(cards[code], code, present, keep)
-          for (const option of options) {
-            kept.set(option, (kept.get(option) ?? 0) + chance / options.length)
-          }
+      for (let way = 0; way < keeps; way++) {
+        const held = blank(classOf[kept[keptFrom[way]]])
+        for (let j = 0; j < codes.length; j++) {
+          if (!chances[j]) continue
+          const from = keptFrom[j * keeps + way]
+          const to = keptFrom[j * keeps + way + 1]
+          for (let i = from; i < to; i++) held.chances[slotOf[kept[i]]] += chances[j] / (to - from)
         }
         moves.push({
-          ceiling: tableAt(rolledCeiling, need, paid, kept),
-          run: () => rolledValue(kept, paid, need),
+          ceiling: tableAt(rolledCeiling, need, paid, held),
+          run: () => rolled(need, paid, held),
         })
       }
     }
@@ -371,51 +314,85 @@ export function makeSearch(model: GoalModel, tables: Tables, tolerance = 1e-6): 
       best = Math.max(best, move.run())
       if (best >= 1) break
     }
-    best = Math.min(1, best)
-    known.set(key, best)
-    return best
+    return Math.min(1, best)
   }
 
-  function rolledValue(kept: Belief, badges: number, need: number): number {
-    const reach = affordable(badges)
-    const looks = new Map<string, { chance: number; belief: Belief }>()
-    for (const [code, chance] of kept) {
-      for (const [full, share] of fresh(code)) {
-        const seen = reach[full]
-        let look = looks.get(shown[seen])
-        if (!look) {
-          look = { chance: 0, belief: new Map() }
-          looks.set(shown[seen], look)
-        }
-        look.chance += chance * share
-        look.belief.set(seen, (look.belief.get(seen) ?? 0) + chance * share)
+  /** The best chance once every free source has dealt a new card onto the kept ones. */
+  function rolled(need: number, badges: number, held: Belief): number {
+    const looks = new Map<number, Belief>()
+    deal(looks, classes[held.group].codes, held.chances, affordable(badges))
+    let sum = 0
+    for (const look of looks.values()) sum += searched(need, badges, look)
+    return sum
+  }
+
+  // ---- The first move, on the board ----
+
+  /** Whether cards of wanted heroes or pieces already on show are enough, and affordable. */
+  const canFinish = (group: number, badges: number, need: number) => {
+    const cost = new Array<number>(need + 1).fill(Infinity)
+    cost[0] = 0
+    for (const { kind } of cards[classes[group].codes[0]]) {
+      if (!kinds[kind].certain) continue
+      const { gain } = kinds[kind].outcomes[0]
+      for (let have = need - 1; have >= 0; have--) {
+        const to = Math.min(need, have + gain)
+        cost[to] = Math.min(cost[to], cost[have] + kinds[kind].good.price)
       }
     }
-    let value = 0
-    for (const look of looks.values()) value += look.chance * beliefValue(need, badges, look.belief)
-    return value
+    return cost[need] <= badges
   }
 
-  const value: Outlook = (from, badges, need) => {
-    if (need <= 0 || canFinish(from.items, badges, need)) return 1
-    if (badges < 0) return 0
-    const seen = reachable(from, badges)
-    const belief: Belief = new Map()
-    for (const world of seen.worlds) {
-      const code = codeOf(seen.items, world.origins)
-      belief.set(code, (belief.get(code) ?? 0) + world.chance)
+  const outlook = (read: Reading): Outlook => {
+    const seen = (belief: Belief, badges: number, need: number) =>
+      canFinish(belief.group, badges, need)
+        ? belief.chances.reduce((sum, chance) => sum + chance, 0)
+        : read(need, badges, belief)
+
+    const from = (start: Board, badges: number, need: number) => {
+      if (need <= 0) return 1
+      if (badges < 0) return 0
+      return seen(view(start, badges), badges, need)
     }
-    return beliefValue(need, badges, belief)
+
+    return {
+      from,
+      afterRoll: (kept, badges, need) => {
+        if (badges < 0) return 0
+        const reach = affordable(badges)
+        const codes = codesOf(kept, badges)
+        const looks = new Map<number, Belief>()
+        // Every kept card holds its source, whether or not it counts toward the goal.
+        kept.worlds.forEach((world, i) =>
+          deal(looks, [codes[i]], [world.chance], reach, new Set(world.origins)),
+        )
+        let sum = 0
+        for (const look of looks.values()) sum += seen(look, badges, need)
+        return Math.min(1, sum)
+      },
+      afterBuy: (start, card, badges, need) => {
+        const kind = kinds[start.items[card]]
+        const left = badges - kind.good.price
+        if (left < 0) return 0
+        const rest = without(start, card)
+        let sum = 0
+        for (const outcome of kind.outcomes) {
+          sum += outcome.chance * from(rest, left + outcome.refund, need - outcome.gain)
+        }
+        return Math.min(1, sum)
+      },
+    }
   }
 
   return {
     board,
     project,
-    afterRoll,
-    afterBuy,
-    value,
-    floor: bound(floor),
-    ceiling: bound(ceiling),
+    value: outlook(searched),
+    floor: outlook(floorAt),
+    ceiling: outlook(ceilingAt),
     stats,
+    get bytes() {
+      return knownBytes
+    },
   }
 }

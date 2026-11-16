@@ -12,6 +12,8 @@
 
 import type { GoalModel } from './moves'
 
+// ---- The codes ----
+
 /** One useful card of a code. `add` is what the card contributes to the code. */
 export interface ShownCard {
   source: number
@@ -26,20 +28,27 @@ interface CodeClass {
   present: number[]
   /** For each kind on show, for each code, that code's cards of the kind. */
   sameKind: ShownCard[][][]
+  /** How many ways there are to keep some count of the cards of each kind on show. */
+  keeps: number
   /**
-   * For each code, for each count of cards kept per kind: every code the kept
-   * cards can form, each as likely as the next.
+   * For each code and each such way, every code the kept cards can form, each as
+   * likely as the next: the entries of `kept` from `keptFrom[slot * keeps + way]`
+   * up to the next entry of `keptFrom`.
    */
-  keptCodes: Int32Array[][]
+  kept: Int32Array
+  keptFrom: Int32Array
 }
 
 export interface Layout {
   size: number
+  /** For each source, what one step of its digit adds to a code. */
+  place: number[]
   cards: ShownCard[][]
   /** The chance a fresh shop shows exactly this code. */
   weight: Float64Array
-  /** The kinds a code shows, sorted, as text: codes with equal text look the same. */
-  shown: string[]
+  /** For each code, its class in `classes` and its place among that class's codes. */
+  classOf: Int32Array
+  slotOf: Int32Array
   /** For each code, every code a choice of locks can leave. */
   lockSets: Int32Array[]
   classes: CodeClass[]
@@ -47,10 +56,12 @@ export interface Layout {
   addOf: Map<number, number>[]
   /** Turns values of full shops into values of kept cards: each free source shows a new card. */
   fold: (values: Float64Array) => Float64Array
+  /** An estimate of its size in memory. */
+  bytes: number
 }
 
 /** Every way to keep `keep[i]` cards of kind `kinds[i]` from a code. */
-export function keptOptions(
+function keptOptions(
   cards: readonly ShownCard[],
   code: number,
   kinds: readonly number[],
@@ -74,7 +85,7 @@ export function keptOptions(
 }
 
 /** Every count of cards kept per kind, given how many of each are on show. */
-export function keepCounts(counts: readonly number[]): number[][] {
+function keepCounts(counts: readonly number[]): number[][] {
   let keeps: number[][] = [[]]
   for (const count of counts) {
     keeps = keeps.flatMap((keep) => Array.from({ length: count + 1 }, (_, j) => [...keep, j]))
@@ -82,26 +93,27 @@ export function keepCounts(counts: readonly number[]): number[][] {
   return keeps
 }
 
-export function layout(model: GoalModel): Layout {
+function layout(model: GoalModel): Layout {
   const { sources } = model
   const radix = sources.map((source) => source.kinds.length + 1)
-  const mult: number[] = []
+  const place: number[] = []
   let size = 1
   for (const r of radix) {
-    mult.push(size)
+    place.push(size)
     size *= r
   }
 
   const cards: ShownCard[][] = []
   const weight = new Float64Array(size)
-  const shown: string[] = []
+  // The kinds a code shows, sorted, as text: codes with equal text look the same.
+  const alike = new Map<string, number[]>()
   for (let code = 0; code < size; code++) {
     const list: ShownCard[] = []
     let chance = 1
     sources.forEach((source, i) => {
-      const digit = Math.floor(code / mult[i]) % radix[i]
+      const digit = Math.floor(code / place[i]) % radix[i]
       if (digit) {
-        list.push({ source: i, kind: source.kinds[digit - 1], add: digit * mult[i] })
+        list.push({ source: i, kind: source.kinds[digit - 1], add: digit * place[i] })
         chance *= source.chances[digit - 1]
       } else {
         chance *= source.none
@@ -109,12 +121,13 @@ export function layout(model: GoalModel): Layout {
     })
     cards.push(list)
     weight[code] = chance
-    shown.push(
-      list
-        .map((card) => card.kind)
-        .sort((a, b) => a - b)
-        .join(','),
-    )
+    const shown = list
+      .map((card) => card.kind)
+      .sort((a, b) => a - b)
+      .join(',')
+    const same = alike.get(shown)
+    if (same) same.push(code)
+    else alike.set(shown, [code])
   }
 
   const lockSets = cards.map((list, code) => {
@@ -128,21 +141,34 @@ export function layout(model: GoalModel): Layout {
     return sets
   })
 
-  const alike = new Map<string, number[]>()
-  shown.forEach((text, code) => alike.set(text, [...(alike.get(text) ?? []), code]))
-  const classes = [...alike.values()].map((codes): CodeClass => {
+  const classOf = new Int32Array(size)
+  const slotOf = new Int32Array(size)
+  const classes = [...alike.values()].map((codes, group): CodeClass => {
+    codes.forEach((code, slot) => {
+      classOf[code] = group
+      slotOf[code] = slot
+    })
     const list = cards[codes[0]]
     const present = [...new Set(list.map((card) => card.kind))]
-    const keeps = keepCounts(present.map((kind) => list.filter((c) => c.kind === kind).length))
+    const ways = keepCounts(present.map((kind) => list.filter((c) => c.kind === kind).length))
+    const kept: number[] = []
+    const keptFrom: number[] = []
+    for (const code of codes) {
+      for (const keep of ways) {
+        keptFrom.push(kept.length)
+        for (const option of keptOptions(cards[code], code, present, keep)) kept.push(option)
+      }
+    }
+    keptFrom.push(kept.length)
     return {
       codes,
       present,
       sameKind: present.map((kind) =>
         codes.map((code) => cards[code].filter((card) => card.kind === kind)),
       ),
-      keptCodes: codes.map((code) =>
-        keeps.map((keep) => Int32Array.from(keptOptions(cards[code], code, present, keep))),
-      ),
+      keeps: ways.length,
+      kept: Int32Array.from(kept),
+      keptFrom: Int32Array.from(keptFrom),
     }
   })
 
@@ -151,10 +177,10 @@ export function layout(model: GoalModel): Layout {
     sources.forEach((source, i) => {
       if (!source.kinds.length) return
       for (let code = 0; code < size; code++) {
-        if (Math.floor(code / mult[i]) % radix[i]) continue
+        if (Math.floor(code / place[i]) % radix[i]) continue
         let sum = source.none * folded[code]
         for (let k = 0; k < source.chances.length; k++) {
-          sum += source.chances[k] * folded[code + (k + 1) * mult[i]]
+          sum += source.chances[k] * folded[code + (k + 1) * place[i]]
         }
         folded[code] = sum
       }
@@ -163,15 +189,31 @@ export function layout(model: GoalModel): Layout {
   }
 
   const addOf = sources.map(
-    (source, i) => new Map(source.kinds.map((kind, j) => [kind, (j + 1) * mult[i]])),
+    (source, i) => new Map(source.kinds.map((kind, j) => [kind, (j + 1) * place[i]])),
   )
-  return { size, cards, weight, shown, lockSets, classes, addOf, fold }
+
+  // Four bytes a number in the typed arrays. The rest, the cards and the small
+  // arrays around each code, at what it was measured to take in V8.
+  const shownCards = cards.reduce((sum, list) => sum + list.length, 0)
+  const numbers =
+    2 * size +
+    lockSets.reduce((sum, sets) => sum + sets.length, 0) +
+    classes.reduce((sum, group) => sum + group.kept.length + group.keptFrom.length, 0)
+  const bytes = 4 * numbers + 140 * shownCards + 680 * size
+
+  return { size, place, cards, weight, classOf, slotOf, lockSets, classes, addOf, fold, bytes }
 }
 
-/** Tables indexed `[targets still needed][badges]`, each row one value per code. */
+// ---- The tables ----
+
+/**
+ * Tables indexed `[targets still needed][badges]`, each row one value per code.
+ * They start empty and hold the rows `cover` has filled. A row depends only on
+ * rows for fewer badges and no more targets, so rows filled for one request stay
+ * good for every later one.
+ */
 export interface Tables {
   layout: Layout
-  maxBadges: number
   ceiling: Float64Array[][]
   floor: Float64Array[][]
   /** The same two tables for the cards kept through a reroll, before the new cards show. */
@@ -179,14 +221,18 @@ export interface Tables {
   rolledFloor: Float64Array[][]
   /** For each code, the code left once cards the badges cannot buy are ignored. */
   affordable: (badges: number) => Int32Array
-  bytes: number
+  /** Fills the rows still missing for up to `need` targets and `badges` badges. */
+  cover: (need: number, badges: number) => void
+  /** An estimate of the size in memory of the layout and the filled rows. */
+  readonly bytes: number
 }
 
 // A chance this close to 1 is treated as certain.
 const SURE = 1e-9
 
-export function buildTables(model: GoalModel, maxBadges: number): Tables {
-  const { kinds, need, reroll } = model
+/** Empty tables for a model. */
+export function createTables(model: GoalModel): Tables {
+  const { kinds, reroll } = model
   const shape = layout(model)
   const { size, cards, weight, lockSets, classes, fold } = shape
 
@@ -207,11 +253,11 @@ export function buildTables(model: GoalModel, maxBadges: number): Tables {
     return withinReach[band]
   }
 
-  const rows = () => Array.from({ length: need + 1 }, () => new Array<Float64Array>(maxBadges + 1))
-  const ceiling = rows()
-  const floor = rows()
-  const rolledCeiling = rows()
-  const rolledFloor = rows()
+  // Row 0 of each table stays empty: with no target left the chance is 1.
+  const ceiling: Float64Array[][] = [[]]
+  const floor: Float64Array[][] = [[]]
+  const rolledCeiling: Float64Array[][] = [[]]
+  const rolledFloor: Float64Array[][] = [[]]
 
   const at = (table: Float64Array[][], n: number, badges: number, code: number) =>
     n <= 0 ? 1 : badges < 0 ? 0 : table[n][badges][code]
@@ -251,101 +297,112 @@ export function buildTables(model: GoalModel, maxBadges: number): Tables {
   const sure: ({ floor: Float64Array; rolledFloor: Float64Array } | undefined)[] = []
   let rowsFilled = 0
 
-  for (let badges = 0; badges <= maxBadges; badges++) {
+  const fill = (n: number, badges: number) => {
+    // Once the goal is as good as certain from every shop, more badges change
+    // nothing: the player can play as if holding the fewer badges, so that
+    // row stays a floor for every count above it, and the ceiling is 1.
+    const settled = sure[n]
+    if (settled) {
+      ceiling[n][badges] = rolledCeiling[n][badges] = certain
+      floor[n][badges] = settled.floor
+      rolledFloor[n][badges] = settled.rolledFloor
+      return
+    }
+    rowsFilled++
     const reach = affordable(badges)
-    for (let n = 1; n <= need; n++) {
-      // Once the goal is as good as certain from every shop, more badges change
-      // nothing: the player can play as if holding the fewer badges, so that
-      // row stays a floor for every count above it, and the ceiling is 1.
-      const settled = sure[n]
-      if (settled) {
-        ceiling[n][badges] = rolledCeiling[n][badges] = certain
-        floor[n][badges] = settled.floor
-        rolledFloor[n][badges] = settled.rolledFloor
-        continue
-      }
-      rowsFilled++
-      const high = new Float64Array(size)
-      const low = new Float64Array(size)
-      const paid = badges - reroll
-      const rolledHigh = paid >= 0 ? rolledCeiling[n][paid] : null
-      const rolledLow = paid >= 0 ? rolledFloor[n][paid] : null
+    const high = new Float64Array(size)
+    const low = new Float64Array(size)
+    const paid = badges - reroll
+    const rolledHigh = paid >= 0 ? rolledCeiling[n][paid] : null
+    const rolledLow = paid >= 0 ? rolledFloor[n][paid] : null
 
-      for (let code = 0; code < size; code++) {
-        if (reach[code] !== code) continue
-        let best = 0
-        for (const card of cards[code]) best = Math.max(best, buy(ceiling, n, badges, code, card))
-        if (rolledHigh) {
-          const sets = lockSets[code]
-          for (let i = 0; i < sets.length; i++) best = Math.max(best, rolledHigh[sets[i]])
-        }
-        high[code] = Math.min(1, best)
+    for (let code = 0; code < size; code++) {
+      if (reach[code] !== code) continue
+      let best = 0
+      for (const card of cards[code]) best = Math.max(best, buy(ceiling, n, badges, code, card))
+      if (rolledHigh) {
+        const sets = lockSets[code]
+        for (let i = 0; i < sets.length; i++) best = Math.max(best, rolledHigh[sets[i]])
       }
+      high[code] = Math.min(1, best)
+    }
 
-      for (const { group, live } of liveClasses(reach)) {
-        const { codes, sameKind, keptCodes } = group
-        let bestScore = -1
-        let tried = new Float64Array(live.length)
-        let best = new Float64Array(live.length)
-        const consider = () => {
-          let score = 0
-          for (let j = 0; j < live.length; j++) score += weight[codes[live[j]]] * tried[j]
-          if (score > bestScore + 1e-15) {
-            bestScore = score
-            const spare = best
-            best = tried
-            tried = spare
-          }
+    for (const { group, live } of liveClasses(reach)) {
+      const { codes, sameKind, keeps, kept, keptFrom } = group
+      let bestScore = -1
+      let tried = new Float64Array(live.length)
+      let best = new Float64Array(live.length)
+      const consider = () => {
+        let score = 0
+        for (let j = 0; j < live.length; j++) score += weight[codes[live[j]]] * tried[j]
+        if (score > bestScore + 1e-15) {
+          bestScore = score
+          const spare = best
+          best = tried
+          tried = spare
         }
-        for (const same of sameKind) {
+      }
+      for (const same of sameKind) {
+        for (let j = 0; j < live.length; j++) {
+          const mine = same[live[j]]
+          let sum = 0
+          for (const card of mine) sum += buy(floor, n, badges, codes[live[j]], card)
+          tried[j] = sum / mine.length
+        }
+        consider()
+      }
+      if (rolledLow) {
+        for (let way = 0; way < keeps; way++) {
           for (let j = 0; j < live.length; j++) {
-            const mine = same[live[j]]
+            const from = keptFrom[live[j] * keeps + way]
+            const to = keptFrom[live[j] * keeps + way + 1]
             let sum = 0
-            for (const card of mine) sum += buy(floor, n, badges, codes[live[j]], card)
-            tried[j] = sum / mine.length
+            for (let i = from; i < to; i++) sum += rolledLow[kept[i]]
+            tried[j] = sum / (to - from)
           }
           consider()
         }
-        if (rolledLow) {
-          const keeps = keptCodes[0].length
-          for (let keep = 0; keep < keeps; keep++) {
-            for (let j = 0; j < live.length; j++) {
-              const options = keptCodes[live[j]][keep]
-              let sum = 0
-              for (let i = 0; i < options.length; i++) sum += rolledLow[options[i]]
-              tried[j] = sum / options.length
-            }
-            consider()
-          }
-        }
-        if (bestScore >= 0) {
-          for (let j = 0; j < live.length; j++) low[codes[live[j]]] = Math.min(1, best[j])
-        }
       }
+      if (bestScore >= 0) {
+        for (let j = 0; j < live.length; j++) low[codes[live[j]]] = Math.min(1, best[j])
+      }
+    }
 
-      for (let code = 0; code < size; code++) {
-        if (reach[code] === code) continue
-        high[code] = high[reach[code]]
-        low[code] = low[reach[code]]
+    for (let code = 0; code < size; code++) {
+      if (reach[code] === code) continue
+      high[code] = high[reach[code]]
+      low[code] = low[reach[code]]
+    }
+    ceiling[n][badges] = high
+    floor[n][badges] = low
+    rolledCeiling[n][badges] = fold(high)
+    rolledFloor[n][badges] = fold(low)
+    if (low.every((value) => value >= 1 - SURE)) {
+      sure[n] = { floor: low, rolledFloor: rolledFloor[n][badges] }
+    }
+  }
+
+  // A row reads rows of the same or fewer targets and fewer badges, so targets
+  // go in rising order, each to the full badge count, before the next.
+  const cover = (need: number, badges: number) => {
+    for (let n = 1; n <= need; n++) {
+      if (n === ceiling.length) {
+        for (const table of [ceiling, floor, rolledCeiling, rolledFloor]) table.push([])
       }
-      ceiling[n][badges] = high
-      floor[n][badges] = low
-      rolledCeiling[n][badges] = fold(high)
-      rolledFloor[n][badges] = fold(low)
-      if (low.every((value) => value >= 1 - SURE)) {
-        sure[n] = { floor: low, rolledFloor: rolledFloor[n][badges] }
-      }
+      for (let next = ceiling[n].length; next <= badges; next++) fill(n, next)
     }
   }
 
   return {
     layout: shape,
-    maxBadges,
     ceiling,
     floor,
     rolledCeiling,
     rolledFloor,
     affordable,
-    bytes: size * 8 * 4 * rowsFilled,
+    cover,
+    get bytes() {
+      return shape.bytes + size * 8 * 4 * rowsFilled
+    },
   }
 }

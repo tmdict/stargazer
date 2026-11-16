@@ -79,13 +79,7 @@ function drawOutcomes(good: Good, goal: Goal, pools: Pools, sell: number): BuyOu
 }
 
 /** The shop as one goal sees it: which products can help, and what each source makes of them. */
-export function goalModel(
-  goal: Goal,
-  odds: LevelOdds,
-  pools: Pools,
-  facts: ShopFacts,
-  cards: readonly ShopCard[] = [],
-): GoalModel {
+export function goalModel(goal: Goal, odds: LevelOdds, pools: Pools, facts: ShopFacts): GoalModel {
   const goods = new Map(facts.goods.map((good) => [good.name, good]))
   const heroes = new Set(goal.heroes.filter((name) => pools.heroes.some((h) => h.name === name)))
   const pieces = new Set(goal.equipment.map((piece) => piece.name))
@@ -103,8 +97,7 @@ export function goalModel(
 
   const kinds: UsefulKind[] = []
   const index = new Map<string, number>()
-  const onShow = cards.flatMap((card) => (card.good ? [card.good] : []))
-  const names = new Set([...odds.flat().map((entry) => entry.good), ...onShow])
+  const names = new Set(odds.flat().map((entry) => entry.good))
   for (const name of [...names].sort()) {
     const good = goods.get(name)
     if (!good) continue
