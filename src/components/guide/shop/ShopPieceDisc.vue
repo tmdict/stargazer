@@ -49,9 +49,8 @@ const backdrop = computed(() => {
 }
 
 .picture img {
-  width: 82%;
-  height: 82%;
+  width: 92%;
+  height: 92%;
   object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
 }
 </style>

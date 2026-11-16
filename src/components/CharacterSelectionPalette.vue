@@ -202,6 +202,14 @@ function handleEnter(event: KeyboardEvent) {
   margin-bottom: 8px;
 }
 
+.filter-row :deep(.icon-filter) {
+  align-items: flex-start;
+}
+
+.filter-row :deep(.icon-options) {
+  justify-content: flex-start;
+}
+
 .filter-row :deep(.clear-option) {
   color: rgba(255, 255, 255, 0.75);
 }
