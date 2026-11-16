@@ -25,8 +25,6 @@ describe('charm data', () => {
     await Promise.all(APP_LOCALES.map((lang) => loadSkillLocale(lang)))
   })
 
-  // A season can ship before its charm text, so no charms is legitimate (a
-  // pack update retires them with their season); a hero list without text, or
   // The tab heads the charms with the current season, which only their ids
   // can confirm.
   it('belongs to the current season', () => {
@@ -34,6 +32,8 @@ describe('charm data', () => {
     expect(charms.map(({ id }) => id).filter((id) => !id.startsWith(prefix))).toEqual([])
   })
 
+  // A season can ship before its charm text, so no charms is legitimate (a
+  // pack update retires them with their season); a hero list without text, or
   // text without a hero list, is a half-applied pack update.
   it('is either fully present or fully retired', () => {
     for (const lang of APP_LOCALES) {

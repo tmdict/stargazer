@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /* The Import and Export buttons of a saved library's backup file (saved teams,
-   rosters), with the file picker and their tooltips. The host runs the import
-   on `file` and the download on `export`. */
+   rosters), with the file picker and their tooltips. */
 
 import { ref } from 'vue'
 
