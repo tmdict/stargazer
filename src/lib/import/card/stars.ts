@@ -68,7 +68,7 @@ const PINK = 0.03
 // star 78% blue or more.
 const RAINBOW = { warm: 0.2, blue: 0.6 } as const
 // Purple shares of a row's bright pixels. From `r1` the row is R1's purple: on
-// result screenshots R1 rows measure 0.58 or more, and R4 rows up to 0.22, the
+// result screenshots R1 rows measure 0.584 or more, and R4 rows up to 0.22, the
 // highest where the stars' lilac lower edge falls inside the band. A white row
 // (R0 or R4) from `mixed` may be an R1 row that headwear tints or a capture
 // fades, so it is sure only as R4 by its rainbow, with at least `starWarm` of
