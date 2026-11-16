@@ -22,7 +22,7 @@ A press of Calculate sends one request to the shop worker. `calculateShop` first
 
 A shop level follows from the round, which the form offers as buttons grouped by level. When the level rises next round, stopping is measured against the next level's sources, and the form says so beside Calculate.
 
-Random fills the shop window with an example shop of the level (`sampleShop`): one card from each source at the repo table's odds, in a random order. Clear empties the window.
+Random fills the shop window with an example shop of the level (`sampleShop`): one card from each source at the repo table's odds, in a random order. Clear empties the window. Each takes a second press once anything is entered.
 
 An answer can be recalculated from a move it recommends. For a reroll, the page sets the recommended locks on the shop and calculates again. For a purchase, the shop stays as entered and the request names the purchase in `startFrom`, so the best-chance comparison starts from buying it first.
 

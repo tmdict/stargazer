@@ -1,12 +1,15 @@
 <script setup lang="ts">
 /* The shop window as the game lays it out: its level, the price of a reroll,
    and the eight cards in two rows. Random fills it with an example shop of the
-   level, and Clear empties it. */
+   level, and Clear empties it. Either takes a second press once anything is
+   entered, since nothing entered can be brought back. */
 
 import { computed } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopWindowCard from './ShopWindowCard.vue'
+import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
@@ -26,6 +29,14 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 const blank = computed(() => cards.every((card) => !card.good && !card.locked))
+
+const { armed, confirm } = useArmedConfirm()
+const random = (): void => {
+  if (blank.value || confirm('random')) emit('random')
+}
+const clear = (): void => {
+  if (confirm('clear')) emit('clear')
+}
 </script>
 
 <template>
@@ -43,19 +54,21 @@ const blank = computed(() => cards.every((card) => !card.good && !card.locked))
         <button
           type="button"
           class="shop-pill-button"
+          :class="{ 'confirm-armed': armed === 'random' }"
           :title="i18n.t('app.shop-random-hint')"
-          @click="emit('random')"
+          @click="random"
         >
-          {{ i18n.t('app.shop-random') }}
+          <ConfirmLabel :armed="armed === 'random'" :label="i18n.t('app.shop-random')" />
         </button>
         <button
           type="button"
           class="shop-pill-button"
+          :class="{ 'confirm-armed': armed === 'clear' }"
           :title="i18n.t('app.shop-clear-hint')"
           :disabled="blank"
-          @click="emit('clear')"
+          @click="clear"
         >
-          {{ i18n.t('app.clear') }}
+          <ConfirmLabel :armed="armed === 'clear'" :label="i18n.t('app.clear')" />
         </button>
       </span>
     </header>

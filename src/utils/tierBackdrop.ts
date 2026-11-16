@@ -1,11 +1,14 @@
 /* The backdrop behind a picture of a rarity tier, a top-to-bottom gradient.
    The stops are data, so a style and an SVG gradient draw the same one. */
 
-export type BackdropTier = 'rare' | 'elite' | 'epic'
+export type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary'
 
 // A colour and where it sits, in percent from the top.
 type BackdropStop = readonly [color: string, at: number]
 
+// Two tiers of the game have no row, since nothing on the site draws them:
+// Mythic (#f3edef, #fcf8f8 at 50, #ececfc) and Supreme (#c4fbeb, #b9e1fa at
+// 25, #ddc7fa at 50, #fee9da at 75, #fff8de).
 export const BACKDROP_STOPS: Record<BackdropTier, readonly BackdropStop[]> = {
   rare: [
     ['#626e8c', 50],
@@ -20,6 +23,11 @@ export const BACKDROP_STOPS: Record<BackdropTier, readonly BackdropStop[]> = {
     ['#dd8c3a', 0],
     ['#f4b749', 50],
     ['#fcce5e', 100],
+  ],
+  legendary: [
+    ['#b9232b', 0],
+    ['#b44742', 50],
+    ['#cf6450', 100],
   ],
 }
 

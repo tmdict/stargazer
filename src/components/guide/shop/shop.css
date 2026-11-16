@@ -131,6 +131,13 @@
   color: var(--color-accent);
 }
 
+.shop-pill-button.confirm-armed,
+.shop-pill-button.confirm-armed:hover {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: #fff;
+}
+
 .shop-pill-button:disabled {
   border-color: rgba(255, 255, 255, 0.22);
   color: rgba(255, 255, 255, 0.85);

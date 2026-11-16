@@ -191,8 +191,14 @@ export function solveMinBadges(
         .concat(set),
     )
   }
-  const spare = Array.from({ length: 1 << others.length }, (_, mask) =>
-    others.filter((_, bit) => (mask >> bit) & 1),
+  // Locked cards with no product named are interchangeable too: which of them
+  // a reroll keeps changes nothing, only how many.
+  const named = others.filter((card) => shop.cards[card].good)
+  const blank = others.filter((card) => !shop.cards[card].good)
+  const spare = Array.from({ length: 1 << named.length }, (_, mask) =>
+    named.filter((_, bit) => (mask >> bit) & 1),
+  ).flatMap((set) =>
+    Array.from({ length: blank.length + 1 }, (_, n) => [...set, ...blank.slice(0, n)]),
   )
   const options: Move[][] = [...offers.values()].map((card) => [{ kind: 'buy', card }])
   for (const set of own) {
