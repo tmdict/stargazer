@@ -6,19 +6,19 @@ Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel t
 
 A pack update writes all of it. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
-| Content               | Files                                                        |
-| --------------------- | ------------------------------------------------------------ |
-| Equipment id and tier | `src/data/honor-duel/equipment/<name>.json`                  |
-| Artifact id           | `src/data/honor-duel/artifact/<name>.json`                   |
-| Names, site languages | `src/locales/honor-duel/{equipment,artifact}/<name>.json`    |
-| Pictures              | data pack, `images/honor-duel/{equipment,artifact}/`         |
-| Effect text           | data pack, `text/honor-duel/<language>/`, two files for each |
+| Content               | Files                                                |
+| --------------------- | ---------------------------------------------------- |
+| Equipment id and tier | `src/data/hd/equipment/<name>.json`                  |
+| Artifact id           | `src/data/hd/artifact/<name>.json`                   |
+| Names, site languages | `src/locales/hd/{equipment,artifact}/<name>.json`    |
+| Pictures              | data pack, `images/hd/{equipment,artifact}/`         |
+| Effect text           | data pack, `text/hd/<language>/`, two files for each |
 
 An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. An update never changes the id of an existing file, and a new entry takes the next number after the highest in use. An update stops, writing nothing, when a file has no entry left in its source, so a renamed entry is renamed by hand and keeps its id.
 
 ## Loading
 
-`src/lib/honorDuel.ts` holds every glob of the content: the data files, the names, the pictures and the text. Only the tab's list and the popup import it, and both are fetched on first use, so a visit that never opens the tab downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/lib/hd/catalog.ts` holds every glob of the content: the data files, the names, the pictures and the text. Only the tab's list and the popup import it, and both are fetched on first use, so a visit that never opens the tab downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
 
 The text loads one language at a time, in the reader's skill-text language, when a popup opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 
@@ -28,7 +28,7 @@ A link opens the tab directly with `?tab=honorDuel` on the Arena page.
 
 ## Formats
 
-A data file, `src/data/honor-duel/equipment/light-armor.json`. `name` equals the file name and keys the names, pictures and text. `tier` is `rare`, `elite`, `epic` or `legendary`. An artifact file has `id` and `name` only.
+A data file, `src/data/hd/equipment/light-armor.json`. `name` equals the file name and keys the names, pictures and text. `tier` is `rare`, `elite`, `epic` or `legendary`. An artifact file has `id` and `name` only.
 
 ```json
 {
@@ -38,7 +38,7 @@ A data file, `src/data/honor-duel/equipment/light-armor.json`. `name` equals the
 }
 ```
 
-A names file, `src/locales/honor-duel/artifact/golden-blooms.json`, with one name for each site language:
+A names file, `src/locales/hd/artifact/golden-blooms.json`, with one name for each site language:
 
 ```json
 {
@@ -48,7 +48,7 @@ A names file, `src/locales/honor-duel/artifact/golden-blooms.json`, with one nam
 }
 ```
 
-The pack's text, one pair of files for each skill-text language, each keyed by entry name. Numbers are marked as in skill text (`[[40%]]`). `text/honor-duel/en/equipment.json`:
+The pack's text, one pair of files for each skill-text language, each keyed by entry name. Numbers are marked as in skill text (`[[40%]]`). `text/hd/en/equipment.json`:
 
 ```json
 {
@@ -59,7 +59,7 @@ The pack's text, one pair of files for each skill-text language, each keyed by e
 }
 ```
 
-`text/honor-duel/en/artifacts.json`. `levels` holds one text for each of the artifact's three levels:
+`text/hd/en/artifacts.json`. `levels` holds one text for each of the artifact's three levels:
 
 ```json
 {

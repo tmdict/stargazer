@@ -17,7 +17,7 @@ import {
   duelItemName,
   equipmentTierLabel,
   loadHonorDuelText,
-} from '@/lib/honorDuel'
+} from '@/lib/hd/catalog'
 import { EQUIPMENT_TIERS, type HonorDuelItem, type HonorDuelText } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'

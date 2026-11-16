@@ -7,7 +7,7 @@ import { computed } from 'vue'
 
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { duelItemName } from '@/lib/honorDuel'
+import { duelItemName } from '@/lib/hd/catalog'
 import type { DuelArtifactText, DuelEquipmentText, HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { HIGHLIGHT_RE, splitHighlightToken } from '@/utils/textHighlight'

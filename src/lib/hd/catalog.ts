@@ -24,14 +24,14 @@ const byId = <T extends { id: number }>(modules: Record<string, T>): T[] =>
   Object.values(modules).sort((a, b) => a.id - b.id)
 
 export const duelEquipment: readonly DuelEquipment[] = byId(
-  import.meta.glob<DuelEquipment>('@/data/honor-duel/equipment/*.json', {
+  import.meta.glob<DuelEquipment>('@/data/hd/equipment/*.json', {
     eager: true,
     import: 'default',
   }),
 )
 
 export const duelArtifacts: readonly DuelArtifact[] = byId(
-  import.meta.glob<DuelArtifact>('@/data/honor-duel/artifact/*.json', {
+  import.meta.glob<DuelArtifact>('@/data/hd/artifact/*.json', {
     eager: true,
     import: 'default',
   }),
@@ -39,13 +39,13 @@ export const duelArtifacts: readonly DuelArtifact[] = byId(
 
 const names = {
   equipment: byStem(
-    import.meta.glob<LocaleData>('@/locales/honor-duel/equipment/*.json', {
+    import.meta.glob<LocaleData>('@/locales/hd/equipment/*.json', {
       eager: true,
       import: 'default',
     }),
   ),
   artifact: byStem(
-    import.meta.glob<LocaleData>('@/locales/honor-duel/artifact/*.json', {
+    import.meta.glob<LocaleData>('@/locales/hd/artifact/*.json', {
       eager: true,
       import: 'default',
     }),
@@ -56,14 +56,14 @@ const names = {
 // square instead of cropped to one.
 const images = {
   equipment: byStem(
-    import.meta.glob<string>('@/pack/images/honor-duel/equipment/*.png', {
+    import.meta.glob<string>('@/pack/images/hd/equipment/*.png', {
       query: { format: 'webp', quality: 80, w: 128, h: 128, fit: 'inside' },
       eager: true,
       import: 'default',
     }),
   ),
   artifact: byStem(
-    import.meta.glob<string>('@/pack/images/honor-duel/artifact/*.png', {
+    import.meta.glob<string>('@/pack/images/hd/artifact/*.png', {
       query: { format: 'webp', quality: 80, w: 128, h: 128, fit: 'inside' },
       eager: true,
       import: 'default',
@@ -85,13 +85,12 @@ export const duelItemImage = ({ kind, item }: HonorDuelItem): string | undefined
 
 const textChunks = {
   equipment: import.meta.glob<Record<string, DuelEquipmentText>>(
-    '@/pack/text/honor-duel/*/equipment.json',
+    '@/pack/text/hd/*/equipment.json',
     { import: 'default' },
   ),
-  artifacts: import.meta.glob<Record<string, DuelArtifactText>>(
-    '@/pack/text/honor-duel/*/artifacts.json',
-    { import: 'default' },
-  ),
+  artifacts: import.meta.glob<Record<string, DuelArtifactText>>('@/pack/text/hd/*/artifacts.json', {
+    import: 'default',
+  }),
 }
 
 const textPromises = new Map<SkillLocale, Promise<HonorDuelText>>()
@@ -100,7 +99,7 @@ const textPromises = new Map<SkillLocale, Promise<HonorDuelText>>()
 export function loadHonorDuelText(lang: SkillLocale): Promise<HonorDuelText> {
   const pending = textPromises.get(lang)
   if (pending) return pending
-  const folder = `/src/pack/text/honor-duel/${lang}`
+  const folder = `/src/pack/text/hd/${lang}`
   const equipment = textChunks.equipment[`${folder}/equipment.json`]
   const artifacts = textChunks.artifacts[`${folder}/artifacts.json`]
   if (!equipment || !artifacts) {

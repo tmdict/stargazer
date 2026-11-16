@@ -301,13 +301,12 @@ export function packProblems(
     ['equipment', 'equipment.json'],
     ['artifact', 'artifacts.json'],
   ] as const) {
-    const path = join(pack, 'text/honor-duel/en', file)
+    const path = join(pack, 'text/hd/en', file)
     const text = existsSync(path)
       ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
       : {}
-    const bare = jsonNames(join(root, 'src/data/honor-duel', kind)).filter(
-      (name) =>
-        !(name in text) || !existsSync(join(pack, 'images/honor-duel', kind, `${name}.png`)),
+    const bare = jsonNames(join(root, 'src/data/hd', kind)).filter(
+      (name) => !(name in text) || !existsSync(join(pack, 'images/hd', kind, `${name}.png`)),
     )
     if (bare.length > 0) {
       notes.push(`${bare.length} Honor Duel ${kind} entries have no picture or text in the pack`)
