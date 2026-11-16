@@ -1,5 +1,6 @@
 {
   "id": 59,
   "name": "survivor",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 69,
   "name": "robe-of-cemetery",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

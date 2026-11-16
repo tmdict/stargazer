@@ -1,5 +1,6 @@
 {
   "id": 99,
   "name": "courage-gauntlets",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

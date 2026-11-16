@@ -1,5 +1,6 @@
 {
   "id": 41,
   "name": "wizards-mask",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

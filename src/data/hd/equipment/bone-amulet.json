@@ -1,5 +1,6 @@
 {
   "id": 32,
   "name": "bone-amulet",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

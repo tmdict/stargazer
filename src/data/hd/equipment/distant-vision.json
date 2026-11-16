@@ -1,5 +1,6 @@
 {
   "id": 105,
   "name": "distant-vision",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

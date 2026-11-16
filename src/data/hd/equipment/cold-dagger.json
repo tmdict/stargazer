@@ -1,5 +1,6 @@
 {
   "id": 6,
   "name": "cold-dagger",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

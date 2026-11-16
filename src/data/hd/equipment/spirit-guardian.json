@@ -1,5 +1,6 @@
 {
   "id": 52,
   "name": "spirit-guardian",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": false
 }

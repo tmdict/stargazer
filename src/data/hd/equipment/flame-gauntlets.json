@@ -1,5 +1,6 @@
 {
   "id": 68,
   "name": "flame-gauntlets",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

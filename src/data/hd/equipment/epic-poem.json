@@ -1,5 +1,6 @@
 {
   "id": 55,
   "name": "epic-poem",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

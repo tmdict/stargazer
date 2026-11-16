@@ -1,5 +1,6 @@
 {
   "id": 61,
   "name": "decaying-ring",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

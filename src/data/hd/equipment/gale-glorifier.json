@@ -1,5 +1,6 @@
 {
   "id": 43,
   "name": "gale-glorifier",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

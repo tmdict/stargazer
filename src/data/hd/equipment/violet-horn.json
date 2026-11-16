@@ -1,5 +1,6 @@
 {
   "id": 57,
   "name": "violet-horn",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

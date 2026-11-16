@@ -1,5 +1,6 @@
 {
   "id": 39,
   "name": "dusty-medal",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

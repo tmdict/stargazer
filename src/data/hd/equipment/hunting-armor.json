@@ -1,5 +1,6 @@
 {
   "id": 29,
   "name": "hunting-armor",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 25,
   "name": "stalwart-helmet",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

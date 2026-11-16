@@ -1,5 +1,6 @@
 {
   "id": 3,
   "name": "exquisite-leather",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

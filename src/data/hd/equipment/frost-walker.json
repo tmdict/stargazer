@@ -1,5 +1,6 @@
 {
   "id": 56,
   "name": "frost-walker",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

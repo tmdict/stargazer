@@ -1,5 +1,6 @@
 {
   "id": 4,
   "name": "beast-kings-claw",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

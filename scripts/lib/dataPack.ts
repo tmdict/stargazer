@@ -22,12 +22,15 @@ import { env, loadEnvFile } from 'node:process'
 import { createServer } from 'vite'
 
 import { outfitOf } from '../../src/lib/characters/outfit.ts'
+import { checkOdds, oddsMismatch } from '../../src/lib/hd/shop/odds.ts'
+import type { OddsTable, ShopFacts } from '../../src/lib/hd/shop/types.ts'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
 import { SKILL_LOCALES } from '../../src/lib/types/i18n.ts'
 
 const SKILL = 'text/skill'
 // The pinned version a download holds; a copy from a local folder has none.
 const MARKER = '.version'
+const SHOP_ODDS = 'hd/shop/odds.json'
 
 // Artifact, phantimal and charm text rides the skill language folders.
 const PACK_FOLDERS = [
@@ -213,6 +216,24 @@ export async function boardPictures(root: string): Promise<string[]> {
   }
 }
 
+/** What is wrong with the pack's Honor Duel shop odds, or null. The calculator
+ * uses them in place of the repo's own table, so they have to be readable and
+ * list the same products for every source as that table. */
+function shopOddsProblem(pack: string, root: string): string | null {
+  const path = join(pack, SHOP_ODDS)
+  if (!existsSync(path)) return null
+  const read = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T
+  try {
+    const facts = read<ShopFacts>(join(root, 'src/data/hd/shop/shop.json'))
+    const odds = checkOdds(read<OddsTable>(path), facts)
+    const own = read<OddsTable>(join(root, 'src/data/hd/shop/odds.json'))
+    const where = oddsMismatch(odds, own, facts)
+    return where ? `the pack's shop odds list other products at ${where}` : null
+  } catch (error) {
+    return `the pack's shop odds cannot be used: ${(error as Error).message}`
+  }
+}
+
 /** What stops a build: the pack lacking what the app reads, or out of step
  * with this repo's own files. New content whose text or portrait lags behind
  * the pack is only a note: a hero with no portrait or skill text yet, and a
@@ -312,6 +333,9 @@ export function packProblems(
       notes.push(`${bare.length} Honor Duel ${kind} entries have no picture or text in the pack`)
     }
   }
+
+  const oddsProblem = shopOddsProblem(pack, root)
+  if (oddsProblem) problems.push(oddsProblem)
 
   const heroes = jsonNames(join(root, 'src/data/character'))
   const known = new Set(heroes)

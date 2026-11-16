@@ -1,5 +1,6 @@
 {
   "id": 63,
   "name": "abyssal-bell",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

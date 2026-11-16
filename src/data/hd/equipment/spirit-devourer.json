@@ -1,5 +1,6 @@
 {
   "id": 110,
   "name": "spirit-devourer",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

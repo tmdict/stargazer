@@ -1,5 +1,6 @@
 {
   "id": 40,
   "name": "gaze",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

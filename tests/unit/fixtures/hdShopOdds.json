@@ -1,0 +1,571 @@
+{
+  "rerolls": [988, 2047, 2395, 4545, 7462],
+  "levels": [
+    [
+      [
+        {
+          "good": "random-pack",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "random-pack",
+          "percent": 76.92,
+          "low": 74.29,
+          "high": 79.56
+        },
+        {
+          "good": "rare-equipment",
+          "percent": 23.08,
+          "low": 20.44,
+          "high": 25.71
+        }
+      ],
+      [
+        {
+          "good": "lightbearer-pack",
+          "percent": 25
+        },
+        {
+          "good": "mauler-pack",
+          "percent": 25
+        },
+        {
+          "good": "wilder-pack",
+          "percent": 25
+        },
+        {
+          "good": "graveborn-pack",
+          "percent": 25
+        }
+      ],
+      [
+        {
+          "good": "lightbearer-pack",
+          "percent": 25
+        },
+        {
+          "good": "mauler-pack",
+          "percent": 25
+        },
+        {
+          "good": "wilder-pack",
+          "percent": 25
+        },
+        {
+          "good": "graveborn-pack",
+          "percent": 25
+        }
+      ],
+      [
+        {
+          "good": "rare-equipment",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "rare-equipment",
+          "percent": 55.06,
+          "low": 52.13,
+          "high": 58
+        },
+        {
+          "good": "trial-card-6",
+          "percent": 38.97,
+          "low": 36.13,
+          "high": 42.11
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 5.97,
+          "low": 4.55,
+          "high": 7.49
+        }
+      ],
+      [
+        {
+          "good": "artifact-exp",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "artifact-exp",
+          "percent": 100
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "good": "random-pack",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "lightbearer-pack",
+          "percent": 25
+        },
+        {
+          "good": "mauler-pack",
+          "percent": 25
+        },
+        {
+          "good": "wilder-pack",
+          "percent": 25
+        },
+        {
+          "good": "graveborn-pack",
+          "percent": 25
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 38.24,
+          "low": 35.54,
+          "high": 41.03
+        },
+        {
+          "good": "rare-equipment",
+          "percent": 26.63,
+          "low": 24.15,
+          "high": 29.22
+        },
+        {
+          "good": "trial-card-6",
+          "percent": 35.13,
+          "low": 33.02,
+          "high": 37.13
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 30,
+          "low": 27.38,
+          "high": 32.65
+        },
+        {
+          "good": "rare-equipment",
+          "percent": 39.95,
+          "low": 37.25,
+          "high": 42.51
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 19.74,
+          "low": 18.08,
+          "high": 21.4
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 10.31,
+          "low": 9.04,
+          "high": 11.72
+        }
+      ],
+      [
+        {
+          "good": "rare-equipment",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "artifact-exp",
+          "percent": 100
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "good": "random-pack",
+          "percent": 24.93,
+          "low": 23.26,
+          "high": 26.85
+        },
+        {
+          "good": "rare-equipment",
+          "percent": 33.78,
+          "low": 31.73,
+          "high": 35.57
+        },
+        {
+          "good": "trial-card-12",
+          "percent": 41.29,
+          "low": 39.33,
+          "high": 43.26
+        }
+      ],
+      [
+        {
+          "good": "lightbearer-pack",
+          "percent": 25
+        },
+        {
+          "good": "mauler-pack",
+          "percent": 25
+        },
+        {
+          "good": "wilder-pack",
+          "percent": 25
+        },
+        {
+          "good": "graveborn-pack",
+          "percent": 25
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 74.41,
+          "low": 72.69,
+          "high": 76.12
+        },
+        {
+          "good": "rare-equipment",
+          "percent": 25.59,
+          "low": 23.88,
+          "high": 27.31
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 68.25,
+          "low": 60.3,
+          "high": 74.09
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 31.75,
+          "low": 25.91,
+          "high": 39.7
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 57.22,
+          "low": 51.29,
+          "high": 65.02
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 29.13,
+          "low": 21.4,
+          "high": 35.04
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 13.65,
+          "low": 12.32,
+          "high": 14.99
+        }
+      ],
+      [
+        {
+          "good": "elite-equipment",
+          "percent": 100
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "good": "hero",
+          "percent": 21.72,
+          "low": 20.55,
+          "high": 22.9
+        },
+        {
+          "good": "lightbearer-pack",
+          "percent": 7.57,
+          "low": 7.23,
+          "high": 7.91
+        },
+        {
+          "good": "mauler-pack",
+          "percent": 7.57,
+          "low": 7.23,
+          "high": 7.91
+        },
+        {
+          "good": "wilder-pack",
+          "percent": 7.57,
+          "low": 7.23,
+          "high": 7.91
+        },
+        {
+          "good": "graveborn-pack",
+          "percent": 7.57,
+          "low": 7.23,
+          "high": 7.91
+        },
+        {
+          "good": "trial-card-12",
+          "percent": 48,
+          "low": 46.64,
+          "high": 49.53
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 79.5,
+          "low": 77.22,
+          "high": 81.77
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 20.5,
+          "low": 18.23,
+          "high": 22.78
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 49.24,
+          "low": 47.62,
+          "high": 50.86
+        },
+        {
+          "good": "hero-pair",
+          "percent": 14.64,
+          "low": 13.48,
+          "high": 15.84
+        },
+        {
+          "good": "legendary-hero",
+          "percent": 15.69,
+          "low": 14.59,
+          "high": 16.9
+        },
+        {
+          "good": "trial-card-22",
+          "percent": 4.86,
+          "low": 4.27,
+          "high": 5.52
+        },
+        {
+          "good": "trial-card-45",
+          "percent": 0.77,
+          "low": 0.53,
+          "high": 1.03
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 14.8,
+          "low": 13.65,
+          "high": 16
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 48.47,
+          "low": 46.04,
+          "high": 51.19
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 51.53,
+          "low": 48.81,
+          "high": 53.96
+        }
+      ],
+      [
+        {
+          "good": "elite-equipment",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero-pair",
+          "percent": 15.35,
+          "low": 14.14,
+          "high": 16.46
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 28.27,
+          "low": 26.69,
+          "high": 29.62
+        },
+        {
+          "good": "epic-equipment",
+          "percent": 51.68,
+          "low": 50.25,
+          "high": 53.25
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 4.7,
+          "low": 3.85,
+          "high": 5.48
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 69.91,
+          "low": 68.59,
+          "high": 71.16
+        },
+        {
+          "good": "hero-pair",
+          "percent": 20.23,
+          "low": 19.1,
+          "high": 21.38
+        },
+        {
+          "good": "legendary-hero",
+          "percent": 9.86,
+          "low": 9.19,
+          "high": 10.59
+        }
+      ],
+      [
+        {
+          "good": "hero",
+          "percent": 20.56,
+          "low": 19.51,
+          "high": 21.71
+        },
+        {
+          "good": "hero-pair",
+          "percent": 79.44,
+          "low": 78.29,
+          "high": 80.49
+        }
+      ],
+      [
+        {
+          "good": "hero-pair",
+          "percent": 100
+        }
+      ],
+      [
+        {
+          "good": "legendary-hero",
+          "percent": 9.97,
+          "low": 9.34,
+          "high": 10.64
+        },
+        {
+          "good": "elite-equipment",
+          "percent": 44.46,
+          "low": 43.25,
+          "high": 45.72
+        },
+        {
+          "good": "trial-card-12",
+          "percent": 15.76,
+          "low": 14.93,
+          "high": 16.55
+        },
+        {
+          "good": "trial-card-22",
+          "percent": 15.81,
+          "low": 15.04,
+          "high": 16.62
+        },
+        {
+          "good": "trial-card-45",
+          "percent": 4.07,
+          "low": 3.6,
+          "high": 4.49
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 9.93,
+          "low": 9.11,
+          "high": 10.76
+        }
+      ],
+      [
+        {
+          "good": "elite-equipment",
+          "percent": 39.49,
+          "low": 38.34,
+          "high": 40.76
+        },
+        {
+          "good": "epic-equipment",
+          "percent": 50.28,
+          "low": 49.18,
+          "high": 51.37
+        },
+        {
+          "good": "artifact-exp",
+          "percent": 10.23,
+          "low": 9.43,
+          "high": 11.06
+        }
+      ],
+      [
+        {
+          "good": "epic-equipment",
+          "percent": 100
+        }
+      ]
+    ]
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "id": 34,
   "name": "bright-greaves",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

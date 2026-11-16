@@ -1,5 +1,6 @@
 {
   "id": 21,
   "name": "endurance-ring",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 92,
   "name": "coexistence",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": false
 }

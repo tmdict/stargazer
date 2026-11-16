@@ -1,5 +1,6 @@
 {
   "id": 65,
   "name": "grandmaster-emblem",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

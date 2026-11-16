@@ -1,5 +1,6 @@
 {
   "id": 98,
   "name": "energy-nexus",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

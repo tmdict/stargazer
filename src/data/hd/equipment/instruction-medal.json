@@ -1,5 +1,6 @@
 {
   "id": 89,
   "name": "instruction-medal",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

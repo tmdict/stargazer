@@ -1,5 +1,6 @@
 {
   "id": 28,
   "name": "crown-of-devotion",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

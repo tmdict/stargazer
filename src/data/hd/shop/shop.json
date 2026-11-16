@@ -1,0 +1,137 @@
+{
+  "reroll": 3,
+  "startingBadges": 60,
+  "sell": 2,
+  "levelRounds": [1, 2, 4, 6, 9],
+  "goods": [
+    {
+      "name": "hero",
+      "price": 15,
+      "kind": "hero",
+      "copies": 1
+    },
+    {
+      "name": "hero-pair",
+      "price": 30,
+      "kind": "hero",
+      "copies": 2
+    },
+    {
+      "name": "legendary-hero",
+      "price": 35,
+      "kind": "legendary",
+      "copies": 3
+    },
+    {
+      "name": "random-pack",
+      "price": 18,
+      "kind": "pack",
+      "draws": 3
+    },
+    {
+      "name": "lightbearer-pack",
+      "price": 33,
+      "kind": "pack",
+      "draws": 3,
+      "faction": "lightbearer"
+    },
+    {
+      "name": "mauler-pack",
+      "price": 33,
+      "kind": "pack",
+      "draws": 3,
+      "faction": "mauler"
+    },
+    {
+      "name": "wilder-pack",
+      "price": 33,
+      "kind": "pack",
+      "draws": 3,
+      "faction": "wilder"
+    },
+    {
+      "name": "graveborn-pack",
+      "price": 33,
+      "kind": "pack",
+      "draws": 3,
+      "faction": "graveborn"
+    },
+    {
+      "name": "rare-equipment",
+      "price": 10,
+      "kind": "equipment",
+      "tier": "rare"
+    },
+    {
+      "name": "elite-equipment",
+      "price": 20,
+      "kind": "equipment",
+      "tier": "elite"
+    },
+    {
+      "name": "epic-equipment",
+      "price": 40,
+      "kind": "equipment",
+      "tier": "epic"
+    },
+    {
+      "name": "trial-card-6",
+      "price": 6,
+      "kind": "trial"
+    },
+    {
+      "name": "trial-card-12",
+      "price": 12,
+      "kind": "trial"
+    },
+    {
+      "name": "trial-card-22",
+      "price": 22,
+      "kind": "trial"
+    },
+    {
+      "name": "trial-card-45",
+      "price": 45,
+      "kind": "trial"
+    },
+    {
+      "name": "artifact-exp",
+      "price": 15,
+      "kind": "exp"
+    }
+  ],
+  "heroes": [
+    "antandra",
+    "cassadee",
+    "cecia",
+    "cyran",
+    "eryndor",
+    "florabelle",
+    "galahad",
+    "gwyneth",
+    "hepler",
+    "indris",
+    "isabella",
+    "karma",
+    "kazim",
+    "kordan",
+    "lily-may",
+    "lumont",
+    "orion",
+    "peggy",
+    "perseus",
+    "ravion",
+    "rowan",
+    "senea",
+    "silvina",
+    "smokey-meerky",
+    "solise",
+    "thador",
+    "thoran",
+    "tilaya",
+    "valen",
+    "valka",
+    "velara",
+    "voracia"
+  ]
+}

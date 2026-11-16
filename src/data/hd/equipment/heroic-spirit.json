@@ -1,5 +1,6 @@
 {
   "id": 103,
   "name": "heroic-spirit",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

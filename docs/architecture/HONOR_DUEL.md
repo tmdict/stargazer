@@ -9,6 +9,8 @@ A pack update writes all of it. This repo holds what the code needs to list an e
 | Content               | Files                                                |
 | --------------------- | ---------------------------------------------------- |
 | Equipment id and tier | `src/data/hd/equipment/<name>.json`                  |
+| Shop prices and goods | `src/data/hd/shop/shop.json`                         |
+| Shop odds             | `src/data/hd/shop/odds.json`                         |
 | Artifact id           | `src/data/hd/artifact/<name>.json`                   |
 | Names, site languages | `src/locales/hd/{equipment,artifact}/<name>.json`    |
 | Pictures              | data pack, `images/hd/{equipment,artifact}/`         |
@@ -28,13 +30,14 @@ A link opens the tab directly with `?tab=honorDuel` on the Arena page.
 
 ## Formats
 
-A data file, `src/data/hd/equipment/light-armor.json`. `name` equals the file name and keys the names, pictures and text. `tier` is `rare`, `elite`, `epic` or `legendary`. An artifact file has `id` and `name` only.
+A data file, `src/data/hd/equipment/light-armor.json`. `name` equals the file name and keys the names, pictures and text. `tier` is `rare`, `elite`, `epic` or `legendary`, and `shop` says whether the shop sells the piece. An artifact file has `id` and `name` only.
 
 ```json
 {
   "id": 1,
   "name": "light-armor",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }
 ```
 
@@ -73,3 +76,33 @@ The pack's text, one pair of files for each skill-text language, each keyed by e
   }
 }
 ```
+
+### The shop
+
+The shop's facts, `src/data/hd/shop/shop.json`, shortened here to three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
+
+```json
+{
+  "reroll": 3,
+  "startingBadges": 60,
+  "sell": 2,
+  "levelRounds": [1, 2, 4, 6, 9],
+  "goods": [
+    { "name": "hero-pair", "price": 30, "kind": "hero", "copies": 2 },
+    { "name": "mauler-pack", "price": 33, "kind": "pack", "draws": 3, "faction": "mauler" },
+    { "name": "epic-equipment", "price": 40, "kind": "equipment", "tier": "epic" }
+  ],
+  "heroes": ["antandra", "cassadee"]
+}
+```
+
+The odds, `src/data/hd/shop/odds.json`, are Toto's measured table, kept by hand. Each of the shop's eight cards comes from its own source, and `levels` holds, for each shop level, what each of the eight sources makes, in source-number order: a good's name and its share in percent, with the measured range as `low` and `high` where the table has one. `rerolls` counts the recorded rerolls behind each level. Shortened here to one source of one level:
+
+```json
+{
+  "rerolls": [988],
+  "levels": [[[{ "good": "random-pack", "percent": 100 }]]]
+}
+```
+
+A data pack may carry a table of its own, `hd/shop/odds.json`, holding `levels` alone in the same shape, where a source that makes nothing the calculator follows is an empty list. `npm run build` stops when that file cannot be read as an odds table, or lists other goods for a source than the repo's table does (`checkOdds` and `oddsMismatch` in `src/lib/hd/shop/odds.ts`).

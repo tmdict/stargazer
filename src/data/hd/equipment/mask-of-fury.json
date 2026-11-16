@@ -1,5 +1,6 @@
 {
   "id": 24,
   "name": "mask-of-fury",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

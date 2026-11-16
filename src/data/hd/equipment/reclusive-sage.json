@@ -1,5 +1,6 @@
 {
   "id": 102,
   "name": "reclusive-sage",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

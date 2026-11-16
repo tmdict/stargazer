@@ -6,6 +6,8 @@ export interface DuelEquipment {
   id: number
   name: string
   tier: EquipmentTier
+  /** Whether the Honor Duel shop sells it. */
+  shop?: boolean
 }
 
 export interface DuelArtifact {

@@ -1,5 +1,6 @@
 {
   "id": 49,
   "name": "iron-medal",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": false
 }

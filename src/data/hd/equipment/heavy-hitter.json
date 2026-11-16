@@ -1,5 +1,6 @@
 {
   "id": 88,
   "name": "heavy-hitter",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

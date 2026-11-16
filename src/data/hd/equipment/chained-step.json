@@ -1,5 +1,6 @@
 {
   "id": 112,
   "name": "chained-step",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

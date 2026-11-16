@@ -1,5 +1,6 @@
 {
   "id": 113,
   "name": "bloom",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

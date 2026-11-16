@@ -1,5 +1,6 @@
 {
   "id": 18,
   "name": "night-apostle",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 79,
   "name": "peers-call",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

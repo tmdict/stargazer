@@ -1,5 +1,6 @@
 {
   "id": 67,
   "name": "bygone-cloak",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

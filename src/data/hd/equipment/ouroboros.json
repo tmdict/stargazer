@@ -1,5 +1,6 @@
 {
   "id": 15,
   "name": "ouroboros",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

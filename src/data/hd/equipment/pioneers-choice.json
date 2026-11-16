@@ -1,5 +1,6 @@
 {
   "id": 104,
   "name": "pioneers-choice",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

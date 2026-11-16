@@ -1,5 +1,6 @@
 {
   "id": 38,
   "name": "starlight",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

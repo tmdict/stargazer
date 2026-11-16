@@ -1,5 +1,6 @@
 {
   "id": 84,
   "name": "gale-crossbow",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 42,
   "name": "gale-boots",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

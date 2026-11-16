@@ -1,5 +1,6 @@
 {
   "id": 33,
   "name": "abyssal-mask",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

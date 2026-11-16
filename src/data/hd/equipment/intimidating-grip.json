@@ -1,5 +1,6 @@
 {
   "id": 96,
   "name": "intimidating-grip",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

@@ -1,5 +1,6 @@
 {
   "id": 107,
   "name": "destinys-call",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

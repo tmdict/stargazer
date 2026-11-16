@@ -105,6 +105,24 @@ describe('build checks', () => {
     )
   })
 
+  it('stop on shop odds the calculator cannot use', () => {
+    const source = (good: string) => [{ good, percent: 100 }]
+    const table = (good: string) => ({
+      levels: Array.from({ length: 5 }, () => Array.from({ length: 8 }, () => source(good))),
+    })
+    const goods = ['hero', 'random-pack'].map((name) => ({ name, price: 15, kind: 'hero' }))
+    put('repo/src/data/hd/shop/shop.json', JSON.stringify({ reroll: 3, sell: 2, goods }))
+    put('repo/src/data/hd/shop/odds.json', JSON.stringify(table('hero')))
+    const problems = () => packProblems(join(dir, 'pack'), join(dir, 'repo'), []).problems
+
+    put('pack/hd/shop/odds.json', JSON.stringify(table('hero')))
+    expect(problems()).toEqual([])
+    put('pack/hd/shop/odds.json', JSON.stringify(table('random-pack')))
+    expect(problems()).toEqual(["the pack's shop odds list other products at level 1, source 1"])
+    put('pack/hd/shop/odds.json', JSON.stringify({ levels: table('hero').levels.slice(1) }))
+    expect(problems()).toEqual(["the pack's shop odds cannot be used: odds: 4 levels, expected 5"])
+  })
+
   it('note a board picture in neither picture folder', () => {
     expect(
       packProblems(join(dir, 'pack'), join(dir, 'repo'), ['odie', 'beetle', 'turret']).notes,

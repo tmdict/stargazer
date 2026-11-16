@@ -1,5 +1,6 @@
 {
   "id": 50,
   "name": "shadow-dagger",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": false
 }

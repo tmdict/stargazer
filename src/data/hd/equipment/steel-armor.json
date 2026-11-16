@@ -1,5 +1,6 @@
 {
   "id": 48,
   "name": "steel-armor",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": false
 }

@@ -1,5 +1,6 @@
 {
   "id": 62,
   "name": "vine-hammer",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

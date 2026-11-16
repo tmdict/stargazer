@@ -1,5 +1,6 @@
 {
   "id": 8,
   "name": "shadow-gloves",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

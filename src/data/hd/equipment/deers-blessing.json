@@ -1,5 +1,6 @@
 {
   "id": 16,
   "name": "deers-blessing",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

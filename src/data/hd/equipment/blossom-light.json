@@ -1,5 +1,6 @@
 {
   "id": 14,
   "name": "blossom-light",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 91,
   "name": "liberty-ring",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": false
 }

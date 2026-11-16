@@ -1,5 +1,6 @@
 {
   "id": 60,
   "name": "fire-dance",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

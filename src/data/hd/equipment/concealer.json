@@ -1,5 +1,6 @@
 {
   "id": 71,
   "name": "concealer",
-  "tier": "epic"
+  "tier": "epic",
+  "shop": true
 }

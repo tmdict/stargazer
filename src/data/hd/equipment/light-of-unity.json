@@ -1,5 +1,6 @@
 {
   "id": 45,
   "name": "light-of-unity",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

@@ -1,5 +1,6 @@
 {
   "id": 36,
   "name": "forest-guardian",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }

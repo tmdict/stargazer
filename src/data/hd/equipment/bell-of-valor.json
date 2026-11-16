@@ -1,5 +1,6 @@
 {
   "id": 9,
   "name": "bell-of-valor",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

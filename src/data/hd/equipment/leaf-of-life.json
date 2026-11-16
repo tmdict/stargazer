@@ -1,5 +1,6 @@
 {
   "id": 7,
   "name": "leaf-of-life",
-  "tier": "rare"
+  "tier": "rare",
+  "shop": true
 }

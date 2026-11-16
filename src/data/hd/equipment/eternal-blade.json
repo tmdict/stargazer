@@ -1,5 +1,6 @@
 {
   "id": 100,
   "name": "eternal-blade",
-  "tier": "legendary"
+  "tier": "legendary",
+  "shop": false
 }

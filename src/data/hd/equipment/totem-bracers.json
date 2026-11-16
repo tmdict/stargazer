@@ -1,5 +1,6 @@
 {
   "id": 13,
   "name": "totem-bracers",
-  "tier": "elite"
+  "tier": "elite",
+  "shop": true
 }
