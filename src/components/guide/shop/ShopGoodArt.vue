@@ -1,0 +1,132 @@
+<script setup lang="ts">
+/* A product's picture as a square: the hero or piece a card names, else the
+   game's question-mark card, with a chip for what it gives, a faction pack's
+   faction in the corner, and a frame in its tier's colour. Without the data
+   pack's pictures a plain mark stands in. */
+
+import { computed } from 'vue'
+
+import { duelEquipment, duelItemImage } from '@/lib/hd/catalog'
+import type { Good } from '@/lib/hd/shop/types'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
+import { goodTier, shopPicture } from './shopGoods'
+
+const { good, hero, equipment } = defineProps<{
+  good: Good
+  hero?: string
+  equipment?: string
+}>()
+
+const gameData = useGameDataStore()
+const i18n = useI18nStore()
+
+const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain' } | null => {
+  if (good.kind === 'hero' && hero) {
+    return { src: gameData.getCharacterImage(hero), fit: 'portrait' }
+  }
+  if (good.kind === 'equipment' && equipment) {
+    const item = duelEquipment.find((piece) => piece.name === equipment)
+    const src = item && duelItemImage({ kind: 'equipment', item })
+    if (src) return { src, fit: 'plain' }
+  }
+  const src = shopPicture(good.kind === 'exp' ? 'artifact-exp' : 'random-card')
+  if (!src) return null
+  return { src, fit: good.kind === 'pack' || good.kind === 'legendary' ? 'raised' : 'plain' }
+})
+
+const chip = computed(() => {
+  if (good.kind === 'trial') return i18n.t('app.shop-chip-trial')
+  return (good.copies ?? 1) > 1 ? `×${good.copies}` : null
+})
+
+const tier = computed(() => goodTier(good))
+const faction = computed(() => good.faction && gameData.getIcon(`faction-${good.faction}`))
+</script>
+
+<template>
+  <span class="shop-art" :class="tier && `shop-tier-${tier}`">
+    <img
+      v-if="picture"
+      class="picture"
+      :class="picture.fit"
+      :src="picture.src"
+      alt=""
+      draggable="false"
+    />
+    <span v-else class="mark">{{ good.kind === 'exp' ? 'XP' : '?' }}</span>
+    <span v-if="chip" class="chip">{{ chip }}</span>
+    <img v-if="faction" class="faction" :src="faction" alt="" draggable="false" />
+  </span>
+</template>
+
+<style scoped>
+.shop-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.shop-art[class*='shop-tier-']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--shop-tier);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.picture {
+  max-width: 78%;
+  max-height: 86%;
+  object-fit: contain;
+}
+
+.picture.raised {
+  translate: 0 -6%;
+}
+
+.picture.portrait {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
+}
+
+.mark {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: var(--import-text-dim);
+}
+
+.chip {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.faction {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 30%;
+  max-width: 30px;
+  aspect-ratio: 1;
+}
+</style>

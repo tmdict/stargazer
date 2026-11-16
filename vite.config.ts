@@ -12,6 +12,7 @@ import { packModule } from './scripts/packModule.ts'
 import {
   GUIDE_PAGES,
   guidePath,
+  HD_SHOP_PATH,
   SL_GENERATOR_PATH,
   SL_LISTS_PATH,
   SL_RULES_PATH,
@@ -49,6 +50,7 @@ function getSSGRoutes(): string[] {
     SL_RULES_PATH,
     SL_LISTS_PATH,
     WWW_PATH,
+    HD_SHOP_PATH,
   ]
 
   // Help exists only in the app locales.

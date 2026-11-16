@@ -17,3 +17,7 @@ export const SL_GENERATOR_PATH = '/guide/pvp/generator'
 export const SL_RULES_PATH = '/guide/pvp/generator/rules'
 export const SL_LISTS_PATH = '/guide/pvp/generator/rules/lists'
 export const WWW_PATH = '/guide/pvp/www'
+
+// The Honor Duel shop calculator, pre-rendered with its heading alone
+// (GuideHdShopView).
+export const HD_SHOP_PATH = '/guide/hd/shop'

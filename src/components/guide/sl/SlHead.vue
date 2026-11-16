@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* A Supreme League page's heading: its title with the BETA chip, and the
-   records it reads with the link to the note on the data. */
+/* A guide tool's heading: its title with the BETA chip, and the line beside
+   it, with the link to the note on its data. A Supreme League page's line
+   names the records it reads; the shop calculator's credits its odds. */
 
 import SlBeta from './SlBeta.vue'
 import { SL_RULES_PATH } from '@/lib/guide'
@@ -8,14 +9,17 @@ import { useI18nStore } from '@/stores/i18n'
 
 // records: the data file's season and export date, once the file has loaded.
 // rules: the page places heroes, so it links the rules it places them by.
+// credit, aboutLabel: the line and its link's label, in place of the records'.
 const {
   title,
-  records,
+  records = null,
   rules = false,
 } = defineProps<{
   title: string
-  records: { season: number; date: string } | null
+  records?: { season: number; date: string } | null
   rules?: boolean
+  credit?: string
+  aboutLabel?: string
 }>()
 
 const emit = defineEmits<{ about: [] }>()
@@ -26,11 +30,13 @@ const i18n = useI18nStore()
 <template>
   <header class="sl-head">
     <h1>{{ title }}<SlBeta /></h1>
-    <p v-if="records">
-      {{ i18n.t('app.sl-records', { season: records.season, date: records.date }) }}
+    <p v-if="records || credit">
+      {{
+        records ? i18n.t('app.sl-records', { season: records.season, date: records.date }) : credit
+      }}
       <span aria-hidden="true">·</span>
       <button type="button" class="sl-about-link" @click="emit('about')">
-        {{ i18n.t('app.sl-about') }}
+        {{ aboutLabel ?? i18n.t('app.sl-about') }}
       </button>
       <template v-if="rules">
         <span aria-hidden="true"> ·</span>

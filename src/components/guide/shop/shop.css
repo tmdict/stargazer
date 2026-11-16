@@ -1,0 +1,155 @@
+.shop-tier-rare {
+  --shop-tier: #5b9be6;
+}
+
+.shop-tier-elite {
+  --shop-tier: var(--color-tier-1);
+}
+
+.shop-tier-epic {
+  --shop-tier: var(--color-tier-2);
+}
+
+.shop-tier-legendary {
+  --shop-tier: var(--color-tier-3);
+}
+
+.shop-tier-mythic {
+  --shop-tier: var(--color-tier-4);
+}
+
+.shop-tier-supreme {
+  --shop-tier: #f0d98a;
+}
+
+.shop-page .shop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--import-text);
+}
+
+.shop-page .shop-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+}
+
+.shop-page .shop-heading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--import-text);
+}
+
+.shop-page .shop-dim {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--import-text-dim);
+}
+
+.shop-page .shop-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--import-text-dim);
+}
+
+.shop-page .shop-note.warn {
+  color: var(--import-warn);
+}
+
+.shop-page .shop-label {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--import-label);
+}
+
+.shop-page .shop-label .shop-dim {
+  margin-left: 8px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.shop-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, 100vw - 44px);
+  min-height: 0;
+  overflow-y: auto;
+  color: #fff;
+  font-size: 13px;
+}
+
+.shop-popup-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.shop-popup-button {
+  padding: 3px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shop-popup-button:hover,
+.shop-popup-button[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+@media (min-width: 1100px) {
+  .shop-page .shop-layout {
+    grid-template-columns: 620px minmax(0, 1fr);
+    grid-template-areas:
+      'window form'
+      'answers answers';
+    align-items: stretch;
+  }
+
+  .shop-page .shop-window {
+    grid-area: window;
+  }
+
+  .shop-page .shop-form {
+    grid-area: form;
+  }
+
+  .shop-page .shop-answers-slot {
+    grid-area: answers;
+  }
+}
+
+@media (max-width: 768px) {
+  .shop-page .shop-box {
+    padding: 14px;
+  }
+}

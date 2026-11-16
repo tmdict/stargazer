@@ -8,7 +8,7 @@ import { useRoute } from 'vue-router'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import { PVP_SEASONS } from '@/content/pvp/seasons'
-import { guidePath, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import { guidePath, HD_SHOP_PATH, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolate } from '@/utils/interpolate'
@@ -29,6 +29,7 @@ const page = (key: string, label: string, to: string, tag?: typeof BETA): Dropdo
 const items = computed<DropdownItem[]>(() => [
   page('guide-sl', i18n.t('app.sl-title'), SL_GENERATOR_PATH, BETA),
   page('guide-www', i18n.t('app.www-title'), WWW_PATH, BETA),
+  page('guide-hd-shop', i18n.t('app.shop-title'), HD_SHOP_PATH, BETA),
   ...PVP_SEASONS.map(({ season, live }) => ({
     key: `report-${season}`,
     label: `${interpolate(i18n.t('app.season'), { n: season })} ${i18n.t('app.pvp-report')}`,

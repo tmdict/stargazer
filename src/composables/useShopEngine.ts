@@ -5,7 +5,7 @@
  * Only the newest request's answers are shown: each carries its request's
  * number, and one from an earlier request is dropped. */
 
-import { onMounted, onUnmounted, readonly, ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, readonly, ref, shallowReadonly, shallowRef } from 'vue'
 
 import type { ShopRequest, ShopResult } from '@/lib/hd/shop/calculate'
 import type { ShopWorkerRequest, ShopWorkerResponse } from '@/workers/shop.worker'
@@ -88,7 +88,7 @@ export function useShopEngine() {
   onUnmounted(clear)
 
   return {
-    result: readonly(result),
+    result: shallowReadonly(result),
     working: readonly(working),
     failed: readonly(failed),
     calculate,
