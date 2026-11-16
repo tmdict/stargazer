@@ -41,6 +41,8 @@ A list names heroes best first and can bring in another list's heroes at that po
 
 A placement's score has four parts, compared in this order. `kept` and `whole` count the team's hard rules, below. `goals` adds each rule's weight times how much of its goal is met, plus the buff weight for each hero on an ally buff tile, less the `walled` weight for each melee hero on a tile with no way to the enemy. `total` adds to the goals how far toward the side it leans each hero stands, times the `lean` weight.
 
+A phantimal's rule counts a hero only while the hero stands in the half it leans to, the middle being in both halves, so a lean decides whether a Spirit Mark on that hero scores. Every other rule counts a hero wherever it stands.
+
 ### Hard rules
 
 A rule with `hard: true`, on a `target` or an `exactly` goal of the team's own, comes before the weights: a placement that keeps more of the team's hard rules (`kept`) is the better one whatever its goals score. The rule still scores its weight as any other does.

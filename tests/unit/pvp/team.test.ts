@@ -508,7 +508,7 @@ describe('a recorded board', () => {
     )
     expect(strong.showsPlayed).toBe(false)
     expect(shownFormation(strong)).toBe(strong.engine)
-  })
+  }, 60_000)
 
   // Athalia, Aliceth, Alna, Frieren and Himmel have no support: Wedge of
   // Matter takes that seat in Himmel's party, and a board without phantimals

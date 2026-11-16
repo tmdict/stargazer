@@ -31,6 +31,7 @@ const GUNNAR = 106
 const CONTESS = 109
 const FRIEREN = 111
 const HIMMEL = 112
+const ISABELLA = 93
 const CANDLEFLAME = 7
 const WEDGE_OF_MATTER = toPhantimalId(5)
 const ILLUSION = PHRAESTO + COMPANION_ID_OFFSET
@@ -49,7 +50,7 @@ const DATA: PlacementData = {
     save: [ORION],
   },
   leans: { front: [], back: [] },
-  weights: { aim: 10, threat: 6, buff: 3, lean: 0.2, margin: 1 },
+  weights: { aim: 10, mark: 8, threat: 6, buff: 3, lean: 0.2, margin: 1 },
   pickRates: {},
 }
 
@@ -359,8 +360,8 @@ describe('placement search', () => {
   })
 
   // Frieren's magic, the Wedge of Matter's mark and Candleflame all want Gunnar
-  // frontmost, 45 points with nobody behind him and no Hero Party; keeping
-  // both hard rules earns 40.
+  // frontmost, 41 points with nobody behind him and no Hero Party; keeping
+  // both hard rules earns 38.
   const HARD: PlacementData = {
     ...DATA,
     lists: { gunnar: [CONTESS], tank: [GUNNAR], haste: [SAIDA], damage: [SAIDA, FRIEREN] },
@@ -382,30 +383,64 @@ describe('placement search', () => {
       [WEDGE_OF_MATTER, 4],
     ])
     board.place(board.units.map((unit) => byPoints.get(unit) ?? 11))
-    expect(scorer.score()).toMatchObject({ kept: 1, goals: 45 })
+    expect(scorer.score()).toMatchObject({ kept: 1, goals: 41 })
 
     const searched = placeTeam(team, map, HARD, PLACEMENT_LOOKUPS)
-    expect(searched.best).toMatchObject({ kept: 2, goals: 40 })
+    expect(searched.best).toMatchObject({ kept: 2, goals: 38 })
     expect(searched.best).toEqual(
       placeTeam(team, map, HARD, PLACEMENT_LOOKUPS, { full: true }).best,
     )
   })
 
-  // Both Spirit Marks land with a Wedge beside one hero between the twins, 21
-  // points; Sylphira and Rolan between them leave one mark unmet, 20 points.
+  // Frieren's magic and Isabella's companion both go to the frontmost ally,
+  // best a tank: Sylphira there, with Rolan alone between the twins, earns 20
+  // points; Sylphira and Rolan both between them earn the twins' 10.
   it('puts two heroes of one faction between the twins ahead of the points', () => {
-    const team = { heroes: [ORION, MEHIRA, SYLPHIRA, ROLAN, TWINS], phantimal: WEDGE_OF_MATTER }
-    const data = { ...HARD, lists: { tank: [SYLPHIRA], haste: [ROLAN], damage: [ORION, SYLPHIRA] } }
+    const team = { heroes: [FRIEREN, ISABELLA, SYLPHIRA, ROLAN, TWINS] }
+    const data = { ...HARD, lists: { tank: [SYLPHIRA], damage: [FRIEREN] } }
+    const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+    const scorer = new PlacementScorer(board, team, data)
+    const byPoints = new Map([
+      [FRIEREN, 1],
+      [ISABELLA, 2],
+      [SYLPHIRA, 10],
+      [ROLAN, 6],
+      [TWINS, 4],
+      [TWINS + COMPANION_ID_OFFSET, 8],
+    ])
+    board.place(board.units.map((unit) => byPoints.get(unit)!))
+    expect(scorer.score()).toMatchObject({ kept: 1, whole: 0, goals: 20 })
+
     const searched = placeTeam(team, MAP, data, PLACEMENT_LOOKUPS)
-    expect(searched.best).toMatchObject({ kept: 1, whole: 1, goals: 20 })
-    const between = new Set(
-      [SYLPHIRA, ROLAN].map((hero) => searched.positions[searched.units.indexOf(hero)]),
+    expect(searched.best).toMatchObject({ kept: 1, whole: 1, goals: 10 })
+    expect(searched.best).toEqual(
+      placeTeam(team, MAP, data, PLACEMENT_LOOKUPS, { full: true }).best,
     )
-    const twins = [TWINS, TWINS + COMPANION_ID_OFFSET]
-      .map((unit) => searched.positions[searched.units.indexOf(unit)]!)
-      .sort((a, b) => a - b)
-    expect(twins).toEqual([1, 10])
-    expect(between).toEqual(new Set([4, 7]))
+  })
+
+  // On arena2, with Contess behind Gunnar, only two of Aliceth's Brightfeather
+  // on Contess, Frieren's defensive magic on Gunnar and the Wedge of Power's
+  // Mark on Frieren hold at once. Were a Mark worth a hero's own rule, the
+  // three pairs would tie and Aliceth's back lean would leave her rule unmet.
+  it('puts the heroes’ own rules ahead of a Spirit Mark they clash with', () => {
+    const team = { heroes: [ALICETH, GUNNAR, CONTESS, FRIEREN, HIMMEL], phantimal: WEDGE_OF_MATTER }
+    const data = {
+      ...HARD,
+      lists: {
+        aliceth: [CONTESS],
+        gunnar: [CONTESS],
+        tank: [GUNNAR],
+        haste: [FRIEREN],
+        damage: [FRIEREN],
+      },
+      leans: { front: [], back: [ALICETH] },
+    }
+    const searched = placeTeam(team, MAP, data, PLACEMENT_LOOKUPS)
+    const board = new PlacementBoard(team, MAP, PLACEMENT_LOOKUPS)
+    const scorer = new PlacementScorer(board, team, data)
+    board.place(searched.positions)
+    expect(metOf(scorer, ALICETH)).toBe(1)
+    expect(metOf(scorer, FRIEREN)).toBe(1)
   })
 
   // On preset-sr1 a hero behind Gunnar and Himmel's Hero Party each have a

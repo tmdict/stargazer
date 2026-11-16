@@ -14,7 +14,7 @@
       "goal": {
         "target": "damage"
       },
-      "weight": "aim",
+      "weight": "mark",
       "note": "Seralyth's Spirit Mark goes to the allied hero behind her and adds damage against enemies with lowered stats, best a damage dealer."
     }
   ]
