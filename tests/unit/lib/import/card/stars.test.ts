@@ -108,7 +108,7 @@ describe('readStars', () => {
   // Headwear beside or over a row tints part of it: the row may read as another
   // level, but not surely.
   it('is not sure of a row that headwear tints in part', () => {
-    const white: Rgb = [225, 240, 250]
+    const white: Rgb = [200, 225, 250]
     const purple: Rgb = [200, 150, 245]
     const pink: Rgb = [250, 200, 245]
     expect(
@@ -124,6 +124,15 @@ describe('readStars', () => {
       for (let x = f.box.x; x < f.box.x + f.box.w; x++)
         if (f.shot.data[(y * f.shot.width + x) * 4] === 200 && (y > top + 1 || x % 2))
           f.shot.data.set(pink, (y * f.shot.width + x) * 4)
+    expect(readStars(...args(f))).toMatchObject({ sure: false })
+    // The same row with a gold frame arc over its outer stars' lower half, so
+    // that it leans yellow.
+    const arc: Rgb = [250, 225, 150]
+    for (const k of [0, 5]) {
+      const cx = Math.round(f.box.x + f.box.w / 2 - ROW.left + (k - 2.5) * ROW.pitch)
+      for (let y = top + 2; y < top + 5; y++)
+        for (let x = cx - 3; x <= cx + 3; x++) f.shot.data.set(arc, (y * f.shot.width + x) * 4)
+    }
     expect(readStars(...args(f))).toMatchObject({ sure: false })
   })
 
