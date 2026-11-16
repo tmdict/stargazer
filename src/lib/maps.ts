@@ -281,11 +281,11 @@ export const gridLayout = (
   )
 
 /* The map a serialized board stands on: its key when that names a map, else
- * the preset its tiles reproduce, else its key or the default map. A board
- * saved on a map that has left the registry so takes the name of a preset with
- * the same tiles. The one rule shared by canonicalization (which fills `m`
- * through it) and the multi-board restore, so a saved record and the live
- * boards it loads into always name the same maps. */
+ * the preset its tiles reproduce, else its key or the default map, so a board
+ * saved on a map the registry lacks is named by a preset with the same tiles.
+ * The one rule shared by canonicalization (which fills `m` through it) and the
+ * multi-board restore, so a saved record and the live boards it loads into
+ * always name the same maps. */
 export const resolveBoardMap = (board: { m?: string; t?: number[][] }): string =>
   board.m !== undefined && MAPS[board.m]
     ? board.m
