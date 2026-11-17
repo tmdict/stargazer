@@ -6,7 +6,7 @@ On the Arena page the tab also swaps the Arena board for an Honor Duel board, wh
 
 ## Where the content comes from
 
-A pack update writes all of it. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
+A pack update writes all of it but the mode's map list, which is kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
 | Content               | Files                                                |
 | --------------------- | ---------------------------------------------------- |
@@ -14,6 +14,7 @@ A pack update writes all of it. This repo holds what the code needs to list an e
 | Shop prices and goods | `src/data/hd/shop/shop.json`                         |
 | Shop odds             | `src/data/hd/shop/odds.json`                         |
 | Artifact id           | `src/data/hd/artifact/<name>.json`                   |
+| Maps and their buffs  | `src/data/hd/maps.json`                              |
 | Names, site languages | `src/locales/hd/{equipment,artifact}/<name>.json`    |
 | Pictures              | data pack, `images/hd/{equipment,artifact}/`         |
 | Effect text           | data pack, `text/hd/<language>/`, two files for each |
@@ -40,9 +41,9 @@ The Arena page shows one of two boards: the Arena's own, and an Honor Duel board
 
 The mode's heroes come from the shop's facts, the list the shop calculator uses. A pick places the hero, or with the Trial switch on a Trial copy of it, which may stand beside the hero and beside other copies ([Grid](./GRID.md#unit-ids)).
 
-A placed hero's tier, equipment and off-field spot are per-hero values under ids of their own (101, 102 and 103), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. Supreme is a Trial hero's tier alone. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there, and a copy placed later takes the piece its hero holds. The same piece may sit on several heroes.
+A placed hero's tier, equipment and off-field spot are per-hero values under ids of their own (101, 102 and 103), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. Supreme is a Trial hero's tier alone. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there, and where they hold none they take the piece it brings. The same piece may sit on several heroes.
 
-An off-field spot is a note that a hero leaves the field. The hero keeps its tile and counts once, and its skill draws from its tile, so the spot shows only a faded second portrait. A side has six spots with one hero to a spot, and a hero that changes sides leaves its spot. The spots are off-grid cells like the artifact places (`src/lib/hd/spots.ts`), so placement, pathfinding and targeting never see them. They draw only while a hero holds one or picks one, and none lies wider than the board's widest row, so a board drawn as wide as a phone's screen shows them whole.
+An off-field spot is a note that a hero leaves the field. The hero keeps its tile and counts once, and its skill draws from its tile, so the spot shows only a faded second portrait. A side has six spots with one hero to a spot, and a hero that changes sides leaves its spot. The spots are off-grid cells like the artifact places (`src/lib/hd/spots.ts`), so placement, pathfinding and targeting never see them. They draw only while a hero holds one or picks one, and none lies wider than the board's widest row, so a board drawn as wide as a phone's screen shows them whole. Team view's crop takes in the ally's spots that draw.
 
 ### The team artifact and the faction bonus
 

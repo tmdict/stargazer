@@ -6,6 +6,7 @@
 
 import type { AttrRules } from '@/lib/characters/attributes'
 import { isTrialHeroId } from '@/lib/characters/trial'
+import type { Team } from '@/lib/types/team'
 
 export const DUEL_TIERS = ['epic', 'legendary', 'mythic', 'supreme'] as const
 
@@ -49,4 +50,10 @@ export const DUEL_ATTR_RULES: AttrRules = {
 export interface DuelArtifactSlot {
   id: number
   level: number
+}
+
+// The hero picking an off-field spot.
+export interface DuelSpotPick {
+  team: Team
+  unitId: number
 }

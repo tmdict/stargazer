@@ -48,8 +48,15 @@ import { executeSwapCharacters } from '@/lib/characters/swap'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
-import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_RULES, type DuelArtifactSlot } from '@/lib/hd/board'
+import {
+  DUEL_ATTR_EQUIPMENT,
+  DUEL_ATTR_RULES,
+  DUEL_ATTR_SPOT,
+  type DuelArtifactSlot,
+  type DuelSpotPick,
+} from '@/lib/hd/board'
 import { duelBuffs } from '@/lib/hd/maps'
+import { duelSpotHex, shownDuelSpots } from '@/lib/hd/spots'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { buffTilesOf, modeBuffs, type ModeListKey, type TileBuff } from '@/lib/mapModeLists'
@@ -127,6 +134,9 @@ export interface GridContext {
   // An Honor Duel board's artifacts, a list apart from the slots above: both
   // lists number from 1, and a slot's id also picks a skill drawing.
   duelArtifacts: { ally: DuelArtifactSlot | null; enemy: DuelArtifactSlot | null }
+  // The hero picking an off-field spot on an Honor Duel board: its side shows
+  // its six spots until one is taken or the pick is dropped.
+  duelSpotPick: DuelSpotPick | null
 
   // Derived (per board)
   // The board's buffs on its mode's list, and their tiles together.
@@ -177,6 +187,7 @@ export interface GridContext {
   removeArtifact: (team: Team) => void
   // Ignored on an Arena board.
   setDuelArtifact: (team: Team, slot: DuelArtifactSlot | null) => void
+  setDuelSpotPick: (pick: DuelSpotPick | null) => void
   getAttr: (team: Team, characterId: number, attrId: number) => number
   getAttrs: (team: Team, characterId: number) => AttrRecord
   // Writes are ignored unless the hero stands on that side of this board, so
@@ -215,6 +226,7 @@ export function createGridContext(
     ally: ref<DuelArtifactSlot | null>(null),
     enemy: ref<DuelArtifactSlot | null>(null),
   }
+  const duelSpotPick = ref<DuelSpotPick | null>(null)
 
   // The values a hero carries under this kind of board's rules (upgrades on the
   // Arena, tier, equipment and off-field spot in Honor Duel), keyed by team +
@@ -344,17 +356,24 @@ export function createGridContext(
     }
   }
 
-  // Copies of a hero on an Honor Duel side share one piece of equipment, so a
-  // hero placed there starts with the piece its copies hold.
+  // Copies of a hero on an Honor Duel side share one piece of equipment. A
+  // hero joining a side takes the piece its copies hold there; where they hold
+  // none, they take the piece it brings from the other side.
   const joinDuelSide = (team: Team, characterId: number): void => {
     if (kind !== 'honorDuel' || !isHeroUnit(characterId)) return
     const heroId = toBaseHeroId(characterId)
-    const piece = getTilesWithCharactersByTeam(grid, team)
+    const copies = getTilesWithCharactersByTeam(grid, team)
       .map((tile) => tile.characterId!)
       .filter((id) => id !== characterId && isHeroUnit(id) && toBaseHeroId(id) === heroId)
+    const held = copies
       .map((id) => getAttr(team, id, DUEL_ATTR_EQUIPMENT))
-      .find((held) => held !== 0)
-    if (piece !== undefined) setAttr(team, characterId, DUEL_ATTR_EQUIPMENT, piece)
+      .find((piece) => piece !== 0)
+    if (held !== undefined) {
+      setAttr(team, characterId, DUEL_ATTR_EQUIPMENT, held)
+      return
+    }
+    const brought = getAttr(team, characterId, DUEL_ATTR_EQUIPMENT)
+    if (brought !== 0) for (const id of copies) setAttr(team, id, DUEL_ATTR_EQUIPMENT, brought)
   }
 
   // Placing onto an occupied tile evicts the occupant, so a place can take a
@@ -382,6 +401,7 @@ export function createGridContext(
     const toTeam = getCharacterTeam(grid, toHexId)
     if (toTeam !== undefined) {
       setAttrs(toTeam, characterId, toTeam === fromTeam ? record : leavingSide(record))
+      if (toTeam !== fromTeam) joinDuelSide(toTeam, characterId)
     }
     pruneAttrs()
     return true
@@ -407,6 +427,10 @@ export function createGridContext(
     const crossing = fromTeam !== toTeam
     setAttrs(toTeam, fromId, crossing ? leavingSide(fromRecord) : fromRecord)
     setAttrs(fromTeam, toId, crossing ? leavingSide(toRecord) : toRecord)
+    if (crossing) {
+      joinDuelSide(toTeam, fromId)
+      joinDuelSide(fromTeam, toId)
+    }
     pruneAttrs()
     return true
   }
@@ -488,6 +512,10 @@ export function createGridContext(
     else duelArtifacts.enemy.value = slot
   }
 
+  const setDuelSpotPick = (pick: DuelSpotPick | null): void => {
+    if (kind === 'honorDuel') duelSpotPick.value = pick
+  }
+
   const refreshSkills = (): void => skillManager.updateActiveSkills(grid)
 
   // Rebuild the grid for the new map. Object.assign preserves the reactive proxy
@@ -498,6 +526,7 @@ export function createGridContext(
     Object.assign(grid, new Grid(FULL_GRID, config))
     skillManager.reset()
     currentMap.value = mapKey
+    duelSpotPick.value = null
     pruneAttrs()
     return true
   }
@@ -575,8 +604,23 @@ export function createGridContext(
       artifactHostHex(grid, Team.ALLY),
       artifactHostHex(grid, Team.ENEMY),
     ])
+    // The ally's off-field spots an Honor Duel board draws, which lie past the
+    // ally's tiles: the full view's extent already holds every spot.
+    const allySpotHexes = computed<Hex[]>(() => {
+      if (kind !== 'honorDuel') return []
+      const held = new Set(
+        getTilesWithCharactersByTeam(grid, Team.ALLY).map((tile) =>
+          getAttr(Team.ALLY, tile.characterId!, DUEL_ATTR_SPOT),
+        ),
+      )
+      return shownDuelSpots(held, duelSpotPick.value?.team === Team.ALLY).map((spot) =>
+        duelSpotHex(grid, Team.ALLY, spot),
+      )
+    })
     const cropHexes = computed<Hex[]>(() =>
-      teamView.value ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY)] : boardHexes.value,
+      teamView.value
+        ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY), ...allySpotHexes.value]
+        : boardHexes.value,
     )
 
     // The full flat board's drawn width in hex radii, side pads included, so a
@@ -785,6 +829,7 @@ export function createGridContext(
     currentMap,
     artifacts,
     duelArtifacts,
+    duelSpotPick,
     ...ctx,
     place,
     remove,
@@ -800,6 +845,7 @@ export function createGridContext(
     setArtifact,
     removeArtifact,
     setDuelArtifact,
+    setDuelSpotPick,
     getAttr,
     getAttrs,
     setAttr,

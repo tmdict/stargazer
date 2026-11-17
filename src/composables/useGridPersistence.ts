@@ -117,12 +117,15 @@ export interface BoardWriter {
 const createBoardWriter = (key: string, kind: BoardKind, snapshot: () => string): BoardWriter => {
   const grids = useGrids()
   const encoded = (): string | null => (grids.active?.kind === kind ? snapshot() : null)
+  // A board the browser refused to store. A change of board rebuilds from
+  // what `load` returns, so the page keeps it for the way back.
+  let unstored: string | null = null
   const write = (value: string | null): void => {
-    if (value !== null) writeStorage(key, value)
+    if (value !== null) unstored = writeStorage(key, value) ? null : value
   }
   let started = false
   return {
-    load: () => readStorage(key),
+    load: () => unstored ?? readStorage(key),
     flush: () => {
       if (started) write(encoded())
     },

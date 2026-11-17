@@ -16,10 +16,11 @@ import { isTrialHeroId } from '@/lib/characters/trial'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import type { Point } from '@/lib/layout'
 import type { Team } from '@/lib/types/team'
-import { setDuelEquipment, useDuelBoard } from '@/stores/duelBoard'
+import { setDuelEquipment } from '@/stores/duelBoard'
 import type { GridContext } from '@/stores/gridContext'
 import { useI18nStore } from '@/stores/i18n'
 import { defineLazyComponent } from '@/utils/lazyComponent'
+import { initialOf } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   context: GridContext
@@ -27,7 +28,6 @@ const props = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const duel = useDuelBoard()
 
 const DuelEquipmentPopup = defineLazyComponent(() => import('./DuelEquipmentPopup.vue'))
 
@@ -44,10 +44,10 @@ const pick = (piece: number): void => {
 }
 
 const pickingSpot = (team: Team, unitId: number): boolean =>
-  duel.spotPick?.team === team && duel.spotPick.unitId === unitId
+  props.context.duelSpotPick?.team === team && props.context.duelSpotPick.unitId === unitId
 
 const toggleSpotPick = (team: Team, unitId: number): void => {
-  duel.spotPick = pickingSpot(team, unitId) ? null : { team, unitId }
+  props.context.setDuelSpotPick(pickingSpot(team, unitId) ? null : { team, unitId })
 }
 </script>
 
@@ -60,7 +60,7 @@ const toggleSpotPick = (team: Team, unitId: number): void => {
         color="var(--duel-trial-mark)"
         :title="i18n.t('app.trial')"
       >
-        {{ [...i18n.t('app.trial')][0] }}
+        {{ initialOf(i18n.t('app.trial')) }}
       </UnitBadge>
     </template>
     <template #pill="{ team, hero }">

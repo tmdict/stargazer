@@ -42,6 +42,7 @@ import type { BadgeIcon } from '@/lib/types/unitBadge'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { initialOf } from '@/utils/nameFormatting'
 import { isTouchClick } from '@/utils/pointer'
 import { gameLabel } from '@/utils/skillLabels'
 import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
@@ -413,9 +414,6 @@ const duelMarks = computed((): DuelMark[] =>
       }),
 )
 
-// A mark holds one character: the first of the word in the site's language.
-const initial = (word: string): string => [...word][0] ?? ''
-
 const badgeStyle = computed(() => {
   const { size, hit, border } = badgeDimensions.value
   return {
@@ -551,10 +549,10 @@ const liftedMode = computed(() =>
         :class="{ 'pale-badge': isPaleTier(mark.tier) }"
         :color="tierBackdrop(mark.tier)"
       >
-        {{ initial(gameLabel(mark.tier, i18n.currentLocale)) }}
+        {{ initialOf(gameLabel(mark.tier, i18n.currentLocale)) }}
       </UnitBadge>
       <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
-        {{ initial(i18n.t('app.trial')) }}
+        {{ initialOf(i18n.t('app.trial')) }}
       </UnitBadge>
       <UnitBadge v-if="mark.piece" class="badge-lower-left" :color="mark.piece.backdrop ?? 'none'">
         <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />

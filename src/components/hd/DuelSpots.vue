@@ -12,9 +12,9 @@ import { useArtifactPlaces } from '@/composables/useArtifactPlaces'
 import { useGridContext } from '@/composables/useGridContext'
 import { toBaseHeroId } from '@/lib/characters/character'
 import { DUEL_ATTR_SPOT } from '@/lib/hd/board'
-import { DUEL_SPOTS, duelSpotHex } from '@/lib/hd/spots'
+import { duelSpotHex, shownDuelSpots } from '@/lib/hd/spots'
 import { Team } from '@/lib/types/team'
-import { duelHeroUnits, setDuelSpot, useDuelBoard } from '@/stores/duelBoard'
+import { duelHeroUnits, setDuelSpot } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
@@ -24,18 +24,17 @@ import '@/styles/grid-artifact.css'
 const props = defineProps<{ readonly?: boolean }>()
 
 const ctx = useGridContext()
-const duel = useDuelBoard()
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 const places = useArtifactPlaces(ctx)
 
 // A pick ends with its hero: one taken off the board picks nothing.
 watchEffect(() => {
-  const picked = duel.spotPick
-  if (picked && !duelHeroUnits(ctx, picked.team).includes(picked.unitId)) duel.spotPick = null
+  const picked = ctx.duelSpotPick
+  if (picked && !duelHeroUnits(ctx, picked.team).includes(picked.unitId)) ctx.setDuelSpotPick(null)
 })
 
-const pick = computed(() => (props.readonly ? null : duel.spotPick))
+const pick = computed(() => (props.readonly ? null : ctx.duelSpotPick))
 
 const holderView = (unitId: number) => {
   const name = gameData.getCharacterById(toBaseHeroId(unitId))?.name ?? ''
@@ -55,7 +54,7 @@ const spots = computed(() =>
     }
     const picking = pick.value?.team === team
     const front = team === Team.ALLY ? places.allyInFront.value : places.enemyInFront.value
-    return DUEL_SPOTS.filter((spot) => picking || holders.has(spot)).map((spot) => {
+    return shownDuelSpots(holders, picking).map((spot) => {
       const hex = duelSpotHex(ctx.grid, team, spot)
       const holder = holders.get(spot)
       return {
@@ -80,14 +79,14 @@ const onSpot = (team: Team, spot: number, holder: number | undefined): void => {
   const picked = pick.value
   if (picked?.team === team) {
     setDuelSpot(ctx, team, picked.unitId, holder === picked.unitId ? 0 : spot)
-    duel.spotPick = null
+    ctx.setDuelSpotPick(null)
   } else if (holder !== undefined) {
-    duel.spotPick = { team, unitId: holder }
+    ctx.setDuelSpotPick({ team, unitId: holder })
   }
 }
 
 const onKeyDown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') duel.spotPick = null
+  if (event.key === 'Escape') ctx.setDuelSpotPick(null)
 }
 onMounted(() => document.addEventListener('keydown', onKeyDown))
 onUnmounted(() => document.removeEventListener('keydown', onKeyDown))

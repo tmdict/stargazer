@@ -97,7 +97,7 @@ An id stays fixed while its mode or map exists, since reassigning one that live 
 
 ## Reading a link
 
-Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. The Arena page and `/share` look for `?hd=` first, and an Honor Duel link opens the Arena page on its Honor Duel tab. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
+Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. The Arena page and `/share` look for `?hd=` first, and an Honor Duel link opens the Arena page on its Honor Duel tab. A link stays in the address only under its own board's tabs: a change of tab to the other board drops it, so a reload opens that tab's stored board. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
 
 Display flags travel with every link, and a `?g=` restore applies them. A payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 

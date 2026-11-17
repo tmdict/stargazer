@@ -7,7 +7,7 @@ import { MAPS } from '@/lib/maps'
 
 const DUEL_BOARDS = checkModeBoards('Honor Duel', duelMaps)
 
-export const DUEL_MAPS: readonly string[] = DUEL_BOARDS.map((board) => board.map)
+const DUEL_MAPS: readonly string[] = DUEL_BOARDS.map((board) => board.map)
 
 // Each map with the numeral it goes by.
 export const DUEL_MAP_NAMES: readonly { key: string; name: string }[] = DUEL_MAPS.map((key) => ({

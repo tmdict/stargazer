@@ -17,6 +17,10 @@ export function localizedDisplayName(
   return translated !== key ? translated : formatDisplayName(name)
 }
 
+// A word's first character, whole: an index into the string would split a
+// character outside the basic plane.
+export const initialOf = (word: string): string => [...word][0] ?? ''
+
 /**
  * A character's display name. Placeholders are named by their faction via the
  * game labels: their slug is an icon key, not a character locale key.

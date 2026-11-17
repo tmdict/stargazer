@@ -51,7 +51,7 @@ interface PanelHero {
   inspectTarget: InspectTarget | null
 }
 
-// Only real heroes carry upgrade attrs.
+// Phantimals and companions carry no values of their own.
 const heroesFor = (team: Team): PanelHero[] =>
   getTilesWithCharactersByTeam(props.context.grid, team)
     .filter((tile) => tile.characterId !== undefined && isHeroUnit(tile.characterId))

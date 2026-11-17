@@ -3,7 +3,6 @@
  * rules (copies of a hero share a piece of equipment, an off-field spot holds
  * one hero), and a side's faction bonus. */
 
-import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
@@ -38,7 +37,7 @@ export const duelHeroUnits = (ctx: GridContext, team: Team): number[] =>
 
 // The board's heroes and artifacts as its link holds them. Companions are left
 // out: a hero's skill spawns them again.
-export function duelBoardState(ctx: GridContext, d: number): DuelBoardState {
+function duelBoardState(ctx: GridContext, d: number): DuelBoardState {
   const units = getTilesWithCharacters(ctx.grid)
     .filter((tile) => isHeroUnit(tile.characterId!))
     .map((tile): DuelUnitState => {
@@ -80,8 +79,10 @@ export function setDuelEquipment(
 // A side's off-field spot holds one hero: giving it to another takes it from
 // the first. 0 takes the hero off its spot.
 export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: number): void {
+  const heroes = duelHeroUnits(ctx, team)
+  if (!heroes.includes(unitId)) return
   if (spot !== 0) {
-    for (const id of duelHeroUnits(ctx, team)) {
+    for (const id of heroes) {
       if (id !== unitId && ctx.getAttr(team, id, DUEL_ATTR_SPOT) === spot) {
         ctx.setAttr(team, id, DUEL_ATTR_SPOT, 0)
       }
@@ -104,10 +105,6 @@ export function duelFactionBonus(ctx: GridContext, team: Team): TeamFactionBonus
 export const useDuelBoard = defineStore('duelBoard', () => {
   const grids = useGrids()
   const gameData = useGameDataStore()
-
-  // The hero picking an off-field spot: its side's six spots show on the
-  // board until one is taken or the pick is dropped.
-  const spotPick = ref<{ team: Team; unitId: number } | null>(null)
 
   /* Places a state's heroes and artifacts on an empty board standing on the
    * state's map. A hero the board refuses is dropped: one the game data lacks,
@@ -155,7 +152,6 @@ export const useDuelBoard = defineStore('duelBoard', () => {
    * state read, for its view switches. */
   const open = (text: string | null): DuelBoardState | null => {
     const state = text ? decodeDuelBoard(text) : null
-    spotPick.value = null
     grids.setGridCount(1, [state?.map ?? DEFAULT_DUEL_MAP], 'honorDuel')
     if (state) fill(grids.active!, state, false)
     return state
@@ -171,10 +167,9 @@ export const useDuelBoard = defineStore('duelBoard', () => {
     if (!ctx || ctx.kind !== 'honorDuel' || !isDuelMap(mapKey)) return false
     const state = duelBoardState(ctx, 0)
     if (!ctx.switchMap(mapKey)) return false
-    spotPick.value = null
     fill(ctx, { ...state, map: mapKey }, true)
     return true
   }
 
-  return { spotPick, open, snapshot, moveToMap }
+  return { open, snapshot, moveToMap }
 })

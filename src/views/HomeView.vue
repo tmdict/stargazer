@@ -190,9 +190,13 @@ const handleTabChange = (tab: string) => {
   activeTab.value = tab
 
   // Push so each tab switch is a history entry, so back/forward navigates tabs.
+  // A link stays in the address only under its own board's tabs: a reload
+  // under the other board's tab would open the link's board there.
+  const { g, hd, ...query } = route.query
   router.push({
     query: {
-      ...route.query,
+      ...query,
+      ...(tab === 'honorDuel' ? { hd } : { g }),
       tab,
     },
   })
@@ -257,6 +261,11 @@ if (duelLink) {
   const result = boardRestore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
     sharedLinkRestored = true
+    // The link's board is the Arena's, whichever tab the address names.
+    if (activeTab.value === 'honorDuel') {
+      activeTab.value = 'characters'
+      router.replace({ query: { ...route.query, tab: 'characters' } })
+    }
     arenaPick.drop()
     applyFlags(result.displayFlags)
     // The restore replaced the board; drop any stale mobile tap/lift selection.

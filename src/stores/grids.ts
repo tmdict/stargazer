@@ -241,8 +241,8 @@ export const useGrids = defineStore('grids', () => {
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
 
-  // A key is unique across boards but for a hero and its synergy copy, which
-  // share a row.
+  // A key is unique across boards but for a hero and its synergy or Trial
+  // copies, which share a row.
   const skillRows = computed<SkillRow[]>(() => {
     const rows = new Map<string, SkillRow>()
     for (const row of contexts.value.flatMap((ctx) => ctx.skillRows)) rows.set(row.key, row)
@@ -742,7 +742,8 @@ export const useGrids = defineStore('grids', () => {
   // Whether clearTeam would remove anything: a unit or the side's artifact.
   const teamHasContent = (ctx: GridContext, team: Team): boolean =>
     getTilesWithCharactersByTeam(ctx.grid, team).length > 0 ||
-    artifactSlot(ctx.artifacts, team) !== null
+    artifactSlot(ctx.artifacts, team) !== null ||
+    artifactSlot(ctx.duelArtifacts, team) !== null
 
   // Read-only mirror of clearTeam over the scoped boards (the canDropCharacter
   // pattern): the Load confirm must promise exactly what the load's clear phase

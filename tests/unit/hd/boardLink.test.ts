@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { DUEL_ITEM_ID_MAX } from '@/lib/hd/board'
 import { decodeDuelBoard, encodeDuelBoard, type DuelBoardState } from '@/lib/hd/boardLink'
 import { BitWriter, bytesToUrlSafe } from '@/lib/teams/bitCodec'
 import { Team } from '@/lib/types/team'
@@ -144,5 +145,17 @@ describe('Honor Duel board link', () => {
     expect(() =>
       encodeDuelBoard({ ...EMPTY, artifacts: { ally: { id: 31, level: 4 }, enemy: null } }),
     ).toThrow()
+  })
+
+  // A piece numbered past the link's item field would be stored as another
+  // piece, and an artifact past it would stop the board saving.
+  it('has room for every piece and artifact of the mode', () => {
+    const ids = [
+      import.meta.glob<{ id: number }>('@/data/hd/equipment/*.json', { eager: true }),
+      import.meta.glob<{ id: number }>('@/data/hd/artifact/*.json', { eager: true }),
+    ].flatMap((files) => Object.values(files).map((file) => file.id))
+
+    expect(ids.length).toBeGreaterThan(0)
+    expect(Math.max(...ids)).toBeLessThanOrEqual(DUEL_ITEM_ID_MAX)
   })
 })

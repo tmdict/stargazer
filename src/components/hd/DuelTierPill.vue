@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import { DUEL_TIERS, duelTiersOf } from '@/lib/hd/board'
 import { useI18nStore } from '@/stores/i18n'
+import { initialOf } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
 import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
 
@@ -37,7 +38,7 @@ const next = (): void => emit('pick', (tier + 1) % duelTiersOf(unitId).length)
     :aria-label="label"
     @click="!readonly && next()"
   >
-    {{ [...label][0] }}
+    {{ initialOf(label) }}
   </component>
 </template>
 

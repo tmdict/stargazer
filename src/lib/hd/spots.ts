@@ -29,6 +29,15 @@ export const DUEL_SPOTS: readonly number[] = Array.from(
   (_, index) => index + 1,
 )
 
+// The spots a side draws: the ones its heroes hold, and all six while one of
+// its heroes picks.
+export function shownDuelSpots(
+  held: { has: (spot: number) => boolean },
+  picking: boolean,
+): number[] {
+  return DUEL_SPOTS.filter((spot) => picking || held.has(spot))
+}
+
 // The enemy's spots are the ally's turned half a circle about the board's
 // center, as the board's two halves are.
 export function duelSpotHex(grid: Grid, team: Team, spot: number): Hex {
