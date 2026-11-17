@@ -79,6 +79,10 @@ MEASURED_ODDS.levels.forEach((sources, index) => {
 export const lockLevels = (card: ShopCard, level: number): number[] =>
   card.locked && card.good ? (SOLD_AT.get(card.good) ?? []).filter((one) => one <= level) : []
 
+/** The shop level a locked card is read at. */
+export const lockedLevel = (card: ShopCard, level: number): number =>
+  card.lockedAt ?? lockLevels(card, level).at(-1) ?? level
+
 export type ShopPickerStep = 'product' | 'hero' | 'piece'
 
 type ShopPicture = 'badge' | 'artifact-exp' | 'random-card'

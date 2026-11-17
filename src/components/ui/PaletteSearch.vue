@@ -15,12 +15,13 @@ const emit = defineEmits<{ enter: [] }>()
 
 const query = defineModel<string>({ required: true })
 
-// Type-to-pick: focus starts in the search box even on touch. The on-grid
-// popup exists only on tablet-and-wider layouts (phones place via the picker
-// sheet) and iPad taps land here expecting to type; the import review opens
-// it on phones too, where the keyboard is the way to find a hero among the
-// pinned candidates. Focusing in the mount tick matters: iPadOS raises the
-// keyboard only while the opening tap's user activation is live.
+// Type-to-pick: unless the owner turns it off, focus starts in the search box
+// even on touch. The hero palette's on-grid popup exists only on
+// tablet-and-wider layouts (phones place via the picker sheet) and iPad taps
+// land here expecting to type; the import review opens it on phones too, where
+// the keyboard is the way to find a hero among the pinned candidates. Focusing
+// in the mount tick matters: iPadOS raises the keyboard only while the opening
+// tap's user activation is live.
 const input = useTemplateRef<HTMLInputElement>('input')
 onMounted(() => {
   if (autofocus) input.value?.focus({ preventScroll: true })

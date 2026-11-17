@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* The Honor Duel list: the mode's artifacts, then its equipment by tier.
-   Nothing here goes on a board, so a click opens the item's details, as the
-   inspect gesture (right-click, hold) does, and hovering shows its effect. */
+/* The Honor Duel list: the mode's artifacts, then its equipment by tier, each
+   piece on its tier's backdrop. Nothing here goes on a board, so a click opens
+   the item's details, as the inspect gesture (right-click, hold) does, and
+   hovering shows its effect. */
 
 import { computed, onMounted, shallowRef, watch } from 'vue'
 
@@ -21,6 +22,7 @@ import {
 import { EQUIPMENT_TIERS, type HonorDuelItem, type HonorDuelText } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
+import { tierBackdrop } from '@/utils/tierBackdrop'
 
 const { scrollable = true } = defineProps<{
   // See CharacterSelection: off when the picker flows in normal page height.
@@ -93,6 +95,7 @@ const groups = computed(() => {
         item,
         name: duelItemName(item, locale),
         image: duelItemImage(item),
+        backdrop: item.kind === 'equipment' ? tierBackdrop(item.item.tier) : undefined,
       })),
     }))
 })
@@ -108,7 +111,7 @@ const groups = computed(() => {
       <h3 class="seasonal-title">{{ group.title }}</h3>
       <div class="seasonal-cells">
         <button
-          v-for="{ item, name, image } in group.items"
+          v-for="{ item, name, image, backdrop } in group.items"
           :key="item.item.id"
           type="button"
           class="seasonal-cell duel-item"
@@ -119,7 +122,7 @@ const groups = computed(() => {
           @mouseleave="onMouseLeave"
         >
           <span class="icon-disc-frame">
-            <span class="duel-icon round-icon">
+            <span class="duel-icon round-icon" :style="{ background: backdrop }">
               <img
                 v-if="image"
                 :src="image"

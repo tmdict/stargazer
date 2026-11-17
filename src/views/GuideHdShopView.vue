@@ -23,7 +23,7 @@ import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import { lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
+import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { compareCharacters } from '@/lib/filterOrder'
@@ -74,11 +74,10 @@ type Popup =
 const popup = ref<Popup | null>(null)
 const below = (under: DOMRect): Point => ({ x: under.left, y: under.bottom + 4 })
 
-// The levels the open popup's card may have been locked at.
-const lockChoices = computed(() => {
-  const card = popup.value?.kind === 'locked-at' ? form.cards.value[popup.value.card] : undefined
-  return card ? lockLevels(card, form.level.value) : []
-})
+// The card whose locked-at level the open popup sets.
+const lockCard = computed(() =>
+  popup.value?.kind === 'locked-at' ? form.cards.value[popup.value.card] : undefined,
+)
 const setLockedAt = (level: number): void => {
   if (popup.value?.kind === 'locked-at') form.setLockedAt(popup.value.card, level)
   popup.value = null
@@ -182,10 +181,7 @@ watch(
         @cancel="engine.cancel"
       />
       <div ref="answers" class="shop-answers-slot">
-        <p v-if="!form.wanted.value" class="shop-note">
-          {{ i18n.t('app.shop-nothing-wanted') }}
-        </p>
-        <p v-else-if="impossible" class="shop-note warn">
+        <p v-if="impossible" class="shop-note warn">
           {{ i18n.t('app.shop-impossible', { level: form.level.value }) }}
         </p>
         <p v-else-if="engine.failed.value" class="shop-note warn">
@@ -234,9 +230,9 @@ watch(
           @close="popup = null"
         />
         <ShopLockedAt
-          v-else-if="popup.kind === 'locked-at'"
-          :levels="lockChoices"
-          :level="form.cards.value[popup.card]?.lockedAt ?? lockChoices.at(-1) ?? form.level.value"
+          v-else-if="popup.kind === 'locked-at' && lockCard"
+          :levels="lockLevels(lockCard, form.level.value)"
+          :level="lockedLevel(lockCard, form.level.value)"
           @pick="setLockedAt"
         />
         <div v-else-if="popup.kind === 'hero'" class="shop-popup">
