@@ -1,6 +1,7 @@
 import { collapseAttrRows, isKnownAttrId, type AttrRow } from '@/lib/characters/attributes'
 import { joinPhantimalBandLocal, splitPhantimalBandLocal } from '@/lib/characters/phantimal'
 import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
+import { BitReader, BitWriter, inRange } from './bitCodec'
 import type { BoardState, GridState } from './gridStateSerializer'
 
 /**
@@ -120,11 +121,6 @@ interface BinaryLinkInput {
   d: number
   boards: BoardState[]
 }
-
-// Integers only: writeBits truncates fractions the same way it truncates
-// oversized values, silently aliasing them to a different id on decode.
-const inRange = (value: unknown, min: number, max: number): boolean =>
-  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
 
 const isTeam = (value: unknown): boolean => value === 1 || value === 2
 
@@ -253,70 +249,6 @@ function validateGridState(state: GridState): GridState {
   }
 
   return validated
-}
-
-class BitWriter {
-  private buffer: number[] = []
-  private currentByte = 0
-  private bitPosition = 0
-
-  writeBits(value: number, bitCount: number): void {
-    for (let i = 0; i < bitCount; i++) {
-      const bit = (value >> i) & 1
-      this.currentByte |= bit << this.bitPosition
-      this.bitPosition++
-
-      if (this.bitPosition === 8) {
-        this.buffer.push(this.currentByte)
-        this.currentByte = 0
-        this.bitPosition = 0
-      }
-    }
-  }
-
-  getBytes(): Uint8Array {
-    // Push any remaining bits
-    if (this.bitPosition > 0) {
-      this.buffer.push(this.currentByte)
-    }
-    return new Uint8Array(this.buffer)
-  }
-}
-
-class BitReader {
-  private position = 0
-
-  constructor(private bytes: Uint8Array) {}
-
-  readBits(bitCount: number): number {
-    let value = 0
-    for (let i = 0; i < bitCount; i++) {
-      const byteIndex = Math.floor((this.position + i) / 8)
-      const bitIndex = (this.position + i) % 8
-
-      if (byteIndex >= this.bytes.length) {
-        throw new Error('Unexpected end of data')
-      }
-
-      const byte = this.bytes[byteIndex]
-      if (byte === undefined) {
-        throw new Error('Unexpected end of data')
-      }
-      const bit = (byte >> bitIndex) & 1
-      value |= bit << i
-    }
-    this.position += bitCount
-    return value
-  }
-
-  // True only when every remaining bit is final-byte zero padding: the strict
-  // full-consumption rule that keeps another format's bytes from misreading
-  // as a valid link.
-  atCleanEnd(): boolean {
-    const remaining = this.bytes.length * 8 - this.position
-    if (remaining < 0 || remaining >= 8) return false
-    return remaining === 0 || this.readBits(remaining) === 0
-  }
 }
 
 function encodeBoard(writer: BitWriter, board: BoardState): void {
@@ -570,63 +502,4 @@ export function decodeLink(bytes: Uint8Array): BinaryLinkState | null {
   } catch {
     return null
   }
-}
-
-// Base64-like encoding optimized for URL use
-// Uses URL-safe characters and avoids padding to minimize URL length
-// This gives us 6 bits per character, making URLs ~33% longer than raw binary
-const URL_SAFE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-
-export function bytesToUrlSafe(bytes: Uint8Array): string {
-  let result = ''
-  let bits = 0
-  let bitCount = 0
-
-  for (const byte of bytes) {
-    bits = (bits << 8) | byte
-    bitCount += 8
-
-    while (bitCount >= 6) {
-      bitCount -= 6
-      const index = (bits >> bitCount) & 0x3f
-      result += URL_SAFE_CHARS[index]
-    }
-  }
-
-  // Handle remaining bits
-  if (bitCount > 0) {
-    const index = (bits << (6 - bitCount)) & 0x3f
-    result += URL_SAFE_CHARS[index]
-  }
-
-  return result
-}
-
-export function urlSafeToBytes(str: string): Uint8Array | null {
-  // Handle empty string as valid (empty state)
-  if (!str || str.length === 0) {
-    return new Uint8Array([])
-  }
-
-  const bytes: number[] = []
-  let bits = 0
-  let bitCount = 0
-
-  for (const char of str) {
-    const index = URL_SAFE_CHARS.indexOf(char)
-    if (index === -1) {
-      console.error('Invalid character in URL-safe string:', char)
-      return null
-    }
-
-    bits = (bits << 6) | index
-    bitCount += 6
-
-    while (bitCount >= 8) {
-      bitCount -= 8
-      bytes.push((bits >> bitCount) & 0xff)
-    }
-  }
-
-  return new Uint8Array(bytes)
 }

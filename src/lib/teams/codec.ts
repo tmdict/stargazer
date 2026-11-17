@@ -11,13 +11,8 @@
  *   use it.
  */
 
-import {
-  bytesToUrlSafe,
-  decodeLink,
-  encodeLink,
-  urlSafeToBytes,
-  type BinaryLinkState,
-} from './binaryEncoder'
+import { decodeLink, encodeLink, type BinaryLinkState } from './binaryEncoder'
+import { bytesToUrlSafe, urlSafeToBytes } from './bitCodec'
 import type { ArenaState, MultiGridState } from './gridStateSerializer'
 
 /* Decode any `?g=` link payload. Pages route on the result's mode: 'arena'

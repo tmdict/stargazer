@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { bytesToUrlSafe, decodeLink, encodeLink, urlSafeToBytes } from '@/lib/teams/binaryEncoder'
+import { decodeLink, encodeLink } from '@/lib/teams/binaryEncoder'
+import { bytesToUrlSafe, urlSafeToBytes } from '@/lib/teams/bitCodec'
 import type { BoardState, GridState } from '@/lib/teams/gridStateSerializer'
 
 const FLAGS = 0b10110
