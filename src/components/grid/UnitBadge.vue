@@ -56,6 +56,12 @@ const ICONS: Record<BadgeIcon, Component> = {
     box-shadow 0.12s ease-out;
 }
 
+.unit-badge :slotted(img) {
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .unit-badge {
     transition: none;

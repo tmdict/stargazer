@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* A hero's tier by name on the tier's backdrop, with a Trial chip for a Trial
-   hero: the words behind the two marks its portrait carries on the board. */
+/* A hero's tier by name on the tier's backdrop, a Trial chip for a Trial hero
+   and the name of its equipment: the words behind the marks its portrait
+   carries on the board. */
 
 import type { DuelTier } from '@/lib/hd/board'
 import { useI18nStore } from '@/stores/i18n'
@@ -10,6 +11,7 @@ import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
 defineProps<{
   tier: DuelTier
   trial: boolean
+  piece?: string
 }>()
 
 const i18n = useI18nStore()
@@ -25,6 +27,7 @@ const i18n = useI18nStore()
       {{ gameLabel(tier, i18n.currentLocale) }}
     </span>
     <span v-if="trial" class="duel-chip trial">{{ i18n.t('app.trial') }}</span>
+    <span v-if="piece" class="duel-piece">{{ piece }}</span>
   </div>
 </template>
 
@@ -52,5 +55,10 @@ const i18n = useI18nStore()
 
 .duel-chip.trial {
   background: var(--duel-trial-mark);
+}
+
+.duel-piece {
+  flex-basis: 100%;
+  text-align: center;
 }
 </style>

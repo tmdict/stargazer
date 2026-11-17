@@ -24,6 +24,7 @@ import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
+import { below, onPhone } from '@/components/guide/shop/popupLayout'
 import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
@@ -69,10 +70,6 @@ type Popup =
   | { kind: 'locked-at'; card: number; position: Point }
   | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
-const below = (under: DOMRect): Point => ({ x: under.left, y: under.bottom + 4 })
-
-// The width under which shop.css gives the popups their phone layout.
-const onPhone = (): boolean => window.matchMedia('(max-width: 520px)').matches
 
 // The card whose locked-at level the open popup sets.
 const lockCard = computed(() =>

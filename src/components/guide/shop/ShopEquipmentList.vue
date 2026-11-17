@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* The equipment the shop sells, by tier, to pick one piece from, with a name
-   search over the site's languages and Enter to take its single match. */
+/* Honor Duel equipment by tier, to pick one piece from, with a name search
+   over the site's languages and Enter to take its single match: the pieces the
+   shop sells, or every piece of the mode. */
 
 import { computed, ref } from 'vue'
 
@@ -11,14 +12,23 @@ import { EQUIPMENT_TIERS, type EquipmentTier } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { matchesPiece } from './shopGoods'
 
-const { tier, taken = [] } = defineProps<{
-  // The one tier to list; every tier the shop sells when left out.
+const {
+  tier,
+  taken = [],
+  all = false,
+  clearable = false,
+} = defineProps<{
+  // The one tier to list; every tier when left out.
   tier?: EquipmentTier
   // Pieces already picked, which are left out.
   taken?: readonly string[]
+  // The pieces the shop never sells too.
+  all?: boolean
+  // Lists None first, for a pick that can take a piece off.
+  clearable?: boolean
 }>()
 
-const emit = defineEmits<{ pick: [name: string] }>()
+const emit = defineEmits<{ pick: [name: string]; clear: [] }>()
 
 const i18n = useI18nStore()
 
@@ -32,7 +42,7 @@ const groups = computed(() =>
       pieces: duelEquipment
         .filter(
           (piece) =>
-            piece.shop &&
+            (all || piece.shop) &&
             piece.tier === one &&
             !taken.includes(piece.name) &&
             matchesPiece(piece, query.value),
@@ -62,6 +72,14 @@ const takeOnly = (): void => {
     @enter="takeOnly"
   />
   <div class="shop-equipment">
+    <button
+      v-if="clearable && !query.trim()"
+      type="button"
+      class="shop-pill-button none"
+      @click="emit('clear')"
+    >
+      {{ i18n.t('app.none') }}
+    </button>
     <section v-for="group in groups" :key="group.tier" :class="`shop-tier-${group.tier}`">
       <h3 v-if="!tier">{{ group.title }}</h3>
       <div class="pieces">
@@ -89,6 +107,10 @@ const takeOnly = (): void => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.none {
+  align-self: flex-start;
 }
 
 h3 {

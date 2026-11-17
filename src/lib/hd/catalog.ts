@@ -37,6 +37,14 @@ export const duelArtifacts: readonly DuelArtifact[] = byId(
   }),
 )
 
+const equipmentById = new Map(duelEquipment.map((item) => [item.id, item]))
+const artifactById = new Map(duelArtifacts.map((item) => [item.id, item]))
+
+// A board holds a piece or an artifact by its id; one that names none reads
+// as none.
+export const duelEquipmentById = (id: number): DuelEquipment | undefined => equipmentById.get(id)
+export const duelArtifactById = (id: number): DuelArtifact | undefined => artifactById.get(id)
+
 const names = {
   equipment: byStem(
     import.meta.glob<LocaleData>('@/locales/hd/equipment/*.json', {

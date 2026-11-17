@@ -12,6 +12,7 @@ import GridPointer from './GridPointer.vue'
 import UnitBadge from './UnitBadge.vue'
 import DuelTierChips from '@/components/hd/DuelTierChips.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
+import { useDuelItems, type DuelItemView } from '@/composables/useDuelItems'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -30,7 +31,7 @@ import {
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { isTrialHeroId } from '@/lib/characters/trial'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
-import { DUEL_ATTR_TIER, DUEL_TIERS, type DuelTier } from '@/lib/hd/board'
+import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER, DUEL_TIERS, type DuelTier } from '@/lib/hd/board'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
 import { buffAt } from '@/lib/mapModeLists'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
@@ -395,7 +396,10 @@ interface DuelMark {
   hexId: number
   trial: boolean
   tier: DuelTier
+  piece: DuelItemView | null
 }
+
+const { pieceOf } = useDuelItems()
 
 const duelMarks = computed((): DuelMark[] =>
   ctx.kind !== 'honorDuel' || props.isMapEditorMode
@@ -404,7 +408,8 @@ const duelMarks = computed((): DuelMark[] =>
         const team = getCharacterTeam(ctx.grid, hexId)
         if (!team || !isHeroUnit(characterId)) return []
         const tier = DUEL_TIERS[ctx.getAttr(team, characterId, DUEL_ATTR_TIER)] ?? DUEL_TIERS[0]
-        return [{ hexId, trial: isTrialHeroId(characterId), tier }]
+        const piece = pieceOf(ctx.getAttr(team, characterId, DUEL_ATTR_EQUIPMENT))
+        return [{ hexId, trial: isTrialHeroId(characterId), tier, piece }]
       }),
 )
 
@@ -551,6 +556,9 @@ const liftedMode = computed(() =>
       <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
         {{ initial(i18n.t('app.trial')) }}
       </UnitBadge>
+      <UnitBadge v-if="mark.piece" class="badge-lower-left" :color="mark.piece.backdrop ?? 'none'">
+        <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
+      </UnitBadge>
     </div>
 
     <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
@@ -591,6 +599,7 @@ const liftedMode = computed(() =>
         v-if="hoveredCard.duel"
         :tier="hoveredCard.duel.tier"
         :trial="hoveredCard.duel.trial"
+        :piece="hoveredCard.duel.piece?.label"
       />
       <BuffTileText v-if="hoveredCard.buff" :buff="hoveredCard.buff" heading />
     </CharacterTooltip>
@@ -669,7 +678,8 @@ const liftedMode = computed(() =>
 }
 
 .badge-upper-right,
-.badge-upper-left {
+.badge-upper-left,
+.badge-lower-left {
   position: absolute;
   top: calc(50% - var(--badge-rim));
   transform: translate(-50%, -50%);
@@ -679,8 +689,13 @@ const liftedMode = computed(() =>
   left: calc(50% + var(--badge-rim));
 }
 
-.badge-upper-left {
+.badge-upper-left,
+.badge-lower-left {
   left: calc(50% - var(--badge-rim));
+}
+
+.badge-lower-left {
+  top: calc(50% + var(--badge-rim));
 }
 
 .pale-badge {
