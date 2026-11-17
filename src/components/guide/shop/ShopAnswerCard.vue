@@ -33,7 +33,6 @@ const emit = defineEmits<{ recalculate: [move: Move] }>()
 
 const i18n = useI18nStore()
 
-// The move the answers start from: the one chosen, else a reroll with the locks as entered.
 const start = computed(
   (): Move =>
     basis ?? {
@@ -46,11 +45,10 @@ const start = computed(
 const untried = (move: Move | undefined): Move | null =>
   move && !sameMove(move, start.value) ? move : null
 
-const piece = computed(() =>
-  answer.goal.kind === 'equipment'
-    ? duelEquipment.find((one) => one.name === (answer.goal as { name: string }).name)
-    : undefined,
-)
+const piece = computed(() => {
+  const { goal } = answer
+  return goal.kind === 'equipment' ? duelEquipment.find((one) => one.name === goal.name) : undefined
+})
 
 const head = computed(() => {
   const { goal } = answer

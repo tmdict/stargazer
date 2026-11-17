@@ -7,7 +7,7 @@ import { drawPool, equipmentShare, evenShare } from './pools'
 import type { EnteredShop, Goal, Good, LevelOdds, Move, Pools, ShopCard, ShopFacts } from './types'
 
 /** A gain that finishes a goal met by any one target. */
-export const FINISHED = 99
+const FINISHED = 99
 
 /** One result of a purchase: targets gained, badges back from heroes sold, and its chance. */
 export interface BuyOutcome {
@@ -166,7 +166,7 @@ export interface Wanted {
   equipment: ReadonlySet<string>
 }
 
-function subsets(list: readonly number[]): number[][] {
+export function subsets(list: readonly number[]): number[][] {
   return Array.from({ length: 1 << list.length }, (_, mask) =>
     list.filter((_, bit) => (mask >> bit) & 1),
   )

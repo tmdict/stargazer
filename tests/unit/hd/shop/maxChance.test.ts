@@ -8,6 +8,7 @@ import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import { readShop } from '@/lib/hd/shop/sources'
 import type { Goal, LevelOdds, Move, OddsTable, PoolHero, ShopCard } from '@/lib/hd/shop/types'
 import {
+  buy,
   card,
   cards,
   chance,
@@ -15,18 +16,20 @@ import {
   hero,
   HEROES,
   levelOdds,
+  lock,
   ODDS,
+  others,
+  packShop,
   pools,
   read,
   REROLL,
   type Asked,
 } from '../../fixtures/hdShop'
 
-const buy = (at: number): Move => ({ kind: 'buy', card: at })
-const lock = (...locks: number[]): Move => ({ kind: 'reroll', locks })
-const others = HEROES.map((h) => h.name).filter((name) => name !== 'L1')
+// The search stops within one part in a million of the answer.
+const CLOSE = 2e-6
 
-// The shop doc's check cases, to four decimals of a percent.
+// Worked check cases, to four decimals of a percent.
 describe('the check cases', () => {
   it('E1: an empty shop at level 5', () => {
     expect(chance({ level: 5, badges: 60, goal: hero('L1') })).toBeCloseTo(0.866792, 5)
@@ -55,17 +58,7 @@ describe('the check cases', () => {
   })
 
   it('E4: packs on show, one hero at a time and any of three', () => {
-    const shop = cards(
-      card('random-pack'),
-      card('lightbearer-pack'),
-      card('wilder-pack'),
-      card('rare-equipment'),
-      card('artifact-exp'),
-      card('artifact-exp'),
-      card('random-pack'),
-      card('rare-equipment'),
-    )
-    const asked = (goal: Goal) => ({ level: 1, badges: 54, goal, cards: shop })
+    const asked = (goal: Goal) => ({ level: 1, badges: 54, goal, cards: packShop })
     expect(chance(asked(hero('L1')), buy(1))).toBeCloseTo(0.390941, 5)
     expect(chance(asked(hero('L1')))).toBeCloseTo(0.352443, 5)
     expect(chance(asked(hero('M1')))).toBeCloseTo(0.352443, 5)
@@ -263,8 +256,6 @@ describe('against a counter that follows every outcome', () => {
       ...moves.map((move) => Math.abs(solved.chance(move) - counter(need, badges, shown, move))),
     )
   }
-  // The search stops within one part in a million of the answer.
-  const CLOSE = 2e-6
 
   it('agrees when every source has the same odds', () => {
     const odds: LevelOdds = Array.from({ length: 4 }, () => [
@@ -325,16 +316,14 @@ describe('rules that always hold', () => {
     cards: shop,
     ...more,
   })
-  // The search stops within one part in a million of the answer.
-  const SLACK = 2e-6
 
   it('more badges never lower a chance, and more copies never raise it', () => {
     const byBadges = [30, 33, 36, 41, 48, 60].map((badges) => chance(asked({ badges })))
     byBadges
       .slice(1)
-      .forEach((value, i) => expect(value).toBeGreaterThanOrEqual(byBadges[i]! - SLACK))
+      .forEach((value, i) => expect(value).toBeGreaterThanOrEqual(byBadges[i]! - CLOSE))
     const byCopies = [1, 2, 3, 4].map((copies) => chance(asked({ goal: hero('L1', copies) })))
-    byCopies.slice(1).forEach((value, i) => expect(value).toBeLessThanOrEqual(byCopies[i]! + SLACK))
+    byCopies.slice(1).forEach((value, i) => expect(value).toBeLessThanOrEqual(byCopies[i]! + CLOSE))
   })
 
   it('the order of the eight cards changes nothing', () => {
@@ -410,7 +399,7 @@ describe('a cache kept through a shop visit', () => {
       pools(asked.sell),
       FACTS,
       kept,
-    )!
+    )
     return moves.flatMap((move) => [...Object.values(solved.range(move)), solved.chance(move)])
   }
   const furthestApart = (one: number[], other: number[]) =>

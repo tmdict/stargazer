@@ -1,7 +1,7 @@
 /* The backdrop behind a picture of a rarity tier, a top-to-bottom gradient.
    The stops are data, so a style and an SVG gradient draw the same one. */
 
-export type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary'
+type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary'
 
 // A colour and where it sits, in percent from the top.
 type BackdropStop = readonly [color: string, at: number]

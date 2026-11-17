@@ -2,7 +2,7 @@
 
 import type { OddsTable, ShopFacts, SourceEntry } from './types'
 
-export const SHOP_LEVELS = 5
+const SHOP_LEVELS = 5
 export const SOURCES = 8
 
 // Percents are written to two decimals, so a source's shares can miss 100 by a

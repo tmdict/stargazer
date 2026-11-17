@@ -51,12 +51,12 @@ export function cardLabel(card: ShopCard, locale: AppLocale): string {
 
 export type ShopPickerStep = 'product' | 'hero' | 'piece'
 
-export type ShopPicture = 'badge' | 'artifact-exp' | 'random-card'
+type ShopPicture = 'badge' | 'artifact-exp' | 'random-card'
 
 /** A shop picture, or undefined where the data pack holds none. */
 export const shopPicture = (name: ShopPicture): string | undefined => images[name]
 
-export type ShopTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
+type ShopTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
 
 // A trial card's price follows the tier of the hero it lends.
 const TRIAL_TIERS: Record<string, ShopTier> = {
@@ -77,10 +77,16 @@ export interface ShopStep {
 const lockSteps = (locks: readonly number[], cards: readonly ShopCard[]): ShopStep[] => {
   const held = cards.flatMap((card, index) => (card.locked && !card.bought ? [index] : []))
   return [
-    ...held.filter((card) => !locks.includes(card)).map((card) => ({ kind: 'unlock', card })),
-    ...held.filter((card) => locks.includes(card)).map((card) => ({ kind: 'keep', card })),
-    ...locks.filter((card) => !held.includes(card)).map((card) => ({ kind: 'lock', card })),
-  ] as ShopStep[]
+    ...held
+      .filter((card) => !locks.includes(card))
+      .map((card): ShopStep => ({ kind: 'unlock', card })),
+    ...held
+      .filter((card) => locks.includes(card))
+      .map((card): ShopStep => ({ kind: 'keep', card })),
+    ...locks
+      .filter((card) => !held.includes(card))
+      .map((card): ShopStep => ({ kind: 'lock', card })),
+  ]
 }
 
 const buyStep = (card: number, cards: readonly ShopCard[]): ShopStep => ({

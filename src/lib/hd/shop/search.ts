@@ -7,21 +7,19 @@
 // the tables disagree about it by more than the tolerance.
 
 import type { GoalModel } from './moves'
+import type { SourceWorld } from './sources'
 import type { Tables } from './tables'
 
 /** Thrown when the deadline passes; the caller keeps the range it already has. */
 export class OutOfTime extends Error {}
 
-interface World {
-  /** The source behind each card of the board. */
-  origins: number[]
-  chance: number
-}
-
-/** `items` holds each card's useful kind, or -1 for a card that only holds its source. */
+/**
+ * `items` holds each card's useful kind, or -1 for a card that only holds its
+ * source. Each world gives the source behind every card.
+ */
 export interface Board {
   items: number[]
-  worlds: World[]
+  worlds: SourceWorld[]
 }
 
 /**
@@ -45,7 +43,7 @@ export interface Outlook {
 }
 
 export interface Search {
-  board: (items: number[], worlds: World[]) => Board
+  board: (items: number[], worlds: SourceWorld[]) => Board
   /** The best chance, within the tolerance. */
   value: Outlook
   /** What the tables alone say. */
@@ -85,9 +83,9 @@ export function createSearch(model: GoalModel, tables: Tables, tolerance: number
     })
   }
 
-  const board = (items: number[], worlds: World[]): Board => {
+  const board = (items: number[], worlds: SourceWorld[]): Board => {
     if (!items.length) return { items, worlds: [{ origins: [], chance: 1 }] }
-    const merged = new Map<string, World>()
+    const merged = new Map<string, SourceWorld>()
     let total = 0
     for (const world of worlds) {
       const origins = canon(world.origins)

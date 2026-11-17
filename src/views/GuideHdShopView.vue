@@ -54,7 +54,6 @@ const form = useShopForm(() => {
 const mounted = ref(false)
 onMounted(() => (mounted.value = true))
 
-// The heroes the shop sells this season.
 const shopHeroes = computed(() => {
   const sold = new Set(SHOP_FACTS.heroes)
   return gameData.characters.filter((c) => sold.has(c.name)).sort(compareCharacters)

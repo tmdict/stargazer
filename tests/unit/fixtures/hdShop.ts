@@ -61,6 +61,23 @@ export function read(odds: LevelOdds, shown: readonly ShopCard[]): ShopReading {
 export const hero = (name: string, copies = 1): Goal => ({ heroes: [name], equipment: [], copies })
 
 export const REROLL: Move = { kind: 'reroll', locks: [] }
+export const buy = (at: number): Move => ({ kind: 'buy', card: at })
+export const lock = (...locks: number[]): Move => ({ kind: 'reroll', locks })
+
+/** Every hero but `L1`. */
+export const others = HEROES.map((h) => h.name).filter((name) => name !== 'L1')
+
+/** A level-1 shop with four packs on show. */
+export const packShop = cards(
+  card('random-pack'),
+  card('lightbearer-pack'),
+  card('wilder-pack'),
+  card('rare-equipment'),
+  card('artifact-exp'),
+  card('artifact-exp'),
+  card('random-pack'),
+  card('rare-equipment'),
+)
 
 export interface Asked {
   level: number

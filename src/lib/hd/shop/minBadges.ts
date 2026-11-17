@@ -3,7 +3,7 @@
 // never runs out and makes the cheapest move from then on.
 
 import type { Costs } from './costs'
-import { goalModel, type GoalModel } from './moves'
+import { goalModel, subsets, type GoalModel } from './moves'
 import { createSolverCache, type SolverCache } from './solverCache'
 import { sourcesOf, type ShopReading } from './sources'
 import type { CostRange, EnteredShop, Goal, Move, Pools, ShopFacts } from './types'
@@ -194,9 +194,7 @@ export function solveMinBadges(
   // a reroll keeps changes nothing, only how many.
   const named = others.filter((card) => shop.cards[card].good)
   const blank = others.filter((card) => !shop.cards[card].good)
-  const spare = Array.from({ length: 1 << named.length }, (_, mask) =>
-    named.filter((_, bit) => (mask >> bit) & 1),
-  ).flatMap((set) =>
+  const spare = subsets(named).flatMap((set) =>
     Array.from({ length: blank.length + 1 }, (_, n) => [...set, ...blank.slice(0, n)]),
   )
   const options: Move[][] = [...offers.values()].map((card) => [{ kind: 'buy', card }])

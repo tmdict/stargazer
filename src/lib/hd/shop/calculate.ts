@@ -8,8 +8,8 @@
 //
 // The work also pauses between stages, where whoever runs it can end it: after
 // each goal is prepared, after each goal's first answer, and after each slice
-// of search. Everything worked out
-// up to a pause is in the cache, so ending there loses nothing.
+// of search. Everything worked out up to a pause is in the cache, so ending
+// there loses nothing.
 
 import {
   adviseBadges,
@@ -50,10 +50,10 @@ import type {
 export const SHOP_LIMITS = { badges: 500, copies: 4 }
 
 /** How long the search may run for one request, in milliseconds. */
-export const SEARCH_MS = 5000
+const SEARCH_MS = 5000
 
 /** How long the search runs between two pauses, in milliseconds. */
-export const SLICE_MS = 50
+const SLICE_MS = 50
 
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
@@ -386,7 +386,7 @@ export function* calculateShop(
   }
   // A goal's way to stop into a higher level fills that level's cost tables,
   // the longest single piece of a request.
-  const answers: ReturnType<typeof answer>[] = []
+  const answers: ShopAnswer[] = []
   for (const work of works) {
     if (answers.length) yield null
     answers.push(answer(work, shop, facts))

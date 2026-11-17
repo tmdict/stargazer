@@ -20,17 +20,15 @@ const emit = defineEmits<{ recalculate: [move: Move] }>()
 
 const i18n = useI18nStore()
 
-const copiesOf = (answer: ShopAnswer): number | undefined =>
-  answer.goal.kind === 'hero'
-    ? heroes.find((hero) => hero.name === (answer.goal as { name: string }).name)?.copies
-    : undefined
+const copiesOf = ({ goal }: ShopAnswer): number | undefined =>
+  goal.kind === 'hero' ? heroes.find((hero) => hero.name === goal.name)?.copies : undefined
 
 const keyOf = ({ goal }: ShopAnswer): string =>
   'name' in goal ? `${goal.kind}:${goal.name}` : goal.kind
 </script>
 
 <template>
-  <section class="sl-panel shop-box shop-answers">
+  <section class="sl-panel shop-box">
     <h2 class="shop-heading">
       {{ i18n.t('app.shop-answers-head') }}
       <span class="shop-dim">{{ i18n.t('app.shop-answers-sub', { level, badges }) }}</span>

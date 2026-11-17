@@ -5,22 +5,22 @@ import { solveMinBadges } from '@/lib/hd/shop/minBadges'
 import { firstMoves } from '@/lib/hd/shop/moves'
 import { solveNextRound, stopReason } from '@/lib/hd/shop/nextRound'
 import { createSolverCache } from '@/lib/hd/shop/solverCache'
-import type { Goal, LevelOdds, Move, Pools, ShopCard } from '@/lib/hd/shop/types'
+import type { Goal, LevelOdds, Pools, ShopCard } from '@/lib/hd/shop/types'
 import {
+  buy,
   card,
   cards,
   FACTS,
   hero,
   HEROES,
   levelOdds,
+  lock,
+  others,
+  packShop,
   pools,
   read,
   REROLL,
 } from '../../fixtures/hdShop'
-
-const buy = (at: number): Move => ({ kind: 'buy', card: at })
-const lock = (...locks: number[]): Move => ({ kind: 'reroll', locks })
-const others = HEROES.map((h) => h.name).filter((name) => name !== 'L1')
 
 interface Asked {
   odds: LevelOdds
@@ -66,19 +66,8 @@ const at = (level: number, goal: Goal, more: Partial<Asked> = {}): Asked => ({
   ...more,
 })
 
-const packShop = cards(
-  card('random-pack'),
-  card('lightbearer-pack'),
-  card('wilder-pack'),
-  card('rare-equipment'),
-  card('artifact-exp'),
-  card('artifact-exp'),
-  card('random-pack'),
-  card('rare-equipment'),
-)
-
-// The shop doc's check cases. Its E2 figure, 55.67, is from Toto's calculator, which rounds
-// the chances of which source a locked card holds; unrounded it is 55.61.
+// Worked check cases. Toto's calculator gives 55.67 for E2, since it rounds the chances of
+// which source a locked card holds; unrounded it is 55.61.
 describe('the check cases', () => {
   it('E1: an empty shop at level 5', () => {
     const { best, reason } = solve(at(5, hero('L1')))

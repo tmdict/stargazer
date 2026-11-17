@@ -106,11 +106,12 @@ export function readShop(
   }
 }
 
-function subsets(size: number, count: number): number[][] {
+/** Every way to pick `count` of the numbers below `size`, each in ascending order. */
+function combinations(size: number, count: number): number[][] {
   if (!count) return [[]]
   const list: number[][] = []
   for (let first = 0; first <= size - count; first++) {
-    for (const rest of subsets(size - first - 1, count - 1)) {
+    for (const rest of combinations(size - first - 1, count - 1)) {
       list.push([first, ...rest.map((i) => i + first + 1)])
     }
   }
@@ -128,7 +129,7 @@ export function sourcesOf(reading: ShopReading, chosen: readonly number[]): Sour
   const first = reading.cards.length - reading.blanks
   const named = chosen.filter((place) => place < first)
   const count = chosen.length - named.length
-  const sets = subsets(reading.blanks, count)
+  const sets = combinations(reading.blanks, count)
   return reading.worlds.flatMap((world) =>
     sets.map((set) => ({
       origins: [

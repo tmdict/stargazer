@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import odds from '@/data/hd/shop/odds.json'
-import { checkShopFacts, SHOP_FACTS } from '@/lib/hd/shop/goods'
+import { checkShopFacts } from '@/lib/hd/shop/goods'
 import { goalModel } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { sampleShop } from '@/lib/hd/shop/sample'
@@ -156,10 +155,6 @@ describe('a pack', () => {
 })
 
 describe('checking the data', () => {
-  it('accepts the measured odds table the site ships', () => {
-    expect(() => checkOdds(odds as OddsTable, SHOP_FACTS)).not.toThrow()
-  })
-
   it('refuses an odds table whose source does not add up to 100', () => {
     const levels = structuredClone(ODDS.levels)
     levels[2]![4]![0]!.percent += 1

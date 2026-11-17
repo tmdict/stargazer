@@ -22,7 +22,7 @@ const text = (step: ShopStep): string => {
 
 <template>
   <span class="shop-steps">
-    <span v-for="(step, index) in steps" :key="index" class="step" :class="step.kind">
+    <span v-for="(step, index) in steps" :key="index" class="step">
       {{ text(step) }}
       <ShopBadges v-if="step.price !== undefined" :count="step.price" />
     </span>

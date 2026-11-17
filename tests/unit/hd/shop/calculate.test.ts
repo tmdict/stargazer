@@ -17,10 +17,19 @@ import type {
   ShopCard,
   WantedEquipment,
 } from '@/lib/hd/shop/types'
-import { card, cards, FACTS, hero, HEROES, ODDS, pools, REROLL } from '../../fixtures/hdShop'
+import {
+  buy,
+  card,
+  cards,
+  FACTS,
+  hero,
+  HEROES,
+  lock,
+  ODDS,
+  pools,
+  REROLL,
+} from '../../fixtures/hdShop'
 
-const buy = (at: number): Move => ({ kind: 'buy', card: at })
-const lock = (...locks: number[]): Move => ({ kind: 'reroll', locks })
 const exp = [{ good: 'artifact-exp', percent: 100 }]
 const filler = (count: number): ShopCard[] => Array(count).fill(card('artifact-exp'))
 const two = pools([], HEROES.slice(0, 2))

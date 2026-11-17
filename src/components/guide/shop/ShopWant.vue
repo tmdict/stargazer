@@ -37,7 +37,7 @@ const step = (by: 1 | -1): void => {
   <span class="shop-want">
     <GuidePortrait v-if="kind === 'hero'" :slug="name" :lang="i18n.currentLocale" :size="40" />
     <ShopPieceDisc v-else :name :size="40" />
-    <span class="label">{{ label }}</span>
+    <span>{{ label }}</span>
     <span v-if="copies !== undefined" class="copies" role="group">
       <button
         type="button"
@@ -59,7 +59,6 @@ const step = (by: 1 | -1): void => {
     </span>
     <button
       type="button"
-      class="remove"
       :aria-label="i18n.t('app.shop-remove', { item: label })"
       :title="i18n.t('app.shop-remove', { item: label })"
       @click="emit('remove')"
