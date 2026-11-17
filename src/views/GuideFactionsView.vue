@@ -126,13 +126,6 @@ const bonusBlocks = computed(() => [
     ],
   },
 ])
-
-const mirror = computed(() =>
-  interpolate(label('tactics-mirror'), {
-    a: faction(TACTICS_WHEEL[0]),
-    b: faction(TACTICS_WHEEL[1]),
-  }),
-)
 </script>
 
 <template>
@@ -225,10 +218,7 @@ const mirror = computed(() =>
 
           <div>
             <p>{{ label('tactics-intro') }}</p>
-            <ul>
-              <li>{{ label('tactics-cycle') }}</li>
-              <li>{{ mirror }}</li>
-            </ul>
+            <p>{{ label('tactics-cycle') }}</p>
           </div>
         </div>
       </div>
