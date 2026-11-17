@@ -118,6 +118,16 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/GuideMechanicsView.vue'),
   },
   {
+    path: guidePath('factions'),
+    name: 'guide-factions',
+    component: () => import('@/views/GuideFactionsView.vue'),
+  },
+  {
+    path: guidePath('damage'),
+    name: 'guide-damage',
+    component: () => import('@/views/GuideDamageView.vue'),
+  },
+  {
     path: SL_GENERATOR_PATH,
     name: 'guide-sl',
     component: () => import('@/views/GuideSlView.vue'),

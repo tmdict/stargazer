@@ -1,0 +1,5 @@
+{
+  "en": "Only {atk} and {hp} make it stronger, while {haste} and {atkSpd} make it happen more often. Damage and {crit} bonuses do nothing for it.",
+  "zh": "只有{atk}和{hp}能提高它的数值，{haste}和{atkSpd}则能让它更频繁地触发。伤害加成与{crit}加成对它无效。",
+  "ko": "{atk}과 {hp}만 수치를 높여 주고, {haste}과 {atkSpd}는 더 자주 발동하게 해 줍니다. 대미지 증가와 {crit} 버프는 효과가 없습니다."
+}

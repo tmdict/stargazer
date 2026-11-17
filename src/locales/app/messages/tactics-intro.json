@@ -1,0 +1,5 @@
+{
+  "en": "A hero deals 15% more damage to a target whose faction is weak to theirs, and 15% less damage to a target whose faction is strong against theirs.",
+  "zh": "克制目标时，对目标造成的伤害提升15%；被目标克制时，对目标造成的伤害下降15%。",
+  "ko": "목표가 자신의 진영에 약하면 목표에 대한 대미지가 15% 증가하고, 목표가 자신의 진영에 강하면 15% 감소합니다."
+}

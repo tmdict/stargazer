@@ -38,6 +38,8 @@ const items = computed<DropdownItem[]>(() => [
   })),
   page('guide-upgrades', i18n.t('app.upgrades'), guidePath('upgrades')),
   page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
+  page('guide-factions', i18n.t('app.faction-bonus'), guidePath('factions')),
+  page('guide-damage', i18n.t('app.damage-types'), guidePath('damage')),
 ])
 </script>
 

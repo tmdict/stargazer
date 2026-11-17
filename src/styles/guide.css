@@ -31,3 +31,31 @@
 .faction-icons img + img {
   margin-left: -5px;
 }
+
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--reading-secondary-size);
+  color: var(--reading-text);
+}
+
+.guide-table th,
+.guide-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.guide-table thead th {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  vertical-align: bottom;
+}
+
+.guide-table tbody tr:last-child th,
+.guide-table tbody tr:last-child td {
+  border-bottom: none;
+}
