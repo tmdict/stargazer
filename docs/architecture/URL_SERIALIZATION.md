@@ -1,8 +1,10 @@
 # URL Serialization
 
-Board state leaves the app in two formats. The binary link format (`src/lib/teams/binaryEncoder.ts`) carries every `?g=` link, whether from the Arena, the Teams page or `/share`. It also stores the Arena autosave under `stargazer.arena`, the one binary value at rest. The JSON interchange format is url-safe base64 of a `MultiGridState`, and it holds the saved-team library, the per-mode autosave slots and backup files. Links never use JSON, and nothing exported uses binary.
+Board state leaves the app in two formats. The binary link format (`src/lib/teams/binaryEncoder.ts`) carries every `?g=` link, whether from the Arena, the Teams page or `/share`. It also stores the Arena autosave under `stargazer.arena`, the one value it holds at rest. The JSON interchange format is url-safe base64 of a `MultiGridState`, and it holds the saved-team library, the per-mode autosave slots and backup files. Links never use JSON, and nothing exported uses binary.
 
 The split follows what each format needs. Links must be short and are allowed to break. Stored teams must compare byte for byte and survive new app versions. `src/lib/teams/codec.ts` holds one encode and one decode per format.
+
+An Honor Duel board has a small link format of its own, `?hd=`, which is also its stored value. It shares this format's bit and text helpers (`src/lib/teams/bitCodec.ts`) and its map ids, and [Honor Duel](./HONOR_DUEL.md#the-board-link) describes it.
 
 ## Decisions
 
@@ -95,11 +97,11 @@ An id stays fixed while its mode or map exists, since reassigning one that live 
 
 ## Reading a link
 
-Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
+Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. The Arena page and `/share` look for `?hd=` first, and an Honor Duel link opens the Arena page on its Honor Duel tab. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
 
 Display flags travel with every link, and a `?g=` restore applies them. A payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 
-The Arena also reads `?tab=` for its side panel: `characters` (the default), `seasonal`, `mapEditor`, `rosters` or `debug`. Each tab switch writes it as a step for Back, and `?tab=skills` goes to `/skills`.
+The Arena also reads `?tab=` for its side panel: `characters` (the default), `seasonal`, `honorDuel`, `mapEditor`, `rosters` or `debug`. Each tab switch writes it as a step for Back, and `?tab=skills` goes to `/skills`.
 
 ## Restoring a board
 

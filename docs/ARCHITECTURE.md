@@ -44,7 +44,7 @@ The code in `src/lib/pvp/` that the PvP team generator and Who Would Win? share 
 
 ## Boards
 
-`createGridContext` (`src/stores/gridContext.ts`) builds one board: its `Grid`, its `SkillManager`, map, artifact slots, upgrade levels, derived values such as layout and closest targets, and the operations that change it. Its watchers run in their own effect scope, so disposing a board leaves nothing behind.
+`createGridContext` (`src/stores/gridContext.ts`) builds one board: its `Grid`, its `SkillManager`, map, artifact slots, upgrade levels, derived values such as layout and closest targets, and the operations that change it. A board is an Arena board or an Honor Duel board, and the rules that differ between the two ask its kind ([Honor Duel](./architecture/HONOR_DUEL.md#the-board)). Its watchers run in their own effect scope, so disposing a board leaves nothing behind.
 
 `useGrids` (`src/stores/grids.ts`) holds the boards, which one is active, the settings every board shares (hex size, team view, invert, perspective), and the rules that span boards: a hero or artifact can appear once per team across the whole page, and a drop may move a unit between boards. The single-board stores (`useGridStore`, `useCharacterStore`, `useArtifactStore`) forward to the active board, so Arena code never needs a board id. Board components read their own board with `useGridContext()`.
 
@@ -79,22 +79,23 @@ SVG has no z-index, so the board draws its layers in order and puts an invisible
 
 Everything persists in the browser's `localStorage` under `stargazer.*` keys. Each key's exact shape, with an example, lives in the doc of the feature that owns it:
 
-| Key                                                                     | Holds                                                                   | Shape in                                                 |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| `stargazer.arena`                                                       | the Arena board, as a binary link payload                               | [URL Serialization](./architecture/URL_SERIALIZATION.md) |
-| `stargazer.arena.variant`                                               | the mode of the Arena's map dropdown pick, `sl` or `gd`                 | [Grid](./architecture/GRID.md#map-editor)                |
-| `stargazer.season`                                                      | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)           |
-| `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort` | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                         |
-| `stargazer.rosters`, `stargazer.rosters.active`                         | the roster library and the active roster                                | [Teams](./architecture/TEAMS.md)                         |
-| `stargazer.import.names`                                                | the team import's record names                                          | [Screenshot Import](./architecture/IMPORT.md)            |
-| `stargazer.import.learned`                                              | the screenshot imports' learned faces                                   | [Screenshot Import](./architecture/IMPORT.md)            |
-| `stargazer.skillLocale`, `stargazer.recentHeroes`                       | skill text language, recent heroes                                      | [Skill Pages](./architecture/SKILL_PAGES.md)             |
-| `stargazer.tags.expanded`                                               | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)             |
-| `stargazer.prefs`                                                       | device preferences                                                      | below                                                    |
-| `stargazer.locale`                                                      | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                     |
-| `stargazer.flags`                                                       | one-time flags, each the date it happened                               | below                                                    |
-| `stargazer.fits`                                                        | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                 |
-| `stargazer.placement.lists`                                             | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                 |
+| Key                                                                     | Holds                                                                   | Shape in                                                  |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| `stargazer.arena`                                                       | the Arena board, as a binary link payload                               | [URL Serialization](./architecture/URL_SERIALIZATION.md)  |
+| `stargazer.arena.variant`                                               | the mode of the Arena's map dropdown pick, `sl` or `gd`                 | [Grid](./architecture/GRID.md#map-editor)                 |
+| `stargazer.hd.board`                                                    | the Arena page's Honor Duel board, as its link text                     | [Honor Duel](./architecture/HONOR_DUEL.md#the-board-link) |
+| `stargazer.season`                                                      | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)            |
+| `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort` | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                          |
+| `stargazer.rosters`, `stargazer.rosters.active`                         | the roster library and the active roster                                | [Teams](./architecture/TEAMS.md)                          |
+| `stargazer.import.names`                                                | the team import's record names                                          | [Screenshot Import](./architecture/IMPORT.md)             |
+| `stargazer.import.learned`                                              | the screenshot imports' learned faces                                   | [Screenshot Import](./architecture/IMPORT.md)             |
+| `stargazer.skillLocale`, `stargazer.recentHeroes`                       | skill text language, recent heroes                                      | [Skill Pages](./architecture/SKILL_PAGES.md)              |
+| `stargazer.tags.expanded`                                               | whether the hero lists show the mechanic filter as chips or as a menu   | [Skill Pages](./architecture/SKILL_PAGES.md)              |
+| `stargazer.prefs`                                                       | device preferences                                                      | below                                                     |
+| `stargazer.locale`                                                      | the app language, `"en"`, `"zh"` or `"ko"`; anything else reads as `en` | here                                                      |
+| `stargazer.flags`                                                       | one-time flags, each the date it happened                               | below                                                     |
+| `stargazer.fits`                                                        | the points Generate's fit checks found, for later visits                | [Placement](./architecture/PLACEMENT.md)                  |
+| `stargazer.placement.lists`                                             | a visitor's changed hero lists from the Hero lists page                 | [Placement](./architecture/PLACEMENT.md)                  |
 
 The one `sessionStorage` key, `stargazer.chunk-recovery`, is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them, except in `stargazer.prefs`, where a write keeps every field but its own.
 
