@@ -3,6 +3,7 @@
  * rules (copies of a hero share a piece of equipment, an off-field spot holds
  * one hero), and a side's faction bonus. */
 
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
@@ -30,7 +31,7 @@ import { useGameDataStore } from './gameData'
 import type { GridContext } from './gridContext'
 import { useGrids } from './grids'
 
-const heroUnitsOf = (ctx: GridContext, team: Team): number[] =>
+export const duelHeroUnits = (ctx: GridContext, team: Team): number[] =>
   getTilesWithCharactersByTeam(ctx.grid, team)
     .map((tile) => tile.characterId!)
     .filter(isHeroUnit)
@@ -71,7 +72,7 @@ export function setDuelEquipment(
   piece: number,
 ): void {
   const heroId = toBaseHeroId(unitId)
-  for (const id of heroUnitsOf(ctx, team)) {
+  for (const id of duelHeroUnits(ctx, team)) {
     if (toBaseHeroId(id) === heroId) ctx.setAttr(team, id, DUEL_ATTR_EQUIPMENT, piece)
   }
 }
@@ -80,7 +81,7 @@ export function setDuelEquipment(
 // the first. 0 takes the hero off its spot.
 export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: number): void {
   if (spot !== 0) {
-    for (const id of heroUnitsOf(ctx, team)) {
+    for (const id of duelHeroUnits(ctx, team)) {
       if (id !== unitId && ctx.getAttr(team, id, DUEL_ATTR_SPOT) === spot) {
         ctx.setAttr(team, id, DUEL_ATTR_SPOT, 0)
       }
@@ -94,7 +95,7 @@ export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: 
 export function duelFactionBonus(ctx: GridContext, team: Team): TeamFactionBonus {
   const gameData = useGameDataStore()
   return teamFactionBonus(
-    heroUnitsOf(ctx, team).flatMap(
+    duelHeroUnits(ctx, team).flatMap(
       (id) => gameData.getCharacterById(toBaseHeroId(id))?.faction ?? [],
     ),
   )
@@ -103,6 +104,10 @@ export function duelFactionBonus(ctx: GridContext, team: Team): TeamFactionBonus
 export const useDuelBoard = defineStore('duelBoard', () => {
   const grids = useGrids()
   const gameData = useGameDataStore()
+
+  // The hero picking an off-field spot: its side's six spots show on the
+  // board until one is taken or the pick is dropped.
+  const spotPick = ref<{ team: Team; unitId: number } | null>(null)
 
   /* Places a state's heroes and artifacts on an empty board standing on the
    * state's map. A hero the board refuses is dropped: one the game data lacks,
@@ -150,6 +155,7 @@ export const useDuelBoard = defineStore('duelBoard', () => {
    * state read, for its view switches. */
   const open = (text: string | null): DuelBoardState | null => {
     const state = text ? decodeDuelBoard(text) : null
+    spotPick.value = null
     grids.setGridCount(1, [state?.map ?? DEFAULT_DUEL_MAP], 'honorDuel')
     if (state) fill(grids.active!, state, false)
     return state
@@ -165,9 +171,10 @@ export const useDuelBoard = defineStore('duelBoard', () => {
     if (!ctx || ctx.kind !== 'honorDuel' || !isDuelMap(mapKey)) return false
     const state = duelBoardState(ctx, 0)
     if (!ctx.switchMap(mapKey)) return false
+    spotPick.value = null
     fill(ctx, { ...state, map: mapKey }, true)
     return true
   }
 
-  return { open, snapshot, moveToMap }
+  return { spotPick, open, snapshot, moveToMap }
 })

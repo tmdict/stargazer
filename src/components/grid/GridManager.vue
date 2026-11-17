@@ -9,6 +9,7 @@ import GridTiles from './GridTiles.vue'
 import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import SlPlacementCard from '@/components/guide/sl/SlPlacementCard.vue'
+import DuelSpots from '@/components/hd/DuelSpots.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
@@ -296,7 +297,10 @@ onUnmounted(() => {
       @artifact-enter="tipsHover.enterArtifact"
       @artifact-leave="tipsHover.leaveArtifact"
     />
-    <DuelArtifacts v-else :show-hover="info.hover" :readonly />
+    <template v-else>
+      <DuelArtifacts :show-hover="info.hover" :readonly />
+      <DuelSpots :readonly />
+    </template>
 
     <!-- Character layer (above artifacts) -->
     <GridCharacters
