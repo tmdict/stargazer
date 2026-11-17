@@ -356,24 +356,18 @@ export function createGridContext(
     }
   }
 
-  // Copies of a hero on an Honor Duel side share one piece of equipment. A
-  // hero joining a side takes the piece its copies hold there; where they hold
-  // none, they take the piece it brings from the other side.
+  // Copies of a hero on an Honor Duel side share one piece of equipment, so a
+  // hero joining a side, placed or come from the other side, starts with the
+  // piece its copies hold there.
   const joinDuelSide = (team: Team, characterId: number): void => {
     if (kind !== 'honorDuel' || !isHeroUnit(characterId)) return
     const heroId = toBaseHeroId(characterId)
-    const copies = getTilesWithCharactersByTeam(grid, team)
+    const piece = getTilesWithCharactersByTeam(grid, team)
       .map((tile) => tile.characterId!)
       .filter((id) => id !== characterId && isHeroUnit(id) && toBaseHeroId(id) === heroId)
-    const held = copies
       .map((id) => getAttr(team, id, DUEL_ATTR_EQUIPMENT))
-      .find((piece) => piece !== 0)
-    if (held !== undefined) {
-      setAttr(team, characterId, DUEL_ATTR_EQUIPMENT, held)
-      return
-    }
-    const brought = getAttr(team, characterId, DUEL_ATTR_EQUIPMENT)
-    if (brought !== 0) for (const id of copies) setAttr(team, id, DUEL_ATTR_EQUIPMENT, brought)
+      .find((held) => held !== 0)
+    if (piece !== undefined) setAttr(team, characterId, DUEL_ATTR_EQUIPMENT, piece)
   }
 
   // Placing onto an occupied tile evicts the occupant, so a place can take a

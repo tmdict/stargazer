@@ -42,8 +42,9 @@ export const DUEL_ATTR_RULES: AttrRules = {
     return Math.min(Math.max(Math.round(value), 0), max)
   },
   defaultOf: () => 0,
-  // A side's spot holds one hero, and the other side's may be taken.
-  sideBound: [DUEL_ATTR_SPOT],
+  // A side's spot holds one hero, and the other side's may be taken. A piece
+  // is its side's too: the other side's copies of the hero hold their own.
+  sideBound: [DUEL_ATTR_SPOT, DUEL_ATTR_EQUIPMENT],
 }
 
 // A side's artifact with its level, 1 to DUEL_ARTIFACT_LEVELS.

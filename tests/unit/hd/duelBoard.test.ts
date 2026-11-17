@@ -232,21 +232,20 @@ describe('Honor Duel equipment and off-field spots', () => {
     expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_TIER)).toBe(2)
   })
 
-  it('a hero that changes sides shares one piece with its copies there', () => {
+  it('a hero that changes sides leaves its piece and takes the one its copies hold there', () => {
     const { ctx, copy } = setup()
     setDuelEquipment(ctx, Team.ALLY, ALLY_A, 9)
     setDuelEquipment(ctx, Team.ALLY, ALLY_B, 4)
 
-    // Its copy there holds none, so that copy takes the piece it brings.
+    // Its copy there holds none.
     expect(ctx.move(2, 41, copy)).toBe(true)
-    expect(ctx.getAttr(Team.ENEMY, copy, DUEL_ATTR_EQUIPMENT)).toBe(9)
-    expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_EQUIPMENT)).toBe(9)
+    expect(ctx.getAttr(Team.ENEMY, copy, DUEL_ATTR_EQUIPMENT)).toBe(0)
+    expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_EQUIPMENT)).toBe(0)
 
-    // Its copy there holds a piece, so it takes that one.
     setDuelEquipment(ctx, Team.ENEMY, ALLY_A, 5)
     expect(ctx.swap(3, 41)).toBe(true)
     expect(ctx.getAttr(Team.ALLY, copy, DUEL_ATTR_EQUIPMENT)).toBe(9)
-    expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_EQUIPMENT)).toBe(4)
+    expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_EQUIPMENT)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_EQUIPMENT)).toBe(5)
   })
 })
