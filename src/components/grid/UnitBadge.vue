@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* A unit badge: an icon in a colored disc on a portrait's rim. The board sets
-   the disc's size and border (--badge-size, --badge-border) and its host
-   places it. */
+/* A unit badge: an icon in a colored disc on a portrait's rim, or what the
+   default slot holds in its place (a letter, a picture). The board sets the
+   disc's size and border (--badge-size, --badge-border) and its host places
+   it. */
 
 import type { Component } from 'vue'
 
@@ -13,9 +14,10 @@ import IconFlame from '../ui/IconFlame.vue'
 import type { BadgeIcon } from '@/lib/types/unitBadge'
 
 defineProps<{
-  icon: BadgeIcon
+  icon?: BadgeIcon
+  // Any CSS background: a colour or a gradient.
   color: string
-  glyph: number
+  glyph?: number
 }>()
 
 const ICONS: Record<BadgeIcon, Component> = {
@@ -28,8 +30,8 @@ const ICONS: Record<BadgeIcon, Component> = {
 </script>
 
 <template>
-  <span class="unit-badge" :style="{ backgroundColor: color }">
-    <component :is="ICONS[icon]" :size="glyph" />
+  <span class="unit-badge" :style="{ background: color }">
+    <slot><component :is="ICONS[icon]" v-if="icon" :size="glyph" /></slot>
   </span>
 </template>
 
@@ -43,7 +45,11 @@ const ICONS: Record<BadgeIcon, Component> = {
   justify-content: center;
   border: var(--badge-border) solid #fff;
   border-radius: 50%;
-  color: #fff;
+  overflow: hidden;
+  color: var(--badge-ink, #fff);
+  font-size: calc(var(--badge-size) * 0.55);
+  font-weight: 700;
+  line-height: 1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition:
     transform 0.12s ease-out,

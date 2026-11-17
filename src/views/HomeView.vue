@@ -11,6 +11,7 @@ import GridControls from '@/components/grid/GridControls.vue'
 import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
+import DuelHeroCard from '@/components/hd/DuelHeroCard.vue'
 import HonorDuelTab from '@/components/hd/HonorDuelTab.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import RosterPanel from '@/components/RosterPanel.vue'
@@ -340,7 +341,8 @@ const handleResetMap = () => {
             :tap-mode="isNarrowBreakpoint(currentBreakpoint)"
           />
           <template v-if="info.heroCard">
-            <TeamPowerPanel :context="activeContext" :show-upgrades="info.upgrades" />
+            <DuelHeroCard v-if="duelShown" :context="activeContext" />
+            <TeamPowerPanel v-else :context="activeContext" :show-upgrades="info.upgrades" />
             <TeamPowerDock :context="activeContext" :show-upgrades="info.upgrades" />
           </template>
           <GridControls

@@ -45,7 +45,7 @@ const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain'
 
 const chip = computed(() => {
   if (icon) return null
-  if (good.kind === 'trial') return i18n.t('app.shop-chip-trial')
+  if (good.kind === 'trial') return i18n.t('app.trial')
   return (good.copies ?? 1) > 1 ? `×${good.copies}` : null
 })
 

@@ -10,6 +10,7 @@ import BuffTileText from './BuffTileText.vue'
 import BuffTileTooltip from './BuffTileTooltip.vue'
 import GridPointer from './GridPointer.vue'
 import UnitBadge from './UnitBadge.vue'
+import DuelTierChips from '@/components/hd/DuelTierChips.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
@@ -23,10 +24,13 @@ import {
   getCharacter,
   getCharacterTeam,
   isBaseHeroId,
+  isHeroUnit,
   toBaseHeroId,
 } from '@/lib/characters/character'
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
+import { isTrialHeroId } from '@/lib/characters/trial'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
+import { DUEL_ATTR_TIER, DUEL_TIERS, type DuelTier } from '@/lib/hd/board'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
 import { buffAt } from '@/lib/mapModeLists'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
@@ -38,6 +42,8 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { isTouchClick } from '@/utils/pointer'
+import { gameLabel } from '@/utils/skillLabels'
+import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
 
 interface Props {
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
@@ -76,7 +82,7 @@ const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelection
 // any placement change, since an icon removed/swapped from under a still cursor
 // fires no mouseleave.
 type HoverCard =
-  | { kind: 'hero'; hero: CharacterType; buff?: string }
+  | { kind: 'hero'; hero: CharacterType; buff?: string; duel?: DuelMark }
   | { kind: 'phantimal'; phantimal: PhantimalType; buff?: string }
   | { kind: 'buff'; buff: string }
 const {
@@ -315,7 +321,9 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 const hoverCardAt = (hexId: number, characterId: number): HoverCard | undefined => {
   const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
   const buff = props.showBuffTiles ? buffAt(ctx.buffs, hexId) : undefined
-  const own = props.showHover || (props.showRules && enemy) ? cardAt(characterId) : undefined
+  const card = props.showHover || (props.showRules && enemy) ? cardAt(characterId) : undefined
+  const duel = duelMarks.value.find((mark) => mark.hexId === hexId)
+  const own = card?.kind === 'hero' && duel ? { ...card, duel } : card
   if (buff === undefined) return own
   if (own) return { ...own, buff }
   return props.showRules && !enemy ? undefined : { kind: 'buff', buff }
@@ -380,6 +388,28 @@ const skillBadges = computed(() => {
   const shown = new Set(visiblePlacements.value.map(([hexId]) => hexId))
   return ctx.skillBadges.filter((badge) => shown.has(badge.hexId))
 })
+
+// An Honor Duel board marks what each hero carries on its portrait, so the
+// board alone, and a picture of it, tells the formation.
+interface DuelMark {
+  hexId: number
+  trial: boolean
+  tier: DuelTier
+}
+
+const duelMarks = computed((): DuelMark[] =>
+  ctx.kind !== 'honorDuel' || props.isMapEditorMode
+    ? []
+    : visiblePlacements.value.flatMap(([hexId, characterId]) => {
+        const team = getCharacterTeam(ctx.grid, hexId)
+        if (!team || !isHeroUnit(characterId)) return []
+        const tier = DUEL_TIERS[ctx.getAttr(team, characterId, DUEL_ATTR_TIER)] ?? DUEL_TIERS[0]
+        return [{ hexId, trial: isTrialHeroId(characterId), tier }]
+      }),
+)
+
+// A mark holds one character: the first of the word in the site's language.
+const initial = (word: string): string => [...word][0] ?? ''
 
 const badgeStyle = computed(() => {
   const { size, hit, border } = badgeDimensions.value
@@ -505,6 +535,24 @@ const liftedMode = computed(() =>
       />
     </div>
 
+    <div
+      v-for="mark in duelMarks"
+      :key="`duel-${mark.hexId}`"
+      class="sprite-anchor"
+      :style="getCharacterStyle(mark.hexId)"
+    >
+      <UnitBadge
+        class="badge-upper-left"
+        :class="{ 'pale-badge': isPaleTier(mark.tier) }"
+        :color="tierBackdrop(mark.tier)"
+      >
+        {{ initial(gameLabel(mark.tier, i18n.currentLocale)) }}
+      </UnitBadge>
+      <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
+        {{ initial(i18n.t('app.trial')) }}
+      </UnitBadge>
+    </div>
+
     <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
       <div
         ref="liftActionsEl"
@@ -539,6 +587,11 @@ const liftedMode = computed(() =>
       variant="detailed"
       :hint="hoverHint"
     >
+      <DuelTierChips
+        v-if="hoveredCard.duel"
+        :tier="hoveredCard.duel.tier"
+        :trial="hoveredCard.duel.trial"
+      />
       <BuffTileText v-if="hoveredCard.buff" :buff="hoveredCard.buff" heading />
     </CharacterTooltip>
     <PhantimalTooltip
@@ -628,6 +681,10 @@ const liftedMode = computed(() =>
 
 .badge-upper-left {
   left: calc(50% - var(--badge-rim));
+}
+
+.pale-badge {
+  --badge-ink: var(--duel-pale-ink);
 }
 
 .skill-mode {

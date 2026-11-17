@@ -9,7 +9,7 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax, UPGRADE_ATTRS } from '@/lib/characters/attributes'
-import { getTilesWithCharactersByTeam, isHeroUnit } from '@/lib/characters/character'
+import { getTilesWithCharactersByTeam, isHeroUnit, toBaseHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -25,6 +25,17 @@ const props = defineProps<{
   showUpgrades: boolean
   readonly?: boolean
 }>()
+
+// `pill` stands in for the upgrade pill and `controls` follows the name, for a
+// board whose heroes carry other values; `mark` sits on the portrait's rim.
+// With either of the first two a hero is a group of its own controls instead
+// of one button.
+const slots = defineSlots<{
+  mark?(props: { hero: PanelHero }): unknown
+  pill?(props: { team: Team; hero: PanelHero }): unknown
+  controls?(props: { team: Team; hero: PanelHero }): unknown
+}>()
+const grouped = computed(() => !!slots.pill || !!slots.controls)
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
@@ -46,7 +57,7 @@ const heroesFor = (team: Team): PanelHero[] =>
     .filter((tile) => tile.characterId !== undefined && isHeroUnit(tile.characterId))
     .map((tile) => {
       const characterId = tile.characterId!
-      const character = gameData.getCharacterById(characterId)
+      const character = gameData.getCharacterById(toBaseHeroId(characterId))
       const canonicalName = character?.name ?? ''
       return {
         characterId,
@@ -189,10 +200,12 @@ const hoveredStat = computed(
         </span>
       </div>
       <div class="heroes">
-        <button
+        <component
+          :is="grouped ? 'div' : 'button'"
           v-for="hero in side.heroes"
           :key="hero.characterId"
-          type="button"
+          :type="grouped ? undefined : 'button'"
+          :role="grouped ? 'group' : undefined"
           class="hero inspectable"
           :class="{ static: !canEdit }"
           :aria-label="heroAria(hero)"
@@ -214,17 +227,21 @@ const hoveredStat = computed(
                 draggable="false"
               />
             </span>
+            <slot name="mark" :hero />
             <HoldRing v-if="pressing === hero" />
           </span>
-          <UpgradePill
-            v-if="showUpgrades"
-            class="pill"
-            :paragon="hero.paragon"
-            :refinement="hero.refinement"
-            nested
-          />
+          <slot name="pill" :team="side.team" :hero>
+            <UpgradePill
+              v-if="showUpgrades"
+              class="pill"
+              :paragon="hero.paragon"
+              :refinement="hero.refinement"
+              nested
+            />
+          </slot>
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
-        </button>
+          <slot name="controls" :team="side.team" :hero />
+        </component>
       </div>
     </div>
 

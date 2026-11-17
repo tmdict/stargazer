@@ -1,14 +1,11 @@
 /* The backdrop behind a picture of a rarity tier, a top-to-bottom gradient.
    The stops are data, so a style and an SVG gradient draw the same one. */
 
-type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary'
+type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
 
 // A colour and where it sits, in percent from the top.
 type BackdropStop = readonly [color: string, at: number]
 
-// Two tiers of the game have no row, since nothing on the site draws them:
-// Mythic (#f3edef, #fcf8f8 at 50, #ececfc) and Supreme (#c4fbeb, #b9e1fa at
-// 25, #ddc7fa at 50, #fee9da at 75, #fff8de).
 export const BACKDROP_STOPS: Record<BackdropTier, readonly BackdropStop[]> = {
   rare: [
     ['#626e8c', 50],
@@ -29,7 +26,22 @@ export const BACKDROP_STOPS: Record<BackdropTier, readonly BackdropStop[]> = {
     ['#b44742', 50],
     ['#cf6450', 100],
   ],
+  mythic: [
+    ['#f3edef', 0],
+    ['#fcf8f8', 50],
+    ['#ececfc', 100],
+  ],
+  supreme: [
+    ['#c4fbeb', 0],
+    ['#b9e1fa', 25],
+    ['#ddc7fa', 50],
+    ['#fee9da', 75],
+    ['#fff8de', 100],
+  ],
 }
+
+// The two pale tiers, where text set on the backdrop has to be dark.
+export const isPaleTier = (tier: BackdropTier): boolean => tier === 'mythic' || tier === 'supreme'
 
 const HERO_TIERS: Record<string, BackdropTier> = { rare: 'rare', a: 'elite', s: 'epic' }
 

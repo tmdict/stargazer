@@ -63,20 +63,13 @@ const heading = (kind: GoodKind, goods: readonly Good[]): string => {
   return i18n.t(kind === 'trial' ? 'app.shop-group-trial' : 'app.shop-group-other')
 }
 
-const TIER_KEYS: Record<string, string> = {
-  mythic: 'app.shop-tier-mythic',
-  supreme: 'app.shop-tier-supreme',
-}
-
 const rowName = (one: Good): string => {
   const locale = i18n.currentLocale
   if (one.kind === 'pack') {
     return one.faction ? gameLabel(one.faction, locale) : i18n.t('app.shop-pack-random')
   }
   const tier = goodTier(one)
-  if (tier) {
-    return TIER_KEYS[tier] ? i18n.t(TIER_KEYS[tier]) : gameLabel(tier, locale)
-  }
+  if (tier) return gameLabel(tier, locale)
   return goodName(one.name, locale)
 }
 
