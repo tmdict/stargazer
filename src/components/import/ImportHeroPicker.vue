@@ -53,6 +53,7 @@ const pinned = computed(() =>
         :characters="heroes"
         :pinned
         :enter-hint="i18n.t('app.import-pick-hero')"
+        touch-focus
         @pick="emit('pick', $event.id)"
       />
       <button v-if="removable" type="button" class="picker-remove" @click="emit('pick', null)">

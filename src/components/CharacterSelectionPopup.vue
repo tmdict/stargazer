@@ -86,6 +86,7 @@ function handleSelect(character: CharacterType): void {
     <CharacterSelectionPalette
       :characters="sortedCharacters"
       :enter-hint="i18n.t('app.place-hero')"
+      touch-focus
       @pick="handleSelect"
     >
       <template v-if="rosters.active" #badge="{ character }">

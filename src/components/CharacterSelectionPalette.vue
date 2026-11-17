@@ -25,6 +25,8 @@ const {
   // What Enter does once the search has narrowed to one hero.
   enterHint: string
   locked?: LockedHeroes
+  // Starts in the search box on touch screens too.
+  touchFocus?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,6 +92,7 @@ function handleEnter() {
   <PaletteSearch
     v-model="searchQuery"
     :placeholder="i18n.t('app.search-heroes-placeholder')"
+    :touch-focus
     @enter="handleEnter"
   />
   <div class="filter-row">

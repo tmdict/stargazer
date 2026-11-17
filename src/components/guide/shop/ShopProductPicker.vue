@@ -13,6 +13,7 @@ import { computed, ref } from 'vue'
 import ShopBadges from './ShopBadges.vue'
 import ShopEquipmentList from './ShopEquipmentList.vue'
 import ShopGoodArt from './ShopGoodArt.vue'
+import ShopPopupClose from './ShopPopupClose.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import PaletteSearch from '@/components/ui/PaletteSearch.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
@@ -88,9 +89,6 @@ const groups = computed(() =>
 
 const query = ref('')
 const searching = computed(() => query.value.trim() !== '')
-
-// A phone's keyboard would cover the products, so only a pointer device starts in the search.
-const typing = window.matchMedia('(hover: hover)').matches
 
 interface Found {
   key: string
@@ -180,12 +178,22 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
 
 <template>
   <div v-if="step === 'product'" class="shop-popup products">
-    <PaletteSearch
-      v-model="query"
-      :placeholder="i18n.t('app.shop-search-any')"
-      :autofocus="typing"
-      @enter="takeOnly"
-    />
+    <div class="head">
+      <button type="button" class="shop-pill-button" @click="empty">
+        {{ i18n.t('app.shop-picker-empty') }}
+      </button>
+      <button
+        v-if="good"
+        type="button"
+        class="shop-pill-button"
+        :aria-pressed="card.bought"
+        @click="toggleBought"
+      >
+        {{ i18n.t('app.shop-picker-bought') }}
+      </button>
+      <ShopPopupClose @close="emit('close')" />
+    </div>
+    <PaletteSearch v-model="query" :placeholder="i18n.t('app.shop-search-any')" @enter="takeOnly" />
     <template v-if="searching">
       <div v-if="found.length" class="goods">
         <button
@@ -223,20 +231,6 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
         </button>
       </div>
     </template>
-    <div class="foot">
-      <button type="button" class="shop-pill-button" @click="empty">
-        {{ i18n.t('app.shop-picker-empty') }}
-      </button>
-      <button
-        v-if="good"
-        type="button"
-        class="shop-pill-button"
-        :aria-pressed="card.bought"
-        @click="toggleBought"
-      >
-        {{ i18n.t('app.shop-picker-bought') }}
-      </button>
-    </div>
   </div>
   <div v-else class="shop-popup">
     <p class="shop-popup-title">
@@ -244,6 +238,7 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
       <button type="button" class="shop-pill-button" @click="emit('close')">
         {{ i18n.t('app.shop-picker-skip') }}
       </button>
+      <ShopPopupClose @close="emit('close')" />
     </p>
     <CharacterSelectionPalette
       v-if="step === 'hero'"
@@ -327,11 +322,16 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
   color: var(--color-header-gold);
 }
 
-.foot {
+.head {
   flex: none;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  margin-top: 4px;
+}
+
+@media (max-width: 520px) {
+  .goods {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

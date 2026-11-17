@@ -91,6 +91,12 @@
   --selection-popup-max-height: min(640px, 100dvh - 16px);
 }
 
+@media (max-width: 520px) {
+  .shop-picker-popup {
+    --selection-popup-max-height: min(640px, 100dvh - 96px);
+  }
+}
+
 .shop-popup {
   display: flex;
   flex-direction: column;

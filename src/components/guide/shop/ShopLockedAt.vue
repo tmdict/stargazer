@@ -2,18 +2,22 @@
 /* The popup that says which shop level a locked card was locked at: the levels
    up to the shop's that sell the card's product. */
 
+import ShopPopupClose from './ShopPopupClose.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 defineProps<{ levels: readonly number[]; level: number }>()
 
-const emit = defineEmits<{ pick: [level: number] }>()
+const emit = defineEmits<{ pick: [level: number]; close: [] }>()
 
 const i18n = useI18nStore()
 </script>
 
 <template>
   <div class="shop-popup">
-    <p class="shop-popup-title">{{ i18n.t('app.shop-locked-at-title') }}</p>
+    <p class="shop-popup-title">
+      {{ i18n.t('app.shop-locked-at-title') }}
+      <ShopPopupClose @close="emit('close')" />
+    </p>
     <div class="levels">
       <button
         v-for="one in levels"

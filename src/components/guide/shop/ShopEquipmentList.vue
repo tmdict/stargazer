@@ -73,7 +73,7 @@ const takeOnly = (): void => {
           :class="{ only: piece.name === only }"
           @click="emit('pick', piece.name)"
         >
-          <ShopPieceDisc :name="piece.name" :size="44" />
+          <ShopPieceDisc :name="piece.name" :size="60" />
           <span class="label">{{ piece.label }}</span>
         </button>
       </div>

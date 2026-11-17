@@ -279,6 +279,7 @@ const predictWinner = async (): Promise<void> => {
           :characters="pickerHeroes"
           :enter-hint="i18n.t('app.place-hero')"
           :locked
+          touch-focus
           @pick="pickFromPicker"
         />
       </SelectionPopup>

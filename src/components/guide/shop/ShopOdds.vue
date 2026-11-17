@@ -32,6 +32,7 @@ const levels = computed(() =>
   MEASURED_ODDS.levels.map((_, index) => ({
     key: String(index + 1),
     label: i18n.t('app.shop-level', { level: index + 1 }),
+    short: i18n.t('app.shop-level-short', { level: index + 1 }),
     selected: shown.value === index + 1,
   })),
 )
@@ -46,7 +47,16 @@ const sources = computed(() => MEASURED_ODDS.levels[shown.value - 1] ?? [])
     <p class="reading-secondary">{{ i18n.t('app.shop-odds-range') }}</p>
     <!-- A popup is dark in both looks, so what follows the look takes its dark colours. -->
     <div data-theme="dark">
-      <SegmentedPicker class="levels" :segments="levels" small @select="shown = Number($event)" />
+      <SegmentedPicker
+        v-slot="{ segment }"
+        class="levels"
+        :segments="levels"
+        small
+        @select="shown = Number($event)"
+      >
+        <span class="wide">{{ segment.label }}</span>
+        <span class="narrow">{{ segment.short }}</span>
+      </SegmentedPicker>
     </div>
     <table class="shop-odds" data-theme="dark">
       <tbody>
@@ -70,6 +80,30 @@ const sources = computed(() => MEASURED_ODDS.levels[shown.value - 1] ?? [])
 <style scoped>
 .levels {
   margin: 12px 0;
+}
+
+.narrow {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .wide {
+    display: none;
+  }
+
+  .narrow {
+    display: inline;
+  }
+
+  .levels {
+    display: flex;
+  }
+
+  .levels :deep(.segment) {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 4px;
+  }
 }
 
 .shop-odds {

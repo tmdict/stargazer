@@ -19,6 +19,7 @@ import ShopForm from '@/components/guide/shop/ShopForm.vue'
 import ShopHeroLists from '@/components/guide/shop/ShopHeroLists.vue'
 import ShopLockedAt from '@/components/guide/shop/ShopLockedAt.vue'
 import ShopOdds from '@/components/guide/shop/ShopOdds.vue'
+import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
@@ -73,6 +74,9 @@ type Popup =
   | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
 const below = (under: DOMRect): Point => ({ x: under.left, y: under.bottom + 4 })
+
+// The width under which shop.css gives the popups their phone layout.
+const onPhone = (): boolean => window.matchMedia('(max-width: 520px)').matches
 
 // The card whose locked-at level the open popup sets.
 const lockCard = computed(() =>
@@ -217,6 +221,7 @@ watch(
         :key="popup.kind === 'card' ? popup.step : popup.kind"
         class="shop-picker-popup"
         :position="popup.position"
+        :centered="onPhone()"
         keep-on-leave
         @close="popup = null"
       >
@@ -234,8 +239,10 @@ watch(
           :levels="lockLevels(lockCard, form.level.value)"
           :level="lockedLevel(lockCard, form.level.value)"
           @pick="setLockedAt"
+          @close="popup = null"
         />
         <div v-else-if="popup.kind === 'hero'" class="shop-popup">
+          <ShopPopupClose @close="popup = null" />
           <CharacterSelectionPalette
             :characters="addable"
             :enter-hint="i18n.t('app.shop-add-hero')"
@@ -243,6 +250,7 @@ watch(
           />
         </div>
         <div v-else class="shop-popup">
+          <ShopPopupClose @close="popup = null" />
           <ShopEquipmentList :taken="form.equipment.value" @pick="addEquipment" />
         </div>
       </SelectionPopup>

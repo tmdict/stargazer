@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
-import { clampX, clampY, VIEWPORT_MARGIN } from '@/utils/viewport'
+import { clampX, clampY, VIEWPORT_MARGIN, viewportHeight, viewportWidth } from '@/utils/viewport'
 
 // Shared chrome for the selection popups (the on-grid character / artifact
 // pickers and the import review's): a fixed-positioned, click-outside-dismissing
@@ -18,6 +18,9 @@ const props = defineProps<{
   // Stay when the mouse leaves: a picker a click opened in an import review
   // closes on a pick, a press outside or Escape.
   keepOnLeave?: boolean
+  // Sit in the middle of the screen instead of at the anchor: a popup that
+  // nearly fills a phone screen leaves an even margin to tap outside.
+  centered?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +37,10 @@ const reposition = () => {
   const el = popupRef.value
   if (!el) return
   const { width, height } = el.getBoundingClientRect()
+  if (props.centered) {
+    coords.value = { x: (viewportWidth() - width) / 2, y: (viewportHeight() - height) / 2 }
+    return
+  }
   coords.value = {
     x: clampX(props.position.x, width, VIEWPORT_MARGIN),
     y: clampY(props.position.y, height, VIEWPORT_MARGIN),
@@ -74,7 +81,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', reposition)
   contentObserver?.disconnect()
 })
-watch(() => props.position, reposition)
+watch(() => [props.position, props.centered], reposition)
 </script>
 
 <template>

@@ -6,25 +6,27 @@ import { onMounted, useTemplateRef } from 'vue'
 
 import { isComposing } from '@/utils/keyboard'
 
-const { autofocus = true } = defineProps<{
+const { touchFocus = false } = defineProps<{
   placeholder: string
-  autofocus?: boolean
+  touchFocus?: boolean
 }>()
 
 const emit = defineEmits<{ enter: [] }>()
 
 const query = defineModel<string>({ required: true })
 
-// Type-to-pick: unless the owner turns it off, focus starts in the search box
-// even on touch. The hero palette's on-grid popup exists only on
-// tablet-and-wider layouts (phones place via the picker sheet) and iPad taps
-// land here expecting to type; the import review opens it on phones too, where
-// the keyboard is the way to find a hero among the pinned candidates. Focusing
-// in the mount tick matters: iPadOS raises the keyboard only while the opening
-// tap's user activation is live.
+// Type-to-pick: focus starts in the search box on a pointer device. On touch
+// the keyboard would cover the list, so only an owner that asks for it focuses
+// there: the hero palette's on-grid popup exists only on tablet-and-wider
+// layouts (phones place via the picker sheet) and iPad taps land here expecting
+// to type, and the import review's keyboard is the way to find a hero among the
+// pinned candidates. Focusing in the mount tick matters: iPadOS raises the
+// keyboard only while the opening tap's user activation is live.
 const input = useTemplateRef<HTMLInputElement>('input')
 onMounted(() => {
-  if (autofocus) input.value?.focus({ preventScroll: true })
+  if (touchFocus || window.matchMedia('(hover: hover)').matches) {
+    input.value?.focus({ preventScroll: true })
+  }
 })
 
 // The Enter that commits an IME composition must not double as a pick.
