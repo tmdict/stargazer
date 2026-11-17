@@ -6,7 +6,6 @@ import DragPreview from '@/components/DragPreview.vue'
 import GuideMenu from '@/components/guide/GuideMenu.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
 import InspectModals from '@/components/modals/InspectModals.vue'
-import MoveBanner from '@/components/move/MoveBanner.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
@@ -19,7 +18,6 @@ import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useContactForm } from '@/composables/useContactForm'
 import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
-import { useMove } from '@/composables/useMove'
 import { usePopupLink } from '@/composables/usePopupLink'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
@@ -40,8 +38,6 @@ const showWhatsNew = ref(false)
 // mounted after, so its leave transition plays.
 const WhatsNewModal = defineLazyComponent(() => import('@/components/modals/WhatsNewModal.vue'))
 const whatsNewMounted = ref(false)
-const MoveModal = defineLazyComponent(() => import('@/components/modals/MoveModal.vue'))
-const moveModalMounted = ref(false)
 const DataModal = defineLazyComponent(() => import('@/components/modals/DataModal.vue'))
 const dataModalMounted = ref(false)
 const showDataModal = ref(false)
@@ -53,18 +49,6 @@ const { target: localeTarget, pick: switchLocale } = useLocaleSwitch()
 const { open: openSearch } = useSearchOverlay()
 useLiftGuard()
 const { unseen: whatsNewUnseen, markSeen: markWhatsNewSeen } = useWhatsNew()
-const {
-  result: moveResult,
-  resultRequested: moveResultRequested,
-  bannerShown: moveBannerShown,
-  popupShown: movePopupShown,
-  popupOnArrival: movePopupOnArrival,
-  openPopup: openMovePopup,
-  bringOldData,
-} = useMove()
-watch(movePopupShown, (shown) => {
-  if (shown) moveModalMounted.value = true
-})
 
 const openWhatsNew = () => {
   whatsNewMounted.value = true
@@ -230,8 +214,6 @@ onUnmounted(() => {
     </nav>
   </header>
 
-  <MoveBanner v-if="moveBannerShown" @open="openMovePopup" />
-
   <RouterView />
 
   <!-- Global drag preview -->
@@ -247,16 +229,6 @@ onUnmounted(() => {
     :show="showWhatsNew"
     @close="showWhatsNew = false"
     @shown="markWhatsNewSeen"
-  />
-
-  <MoveModal
-    v-if="moveModalMounted"
-    :show="movePopupShown"
-    :result="moveResult"
-    :opened-on-arrival="movePopupOnArrival"
-    :requested="moveResultRequested"
-    @close="movePopupShown = false"
-    @bring="bringOldData"
   />
 
   <ContactForm />

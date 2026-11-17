@@ -19,10 +19,10 @@ afterEach(() => {
 
 describe('flags item', () => {
   it('reads an entry only when it is a date', () => {
-    storage.set(FLAGS_KEY, JSON.stringify({ whatsNew: '2026-11-06', moved: 1, welcomed: '1' }))
+    storage.set(FLAGS_KEY, JSON.stringify({ whatsNew: '2026-11-06' }))
     expect(readFlag('whatsNew')).toBe('2026-11-06')
-    expect(readFlag('moved')).toBeNull()
-    expect(readFlag('welcomed')).toBeNull()
+    storage.set(FLAGS_KEY, JSON.stringify({ whatsNew: 1 }))
+    expect(readFlag('whatsNew')).toBeNull()
   })
 
   it('reads a value that is not an object as no flags', () => {
@@ -30,15 +30,9 @@ describe('flags item', () => {
     expect(readFlag('whatsNew')).toBeNull()
   })
 
-  it('keeps the other flags on a write, and drops entries it does not know', () => {
-    storage.set(
-      FLAGS_KEY,
-      JSON.stringify({ whatsNew: '2026-11-06', retired: '2026-01-01', moved: 7 }),
-    )
-    writeFlag('welcomed', '2026-11-20')
-    expect(JSON.parse(storage.get(FLAGS_KEY)!)).toEqual({
-      whatsNew: '2026-11-06',
-      welcomed: '2026-11-20',
-    })
+  it('drops entries it does not know on a write', () => {
+    storage.set(FLAGS_KEY, JSON.stringify({ retired: '2026-01-01', moved: '2026-11-10' }))
+    writeFlag('whatsNew', '2026-11-20')
+    expect(JSON.parse(storage.get(FLAGS_KEY)!)).toEqual({ whatsNew: '2026-11-20' })
   })
 })

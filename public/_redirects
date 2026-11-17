@@ -1,6 +1,4 @@
 https://afkstargazer.netlify.app/* https://afkstargazer.com/:splat 301!
-# The old address's recovery page; the app's fallback would otherwise answer.
-https://stargazer.tmdict.com/backup /move-recovery.html 200!
 https://stargazer.tmdict.com/* https://afkstargazer.com/:splat 301!
 # Retired paths; each guide page has one address, and a Chinese or Korean
 # link keeps its language through ?lang=.
