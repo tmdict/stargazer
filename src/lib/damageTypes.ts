@@ -20,5 +20,5 @@ export const DAMAGE_RULES: readonly DamageRule[] = [
   { key: 'life-drain', applies: [false, true, false, false] },
   { key: 'immunity', applies: [true, true, true, false] },
   { key: 'fatal', applies: [true, true, false, false] },
-  { key: 'hp-loss-effects', applies: [true, true, true, false] },
+  { key: 'hp-loss-effects', note: true, applies: [true, true, true, false] },
 ]

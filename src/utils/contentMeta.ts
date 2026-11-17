@@ -156,7 +156,7 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
     ko: {
       title: '대미지 유형',
       description:
-        'AFK: 새로운 여정 대미지 유형. 물리·마법·고정 대미지와 HP 손실의 차이, 스킬 설명으로 구분하는 법, 유형별로 영향을 주는 효과를 정리했습니다.',
+        'AFK: 새로운 여정 대미지 유형. 물리·마법·고정 대미지와 HP 유실의 차이, 스킬 설명으로 구분하는 법, 유형별로 영향을 주는 효과를 정리했습니다.',
     },
   },
 }
