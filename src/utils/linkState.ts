@@ -14,3 +14,7 @@ export function getDuelLinkFromUrl(): string | null {
 export function getEncodedStateFromRoute(query: { g?: string | string[] | null }): string | null {
   return typeof query.g === 'string' ? query.g : null
 }
+
+export function getDuelLinkFromRoute(query: { hd?: string | string[] | null }): string | null {
+  return typeof query.hd === 'string' ? query.hd : null
+}

@@ -7,24 +7,31 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
+import DuelHeroCard from '@/components/hd/DuelHeroCard.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import { useBoardFit } from '@/composables/useBoardFit'
 import { useBreakpoint } from '@/composables/useBreakpoint'
-import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
+import {
+  deriveGridInfoView,
+  duelGridInfoView,
+  useGridInfoPrefs,
+} from '@/composables/useGridInfoPrefs'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
+import { HONOR_DUEL_IN_PACK } from '@/lib/hd/pack'
 import { SITE_ORIGIN } from '@/lib/site'
 import { decodeLinkFromUrl } from '@/lib/teams/codec'
-import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
+import { unpackDisplayFlags, type DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { useBoardRestore } from '@/stores/boardRestore'
+import { useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { isNarrowBreakpoint } from '@/utils/breakpoints'
-import { getEncodedStateFromRoute } from '@/utils/linkState'
+import { getDuelLinkFromRoute, getEncodedStateFromRoute } from '@/utils/linkState'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 
 import '@/styles/content.css'
@@ -35,19 +42,24 @@ const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
 const boardRestore = useBoardRestore()
+const duelBoard = useDuelBoard()
 const { success } = useToast()
 const route = useRoute()
 
+// An `hd` link is an Honor Duel board's and comes first, as on the Arena page.
+const duelAtLoad = HONOR_DUEL_IN_PACK ? getDuelLinkFromRoute(route.query) : null
+const isDuel = duelAtLoad !== null
+
 // The payload names its own mode: arena renders the single-board viewer,
 // team modes the multi viewer.
-const encodedAtLoad = getEncodedStateFromRoute(route.query)
+const encodedAtLoad = isDuel ? null : getEncodedStateFromRoute(route.query)
 const linkAtLoad = encodedAtLoad !== null ? decodeLinkFromUrl(encodedAtLoad) : null
 const isMultiBoard = ref(linkAtLoad !== null && linkAtLoad.mode !== 'arena')
 
 // Multi reuses the Teams board sizing; single keeps the Arena breakpoint sizing.
 // The single board is rebuilt so it shows what the link carries, without the
-// map pick or the hidden skills of the page that opened it; multi rebuilds on
-// restore.
+// map pick or the hidden skills of the page that opened it; multi and an Honor
+// Duel board rebuild on restore.
 if (isMultiBoard.value) {
   grids.hexSizeMode = 'fixed-medium'
 } else {
@@ -86,20 +98,15 @@ const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
 
 // Grid-info visibility is the viewer's own shared pref, not the link's.
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
-const info = computed(() => deriveGridInfoView(gridInfoPrefs))
+const info = computed(() => {
+  const view = deriveGridInfoView(gridInfoPrefs)
+  return isDuel ? duelGridInfoView(view) : view
+})
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
 
-// Restore state from URL
-const restoreStateFromUrl = () => {
-  if (!linkAtLoad) return false
-  const result = isMultiBoard.value
-    ? boardRestore.restoreMultiFromDecodedState(linkAtLoad)
-    : boardRestore.restoreFromEncodedState(encodedAtLoad)
-  if (!result.success) return false
-
-  const flags = unpackDisplayFlags(linkAtLoad.d)
+const applyFlags = (flags: Required<DisplayFlags>): void => {
   showPerspective.value = flags.showPerspective
   showSkills.value = flags.showSkills
   gridStore.teamView = flags.teamView
@@ -107,6 +114,22 @@ const restoreStateFromUrl = () => {
   // Wrap is a 5-board layout; a stray wrap bit on a smaller payload is
   // ignored (BoardsRow degrades gracefully anyway; this is cosmetic).
   wrapBoards.value = flags.wrap && grids.contexts.length === 5
+}
+
+// Restore state from URL
+const restoreStateFromUrl = () => {
+  if (isDuel) {
+    const state = duelBoard.open(duelAtLoad)
+    if (state) applyFlags(unpackDisplayFlags(state.d))
+    return state !== null
+  }
+  if (!linkAtLoad) return false
+  const result = isMultiBoard.value
+    ? boardRestore.restoreMultiFromDecodedState(linkAtLoad)
+    : boardRestore.restoreFromEncodedState(encodedAtLoad)
+  if (!result.success) return false
+
+  applyFlags(unpackDisplayFlags(linkAtLoad.d))
   return true
 }
 
@@ -123,12 +146,17 @@ onMounted(() => {
 })
 
 // The pencil opens this shared setup in its editable page (Arena for a single
-// board, the 5 v 5 boards for multi), which overwrites that page's saved state.
-// Dismissing (backdrop / close) instead goes to the bare page, leaving it untouched.
-const dismissLink = computed(() => (isMultiBoard.value ? '/teams' : '/'))
-const editLink = computed(() =>
-  encodedAtLoad ? `${dismissLink.value}?g=${encodedAtLoad}` : dismissLink.value,
-)
+// board, its Honor Duel tab for an Honor Duel board, the 5 v 5 boards for
+// multi), which overwrites that page's saved state. Dismissing (backdrop /
+// close) instead goes to the bare page, leaving it untouched.
+const dismissLink = computed(() => {
+  if (isDuel) return '/?tab=honorDuel'
+  return isMultiBoard.value ? '/teams' : '/'
+})
+const editLink = computed(() => {
+  if (isDuel) return `/?hd=${duelAtLoad}`
+  return encodedAtLoad ? `${dismissLink.value}?g=${encodedAtLoad}` : dismissLink.value
+})
 </script>
 
 <template>
@@ -179,12 +207,15 @@ const editLink = computed(() =>
         </BoardsRow>
         <div v-else class="share-board">
           <GridContainer :context="activeContext" :info :show-skills :readonly="true" />
-          <TeamPowerPanel
-            v-if="info.heroCard"
-            :context="activeContext"
-            :show-upgrades="info.upgrades"
-            readonly
-          />
+          <template v-if="info.heroCard">
+            <DuelHeroCard v-if="isDuel" :context="activeContext" readonly />
+            <TeamPowerPanel
+              v-else
+              :context="activeContext"
+              :show-upgrades="info.upgrades"
+              readonly
+            />
+          </template>
         </div>
       </DragDropProvider>
     </div>
