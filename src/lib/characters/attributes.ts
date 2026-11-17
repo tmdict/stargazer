@@ -61,6 +61,23 @@ export const clampAttr = (attrId: number, value: number, characterId: number): n
  * default. Treated as a value object: transfers move the whole record. */
 export type AttrRecord = Record<number, number>
 
+/* The values a kind of board lets a hero carry: each board holds its heroes'
+ * records under one set of rules, and an id outside them clamps to its default
+ * and is never stored. */
+export interface AttrRules {
+  clamp: (attrId: number, value: number, characterId: number) => number
+  defaultOf: (attrId: number) => number
+  // Values that belong to the hero's side: one that changes teams leaves them
+  // behind.
+  sideBound: readonly number[]
+}
+
+export const HERO_ATTR_RULES: AttrRules = {
+  clamp: clampAttr,
+  defaultOf: attrDefault,
+  sideBound: [],
+}
+
 export const TOP_LEVELS: AttrRecord = {
   [ATTR_PARAGON]: attrMax(ATTR_PARAGON),
   [ATTR_REFINEMENT]: attrMax(ATTR_REFINEMENT),

@@ -10,6 +10,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
+import { duelHeroes } from '@/lib/hd/heroes'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
@@ -43,15 +44,20 @@ const { requestTab } = useSelectionState()
 
 const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
-// Heroes the active roster offers with a legal placement on this team. While
-// Syn is on, an already-placed hero stays listed as its synergy copy, matching
-// the picker's lifted grey-out.
+// An Honor Duel board draws on the mode's heroes, the same for every player,
+// and holds no roster levels.
+const duel = ctx.kind === 'honorDuel'
+const pool = computed(() =>
+  duel ? duelHeroes(gameData.characters) : gameData.characters.filter(rosters.isPickable),
+)
+
+// Heroes of the pool with a legal placement on this team. While Syn is on, an
+// already-placed hero stays listed as its synergy copy, matching the picker's
+// lifted grey-out.
 const availableCharacters = computed(() => {
   const t = team.value
   if (!t) return []
-  return gameData.characters.filter(
-    (char) => rosters.isPickable(char) && grids.resolvePick(ctx, char.id, t) !== null,
-  )
+  return pool.value.filter((char) => grids.resolvePick(ctx, char.id, t) !== null)
 })
 
 const sortedCharacters = computed(() => [...availableCharacters.value].sort(compareCharacters))
@@ -82,14 +88,14 @@ function handleSelect(character: CharacterType): void {
 
 <template>
   <SelectionPopup :position @close="emit('close')">
-    <RosterMenu dark manage class="popup-roster-menu" @manage="manageRosters" />
+    <RosterMenu v-if="!duel" dark manage class="popup-roster-menu" @manage="manageRosters" />
     <CharacterSelectionPalette
       :characters="sortedCharacters"
       :enter-hint="i18n.t('app.place-hero')"
       touch-focus
       @pick="handleSelect"
     >
-      <template v-if="rosters.active" #badge="{ character }">
+      <template v-if="rosters.active && !duel" #badge="{ character }">
         <UpgradeBars
           :reserved="!rosters.levelsFor(character.id)"
           :paragon="rosters.levelsFor(character.id)?.[ATTR_PARAGON] ?? 0"

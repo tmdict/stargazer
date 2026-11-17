@@ -16,7 +16,7 @@
 
 import { computed, effectScope, reactive, ref, watch, type Ref } from 'vue'
 
-import { attrDefault, clampAttr, type AttrRecord } from '@/lib/characters/attributes'
+import { HERO_ATTR_RULES, type AttrRecord } from '@/lib/characters/attributes'
 import {
   findCharacterHex,
   findTeamPhantimalHex,
@@ -29,6 +29,7 @@ import {
   hasCharacter,
   isBaseHeroId,
   isHeroUnit,
+  toBaseHeroId,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
@@ -47,6 +48,8 @@ import { executeSwapCharacters } from '@/lib/characters/swap'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
+import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_RULES, type DuelArtifactSlot } from '@/lib/hd/board'
+import { duelBuffs } from '@/lib/hd/maps'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { buffTilesOf, modeBuffs, type ModeListKey, type TileBuff } from '@/lib/mapModeLists'
@@ -69,6 +72,12 @@ const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
 // Horizontal crop is pure margin: character discs and artifact icons sit within
 // the hex polygon corners, so no sprite-clearance allowance is needed here.
 const CROP_SIDE_PAD_MULTIPLIER = 0.4
+
+/* What a board is for. The Arena page shows one board of either kind, and
+ * each rule that differs between them asks here: which values a hero carries,
+ * whether phantimals and the season's artifacts belong, where a side's
+ * artifact is kept and which list gives the map its buffs. */
+export type BoardKind = 'arena' | 'honorDuel'
 
 interface ViewBoxBounds {
   x: number
@@ -110,10 +119,14 @@ export interface CharacterDropPayload {
 // `.value`, and `ctx.grid` is the reactive grid proxy.
 export interface GridContext {
   id: number
+  kind: BoardKind
   grid: Grid
   skillManager: SkillManager
   currentMap: string
   artifacts: { ally: number | null; enemy: number | null }
+  // An Honor Duel board's artifacts, a list apart from the slots above: both
+  // lists number from 1, and a slot's id also picks a skill drawing.
+  duelArtifacts: { ally: DuelArtifactSlot | null; enemy: DuelArtifactSlot | null }
 
   // Derived (per board)
   // The board's buffs on its mode's list, and their tiles together.
@@ -162,6 +175,8 @@ export interface GridContext {
   refreshSkills: () => void
   setArtifact: (team: Team, artifactId: number) => void
   removeArtifact: (team: Team) => void
+  // Ignored on an Arena board.
+  setDuelArtifact: (team: Team, slot: DuelArtifactSlot | null) => void
   getAttr: (team: Team, characterId: number, attrId: number) => number
   getAttrs: (team: Team, characterId: number) => AttrRecord
   // Writes are ignored unless the hero stands on that side of this board, so
@@ -173,7 +188,7 @@ export interface GridContext {
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
   // One side wiped: every unit on the team (heroes, phantimal, synergy), its
-  // upgrade attrs, and its artifact.
+  // hero values, and its artifact of either list.
   clearTeam: (team: Team) => void
   clearArtifacts: () => void
   clear: () => void
@@ -185,6 +200,7 @@ export function createGridContext(
   id: number,
   mapKey: string,
   globals: GridContextGlobals,
+  kind: BoardKind = 'arena',
 ): GridContext {
   const gameDataStore = useGameDataStore()
   const { hexSize, teamView, inverted, perspective, sharedCrop, hiddenSkills, buffMode } = globals
@@ -195,8 +211,13 @@ export function createGridContext(
 
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
+  const duelArtifacts = {
+    ally: ref<DuelArtifactSlot | null>(null),
+    enemy: ref<DuelArtifactSlot | null>(null),
+  }
 
-  // Upgrade attrs (lib/characters/attributes) per real hero, keyed by team +
+  // The values a hero carries under this kind of board's rules (upgrades on the
+  // Arena, tier, equipment and off-field spot in Honor Duel), keyed by team +
   // character rather than hex, so values follow their hero across moves and each
   // team tracks a hero independently. Sparse: only non-default values are
   // stored. A record exists only while its hero stands on that side of this
@@ -206,8 +227,9 @@ export function createGridContext(
   // store's cross-board transfers).
   const attrs = reactive(new Map<string, AttrRecord>())
   const attrKey = (team: Team, characterId: number): string => `${team}:${characterId}`
+  const attrRules = kind === 'honorDuel' ? DUEL_ATTR_RULES : HERO_ATTR_RULES
   const getAttr = (team: Team, characterId: number, attrId: number): number =>
-    attrs.get(attrKey(team, characterId))?.[attrId] ?? attrDefault(attrId)
+    attrs.get(attrKey(team, characterId))?.[attrId] ?? attrRules.defaultOf(attrId)
   const getAttrs = (team: Team, characterId: number): AttrRecord =>
     attrs.get(attrKey(team, characterId)) ?? {}
   const storeAttrs = (key: string, record: AttrRecord): void => {
@@ -232,8 +254,8 @@ export function createGridContext(
     if (!holdsAttrs(team, characterId)) return
     const key = attrKey(team, characterId)
     const record = { ...attrs.get(key) }
-    const clamped = clampAttr(attrId, value, characterId)
-    if (clamped !== attrDefault(attrId)) record[attrId] = clamped
+    const clamped = attrRules.clamp(attrId, value, characterId)
+    if (clamped !== attrRules.defaultOf(attrId)) record[attrId] = clamped
     else delete record[attrId]
     storeAttrs(key, record)
   }
@@ -242,11 +264,16 @@ export function createGridContext(
     const next: AttrRecord = {}
     for (const [id, value] of Object.entries(record)) {
       const attrId = Number(id)
-      const clamped = clampAttr(attrId, value, characterId)
-      if (clamped !== attrDefault(attrId)) next[attrId] = clamped
+      const clamped = attrRules.clamp(attrId, value, characterId)
+      if (clamped !== attrRules.defaultOf(attrId)) next[attrId] = clamped
     }
     storeAttrs(attrKey(team, characterId), next)
   }
+
+  const leavingSide = (record: AttrRecord): AttrRecord =>
+    Object.fromEntries(
+      Object.entries(record).filter(([attrId]) => !attrRules.sideBound.includes(Number(attrId))),
+    )
 
   const scope = effectScope(true)
 
@@ -264,6 +291,7 @@ export function createGridContext(
   }
 
   const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean =>
+    kind === 'arena' &&
     !globals.nonSeasonal?.value &&
     teamQualifies(
       grid,
@@ -316,11 +344,25 @@ export function createGridContext(
     }
   }
 
+  // Copies of a hero on an Honor Duel side share one piece of equipment, so a
+  // hero placed there starts with the piece its copies hold.
+  const joinDuelSide = (team: Team, characterId: number): void => {
+    if (kind !== 'honorDuel' || !isHeroUnit(characterId)) return
+    const heroId = toBaseHeroId(characterId)
+    const piece = getTilesWithCharactersByTeam(grid, team)
+      .map((tile) => tile.characterId!)
+      .filter((id) => id !== characterId && isHeroUnit(id) && toBaseHeroId(id) === heroId)
+      .map((id) => getAttr(team, id, DUEL_ATTR_EQUIPMENT))
+      .find((held) => held !== 0)
+    if (piece !== undefined) setAttr(team, characterId, DUEL_ATTR_EQUIPMENT, piece)
+  }
+
   // Placing onto an occupied tile evicts the occupant, so a place can take a
   // hero off the board too.
   const place = (hexId: number, characterId: number, team: Team = Team.ALLY): boolean => {
     const placed = executePlaceCharacter(grid, skillManager, hexId, characterId, team)
     pruneAttrs()
+    if (placed) joinDuelSide(team, characterId)
     return placed
   }
 
@@ -338,7 +380,9 @@ export function createGridContext(
     const record = fromTeam === undefined ? {} : getAttrs(fromTeam, characterId)
     if (!executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)) return false
     const toTeam = getCharacterTeam(grid, toHexId)
-    if (toTeam !== undefined) setAttrs(toTeam, characterId, record)
+    if (toTeam !== undefined) {
+      setAttrs(toTeam, characterId, toTeam === fromTeam ? record : leavingSide(record))
+    }
     pruneAttrs()
     return true
   }
@@ -360,14 +404,18 @@ export function createGridContext(
     const fromRecord = getAttrs(fromTeam, fromId)
     const toRecord = getAttrs(toTeam, toId)
     if (!executeSwapCharacters(grid, skillManager, fromHexId, toHexId)) return false
-    setAttrs(toTeam, fromId, fromRecord)
-    setAttrs(fromTeam, toId, toRecord)
+    const crossing = fromTeam !== toTeam
+    setAttrs(toTeam, fromId, crossing ? leavingSide(fromRecord) : fromRecord)
+    setAttrs(fromTeam, toId, crossing ? leavingSide(toRecord) : toRecord)
     pruneAttrs()
     return true
   }
 
-  const autoPlace = (characterId: number, team: Team, avoid?: ReadonlySet<number>): boolean =>
-    executeAutoPlaceCharacter(grid, skillManager, characterId, team, avoid)
+  const autoPlace = (characterId: number, team: Team, avoid?: ReadonlySet<number>): boolean => {
+    const placed = executeAutoPlaceCharacter(grid, skillManager, characterId, team, avoid)
+    if (placed) joinDuelSide(team, characterId)
+    return placed
+  }
 
   const placePhantimal = (hexId: number, phantimalId: number, team: Team = Team.ALLY): boolean => {
     if (!phantimalCanJoinTeam(phantimalId, team)) return false
@@ -423,6 +471,7 @@ export function createGridContext(
   }
 
   const setArtifact = (team: Team, artifactId: number): void => {
+    if (kind !== 'arena') return
     if (globals.nonSeasonal?.value && !isPermanentArtifactId(artifactId)) return
     if (team === Team.ALLY) artifacts.ally.value = artifactId
     else artifacts.enemy.value = artifactId
@@ -431,6 +480,12 @@ export function createGridContext(
   const removeArtifact = (team: Team): void => {
     if (team === Team.ALLY) artifacts.ally.value = null
     else artifacts.enemy.value = null
+  }
+
+  const setDuelArtifact = (team: Team, slot: DuelArtifactSlot | null): void => {
+    if (kind !== 'honorDuel') return
+    if (team === Team.ALLY) duelArtifacts.ally.value = slot
+    else duelArtifacts.enemy.value = slot
   }
 
   const refreshSkills = (): void => skillManager.updateActiveSkills(grid)
@@ -458,11 +513,14 @@ export function createGridContext(
     }
     pruneAttrs()
     removeArtifact(team)
+    setDuelArtifact(team, null)
   }
 
   const clearArtifacts = (): void => {
     artifacts.ally.value = null
     artifacts.enemy.value = null
+    duelArtifacts.ally.value = null
+    duelArtifacts.enemy.value = null
   }
 
   const clear = (): void => {
@@ -471,9 +529,10 @@ export function createGridContext(
   }
 
   const ctx = scope.run(() => {
-    const buffs = computed((): readonly TileBuff[] =>
-      buffMode?.value ? modeBuffs(buffMode.value, currentMap.value) : [],
-    )
+    const buffs = computed((): readonly TileBuff[] => {
+      if (kind === 'honorDuel') return duelBuffs(currentMap.value)
+      return buffMode?.value ? modeBuffs(buffMode.value, currentMap.value) : []
+    })
     const buffTiles = computed((): readonly number[] => buffTilesOf(buffs.value))
     const hexScale = computed(() => hexSize.value.x / BASE_HEX_RADIUS)
     const fullBox = computed<ViewBoxBounds>(() => {
@@ -720,10 +779,12 @@ export function createGridContext(
 
   return reactive({
     id,
+    kind,
     grid,
     skillManager,
     currentMap,
     artifacts,
+    duelArtifacts,
     ...ctx,
     place,
     remove,
@@ -738,6 +799,7 @@ export function createGridContext(
     refreshSkills,
     setArtifact,
     removeArtifact,
+    setDuelArtifact,
     getAttr,
     getAttrs,
     setAttr,

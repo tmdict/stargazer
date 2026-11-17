@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import ToggleChipMenu from '@/components/ui/ToggleChipMenu.vue'
 import { gridInfoMenuRows, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const { share = false } = defineProps<{
@@ -15,9 +16,18 @@ const { share = false } = defineProps<{
 }>()
 
 const i18n = useI18nStore()
+const grids = useGrids()
 const { prefs, setPref } = useGridInfoPrefs()
 
-const groups = computed(() => [{ rows: gridInfoMenuRows(prefs, (key) => i18n.t(`app.${key}`)) }])
+const groups = computed(() => [
+  {
+    rows: gridInfoMenuRows(
+      prefs,
+      (key) => i18n.t(`app.${key}`),
+      grids.active?.kind === 'honorDuel',
+    ),
+  },
+])
 
 const master = computed({
   get: () => prefs.master,

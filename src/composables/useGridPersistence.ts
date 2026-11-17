@@ -1,7 +1,10 @@
 /* Persists the current board setup to localStorage and mirrors every change, so a
  * returning visitor sees their last state.
  *
- * Arena: one slot holding the same encoded `g` string a share link carries.
+ * Arena: one slot holding the same encoded `g` string a share link carries,
+ * and one for the page's Honor Duel board holding its `hd` string. The page
+ * shows one of the two boards at a time, and each slot's writer encodes a
+ * board of its own kind only (useArenaBoards runs the change between them).
  *
  * Teams: one slot PER TEAM MODE, each holding an envelope of the encoded
  * multi-board string plus the saved-team provenance (sourceId). The autosave
@@ -31,9 +34,16 @@ import {
 } from '@/lib/teams/gridStateSerializer'
 import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
 import { useArtifactStore } from '@/stores/artifact'
+import { useDuelBoard } from '@/stores/duelBoard'
 import { useGridStore } from '@/stores/grid'
+import type { BoardKind } from '@/stores/gridContext'
 import { useGrids } from '@/stores/grids'
-import { ARENA_STORAGE_KEY, readStorage, writeStorage } from '@/utils/storage'
+import {
+  ARENA_STORAGE_KEY,
+  DUEL_BOARD_STORAGE_KEY,
+  readStorage,
+  writeStorage,
+} from '@/utils/storage'
 
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
@@ -91,29 +101,48 @@ export const readSavedBoards = (page: 'arena' | TeamModeKey): GridState[] | null
   return (slot && decodeTeamData(slot.data)?.boards) ?? null
 }
 
-interface GridPersistence {
+export interface BoardWriter {
   load: () => string | null
+  // Writes the board on screen now, when it is this writer's kind. Inert until
+  // startAutosave: before the page's first restore the board on screen is an
+  // empty stand-in, which must not replace the stored one.
+  flush: () => void
   startAutosave: () => void
 }
 
-// `snapshot` reads reactive board state, so the watch fires on any content/flag
-// change; the encoded string is the watch value, so it fires only on real changes.
-const createPersistence = (key: string, snapshot: () => string): GridPersistence => ({
-  load: () => readStorage(key),
-  startAutosave: () => {
-    // Write once up front so a just-restored `?g=` link overwrites the saved slot,
-    // then mirror every later change. Call after the initial restore so the restore
-    // itself isn't double-counted.
-    writeStorage(key, snapshot())
-    watch(snapshot, (encoded) => writeStorage(key, encoded))
-  },
-})
+/* `snapshot` reads reactive board state, so the watch fires on any content/flag
+ * change; the encoded string is the watch value, so it fires only on real
+ * changes. While a board of another kind is on screen the value is null, which
+ * is never written: a slot can only ever receive its own kind of board. */
+const createBoardWriter = (key: string, kind: BoardKind, snapshot: () => string): BoardWriter => {
+  const grids = useGrids()
+  const encoded = (): string | null => (grids.active?.kind === kind ? snapshot() : null)
+  const write = (value: string | null): void => {
+    if (value !== null) writeStorage(key, value)
+  }
+  let started = false
+  return {
+    load: () => readStorage(key),
+    flush: () => {
+      if (started) write(encoded())
+    },
+    startAutosave: () => {
+      if (started) return
+      started = true
+      // Write once up front so a just-restored link overwrites the saved slot,
+      // then mirror every later change. Call after the initial restore so the
+      // restore itself isn't double-counted.
+      write(encoded())
+      watch(encoded, write)
+    },
+  }
+}
 
-export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersistence {
+export function useArenaPersistence(getFlags: () => DisplayFlags): BoardWriter {
   const gridStore = useGridStore()
   const artifactStore = useArtifactStore()
   const grids = useGrids()
-  return createPersistence(ARENA_STORAGE_KEY, () =>
+  return createBoardWriter(ARENA_STORAGE_KEY, 'arena', () =>
     encodeGridStateToUrl(
       serializeGridState(
         gridStore.getAllTiles,
@@ -123,6 +152,13 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
         grids.active?.getAttrs,
       ),
     ),
+  )
+}
+
+export function useDuelPersistence(getFlags: () => DisplayFlags): BoardWriter {
+  const duelBoard = useDuelBoard()
+  return createBoardWriter(DUEL_BOARD_STORAGE_KEY, 'honorDuel', () =>
+    duelBoard.snapshot(getFlags()),
   )
 }
 

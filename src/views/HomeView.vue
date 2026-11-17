@@ -17,32 +17,35 @@ import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
+import { useArenaBoards } from '@/composables/useArenaBoards'
 import { useArenaPick } from '@/composables/useArenaPick'
 import { useBoardFit } from '@/composables/useBoardFit'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import {
   deriveGridInfoView,
+  duelGridInfoView,
   GRID_INFO_NONE,
   useGridInfoPrefs,
 } from '@/composables/useGridInfoPrefs'
-import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { useToast } from '@/composables/useToast'
+import { decodeDuelBoard } from '@/lib/hd/boardLink'
 import { HONOR_DUEL_IN_PACK } from '@/lib/hd/pack'
 import { encodeGridStateToUrl } from '@/lib/teams/codec'
 import { serializeGridState } from '@/lib/teams/gridStateSerializer'
 import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
 import { useBoardRestore } from '@/stores/boardRestore'
+import { useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { isNarrowBreakpoint } from '@/utils/breakpoints'
-import { getEncodedStateFromUrl } from '@/utils/linkState'
+import { getDuelLinkFromUrl, getEncodedStateFromUrl } from '@/utils/linkState'
 
 const gridStore = useGridStore()
 const grids = useGrids()
@@ -106,10 +109,12 @@ const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearTargets, clea
 const sheetExpanded = ref(false)
 
 // Tapping a grid cell targets it: jump to the picker, open the sheet; placing
-// (which clears the target) collapses it so the grid result is visible.
+// (which clears the target) collapses it so the grid result is visible. The
+// Honor Duel board's picker is on its own tab, and any other tab would put the
+// Arena board back.
 watch(targetHexId, (id) => {
   if (id !== null) {
-    activeTab.value = 'characters'
+    activeTab.value = duelShown.value ? 'honorDuel' : 'characters'
     sheetExpanded.value = true
   } else {
     sheetExpanded.value = false
@@ -137,6 +142,13 @@ const showDebug = computed(() => activeTab.value === 'debug')
 
 const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = useDisplayFlags()
 
+// The Honor Duel tab works on the Honor Duel board, every other tab on the
+// Arena board.
+const boards = useArenaBoards(toFlags)
+const duelBoard = useDuelBoard()
+const duelShown = computed(() => boards.kind.value === 'honorDuel')
+watch(activeTab, (tab) => boards.show(tab === 'honorDuel' ? 'honorDuel' : 'arena'))
+
 const boardPanel = ref<HTMLElement>()
 useBoardFit(boardPanel)
 
@@ -158,9 +170,11 @@ watch(mapEditorActive, (active) => {
   if (active) gridStore.teamView = false
 })
 
-const info = computed(() =>
-  mapEditorActive.value ? GRID_INFO_NONE : deriveGridInfoView(gridInfoPrefs),
-)
+const info = computed(() => {
+  if (mapEditorActive.value) return GRID_INFO_NONE
+  const view = deriveGridInfoView(gridInfoPrefs)
+  return duelShown.value ? duelGridInfoView(view) : view
+})
 
 // Debug shows the full grid, so team view (which crops to ally tiles) doesn't apply.
 const resetForDebug = () => {
@@ -215,15 +229,30 @@ watch(
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
 
-const arenaPersistence = useArenaPersistence(toFlags)
-
-// A ?g= link takes priority and is applied in setup (before paint, matching the
-// existing share behavior); the autosave on mount then overwrites the saved arena
-// with it. A link that fails to decode is treated as absent, so the saved arena
-// still loads and the autosave can't wipe it with the empty board.
-const sharedLink = gameDataStore.dataLoaded ? getEncodedStateFromUrl() : null
+// A link takes priority and is applied in setup (before paint, matching the
+// existing share behavior); the autosave on mount then overwrites its board's
+// stored value with it. An ?hd= link opens the Honor Duel tab on its board, a
+// ?g= link the Arena board. A link that fails to decode is treated as absent,
+// so the stored board still loads and the autosave can't wipe it with the
+// empty board; so is an ?hd= link on a build without the tab.
+const duelLink = gameDataStore.dataLoaded && HONOR_DUEL_IN_PACK ? getDuelLinkFromUrl() : null
+const sharedLink = gameDataStore.dataLoaded && !duelLink ? getEncodedStateFromUrl() : null
 let sharedLinkRestored = false
-if (sharedLink) {
+if (duelLink) {
+  if (decodeDuelBoard(duelLink)) {
+    sharedLinkRestored = true
+    activeTab.value = 'honorDuel'
+    // The address names the tab too, so going back to it opens the same board.
+    if (route.query.tab !== 'honorDuel') {
+      router.replace({ query: { ...route.query, tab: 'honorDuel' } })
+    }
+    const flags = boards.openDuel(duelLink)
+    if (flags) applyFlags(flags)
+    success(i18nStore.t('app.grid-loaded'))
+  } else {
+    error(i18nStore.t('app.invalid-url'))
+  }
+} else if (sharedLink) {
   const result = boardRestore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
     sharedLinkRestored = true
@@ -237,34 +266,34 @@ if (sharedLink) {
     error(i18nStore.t('app.invalid-url'))
   }
 }
+// The page opened on the Honor Duel tab: its board, empty until the stored one
+// is read on mount.
+if (!sharedLinkRestored && activeTab.value === 'honorDuel') duelBoard.open(null)
 
 // The initial tab comes straight from ?tab= without passing through handleTabChange,
 // so enforce its display resets here, after a restore, which can introduce the
 // conflicting flags (e.g. team view in a share link while ?tab=debug).
 applyTabResets(activeTab.value)
 
-// No restored share link: restore the saved arena. Done on mount because
-// localStorage is unavailable during SSG, so the first client render matches the
-// pre-rendered empty grid. Autosave starts after the restore so the restore
-// isn't what triggers a write.
+// No restored share link: restore the stored board of the tab the page opened
+// on. Done on mount because localStorage is unavailable during SSG, so the first
+// client render matches the pre-rendered empty grid. Autosave starts after the
+// restore so the restore isn't what triggers a write.
 onMounted(() => {
   if (!sharedLinkRestored && gameDataStore.dataLoaded) {
-    const saved = arenaPersistence.load()
-    if (saved) {
-      const result = boardRestore.restoreFromEncodedState(saved)
-      if (result.success && result.displayFlags) {
-        applyFlags(result.displayFlags)
-        applyTabResets(activeTab.value)
-      }
+    const flags = duelShown.value ? boards.openDuel() : boards.openArena()
+    if (flags) {
+      applyFlags(flags)
+      applyTabResets(activeTab.value)
     }
-    arenaPick.restore()
   }
-  arenaPersistence.startAutosave()
+  boards.startAutosave()
 })
 
 // Action button handlers
 
 const handleCopyLink = () => {
+  if (duelShown.value) return shareLink(duelBoard.snapshot(toFlags()), 'hd')
   // Serialize the board exactly as it appears, then copy + open the read-only share.
   const encodedState = encodeGridStateToUrl(
     serializeGridState(
@@ -321,8 +350,9 @@ const handleResetMap = () => {
             v-model:team-view="gridStore.teamView"
             :disable-team-view="mapEditorActive || activeTab === 'debug'"
             :hide-team-controls="mapEditorActive || activeTab === 'debug'"
+            :hide-generate="duelShown"
             :hide-grid-info="mapEditorActive"
-            :show-format-menu="!mapEditorActive && activeTab !== 'debug'"
+            :show-format-menu="!mapEditorActive && activeTab !== 'debug' && !duelShown"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"
             @download="handleDownload"
@@ -343,7 +373,7 @@ const handleResetMap = () => {
               />
             </template>
             <template #honorDuel="{ active }">
-              <HonorDuelTab :active="active === 'honorDuel'" />
+              <HonorDuelTab :active="active === 'honorDuel'" board />
             </template>
             <template #mapEditor>
               <MapEditor

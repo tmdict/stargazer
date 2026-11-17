@@ -27,37 +27,38 @@ const BUFF_TEXTS = new Set(
 /* A board is found by its mode and map alone (the Arena's dropdown pick keeps
  * no board number), so a map is on a mode's list at most once. A buff sits on
  * deployment tiles, where a hero can stand, and a tile holds one buff. */
-function loadModeLists(): Record<ModeListKey, readonly ModeBoard[]> {
-  const lists: Record<ModeListKey, readonly ModeBoard[]> = modeMapLists
-  for (const [mode, boards] of Object.entries(lists)) {
-    const listed = new Set<string>()
-    for (const { map, buffs = [] } of boards) {
-      const config = MAPS[map]
-      if (!config) throw new Error(`Mode ${mode}: no map ${map}`)
-      const deployment = new Set([
-        ...configTiles(config, Team.ALLY),
-        ...configTiles(config, Team.ENEMY),
-      ])
-      if (listed.has(map)) throw new Error(`Mode ${mode}: map ${map} is listed twice`)
-      listed.add(map)
-      const buffed = new Set<number>()
-      for (const { id, tiles } of buffs) {
-        if (!BUFF_TEXTS.has(id)) throw new Error(`Mode ${mode}, map ${map}: no text for buff ${id}`)
-        if (!tiles.length) throw new Error(`Mode ${mode}, map ${map}: buff ${id} has no tiles`)
-        for (const hex of tiles) {
-          if (!deployment.has(hex)) {
-            throw new Error(
-              `Mode ${mode}, map ${map}: buff tile ${hex} is not an ally or enemy tile`,
-            )
-          }
-          if (buffed.has(hex)) {
-            throw new Error(`Mode ${mode}, map ${map}: tile ${hex} has two buffs`)
-          }
-          buffed.add(hex)
+export function checkModeBoards(mode: string, boards: readonly ModeBoard[]): readonly ModeBoard[] {
+  const listed = new Set<string>()
+  for (const { map, buffs = [] } of boards) {
+    const config = MAPS[map]
+    if (!config) throw new Error(`Mode ${mode}: no map ${map}`)
+    const deployment = new Set([
+      ...configTiles(config, Team.ALLY),
+      ...configTiles(config, Team.ENEMY),
+    ])
+    if (listed.has(map)) throw new Error(`Mode ${mode}: map ${map} is listed twice`)
+    listed.add(map)
+    const buffed = new Set<number>()
+    for (const { id, tiles } of buffs) {
+      if (!BUFF_TEXTS.has(id)) throw new Error(`Mode ${mode}, map ${map}: no text for buff ${id}`)
+      if (!tiles.length) throw new Error(`Mode ${mode}, map ${map}: buff ${id} has no tiles`)
+      for (const hex of tiles) {
+        if (!deployment.has(hex)) {
+          throw new Error(`Mode ${mode}, map ${map}: buff tile ${hex} is not an ally or enemy tile`)
         }
+        if (buffed.has(hex)) {
+          throw new Error(`Mode ${mode}, map ${map}: tile ${hex} has two buffs`)
+        }
+        buffed.add(hex)
       }
     }
   }
+  return boards
+}
+
+function loadModeLists(): Record<ModeListKey, readonly ModeBoard[]> {
+  const lists: Record<ModeListKey, readonly ModeBoard[]> = modeMapLists
+  for (const [mode, boards] of Object.entries(lists)) checkModeBoards(mode, boards)
   return lists
 }
 

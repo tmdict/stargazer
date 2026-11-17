@@ -1,0 +1,7 @@
+[
+  { "map": "arena1" },
+  { "map": "arena2" },
+  { "map": "arena3", "buffs": [{ "id": "swift-shadow", "tiles": [21, 25] }] },
+  { "map": "arena4" },
+  { "map": "arena5" }
+]

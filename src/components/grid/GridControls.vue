@@ -34,6 +34,8 @@ defineProps<{
   disableTeamView?: boolean
   // Hides Generate and Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
+  // Hides Generate alone (an Honor Duel board: formations come from Arena records).
+  hideGenerate?: boolean
   // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
   // Hides the Grid Info chip (map-editor painting suppresses every grid-info
@@ -88,7 +90,7 @@ const clearSides = computed((): ClearSide[] =>
         <slot name="actions-start" />
       </span>
       <span class="actions-group">
-        <GridGenerateButton v-if="!hideTeamControls" :from="generatorFrom" />
+        <GridGenerateButton v-if="!hideTeamControls && !hideGenerate" :from="generatorFrom" />
         <button @click="emit('copyLink')" class="control-btn" :title="i18n.t('app.link')">
           <IconLink :size="14" class="btn-icon" />
           <span class="btn-text">{{ i18n.t('app.link') }}</span>

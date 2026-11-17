@@ -21,7 +21,7 @@ export function toTrialId(baseId: number, copy: number): number {
   return TRIAL_ID_OFFSET + (copy - 1) * TRIAL_BAND_SIZE + baseId
 }
 
-export function trialCopyOf(id: number): number {
+function trialCopyOf(id: number): number {
   return Math.floor((id - TRIAL_ID_OFFSET) / TRIAL_BAND_SIZE) + 1
 }
 
@@ -29,6 +29,15 @@ export function trialCopyOf(id: number): number {
 // companion.
 export function trialBandLocal(id: number): number {
   return (id - TRIAL_ID_OFFSET) % TRIAL_BAND_SIZE
+}
+
+// The lowest copy number none of a board's units holds, or null when all are taken.
+export function freeTrialCopy(unitIds: readonly number[]): number | null {
+  const taken = new Set(unitIds.filter(inTrialBand).map(trialCopyOf))
+  for (let copy = 1; copy <= TRIAL_COPIES; copy++) {
+    if (!taken.has(copy)) return copy
+  }
+  return null
 }
 
 // The copy itself, as opposed to a companion it spawned.

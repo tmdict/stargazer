@@ -5,6 +5,9 @@
 // The Arena board's autosave, which the season clean-up pass rewrites in place.
 export const ARENA_STORAGE_KEY = 'stargazer.arena'
 
+// The Arena page's Honor Duel board, as the text its link carries.
+export const DUEL_BOARD_STORAGE_KEY = 'stargazer.hd.board'
+
 export const readStorage = (key: string): string | null => {
   if (import.meta.env.SSR) return null
   try {

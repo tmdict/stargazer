@@ -3,13 +3,28 @@ import { computed } from 'vue'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import { useArenaPick } from '@/composables/useArenaPick'
+import { DUEL_MAP_NAMES } from '@/lib/hd/maps'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
+import { useDuelBoard } from '@/stores/duelBoard'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const grids = useGrids()
 const i18nStore = useI18nStore()
 const arenaPick = useArenaPick()
+const duelBoard = useDuelBoard()
+
+// An Honor Duel board lists its own maps: a quick-select slot would move the
+// Arena board, which is not on screen.
+const duelMaps = computed(() => {
+  const mode = i18nStore.t('app.honor-duel')
+  return DUEL_MAP_NAMES.map(({ key, name }) => ({ key, label: `${mode} ${name}` }))
+})
+const duelPicked = computed(() => {
+  const ctx = grids.active
+  if (ctx?.kind !== 'honorDuel') return undefined
+  return duelMaps.value.find((m) => m.key === ctx.currentMap)
+})
 
 // Quick-select slots: one row per map of every registered team type, so a
 // season rotation in the registry updates the entries by itself. One map can
@@ -36,15 +51,25 @@ const picked = computed(() => {
 })
 
 const items = computed((): DropdownItem[] =>
-  quickMaps.value.map((m) => ({
-    key: m.label,
-    label: m.label,
-    selected: m === picked.value,
-  })),
+  duelPicked.value
+    ? duelMaps.value.map((m) => ({
+        key: m.key,
+        label: m.label,
+        selected: m === duelPicked.value,
+      }))
+    : quickMaps.value.map((m) => ({
+        key: m.label,
+        label: m.label,
+        selected: m === picked.value,
+      })),
 )
 
-const select = (label: string): void => {
-  const row = quickMaps.value.find((m) => m.label === label)
+const select = (key: string): void => {
+  if (duelPicked.value) {
+    duelBoard.moveToMap(key)
+    return
+  }
+  const row = quickMaps.value.find((m) => m.label === key)
   if (row) arenaPick.pick(row.mode, row.key)
 }
 </script>
@@ -53,7 +78,7 @@ const select = (label: string): void => {
   <DropdownSelect
     class="arena-dropdown"
     variant="tab"
-    :label="picked?.label ?? i18nStore.t('app.arena')"
+    :label="duelPicked?.label ?? picked?.label ?? i18nStore.t('app.arena')"
     :items
     @select="select"
   />

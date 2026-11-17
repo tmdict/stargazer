@@ -28,6 +28,7 @@ import {
   getTilesWithCharactersByTeam,
   hasCharacter,
   isCompanionId,
+  isRealHeroId,
   resolvePlacement,
 } from '@/lib/characters/character'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
@@ -37,6 +38,7 @@ import { resolveReplacement } from '@/lib/characters/place'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { canSwapCharacters } from '@/lib/characters/swap'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
+import { freeTrialCopy, toTrialId } from '@/lib/characters/trial'
 import { rotatedHexId } from '@/lib/grid'
 import { BASE_HEX_RADIUS, type Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
@@ -60,7 +62,12 @@ import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { getTeamFromTileState } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import type { Breakpoint } from '@/utils/breakpoints'
-import { createGridContext, type CharacterDropPayload, type GridContext } from './gridContext'
+import {
+  createGridContext,
+  type BoardKind,
+  type CharacterDropPayload,
+  type GridContext,
+} from './gridContext'
 import { useRosters } from './rosters'
 
 type HexSizeMode = 'breakpoint' | 'fixed-medium'
@@ -164,6 +171,10 @@ export const useGrids = defineStore('grids', () => {
   // The Arena's map dropdown pick: the mode of the row picked and its map
   // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
   const arenaPick = shallowRef<{ mode: TeamVariantKey; map: string } | null>(null)
+  // The Honor Duel hero list's Trial switch: while on, a pick lands on an Honor
+  // Duel board as a Trial copy. Never serialized or persisted, and every
+  // rebuild of the boards clears it.
+  const trial = ref(false)
 
   /* The mode whose list gives the boards their buffs: the Arena's pick while
    * its board stays on the map picked, else the list the boards' maps match as
@@ -284,24 +295,34 @@ export const useGrids = defineStore('grids', () => {
   // (Re)build to exactly `count` boards (clamped to [1, MAX_GRID_COUNT]). Disposes
   // prior boards so their reactive effects (per-board phantimal watchers) don't
   // leak across reconfiguration.
-  const setGridCount = (count: number, maps?: (string | undefined)[]): void => {
+  const setGridCount = (
+    count: number,
+    maps?: (string | undefined)[],
+    kind: BoardKind = 'arena',
+  ): void => {
     const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
     arenaPick.value = null
     hiddenSkills.value = new Set()
     nonSeasonal.value = false
+    trial.value = false
     contexts.value = Array.from({ length: clamped }, (_, i) =>
-      createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
-        hexSize,
-        teamView,
-        inverted,
-        perspective,
-        synergy,
-        nonSeasonal,
-        sharedCrop,
-        hiddenSkills,
-        buffMode,
-      }),
+      createGridContext(
+        i,
+        maps?.[i] ?? DEFAULT_MAP_KEY,
+        {
+          hexSize,
+          teamView,
+          inverted,
+          perspective,
+          synergy,
+          nonSeasonal,
+          sharedCrop,
+          hiddenSkills,
+          buffMode,
+        },
+        kind,
+      ),
     )
     if (activeId.value >= clamped) activeId.value = 0
     deriveSynergy()
@@ -340,6 +361,15 @@ export const useGrids = defineStore('grids', () => {
     return placement !== null && placement.ctxId !== exceptCtxId
   }
 
+  // The unit a picked hero stands for before any placing rule is asked: itself,
+  // or with the Trial switch on, a new Trial copy of it under the board's
+  // lowest free copy number. Null when the board holds every copy number.
+  const pickUnitId = (ctx: GridContext, characterId: number): number | null => {
+    if (ctx.kind !== 'honorDuel' || !trial.value || !isRealHeroId(characterId)) return characterId
+    const copy = freeTrialCopy(getTilesWithCharacters(ctx.grid).map((tile) => tile.characterId!))
+    return copy === null ? null : toTrialId(characterId, copy)
+  }
+
   // The id a pick from the hero picker lands as on a board, or null: the engine
   // resolver (judged against the post-vacate board when a target tile is given)
   // plus page-wide uniqueness, which still gates a base-id placement since the
@@ -352,17 +382,21 @@ export const useGrids = defineStore('grids', () => {
     team: Team,
     targetHexId?: number,
   ): number | null => {
+    const pickId = pickUnitId(ctx, characterId)
+    if (pickId === null) return null
     const resolved =
       targetHexId === undefined
-        ? resolvePlacement(ctx.grid, characterId, team, synergy.value)
-        : resolveReplacement(ctx.grid, characterId, team, targetHexId, synergy.value)
+        ? resolvePlacement(ctx.grid, pickId, team, synergy.value)
+        : resolveReplacement(ctx.grid, pickId, team, targetHexId, synergy.value)
     if (resolved === characterId && isUsed(characterId, team)) return null
     return resolved
   }
 
   // A hero picked from the picker starts at the active roster's levels.
   // setAttrs ignores units that carry none (a synergy copy, a placeholder).
+  // Honor Duel's heroes are the same for everyone, so its board takes none.
   const applyRosterLevels = (ctx: GridContext, unitId: number, team: Team): void => {
+    if (ctx.kind !== 'arena') return
     const levels = rosters.levelsFor(unitId)
     if (levels) ctx.setAttrs(team, unitId, levels)
   }
@@ -945,7 +979,11 @@ export const useGrids = defineStore('grids', () => {
       return false
     }
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
-      const ok = targetCtx.handleDrop(payload, targetHexId)
+      // A picker's payload names the hero picked; the board places the unit it
+      // stands for.
+      const pickId = sourceHexId === undefined ? pickUnitId(targetCtx, payload.characterId) : null
+      const dropped = pickId === null ? payload : { ...payload, characterId: pickId }
+      const ok = targetCtx.handleDrop(dropped, targetHexId)
       if (!ok) return false
       activeId.value = targetCtxId
       // A picker drop lands as the base hero or its synergy copy; the tile says which.
@@ -1074,6 +1112,7 @@ export const useGrids = defineStore('grids', () => {
     setNonSeasonal,
     hiddenSkills,
     arenaPick,
+    trial,
     buffMode,
     skillRows,
     setSkillsHidden,

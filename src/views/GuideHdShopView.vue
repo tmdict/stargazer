@@ -27,9 +27,8 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
-import { compareCharacters } from '@/lib/filterOrder'
 import { duelEquipment } from '@/lib/hd/catalog'
-import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import { duelHeroes } from '@/lib/hd/heroes'
 import type { Move } from '@/lib/hd/shop/types'
 import type { Point } from '@/lib/layout'
 import { useGameDataStore } from '@/stores/gameData'
@@ -56,10 +55,7 @@ const form = useShopForm(() => {
 const mounted = ref(false)
 onMounted(() => (mounted.value = true))
 
-const shopHeroes = computed(() => {
-  const sold = new Set(SHOP_FACTS.heroes)
-  return gameData.characters.filter((c) => sold.has(c.name)).sort(compareCharacters)
-})
+const shopHeroes = computed(() => duelHeroes(gameData.characters))
 const drawn = computed(() => shopHeroes.value.filter((c) => !form.mythic.value.includes(c.name)))
 const addable = computed(() =>
   drawn.value.filter((c) => !form.heroes.value.some((hero) => hero.name === c.name)),

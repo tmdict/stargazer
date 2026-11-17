@@ -9,12 +9,12 @@ import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import PickerSearchRow from '@/components/ui/PickerSearchRow.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
+import { usePickerPlacement } from '@/composables/usePickerPlacement'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { isCharacterOnTeam, synergySlotFree } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
-import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
@@ -31,7 +31,9 @@ const {
   scrollable?: boolean
 }>()
 
-const { fillOrder, targetHexId, targetTile, clearTargetHex, requestTab } = useSelectionState()
+const { requestTab } = useSelectionState()
+const { targetTile, clearTargetHex, placedTeam, placeOnTarget, placeOnFirstSide } =
+  usePickerPlacement()
 const grids = useGrids()
 const i18n = useI18nStore()
 const toast = useToast()
@@ -48,15 +50,6 @@ const {
   energyPicked,
   inspectChips,
 } = useCharacterFilters(computed(() => characters.filter(rosters.isPickable)))
-
-// Placement, uniqueness, and removal are page-wide (across every board); on the
-// single Arena board this is identical to a per-board check. A hero is "placed"
-// if it sits on either team, so the click toggle finds it wherever it is.
-const placedTeam = (characterId: number): Team | null => {
-  if (grids.findPlacement(characterId, Team.ALLY)) return Team.ALLY
-  if (grids.findPlacement(characterId, Team.ENEMY)) return Team.ENEMY
-  return null
-}
 
 // While Syn is armed and the placed hero's own team still has a free assist
 // slot, the next click places the duplicate, so the grey-out lifts to match.
@@ -83,14 +76,7 @@ const isDimmed = (character: CharacterType): boolean => {
 }
 
 const handleCharacterClick = (character: CharacterType) => {
-  // Mobile: a tapped tile targets a specific cell on its board. Place the hero
-  // there using that tile's team, on that board (not whichever board is active).
-  if (targetHexId.value !== null) {
-    const tile = targetTile.value
-    if (tile) grids.placePick(tile.ctx, character.id, tile.team, tile.hexId)
-    clearTargetHex()
-    return
-  }
+  if (placeOnTarget(character.id)) return
   // Placeholders skip the remove-toggle: every click adds another copy.
   if (!character.placeholder) {
     const placed = placedTeam(character.id)
@@ -102,9 +88,7 @@ const handleCharacterClick = (character: CharacterType) => {
       return
     }
   }
-  for (const team of fillOrder) {
-    if (grids.placeOnActive(character.id, team)) break
-  }
+  placeOnFirstSide(character.id)
 }
 
 // A search result places its hero like a picker-icon click, minus the

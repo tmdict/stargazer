@@ -279,6 +279,7 @@ onUnmounted(() => {
     <!-- Artifact layer (behind characters). Team-view hiding and invert-aware
          front/back are handled inside GridArtifacts. -->
     <GridArtifacts
+      v-if="ctx.kind === 'arena'"
       :ally-artifact-id="ctx.artifacts.ally"
       :enemy-artifact-id="ctx.artifacts.enemy"
       :show-hover="info.hover"

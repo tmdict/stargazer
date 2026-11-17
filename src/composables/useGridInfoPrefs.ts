@@ -85,17 +85,37 @@ const MENU_ROWS: readonly { key: GridInfoKey; label: string }[] = [
   { key: 'heroSkin', label: 'hero-skin' },
 ]
 
-/** The Grid Info menu's rows for these prefs, each label key read through `label`. */
-export function gridInfoMenuRows(prefs: GridInfoPrefs, label: (key: string) => string) {
+// The choices that mean nothing on an Honor Duel board: placement tips come
+// from Arena battle records, and its heroes carry no upgrades.
+const DUEL_HIDDEN: readonly GridInfoKey[] = ['rules', 'upgrades']
+
+/** The Grid Info menu's rows for these prefs, each label key read through
+ * `label`; `duel` leaves out the rows an Honor Duel board has no use for. */
+export function gridInfoMenuRows(
+  prefs: GridInfoPrefs,
+  label: (key: string) => string,
+  duel = false,
+) {
   const parentsOf = (key: GridInfoKey): GridInfoKey[] => GRID_INFO_PARENTS[key] ?? []
-  return MENU_ROWS.map(({ key, label: labelKey }) => ({
-    key,
-    label: label(labelKey),
-    checked: prefs[key],
-    sub: parentsOf(key).length > 0,
-    dim: !prefs.master || parentsOf(key).some((parent) => !prefs[parent]),
-  }))
+  return MENU_ROWS.filter(({ key }) => !duel || !DUEL_HIDDEN.includes(key)).map(
+    ({ key, label: labelKey }) => ({
+      key,
+      label: label(labelKey),
+      checked: prefs[key],
+      sub: parentsOf(key).length > 0,
+      dim: !prefs.master || parentsOf(key).some((parent) => !prefs[parent]),
+    }),
+  )
 }
+
+/** A view as an Honor Duel board shows it. The stored choices are one set for
+ * every board, so a choice of Placement tips shows Hover details here. */
+export const duelGridInfoView = (view: GridInfoView): GridInfoView => ({
+  ...view,
+  hover: view.hover || view.rules,
+  rules: false,
+  upgrades: false,
+})
 
 export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
   const effective = (key: Exclude<GridInfoKey, 'master'>): boolean =>

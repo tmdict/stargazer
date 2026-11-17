@@ -6,17 +6,25 @@ import { useToast } from './useToast'
 /* Copies a read-only /share link for an already-encoded grid state and opens the
  * share page. The `linkCopied` history state tells ShareView to show the "copied"
  * toast on arrival, so the toast fires once, on the share page, for both the Arena
- * and the 5 v 5 boards. */
+ * and the 5 v 5 boards. `param` names the state in the address: `g`, or `hd`
+ * for an Honor Duel board. */
 export function useShareLink() {
   const router = useRouter()
   const i18n = useI18nStore()
   const { error } = useToast()
 
-  return async function shareEncodedState(encodedState: string): Promise<void> {
+  return async function shareEncodedState(
+    encodedState: string,
+    param: 'g' | 'hd' = 'g',
+  ): Promise<void> {
     try {
-      const shareLink = `${window.location.origin}/share?g=${encodedState}`
+      const shareLink = `${window.location.origin}/share?${param}=${encodedState}`
       await navigator.clipboard.writeText(shareLink)
-      router.push({ path: '/share', query: { g: encodedState }, state: { linkCopied: true } })
+      router.push({
+        path: '/share',
+        query: { [param]: encodedState },
+        state: { linkCopied: true },
+      })
     } catch (err) {
       console.error('Failed to copy share link:', err)
       error(i18n.t('app.copy-link-failed'))
