@@ -30,7 +30,7 @@ import {
   type StopPlan,
   type StopReason,
 } from './nextRound'
-import { levelOfRound, SOURCES } from './odds'
+import { SOURCES } from './odds'
 import { solveOffers, type Offers } from './offers'
 import { OutOfTime } from './search'
 import type { SolverCache } from './solverCache'
@@ -67,7 +67,9 @@ export interface WantedHero {
 }
 
 export interface ShopRequest {
-  round: number
+  level: number
+  /** Whether the shop level goes up next round. */
+  rises: boolean
   shop: EnteredShop
   heroes: WantedHero[]
   equipment: WantedEquipment[]
@@ -107,7 +109,6 @@ function checkRequest(request: ShopRequest): void {
   const { shop, heroes, equipment, startFrom } = request
   const whole = (value: number, least: number, most: number) =>
     Number.isInteger(value) && value >= least && value <= most
-  if (!whole(request.round, 1, Infinity)) throw new Error('shop: no such round')
   if (!whole(shop.badges, 0, SHOP_LIMITS.badges)) throw new Error('shop: badges out of range')
   if (shop.cards.length !== SOURCES) throw new Error(`shop: a shop has ${SOURCES} cards`)
   if (shop.cards.some((card) => card.bought && (card.locked || !card.good))) {
@@ -369,9 +370,9 @@ export function* calculateShop(
   sliceMs = SLICE_MS,
 ): Generator<ShopResult | null, void> {
   checkRequest(request)
-  const { shop } = request
-  const level = levelOfRound(request.round, facts.levelRounds)
-  const rises = levelOfRound(request.round + 1, facts.levelRounds) > level
+  const { shop, level } = request
+  if (!table.levels[level - 1]) throw new Error('shop: no such level')
+  const rises = request.rises && level < table.levels.length
   const lower = table.levels.slice(0, level - 1).reverse()
   const reading = readShop(table.levels[level - 1], shop.cards, lower)
   if (!reading) {

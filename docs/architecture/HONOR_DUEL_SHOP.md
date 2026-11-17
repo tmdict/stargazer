@@ -1,6 +1,6 @@
 # Honor Duel Shop Calculator
 
-The page at `/guide/hd/shop` answers one question about the Honor Duel shop in front of a player: what to do first. The player enters the eight cards on show, the round, the badges in hand and the heroes or equipment wanted. For each wanted item the page shows two answers, the move with the best chance of getting it this round, and the move that spends the fewest badges on average.
+The page at `/guide/hd/shop` answers one question about the Honor Duel shop in front of a player: what to do first. The player enters the eight cards on show, the shop level, the badges in hand and the heroes or equipment wanted. For each wanted item the page shows two answers, the move with the best chance of getting it this round, and the move that spends the fewest badges on average.
 
 The hard part is that a player does not see everything that decides the next shop. Each of the eight cards comes from its own numbered source, and a locked card keeps its source from making a new one. Two shops that look the same can therefore behave differently after a reroll. The calculator follows Toto's calculator and its measured odds; the data shapes are in [Honor Duel](./HONOR_DUEL.md).
 
@@ -18,9 +18,9 @@ The hard part is that a player does not see everything that decides the next sho
                                         └─────────────────────────────────┘
 ```
 
-A press of Calculate sends one request to the shop worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. A shop no source assignment explains is refused as impossible. A locked card of a product the level never sells was kept from a lower level, and is read against the nearest level that sells it. It then makes one goal for each wanted item, a goal for "any wanted piece", and goals for "any wanted hero" and "any target" when every hero needs a single copy.
+A press of Calculate sends one request to the shop worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. A shop no source assignment explains is refused as impossible. A locked card may name the lower shop level it was locked at (`lockedAt`), and is then read against that level's sources: the card shows the level as a label wherever a lower level sells its product, and a press on the label offers those levels. A locked card of a product the level never sells was kept from a lower level, and is read against the nearest level that sells it unless it names another. It then makes one goal for each wanted item, a goal for "any wanted piece", and goals for "any wanted hero" and "any target" when every hero needs a single copy.
 
-A shop level follows from the round, which the form offers as buttons grouped by level. When the level rises next round, stopping is measured against the next level's sources, and the form says so beside Calculate.
+The form asks for the shop level and whether it goes up next round, since a player can see both in the game and seldom knows the round. A level that lasts one round always goes up and the last level never does (`risesNext`), so the switch is the player's only in between. When the level rises next round, stopping is measured against the next level's sources, and the form says so beside Calculate.
 
 Random fills the shop window with an example shop of the level (`sampleShop`): one card from each source at the repo table's odds, in a random order. Clear empties the window. Each takes a second press once anything is entered.
 

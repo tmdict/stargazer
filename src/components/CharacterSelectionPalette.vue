@@ -4,14 +4,14 @@
    filter, the icon grid, and Enter to take a search's single match. Board-free;
    the consumer decides what a pick means. A locked hero is never picked. */
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
+import PaletteSearch from './ui/PaletteSearch.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { CharacterType, LockedHeroes } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
-import { isComposing } from '@/utils/keyboard'
 
 const {
   characters,
@@ -68,15 +68,6 @@ const listed = computed(() =>
     : filteredCharacters.value,
 )
 
-// Type-to-pick: focus starts in the search box even on touch. The on-grid
-// popup exists only on tablet-and-wider layouts (phones place via the picker
-// sheet) and iPad taps land here expecting to type; the import review opens
-// it on phones too, where the keyboard is the way to find a hero among the
-// pinned candidates. Focusing in the mount tick matters: iPadOS raises the
-// keyboard only while the opening tap's user activation is live.
-const searchInput = ref<HTMLInputElement>()
-onMounted(() => searchInput.value?.focus({ preventScroll: true }))
-
 // Keep in sync with handleEnter's guard: a hint for a dead shortcut misleads.
 const enterTarget = computed(() =>
   searchQuery.value.trim() !== '' &&
@@ -88,23 +79,18 @@ const enterTarget = computed(() =>
 
 // Enter completes a search that narrowed to exactly one hero; clearing the
 // query restarts type-to-pick for the next pick (the palette may stay open).
-// The Enter that commits an IME composition must not double as a pick.
-function handleEnter(event: KeyboardEvent) {
-  if (isComposing(event) || !enterTarget.value) return
+function handleEnter() {
+  if (!enterTarget.value) return
   emit('pick', enterTarget.value)
   searchQuery.value = ''
 }
 </script>
 
 <template>
-  <!-- type="search" for the native clear button. -->
-  <input
-    ref="searchInput"
+  <PaletteSearch
     v-model="searchQuery"
-    type="search"
-    class="search-input"
     :placeholder="i18n.t('app.search-heroes-placeholder')"
-    @keydown.enter="handleEnter"
+    @enter="handleEnter"
   />
   <div class="filter-row">
     <FilterIcons
@@ -160,44 +146,6 @@ function handleEnter(event: KeyboardEvent) {
 </template>
 
 <style scoped>
-.search-input {
-  width: calc(100% - 2 * var(--palette-inset));
-  box-sizing: border-box;
-  margin: 0 var(--palette-inset) 8px;
-  padding: var(--field-dark-padding);
-  font: inherit;
-  font-size: max(var(--field-dark-font-size), var(--field-min-font-size));
-  color: #fff;
-  background: var(--field-dark-background);
-  border: var(--field-dark-border);
-  border-radius: var(--field-dark-radius);
-  transition: border-color 0.15s ease;
-}
-
-.search-input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.search-input::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 12px;
-  width: 12px;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23ccc' stroke-width='1.4' stroke-linecap='round'><path d='M2 2 L10 10 M10 2 L2 10'/></svg>")
-    no-repeat center / 12px 12px;
-  cursor: pointer;
-  opacity: 0.6;
-}
-
-.search-input::-webkit-search-cancel-button:hover {
-  opacity: 1;
-}
-
 .filter-row {
   margin-bottom: 8px;
 }

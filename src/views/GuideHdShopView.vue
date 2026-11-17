@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The Honor Duel shop calculator: the shop in front of the player, the round,
+/* The Honor Duel shop calculator: the shop in front of the player, its level,
    the badges in hand and what they are looking for, and for each target the
    move with the best chance this round and the move that costs the fewest
    badges on average (lib/hd/shop), worked out in the shop worker
@@ -17,12 +17,13 @@ import ShopAnswers from '@/components/guide/shop/ShopAnswers.vue'
 import ShopEquipmentList from '@/components/guide/shop/ShopEquipmentList.vue'
 import ShopForm from '@/components/guide/shop/ShopForm.vue'
 import ShopHeroLists from '@/components/guide/shop/ShopHeroLists.vue'
+import ShopLockedAt from '@/components/guide/shop/ShopLockedAt.vue'
 import ShopOdds from '@/components/guide/shop/ShopOdds.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import type { ShopPickerStep } from '@/components/guide/shop/shopGoods'
+import { lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { compareCharacters } from '@/lib/filterOrder'
@@ -68,9 +69,20 @@ const moreEquipment = computed(() =>
 
 type Popup =
   | { kind: 'card'; card: number; step: ShopPickerStep; position: Point }
+  | { kind: 'locked-at'; card: number; position: Point }
   | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
 const below = (under: DOMRect): Point => ({ x: under.left, y: under.bottom + 4 })
+
+// The levels the open popup's card may have been locked at.
+const lockChoices = computed(() => {
+  const card = popup.value?.kind === 'locked-at' ? form.cards.value[popup.value.card] : undefined
+  return card ? lockLevels(card, form.level.value) : []
+})
+const setLockedAt = (level: number): void => {
+  if (popup.value?.kind === 'locked-at') form.setLockedAt(popup.value.card, level)
+  popup.value = null
+}
 
 const addHero = (name: string): void => {
   form.addHero(name)
@@ -144,13 +156,13 @@ watch(
           (card, under) => (popup = { kind: 'card', card, step: 'product', position: below(under) })
         "
         @lock="form.toggleLock"
+        @locked-at="(card, under) => (popup = { kind: 'locked-at', card, position: below(under) })"
         @random="form.fillExample"
         @clear="form.clearCards"
       />
       <ShopForm
-        v-model:round="form.round.value"
-        :level="form.level.value"
-        :rises="form.rises.value"
+        v-model:level="form.level.value"
+        v-model:rises="form.rises.value"
         :badges="form.badges.value"
         :heroes="form.heroes.value"
         :equipment="form.equipment.value"
@@ -220,6 +232,12 @@ watch(
           :heroes="drawn"
           @set="(card) => popup?.kind === 'card' && form.setCard(popup.card, card)"
           @close="popup = null"
+        />
+        <ShopLockedAt
+          v-else-if="popup.kind === 'locked-at'"
+          :levels="lockChoices"
+          :level="form.cards.value[popup.card]?.lockedAt ?? lockChoices.at(-1) ?? form.level.value"
+          @pick="setLockedAt"
         />
         <div v-else-if="popup.kind === 'hero'" class="shop-popup">
           <CharacterSelectionPalette

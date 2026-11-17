@@ -1,26 +1,23 @@
 <script setup lang="ts">
-/* The calculator's form beside the shop window: the round, as buttons under
-   the shop level each round belongs to, the badges in hand, the heroes and
-   equipment looked for, the link to the heroes to sell and the Mythic heroes,
-   and Calculate. While a calculation runs, Calculate gives way to Cancel. The
-   last level never ends, so it has one button for its first round and every
-   round after. A level's last round carries a mark, and says in its label
-   that the shop level rises next. */
+/* The calculator's form beside the shop window: the shop level, whether it
+   goes up next round, the badges in hand, the heroes and equipment looked for,
+   the link to the heroes to sell and the Mythic heroes, and Calculate. While a
+   calculation runs, Calculate gives way to Cancel. Whether the level goes up is
+   the player's to say only where the game leaves it open: a level that lasts
+   one round always does, and the last level never does. */
 
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopWant from './ShopWant.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
 import { SHOP_LIMITS, type WantedHero } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import { risesNext } from '@/lib/hd/shop/odds'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
 
 const props = defineProps<{
-  level: number
-  // Whether the shop level goes up next round.
-  rises: boolean
   badges: number
   heroes: readonly WantedHero[]
   equipment: readonly string[]
@@ -45,27 +42,20 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const round = defineModel<number>('round', { required: true })
+const level = defineModel<number>('level', { required: true })
+// Whether the shop level goes up next round.
+const rises = defineModel<boolean>('rises', { required: true })
 
 const i18n = useI18nStore()
 
-const levels = SHOP_FACTS.levelRounds.map((first, index, firsts) => {
-  const next = firsts[index + 1]
-  return {
-    level: index + 1,
-    rounds:
-      next === undefined
-        ? [{ round: first, label: `${first}+`, last: false }]
-        : Array.from({ length: next - first }, (_, i) => ({
-            round: first + i,
-            label: String(first + i),
-            last: first + i === next - 1,
-          })),
-  }
-})
+const levels = SHOP_FACTS.levelRounds.map((_, index) => index + 1)
 
-const lastLabel = (lastRound: number, level: number): string =>
-  i18n.t('app.shop-round-last', { round: lastRound, level: level + 1 })
+// Whether the player's word changes anything at this level.
+const open = computed(
+  () =>
+    risesNext(level.value, true, SHOP_FACTS.levelRounds) &&
+    !risesNext(level.value, false, SHOP_FACTS.levelRounds),
+)
 
 // The box is written back after the page has taken the number, so a number
 // out of range shows as the one kept.
@@ -83,26 +73,29 @@ const under = (event: MouseEvent): DOMRect =>
 <template>
   <section class="sl-panel shop-box shop-form">
     <div class="top">
-      <div class="rounds" role="group" :aria-label="i18n.t('app.shop-round')">
-        <span class="shop-label">{{ i18n.t('app.shop-round') }}</span>
-        <span v-for="one in levels" :key="one.level" class="level">
-          <span class="shop-dim">{{ i18n.t('app.shop-level', { level: one.level }) }}</span>
-          <span class="list">
-            <button
-              v-for="item in one.rounds"
-              :key="item.round"
-              type="button"
-              class="round"
-              :class="{ last: item.last }"
-              :aria-pressed="item.round === round"
-              :aria-label="item.last ? lastLabel(item.round, one.level) : undefined"
-              :title="item.last ? lastLabel(item.round, one.level) : undefined"
-              @click="round = item.round"
-            >
-              {{ item.label }}
-            </button>
-          </span>
+      <div class="levels" role="group" :aria-label="i18n.t('app.shop-level-label')">
+        <span class="shop-label">{{ i18n.t('app.shop-level-label') }}</span>
+        <span class="list">
+          <button
+            v-for="one in levels"
+            :key="one"
+            type="button"
+            class="choice"
+            :aria-pressed="one === level"
+            @click="level = one"
+          >
+            {{ one }}
+          </button>
         </span>
+        <button
+          type="button"
+          class="choice rises"
+          :aria-pressed="rises"
+          :disabled="!open"
+          @click="rises = !rises"
+        >
+          {{ i18n.t('app.shop-rises') }}
+        </button>
       </div>
       <label class="set">
         <span class="shop-label">{{ i18n.t('app.shop-badges') }}</span>
@@ -198,25 +191,11 @@ const under = (event: MouseEvent): DOMRect =>
   gap: 12px 22px;
 }
 
-.rounds {
+.levels {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px 12px;
-}
-
-.rounds > .shop-label {
-  align-self: center;
-}
-
-.level {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.level .shop-dim {
-  font-size: 12px;
 }
 
 .list {
@@ -224,7 +203,7 @@ const under = (event: MouseEvent): DOMRect =>
   gap: 4px;
 }
 
-.round {
+.choice {
   position: relative;
   min-width: 34px;
   height: 32px;
@@ -239,24 +218,23 @@ const under = (event: MouseEvent): DOMRect =>
   cursor: pointer;
 }
 
-.round:hover {
+.choice:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.round[aria-pressed='true'] {
+.choice:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.choice[aria-pressed='true'] {
   border-color: var(--color-header-gold);
   background: var(--import-warn-tint);
   color: var(--color-header-gold);
 }
 
-.round.last::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  border: 3px solid transparent;
-  border-top: 0;
-  border-bottom: 5px solid var(--color-header-gold);
+.rises {
+  padding: 0 12px;
 }
 
 .notice {

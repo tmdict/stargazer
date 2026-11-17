@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /* One of the shop's eight cards: its product's picture, name and price, and
    its lock. A press on the card opens the picker that sets what it shows; a
-   bought card is dimmed. */
+   bought card is dimmed. A locked card names the shop level it was locked at
+   wherever that could be a lower one than the shop's, and a press on the name
+   offers the levels. */
 
 import { computed } from 'vue'
 
@@ -11,30 +13,45 @@ import IconLock from '@/components/ui/IconLock.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
-import { cardLabel, SHOP_GOODS } from './shopGoods'
+import { cardLabel, lockLevels, SHOP_GOODS } from './shopGoods'
 
-const { card } = defineProps<{ card: ShopCard }>()
+const { card, level } = defineProps<{ card: ShopCard; level: number }>()
 
-const emit = defineEmits<{ pick: [under: DOMRect]; lock: [] }>()
+const emit = defineEmits<{ pick: [under: DOMRect]; lock: []; lockedAt: [under: DOMRect] }>()
 
 const i18n = useI18nStore()
 
 const good = computed(() => SHOP_GOODS.get(card.good ?? ''))
 const label = computed(() => cardLabel(card, i18n.currentLocale) || i18n.t('app.shop-picker-empty'))
 
-const pick = (event: MouseEvent): void =>
-  emit('pick', (event.currentTarget as HTMLElement).getBoundingClientRect())
+const levels = computed(() => lockLevels(card, level))
+const lockedAt = computed(() => card.lockedAt ?? levels.value.at(-1) ?? level)
+const lower = computed(() => levels.value.length > 1 || lockedAt.value < level)
+
+const under = (event: MouseEvent): DOMRect =>
+  (event.currentTarget as HTMLElement).getBoundingClientRect()
 </script>
 
 <template>
   <div class="shop-card" :class="{ bought: card.bought, locked: card.locked }">
-    <button type="button" class="face" :aria-label="label" @click="pick">
+    <button type="button" class="face" :aria-label="label" @click="emit('pick', under($event))">
       <span class="art">
         <ShopGoodArt v-if="good" :good :hero="card.hero" :equipment="card.equipment" />
         <span v-else class="empty"><IconPlus /></span>
       </span>
       <span class="name">{{ good ? label : '' }}</span>
       <ShopBadges v-if="good" class="price" :count="good.price" />
+    </button>
+    <button
+      v-if="lower"
+      type="button"
+      class="locked-at"
+      :disabled="levels.length < 2"
+      :aria-label="i18n.t('app.shop-locked-at', { level: lockedAt })"
+      :title="i18n.t('app.shop-locked-at', { level: lockedAt })"
+      @click="emit('lockedAt', under($event))"
+    >
+      {{ i18n.t('app.shop-level', { level: lockedAt }) }}
     </button>
     <button
       v-if="!card.bought"
@@ -77,7 +94,8 @@ const pick = (event: MouseEvent): void =>
 }
 
 .face:focus-visible,
-.lock:focus-visible {
+.lock:focus-visible,
+.locked-at:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -155,6 +173,33 @@ const pick = (event: MouseEvent): void =>
   border-color: var(--color-header-gold);
   background: var(--color-header-gold);
   color: #222;
+}
+
+.locked-at {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--color-header-gold);
+  border-radius: 999px;
+  background: #1b1e24;
+  color: var(--color-header-gold);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.locked-at:hover:not(:disabled) {
+  background: var(--color-header-gold);
+  color: #222;
+}
+
+.locked-at:disabled {
+  cursor: default;
 }
 
 @media (max-width: 520px) {

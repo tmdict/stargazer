@@ -37,7 +37,8 @@ const everyLevel = (odds: LevelOdds): OddsTable => ({ levels: Array(5).fill(odds
 
 interface Asked {
   odds?: LevelOdds
-  round?: number
+  level?: number
+  rises?: boolean
   badges?: number
   cards?: ShopCard[]
   heroes?: [name: string, copies?: number][]
@@ -47,7 +48,8 @@ interface Asked {
 }
 
 const request = (asked: Asked): ShopRequest => ({
-  round: asked.round ?? 1,
+  level: asked.level ?? 1,
+  rises: asked.rises ?? (asked.level ?? 1) === 1,
   shop: { badges: asked.badges ?? 60, cards: asked.cards ?? cards() },
   heroes: (asked.heroes ?? [['L1']]).map(([name, copies = 1]) => ({ name, copies })),
   equipment: asked.equipment ?? [],
@@ -107,7 +109,7 @@ describe('the goals of a request', () => {
 
   it('has no answer for a shop that cannot happen at its level', () => {
     const shop = cards(...Array(8).fill(card('epic-equipment')))
-    expect(stages({ round: 1, cards: shop, pools: pools() })).toEqual([
+    expect(stages({ level: 1, cards: shop, pools: pools() })).toEqual([
       { error: 'impossible-shop' },
     ])
   })
@@ -116,7 +118,7 @@ describe('the goals of a request', () => {
     const piece: WantedEquipment = { name: 'r1', tier: 'rare' }
     const shop = cards(card('rare-equipment', { equipment: 'r1', locked: true }), card('hero'))
     const { r1 } = answers({
-      round: 6,
+      level: 4,
       cards: shop,
       heroes: [],
       equipment: [piece],
@@ -320,21 +322,20 @@ describe('stopping', () => {
     expect(shown.chance.best!.chance.floor).toBeGreaterThan(0)
   })
 
-  it('waits for the next shop level only in a round before one', () => {
+  it('waits for the next shop level only when the level goes up next round', () => {
     const shop = cards(card('random-pack'), card(), card('graveborn-pack'))
-    const at = (round: number, shown = cards()) =>
-      answers({ round, cards: shown, pools: pools() }).L1!
-    const first = at(1, shop)
+    const at = (level: number, rises: boolean, shown = cards()) =>
+      answers({ level, rises, cards: shown, pools: pools() }).L1!
+    const first = at(1, true, shop)
     expect(first.badges.stop).toBe('next-level')
     expect(first.stopPlan).toMatchObject({ locks: [], buy: null })
-    // Rounds 2 and 3 are both level 2, and level 3 starts in round 4.
-    expect(at(2).badges.stop).toBeNull()
-    expect(at(3).badges.stop).toBe('next-level')
+    expect(at(2, false).badges.stop).toBeNull()
+    expect(at(2, true).badges.stop).toBe('next-level')
   })
 })
 
 describe('answers in stages', () => {
-  const heavy: Asked = { round: 9, badges: 150, heroes: [['L1', 4]], pools: pools() }
+  const heavy: Asked = { level: 5, badges: 150, heroes: [['L1', 4]], pools: pools() }
   const best = (result: ShopResult) => {
     if (!('answers' in result)) throw new Error('the shop cannot happen at this level')
     return result.answers[0]!.chance.best!

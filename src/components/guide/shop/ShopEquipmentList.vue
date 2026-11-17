@@ -1,12 +1,15 @@
 <script setup lang="ts">
-/* The equipment the shop sells, by tier, to pick one piece from. */
+/* The equipment the shop sells, by tier, to pick one piece from, with a name
+   search over the site's languages and Enter to take its single match. */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import ShopPieceDisc from './ShopPieceDisc.vue'
+import PaletteSearch from '@/components/ui/PaletteSearch.vue'
 import { duelEquipment, duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
 import { EQUIPMENT_TIERS, type EquipmentTier } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
+import { matchesPiece } from './shopGoods'
 
 const { tier, taken = [] } = defineProps<{
   // The one tier to list; every tier the shop sells when left out.
@@ -19,13 +22,21 @@ const emit = defineEmits<{ pick: [name: string] }>()
 
 const i18n = useI18nStore()
 
+const query = ref('')
+
 const groups = computed(() =>
   EQUIPMENT_TIERS.filter((one) => !tier || one === tier)
     .map((one) => ({
       tier: one,
       title: equipmentTierLabel(one, i18n.currentLocale),
       pieces: duelEquipment
-        .filter((piece) => piece.shop && piece.tier === one && !taken.includes(piece.name))
+        .filter(
+          (piece) =>
+            piece.shop &&
+            piece.tier === one &&
+            !taken.includes(piece.name) &&
+            matchesPiece(piece, query.value),
+        )
         .map((item) => ({
           name: item.name,
           label: duelItemName({ kind: 'equipment', item }, i18n.currentLocale),
@@ -33,9 +44,23 @@ const groups = computed(() =>
     }))
     .filter((group) => group.pieces.length > 0),
 )
+
+const only = computed(() => {
+  const pieces = groups.value.flatMap((group) => group.pieces)
+  return query.value.trim() && pieces.length === 1 ? pieces[0]!.name : null
+})
+
+const takeOnly = (): void => {
+  if (only.value) emit('pick', only.value)
+}
 </script>
 
 <template>
+  <PaletteSearch
+    v-model="query"
+    :placeholder="i18n.t('app.shop-search-equipment')"
+    @enter="takeOnly"
+  />
   <div class="shop-equipment">
     <section v-for="group in groups" :key="group.tier" :class="`shop-tier-${group.tier}`">
       <h3 v-if="!tier">{{ group.title }}</h3>
@@ -45,6 +70,7 @@ const groups = computed(() =>
           :key="piece.name"
           type="button"
           class="piece"
+          :class="{ only: piece.name === only }"
           @click="emit('pick', piece.name)"
         >
           <ShopPieceDisc :name="piece.name" :size="44" />
@@ -52,6 +78,7 @@ const groups = computed(() =>
         </button>
       </div>
     </section>
+    <p v-if="!groups.length" class="shop-no-matches">{{ i18n.t('app.shop-no-matches') }}</p>
   </div>
 </template>
 
@@ -92,7 +119,8 @@ h3 {
   cursor: pointer;
 }
 
-.piece:hover {
+.piece:hover,
+.piece.only {
   background: rgba(255, 255, 255, 0.1);
 }
 

@@ -4,8 +4,10 @@
 
 import { duelEquipment, duelItemName } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
-import type { AppLocale, LocaleData } from '@/lib/types/i18n'
+import type { DuelEquipment } from '@/lib/types/honorDuel'
+import { APP_LOCALES, type AppLocale, type LocaleData } from '@/lib/types/i18n'
 import { fileStem } from '@/utils/fileStem'
 import { formatDisplayName } from '@/utils/nameFormatting'
 import { curatedHeroName } from '@/utils/skillLabels'
@@ -37,6 +39,19 @@ export const pieceName = (name: string, locale: AppLocale): string => {
   return item ? duelItemName({ kind: 'equipment', item }, locale) : formatDisplayName(name)
 }
 
+const within = (query: string, name: (locale: AppLocale) => string): boolean => {
+  const text = query.trim().toLowerCase()
+  return !text || APP_LOCALES.some((locale) => name(locale).toLowerCase().includes(text))
+}
+
+/** Whether a search matches a product's name in any of the site's languages. */
+export const matchesGood = (good: Good, query: string): boolean =>
+  within(query, (locale) => goodName(good.name, locale))
+
+/** Whether a search matches a piece's name in any of the site's languages. */
+export const matchesPiece = (item: DuelEquipment, query: string): boolean =>
+  within(query, (locale) => duelItemName({ kind: 'equipment', item }, locale))
+
 /** What a card reads as: the hero or piece it names, else its product. */
 export function cardLabel(card: ShopCard, locale: AppLocale): string {
   const good = SHOP_GOODS.get(card.good ?? '')
@@ -48,6 +63,21 @@ export function cardLabel(card: ShopCard, locale: AppLocale): string {
   if (good.kind === 'equipment' && card.equipment) return pieceName(card.equipment, locale)
   return goodName(good.name, locale)
 }
+
+const SOLD_AT = new Map<string, number[]>()
+MEASURED_ODDS.levels.forEach((sources, index) => {
+  for (const good of new Set(sources.flat().map((entry) => entry.good))) {
+    SOLD_AT.set(good, [...(SOLD_AT.get(good) ?? []), index + 1])
+  }
+})
+
+/**
+ * The shop levels a locked card may have been locked at, lowest first: those up
+ * to the shop's that sell its product. The last is the one the calculator reads
+ * the card at when the card names none.
+ */
+export const lockLevels = (card: ShopCard, level: number): number[] =>
+  card.locked && card.good ? (SOLD_AT.get(card.good) ?? []).filter((one) => one <= level) : []
 
 export type ShopPickerStep = 'product' | 'hero' | 'piece'
 

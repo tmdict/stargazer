@@ -14,7 +14,7 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 
-const { cards } = defineProps<{
+const { cards, level } = defineProps<{
   cards: readonly ShopCard[]
   level: number
 }>()
@@ -22,6 +22,7 @@ const { cards } = defineProps<{
 const emit = defineEmits<{
   pick: [card: number, under: DOMRect]
   lock: [card: number]
+  lockedAt: [card: number, under: DOMRect]
   random: []
   clear: []
 }>()
@@ -77,7 +78,9 @@ const clear = (): void => {
         v-for="(card, index) in cards"
         :key="index"
         :card
+        :level
         @pick="(under) => emit('pick', index, under)"
+        @locked-at="(under) => emit('lockedAt', index, under)"
         @lock="emit('lock', index)"
       />
     </div>

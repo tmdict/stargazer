@@ -94,6 +94,26 @@ describe('reading the shop', () => {
     const open = cards(card('rare-equipment'), card('hero'))
     expect(readShop(levelOdds(4), open, lower)).toBeNull()
   })
+
+  it('reads a locked card against the level it names, though its own level makes the product', () => {
+    const lower = [levelOdds(3), levelOdds(2), levelOdds(1)]
+    const origins = (shown: ShopCard) =>
+      new Set(readShop(levelOdds(4), cards(shown), lower)!.worlds.map((world) => world.origins[0]))
+
+    // The first six sources make Hero cards at level 4, the third to the seventh at level 3.
+    expect(origins(card('hero', { locked: true }))).toEqual(new Set([0, 1, 2, 3, 4, 5]))
+    expect(origins(card('hero', { locked: true, lockedAt: 3 }))).toEqual(new Set([2, 3, 4, 5, 6]))
+
+    const kept = cards(card('hero', { locked: true, lockedAt: 3 }))
+    const reading = readShop(levelOdds(4), kept, lower)!
+    expect(reading.odds[6]).toContainEqual({ good: 'hero', percent: 0 })
+    expect(reading.odds[2]).toEqual(levelOdds(4)[2])
+
+    // Level 1 sells no Hero cards.
+    expect(
+      readShop(levelOdds(4), cards(card('hero', { locked: true, lockedAt: 1 })), lower),
+    ).toBeNull()
+  })
 })
 
 describe('an example shop', () => {

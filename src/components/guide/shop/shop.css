@@ -102,6 +102,13 @@
   font-size: 13px;
 }
 
+.shop-no-matches {
+  margin: 0;
+  padding: 12px 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 .shop-popup-title {
   display: flex;
   align-items: center;

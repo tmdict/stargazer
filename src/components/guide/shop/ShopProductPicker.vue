@@ -4,22 +4,36 @@
    is. The products are rows under a heading for each kind, and a row drops the
    words its heading already says. Naming the hero or piece is optional, since
    a card that is not one looked for needs no name. A product is set as soon as
-   it is picked, so the popup can be left at any step. */
+   it is picked, so the popup can be left at any step. A search over the
+   products lists every product, hero card and piece whose name it matches, and
+   picking a hero or a piece there sets the card in one step. */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import ShopBadges from './ShopBadges.vue'
 import ShopEquipmentList from './ShopEquipmentList.vue'
 import ShopGoodArt from './ShopGoodArt.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import PaletteSearch from '@/components/ui/PaletteSearch.vue'
+import { matchCharacterNames } from '@/composables/useSkillSearch'
+import { duelEquipment } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import type { Good, GoodKind, ShopCard } from '@/lib/hd/shop/types'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
-import { goodName, goodTier, SHOP_GOODS, type ShopPickerStep } from './shopGoods'
+import {
+  cardLabel,
+  goodName,
+  goodTier,
+  matchesGood,
+  matchesPiece,
+  pieceName,
+  SHOP_GOODS,
+  type ShopPickerStep,
+} from './shopGoods'
 
-const { card } = defineProps<{
+const { card, heroes } = defineProps<{
   card: ShopCard
   // The heroes a hero card can show.
   heroes: readonly CharacterType[]
@@ -72,11 +86,81 @@ const groups = computed(() =>
   }).filter((group) => group.goods.length),
 )
 
+const query = ref('')
+const searching = computed(() => query.value.trim() !== '')
+
+// A phone's keyboard would cover the products, so only a pointer device starts in the search.
+const typing = window.matchMedia('(hover: hover)').matches
+
+interface Found {
+  key: string
+  good: Good
+  label: string
+  hero?: string
+  equipment?: string
+}
+
+const found = computed((): Found[] => {
+  if (!searching.value) return []
+  const locale = i18n.currentLocale
+  const goods = SHOP_FACTS.goods
+  const named = matchCharacterNames(query.value.trim())
+  const heroGoods = goods.filter((one) => one.kind === 'hero')
+  return [
+    ...goods
+      .filter((one) => matchesGood(one, query.value))
+      .map((one) => ({ key: one.name, good: one, label: goodName(one.name, locale) })),
+    ...heroes
+      .filter((hero) => named.has(hero.name))
+      .flatMap((hero) =>
+        heroGoods.map((one) => ({
+          key: `${one.name}:${hero.name}`,
+          good: one,
+          hero: hero.name,
+          label: cardLabel(
+            { good: one.name, hero: hero.name, locked: false, bought: false },
+            locale,
+          ),
+        })),
+      ),
+    ...duelEquipment
+      .filter((piece) => piece.shop && matchesPiece(piece, query.value))
+      .flatMap((piece) => {
+        const one = goods.find((good) => good.kind === 'equipment' && good.tier === piece.tier)
+        return one
+          ? [
+              {
+                key: `${one.name}:${piece.name}`,
+                good: one,
+                equipment: piece.name,
+                label: pieceName(piece.name, locale),
+              },
+            ]
+          : []
+      }),
+  ]
+})
+
 const choose = (picked: Good): void => {
   emit('set', { good: picked.name, locked: card.locked, bought: false })
   if (picked.kind === 'hero') step.value = 'hero'
   else if (picked.kind === 'equipment') step.value = 'piece'
   else emit('close')
+}
+
+const take = (one: Found): void => {
+  if (!one.hero && !one.equipment) return choose(one.good)
+  emit('set', {
+    good: one.good.name,
+    locked: card.locked,
+    bought: false,
+    ...(one.hero ? { hero: one.hero } : { equipment: one.equipment }),
+  })
+  emit('close')
+}
+
+const takeOnly = (): void => {
+  if (found.value.length === 1) take(found.value[0]!)
 }
 
 const empty = (): void => {
@@ -96,7 +180,32 @@ const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
 
 <template>
   <div v-if="step === 'product'" class="shop-popup products">
-    <template v-for="group in groups" :key="group.key">
+    <PaletteSearch
+      v-model="query"
+      :placeholder="i18n.t('app.shop-search-any')"
+      :autofocus="typing"
+      @enter="takeOnly"
+    />
+    <template v-if="searching">
+      <div v-if="found.length" class="goods">
+        <button
+          v-for="one in found"
+          :key="one.key"
+          type="button"
+          class="good"
+          :class="{ on: found.length === 1 }"
+          @click="take(one)"
+        >
+          <span class="art">
+            <ShopGoodArt :good="one.good" :hero="one.hero" :equipment="one.equipment" icon />
+          </span>
+          <span class="label">{{ one.label }}</span>
+          <ShopBadges class="price" :count="one.good.price" />
+        </button>
+      </div>
+      <p v-else class="shop-no-matches">{{ i18n.t('app.shop-no-matches') }}</p>
+    </template>
+    <template v-for="group in groups" v-else :key="group.key">
       <p class="group">{{ group.heading }}</p>
       <div class="goods">
         <button

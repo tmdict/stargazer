@@ -37,7 +37,8 @@ const shares = (odds: LevelOdds, good: string): number[] =>
  * Every one-to-one match of cards to sources, each with the chance it is the true
  * one given what is on show. Null when no match exists, so the shop as entered
  * cannot happen at this level. `lower` holds the odds of the levels below, the
- * nearest first: a locked card of a product this level never makes is read
+ * nearest first. A locked card is read against the level it was locked at, when
+ * the card names one, and a locked card of a product this level never makes
  * against the nearest level that makes it.
  */
 export function readShop(
@@ -51,13 +52,17 @@ export function readShop(
 
   const carried: SourceEntry[][] = odds.map(() => [])
   const likelihood = named.map((index) => {
-    const { good, locked } = cards[index]
+    const { good, locked, lockedAt } = cards[index]
     const now = shares(odds, good!)
-    if (!locked || now.some(Boolean)) return now
-    const before = lower.map((level) => shares(level, good!)).find((list) => list.some(Boolean))
+    if (!locked) return now
+    const said = lockedAt === undefined ? undefined : lower[lower.length - lockedAt]
+    if (!said && now.some(Boolean)) return now
+    const before = said
+      ? shares(said, good!)
+      : lower.map((level) => shares(level, good!)).find((list) => list.some(Boolean))
     if (!before) return now
     before.forEach((share, source) => {
-      if (share && !carried[source].some((entry) => entry.good === good)) {
+      if (share && !now[source] && !carried[source].some((entry) => entry.good === good)) {
         carried[source].push({ good: good!, percent: 0 })
       }
     })

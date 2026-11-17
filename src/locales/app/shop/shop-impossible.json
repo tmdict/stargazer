@@ -1,5 +1,5 @@
 {
-  "en": "This shop cannot come up at shop level {level}. Check the cards and the round.",
-  "zh": "商店等级 {level} 不会出现这样的商店。请检查卡片和回合。",
-  "ko": "상점 레벨 {level}에서는 이런 상점이 나올 수 없습니다. 카드와 라운드를 확인하세요."
+  "en": "This shop cannot come up at shop level {level}. Check the cards and the shop level.",
+  "zh": "商店等级 {level} 不会出现这样的商店。请检查卡片和商店等级。",
+  "ko": "상점 레벨 {level}에서는 이런 상점이 나올 수 없습니다. 카드와 상점 레벨을 확인하세요."
 }

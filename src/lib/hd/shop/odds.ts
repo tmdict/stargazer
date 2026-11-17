@@ -69,11 +69,13 @@ export function oddsMismatch(table: OddsTable, other: OddsTable): string | null 
   return null
 }
 
-/** The shop level (1 to 5) of a round. */
-export function levelOfRound(round: number, levelRounds: readonly number[]): number {
-  let level = 1
-  levelRounds.forEach((first, index) => {
-    if (round >= first) level = index + 1
-  })
-  return level
+/**
+ * Whether the shop level goes up next round: never from the last level, always
+ * from a level that lasts one round, else as the player says.
+ */
+export function risesNext(level: number, said: boolean, levelRounds: readonly number[]): boolean {
+  const first = levelRounds[level - 1]
+  const next = levelRounds[level]
+  if (first === undefined || next === undefined) return false
+  return next - first === 1 || said
 }

@@ -9,18 +9,20 @@ import { duelEquipment } from '@/lib/hd/catalog'
 import { SHOP_LIMITS, type ShopRequest, type WantedHero } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
-import { levelOfRound, SOURCES } from '@/lib/hd/shop/odds'
+import { risesNext, SOURCES } from '@/lib/hd/shop/odds'
 import { shopPools } from '@/lib/hd/shop/pools'
 import { sampleShop } from '@/lib/hd/shop/sample'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
+import { lockLevels } from './shopGoods'
 
 const blank = (): ShopCard => ({ good: null, locked: false, bought: false })
 
 export function useShopForm(changed: () => void) {
   const gameData = useGameDataStore()
 
-  const round = ref(1)
+  const level = ref(1)
+  const risesSaid = ref(false)
   const badges = ref(SHOP_FACTS.startingBadges)
   const cards = ref<ShopCard[]>(Array.from({ length: SOURCES }, blank))
   const heroes = ref<WantedHero[]>([])
@@ -28,29 +30,57 @@ export function useShopForm(changed: () => void) {
   const sell = ref<string[]>([])
   const mythic = ref<string[]>([])
 
-  watch([round, badges, cards, heroes, equipment, sell, mythic], changed, { deep: true })
+  const rises = computed({
+    get: () => risesNext(level.value, risesSaid.value, SHOP_FACTS.levelRounds),
+    set: (said) => (risesSaid.value = said),
+  })
+  // What was said of one level says nothing of another.
+  watch(level, () => {
+    risesSaid.value = false
+    for (const card of cards.value) {
+      if (card.lockedAt !== undefined && card.lockedAt >= level.value) delete card.lockedAt
+    }
+  })
 
-  const level = computed(() => levelOfRound(round.value, SHOP_FACTS.levelRounds))
-  const rises = computed(() => levelOfRound(round.value + 1, SHOP_FACTS.levelRounds) > level.value)
+  watch([level, rises, badges, cards, heroes, equipment, sell, mythic], changed, { deep: true })
 
   const setBadges = (value: number): void => {
     if (!Number.isFinite(value)) return
     badges.value = Math.min(SHOP_LIMITS.badges, Math.max(0, Math.round(value)))
   }
 
+  // The level a card was locked at lasts as long as its lock and its product.
   const setCard = (index: number, card: ShopCard): void => {
-    cards.value[index] = card
+    const was = cards.value[index]
+    const next = { ...card }
+    delete next.lockedAt
+    if (card.locked && card.good === was?.good && was?.lockedAt !== undefined) {
+      next.lockedAt = was.lockedAt
+    }
+    cards.value[index] = next
+  }
+
+  const setLock = (card: ShopCard, locked: boolean): void => {
+    card.locked = locked
+    if (!locked) delete card.lockedAt
   }
 
   const toggleLock = (index: number): void => {
     const card = cards.value[index]
-    if (card && !card.bought) card.locked = !card.locked
+    if (card && !card.bought) setLock(card, !card.locked)
   }
 
   const setLocks = (locks: readonly number[]): void => {
     cards.value.forEach((card, index) => {
-      if (!card.bought) card.locked = locks.includes(index)
+      if (!card.bought) setLock(card, locks.includes(index))
     })
+  }
+
+  const setLockedAt = (index: number, at: number): void => {
+    const card = cards.value[index]
+    if (!card) return
+    if (at === lockLevels(card, level.value).at(-1)) delete card.lockedAt
+    else card.lockedAt = at
   }
 
   const clearCards = (): void => {
@@ -121,7 +151,8 @@ export function useShopForm(changed: () => void) {
     const factions = new Map(gameData.characters.map((c) => [c.name, c.faction]))
     const tiers = new Map(duelEquipment.map((piece) => [piece.name, piece.tier]))
     return {
-      round: round.value,
+      level: level.value,
+      rises: rises.value,
       shop: { badges: badges.value, cards: cards.value.map((card) => ({ ...card })) },
       heroes: heroes.value.map((hero) => ({ ...hero })),
       equipment: equipment.value.flatMap((name) => {
@@ -139,7 +170,6 @@ export function useShopForm(changed: () => void) {
   }
 
   return {
-    round,
     badges,
     cards,
     heroes,
@@ -153,6 +183,7 @@ export function useShopForm(changed: () => void) {
     setCard,
     toggleLock,
     setLocks,
+    setLockedAt,
     clearCards,
     fillExample,
     addHero,
