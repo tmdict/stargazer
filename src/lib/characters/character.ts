@@ -3,7 +3,9 @@ import { State } from '../types/state'
 import { Team } from '../types/team'
 import { companionLocalId, inPhantimalBand, isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
-import { decomposeUnitId, isSynergyHeroId, toSynergyId } from './synergy'
+import { isSynergyHeroId, toSynergyId } from './synergy'
+import { isTrialHeroId } from './trial'
+import { decomposeUnitId } from './unitBand'
 import { COMPANION_ID_OFFSET, PHANTIMAL_ID_OFFSET } from './unitIds'
 
 // Character queries
@@ -62,9 +64,9 @@ export function getTilesWithCharactersByTeam(grid: Grid, team: Team): GridTile[]
 }
 
 // A base hero, as opposed to a skill-spawned companion, a seasonal phantimal, or
-// a synergy-band unit. One comparison covers all: companion ids are
-// N * COMPANION_ID_OFFSET + base and the phantimal and synergy bands sit higher
-// still, so every non-base unit lands at or above the offset.
+// a synergy-band or Trial-band unit. One comparison covers all: companion ids
+// are N * COMPANION_ID_OFFSET + base and the other bands sit higher still, so
+// every non-base unit lands at or above the offset.
 export function isBaseHeroId(characterId: number): boolean {
   return characterId < COMPANION_ID_OFFSET
 }
@@ -75,8 +77,15 @@ export function isRealHeroId(characterId: number): boolean {
   return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
 }
 
-// A skill-spawned companion in any band (base, phantimal or synergy), read on
-// the band-local id. An id above every band comes back unstripped, and the
+// A hero standing on a board in its own right, the unit the hero card lists and
+// per-hero values belong to: a real hero or a Trial copy of one. A synergy copy
+// is left out, since it carries no values.
+export function isHeroUnit(unitId: number): boolean {
+  return isRealHeroId(unitId) || isTrialHeroId(unitId)
+}
+
+// A skill-spawned companion in any band (base, phantimal, synergy or Trial),
+// read on the band-local id. An id above every band comes back unstripped, and the
 // upper bound stops it reading as a companion.
 export function isCompanionId(unitId: number): boolean {
   const localId = companionLocalId(unitId)
@@ -84,8 +93,8 @@ export function isCompanionId(unitId: number): boolean {
 }
 
 // The hero a unit identifies as on every surface (name, art, faction, class):
-// a synergy copy or a companion in either hero band resolves to the base hero
-// it derives from. Phantimal-band units have no base hero; callers branch on
+// a synergy copy, a Trial copy or a companion in any hero band resolves to the
+// base hero it derives from. Phantimal-band units have no base hero; callers branch on
 // inPhantimalBand first.
 export function toBaseHeroId(unitId: number): number {
   return decomposeUnitId(unitId).localId % COMPANION_ID_OFFSET

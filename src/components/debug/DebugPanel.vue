@@ -2,7 +2,7 @@
 import { computed, onUnmounted } from 'vue'
 
 import { useDebugLines } from '@/composables/useDebugLines'
-import { decomposeUnitId } from '@/lib/characters/synergy'
+import { decomposeUnitId } from '@/lib/characters/unitBand'
 import type { GridTile } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { SkillTargetInfo } from '@/lib/skills/skill'

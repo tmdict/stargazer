@@ -1,6 +1,6 @@
 import { findCharacterHex } from '../characters/character'
 import { isPhantimalId } from '../characters/phantimal'
-import { decomposeUnitId } from '../characters/synergy'
+import { decomposeUnitId } from '../characters/unitBand'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
 import type { BadgeIcon } from '../types/unitBadge'
@@ -99,7 +99,8 @@ export interface SkillRow {
   id: number
 }
 
-// A synergy copy shares its base hero's key, so one row covers both.
+// A synergy or Trial copy shares its base hero's key, so one row covers a hero
+// and every copy of it.
 export const unitSkillKey = (characterId: number, team: Team): string =>
   `${decomposeUnitId(characterId).localId}-${team}`
 

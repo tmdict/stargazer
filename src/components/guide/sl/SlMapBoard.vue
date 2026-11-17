@@ -16,7 +16,7 @@ import { unitInspectTarget, useInspect, type InspectTarget } from '@/composables
 import { useLongPress } from '@/composables/useLongPress'
 import { usePreviewImages } from '@/composables/usePreviewImages'
 import { inPhantimalBand, phantimalBandLocal } from '@/lib/characters/phantimal'
-import { decomposeUnitId } from '@/lib/characters/synergy'
+import { decomposeUnitId } from '@/lib/characters/unitBand'
 import {
   cardRings,
   hasCard,

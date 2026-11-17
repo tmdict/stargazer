@@ -17,7 +17,7 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { attrMax, UPGRADE_ATTRS } from '@/lib/characters/attributes'
-import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
+import { getTilesWithCharactersByTeam, isHeroUnit } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
 import type { GridContext } from '@/stores/gridContext'
 import { artifactSlot } from '@/stores/grids'
@@ -43,7 +43,7 @@ const sideState = (team: Team): { heroIds: number[]; hasContent: boolean } => {
   const tiles = getTilesWithCharactersByTeam(props.context.grid, team)
   return {
     heroIds: tiles
-      .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
+      .filter((tile) => tile.characterId !== undefined && isHeroUnit(tile.characterId))
       .map((tile) => tile.characterId!),
     hasContent: tiles.length > 0 || artifactSlot(props.context.artifacts, team) !== null,
   }

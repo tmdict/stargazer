@@ -26,7 +26,7 @@ import {
   toBaseHeroId,
 } from '@/lib/characters/character'
 import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characters/phantimal'
-import { decomposeUnitId } from '@/lib/characters/synergy'
+import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
 import { buffAt } from '@/lib/mapModeLists'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'

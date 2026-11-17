@@ -28,7 +28,7 @@ import {
   getTilesWithCharactersByTeam,
   hasCharacter,
   isBaseHeroId,
-  isRealHeroId,
+  isHeroUnit,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
@@ -44,7 +44,7 @@ import {
 } from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { decomposeUnitId } from '@/lib/characters/synergy'
+import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
@@ -214,11 +214,11 @@ export function createGridContext(
     if (Object.keys(record).length > 0) attrs.set(key, record)
     else attrs.delete(key)
   }
-  // Only real heroes carry upgrades. Companions and phantimals also leave the
-  // board through skills and the phantimal reconciler, which don't prune, and
+  // Only heroes carry values. Companions and phantimals also leave the board
+  // through skills and the phantimal reconciler, which don't prune, and
   // placeholder copies repeat on a team and would share one key.
   const holdsAttrs = (team: Team, characterId: number): boolean =>
-    isRealHeroId(characterId) && findCharacterHex(grid, characterId, team) !== null
+    isHeroUnit(characterId) && findCharacterHex(grid, characterId, team) !== null
   const pruneAttrs = (): void => {
     if (attrs.size === 0) return
     const onBoard = new Set(
@@ -251,7 +251,7 @@ export function createGridContext(
   const scope = effectScope(true)
 
   // The static range map is base-id keyed; seed an entry per on-grid namespaced
-  // unit (phantimal, companion, synergy) so any of them can act as a targeting
+  // unit (phantimal, companion, synergy, Trial) so any of them can act as a targeting
   // source instead of falling back to melee.
   const buildUnitRanges = (tiles: GridTile[]): Map<number, number> => {
     const ranges = new Map(gameDataStore.characterRanges)

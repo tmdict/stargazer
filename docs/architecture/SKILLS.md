@@ -39,7 +39,7 @@ Each board's context (`src/stores/gridContext.ts`) owns a `Grid` and a `SkillMan
 
 The registry (`src/lib/skills/registry.ts`) holds one `Skill` per base hero. Skill files register themselves as an import side effect: the eager `import.meta.glob` calls at the bottom of `skill.ts` load `characters/*.ts` and `seasonal/*.ts`. The registry stores `SkillBase<unknown>`, and `skill.ts` binds it to `SkillContext` through typed wrappers, because `SkillContext` refers to `SkillManager` and a direct import would be circular.
 
-A synergy copy runs its base hero's skill. Only the definition lookup strips the synergy band (`decomposeUnitId`), while every piece of instance state stays keyed by the placed id, so a builder must read `ctx.characterId` and never the id in its own config.
+A synergy copy or a Trial copy runs its base hero's skill. Only the definition lookup strips the band (`decomposeUnitId`), while every piece of instance state stays keyed by the placed id, so a builder must read `ctx.characterId` and never the id in its own config.
 
 `SkillManager` is a plain class, one per board. The board wraps it in `reactive`, so its computeds re-derive when a skill changes the manager's maps. Instance state is keyed `characterId-team`, so the same unit can be active on both teams.
 

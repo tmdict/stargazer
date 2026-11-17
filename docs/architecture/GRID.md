@@ -65,15 +65,18 @@ The Format menu holds two switches, shown on the Arena and in the Teams page's 1
 
 Every unit on a tile is one `characterId`, and the id range it falls in says what kind of unit it is:
 
-| Ids           | Unit                                                                     | Link section    |
-| ------------- | ------------------------------------------------------------------------ | --------------- |
-| 1–8999        | heroes                                                                   | `c`, raw id     |
-| 9000–9999     | placeholders, one per faction                                            | `c`, raw id     |
-| 10000–99999   | hero companions, `N × 10000 + hero`                                      | `c`, raw id     |
-| 100000–199999 | phantimal `100000 + L`, its companions `100000 + N × 10000 + L`          | `s`, band-local |
-| 200000–299999 | synergy hero `200000 + hero`, its companions `200000 + N × 10000 + hero` | `y`, band-local |
+| Ids            | Unit                                                                                      | Link section    |
+| -------------- | ----------------------------------------------------------------------------------------- | --------------- |
+| 1–8999         | heroes                                                                                    | `c`, raw id     |
+| 9000–9999      | placeholders, one per faction                                                             | `c`, raw id     |
+| 10000–99999    | hero companions, `N × 10000 + hero`                                                       | `c`, raw id     |
+| 100000–199999  | phantimal `100000 + L`, its companions `100000 + N × 10000 + L`                           | `s`, band-local |
+| 200000–299999  | synergy hero `200000 + hero`, its companions `200000 + N × 10000 + hero`                  | `y`, band-local |
+| 300000–1299999 | Trial copy `k` of a hero `300000 + (k − 1) × 100000 + hero`, its companions `+ N × 10000` | none            |
 
-The phantimal and synergy ranges repeat the hero layout above an offset, so companion arithmetic works unchanged in all three. Two helpers strip the offset, for different readers. `companionLocalId` (`src/lib/characters/phantimal.ts`) strips the phantimal or synergy offset, and the companion predicate `isCompanionId` classifies its result. `decomposeUnitId` (`synergy.ts`) strips only the synergy offset, and the skill registry and `toBaseHeroId` use it. The registry must not strip the phantimal offset, or phantimal 5 would run hero 5's skill.
+The phantimal and synergy ranges repeat the hero layout above an offset, so companion arithmetic works unchanged in all three. Two helpers strip the offset, for different readers. `companionLocalId` (`src/lib/characters/phantimal.ts`) strips the phantimal, synergy or Trial offset, and the companion predicate `isCompanionId` classifies its result. `decomposeUnitId` (`unitBand.ts`) strips the synergy and Trial offsets only, and the skill registry and `toBaseHeroId` use it. The registry must not strip the phantimal offset, or phantimal 5 would run hero 5's skill.
+
+A Trial hero is an Honor Duel unit that may repeat on a team, so each copy on a board takes a range of its own (`src/lib/characters/trial.ts`): ten ranges of 100000, one per copy a board can hold (five a side), each laid out like the hero range. A copy's skill state, companions and per-hero values are keyed by its id, so copies never share any. The copy number `k` is board-local: no link or stored value carries it, a new copy takes the lowest free number, and a reader hands the numbers out again in tile order. `isHeroUnit` is true for a real hero and a Trial copy, the units the hero card lists and per-hero values belong to.
 
 `inPhantimalBand` covers a phantimal and its companions, while `isPhantimalId` matches only the phantimal. Every id-range predicate is bounded above, so a higher range never reads as a lower one. `getMainCharacterId` subtracts the companion index instead of taking a modulo, so a synergy or phantimal companion resolves to its own owner and never to a base hero. Phantimal details are in [Seasonal Content](./SEASONAL.md).
 

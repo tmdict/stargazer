@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
+import { toSynergyId } from '@/lib/characters/synergy'
+import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { encodeGridStateToUrl, encodeTeamData } from '@/lib/teams/codec'
 import {
   serializeGridState,

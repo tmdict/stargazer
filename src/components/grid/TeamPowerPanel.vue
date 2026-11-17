@@ -9,7 +9,7 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax, UPGRADE_ATTRS } from '@/lib/characters/attributes'
-import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
+import { getTilesWithCharactersByTeam, isHeroUnit } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -43,7 +43,7 @@ interface PanelHero {
 // Only real heroes carry upgrade attrs.
 const heroesFor = (team: Team): PanelHero[] =>
   getTilesWithCharactersByTeam(props.context.grid, team)
-    .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
+    .filter((tile) => tile.characterId !== undefined && isHeroUnit(tile.characterId))
     .map((tile) => {
       const characterId = tile.characterId!
       const character = gameData.getCharacterById(characterId)

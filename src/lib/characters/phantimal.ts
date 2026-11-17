@@ -18,7 +18,7 @@
 // works unchanged inside it. The band's id math lives in this module (callers
 // use the helpers below); without a phantimal companion skill registered, no
 // id above the phantimals themselves is ever produced.
-import { decomposeUnitId } from './synergy'
+import { decomposeUnitId } from './unitBand'
 import { COMPANION_ID_OFFSET, PHANTIMAL_ID_OFFSET, SYNERGY_ID_OFFSET } from './unitIds'
 
 // A phantimal or a companion it spawned. Bounded above: the

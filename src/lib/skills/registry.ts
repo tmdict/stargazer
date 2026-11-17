@@ -1,4 +1,4 @@
-import { decomposeUnitId } from '../characters/synergy'
+import { decomposeUnitId } from '../characters/unitBand'
 
 // Generic skill interface - Context is parameterized to avoid circular dep with SkillContext in skill.ts
 export interface SkillBase<Context = unknown> {
@@ -31,8 +31,8 @@ export function registerSkill<Context>(skill: SkillBase<Context>): void {
 export function getCharacterSkill<Context = unknown>(
   characterId: number,
 ): SkillBase<Context> | undefined {
-  // A synergy copy runs its base hero's skill; instance state stays keyed by
-  // the placed id at the call sites, only the definition lookup strips.
+  // A synergy or Trial copy runs its base hero's skill; instance state stays
+  // keyed by the placed id at the call sites, only the definition lookup strips.
   return skillRegistry.get(decomposeUnitId(characterId).localId) as SkillBase<Context> | undefined
 }
 
