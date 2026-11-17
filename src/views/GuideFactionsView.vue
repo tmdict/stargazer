@@ -161,9 +161,9 @@ const bonusBlocks = computed(() => [
                 </tr>
               </tbody>
             </table>
-            <ul>
-              <li v-for="note in block.notes" :key="note">{{ note }}</li>
-            </ul>
+            <div class="notes">
+              <p v-for="note in block.notes" :key="note">{{ note }}</p>
+            </div>
           </template>
         </div>
 
@@ -235,6 +235,9 @@ const bonusBlocks = computed(() => [
   align-items: start;
   gap: 0 48px;
   margin: 16px 0 8px;
+}
+.bonus .notes {
+  margin-top: 12px;
 }
 .bonus .team {
   width: 1%;
