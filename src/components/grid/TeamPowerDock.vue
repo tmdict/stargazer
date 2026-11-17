@@ -45,7 +45,10 @@ const sideState = (team: Team): { heroIds: number[]; hasContent: boolean } => {
     heroIds: tiles
       .filter((tile) => tile.characterId !== undefined && isHeroUnit(tile.characterId))
       .map((tile) => tile.characterId!),
-    hasContent: tiles.length > 0 || artifactSlot(props.context.artifacts, team) !== null,
+    hasContent:
+      tiles.length > 0 ||
+      artifactSlot(props.context.artifacts, team) !== null ||
+      artifactSlot(props.context.duelArtifacts, team) !== null,
   }
 }
 

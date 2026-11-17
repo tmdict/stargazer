@@ -83,10 +83,10 @@ export interface ArtifactDragPayload {
   sourceTeam: Team
 }
 
-export const artifactSlot = (
-  slots: { ally: number | null; enemy: number | null },
+export const artifactSlot = <T>(
+  slots: { ally: T | null; enemy: T | null },
   team: Team,
-): number | null => (team === Team.ALLY ? slots.ally : slots.enemy)
+): T | null => (team === Team.ALLY ? slots.ally : slots.enemy)
 
 export interface SideLoadOptions {
   // Mirror the formation 180 degrees onto the opposite team.

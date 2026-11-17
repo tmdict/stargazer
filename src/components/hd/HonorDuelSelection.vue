@@ -4,10 +4,11 @@
    the item's details, as the inspect gesture (right-click, hold) does, and
    hovering shows its effect. */
 
-import { computed, onMounted, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 
 import HonorDuelTooltip from './HonorDuelTooltip.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
+import { useDuelText } from '@/composables/useDuelText'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
@@ -17,9 +18,8 @@ import {
   duelItemImage,
   duelItemName,
   equipmentTierLabel,
-  loadHonorDuelText,
 } from '@/lib/hd/catalog'
-import { EQUIPMENT_TIERS, type HonorDuelItem, type HonorDuelText } from '@/lib/types/honorDuel'
+import { EQUIPMENT_TIERS, type HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
 import { tierBackdrop } from '@/utils/tierBackdrop'
@@ -47,22 +47,7 @@ const open = (item: HonorDuelItem) => {
 }
 const { pressing, start: startHold, onContextMenu } = useLongPress<HonorDuelItem>(open)
 
-// The card's text, in the skill-text language as in the details popup. Read
-// after mount, so the pre-rendered page carries none; null where the data pack
-// holds none for the language.
-const text = shallowRef<HonorDuelText | null>(null)
-onMounted(() =>
-  watch(
-    () => i18n.effectiveSkillLocale,
-    (lang) => {
-      const settle = (loaded: HonorDuelText | null) => {
-        if (i18n.effectiveSkillLocale === lang) text.value = loaded
-      }
-      loadHonorDuelText(lang).then(settle, () => settle(null))
-    },
-    { immediate: true },
-  ),
-)
+const text = useDuelText()
 
 const hoveredText = computed(() => {
   const item = hovered.value

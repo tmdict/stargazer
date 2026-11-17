@@ -1,7 +1,7 @@
 // Honor Duel's equipment and artifacts: the data files, display names and
 // pictures, and the data pack's text, one lazy chunk per language. Only the
-// Honor Duel tab, its popup and the shop calculator page import this module,
-// so none of it loads until one of them is opened.
+// Honor Duel tab, its popup, an Honor Duel board and the shop calculator page
+// import this module, so none of it loads until one of them is opened.
 
 import type {
   DuelArtifact,
@@ -12,7 +12,7 @@ import type {
   HonorDuelItem,
   HonorDuelText,
 } from '@/lib/types/honorDuel'
-import type { AppLocale, LocaleData, SkillLocale } from '@/lib/types/i18n'
+import { APP_LOCALES, type AppLocale, type LocaleData, type SkillLocale } from '@/lib/types/i18n'
 import { fileStem } from '@/utils/fileStem'
 import { formatDisplayName } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
@@ -81,6 +81,19 @@ const images = {
 
 export const duelItemName = ({ kind, item }: HonorDuelItem, locale: AppLocale): string =>
   names[kind][item.name]?.[locale] || formatDisplayName(item.name)
+
+/** Whether a search matches an item's name in any of the site's languages. */
+export const matchesDuelItem = (item: HonorDuelItem, query: string): boolean => {
+  const text = query.trim().toLowerCase()
+  return (
+    !text || APP_LOCALES.some((locale) => duelItemName(item, locale).toLowerCase().includes(text))
+  )
+}
+
+/** An artifact's effect at a level, from 1. A level past the last the text
+ * holds reads as the last. */
+export const duelLevelText = (text: DuelArtifactText, level: number): string | undefined =>
+  text.levels[Math.min(level, text.levels.length) - 1]
 
 /** A tier of equipment as the game names it ("Rare Equipment"); Chinese joins
  * the two words without a space. */

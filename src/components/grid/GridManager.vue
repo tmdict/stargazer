@@ -25,6 +25,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
+import { defineLazyComponent } from '@/utils/lazyComponent'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
@@ -43,6 +44,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// An Honor Duel board's artifact layer brings the mode's catalog with it, so
+// an Arena board loads neither.
+const DuelArtifacts = defineLazyComponent(() => import('@/components/hd/DuelArtifacts.vue'))
 
 const ctx = useGridContext()
 const grids = useGrids()
@@ -291,6 +296,7 @@ onUnmounted(() => {
       @artifact-enter="tipsHover.enterArtifact"
       @artifact-leave="tipsHover.leaveArtifact"
     />
+    <DuelArtifacts v-else :show-hover="info.hover" :readonly />
 
     <!-- Character layer (above artifacts) -->
     <GridCharacters

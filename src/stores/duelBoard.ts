@@ -1,7 +1,7 @@
 /* The Arena page's Honor Duel board: the board on screen read as the state its
- * link holds, a board built from one, and the edits that follow the mode's own
+ * link holds, a board built from one, the edits that follow the mode's own
  * rules (copies of a hero share a piece of equipment, an off-field spot holds
- * one hero). */
+ * one hero), and a side's faction bonus. */
 
 import { defineStore } from 'pinia'
 
@@ -14,6 +14,7 @@ import {
   toBaseHeroId,
 } from '@/lib/characters/character'
 import { isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
+import { teamFactionBonus, type TeamFactionBonus } from '@/lib/factionBonus'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import {
   decodeDuelBoard,
@@ -86,6 +87,17 @@ export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: 
     }
   }
   ctx.setAttr(team, unitId, DUEL_ATTR_SPOT, spot)
+}
+
+// Every hero of the side counts toward its faction, a copy as much as the
+// first.
+export function duelFactionBonus(ctx: GridContext, team: Team): TeamFactionBonus {
+  const gameData = useGameDataStore()
+  return teamFactionBonus(
+    heroUnitsOf(ctx, team).flatMap(
+      (id) => gameData.getCharacterById(toBaseHeroId(id))?.faction ?? [],
+    ),
+  )
 }
 
 export const useDuelBoard = defineStore('duelBoard', () => {

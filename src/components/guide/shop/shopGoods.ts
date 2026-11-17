@@ -2,7 +2,7 @@
  * languages, the data pack's pictures, the tier that colours its frame, and
  * the steps a move reads as. */
 
-import { duelEquipment, duelItemName } from '@/lib/hd/catalog'
+import { duelEquipment, duelItemName, matchesDuelItem } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
@@ -50,7 +50,7 @@ export const matchesGood = (good: Good, query: string): boolean =>
 
 /** Whether a search matches a piece's name in any of the site's languages. */
 export const matchesPiece = (item: DuelEquipment, query: string): boolean =>
-  within(query, (locale) => duelItemName({ kind: 'equipment', item }, locale))
+  matchesDuelItem({ kind: 'equipment', item }, query)
 
 /** What a card reads as: the hero or piece it names, else its product. */
 export function cardLabel(card: ShopCard, locale: AppLocale): string {

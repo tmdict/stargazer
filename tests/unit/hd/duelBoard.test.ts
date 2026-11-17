@@ -7,7 +7,13 @@ import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/bo
 import { encodeDuelBoard, type DuelBoardState, type DuelUnitState } from '@/lib/hd/boardLink'
 import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
-import { duelBoardState, setDuelEquipment, setDuelSpot, useDuelBoard } from '@/stores/duelBoard'
+import {
+  duelBoardState,
+  duelFactionBonus,
+  setDuelEquipment,
+  setDuelSpot,
+  useDuelBoard,
+} from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { ALLY_A, ALLY_B, ALLY_C, ENEMY_A, PHRAESTO } from '../fixtures/characters'
@@ -221,6 +227,30 @@ describe('Honor Duel equipment and off-field spots', () => {
 
     expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_SPOT)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_TIER)).toBe(2)
+  })
+})
+
+describe("a side's faction bonus", () => {
+  it('counts every copy of a hero', () => {
+    const faction = useGameDataStore().getCharacterById(ALLY_A)!.faction
+    const { ctx } = openBoard(
+      board([
+        unit(1, Team.ALLY, ALLY_A),
+        unit(2, Team.ALLY, ALLY_A, { trial: true }),
+        unit(3, Team.ALLY, ALLY_A, { trial: true }),
+        unit(4, Team.ALLY, ALLY_A, { trial: true }),
+        unit(5, Team.ALLY, ALLY_A, { trial: true }),
+        unit(40, Team.ENEMY, ALLY_A),
+        unit(41, Team.ENEMY, ALLY_A, { trial: true }),
+        unit(42, Team.ENEMY, ALLY_A, { trial: true }),
+      ]),
+    )
+
+    expect(duelFactionBonus(ctx, Team.ALLY)).toEqual({
+      percent: 22,
+      counts: [{ faction, count: 5 }],
+    })
+    expect(duelFactionBonus(ctx, Team.ENEMY).percent).toBe(10)
   })
 })
 

@@ -6,21 +6,21 @@ import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
 import GridPointer from '@/components/grid/GridPointer.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
+import { useArtifactPlaces } from '@/composables/useArtifactPlaces'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { artifactHostHex } from '@/lib/grid'
-import type { Hex } from '@/lib/hex'
-import { ARTIFACT_RADIUS, BOARD_SIZE } from '@/lib/layout'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
+
+import '@/styles/grid-artifact.css'
 
 const props = defineProps<{
   allyArtifactId?: number | null
@@ -78,50 +78,16 @@ const hideArtifactHover = () => {
 // board (its coordinate space matches the layout, like GridTiles).
 const cellLayerRef = ref<SVGSVGElement | null>(null)
 
-// Host cells are never a hex-pipeline drop target; they accept artifact drops
-// via the separate artifact pipeline below.
-const allyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ALLY))
-const enemyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ENEMY))
-
-const cellCenter = (hex: Hex) => ctx.layout.hexToPixel(hex)
-const cellPoints = (hex: Hex) => ctx.layout.polygonPoints(hex)
-
-const allyCenter = computed(() => cellCenter(allyCellHex.value))
-const enemyCenter = computed(() => cellCenter(enemyCellHex.value))
-const allyCellPoints = computed(() => cellPoints(allyCellHex.value))
-const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
-
-// The host-cell SVG shares the full grid box and coordinate space with GridTiles,
-// so it compresses with the perspective wrapper exactly like the real hexes.
-const gridPixelSize = computed(() => BOARD_SIZE * ctx.hexScale)
-
-// Artifact icon geometry (at 40px hex radius). Icons are full-bleed square art
-// that fills the circle; only the container scales with the breakpoint.
-const BASE_ARTIFACT_SIZE = 2 * ARTIFACT_RADIUS
-
-const artifactDimensions = computed(() => {
-  const scale = ctx.hexScale
-  return {
-    containerSize: BASE_ARTIFACT_SIZE * scale,
-    borderWidth: Math.max(2, 2 * scale),
-  }
-})
-
-const iconStyle = (center: { x: number; y: number }) => {
-  const { containerSize, borderWidth } = artifactDimensions.value
-  const styles: Record<string, string | number> = {
-    width: `${containerSize}px`,
-    height: `${containerSize}px`,
-    '--artifact-border-width': `${borderWidth}px`,
-    left: `${center.x - containerSize / 2}px`,
-    top: `${center.y - containerSize / 2}px`,
-  }
-  if (ctx.perspective) styles.transform = ctx.layout.standingTransform(containerSize / 2)
-  return styles
-}
-
-const getAllyStyles = computed(() => iconStyle(allyCenter.value))
-const getEnemyStyles = computed(() => iconStyle(enemyCenter.value))
+// The host cells accept artifact drops via the separate artifact pipeline
+// below.
+const {
+  gridPixelSize,
+  ally: { center: allyCenter, points: allyCellPoints, style: getAllyStyles },
+  enemy: { center: enemyCenter, points: enemyCellPoints, style: getEnemyStyles },
+  allyInFront: allySlotInFront,
+  enemyInFront: enemySlotInFront,
+  enemyVisible: enemySlotVisible,
+} = useArtifactPlaces(ctx)
 
 const allyArtifact = computed(() => {
   if (props.allyArtifactId === null || props.allyArtifactId === undefined) return null
@@ -156,13 +122,6 @@ const inspectArtifact = (team: Team): void => {
 }
 
 const { pressing: holdingTeam, start: startHold, onContextMenu } = useLongPress(inspectArtifact)
-
-// "Front" is the slot that renders at the screen-bottom (near) edge, which must
-// sit above the sprites behind it; the inverted view rotates the enemy cell down
-// there. The ally slot is always visible: team view shows your team.
-const allySlotInFront = computed(() => !ctx.inverted)
-const enemySlotInFront = computed(() => ctx.inverted)
-const enemySlotVisible = computed(() => !ctx.teamView)
 
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
 const showEnemyCell = computed(() => enemySlotVisible.value && showPlaceholders.value)
@@ -389,42 +348,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 </template>
 
 <style scoped>
-.grid-artifacts {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  /* Host cells sit just past the grid's left/right edges; clip x only (y stays
-     visible for perspective-lifted icons) so they can't cause horizontal page
-     overflow if the grid is ever transiently mis-scaled. */
-  overflow-x: clip;
-}
-
-.artifact-cell-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.artifact-cell {
-  fill: none;
-}
-
-.artifact-cell.clickable {
-  fill: var(--tile-artifact-fill);
-  pointer-events: auto;
-  cursor: pointer;
-  transition: fill 0.15s ease;
-}
-
-.artifact-cell.clickable:hover {
-  fill: var(--tile-artifact-fill-hover);
-}
-
 /* Under auto an unfilled cell takes no pointer events inside it, so drops there are lost. */
 .artifact-cell.droppable {
   pointer-events: all;
@@ -438,25 +361,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 .grid-artifact.invalid-drop {
   opacity: 0.55;
-}
-
-.grid-artifact {
-  position: absolute;
-  cursor: pointer;
-  pointer-events: auto;
-  transform-origin: center;
-}
-
-.switching .grid-artifact {
-  transition: transform var(--transition-perspective);
-}
-
-.grid-artifact.front {
-  z-index: 2;
-}
-
-.grid-artifact.readonly {
-  cursor: default;
 }
 
 .grid-artifact.rules-faded {
@@ -476,17 +380,5 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   font-size: 1.1rem;
   font-weight: 700;
   user-select: none;
-}
-
-.artifact-circle {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-round);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: var(--artifact-border-width, 2px) solid var(--color-bg-raised);
-  background: var(--color-bg-raised);
 }
 </style>

@@ -21,3 +21,36 @@ export const FACTION_BONUS_STEPS: readonly { groups: readonly number[]; percent:
 // Added per Celestial or Hypogean hero on the team, on top of the step.
 export const WILD_FACTION_PERCENT = 1
 export const WILD_FACTIONS = ['celestial', 'hypogean'] as const
+
+const isWild = (faction: string): boolean => (WILD_FACTIONS as readonly string[]).includes(faction)
+
+export interface TeamFactionBonus {
+  // The step the team reaches plus its wild heroes' points, in percent.
+  percent: number
+  // The team's heroes by faction, the largest group first.
+  counts: readonly { faction: string; count: number }[]
+}
+
+/* A team's bonus from its heroes' factions, one entry per hero, copies of a
+ * hero included. A Celestial or Hypogean hero stands in for any faction, so
+ * the team takes the highest step those stand-ins can complete, and each adds
+ * its own point on top. */
+export function teamFactionBonus(factions: readonly string[]): TeamFactionBonus {
+  const tally = new Map<string, number>()
+  for (const faction of factions) tally.set(faction, (tally.get(faction) ?? 0) + 1)
+  const counts = [...tally]
+    .map(([faction, count]) => ({ faction, count }))
+    .sort((a, b) => b.count - a.count)
+  const wild = factions.filter(isWild).length
+  const sizes = counts.filter(({ faction }) => !isWild(faction)).map(({ count }) => count)
+
+  // A step's largest group goes to the largest faction, and so on down: any
+  // other match needs at least as many stand-ins.
+  const standIns = (groups: readonly number[]): number =>
+    groups.reduce((needed, size, i) => needed + Math.max(0, size - (sizes[i] ?? 0)), 0)
+  const step = FACTION_BONUS_STEPS.reduce(
+    (best, { groups, percent }) => (standIns(groups) <= wild ? Math.max(best, percent) : best),
+    0,
+  )
+  return { percent: step + wild * WILD_FACTION_PERCENT, counts }
+}
