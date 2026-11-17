@@ -1,0 +1,5 @@
+{
+  "en": "{physDef} against physical damage, {magicDef} against magic damage",
+  "zh": "物理伤害受{physDef}减免，魔法伤害受{magicDef}减免",
+  "ko": "물리 대미지는 {physDef}, 마법 대미지는 {magicDef}으로 감소"
+}

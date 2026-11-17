@@ -1,11 +1,12 @@
 <script setup lang="ts">
 /* Guide index. On wide screens two columns, the reports over Mechanics and
-   the generator and Who Would Win? over Upgrades, so each card follows the
-   one above it however tall its neighbour is. On narrow screens the columns
-   dissolve into one stack, ordered by the grid's areas. */
+   the generator and Who Would Win? over Upgrades and Combat Basics, so each
+   card follows the one above it however tall its neighbour is. On narrow
+   screens the columns dissolve into one stack, ordered by the grid's areas. */
 
 import { computed } from 'vue'
 
+import GuideCombatIndex from '@/components/guide/GuideCombatIndex.vue'
 import GuideMechanicsIndex from '@/components/guide/GuideMechanicsIndex.vue'
 import GuidePvpReport from '@/components/guide/GuidePvpReport.vue'
 import GuideUpgradesIndex from '@/components/guide/GuideUpgradesIndex.vue'
@@ -40,6 +41,7 @@ useGameDataStore().initializeContentData()
       <SlGuideEntry class="generator" :lang />
       <WwwGuideEntry class="www" :lang />
       <GuideUpgradesIndex class="upgrades" :lang />
+      <GuideCombatIndex class="combat" :lang />
     </div>
   </main>
 </template>
@@ -53,6 +55,7 @@ useGameDataStore().initializeContentData()
     'generator'
     'www'
     'upgrades'
+    'combat'
     'mechanics';
   align-items: start;
   gap: var(--stack-gap);
@@ -73,6 +76,9 @@ useGameDataStore().initializeContentData()
 }
 .upgrades {
   grid-area: upgrades;
+}
+.combat {
+  grid-area: combat;
 }
 .mechanics {
   grid-area: mechanics;

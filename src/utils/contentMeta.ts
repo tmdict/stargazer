@@ -126,6 +126,40 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
         'AFK: 새로운 여정 영웅을 스킬 메커니즘별로 모았습니다. 태그별 관련 스킬 설명도 함께 확인할 수 있습니다.',
     },
   },
+  factions: {
+    en: {
+      title: 'Faction Bonus',
+      description:
+        'AFK Journey Faction Bonus and Tactics: the ATK and HP a team gains from heroes of one faction, and the 15% damage change between factions that counter each other.',
+    },
+    zh: {
+      title: '同阵营增益',
+      description:
+        '剑与远征启程同阵营增益与阵营克制规则：同阵营角色带来的攻击力与生命值加成，以及克制关系带来的15%伤害增减。',
+    },
+    ko: {
+      title: '동일 진영 버프',
+      description:
+        'AFK: 새로운 여정 동일 진영 버프와 진영 상성 규칙. 같은 진영 영웅으로 얻는 공격력·HP 증가와 상성에 따른 15% 대미지 증감을 정리했습니다.',
+    },
+  },
+  damage: {
+    en: {
+      title: 'Damage Types',
+      description:
+        'AFK Journey damage types: how physical, magic and true damage and HP loss differ, how to tell them apart in skill text, and which effects raise or stop each.',
+    },
+    zh: {
+      title: '伤害类型',
+      description:
+        '剑与远征启程伤害类型：物理、魔法、真实伤害与生命流失的区别，如何从技能描述中分辨，以及各自受哪些效果影响。',
+    },
+    ko: {
+      title: '대미지 유형',
+      description:
+        'AFK: 새로운 여정 대미지 유형. 물리·마법·고정 대미지와 HP 손실의 차이, 스킬 설명으로 구분하는 법, 유형별로 영향을 주는 효과를 정리했습니다.',
+    },
+  },
 }
 
 const HELP_META: Record<AppLocale, { title: string; description: string }> = {

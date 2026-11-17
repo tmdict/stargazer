@@ -3,9 +3,15 @@
  * needs a title, and the router names its view (router/routes.ts). Relative
  * import: vite.config.ts type-checks this file without the `@` alias. */
 
-export type GuidePage = 'index' | 'upgrades' | 'mechanics'
+export type GuidePage = 'index' | 'upgrades' | 'mechanics' | 'factions' | 'damage'
 
-export const GUIDE_PAGES: readonly GuidePage[] = ['index', 'upgrades', 'mechanics']
+export const GUIDE_PAGES: readonly GuidePage[] = [
+  'index',
+  'upgrades',
+  'mechanics',
+  'factions',
+  'damage',
+]
 
 export const guidePath = (page: GuidePage): string =>
   page === 'index' ? '/guide' : `/guide/${page}`
