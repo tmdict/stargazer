@@ -1,5 +1,0 @@
-{
-  "en": "{list} didn't fit because the library is full. You can still get the rest from the old site as files.",
-  "zh": "有 {list}因数量已达上限未能迁移，其余内容仍可在旧站点保存为文件。",
-  "ko": "저장 한도가 가득 차서 {list}는 옮기지 못했습니다. 나머지는 이전 사이트에서 파일로 저장할 수 있습니다."
-}

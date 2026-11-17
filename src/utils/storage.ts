@@ -5,18 +5,6 @@
 // The Arena board's autosave, which the season clean-up pass rewrites in place.
 export const ARENA_STORAGE_KEY = 'stargazer.arena'
 
-// False where the browser refuses the page its storage, which a read alone
-// cannot tell from an item that was never written.
-export const storageReadable = (): boolean => {
-  if (import.meta.env.SSR) return false
-  try {
-    localStorage.getItem('stargazer.flags')
-    return true
-  } catch {
-    return false
-  }
-}
-
 export const readStorage = (key: string): string | null => {
   if (import.meta.env.SSR) return null
   try {
