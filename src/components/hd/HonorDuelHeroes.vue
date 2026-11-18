@@ -13,6 +13,7 @@ import CharacterGrid from '@/components/CharacterGrid.vue'
 import CharacterIcon from '@/components/CharacterIcon.vue'
 import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
+import { useDuelList } from '@/composables/useDuelList'
 import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
 import { duelHeroes } from '@/lib/hd/heroes'
@@ -33,8 +34,9 @@ const { targetTile, placedTeam, placeOnTarget, placeOnFirstSide } = usePickerPla
 
 const shopHeroes = computed(() => duelHeroes(gameData.characters))
 const trialGroups = useDuelTrialGroups()
+const trialList = useDuelList()
 const listed = computed(() =>
-  grids.trial ? trialGroups.value.flatMap((group) => group.units) : shopHeroes.value,
+  trialList.value ? trialGroups.value.flatMap((group) => group.units) : shopHeroes.value,
 )
 const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(listed)
 
@@ -53,8 +55,8 @@ watch(listed, (units) => {
 })
 
 const lists = computed(() => [
-  { key: 'shop', label: i18n.t('app.shop'), selected: !grids.trial },
-  { key: 'trial', label: i18n.t('app.trial'), selected: grids.trial },
+  { key: 'shop', label: i18n.t('app.shop'), selected: !trialList.value },
+  { key: 'trial', label: i18n.t('app.trial'), selected: trialList.value },
 ])
 
 const maps = computed(() =>
@@ -70,7 +72,7 @@ const maps = computed(() =>
 const isDimmed = (character: CharacterType): boolean => {
   const tile = targetTile.value
   if (tile) return grids.resolvePick(tile.ctx, character.id, tile.team, tile.hexId) === null
-  if (!grids.trial) return placedTeam(character.id) !== null
+  if (!trialList.value) return placedTeam(character.id) !== null
   const ctx = grids.active
   return (
     !ctx ||
@@ -81,7 +83,7 @@ const isDimmed = (character: CharacterType): boolean => {
 const handleClick = (character: CharacterType) => {
   if (placeOnTarget(character.id)) return
   // A Trial copy is taken off on the board itself, so its click only adds.
-  const placed = grids.trial ? null : placedTeam(character.id)
+  const placed = trialList.value ? null : placedTeam(character.id)
   if (placed !== null) grids.removeFromAnyBoard(character.id, placed)
   else placeOnFirstSide(character.id)
 }
@@ -99,7 +101,7 @@ const handleClick = (character: CharacterType) => {
           small
           :segments="lists"
           :aria-label="i18n.t('app.heroes')"
-          @select="grids.trial = $event === 'trial'"
+          @select="trialList = $event === 'trial'"
         />
         <SegmentedPicker
           small
@@ -111,7 +113,7 @@ const handleClick = (character: CharacterType) => {
       </template>
     </CharacterFilterStrip>
 
-    <div v-if="grids.trial" class="icon-groups">
+    <div v-if="trialList" class="icon-groups">
       <section v-for="group in shownGroups" :key="group.card" class="icon-group">
         <h3 class="seasonal-title">{{ goodName(group.card, i18n.currentLocale) }}</h3>
         <CharacterGrid>

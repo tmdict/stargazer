@@ -5,6 +5,7 @@ import CharacterSelectionPalette from './CharacterSelectionPalette.vue'
 import RosterMenu from './RosterMenu.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import UpgradeBars from './ui/UpgradeBars.vue'
+import { useDuelList } from '@/composables/useDuelList'
 import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -50,9 +51,10 @@ const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.
 // shop's heroes, or each Trial unit once, at the cheapest card that brings it.
 const duel = computed(() => ctx.kind === 'honorDuel')
 const trialGroups = useDuelTrialGroups()
+const trialList = useDuelList()
 const pool = computed(() => {
   if (!duel.value) return gameData.characters.filter(rosters.isPickable)
-  return grids.trial ? duelTrialPool(trialGroups.value) : duelHeroes(gameData.characters)
+  return trialList.value ? duelTrialPool(trialGroups.value) : duelHeroes(gameData.characters)
 })
 
 // Heroes of the pool with a legal placement on this team. While Syn is on, an

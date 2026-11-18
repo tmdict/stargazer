@@ -172,10 +172,6 @@ export const useGrids = defineStore('grids', () => {
   // The Arena's map dropdown pick: the mode of the row picked and its map
   // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
   const arenaPick = shallowRef<{ mode: TeamVariantKey; map: string } | null>(null)
-  // Which list the Honor Duel hero pickers show: the Trial Cards' units while
-  // on, else the shop's heroes. Never serialized or persisted, and every
-  // rebuild of the boards clears it.
-  const trial = ref(false)
 
   /* The mode whose list gives the boards their buffs: the Arena's pick while
    * its board stays on the map picked, else the list the boards' maps match as
@@ -306,7 +302,6 @@ export const useGrids = defineStore('grids', () => {
     arenaPick.value = null
     hiddenSkills.value = new Set()
     nonSeasonal.value = false
-    trial.value = false
     contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(
         i,
@@ -1132,7 +1127,6 @@ export const useGrids = defineStore('grids', () => {
     setNonSeasonal,
     hiddenSkills,
     arenaPick,
-    trial,
     buffMode,
     skillRows,
     setSkillsHidden,
