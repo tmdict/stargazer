@@ -6,9 +6,7 @@
 import { useI18nStore } from '@/stores/i18n'
 
 defineProps<{
-  // Whether the hero holds a spot.
   held: boolean
-  // Whether this hero's pick is open.
   picking: boolean
 }>()
 

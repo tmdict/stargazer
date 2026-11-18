@@ -8,10 +8,9 @@ import { computed, ref } from 'vue'
 
 import DuelEffectText from './DuelEffectText.vue'
 import DuelItemDisc from './DuelItemDisc.vue'
+import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
 import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import PaletteSearch from '@/components/ui/PaletteSearch.vue'
-import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import { onPhone } from '@/components/guide/shop/popupLayout'
 import { useDuelText } from '@/composables/useDuelText'
 import { DUEL_ARTIFACT_LEVELS, type DuelArtifactSlot } from '@/lib/hd/board'
 import {
@@ -29,7 +28,6 @@ import '@/components/guide/shop/shop.css'
 
 const { held } = defineProps<{
   position: Point
-  // The side's artifact, null for none.
   held: DuelArtifactSlot | null
 }>()
 
@@ -77,62 +75,50 @@ const takeOnly = (): void => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <SelectionPopup
-      class="shop-picker-popup"
-      :position
-      :centered="onPhone()"
-      keep-on-leave
-      @close="emit('close')"
-    >
-      <div class="shop-popup">
-        <ShopPopupClose @close="emit('close')" />
-        <section v-if="current" class="held">
-          <div class="held-head">
-            <DuelItemDisc :item="current.item" :size="44" />
-            <span class="held-name">{{ current.label }}</span>
-            <button type="button" class="shop-pill-button" @click="emit('pick', null)">
-              {{ i18n.t('app.none') }}
-            </button>
-          </div>
-          <div class="levels" role="group">
-            <button
-              v-for="level in LEVELS"
-              :key="level"
-              type="button"
-              class="shop-pill-button"
-              :class="{ active: level === current.level }"
-              :aria-pressed="level === current.level"
-              @click="emit('pick', { id: current.artifact.id, level })"
-            >
-              {{ i18n.t('app.shop-level-short', { level }) }}
-            </button>
-          </div>
-          <DuelEffectText v-if="current.effect" class="effect" :source="current.effect" />
-        </section>
-        <PaletteSearch
-          v-model="query"
-          :placeholder="i18n.t('app.search-label')"
-          @enter="takeOnly"
-        />
-        <div class="artifacts">
-          <button
-            v-for="{ artifact, item, label } in shown"
-            :key="artifact.id"
-            type="button"
-            class="artifact"
-            :class="{ only: artifact === only, current: artifact === current?.artifact }"
-            :aria-pressed="artifact === current?.artifact"
-            @click="pick(artifact)"
-          >
-            <DuelItemDisc :item :size="60" />
-            <span class="label">{{ label }}</span>
+  <ShopPickerPopup :position @close="emit('close')">
+    <div class="shop-popup">
+      <ShopPopupClose @close="emit('close')" />
+      <section v-if="current" class="held">
+        <div class="held-head">
+          <DuelItemDisc :item="current.item" :size="44" />
+          <span class="held-name">{{ current.label }}</span>
+          <button type="button" class="shop-pill-button" @click="emit('pick', null)">
+            {{ i18n.t('app.none') }}
           </button>
         </div>
-        <p v-if="!shown.length" class="shop-no-matches">{{ i18n.t('app.shop-no-matches') }}</p>
+        <div class="levels" role="group">
+          <button
+            v-for="level in LEVELS"
+            :key="level"
+            type="button"
+            class="shop-pill-button"
+            :class="{ active: level === current.level }"
+            :aria-pressed="level === current.level"
+            @click="emit('pick', { id: current.artifact.id, level })"
+          >
+            {{ i18n.t('app.shop-level-short', { level }) }}
+          </button>
+        </div>
+        <DuelEffectText v-if="current.effect" class="effect" :source="current.effect" />
+      </section>
+      <PaletteSearch v-model="query" :placeholder="i18n.t('app.search-label')" @enter="takeOnly" />
+      <div class="artifacts shop-tiles">
+        <button
+          v-for="{ artifact, item, label } in shown"
+          :key="artifact.id"
+          type="button"
+          class="shop-tile"
+          :class="{ only: artifact === only, current: artifact === current?.artifact }"
+          :aria-pressed="artifact === current?.artifact"
+          @click="pick(artifact)"
+        >
+          <DuelItemDisc :item :size="60" />
+          <span class="shop-tile-label">{{ label }}</span>
+        </button>
       </div>
-    </SelectionPopup>
-  </Teleport>
+      <p v-if="!shown.length" class="shop-no-matches">{{ i18n.t('app.shop-no-matches') }}</p>
+    </div>
+  </ShopPickerPopup>
 </template>
 
 <style scoped>
@@ -181,45 +167,9 @@ const takeOnly = (): void => {
 
 .artifacts {
   flex: none;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 4px;
 }
 
-.artifact {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-  padding: 4px 2px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: rgba(255, 255, 255, 0.85);
-  font: inherit;
-  cursor: pointer;
-}
-
-.artifact:hover,
-.artifact.only {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.artifact.current {
+.shop-tile.current {
   background: rgba(255, 255, 255, 0.18);
-}
-
-.label {
-  max-width: 100%;
-  overflow: hidden;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  font-size: 11px;
-  line-height: 1.2;
-  text-align: center;
 }
 </style>

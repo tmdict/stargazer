@@ -3,9 +3,8 @@
    every piece of the mode, and None first to take a held piece off. */
 
 import ShopEquipmentList from '@/components/guide/shop/ShopEquipmentList.vue'
+import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
 import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
-import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import { onPhone } from '@/components/guide/shop/popupLayout'
 import { duelEquipment } from '@/lib/hd/catalog'
 import type { Point } from '@/lib/layout'
 
@@ -27,18 +26,10 @@ const pick = (name: string): void => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <SelectionPopup
-      class="shop-picker-popup"
-      :position
-      :centered="onPhone()"
-      keep-on-leave
-      @close="emit('close')"
-    >
-      <div class="shop-popup">
-        <ShopPopupClose @close="emit('close')" />
-        <ShopEquipmentList all :clearable @pick="pick" @clear="emit('pick', 0)" />
-      </div>
-    </SelectionPopup>
-  </Teleport>
+  <ShopPickerPopup :position @close="emit('close')">
+    <div class="shop-popup">
+      <ShopPopupClose @close="emit('close')" />
+      <ShopEquipmentList all :clearable @pick="pick" @clear="emit('pick', 0)" />
+    </div>
+  </ShopPickerPopup>
 </template>

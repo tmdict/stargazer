@@ -17,7 +17,7 @@ import {
 } from './board'
 import { SHOP_FACTS } from './shop/goods'
 
-export interface TrialCard {
+interface TrialCard {
   // The card's name in the shop's product list.
   card: string
   // The tier of a unit the card brings.

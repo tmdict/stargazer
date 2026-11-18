@@ -106,7 +106,6 @@ const {
   void inspect({ kind: 'honorDuel', item: held.item })
 })
 
-// The side whose picker is open.
 const picking = ref<{ team: Team; position: Point } | null>(null)
 
 const openPicker = (event: MouseEvent, team: Team): void => {

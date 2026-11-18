@@ -29,30 +29,17 @@ import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { getRegisteredSkills, hasCompanionSkill } from '@/lib/skills/registry'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { NO_LOOKUPS } from '../fixtures/skills'
+import { ID_LOOKUPS, skillSnapshot } from '../fixtures/skills'
 
 const ENEMY_SEEDS = [9001, 9002, 9004]
 const COPIES = [1, 2, 3, 4, 5]
-
-const snapshot = (sm: SkillManager) => ({
-  targets: [...sm.getAllSkillTargets().entries()],
-  images: [...sm.getImageModifiersByCharacterAndTeam().entries()],
-  tileColors: [...sm.getTileColorModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
-  tileFills: [...sm.getTileFillModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
-  lineCount: sm.getSkillLines().length,
-  badges: sm.getSkillBadges(),
-})
 
 const sorted = <T>(rows: T[]): T[] =>
   [...rows].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1))
 
 const makeBoard = () => {
   const grid = new Grid()
-  const sm = new SkillManager({
-    ...NO_LOOKUPS,
-    factionOf: (id) => ['lightbearer', 'wilder', 'graveborn', 'mauler'][id % 4],
-    classOf: (id) => ['tank', 'mage', 'warrior', 'support'][id % 4],
-  })
+  const sm = new SkillManager(ID_LOOKUPS)
   const enemyTiles = getAllAvailableTilesForTeam(grid, Team.ENEMY)
   ENEMY_SEEDS.forEach((id, i) => {
     const tile = enemyTiles[Math.floor((i * (enemyTiles.length - 1)) / (ENEMY_SEEDS.length - 1))]!
@@ -125,7 +112,7 @@ describe('Trial copies of one hero on a board', () => {
         executePlaceCharacter(grid, sm, freeTile(Team.ALLY), toTrialId(hero, 6), Team.ALLY),
       ).toBe(false)
 
-      const during = snapshot(sm)
+      const during = skillSnapshot(sm)
       for (const [key] of [...during.targets, ...during.images]) {
         expect(ids).toContain(parseInt(key, 10))
       }
@@ -141,7 +128,7 @@ describe('Trial copies of one hero on a board', () => {
       for (const tile of getTilesWithCharacters(grid)) {
         if (inTrialBand(tile.characterId!)) executeRemoveCharacter(grid, sm, tile.hex.getId())
       }
-      expect(snapshot(sm)).toEqual({
+      expect(skillSnapshot(sm)).toEqual({
         targets: [],
         images: [],
         tileColors: [],
@@ -172,8 +159,8 @@ describe('Trial copies of one hero on a board', () => {
       ids.forEach((id, i) => {
         if (i !== 2) executePlaceCharacter(fresh.grid, fresh.sm, hexes[i]!, id, Team.ALLY)
       })
-      const a = snapshot(left.sm)
-      const b = snapshot(fresh.sm)
+      const a = skillSnapshot(left.sm)
+      const b = skillSnapshot(fresh.sm)
       expect(sorted(a.targets)).toEqual(sorted(b.targets))
       expect(sorted(a.tileColors)).toEqual(sorted(b.tileColors))
       expect(sorted(a.tileFills)).toEqual(sorted(b.tileFills))

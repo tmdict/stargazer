@@ -83,7 +83,7 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in figures.hero.value" :key="row.level">
+        <tr v-for="row in figures.hero" :key="row.level">
           <th scope="row">{{ row.level }}</th>
           <td :class="{ none: !row.single }">{{ percent(row.single) }}</td>
           <td :class="{ none: !row.pair }">{{ percent(row.pair) }}</td>
@@ -105,7 +105,7 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in figures.packs.value" :key="row.wanted">
+        <tr v-for="row in figures.packs" :key="row.wanted">
           <th scope="row">{{ row.wanted }}</th>
           <td>{{ percent(row.random) }}</td>
           <td>{{ percent(row.faction) }}</td>
@@ -127,9 +127,7 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
   text-align: left;
   white-space: nowrap;
 }
-.guide-table tbody th {
-  color: var(--reading-muted);
-}
+.guide-table tbody th,
 .guide-table .none {
   color: var(--reading-muted);
 }

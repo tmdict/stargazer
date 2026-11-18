@@ -24,7 +24,7 @@ const ALLY_SPOTS: readonly { anchor: number; direction: number; steps: number }[
   { anchor: 1, direction: WEST, steps: 2 },
 ]
 
-export const DUEL_SPOTS: readonly number[] = Array.from(
+const DUEL_SPOTS: readonly number[] = Array.from(
   { length: DUEL_SPOT_COUNT },
   (_, index) => index + 1,
 )

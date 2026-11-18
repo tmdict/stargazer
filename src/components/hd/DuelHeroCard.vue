@@ -31,7 +31,6 @@ const i18n = useI18nStore()
 
 const DuelEquipmentPopup = defineLazyComponent(() => import('./DuelEquipmentPopup.vue'))
 
-// The hero whose equipment picker is open.
 const picking = ref<{ team: Team; unitId: number; position: Point } | null>(null)
 
 const pieceOf = (team: Team, unitId: number): number =>

@@ -1,7 +1,8 @@
 /* What the player has entered on the shop calculator: the shop level and
  * whether it goes up next round, the badges, the eight cards, the heroes and
- * equipment looked for, and the heroes to sell or leave out. Nothing is kept between visits. `changed` runs on every edit,
- * which is how the page drops answers that no longer belong to what is shown. */
+ * equipment looked for, and the heroes to sell or leave out. Nothing is kept
+ * between visits. `changed` runs on every edit, which is how the page drops
+ * answers that no longer belong to what is shown. */
 
 import { computed, ref, watch } from 'vue'
 

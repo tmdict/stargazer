@@ -31,7 +31,6 @@ const loaded = (): DuelCatalog | null => {
 }
 
 export interface DuelItemView {
-  item: HonorDuelItem
   label: string
   image: string | undefined
   backdrop: string | undefined
@@ -48,7 +47,6 @@ export function useDuelItems() {
     if (!source || !piece) return null
     const item: HonorDuelItem = { kind: 'equipment', item: piece }
     return {
-      item,
       label: source.duelItemName(item, i18n.currentLocale),
       image: source.duelItemImage(item),
       backdrop: tierBackdrop(piece.tier),

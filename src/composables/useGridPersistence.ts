@@ -101,7 +101,7 @@ export const readSavedBoards = (page: 'arena' | TeamModeKey): GridState[] | null
   return (slot && decodeTeamData(slot.data)?.boards) ?? null
 }
 
-export interface BoardWriter {
+interface BoardWriter {
   load: () => string | null
   // Writes the board on screen now, when it is this writer's kind. Inert until
   // startAutosave: before the page's first restore the board on screen is an

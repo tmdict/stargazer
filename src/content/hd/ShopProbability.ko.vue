@@ -62,13 +62,12 @@ const f = useShopFigures()
 
   <h2>원하는 영웅이 나올까?</h2>
   <p>
-    영웅 카드는 상점의 영웅 {{ f.poolSize.value }}명 중 한 명입니다. 게임은 뽑는 방식을 알려 주지
-    않으므로 모든 영웅의 확률이 같다고 봅니다. 확률 p로 영웅 카드를 내는 출처가 원하는 영웅의 카드를
-    낼 확률은 p ÷ {{ f.poolSize.value }}이고, 같은 공식으로 상점에 그 영웅이 나올 확률 q를 구합니다.
+    영웅 카드는 상점의 영웅 {{ f.poolSize }}명 중 한 명입니다. 게임은 뽑는 방식을 알려 주지 않으므로
+    모든 영웅의 확률이 같다고 봅니다. 확률 p로 영웅 카드를 내는 출처가 원하는 영웅의 카드를 낼
+    확률은 p ÷ {{ f.poolSize }}이고, 같은 공식으로 상점에 그 영웅이 나올 확률 q를 구합니다.
   </p>
   <p class="formula">
-    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize.value }}) × … × (1 − p<sub>8</sub> ÷
-    {{ f.poolSize.value }})
+    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize }}) × … × (1 − p<sub>8</sub> ÷ {{ f.poolSize }})
   </p>
   <p>
     상점 레벨 {{ f.pairFrom }}부터는 영웅이 두 장짜리 영웅 카드로도 나올 수 있습니다. 아래 표는 두
@@ -86,19 +85,18 @@ const f = useShopFigures()
   <p>새로고침 한 번에 휘장 {{ f.reroll }}개가 들므로, 카드를 찾아서 사는 데 드는 평균 비용은:</p>
   <p class="formula">평균 휘장 = {{ f.reroll }} ÷ q + 가격</p>
   <p>
-    상점 레벨 {{ f.example.value.level }}에서 영웅 한 명은 상점의
-    {{ percent(f.example.value.chance) }}에서 나옵니다. 평균
-    {{ f.example.value.rerolls.toFixed(1) }}회의 새로고침, 즉 새로고침에 휘장 약
-    {{ Math.round(f.example.value.rerollBadges) }}개가 듭니다. 가격은 어떤 카드가 나오느냐에 따라
-    다릅니다. 그런 상점의 {{ percent(f.example.value.pairOnly) }}에서는 그 영웅이 두 장짜리 영웅
-    카드로만 나와, 휘장 {{ f.heroPrice }}개가 아니라 {{ f.pairPrice }}개를 내야 합니다. 그래서 평균
-    가격은 약 {{ Math.round(f.example.value.price) }}개이고, 한 장을 얻는 데 드는 휘장은 모두 약
-    {{ Math.round(f.example.value.badges) }}개입니다.
+    상점 레벨 {{ f.example.level }}에서 영웅 한 명은 상점의 {{ percent(f.example.chance) }}에서
+    나옵니다. 평균 {{ f.example.rerolls.toFixed(1) }}회의 새로고침, 즉 새로고침에 휘장 약
+    {{ Math.round(f.example.rerollBadges) }}개가 듭니다. 가격은 어떤 카드가 나오느냐에 따라
+    다릅니다. 그런 상점의 {{ percent(f.example.pairOnly) }}에서는 그 영웅이 두 장짜리 영웅 카드로만
+    나와, 휘장 {{ f.heroPrice }}개가 아니라 {{ f.pairPrice }}개를 내야 합니다. 그래서 평균 가격은 약
+    {{ Math.round(f.example.price) }}개이고, 한 장을 얻는 데 드는 휘장은 모두 약
+    {{ Math.round(f.example.badges) }}개입니다.
   </p>
   <p>
-    평균은 보장이 아닙니다. 새로고침을 {{ f.example.value.rounded }}회 해도 카드가 한 번도 나오지
-    않을 확률이 {{ percent(f.example.value.unlucky) }} 남아 있습니다. q가 작으면 이 비율은 항상
-    37%에 가깝습니다.
+    평균은 보장이 아닙니다. 새로고침을 {{ f.example.rounded }}회 해도 카드가 한 번도 나오지 않을
+    확률이 {{ percent(f.example.unlucky) }} 남아 있습니다. q가 작으면 이 비율은 항상 37%에
+    가깝습니다.
   </p>
 
   <h2>팩에서 나오는 것</h2>
@@ -108,9 +106,9 @@ const f = useShopFigures()
   </p>
   <p class="formula">P(한 명 이상) = 1 − (1 − k ÷ n)<sup>d</sup></p>
   <p>
-    무작위 팩은 영웅 {{ f.poolSize.value }}명 전체에서 뽑습니다. 진영 팩은 그 진영의
-    {{ f.factionPoolSize.value }}명에서만 뽑으므로, 원하는 영웅이 그 진영이어야 합니다. 무작위
-    레전드 영웅은 영웅 한 명을 뽑아 그 영웅 {{ f.legendaryCopies }}장을 줍니다.
+    무작위 팩은 영웅 {{ f.poolSize }}명 전체에서 뽑습니다. 진영 팩은 그 진영의
+    {{ f.factionPoolSize }}명에서만 뽑으므로, 원하는 영웅이 그 진영이어야 합니다. 무작위 레전드
+    영웅은 영웅 한 명을 뽑아 그 영웅 {{ f.legendaryCopies }}장을 줍니다.
   </p>
   <p>
     풀은 상점의 영웅에서 이미 신화 등급인 영웅을 뺀 것입니다. 그런 영웅은 상점과 팩에서 더 이상
@@ -119,10 +117,9 @@ const f = useShopFigures()
   <ShopProbabilityTable table="packs" />
   <p>
     팩의 가격을 확률로 나누면 원하는 영웅이 나올 때까지 평균적으로 쓰는 휘장이 됩니다. 영웅 한 명을
-    원할 때 휘장 {{ f.randomPrice }}개인 무작위 팩으로는 약
-    {{ Math.round(f.packCost.value.random) }}개, 휘장 {{ f.factionPrice }}개인 진영 팩으로는 약
-    {{ Math.round(f.packCost.value.faction) }}개입니다. 필요 없는 영웅을 팔면 한 명당 휘장
-    {{ f.sell }}개를 돌려받아 두 수치가 조금 낮아집니다.
+    원할 때 휘장 {{ f.randomPrice }}개인 무작위 팩으로는 약 {{ Math.round(f.packCost.random) }}개,
+    휘장 {{ f.factionPrice }}개인 진영 팩으로는 약 {{ Math.round(f.packCost.faction) }}개입니다.
+    필요 없는 영웅을 팔면 한 명당 휘장 {{ f.sell }}개를 돌려받아 두 수치가 조금 낮아집니다.
   </p>
 
   <h2>잠금이 바꾸는 것</h2>
@@ -240,10 +237,10 @@ const f = useShopFigures()
   </p>
   <p class="formula">E = {{ f.reroll }} ÷ q + p</p>
   <p>
-    무작위 레전드 영웅에서 원하는 영웅이 나오는 것은 {{ f.poolSize.value }}번에 한 번이므로, 한 번
-    맞히는 데 평균 휘장 {{ f.legendaryPrice }} × {{ f.poolSize.value }} =
-    {{ (f.legendaryPrice * f.poolSize.value).toLocaleString('en') }}개가 듭니다. 영웅 한 명을 찾을
-    때 최소 휘장은 이 상품을 고르지 않습니다.
+    무작위 레전드 영웅에서 원하는 영웅이 나오는 것은 {{ f.poolSize }}번에 한 번이므로, 한 번 맞히는
+    데 평균 휘장 {{ f.legendaryPrice }} × {{ f.poolSize }} =
+    {{ (f.legendaryPrice * f.poolSize).toLocaleString('en') }}개가 듭니다. 영웅 한 명을 찾을 때 최소
+    휘장은 이 상품을 고르지 않습니다.
   </p>
   <p>
     두 답은 다를 수 있습니다. 지금 카드 한 장을 사는 것이 이번 라운드의 최고 확률이어도, 휘장을 아껴
@@ -335,11 +332,11 @@ const f = useShopFigures()
     휘장이 많으면 대개 그 전에 목표를 이루므로 한 자리를 더 뽑는 가치가 더 큽니다.
   </p>
   <p>
-    Toto의 계산기에 따르면 상점 레벨 {{ f.levels.length }}, 풀이 영웅 {{ f.poolSize.value }}명
-    전체일 때 경계는 휘장 약 60개입니다. 그보다 적으면 잠금이, 많으면 구매가 낫고, 경계 근처에서는
-    둘의 차이가 1%p 미만입니다. 그보다 낮은 레벨에서는 두 장짜리 영웅 카드가 드물어 휘장이 적어도
-    구매가 낫습니다. 이것은 이번 라운드에 목표를 이룰 확률을 비교한 것이며, 이번 라운드에 완성하지
-    못했을 때 산 카드를 가지고 있는 가치는 넣지 않았습니다.
+    Toto의 계산기에 따르면 상점 레벨 {{ f.levels.length }}, 풀이 영웅 {{ f.poolSize }}명 전체일 때
+    경계는 휘장 약 60개입니다. 그보다 적으면 잠금이, 많으면 구매가 낫고, 경계 근처에서는 둘의 차이가
+    1%p 미만입니다. 그보다 낮은 레벨에서는 두 장짜리 영웅 카드가 드물어 휘장이 적어도 구매가
+    낫습니다. 이것은 이번 라운드에 목표를 이룰 확률을 비교한 것이며, 이번 라운드에 완성하지 못했을
+    때 산 카드를 가지고 있는 가치는 넣지 않았습니다.
   </p>
 
   <h3>관찰 3. 한 장이 필요한데 그 영웅의 두 장짜리 영웅 카드가 나오면 산다</h3>
@@ -356,12 +353,12 @@ const f = useShopFigures()
   <p>
     새로고침할 때마다 같은 선택 앞에 서게 되므로, 몇 번 새로고침해 본 뒤 사는 방법이 둘 중 나은 쪽을
     이길 수는 없습니다. 관찰 4에 따라 팩은 이 비교를 바꾸지 않습니다. 두 장짜리 영웅 카드가 나오는
-    상점 레벨에서 풀이 영웅 {{ f.poolSize.value }}명 전체일 때 p는
-    {{ percent(f.pairSingle.value.low) }}에서 {{ percent(f.pairSingle.value.high) }} 사이이므로 바로
-    사는 편이 낫습니다. p가 {{ percent(f.pairBreakEven) }}를 넘는 것은 풀이 줄었을 때뿐입니다. 상점
-    레벨에 따라 영웅 {{ f.pairPool.value.low }}~{{ f.pairPool.value.high }}명 이하로 줄어야 하며,
-    예를 들어 많은 영웅이 신화 등급이 된 경우입니다. 그때는 새로고침이 낫습니다. 최고 확률
-    기준으로는 사면 바로 목표를 이루므로 삽니다.
+    상점 레벨에서 풀이 영웅 {{ f.poolSize }}명 전체일 때 p는 {{ percent(f.pairSingle.low) }}에서
+    {{ percent(f.pairSingle.high) }} 사이이므로 바로 사는 편이 낫습니다. p가
+    {{ percent(f.pairBreakEven) }}를 넘는 것은 풀이 줄었을 때뿐입니다. 상점 레벨에 따라 영웅
+    {{ f.pairPool.low }}~{{ f.pairPool.high }}명 이하로 줄어야 하며, 예를 들어 많은 영웅이 신화
+    등급이 된 경우입니다. 그때는 새로고침이 낫습니다. 최고 확률 기준으로는 사면 바로 목표를 이루므로
+    삽니다.
   </p>
 
   <h3>관찰 4. 영웅 한 명을 찾을 때는 한 장짜리 영웅 카드가 무작위 팩이나 진영 팩보다 낫다</h3>
@@ -377,13 +374,13 @@ const f = useShopFigures()
   <p>
     원하는 영웅이 한 명일 때 한 장의 비용은 무작위 팩으로는 휘장
     {{ f.randomPrice / f.draws }} × n개, 영웅이 m명인 진영의 팩으로는
-    {{ f.factionPrice / f.draws }} × m개입니다. 풀이 {{ f.poolSize.value }}명, 진영이
-    {{ f.factionPoolSize.value }}명이면 각각 {{ Math.round(f.copyCost.value.random) }}개와
-    {{ Math.round(f.copyCost.value.faction) }}개로, 카드의 {{ f.heroPrice }}개보다 훨씬 많습니다.
-    팩이 한 장짜리 영웅 카드보다 나은 것은 원하는 영웅이 풀에서 큰 비중을 차지할 때뿐입니다. 무작위
-    팩은 풀의 {{ percent(f.packShare.random) }}, 진영 팩은 그 진영의
-    {{ percent(f.packShare.faction) }}를 넘어야 합니다. 팩에서 나온 영웅을 모두 팔아도 돌려받는
-    휘장은 최대 {{ f.packRefund }}개이므로, 원하는 영웅이 한 명일 때 결론은 바뀌지 않습니다.
+    {{ f.factionPrice / f.draws }} × m개입니다. 풀이 {{ f.poolSize }}명, 진영이
+    {{ f.factionPoolSize }}명이면 각각 {{ Math.round(f.copyCost.random) }}개와
+    {{ Math.round(f.copyCost.faction) }}개로, 카드의 {{ f.heroPrice }}개보다 훨씬 많습니다. 팩이 한
+    장짜리 영웅 카드보다 나은 것은 원하는 영웅이 풀에서 큰 비중을 차지할 때뿐입니다. 무작위 팩은
+    풀의 {{ percent(f.packShare.random) }}, 진영 팩은 그 진영의 {{ percent(f.packShare.faction) }}를
+    넘어야 합니다. 팩에서 나온 영웅을 모두 팔아도 돌려받는 휘장은 최대 {{ f.packRefund }}개이므로,
+    원하는 영웅이 한 명일 때 결론은 바뀌지 않습니다.
   </p>
 
   <h3>관찰 5. 영웅 한 명을 찾을 때는 진영 팩이 무작위 팩보다 낫다</h3>
@@ -398,12 +395,12 @@ const f = useShopFigures()
     >)
   </p>
   <p>
-    진영이 {{ f.factionPoolSize.value }}명, 풀이 {{ f.poolSize.value }}명이면 진영 팩은 휘장 약
-    {{ Math.round(f.packCost.value.faction) }}개, 무작위 팩은 약
-    {{ Math.round(f.packCost.value.random) }}개가 듭니다. 확률이 작을 때 이 확률은 {{ f.draws }} ÷
-    x에 가까우므로, 비교는 대략 {{ f.factionPrice / f.draws }} × m 대
-    {{ f.randomPrice / f.draws }} × n입니다. 둘은 전체 풀이 그 영웅 진영의 약 두 배일 때 같아집니다.
-    진영이 {{ f.factionPoolSize.value }}명이면 약 {{ Math.round(f.packPool.value) }}명입니다.
+    진영이 {{ f.factionPoolSize }}명, 풀이 {{ f.poolSize }}명이면 진영 팩은 휘장 약
+    {{ Math.round(f.packCost.faction) }}개, 무작위 팩은 약 {{ Math.round(f.packCost.random) }}개가
+    듭니다. 확률이 작을 때 이 확률은 {{ f.draws }} ÷ x에 가까우므로, 비교는 대략
+    {{ f.factionPrice / f.draws }} × m 대 {{ f.randomPrice / f.draws }} × n입니다. 둘은 전체 풀이 그
+    영웅 진영의 약 두 배일 때 같아집니다. 진영이 {{ f.factionPoolSize }}명이면 약
+    {{ Math.round(f.packPool) }}명입니다.
   </p>
   <p>
     네 진영에 남은 영웅 수가 비슷한 동안에는 진영 팩이 항상 낫습니다. 다른 진영의 영웅이 많이 풀에서

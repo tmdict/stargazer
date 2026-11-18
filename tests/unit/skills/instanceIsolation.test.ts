@@ -25,28 +25,10 @@ import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { getRegisteredSkills } from '@/lib/skills/registry'
-import { SkillManager, type SkillBadge } from '@/lib/skills/skill'
+import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { NO_LOOKUPS } from '../fixtures/skills'
-
-interface ManagerSnapshot {
-  targets: [string, unknown][]
-  images: [string, string][]
-  tileColors: [number, string[]][]
-  tileFills: [number, string[]][]
-  lineCount: number
-  badges: SkillBadge[]
-}
-
-const snapshot = (sm: SkillManager): ManagerSnapshot => ({
-  targets: [...sm.getAllSkillTargets().entries()],
-  images: [...sm.getImageModifiersByCharacterAndTeam().entries()],
-  tileColors: [...sm.getTileColorModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
-  tileFills: [...sm.getTileFillModifiers().entries()].map(([hex, colors]) => [hex, [...colors]]),
-  lineCount: sm.getSkillLines().length,
-  badges: sm.getSkillBadges(),
-})
+import { ID_LOOKUPS, skillSnapshot, type ManagerSnapshot } from '../fixtures/skills'
 
 const hasEffect = (s: ManagerSnapshot): boolean =>
   s.targets.length +
@@ -60,7 +42,7 @@ const hasEffect = (s: ManagerSnapshot): boolean =>
 const keyed = <T>(entries: [string, T][], id: number): [string, T][] =>
   entries.filter(([key]) => key.startsWith(`${id}-`))
 
-// Skill-less seeds. Allies (classes by id % 4 under classOf below): a tank
+// Skill-less seeds. Allies (classes by id % 4 under ID_LOOKUPS): a tank
 // behind the hero, a mage and a support beside it, and a warrior in its row.
 // Enemies spread across their side.
 const ALLY_SEEDS = [9100, 9101, 9103, 9102]
@@ -73,11 +55,7 @@ const isAllyTile = (grid: Grid, hex: Hex): boolean =>
 
 const makeHarness = () => {
   const grid = new Grid()
-  const sm = new SkillManager({
-    ...NO_LOOKUPS,
-    factionOf: (id) => ['lightbearer', 'wilder', 'graveborn', 'mauler'][id % 4],
-    classOf: (id) => ['tank', 'mage', 'warrior', 'support'][id % 4],
-  })
+  const sm = new SkillManager(ID_LOOKUPS)
   // The hero goes on an ally tile with an ally tile behind it (neighbour 3 for
   // allies) and a row-mate (same diagonal, which is never a neighbour), so
   // neighbour-, row- and behind-based skills all have someone to act on.
@@ -122,7 +100,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
 
       const baseHex = freeAllyHex()
       expect(executePlaceCharacter(grid, sm, baseHex, baseId, Team.ALLY)).toBe(true)
-      const soloState = snapshot(sm)
+      const soloState = skillSnapshot(sm)
       expect(hasEffect(soloState), `${skill.id} produced no effect to clean up`).toBe(true)
 
       const copyHex = freeAllyHex()
@@ -130,7 +108,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
 
       // Every id-keyed entry must belong to one of the two instances or a
       // companion derived from one of them.
-      const during = snapshot(sm)
+      const during = skillSnapshot(sm)
       for (const [key] of [...during.targets, ...during.images]) {
         const owner = decomposeUnitId(parseInt(key, 10)).localId % 10000
         expect(owner, `state key ${key} belongs to neither instance`).toBe(baseId)
@@ -140,7 +118,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
       // the pre-copy occupancy, so any config-keyed write or clear by the
       // copy's lifecycle shows up as a diff.
       expect(executeRemoveCharacter(grid, sm, copyHex)).toBe(true)
-      const after = snapshot(sm)
+      const after = skillSnapshot(sm)
       expect(keyed(after.targets, baseId)).toEqual(keyed(soloState.targets, baseId))
       expect(keyed(after.images, baseId)).toEqual(keyed(soloState.images, baseId))
       expect(after.tileColors).toEqual(soloState.tileColors)
@@ -150,7 +128,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
 
       // Removing the base must leave no trace anywhere.
       expect(executeRemoveCharacter(grid, sm, baseHex)).toBe(true)
-      const final = snapshot(sm)
+      const final = skillSnapshot(sm)
       expect(final.targets).toEqual([])
       expect(final.images).toEqual([])
       expect(final.tileColors).toEqual([])
@@ -187,7 +165,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
     const { grid, sm, freeAllyHex } = makeHarness()
     const thador = 84
     expect(executePlaceCharacter(grid, sm, freeAllyHex(), thador, Team.ALLY)).toBe(true)
-    const soloTiles = snapshot(sm).tileColors
+    const soloTiles = skillSnapshot(sm).tileColors
     const soloTarget = sm.getAllSkillTargets().get(`${thador}-${Team.ALLY}`)
 
     const copyHex = freeAllyHex()
@@ -201,6 +179,6 @@ describe('skill instance isolation (divergent-id contract)', () => {
     expect(sm.getAllSkillTargets().get(`${thador}-${Team.ALLY}`)).toEqual(soloTarget)
 
     expect(executeRemoveCharacter(grid, sm, copyHex)).toBe(true)
-    expect(snapshot(sm).tileColors).toEqual(soloTiles)
+    expect(skillSnapshot(sm).tileColors).toEqual(soloTiles)
   })
 })

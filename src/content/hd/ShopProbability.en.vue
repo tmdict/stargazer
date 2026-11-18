@@ -63,14 +63,13 @@ const f = useShopFigures()
 
   <h2>Will my hero show up?</h2>
   <p>
-    A hero card names one of the shop's {{ f.poolSize.value }} heroes. The game does not show how it
+    A hero card names one of the shop's {{ f.poolSize }} heroes. The game does not show how it
     picks, so every hero is taken as equally likely. A source that makes a hero card with chance p
-    then makes a card of your hero with chance p ÷ {{ f.poolSize.value }}, and the same formula
-    gives the chance q that a shop shows it:
+    then makes a card of your hero with chance p ÷ {{ f.poolSize }}, and the same formula gives the
+    chance q that a shop shows it:
   </p>
   <p class="formula">
-    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize.value }}) × … × (1 − p<sub>8</sub> ÷
-    {{ f.poolSize.value }})
+    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize }}) × … × (1 − p<sub>8</sub> ÷ {{ f.poolSize }})
   </p>
   <p>
     From shop level {{ f.pairFrom }} a hero can also show on a two-copy card. The table counts the
@@ -90,19 +89,18 @@ const f = useShopFigures()
   </p>
   <p class="formula">average badges = {{ f.reroll }} ÷ q + price</p>
   <p>
-    At shop level {{ f.example.value.level }}, one hero shows in
-    {{ percent(f.example.value.chance) }} of shops. That is
-    {{ f.example.value.rerolls.toFixed(1) }} rerolls on average, or about
-    {{ Math.round(f.example.value.rerollBadges) }} badges on rerolls. The price depends on the card:
-    in {{ percent(f.example.value.pairOnly) }} of those shops the hero shows on two-copy cards only,
-    at {{ f.pairPrice }} badges in place of {{ f.heroPrice }}. The average price is then about
-    {{ Math.round(f.example.value.price) }} badges, and one copy costs about
-    {{ Math.round(f.example.value.badges) }} badges in all.
+    At shop level {{ f.example.level }}, one hero shows in {{ percent(f.example.chance) }} of shops.
+    That is {{ f.example.rerolls.toFixed(1) }} rerolls on average, or about
+    {{ Math.round(f.example.rerollBadges) }} badges on rerolls. The price depends on the card: in
+    {{ percent(f.example.pairOnly) }} of those shops the hero shows on two-copy cards only, at
+    {{ f.pairPrice }} badges in place of {{ f.heroPrice }}. The average price is then about
+    {{ Math.round(f.example.price) }} badges, and one copy costs about
+    {{ Math.round(f.example.badges) }} badges in all.
   </p>
   <p>
-    An average is not a promise. After {{ f.example.value.rounded }} rerolls there is still a
-    {{ percent(f.example.value.unlucky) }} chance that the card has not shown once. For a small q
-    this share is always close to 37%.
+    An average is not a promise. After {{ f.example.rounded }} rerolls there is still a
+    {{ percent(f.example.unlucky) }} chance that the card has not shown once. For a small q this
+    share is always close to 37%.
   </p>
 
   <h2>What a pack gives</h2>
@@ -112,9 +110,9 @@ const f = useShopFigures()
   </p>
   <p class="formula">P(at least one) = 1 − (1 − k ÷ n)<sup>d</sup></p>
   <p>
-    A Random Pack picks from all {{ f.poolSize.value }} heroes. A faction pack picks from the
-    {{ f.factionPoolSize.value }} of its faction, so the wanted heroes have to belong to it. A
-    Random Legendary Hero picks one hero and gives {{ f.legendaryCopies }} copies of it.
+    A Random Pack picks from all {{ f.poolSize }} heroes. A faction pack picks from the
+    {{ f.factionPoolSize }} of its faction, so the wanted heroes have to belong to it. A Random
+    Legendary Hero picks one hero and gives {{ f.legendaryCopies }} copies of it.
   </p>
   <p>
     A pool is the shop's heroes less the ones you already hold at Mythic, which the shop and its
@@ -123,10 +121,10 @@ const f = useShopFigures()
   <ShopProbabilityTable table="packs" />
   <p>
     Dividing a pack's price by its chance gives the average badges spent before it pays off. For one
-    wanted hero that is about {{ Math.round(f.packCost.value.random) }} badges through Random Packs
-    at {{ f.randomPrice }} each, and about {{ Math.round(f.packCost.value.faction) }} through
-    faction packs at {{ f.factionPrice }}. Selling the heroes you do not need gives
-    {{ f.sell }} badges back for each, which lowers both figures a little.
+    wanted hero that is about {{ Math.round(f.packCost.random) }} badges through Random Packs at
+    {{ f.randomPrice }} each, and about {{ Math.round(f.packCost.faction) }} through faction packs
+    at {{ f.factionPrice }}. Selling the heroes you do not need gives {{ f.sell }} badges back for
+    each, which lowers both figures a little.
   </p>
 
   <h2>What a lock changes</h2>
@@ -253,10 +251,10 @@ const f = useShopFigures()
   </p>
   <p class="formula">E = {{ f.reroll }} ÷ q + p</p>
   <p>
-    A Random Legendary Hero names your hero once in {{ f.poolSize.value }} times, so one hit costs
-    {{ f.legendaryPrice }} × {{ f.poolSize.value }} =
-    {{ (f.legendaryPrice * f.poolSize.value).toLocaleString('en') }} badges on average. Fewest
-    badges does not pick it for a single hero.
+    A Random Legendary Hero names your hero once in {{ f.poolSize }} times, so one hit costs
+    {{ f.legendaryPrice }} × {{ f.poolSize }} =
+    {{ (f.legendaryPrice * f.poolSize).toLocaleString('en') }} badges on average. Fewest badges does
+    not pick it for a single hero.
   </p>
   <p>
     The two answers can disagree. Buying a single card now may be the best chance this round, while
@@ -360,10 +358,10 @@ const f = useShopFigures()
   </p>
   <p>
     Toto's calculator puts the boundary at about 60 badges at shop level {{ f.levels.length }} with
-    all {{ f.poolSize.value }} heroes in the pool: locking is better below it and buying above, and
-    near it the two differ by less than 1 percentage point. At the levels below, where two-copy
-    cards are rare, buying is better even with few badges. This compares the chance of finishing
-    this round. It does not count the worth of holding the bought card when the round ends short.
+    all {{ f.poolSize }} heroes in the pool: locking is better below it and buying above, and near
+    it the two differ by less than 1 percentage point. At the levels below, where two-copy cards are
+    rare, buying is better even with few badges. This compares the chance of finishing this round.
+    It does not count the worth of holding the bought card when the round ends short.
   </p>
 
   <h3>Observation 3. If one copy is needed and the hero's two-copy card shows, buy it</h3>
@@ -379,12 +377,12 @@ const f = useShopFigures()
   <p>
     Every reroll meets the same choice, so trying a few rerolls first cannot beat the better of the
     two. By observation 4, packs do not change the comparison. At the shop levels where two-copy
-    cards show, p is between {{ percent(f.pairSingle.value.low) }} and
-    {{ percent(f.pairSingle.value.high) }} with all {{ f.poolSize.value }} heroes in the pool, so
-    buying at once is better. p passes {{ percent(f.pairBreakEven) }} only in a smaller pool, of
-    {{ f.pairPool.value.low }} to {{ f.pairPool.value.high }} heroes or fewer depending on the shop
-    level, for example once many heroes are at Mythic. Rerolling is then better. For best chance,
-    buying finishes the goal on the spot, so you buy.
+    cards show, p is between {{ percent(f.pairSingle.low) }} and
+    {{ percent(f.pairSingle.high) }} with all {{ f.poolSize }} heroes in the pool, so buying at once
+    is better. p passes {{ percent(f.pairBreakEven) }} only in a smaller pool, of
+    {{ f.pairPool.low }} to {{ f.pairPool.high }} heroes or fewer depending on the shop level, for
+    example once many heroes are at Mythic. Rerolling is then better. For best chance, buying
+    finishes the goal on the spot, so you buy.
   </p>
 
   <h3>Observation 4. For one hero, a one-copy card beats a Random Pack or a faction pack</h3>
@@ -401,14 +399,13 @@ const f = useShopFigures()
   <p>
     With one wanted hero, a copy costs {{ f.randomPrice / f.draws }} × n badges through Random Packs
     and {{ f.factionPrice / f.draws }} × m through packs of a faction with m heroes. With
-    {{ f.poolSize.value }} heroes in the pool and {{ f.factionPoolSize.value }} in the faction that
-    is {{ Math.round(f.copyCost.value.random) }} and
-    {{ Math.round(f.copyCost.value.faction) }} badges, far above the card's {{ f.heroPrice }}. A
-    pack beats one-copy cards only when wanted heroes make up a large share of its pool: more than
-    {{ percent(f.packShare.random) }} of the pool for a Random Pack and more than
-    {{ percent(f.packShare.faction) }} of the faction for a faction pack. Selling everything a pack
-    gives returns at most {{ f.packRefund }} badges, so with one wanted hero the answer stays the
-    same.
+    {{ f.poolSize }} heroes in the pool and {{ f.factionPoolSize }} in the faction that is
+    {{ Math.round(f.copyCost.random) }} and {{ Math.round(f.copyCost.faction) }} badges, far above
+    the card's {{ f.heroPrice }}. A pack beats one-copy cards only when wanted heroes make up a
+    large share of its pool: more than {{ percent(f.packShare.random) }} of the pool for a Random
+    Pack and more than {{ percent(f.packShare.faction) }} of the faction for a faction pack. Selling
+    everything a pack gives returns at most {{ f.packRefund }} badges, so with one wanted hero the
+    answer stays the same.
   </p>
 
   <h3>Observation 5. For one hero, a faction pack beats a Random Pack</h3>
@@ -423,13 +420,12 @@ const f = useShopFigures()
     >)
   </p>
   <p>
-    With {{ f.factionPoolSize.value }} heroes in the faction and {{ f.poolSize.value }} in the pool,
-    the faction pack costs about {{ Math.round(f.packCost.value.faction) }} badges and the Random
-    Pack about {{ Math.round(f.packCost.value.random) }}. For small chances the chance is close to
-    {{ f.draws }} ÷ x, so the comparison is roughly {{ f.factionPrice / f.draws }} × m against
+    With {{ f.factionPoolSize }} heroes in the faction and {{ f.poolSize }} in the pool, the faction
+    pack costs about {{ Math.round(f.packCost.faction) }} badges and the Random Pack about
+    {{ Math.round(f.packCost.random) }}. For small chances the chance is close to {{ f.draws }} ÷ x,
+    so the comparison is roughly {{ f.factionPrice / f.draws }} × m against
     {{ f.randomPrice / f.draws }} × n. The two meet where the whole pool is about twice the hero's
-    faction: about {{ Math.round(f.packPool.value) }} heroes for a faction of
-    {{ f.factionPoolSize.value }}.
+    faction: about {{ Math.round(f.packPool) }} heroes for a faction of {{ f.factionPoolSize }}.
   </p>
   <p>
     While the four factions keep similar numbers, the faction pack is always better. If many heroes

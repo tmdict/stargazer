@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { findCharacterHex, getTilesWithCharacters } from '@/lib/characters/character'
 import { toTrialId, toTrialPick } from '@/lib/characters/trial'
@@ -55,10 +55,6 @@ const onScreen = (): DuelBoardState =>
 beforeEach(() => {
   setActivePinia(createPinia())
   useGameDataStore().initializeContentData()
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 describe('an Honor Duel board from its link text', () => {

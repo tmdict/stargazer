@@ -87,7 +87,7 @@ export const shopPicture = (name: ShopPicture): string | undefined => images[nam
 
 type ShopTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
 
-// A trial card's price follows the tier of the unit it lends.
+// A trial card takes the tier of the unit it lends.
 export const goodTier = (good: Good): ShopTier | undefined =>
   good.tier ?? TRIAL_CARDS.find((card) => card.card === good.name)?.tier
 

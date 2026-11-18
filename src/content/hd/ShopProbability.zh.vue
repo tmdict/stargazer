@@ -59,14 +59,13 @@ const f = useShopFigures()
   <h2>我要的英雄会出现吗？</h2>
   <p>
     一张英雄卡是商店
-    {{ f.poolSize.value }}
+    {{ f.poolSize }}
     位英雄中的一位。游戏没有说明抽取方式，因此视每位英雄的概率相等。一个以概率 p
     产出英雄卡的来源，产出你要的英雄的概率就是 p ÷
-    {{ f.poolSize.value }}，套用同一条公式即可得到商店出现该英雄的概率 q：
+    {{ f.poolSize }}，套用同一条公式即可得到商店出现该英雄的概率 q：
   </p>
   <p class="formula">
-    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize.value }}) × … × (1 − p<sub>8</sub> ÷
-    {{ f.poolSize.value }})
+    q = 1 − (1 − p<sub>1</sub> ÷ {{ f.poolSize }}) × … × (1 − p<sub>8</sub> ÷ {{ f.poolSize }})
   </p>
   <p>
     从商店等级
@@ -83,18 +82,18 @@ const f = useShopFigures()
   <p>一次刷新花费 {{ f.reroll }} 枚徽章，所以找到并买下一张卡片的平均花费为：</p>
   <p class="formula">平均徽章数 = {{ f.reroll }} ÷ q + 价格</p>
   <p>
-    在商店等级 {{ f.example.value.level }}，某位英雄在
-    {{ percent(f.example.value.chance) }} 的商店中出现。平均需要刷新
-    {{ f.example.value.rerolls.toFixed(1) }} 次，刷新约花费
-    {{ Math.round(f.example.value.rerollBadges) }} 枚徽章。价格取决于出现的是哪种卡：其中
-    {{ percent(f.example.value.pairOnly) }} 的商店里该英雄只以双张英雄卡出现，价格是
+    在商店等级 {{ f.example.level }}，某位英雄在
+    {{ percent(f.example.chance) }} 的商店中出现。平均需要刷新
+    {{ f.example.rerolls.toFixed(1) }} 次，刷新约花费
+    {{ Math.round(f.example.rerollBadges) }} 枚徽章。价格取决于出现的是哪种卡：其中
+    {{ percent(f.example.pairOnly) }} 的商店里该英雄只以双张英雄卡出现，价格是
     {{ f.pairPrice }} 枚而不是 {{ f.heroPrice }} 枚。因此平均价格约为
-    {{ Math.round(f.example.value.price) }} 枚，得到一张的总花费约为
-    {{ Math.round(f.example.value.badges) }} 枚徽章。
+    {{ Math.round(f.example.price) }} 枚，得到一张的总花费约为
+    {{ Math.round(f.example.badges) }} 枚徽章。
   </p>
   <p>
-    平均值不是保证。刷新 {{ f.example.value.rounded }} 次后，仍有
-    {{ percent(f.example.value.unlucky) }} 的概率一次都没有出现。q 很小时，这个比例总是接近 37%。
+    平均值不是保证。刷新 {{ f.example.rounded }} 次后，仍有
+    {{ percent(f.example.unlucky) }} 的概率一次都没有出现。q 很小时，这个比例总是接近 37%。
   </p>
 
   <h2>卡包能给什么</h2>
@@ -104,8 +103,8 @@ const f = useShopFigures()
   </p>
   <p class="formula">P(至少一位) = 1 − (1 − k ÷ n)<sup>d</sup></p>
   <p>
-    随机卡包从全部 {{ f.poolSize.value }} 位英雄中抽取。阵营卡包只从该阵营的
-    {{ f.factionPoolSize.value }}
+    随机卡包从全部 {{ f.poolSize }} 位英雄中抽取。阵营卡包只从该阵营的
+    {{ f.factionPoolSize }}
     位英雄中抽取，所以想要的英雄必须属于这个阵营。随机传说英雄抽取一位英雄，并给出该英雄的
     {{ f.legendaryCopies }} 张。
   </p>
@@ -115,9 +114,9 @@ const f = useShopFigures()
   <ShopProbabilityTable table="packs" />
   <p>
     用卡包的价格除以概率，就是抽中之前平均要花的徽章。想要一位英雄时，通过每个
-    {{ f.randomPrice }} 枚徽章的随机卡包约需 {{ Math.round(f.packCost.value.random) }} 枚，通过每个
+    {{ f.randomPrice }} 枚徽章的随机卡包约需 {{ Math.round(f.packCost.random) }} 枚，通过每个
     {{ f.factionPrice }} 枚徽章的阵营卡包约需
-    {{ Math.round(f.packCost.value.faction) }} 枚。出售不需要的英雄每位可拿回
+    {{ Math.round(f.packCost.faction) }} 枚。出售不需要的英雄每位可拿回
     {{ f.sell }} 枚徽章，两个数字都会略低一些。
   </p>
 
@@ -211,9 +210,9 @@ const f = useShopFigures()
   </p>
   <p class="formula">E = {{ f.reroll }} ÷ q + p</p>
   <p>
-    随机传说英雄每 {{ f.poolSize.value }} 次才有一次是你要的英雄，所以平均要花
-    {{ f.legendaryPrice }} × {{ f.poolSize.value }} =
-    {{ (f.legendaryPrice * f.poolSize.value).toLocaleString('en') }}
+    随机传说英雄每 {{ f.poolSize }} 次才有一次是你要的英雄，所以平均要花 {{ f.legendaryPrice }} ×
+    {{ f.poolSize }} =
+    {{ (f.legendaryPrice * f.poolSize).toLocaleString('en') }}
     枚徽章才能抽中一次。只找一位英雄时，最少徽章不会选它。
   </p>
   <p>
@@ -284,7 +283,7 @@ const f = useShopFigures()
   </p>
   <p>
     按 Toto 的计算器，在商店等级 {{ f.levels.length }}、英雄池为全部
-    {{ f.poolSize.value }} 位时，分界点约为 60
+    {{ f.poolSize }} 位时，分界点约为 60
     枚徽章：低于它锁定更好，高于它买下更好，分界点附近两者相差不到 1
     个百分点。在更低的等级，双张英雄卡很少见，即使徽章少也是买下更好。这里比较的是本回合达成目标的概率，没有计入本回合未达成时手里留着这张卡片的价值。
   </p>
@@ -302,10 +301,10 @@ const f = useShopFigures()
   <p>
     每次刷新面对的都是同样的选择，所以先刷几次再买不会比两者中较好的那个更好。根据观察
     4，卡包不会改变这个比较。在会出现双张英雄卡的商店等级，英雄池为全部
-    {{ f.poolSize.value }} 位时，p 在 {{ percent(f.pairSingle.value.low) }} 到
-    {{ percent(f.pairSingle.value.high) }} 之间，所以立即买下更好。只有英雄池变小，p 才会超过
-    {{ percent(f.pairBreakEven) }}：视商店等级不同，要小到 {{ f.pairPool.value.low }} 至
-    {{ f.pairPool.value.high }}
+    {{ f.poolSize }} 位时，p 在 {{ percent(f.pairSingle.low) }} 到
+    {{ percent(f.pairSingle.high) }} 之间，所以立即买下更好。只有英雄池变小，p 才会超过
+    {{ percent(f.pairBreakEven) }}：视商店等级不同，要小到 {{ f.pairPool.low }} 至
+    {{ f.pairPool.high }}
     位或更少，例如许多英雄已达到神话时。这时刷新更好。就最高概率而言，买下立刻达成目标，所以直接买。
   </p>
 
@@ -321,9 +320,9 @@ const f = useShopFigures()
   <p>
     只想要一位英雄时，通过随机卡包每张要花 {{ f.randomPrice / f.draws }} × n 枚徽章，通过有 m
     位英雄的阵营的卡包每张要花 {{ f.factionPrice / f.draws }} × m 枚。英雄池有
-    {{ f.poolSize.value }} 位、阵营有 {{ f.factionPoolSize.value }} 位时，分别是
-    {{ Math.round(f.copyCost.value.random) }} 枚和
-    {{ Math.round(f.copyCost.value.faction) }} 枚，远高于单张英雄卡的
+    {{ f.poolSize }} 位、阵营有 {{ f.factionPoolSize }} 位时，分别是
+    {{ Math.round(f.copyCost.random) }} 枚和
+    {{ Math.round(f.copyCost.faction) }} 枚，远高于单张英雄卡的
     {{ f.heroPrice }}
     枚。只有想要的英雄在池中占很大比例时，卡包才胜过单张英雄卡：随机卡包要超过英雄池的
     {{ percent(f.packShare.random) }}，阵营卡包要超过该阵营的
@@ -343,12 +342,12 @@ const f = useShopFigures()
     >)
   </p>
   <p>
-    阵营有 {{ f.factionPoolSize.value }} 位、英雄池有 {{ f.poolSize.value }} 位时，阵营卡包约需
-    {{ Math.round(f.packCost.value.faction) }} 枚徽章，随机卡包约需
-    {{ Math.round(f.packCost.value.random) }} 枚。概率很小时，这个概率接近 {{ f.draws }} ÷
+    阵营有 {{ f.factionPoolSize }} 位、英雄池有 {{ f.poolSize }} 位时，阵营卡包约需
+    {{ Math.round(f.packCost.faction) }} 枚徽章，随机卡包约需
+    {{ Math.round(f.packCost.random) }} 枚。概率很小时，这个概率接近 {{ f.draws }} ÷
     x，所以比较大致是 {{ f.factionPrice / f.draws }} × m 对 {{ f.randomPrice / f.draws }} ×
-    n。两者在整个英雄池约为该阵营两倍时持平：阵营有 {{ f.factionPoolSize.value }} 位时，约为
-    {{ Math.round(f.packPool.value) }} 位。
+    n。两者在整个英雄池约为该阵营两倍时持平：阵营有 {{ f.factionPoolSize }} 位时，约为
+    {{ Math.round(f.packPool) }} 位。
   </p>
   <p>
     四个阵营剩下的英雄数相近时，阵营卡包总是更好。如果其他阵营的许多英雄已离开英雄池（例如达到神话），使英雄池小于这个数，随机卡包更好。想要的几位英雄分属不同阵营、得到任意一位即可时，随机卡包抽中的概率更高，这时应直接比较两种卡包。

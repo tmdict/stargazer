@@ -3,7 +3,7 @@
 import type { LevelOdds } from './types'
 
 /** The chance at least one of several independent events happens. */
-export const anyOf = (chances: readonly number[]): number =>
+const anyOf = (chances: readonly number[]): number =>
   1 - chances.reduce((miss, chance) => miss * (1 - chance), 1)
 
 /** The chance a pack of `draws` picks, repeats allowed, gives one of `wanted` heroes out of `pool`. */

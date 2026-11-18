@@ -13,7 +13,7 @@ const i18n = useI18nStore()
 <template>
   <button
     type="button"
-    class="shop-popup-close"
+    class="shop-pill-button shop-popup-close"
     :aria-label="i18n.t('app.close')"
     @click="emit('close')"
   >
@@ -30,15 +30,5 @@ const i18n = useI18nStore()
   height: 26px;
   margin-left: auto;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background: none;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-}
-
-.shop-popup-close:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
 }
 </style>

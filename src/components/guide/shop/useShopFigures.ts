@@ -1,7 +1,7 @@
 /* The numbers the shop probability guide shows, worked out from the shop's
  * rules and the measured odds table so the page follows the data. */
 
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 
 import { duelHeroes } from '@/lib/hd/heroes'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
@@ -89,7 +89,7 @@ export function useShopFigures() {
     [1, 2, 3].map((wanted) => ({
       wanted,
       random: packChance(wanted, pool.value.length, DRAWS),
-      faction: packChance(wanted, factionPool.value, FACTION_PACK?.draws ?? 0),
+      faction: packChance(wanted, factionPool.value, DRAWS),
     })),
   )
 
@@ -176,7 +176,7 @@ export function useShopFigures() {
     ),
   )
 
-  return {
+  return reactive({
     reroll: REROLL,
     sell: SHOP_FACTS.sell,
     draws: DRAWS,
@@ -212,5 +212,5 @@ export function useShopFigures() {
     packPool,
     pairSingle,
     pairPool,
-  }
+  })
 }

@@ -82,17 +82,17 @@ const takeOnly = (): void => {
     </button>
     <section v-for="group in groups" :key="group.tier" :class="`shop-tier-${group.tier}`">
       <h3 v-if="!tier">{{ group.title }}</h3>
-      <div class="pieces">
+      <div class="shop-tiles">
         <button
           v-for="piece in group.pieces"
           :key="piece.name"
           type="button"
-          class="piece"
+          class="shop-tile"
           :class="{ only: piece.name === only }"
           @click="emit('pick', piece.name)"
         >
           <ShopPieceDisc :name="piece.name" :size="60" />
-          <span class="label">{{ piece.label }}</span>
+          <span class="shop-tile-label">{{ piece.label }}</span>
         </button>
       </div>
     </section>
@@ -118,44 +118,5 @@ h3 {
   font-size: 12px;
   font-weight: 700;
   color: var(--shop-tier);
-}
-
-.pieces {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 4px;
-}
-
-.piece {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-  padding: 4px 2px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: rgba(255, 255, 255, 0.85);
-  font: inherit;
-  cursor: pointer;
-}
-
-.piece:hover,
-.piece.only {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.label {
-  max-width: 100%;
-  overflow: hidden;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  font-size: 11px;
-  line-height: 1.2;
-  text-align: center;
 }
 </style>

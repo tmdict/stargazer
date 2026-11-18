@@ -19,12 +19,12 @@ import ShopForm from '@/components/guide/shop/ShopForm.vue'
 import ShopHeroLists from '@/components/guide/shop/ShopHeroLists.vue'
 import ShopLockedAt from '@/components/guide/shop/ShopLockedAt.vue'
 import ShopOdds from '@/components/guide/shop/ShopOdds.vue'
+import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
 import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import SelectionPopup from '@/components/ui/SelectionPopup.vue'
-import { below, onPhone } from '@/components/guide/shop/popupLayout'
+import { below } from '@/components/guide/shop/popupLayout'
 import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
@@ -210,46 +210,41 @@ watch(
       @close="listsOpen = false"
     />
 
-    <Teleport to="body">
-      <SelectionPopup
-        v-if="popup"
-        :key="popup.kind === 'card' ? popup.step : popup.kind"
-        class="shop-picker-popup"
-        :position="popup.position"
-        :centered="onPhone()"
-        keep-on-leave
+    <ShopPickerPopup
+      v-if="popup"
+      :key="popup.kind === 'card' ? popup.step : popup.kind"
+      :position="popup.position"
+      @close="popup = null"
+    >
+      <ShopProductPicker
+        v-if="popup.kind === 'card'"
+        :key="popup.card"
+        v-model:step="popup.step"
+        :card="form.cards.value[popup.card]!"
+        :heroes="drawn"
+        @set="(card) => popup?.kind === 'card' && form.setCard(popup.card, card)"
         @close="popup = null"
-      >
-        <ShopProductPicker
-          v-if="popup.kind === 'card'"
-          :key="popup.card"
-          v-model:step="popup.step"
-          :card="form.cards.value[popup.card]!"
-          :heroes="drawn"
-          @set="(card) => popup?.kind === 'card' && form.setCard(popup.card, card)"
-          @close="popup = null"
+      />
+      <ShopLockedAt
+        v-else-if="popup.kind === 'locked-at' && lockCard"
+        :levels="lockLevels(lockCard, form.level.value)"
+        :level="lockedLevel(lockCard, form.level.value)"
+        @pick="setLockedAt"
+        @close="popup = null"
+      />
+      <div v-else-if="popup.kind === 'hero'" class="shop-popup">
+        <ShopPopupClose @close="popup = null" />
+        <CharacterSelectionPalette
+          :characters="addable"
+          :enter-hint="i18n.t('app.shop-add-hero')"
+          @pick="(hero) => addHero(hero.name)"
         />
-        <ShopLockedAt
-          v-else-if="popup.kind === 'locked-at' && lockCard"
-          :levels="lockLevels(lockCard, form.level.value)"
-          :level="lockedLevel(lockCard, form.level.value)"
-          @pick="setLockedAt"
-          @close="popup = null"
-        />
-        <div v-else-if="popup.kind === 'hero'" class="shop-popup">
-          <ShopPopupClose @close="popup = null" />
-          <CharacterSelectionPalette
-            :characters="addable"
-            :enter-hint="i18n.t('app.shop-add-hero')"
-            @pick="(hero) => addHero(hero.name)"
-          />
-        </div>
-        <div v-else class="shop-popup">
-          <ShopPopupClose @close="popup = null" />
-          <ShopEquipmentList :taken="form.equipment.value" @pick="addEquipment" />
-        </div>
-      </SelectionPopup>
-    </Teleport>
+      </div>
+      <div v-else class="shop-popup">
+        <ShopPopupClose @close="popup = null" />
+        <ShopEquipmentList :taken="form.equipment.value" @pick="addEquipment" />
+      </div>
+    </ShopPickerPopup>
   </main>
 </template>
 

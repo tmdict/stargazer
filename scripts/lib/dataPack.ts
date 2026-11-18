@@ -216,17 +216,18 @@ export async function boardPictures(root: string): Promise<string[]> {
   }
 }
 
+const readJson = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T
+
 /** What is wrong with the pack's Honor Duel shop odds, or null. The calculator
  * uses them in place of the repo's own table, so they have to be readable and
  * list the same products for every source as that table. */
 function shopOddsProblem(pack: string, root: string): string | null {
   const path = join(pack, SHOP_ODDS)
   if (!existsSync(path)) return null
-  const read = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T
   try {
-    const facts = read<ShopFacts>(join(root, 'src/data/hd/shop/shop.json'))
-    const odds = checkOdds(read<OddsTable>(path), facts)
-    const own = checkOdds(read<OddsTable>(join(root, 'src/data/hd/shop/odds.json')), facts)
+    const facts = readJson<ShopFacts>(join(root, 'src/data/hd/shop/shop.json'))
+    const odds = checkOdds(readJson<OddsTable>(path), facts)
+    const own = checkOdds(readJson<OddsTable>(join(root, 'src/data/hd/shop/odds.json')), facts)
     const where = oddsMismatch(odds, own)
     return where ? `the pack's shop odds list other products at ${where}` : null
   } catch (error) {
@@ -237,7 +238,6 @@ function shopOddsProblem(pack: string, root: string): string | null {
 /** What the Trial list's units lack: a creature's picture or its faction's
  * icon in the pack, and a hero or creature file in this repo. */
 function trialUnitNotes(pack: string, root: string): string[] {
-  const read = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T
   const notes: string[] = []
   const creatureDir = join(root, 'src/data/hd/creature')
   const creatures = jsonNames(creatureDir)
@@ -248,7 +248,9 @@ function trialUnitNotes(pack: string, root: string): string[] {
     notes.push(`${bare.length} Honor Duel creatures have no picture in the pack`)
   }
   const factions = new Set(
-    creatures.map((name) => read<{ faction: string }>(join(creatureDir, `${name}.json`)).faction),
+    creatures.map(
+      (name) => readJson<{ faction: string }>(join(creatureDir, `${name}.json`)).faction,
+    ),
   )
   for (const faction of factions) {
     if (!existsSync(join(pack, 'images/hd/icon', `faction-${faction}.png`))) {
@@ -258,7 +260,7 @@ function trialUnitNotes(pack: string, root: string): string[] {
   const list = join(root, 'src/data/hd/trial.json')
   if (!existsSync(list)) return notes
   const filed = new Set([...creatures, ...jsonNames(join(root, 'src/data/character'))])
-  const unfiled = read<{ cards: { units?: string[] }[] }>(list)
+  const unfiled = readJson<{ cards: { units?: string[] }[] }>(list)
     .cards.flatMap((card) => card.units ?? [])
     .filter((name) => !filed.has(name))
   if (unfiled.length > 0) {
