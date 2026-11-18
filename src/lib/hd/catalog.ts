@@ -1,11 +1,13 @@
 // Honor Duel's equipment and artifacts: the data files, display names and
-// pictures, and the data pack's text, one lazy chunk per language. Only the
-// Honor Duel tab, its popup, an Honor Duel board and the shop calculator page
-// import this module, so none of it loads until one of them is opened.
+// pictures, and the data pack's text, the creatures' skills with it, one lazy
+// chunk per language. Only the Honor Duel tab, the mode's popups, an Honor Duel
+// board and the shop calculator page import this module, so none of it loads
+// until one of them is opened.
 
 import type {
   DuelArtifact,
   DuelArtifactText,
+  DuelCreatureText,
   DuelEquipment,
   DuelEquipmentText,
   EquipmentTier,
@@ -112,24 +114,29 @@ const textChunks = {
   artifacts: import.meta.glob<Record<string, DuelArtifactText>>('@/pack/text/hd/*/artifacts.json', {
     import: 'default',
   }),
+  creatures: import.meta.glob<Record<string, DuelCreatureText>>('@/pack/text/hd/*/creatures.json', {
+    import: 'default',
+  }),
 }
 
 const textPromises = new Map<SkillLocale, Promise<HonorDuelText>>()
 
-/** One language's text. Rejects where the data pack holds none for it. */
+/** One language's text. Rejects where the data pack holds none for it; the
+ * creatures' file alone may be absent (DUEL_CREATURE_TEXT_IN_PACK), and their
+ * list is then empty. */
 export function loadHonorDuelText(lang: SkillLocale): Promise<HonorDuelText> {
   const pending = textPromises.get(lang)
   if (pending) return pending
   const folder = `/src/pack/text/hd/${lang}`
   const equipment = textChunks.equipment[`${folder}/equipment.json`]
   const artifacts = textChunks.artifacts[`${folder}/artifacts.json`]
+  const creatures = textChunks.creatures[`${folder}/creatures.json`]
   if (!equipment || !artifacts) {
     return Promise.reject(new Error(`No Honor Duel text for "${lang}"`))
   }
-  const promise = Promise.all([equipment(), artifacts()]).then(([e, a]) => ({
-    equipment: e,
-    artifacts: a,
-  }))
+  const promise = Promise.all([equipment(), artifacts(), creatures?.() ?? {}]).then(
+    ([e, a, c]) => ({ equipment: e, artifacts: a, creatures: c }),
+  )
   // A failed load is dropped so the next call asks again.
   promise.catch(() => textPromises.delete(lang))
   textPromises.set(lang, promise)

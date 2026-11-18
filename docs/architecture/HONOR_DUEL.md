@@ -6,7 +6,7 @@ On the Arena page the tab also swaps the Arena board for an Honor Duel board, wh
 
 ## Where the content comes from
 
-A pack update writes all of it but the mode's map list, the Trial list, the creatures and the shop's `rounds`, which are kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
+A pack update writes all of it but the mode's map list, the Trial list, the creatures' files and names and the shop's `rounds`, which are kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
 | Content                 | Files                                                      |
 | ----------------------- | ---------------------------------------------------------- |
@@ -21,16 +21,17 @@ A pack update writes all of it but the mode's map list, the Trial list, the crea
 | Pictures                | data pack, `images/hd/{equipment,artifact,creature}/`      |
 | Creatures' faction icon | data pack, `images/hd/icon/`                               |
 | Effect text             | data pack, `text/hd/<language>/`, two files for each       |
+| Creatures' skill text   | data pack, `text/hd/<language>/creatures.json`             |
 
 An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. A creature's is counted from 7000 instead, inside the hero ids, because a board holds a creature where it holds a hero ([Grid](./GRID.md#unit-ids)). An update never changes the id of an existing file, and a new entry takes the next number after the highest in use. An update stops, writing nothing, when a file has no entry left in its source, so a renamed entry is renamed by hand and keeps its id.
 
 ## Loading
 
-`src/lib/hd/catalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text. The tab's list, its popup, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/lib/hd/catalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
 
 The text loads one language at a time, in the reader's skill-text language, when a popup opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 
-The pack is pinned separately from this repo, so a build can meet a pack from before a pack update. `npm run build` then prints one note for each list with entries the pack lacks and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and `?tab=honorDuel` then opens the default tab. Where the pack lacks only some entries, the tab lists those by name and their popup says the details are pending. A creature is listed only once the pack holds its picture, and the faction filter shows a faction only once its icon is there.
+The pack is pinned separately from this repo, so a build can meet a pack from before a pack update. `npm run build` then prints one note for each list with entries the pack lacks and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and `?tab=honorDuel` then opens the default tab. Where the pack lacks only some entries, the tab lists those by name and their popup says the details are pending. A creature is listed only once the pack holds its picture, and the faction filter shows a faction only once its icon is there. A pack without the creatures' skill text leaves a creature with nothing to open (`DUEL_CREATURE_TEXT_IN_PACK`).
 
 A link opens the tab directly with `?tab=honorDuel` on the Arena page.
 
@@ -46,7 +47,7 @@ A unit of the mode comes from one of two sources, and its source sets its tiers 
 
 The picker shows the two sources as two lists, Shop and Trial, and the popup on an empty tile follows the list on show. That choice is one value for both (`useDuelList`), which lasts while the page is open and is never stored. The Trial list has a group for each card. A pick from a group carries the card's tier in its id (`toTrialPick`), so a click, a tap and a drag place a copy at that tier through the one placing path. The popup lists each Trial unit once, at the cheapest card that brings it.
 
-A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment as a hero does, and it has no skill page.
+A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment as a hero does, and it has no skill page: the gestures that open a hero's skills open a popup with the creature's own, from the pack's creature text (`heroInspectTarget`, `CreatureModal`).
 
 A placed unit's tier and equipment are per-hero values under ids of their own (101 and 102), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that changes sides leaves its piece behind, and a hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there. The same piece may sit on several heroes.
 
@@ -174,6 +175,43 @@ A creature's file, `src/data/hd/creature/icesoul.json`. `id` is from 7000 to 899
 ```
 
 Its names file, `src/locales/hd/creature/icesoul.json`, has one name for each site language, as an artifact's does.
+
+The pack's creature text, one file for each skill-text language, keyed by creature file name. `text/hd/en/creatures.json`, shortened here to one of its creatures:
+
+```json
+{
+  "icesoul": {
+    "name": "Icesoul",
+    "skills": [
+      {
+        "name": "Ice Shield",
+        "description": "Gains a shield of [[200%]]{atk} for [[10]]s, and additional [[80%]]{atk} shield value for each enemy within [[1]] surrounding tile."
+      },
+      {
+        "name": "Frozen Mist",
+        "description": "Generates frozen mist after the battle starts, covering the surrounding area till defeated or the battle ends. When attacked by targets within [[1]] tiles, reduces the Haste of the target by [[50%]] for [[2]]s."
+      },
+      {
+        "name": "Frozen",
+        "description": "When defeated, [[freezes|freeze]] targets within [[1]] tile for [[3]]s."
+      },
+      {
+        "name": "Elemental Defense",
+        "description": "Takes [[70%]] less physical damage."
+      }
+    ]
+  }
+}
+```
+
+| Field                  | Holds                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                 | the creature's name in that language, the popup's title                                                                                     |
+| `skills`               | the creature's skills, in the order the popup lists them                                                                                    |
+| `skills[].name`        | the skill's name, its heading in the popup                                                                                                  |
+| `skills[].description` | the skill's one text, marked as a hero's skill text is: a number (`[[200%]]`), a stat (`{atk}`) and a glossary word (`[[freezes\|freeze]]`) |
+
+A glossary word opens the same popup it opens in a hero's skill text. A creature with no entry in the file opens its popup with the details pending, and `npm run build` prints a note counting the creatures the pack has no skill text for.
 
 ### The shop
 

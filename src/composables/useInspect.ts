@@ -2,6 +2,7 @@ import { computed, nextTick, ref, shallowRef } from 'vue'
 
 import { toBaseHeroId } from '@/lib/characters/character'
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
+import { DUEL_CREATURE_TEXT_IN_PACK } from '@/lib/hd/pack'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { HonorDuelItem } from '@/lib/types/honorDuel'
@@ -20,6 +21,7 @@ export type InspectTarget =
   // the Mechanics guide's picks).
   | { kind: 'hero'; slug: string; chips?: readonly TagPick[] }
   | { kind: 'phantimal'; phantimal: PhantimalType }
+  | { kind: 'creature'; creature: CharacterType }
   | { kind: 'artifact'; artifact: ArtifactType }
   | { kind: 'honorDuel'; item: HonorDuelItem }
   | { kind: 'charm'; charm: CharmData }
@@ -29,12 +31,19 @@ const target = shallowRef<InspectTarget | null>(null)
 const open = ref(false)
 
 // A hero has a skill page unless it is a placeholder or has no skill text, and
-// without a page there is nothing to inspect.
+// without a page there is nothing to inspect. An Honor Duel creature has no
+// page: its skills are in the data pack's creature text, when the pack holds it.
 export const heroInspectTarget = (
   hero: CharacterType,
   chips?: readonly TagPick[],
-): InspectTarget | null =>
-  !hero.placeholder && hasSkillLocale(hero.name) ? { kind: 'hero', slug: hero.name, chips } : null
+): InspectTarget | null => {
+  if (hero.creature) {
+    return DUEL_CREATURE_TEXT_IN_PACK ? { kind: 'creature', creature: hero } : null
+  }
+  return !hero.placeholder && hasSkillLocale(hero.name)
+    ? { kind: 'hero', slug: hero.name, chips }
+    : null
+}
 
 // A unit on a board opens its owner: a companion or synergy copy its hero's
 // skills, a phantimal's companion its phantimal's.

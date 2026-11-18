@@ -35,8 +35,14 @@ export interface DuelArtifactText {
   levels: string[]
 }
 
+export interface DuelCreatureText {
+  name: string
+  skills: { name: string; description: string }[]
+}
+
 /** One language's Honor Duel text, each list keyed by the entry's file name. */
 export interface HonorDuelText {
   equipment: Record<string, DuelEquipmentText>
   artifacts: Record<string, DuelArtifactText>
+  creatures: Record<string, DuelCreatureText>
 }

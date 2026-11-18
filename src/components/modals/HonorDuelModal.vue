@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue'
+import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
+import { useModalDuelText } from '@/composables/useDuelText'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
-import { duelItemName, equipmentTierLabel, loadHonorDuelText } from '@/lib/hd/catalog'
-import type { HonorDuelItem, HonorDuelText } from '@/lib/types/honorDuel'
-import type { SkillLocale } from '@/lib/types/i18n'
+import { duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
+import type { HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { gameLabel } from '@/utils/skillLabels'
 
@@ -24,21 +24,7 @@ const i18n = useI18nStore()
 // The name and effect text follow the skill-text language, as in the skill
 // modal; the tier chip is chrome, in the site language.
 const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
-
-// The text trails `applied` by its own chunk load, and stays null where the
-// data pack holds none for the language.
-const loaded = shallowRef<{ lang: SkillLocale; text: HonorDuelText | null } | null>(null)
-watch(
-  applied,
-  (lang) => {
-    if (!lang) return
-    const settle = (text: HonorDuelText | null) => {
-      if (applied.value === lang) loaded.value = { lang, text }
-    }
-    loadHonorDuelText(lang).then(settle, () => settle(null))
-  },
-  { immediate: true },
-)
+const loaded = useModalDuelText(applied)
 
 const text = computed(() => {
   const all = loaded.value?.text

@@ -237,8 +237,8 @@ function shopOddsProblem(pack: string, root: string): string | null {
   }
 }
 
-/** What the Trial list's units lack: a creature's picture or its faction's
- * icon in the pack, and a hero or creature file in this repo. */
+/** What the Trial list's units lack: a creature's picture, its skill text or
+ * its faction's icon in the pack, and a hero or creature file in this repo. */
 function trialUnitNotes(pack: string, root: string): string[] {
   const notes: string[] = []
   const creatureDir = join(root, 'src/data/hd/creature')
@@ -248,6 +248,14 @@ function trialUnitNotes(pack: string, root: string): string[] {
   )
   if (bare.length > 0) {
     notes.push(`${bare.length} Honor Duel creatures have no picture in the pack`)
+  }
+  // A pack update writes every language's creature text alike, so English
+  // answers for all.
+  const textPath = join(pack, 'text/hd/en/creatures.json')
+  const text = existsSync(textPath) ? readJson<Record<string, unknown>>(textPath) : {}
+  const untold = creatures.filter((name) => !(name in text))
+  if (untold.length > 0) {
+    notes.push(`${untold.length} Honor Duel creatures have no skill text in the pack`)
   }
   const factions = new Set(
     creatures.map(

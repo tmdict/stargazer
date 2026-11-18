@@ -14,8 +14,9 @@ import SkillModal from './SkillModal.vue'
 import { useInspect } from '@/composables/useInspect'
 import { defineLazyComponent } from '@/utils/lazyComponent'
 
-// Fetched with the Honor Duel data it reads, on the first Honor Duel inspect.
+// Each is fetched with the Honor Duel data it reads, on its first inspect.
 const HonorDuelModal = defineLazyComponent(() => import('./HonorDuelModal.vue'))
+const CreatureModal = defineLazyComponent(() => import('./CreatureModal.vue'))
 
 const { target, open, close } = useInspect()
 
@@ -43,6 +44,12 @@ watch(
     v-else-if="target?.kind === 'phantimal'"
     :show="open"
     :phantimal="target.phantimal"
+    @close="close"
+  />
+  <CreatureModal
+    v-else-if="target?.kind === 'creature'"
+    :show="open"
+    :creature="target.creature"
     @close="close"
   />
   <ArtifactModal

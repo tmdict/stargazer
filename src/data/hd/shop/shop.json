@@ -4,15 +4,35 @@
   "sell": 2,
   "levelRounds": [1, 2, 4, 6, 9],
   "rounds": [
-    { "badges": [60, 70] },
-    { "badges": [40] },
-    { "badges": [40] },
-    { "badges": [60], "event": "fitz-trial" },
-    { "badges": [60] },
-    { "badges": [90] },
-    { "badges": [90] },
-    { "badges": [90], "event": "fitz-trial" },
-    { "badges": [110] }
+    {
+      "badges": [60, 70]
+    },
+    {
+      "badges": [40]
+    },
+    {
+      "badges": [40]
+    },
+    {
+      "badges": [60],
+      "event": "fitz-trial"
+    },
+    {
+      "badges": [60]
+    },
+    {
+      "badges": [90]
+    },
+    {
+      "badges": [90]
+    },
+    {
+      "badges": [90],
+      "event": "fitz-trial"
+    },
+    {
+      "badges": [110]
+    }
   ],
   "goods": [
     {
