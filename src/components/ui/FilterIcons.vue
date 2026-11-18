@@ -30,16 +30,18 @@ const PREFIX_ORDERS: Record<string, readonly string[]> = {
   class: CLASS_ORDER,
 }
 
-const orderedOptions = computed(() => {
-  const order = PREFIX_ORDERS[iconPrefix]
-  if (!order) return options
-  return [...options].sort((a, b) => compareByOrder(a, b, order))
-})
-
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
   return gameDataStore.getIcon(iconKey)
 }
+
+// An option is drawn as its icon alone, so one with no icon (a faction whose
+// icon the data pack does not hold yet) is left out.
+const orderedOptions = computed(() => {
+  const drawn = options.filter((option) => getIconPath(iconPrefix, option) !== '')
+  const order = PREFIX_ORDERS[iconPrefix]
+  return order ? drawn.sort((a, b) => compareByOrder(a, b, order)) : drawn
+})
 </script>
 
 <template>

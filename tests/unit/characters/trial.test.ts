@@ -16,7 +16,14 @@ import { executePlaceCharacter } from '@/lib/characters/place'
 import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { inSynergyBand } from '@/lib/characters/synergy'
-import { inTrialBand, isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
+import {
+  inTrialBand,
+  isTrialHeroId,
+  toTrialId,
+  toTrialPick,
+  TRIAL_COPIES,
+  trialPickOf,
+} from '@/lib/characters/trial'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { getRegisteredSkills, hasCompanionSkill } from '@/lib/skills/registry'
@@ -85,6 +92,16 @@ describe('Trial id band', () => {
     expect(inTrialBand(last + 1)).toBe(false)
     expect(decomposeUnitId(last + 40)).toEqual({ synergy: false, localId: last + 40 })
     expect(isCompanionId(last + 10040)).toBe(false)
+  })
+})
+
+describe('Trial picks', () => {
+  it('sit above every copy and read back their unit and tier', () => {
+    expect(trialPickOf(toTrialPick(7001, 3))).toEqual({ baseId: 7001, tier: 3 })
+    expect(trialPickOf(toTrialPick(1, 0))).toEqual({ baseId: 1, tier: 0 })
+    expect(inTrialBand(toTrialPick(1, 0))).toBe(false)
+    // The highest id of the last copy's band.
+    expect(trialPickOf(toTrialId(99999, TRIAL_COPIES))).toBeNull()
   })
 })
 

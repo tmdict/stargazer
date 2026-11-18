@@ -17,6 +17,9 @@ export interface CharacterType {
   // Faction placeholder stand-in (see lib/characters/placeholder.ts): faction
   // is real, class and damage are 'none'. Absent on real heroes.
   placeholder?: true
+  // An Honor Duel creature (src/data/hd/creature/): a Trial unit that is no
+  // hero. Its faction is real, and it has no class, damage type or energy.
+  creature?: true
   team?: Team // Team assignment for placement
 }
 

@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { findCharacterHex, getTilesWithCharacters } from '@/lib/characters/character'
-import { toTrialId } from '@/lib/characters/trial'
+import { toTrialId, toTrialPick } from '@/lib/characters/trial'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import {
   decodeDuelBoard,
@@ -15,11 +15,22 @@ import { Team } from '@/lib/types/team'
 import { duelFactionBonus, setDuelEquipment, setDuelSpot, useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
-import { ALLY_A, ALLY_B, ALLY_C, ENEMY_A, PHRAESTO } from '../fixtures/characters'
+import { KULU } from '../fixtures/characters'
 
 /* The Honor Duel board built from its link text and read back, with the real
  * stores and game data. Map arena1 has ally tiles 1-10/12/13/16 and enemy tiles
  * 30/33/34/36-45; arena2 keeps ally tile 1 and has no ally tile 9. */
+
+// Heroes of the shop with no registered skill, so placing one has no side
+// effects.
+const ALLY_A = 11
+const ALLY_B = 3
+const ALLY_C = 72
+const ENEMY_A = 47
+// A Supreme Trial Card's hero and a creature, with no skill either. KULU is a
+// hero neither the shop nor a card brings.
+const SUPREME_HERO = 6
+const CREATURE = 7001
 
 const unit = (
   hexId: number,
@@ -60,8 +71,10 @@ describe('an Honor Duel board from its link text', () => {
     const state = board(
       [
         unit(1, Team.ALLY, ALLY_A, { tier: 1, equipment: 7, spot: 2 }),
-        unit(2, Team.ALLY, ALLY_A, { trial: true, tier: 3, equipment: 7 }),
-        unit(3, Team.ALLY, ALLY_B, { trial: true, tier: 2, equipment: 255, spot: 6 }),
+        unit(2, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 7 }),
+        unit(3, Team.ALLY, ALLY_B, { trial: true, tier: 1, equipment: 255, spot: 6 }),
+        unit(4, Team.ALLY, SUPREME_HERO, { trial: true, tier: 3 }),
+        unit(5, Team.ALLY, CREATURE, { trial: true, equipment: 12 }),
         unit(40, Team.ENEMY, ALLY_A, { equipment: 12, spot: 2 }),
       ],
       { d: 6, artifacts: { ally: { id: 5, level: 2 }, enemy: null } },
@@ -95,22 +108,58 @@ describe('an Honor Duel board from its link text', () => {
       unit(2, Team.ALLY, ALLY_B),
       unit(3, Team.ALLY, ALLY_C),
       unit(4, Team.ALLY, ENEMY_A),
-      unit(5, Team.ALLY, ALLY_A, { trial: true }),
+      unit(5, Team.ALLY, ALLY_A, { trial: true, tier: 1 }),
     ]
     openBoard(
       board([
         ...kept,
         // A sixth hero, a second normal copy, a hero the game lacks and an
         // ally on an enemy tile.
-        unit(6, Team.ALLY, ALLY_B, { trial: true }),
+        unit(6, Team.ALLY, ALLY_B, { trial: true, tier: 1 }),
         unit(36, Team.ENEMY, ALLY_A),
         unit(37, Team.ENEMY, ALLY_A),
         unit(38, Team.ENEMY, 8999),
-        unit(40, Team.ALLY, ALLY_C, { trial: true }),
+        unit(40, Team.ALLY, ALLY_C, { trial: true, tier: 1 }),
       ]),
     )
 
     expect(onScreen().units).toEqual([...kept, unit(36, Team.ENEMY, ALLY_A)])
+  })
+
+  it('drops a unit its source does not bring', () => {
+    const kept = [
+      unit(5, Team.ALLY, ALLY_A),
+      unit(40, Team.ENEMY, SUPREME_HERO, { trial: true, tier: 3 }),
+      unit(41, Team.ENEMY, CREATURE, { trial: true }),
+    ]
+    openBoard(
+      board([
+        // A hero neither source brings, as a hero and as a Trial unit, and a
+        // card's hero and a creature without the Trial mark.
+        unit(1, Team.ALLY, KULU),
+        unit(2, Team.ALLY, KULU, { trial: true, tier: 3 }),
+        unit(3, Team.ALLY, SUPREME_HERO),
+        unit(4, Team.ALLY, CREATURE),
+        ...kept,
+      ]),
+    )
+
+    expect(onScreen().units).toEqual(kept)
+  })
+
+  it("moves a tier a unit's source does not allow to the nearest it does", () => {
+    const { ctx } = openBoard(
+      board([
+        unit(1, Team.ALLY, ALLY_A, { trial: true, tier: 3 }),
+        unit(2, Team.ALLY, ALLY_A, { trial: true }),
+        unit(3, Team.ALLY, SUPREME_HERO, { trial: true }),
+        unit(4, Team.ALLY, CREATURE, { trial: true, tier: 2 }),
+        unit(5, Team.ALLY, ALLY_B),
+      ]),
+    )
+    ctx.setAttr(Team.ALLY, ALLY_B, DUEL_ATTR_TIER, 3)
+
+    expect(onScreen().units.map((u) => u.tier)).toEqual([2, 1, 3, 0, 2])
   })
 
   it('keeps one hero on an off-field spot a side: the first in tile order', () => {
@@ -124,25 +173,6 @@ describe('an Honor Duel board from its link text', () => {
 
     expect(onScreen().units.map((u) => u.spot)).toEqual([4, 0, 4])
   })
-
-  // The companion's tile is drawn at random: one case per tenth of the draw,
-  // so the result does not depend on which tile comes up.
-  it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])(
-    'a summoner never costs another hero its tile (random pick %i of 10)',
-    (pick) => {
-      vi.spyOn(Math, 'random').mockReturnValue(pick / 10)
-      const units = [
-        unit(1, Team.ALLY, PHRAESTO),
-        unit(2, Team.ALLY, ALLY_A),
-        unit(3, Team.ALLY, ALLY_B),
-        unit(4, Team.ALLY, ALLY_C),
-        unit(5, Team.ALLY, ENEMY_A),
-      ]
-      openBoard(board(units))
-
-      expect(onScreen().units).toEqual(units)
-    },
-  )
 
   it('opens an empty board on the first map for a text that is no board', () => {
     const duel = useDuelBoard()
@@ -161,7 +191,7 @@ describe('moving an Honor Duel board to another map', () => {
       board(
         [
           unit(1, Team.ALLY, ALLY_B, { tier: 1 }),
-          unit(9, Team.ALLY, ALLY_A, { trial: true, tier: 3, equipment: 9, spot: 4 }),
+          unit(9, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9, spot: 4 }),
         ],
         { artifacts: { ally: { id: 3, level: 2 }, enemy: null } },
       ),
@@ -177,7 +207,7 @@ describe('moving an Honor Duel board to another map', () => {
     const moved = state.units.find((u) => u.trial)!
     expect([1, 9]).not.toContain(moved.hexId)
     expect(moved).toEqual(
-      unit(moved.hexId, Team.ALLY, ALLY_A, { trial: true, tier: 3, equipment: 9, spot: 4 }),
+      unit(moved.hexId, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9, spot: 4 }),
     )
   })
 })
@@ -272,37 +302,52 @@ describe("a side's faction bonus", () => {
     })
     expect(duelFactionBonus(ctx, Team.ENEMY).percent).toBe(10)
   })
+
+  it('counts creatures as a faction of their own, with a Supreme hero standing in', () => {
+    const { ctx } = openBoard(
+      board([
+        unit(1, Team.ALLY, 7000, { trial: true }),
+        unit(2, Team.ALLY, CREATURE, { trial: true }),
+        unit(3, Team.ALLY, CREATURE, { trial: true }),
+        unit(40, Team.ENEMY, 7000, { trial: true }),
+        unit(41, Team.ENEMY, CREATURE, { trial: true }),
+        unit(42, Team.ENEMY, SUPREME_HERO, { trial: true, tier: 3 }),
+      ]),
+    )
+
+    expect(duelFactionBonus(ctx, Team.ALLY)).toEqual({
+      percent: 10,
+      counts: [{ faction: 'other', count: 3 }],
+    })
+    expect(duelFactionBonus(ctx, Team.ENEMY).percent).toBe(11)
+  })
 })
 
-describe('the Trial switch', () => {
-  it('turns each pick into the next free Trial copy on an Honor Duel board', () => {
+describe('a Trial pick', () => {
+  it("places the next free copy of its unit at its card's tier", () => {
     const grids = useGrids()
     useDuelBoard().open(null)
     const ctx = grids.active!
-    grids.trial = true
 
-    expect(grids.placePick(ctx, ALLY_A, Team.ALLY, 1)).toBe(true)
-    expect(grids.placePick(ctx, ALLY_A, Team.ALLY, 2)).toBe(true)
-    expect(grids.placePick(ctx, ALLY_B, Team.ENEMY, 40)).toBe(true)
+    expect(grids.placePick(ctx, toTrialPick(ALLY_A, 2), Team.ALLY, 1)).toBe(true)
+    expect(grids.placePick(ctx, toTrialPick(ALLY_A, 1), Team.ALLY, 2)).toBe(true)
+    expect(grids.routeDrop({ characterId: toTrialPick(SUPREME_HERO, 3) }, ctx.id, 40)).toBe(true)
     expect(findCharacterHex(ctx.grid, toTrialId(ALLY_A, 1), Team.ALLY)).toBe(1)
     expect(findCharacterHex(ctx.grid, toTrialId(ALLY_A, 2), Team.ALLY)).toBe(2)
-    expect(findCharacterHex(ctx.grid, toTrialId(ALLY_B, 3), Team.ENEMY)).toBe(40)
+    expect(findCharacterHex(ctx.grid, toTrialId(SUPREME_HERO, 3), Team.ENEMY)).toBe(40)
+    expect(onScreen().units.map((u) => u.tier)).toEqual([2, 1, 3])
 
     // A number that came free is the next one handed out.
     expect(ctx.remove(1)).toBe(true)
-    expect(grids.placePick(ctx, ALLY_C, Team.ALLY, 3)).toBe(true)
-    expect(findCharacterHex(ctx.grid, toTrialId(ALLY_C, 1), Team.ALLY)).toBe(3)
+    expect(grids.placePick(ctx, toTrialPick(CREATURE, 0), Team.ALLY, 3)).toBe(true)
+    expect(findCharacterHex(ctx.grid, toTrialId(CREATURE, 1), Team.ALLY)).toBe(3)
   })
 
-  it('is off again on every board that replaces the one on screen', () => {
+  it('is refused on an Arena board', () => {
     const grids = useGrids()
-    useDuelBoard().open(null)
-    grids.trial = true
-
     grids.setGridCount(1)
 
-    expect(grids.trial).toBe(false)
-    expect(grids.placePick(grids.active!, ALLY_A, Team.ALLY, 1)).toBe(true)
-    expect(findCharacterHex(grids.active!.grid, ALLY_A, Team.ALLY)).toBe(1)
+    expect(grids.placePick(grids.active!, toTrialPick(ALLY_A, 1), Team.ALLY, 1)).toBe(false)
+    expect(getTilesWithCharacters(grids.active!.grid)).toEqual([])
   })
 })

@@ -8,7 +8,8 @@ const byName = (modules: Record<string, string>): Record<string, string> =>
   )
 
 // The 100px width sets the grid image export's resolution (FULL_DETAIL_RATIO).
-// Phantimals and outfits have the portraits' shape and take the same variant.
+// Phantimals, outfits and Honor Duel's creatures have the portraits' shape and
+// take the same variant.
 // Outfits share the portraits' folder under lib/characters/outfit.ts's naming
 // rule, and a glob takes only literals, so the rule is repeated in each pattern
 // and the query in each glob.
@@ -17,6 +18,7 @@ export const characterImages = byName(
     [
       '@/pack/images/character/*.png',
       '@/pack/images/seasonal/phantimal/*.png',
+      '@/pack/images/hd/creature/*.png',
       '!@/pack/images/character/*-skin[0-9]*.png',
     ],
     {

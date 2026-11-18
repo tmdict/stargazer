@@ -334,6 +334,13 @@ export function packProblems(
     }
   }
 
+  const bareCreatures = jsonNames(join(root, 'src/data/hd/creature')).filter(
+    (name) => !existsSync(join(pack, 'images/hd/creature', `${name}.png`)),
+  )
+  if (bareCreatures.length > 0) {
+    notes.push(`${bareCreatures.length} Honor Duel creatures have no picture in the pack`)
+  }
+
   const oddsProblem = shopOddsProblem(pack, root)
   if (oddsProblem) problems.push(oddsProblem)
 

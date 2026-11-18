@@ -9,7 +9,7 @@ import {
   toLocalPhantimalId,
 } from '@/lib/characters/phantimal'
 import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
-import { loadArtifacts, loadCharacters, loadPhantimals } from '@/lib/dataLoader'
+import { loadArtifacts, loadCharacters, loadCreatures, loadPhantimals } from '@/lib/dataLoader'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -24,6 +24,7 @@ import {
 export const useGameDataStore = defineStore('gameData', () => {
   // Data state
   const characters = ref<CharacterType[]>([])
+  const creatures = ref<CharacterType[]>([])
   const artifacts = ref<ArtifactType[]>([])
   const phantimals = ref<PhantimalType[]>([])
   const characterImages = ref<Record<string, string>>({})
@@ -42,6 +43,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   const loadIntoState = () => {
     const heroes = loadCharacters()
     characters.value = heroes
+    creatures.value = loadCreatures()
     artifacts.value = loadArtifacts()
     phantimals.value = loadPhantimals()
     characterImages.value = loadCharacterImages()
@@ -97,9 +99,11 @@ export const useGameDataStore = defineStore('gameData', () => {
     return characterRanges.value.get(baseId) ?? 1
   }
 
-  const getCharacterById = (characterId: number): CharacterType | undefined => {
-    return characters.value.find((char) => char.id === characterId)
-  }
+  // An Honor Duel creature answers by its id as a hero does, though the hero
+  // list leaves it out.
+  const getCharacterById = (characterId: number): CharacterType | undefined =>
+    characters.value.find((char) => char.id === characterId) ??
+    creatures.value.find((creature) => creature.id === characterId)
 
   // Slug of a phantimal-band unit, which names its portrait: the phantimal's
   // own, or for a companion the owner skill's companion image (falling back to
@@ -156,6 +160,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   return {
     // State (readonly)
     characters: readonly(characters),
+    creatures: readonly(creatures),
     artifacts: readonly(artifacts),
     pickerArtifacts,
     phantimals: readonly(phantimals),

@@ -7,8 +7,13 @@ import { getTilesWithCharacters } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
-import { ALLY_A, ALLY_B, ENEMY_A } from '../fixtures/characters'
 import { stubLocalStorage } from '../fixtures/storage'
+
+// Heroes of the Honor Duel shop with no registered skill, so both boards take
+// them and placing one has no side effects.
+const ALLY_A = 11
+const ALLY_B = 3
+const ENEMY_A = 47
 
 /* The Arena page's two boards share one screen and keep a stored value each.
  * Runs headless: node env + in-memory localStorage stub, SSR flag off so the

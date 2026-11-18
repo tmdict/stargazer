@@ -3,13 +3,15 @@
 // the list of each hero's charms, so a worker, a build script or lib/ code that
 // reads game data loads nothing else.
 
-import { PLACEHOLDERS } from '@/lib/characters/placeholder'
+import { PLACEHOLDER_NONE, PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
+import type { DuelCreature } from '@/lib/types/honorDuel'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import type { CharmData, CharmFile, HeroCharm, HeroCharms, TagAttachment } from '@/lib/types/skill'
 
 let characters: CharacterType[] | null = null
+let creatures: CharacterType[] | null = null
 let artifacts: ArtifactType[] | null = null
 let phantimals: PhantimalType[] | null = null
 let charms: CharmData[] | null = null
@@ -28,6 +30,33 @@ export function loadCharacters(): CharacterType[] {
     ...PLACEHOLDERS,
   ]
   return characters
+}
+
+// Honor Duel's creatures in id order, in the shape of a hero. They stay out of
+// the hero list, so no picker, roster, skill page or import lists one, and a
+// lookup by id finds them (unitData, the game data store).
+export function loadCreatures(): CharacterType[] {
+  creatures ??= Object.values(
+    import.meta.glob<DuelCreature>('@/data/hd/creature/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+    .sort((a, b) => a.id - b.id)
+    .map(({ id, name, faction }) => ({
+      id,
+      name,
+      faction,
+      class: PLACEHOLDER_NONE,
+      damage: PLACEHOLDER_NONE,
+      level: 'rare',
+      energy: [0],
+      range: 1,
+      season: 0,
+      tags: {},
+      creature: true,
+    }))
+  return creatures
 }
 
 // Artifacts split by rotation semantics: the permanent pre-season set lives

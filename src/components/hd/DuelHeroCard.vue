@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The hero card of an Honor Duel board: the Arena's panel of portraits and
-   names, with each hero's tier in place of its upgrades, its equipment slot,
-   its off-field control and a mark on a Trial hero. What a hero carries is set
+   names, with each unit's tier in place of its upgrades, its equipment slot,
+   its off-field control and a mark on a Trial unit. What a unit carries is set
    here and shows on the board. */
 
 import { ref } from 'vue'

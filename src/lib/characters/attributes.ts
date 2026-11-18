@@ -66,7 +66,7 @@ export type AttrRecord = Record<number, number>
  * and is never stored. */
 export interface AttrRules {
   clamp: (attrId: number, value: number, characterId: number) => number
-  defaultOf: (attrId: number) => number
+  defaultOf: (attrId: number, characterId: number) => number
   // Values that belong to the hero's side: one that changes teams leaves them
   // behind.
   sideBound: readonly number[]

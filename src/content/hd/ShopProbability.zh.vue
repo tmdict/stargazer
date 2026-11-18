@@ -324,9 +324,7 @@ const f = useShopFigures()
     {{ f.poolSize.value }} 位、阵营有 {{ f.factionPoolSize.value }} 位时，分别是
     {{ Math.round(f.copyCost.value.random) }} 枚和
     {{ Math.round(f.copyCost.value.faction) }} 枚，远高于单张英雄卡的
-    {{
-      f.heroPrice
-    }}
+    {{ f.heroPrice }}
     枚。只有想要的英雄在池中占很大比例时，卡包才胜过单张英雄卡：随机卡包要超过英雄池的
     {{ percent(f.packShare.random) }}，阵营卡包要超过该阵营的
     {{ percent(f.packShare.faction) }}。卖掉卡包开出的全部英雄最多返还

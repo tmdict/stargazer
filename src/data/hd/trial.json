@@ -1,0 +1,41 @@
+{
+  "cards": [
+    {
+      "card": "trial-card-6",
+      "tier": "epic",
+      "units": ["sandbeast-king", "icesoul", "mad-creature", "charming-creature", "dark-creature"]
+    },
+    {
+      "card": "trial-card-12",
+      "tier": "legendary",
+      "shop": true
+    },
+    {
+      "card": "trial-card-22",
+      "tier": "mythic",
+      "shop": true
+    },
+    {
+      "card": "trial-card-45",
+      "tier": "supreme",
+      "units": [
+        "berial",
+        "scarlita",
+        "talene",
+        "harak",
+        "cryonaia",
+        "athalia",
+        "baelran",
+        "saida",
+        "aliceth",
+        "mehira",
+        "contess",
+        "gunnar",
+        "alna",
+        "loraine",
+        "sylphira",
+        "lamentis"
+      ]
+    }
+  ]
+}

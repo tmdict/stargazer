@@ -50,13 +50,13 @@ import { UNIT_LOOKUPS } from '@/lib/characters/unitData'
 import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import {
   DUEL_ATTR_EQUIPMENT,
-  DUEL_ATTR_RULES,
   DUEL_ATTR_SPOT,
   type DuelArtifactSlot,
   type DuelSpotPick,
 } from '@/lib/hd/board'
 import { duelBuffs } from '@/lib/hd/maps'
 import { duelSpotHex, shownDuelSpots } from '@/lib/hd/spots'
+import { DUEL_ATTR_RULES } from '@/lib/hd/units'
 import type { Hex } from '@/lib/hex'
 import { BASE_HEX_RADIUS, BOARD_SIZE, Layout, PERSPECTIVE, POINTY, type Point } from '@/lib/layout'
 import { buffTilesOf, modeBuffs, type ModeListKey, type TileBuff } from '@/lib/mapModeLists'
@@ -241,7 +241,7 @@ export function createGridContext(
   const attrKey = (team: Team, characterId: number): string => `${team}:${characterId}`
   const attrRules = kind === 'honorDuel' ? DUEL_ATTR_RULES : HERO_ATTR_RULES
   const getAttr = (team: Team, characterId: number, attrId: number): number =>
-    attrs.get(attrKey(team, characterId))?.[attrId] ?? attrRules.defaultOf(attrId)
+    attrs.get(attrKey(team, characterId))?.[attrId] ?? attrRules.defaultOf(attrId, characterId)
   const getAttrs = (team: Team, characterId: number): AttrRecord =>
     attrs.get(attrKey(team, characterId)) ?? {}
   const storeAttrs = (key: string, record: AttrRecord): void => {
@@ -267,7 +267,7 @@ export function createGridContext(
     const key = attrKey(team, characterId)
     const record = { ...attrs.get(key) }
     const clamped = attrRules.clamp(attrId, value, characterId)
-    if (clamped !== attrRules.defaultOf(attrId)) record[attrId] = clamped
+    if (clamped !== attrRules.defaultOf(attrId, characterId)) record[attrId] = clamped
     else delete record[attrId]
     storeAttrs(key, record)
   }
@@ -277,7 +277,7 @@ export function createGridContext(
     for (const [id, value] of Object.entries(record)) {
       const attrId = Number(id)
       const clamped = attrRules.clamp(attrId, value, characterId)
-      if (clamped !== attrRules.defaultOf(attrId)) next[attrId] = clamped
+      if (clamped !== attrRules.defaultOf(attrId, characterId)) next[attrId] = clamped
     }
     storeAttrs(attrKey(team, characterId), next)
   }

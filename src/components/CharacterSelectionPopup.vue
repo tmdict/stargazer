@@ -5,12 +5,13 @@ import CharacterSelectionPalette from './CharacterSelectionPalette.vue'
 import RosterMenu from './RosterMenu.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import UpgradeBars from './ui/UpgradeBars.vue'
+import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
-import { duelHeroes } from '@/lib/hd/heroes'
+import { duelHeroes, duelTrialPool } from '@/lib/hd/heroes'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
@@ -44,12 +45,15 @@ const { requestTab } = useSelectionState()
 
 const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
-// An Honor Duel board draws on the mode's heroes, the same for every player,
-// and holds no roster levels.
+// An Honor Duel board draws on the mode's units, the same for every player,
+// and holds no roster levels. Its pool follows the list its picker shows: the
+// shop's heroes, or each Trial unit once, at the cheapest card that brings it.
 const duel = computed(() => ctx.kind === 'honorDuel')
-const pool = computed(() =>
-  duel.value ? duelHeroes(gameData.characters) : gameData.characters.filter(rosters.isPickable),
-)
+const trialGroups = useDuelTrialGroups()
+const pool = computed(() => {
+  if (!duel.value) return gameData.characters.filter(rosters.isPickable)
+  return grids.trial ? duelTrialPool(trialGroups.value) : duelHeroes(gameData.characters)
+})
 
 // Heroes of the pool with a legal placement on this team. While Syn is on, an
 // already-placed hero stays listed as its synergy copy, matching the picker's

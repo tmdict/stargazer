@@ -23,6 +23,7 @@ import {
   type DuelUnitState,
 } from '@/lib/hd/boardLink'
 import { DEFAULT_DUEL_MAP, isDuelMap } from '@/lib/hd/maps'
+import { duelSourceTiers } from '@/lib/hd/units'
 import { hasCompanionSkill } from '@/lib/skills/registry'
 import { packDisplayFlags, type DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
@@ -91,8 +92,8 @@ export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: 
   ctx.setAttr(team, unitId, DUEL_ATTR_SPOT, spot)
 }
 
-// Every hero of the side counts toward its faction, a copy as much as the
-// first.
+// Every unit of the side counts toward its faction, a copy as much as the
+// first, and a creature toward the creatures' own.
 export function duelFactionBonus(ctx: GridContext, team: Team): TeamFactionBonus {
   const gameData = useGameDataStore()
   return teamFactionBonus(
@@ -106,16 +107,20 @@ export const useDuelBoard = defineStore('duelBoard', () => {
   const grids = useGrids()
   const gameData = useGameDataStore()
 
-  /* Places a state's heroes and artifacts on an empty board standing on the
-   * state's map. A hero the board refuses is dropped: one the game data lacks,
-   * a tile not open to its side, a sixth hero, a second normal copy. With
-   * `relocate` a hero whose tile is gone takes a free one instead, as a map
-   * change wants. Trial copy numbers are handed out in tile order. */
+  /* Places a state's units and artifacts on an empty board standing on the
+   * state's map. A unit the board refuses is dropped: one the game data lacks,
+   * one its source does not bring (a hero the shop does not sell, a unit no
+   * Trial Card shows, a creature without the Trial mark), a tile not open to
+   * its side, a sixth unit, a second normal copy. A tier the unit's source does
+   * not allow moves to the nearest it does, as the board's value rules clamp
+   * it. With `relocate` a unit whose tile is gone takes a free one instead, as
+   * a map change wants. Trial copy numbers are handed out in tile order. */
   const fill = (ctx: GridContext, state: DuelBoardState, relocate: boolean): void => {
     const units: (DuelUnitState & { unitId: number })[] = []
     let copies = 0
     for (const unit of state.units) {
-      if (!gameData.getCharacterById(unit.heroId)) continue
+      const name = gameData.getCharacterById(unit.heroId)?.name
+      if (name === undefined || duelSourceTiers(name, unit.trial).length === 0) continue
       if (!unit.trial) units.push({ ...unit, unitId: unit.heroId })
       else if (copies < TRIAL_COPIES)
         units.push({ ...unit, unitId: toTrialId(unit.heroId, ++copies) })

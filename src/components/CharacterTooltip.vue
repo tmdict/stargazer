@@ -35,19 +35,24 @@ const formattedEnergy = computed(() => {
   return added > 0 ? `${ownEnergy(character)} (${added})` : String(ownEnergy(character))
 })
 
-const rows = computed(() => [
-  traitRow('faction', character.faction),
-  traitRow('class', character.class),
-  traitRow('damage', character.damage),
-  {
-    label: `${i18n.t('game.energy')}:`,
-    value: formattedEnergy.value,
-    icon: gameDataStore.getIcon('initial-energy'),
-    iconClass: 'energy-icon',
-  },
-  rangeRow(character.range),
-  { label: `${i18n.t('game.season')}:`, value: character.season },
-])
+const rows = computed(() => {
+  const faction = traitRow('faction', character.faction)
+  // A creature has a faction and none of a hero's other traits.
+  if (character.creature) return [faction]
+  return [
+    faction,
+    traitRow('class', character.class),
+    traitRow('damage', character.damage),
+    {
+      label: `${i18n.t('game.energy')}:`,
+      value: formattedEnergy.value,
+      icon: gameDataStore.getIcon('initial-energy'),
+      iconClass: 'energy-icon',
+    },
+    rangeRow(character.range),
+    { label: `${i18n.t('game.season')}:`, value: character.season },
+  ]
+})
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 /* A unit's data file, and the traits skills read from it, by unit id. */
 
-import { loadCharacters, loadPhantimals } from '../dataLoader'
+import { loadCharacters, loadCreatures, loadPhantimals } from '../dataLoader'
 import type { SkillLookups } from '../skills/skill'
 import type { CharacterType } from '../types/character'
 import type { PhantimalType } from '../types/phantimal'
@@ -11,14 +11,15 @@ let files:
   { heroes: Map<number, CharacterType>; phantimals: Map<number, PhantimalType> } | undefined
 const data = () =>
   (files ??= {
-    heroes: new Map(loadCharacters().map((hero) => [hero.id, hero])),
+    heroes: new Map([...loadCharacters(), ...loadCreatures()].map((unit) => [unit.id, unit])),
     phantimals: new Map(loadPhantimals().map((phantimal) => [phantimal.id, phantimal])),
   })
 
 const phantimalData = (unitId: number) => data().phantimals.get(toLocalPhantimalId(unitId))
 
-// A companion or a synergy copy answers with its base hero's file, and a
-// phantimal's companion with its phantimal's.
+// A companion, a synergy copy or a Trial copy answers with its base hero's
+// file, a Trial copy of a creature with the creature's, and a phantimal's
+// companion with its phantimal's.
 export const unitData = (unitId: number): CharacterType | PhantimalType | undefined =>
   inPhantimalBand(unitId) ? phantimalData(unitId) : data().heroes.get(toBaseHeroId(unitId))
 

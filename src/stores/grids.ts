@@ -28,7 +28,6 @@ import {
   getTilesWithCharactersByTeam,
   hasCharacter,
   isCompanionId,
-  isRealHeroId,
   resolvePlacement,
 } from '@/lib/characters/character'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
@@ -38,8 +37,9 @@ import { resolveReplacement } from '@/lib/characters/place'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { canSwapCharacters } from '@/lib/characters/swap'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
-import { freeTrialCopy, toTrialId } from '@/lib/characters/trial'
+import { freeTrialCopy, toTrialId, trialPickOf } from '@/lib/characters/trial'
 import { rotatedHexId } from '@/lib/grid'
+import { DUEL_ATTR_TIER } from '@/lib/hd/board'
 import { BASE_HEX_RADIUS, type Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { isPermanentArtifactId } from '@/lib/seasonal'
@@ -171,8 +171,8 @@ export const useGrids = defineStore('grids', () => {
   // The Arena's map dropdown pick: the mode of the row picked and its map
   // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
   const arenaPick = shallowRef<{ mode: TeamVariantKey; map: string } | null>(null)
-  // The Honor Duel hero list's Trial switch: while on, a pick lands on an Honor
-  // Duel board as a Trial copy. Never serialized or persisted, and every
+  // Which list the Honor Duel hero pickers show: the Trial Cards' units while
+  // on, else the shop's heroes. Never serialized or persisted, and every
   // rebuild of the boards clears it.
   const trial = ref(false)
 
@@ -361,13 +361,16 @@ export const useGrids = defineStore('grids', () => {
     return placement !== null && placement.ctxId !== exceptCtxId
   }
 
-  // The unit a picked hero stands for before any placing rule is asked: itself,
-  // or with the Trial switch on, a new Trial copy of it under the board's
-  // lowest free copy number. Null when the board holds every copy number.
-  const pickUnitId = (ctx: GridContext, characterId: number): number | null => {
-    if (ctx.kind !== 'honorDuel' || !trial.value || !isRealHeroId(characterId)) return characterId
+  // The unit a pick stands for before any placing rule is asked: the hero
+  // itself, or for a Trial pick a new copy of its unit under the board's lowest
+  // free copy number. Null when the board holds every copy number, or is no
+  // Honor Duel board.
+  const pickUnitId = (ctx: GridContext, pickId: number): number | null => {
+    const pick = trialPickOf(pickId)
+    if (!pick) return pickId
+    if (ctx.kind !== 'honorDuel') return null
     const copy = freeTrialCopy(getTilesWithCharacters(ctx.grid).map((tile) => tile.characterId!))
-    return copy === null ? null : toTrialId(characterId, copy)
+    return copy === null ? null : toTrialId(pick.baseId, copy)
   }
 
   // The id a pick from the hero picker lands as on a board, or null: the engine
@@ -392,13 +395,18 @@ export const useGrids = defineStore('grids', () => {
     return resolved
   }
 
-  // A hero picked from the picker starts at the active roster's levels.
-  // setAttrs ignores units that carry none (a synergy copy, a placeholder).
-  // Honor Duel's heroes are the same for everyone, so its board takes none.
-  const applyRosterLevels = (ctx: GridContext, unitId: number, team: Team): void => {
-    if (ctx.kind !== 'arena') return
-    const levels = rosters.levelsFor(unitId)
-    if (levels) ctx.setAttrs(team, unitId, levels)
+  // What a unit placed from a picker starts with. On the Arena, the active
+  // roster's levels: setAttrs ignores units that carry none (a synergy copy, a
+  // placeholder). Honor Duel's heroes are the same for everyone, so its board
+  // takes no levels, and a Trial pick starts at its card's tier.
+  const applyPickValues = (ctx: GridContext, pickId: number, unitId: number, team: Team): void => {
+    if (ctx.kind === 'arena') {
+      const levels = rosters.levelsFor(unitId)
+      if (levels) ctx.setAttrs(team, unitId, levels)
+      return
+    }
+    const pick = trialPickOf(pickId)
+    if (pick) ctx.setAttr(team, unitId, DUEL_ATTR_TIER, pick.tier)
   }
 
   // Every pick that is not a drag (click, tap on a targeted tile, the
@@ -414,7 +422,7 @@ export const useGrids = defineStore('grids', () => {
     if (resolved === null) return false
     const placed =
       hexId === undefined ? ctx.autoPlace(resolved, team) : ctx.place(hexId, resolved, team)
-    if (placed) applyRosterLevels(ctx, resolved, team)
+    if (placed) applyPickValues(ctx, characterId, resolved, team)
     return placed
   }
 
@@ -980,8 +988,8 @@ export const useGrids = defineStore('grids', () => {
       return false
     }
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
-      // A picker's payload names the hero picked; the board places the unit it
-      // stands for.
+      // A picker's payload names the pick; the board places the unit it stands
+      // for.
       const pickId = sourceHexId === undefined ? pickUnitId(targetCtx, payload.characterId) : null
       const dropped = pickId === null ? payload : { ...payload, characterId: pickId }
       const ok = targetCtx.handleDrop(dropped, targetHexId)
@@ -991,7 +999,7 @@ export const useGrids = defineStore('grids', () => {
       const placedId = getCharacter(targetCtx.grid, targetHexId)
       const placedTeam = getCharacterTeam(targetCtx.grid, targetHexId)
       if (sourceHexId === undefined && placedId !== undefined && placedTeam !== undefined) {
-        applyRosterLevels(targetCtx, placedId, placedTeam)
+        applyPickValues(targetCtx, payload.characterId, placedId, placedTeam)
       }
       return true
     }

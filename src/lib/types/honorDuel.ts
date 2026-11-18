@@ -15,6 +15,13 @@ export interface DuelArtifact {
   name: string
 }
 
+/** A creature's data file. Its id is in the creatures' band of the hero ids. */
+export interface DuelCreature {
+  id: number
+  name: string
+  faction: string
+}
+
 export type HonorDuelItem =
   { kind: 'equipment'; item: DuelEquipment } | { kind: 'artifact'; item: DuelArtifact }
 

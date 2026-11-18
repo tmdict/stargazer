@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* A hero's tier by name on the tier's backdrop, a Trial chip for a Trial hero
+/* A unit's tier by name on the tier's backdrop, a Trial chip for a Trial unit
    and the name of its equipment: the words behind the marks its portrait
    carries on the board. */
 

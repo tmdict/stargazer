@@ -1,11 +1,13 @@
 <script setup lang="ts">
-/* A hero's tier in the hero card: the mark its portrait carries on the board,
+/* A unit's tier in the hero card: the mark its portrait carries on the board,
    the tier's first character on the tier's backdrop. A tap moves to the next
-   tier the hero can hold and wraps to the first. */
+   tier the unit can hold and wraps to the first. A unit with one tier shows it
+   without a choice. */
 
 import { computed } from 'vue'
 
-import { DUEL_TIERS, duelTiersOf } from '@/lib/hd/board'
+import { DUEL_TIERS } from '@/lib/hd/board'
+import { duelTiersOf } from '@/lib/hd/units'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
@@ -24,19 +26,24 @@ const i18n = useI18nStore()
 
 const key = computed(() => DUEL_TIERS[tier] ?? DUEL_TIERS[0])
 const label = computed(() => gameLabel(key.value, i18n.currentLocale))
-const next = (): void => emit('pick', (tier + 1) % duelTiersOf(unitId).length)
+const choices = computed(() => duelTiersOf(unitId))
+const fixed = computed(() => readonly || choices.value.length < 2)
+const next = (): void => {
+  const tiers = choices.value
+  emit('pick', tiers[(tiers.indexOf(tier) + 1) % tiers.length]!)
+}
 </script>
 
 <template>
   <component
-    :is="readonly ? 'span' : 'button'"
-    :type="readonly ? undefined : 'button'"
+    :is="fixed ? 'span' : 'button'"
+    :type="fixed ? undefined : 'button'"
     class="duel-tier"
-    :class="{ pale: isPaleTier(key), readonly }"
+    :class="{ pale: isPaleTier(key), readonly: fixed }"
     :style="{ background: tierBackdrop(key) }"
     :title="label"
     :aria-label="label"
-    @click="!readonly && next()"
+    @click="!fixed && next()"
   >
     {{ initialOf(label) }}
   </component>

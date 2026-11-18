@@ -48,9 +48,11 @@ export function loadOutfitImages(): Record<string, string> {
   return outfits
 }
 
+// The interface's own icons, and the ones the data pack brings for Honor Duel
+// under the same naming (`faction-<name>`).
 export function loadIcons(): Record<string, string> {
   icons ??= byStem(
-    import.meta.glob<string>('@/assets/images/icons/*.png', {
+    import.meta.glob<string>(['@/assets/images/icons/*.png', '@/pack/images/hd/icon/*.png'], {
       query: { format: 'webp', quality: 80, w: 100 },
       eager: true,
       import: 'default',

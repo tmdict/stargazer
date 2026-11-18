@@ -6,6 +6,7 @@ import { fileStem } from './fileStem'
 
 let appLocales: Record<string, LocaleData> | null = null
 let characterLocales: Record<string, LocaleData> | null = null
+let creatureLocales: Record<string, LocaleData> | null = null
 let artifactLocales: Record<string, LocaleData> | null = null
 let phantimalLocales: Record<string, LocaleData> | null = null
 let gameLocales: Record<string, LocaleData> | null = null
@@ -43,6 +44,18 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
     }),
   )
   return characterLocales
+}
+
+// Honor Duel's creatures. They read as character names (`character.<name>`)
+// but stay out of the heroes' own dictionary, which hero searches list from.
+function loadCreatureLocales(): Record<string, LocaleData> {
+  creatureLocales ??= buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/hd/creature/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+  return creatureLocales
 }
 
 export function loadArtifactLocales(): Record<string, LocaleData> {
@@ -87,7 +100,7 @@ function loadBuffLocales(): Record<string, LocaleData> {
 export function loadAllLocales(): LocaleDictionary {
   return {
     app: loadAppLocales(),
-    character: loadCharacterLocales(),
+    character: { ...loadCharacterLocales(), ...loadCreatureLocales() },
     artifact: loadArtifactLocales(),
     game: loadGameLocales(),
     buff: loadBuffLocales(),
