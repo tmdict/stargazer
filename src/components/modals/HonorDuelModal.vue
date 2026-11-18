@@ -23,8 +23,9 @@ const i18n = useI18nStore()
 
 // The name and effect text follow the skill-text language, as in the skill
 // modal; the tier chip is chrome, in the site language.
-const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
-const loaded = useModalDuelText(applied)
+const { selected, applied, failed: localeFailed, apply } = useModalSkillLocale(() => props.show)
+const { loaded, failed: textFailed } = useModalDuelText(() => props.show, applied)
+const failed = computed(() => localeFailed.value || textFailed.value)
 
 const text = computed(() => {
   const all = loaded.value?.text

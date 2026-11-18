@@ -121,19 +121,18 @@ const textChunks = {
 
 const textPromises = new Map<SkillLocale, Promise<HonorDuelText>>()
 
-/** One language's text. Rejects where the data pack holds none for it; the
+/** One language's text, or null where the data pack holds none for it; the
  * creatures' file alone may be absent (DUEL_CREATURE_TEXT_IN_PACK), and their
- * list is then empty. */
-export function loadHonorDuelText(lang: SkillLocale): Promise<HonorDuelText> {
+ * list is then empty. Rejects only when the download fails, so a caller can
+ * tell that from text the pack lacks. */
+export function loadHonorDuelText(lang: SkillLocale): Promise<HonorDuelText | null> {
   const pending = textPromises.get(lang)
   if (pending) return pending
   const folder = `/src/pack/text/hd/${lang}`
   const equipment = textChunks.equipment[`${folder}/equipment.json`]
   const artifacts = textChunks.artifacts[`${folder}/artifacts.json`]
   const creatures = textChunks.creatures[`${folder}/creatures.json`]
-  if (!equipment || !artifacts) {
-    return Promise.reject(new Error(`No Honor Duel text for "${lang}"`))
-  }
+  if (!equipment || !artifacts) return Promise.resolve(null)
   const promise = Promise.all([equipment(), artifacts(), creatures?.() ?? {}]).then(
     ([e, a, c]) => ({ equipment: e, artifacts: a, creatures: c }),
   )
