@@ -148,7 +148,7 @@ The pack's text, one pair of files for each skill-text language, each keyed by e
 
 The calculator that reads these two files is described in [Honor Duel Shop Calculator](./HONOR_DUEL_SHOP.md).
 
-The shop's facts, `src/data/hd/shop/shop.json`, shortened here to three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
+The shop's facts, `src/data/hd/shop/shop.json`, shortened here to two of its nine rounds, three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. `rounds` lists the rounds from round 1, and its last entry holds for every later round: `badges` is what the round brings, with both amounts where a round can bring either of two, and `event` names the round's event by the file its words are kept in (`shop-event-<event>`). A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
 
 ```json
 {
@@ -156,6 +156,7 @@ The shop's facts, `src/data/hd/shop/shop.json`, shortened here to three of its s
   "startingBadges": 60,
   "sell": 2,
   "levelRounds": [1, 2, 4, 6, 9],
+  "rounds": [{ "badges": [60, 70] }, { "badges": [60], "event": "fitz-trial" }],
   "goods": [
     { "name": "hero-pair", "price": 30, "kind": "hero", "copies": 2 },
     { "name": "mauler-pack", "price": 33, "kind": "pack", "draws": 3, "faction": "mauler" },

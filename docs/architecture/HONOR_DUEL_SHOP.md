@@ -56,7 +56,7 @@ The page stores nothing. What a player enters lasts for the visit to the page.
 
 The odds view always shows the measured table in this repo, with its measured ranges.
 
-The probability guide at `/guide/hd/shop/probability` explains the shop's formulas. Its text is written per language in `src/content/hd/`, and every number in it, tables and examples alike, is worked out from the shop's rules and the measured table (`useShopFigures`), never typed into the text.
+The probability guide at `/guide/hd/shop/probability` explains the shop's formulas. Its text is written per language in `src/content/hd/`, and every number in it, tables and examples alike, is worked out from the shop's rules and the measured table (`useShopFigures`), never typed into the text. The one exception is the badge count at which locking a one-copy card and buying it change places, which is quoted from Toto's calculator.
 
 ## Rules
 

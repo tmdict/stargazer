@@ -18,12 +18,22 @@ export interface Good {
   tier?: EquipmentTier
 }
 
+/** One round of a run. */
+export interface ShopRound {
+  /** The badges the round brings; a round that can bring either of two amounts lists both. */
+  badges: number[]
+  /** The round's event, by the name its words are filed under. */
+  event?: string
+}
+
 export interface ShopFacts {
   reroll: number
   startingBadges: number
   sell: number
   /** The first round of each shop level. */
   levelRounds: number[]
+  /** The rounds from round 1 on; the last entry holds for every later round. */
+  rounds: ShopRound[]
   goods: Good[]
   heroes: string[]
 }

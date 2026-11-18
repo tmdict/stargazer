@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /* One of the shop probability guide's tables, the same in every language:
-   the shop level by round, how often each product shows, how often one hero
-   shows, and what a pack gives. */
+   what each round brings, how often each product shows, how often one hero
+   shows, what a pack gives, and the records behind each shop level. */
 
 import { useI18nStore } from '@/stores/i18n'
 import { goodName } from './shopGoods'
 import { percent, useShopFigures } from './useShopFigures'
 
-defineProps<{ table: 'levels' | 'products' | 'hero' | 'packs' }>()
+defineProps<{ table: 'rounds' | 'levels' | 'products' | 'hero' | 'packs' }>()
 
 const i18n = useI18nStore()
 const figures = useShopFigures()
@@ -16,7 +16,26 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
 
 <template>
   <div class="scroll">
-    <table v-if="table === 'levels'" class="guide-table">
+    <table v-if="table === 'rounds'" class="guide-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('app.shop-math-round') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-math-badges-gained') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-level-label') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-math-event') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in figures.rounds" :key="row.round">
+          <th scope="row">{{ row.round }}</th>
+          <td>{{ row.badges }}</td>
+          <td>{{ level(row.level) }}</td>
+          <td>{{ row.event ? i18n.t(`app.shop-event-${row.event}`) : '' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table v-else-if="table === 'levels'" class="guide-table">
       <thead>
         <tr>
           <th scope="col">{{ i18n.t('app.shop-level-label') }}</th>
@@ -37,12 +56,14 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
       <thead>
         <tr>
           <th scope="col" class="name">{{ i18n.t('app.shop-math-product') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-math-price') }}</th>
           <th v-for="row in figures.levels" :key="row.level" scope="col">{{ level(row.level) }}</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="row in figures.products" :key="row.name">
           <th scope="row" class="name">{{ goodName(row.name, i18n.currentLocale) }}</th>
+          <td>{{ row.price }}</td>
           <td v-for="(chance, index) in row.chances" :key="index" :class="{ none: !chance }">
             {{ percent(chance) }}
           </td>
@@ -54,6 +75,8 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
       <thead>
         <tr>
           <th scope="col">{{ i18n.t('app.shop-level-label') }}</th>
+          <th scope="col">{{ goodName(figures.heroCard, i18n.currentLocale) }}</th>
+          <th scope="col">{{ goodName(figures.pairCard, i18n.currentLocale) }}</th>
           <th scope="col">{{ i18n.t('app.shop-math-shows') }}</th>
           <th scope="col">{{ i18n.t('app.shop-math-rerolls') }}</th>
           <th scope="col">{{ i18n.t('app.shop-math-reroll-badges') }}</th>
@@ -62,6 +85,8 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
       <tbody>
         <tr v-for="row in figures.hero.value" :key="row.level">
           <th scope="row">{{ row.level }}</th>
+          <td :class="{ none: !row.single }">{{ percent(row.single) }}</td>
+          <td :class="{ none: !row.pair }">{{ percent(row.pair) }}</td>
           <td :class="{ none: !row.chance }">{{ percent(row.chance) }}</td>
           <td :class="{ none: !row.rerolls }">{{ row.rerolls?.toFixed(1) ?? '–' }}</td>
           <td :class="{ none: !row.rerolls }">
