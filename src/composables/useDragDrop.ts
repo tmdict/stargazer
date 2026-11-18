@@ -100,8 +100,7 @@ const endDrag = (event: DragEvent) => {
   document.removeEventListener('dragend', endDrag)
 }
 
-// `backdrop` is the fill the unit is drawn on where the drag starts, when that
-// is not its hero's own.
+// `backdrop` takes the place of the hero's own rarity fill in the drag picture.
 const startDrag = (event: DragEvent, unit: DraggedUnit, imageUrl: string, backdrop?: string) => {
   if (!event.dataTransfer) return
 

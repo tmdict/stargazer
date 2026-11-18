@@ -33,7 +33,7 @@ const loaded = (): DuelCatalog | null => {
 export interface DuelItemView {
   label: string
   image: string | undefined
-  backdrop: string | undefined
+  backdrop: string
 }
 
 export function useDuelItems() {

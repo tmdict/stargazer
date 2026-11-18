@@ -39,7 +39,7 @@ const open = (event: MouseEvent): void =>
     :aria-label="label"
     @click="!readonly && open($event)"
   >
-    <UnitBadge v-if="held" :color="held.backdrop ?? 'none'">
+    <UnitBadge v-if="held" :color="held.backdrop">
       <img v-if="held.image" :src="held.image" alt="" draggable="false" />
     </UnitBadge>
     <IconPlus v-else :size="11" />

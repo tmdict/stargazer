@@ -31,7 +31,7 @@ import { useGameDataStore } from './gameData'
 import type { GridContext } from './gridContext'
 import { useGrids } from './grids'
 
-export const duelHeroUnits = (ctx: GridContext, team: Team): number[] =>
+const duelHeroUnits = (ctx: GridContext, team: Team): number[] =>
   getTilesWithCharactersByTeam(ctx.grid, team)
     .map((tile) => tile.characterId!)
     .filter(isHeroUnit)

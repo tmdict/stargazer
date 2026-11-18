@@ -550,23 +550,24 @@ const liftedMode = computed(() =>
       />
     </div>
 
-    <div
-      v-for="mark in duelMarks"
-      :key="`duel-${mark.hexId}`"
-      class="sprite-anchor"
-      :style="getCharacterStyle(mark.hexId)"
-    >
-      <UnitBadge
-        v-if="mark.piece"
-        class="badge-upper-left duel-piece"
-        :color="mark.piece.backdrop ?? 'none'"
+    <template v-for="mark in duelMarks" :key="`duel-${mark.hexId}`">
+      <div
+        v-if="mark.piece || mark.trial"
+        class="sprite-anchor"
+        :style="getCharacterStyle(mark.hexId)"
       >
-        <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
-      </UnitBadge>
-      <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
-        {{ initialOf(i18n.t('app.trial')) }}
-      </UnitBadge>
-    </div>
+        <UnitBadge
+          v-if="mark.piece"
+          class="badge-upper-left duel-piece"
+          :color="mark.piece.backdrop"
+        >
+          <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
+        </UnitBadge>
+        <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
+          {{ initialOf(i18n.t('app.trial')) }}
+        </UnitBadge>
+      </div>
+    </template>
 
     <div v-if="liftPill" class="sprite-anchor" :style="getCharacterStyle(liftPill.hexId)">
       <div

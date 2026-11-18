@@ -46,7 +46,7 @@ const ICONS: Record<BadgeIcon, Component> = {
   border: var(--badge-border) solid #fff;
   border-radius: 50%;
   overflow: hidden;
-  color: var(--badge-ink, #fff);
+  color: #fff;
   font-size: calc(var(--badge-size) * 0.55);
   font-weight: 700;
   line-height: 1;

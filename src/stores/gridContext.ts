@@ -218,14 +218,14 @@ export function createGridContext(
   }
 
   // The values a hero carries under this kind of board's rules (upgrades on the
-  // Arena, tier and equipment in Honor Duel), keyed by team +
-  // character rather than hex, so values follow their hero across moves and each
-  // team tracks a hero independently. Sparse: only non-default values are
-  // stored. A record exists only while its hero stands on that side of this
-  // board: writes for anyone else are ignored, and every operation that can take
-  // a hero off the board prunes afterwards, so a hero that comes back starts at
-  // defaults. A team change re-keys the record (move/swap below, and the grids
-  // store's cross-board transfers).
+  // Arena, tier and equipment in Honor Duel), keyed by team + character rather
+  // than hex, so values follow their hero across moves and each team tracks a
+  // hero independently. Sparse: only non-default values are stored. A record
+  // exists only while its hero stands on that side of this board: writes for
+  // anyone else are ignored, and every operation that can take a hero off the
+  // board prunes afterwards, so a hero that comes back starts at defaults. A
+  // team change re-keys the record (move/swap below, and the grids store's
+  // cross-board transfers).
   const attrs = reactive(new Map<string, AttrRecord>())
   const attrKey = (team: Team, characterId: number): string => `${team}:${characterId}`
   const attrRules = kind === 'honorDuel' ? DUEL_ATTR_RULES : HERO_ATTR_RULES
