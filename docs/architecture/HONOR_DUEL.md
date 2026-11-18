@@ -1,6 +1,6 @@
 # Honor Duel
 
-Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts and then equipment by tier, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. Nothing in the two lists goes on a board.
+Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts and then equipment by tier, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. On the Teams page nothing in the two lists goes on a board.
 
 On the Arena page the tab also swaps the Arena board for an Honor Duel board, where a formation of the mode is laid out with its tiers, equipment and artifacts ([The board](#the-board)).
 
@@ -51,9 +51,13 @@ A creature is a Trial unit that is no hero. It is kept out of the hero list (`lo
 
 A placed unit's tier and equipment are per-hero values under ids of their own (101 and 102), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that changes sides leaves its piece behind, and a hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there. The same piece may sit on several heroes.
 
+One pair of controls sets a unit's tier and equipment, `DuelTierPill` and `DuelPieceSlot`, and they show in three places: the hero card under the board, the unit's portrait, and the row over a lifted unit, which is how a touch screen reaches them. On a portrait the piece a unit holds stays at the upper left, where a picture of the board keeps it, beside the Trial mark at the upper right. The empty slot, and the tier at the lower left, show only under the pointer. `DuelPiecePicker` opens the equipment picker for all three, and opening it ends a lift, since the tap that closes it would otherwise move the lifted unit. A piece can also be dragged from the tab's list onto a unit ([Board Input](./DRAG_AND_DROP.md#honor-duel-equipment)).
+
 ### The team artifact and the faction bonus
 
 Each side holds one Honor Duel artifact with a level from 1 to 3. It is kept apart from the Arena's seasonal artifact: both lists number from 1, and a seasonal artifact's number also picks a skill drawing, so one shared place would show the wrong thing. It draws on the board's two artifact places and nothing else on the board.
+
+Beside an Honor Duel board, a click on an artifact in the tab's list follows the Arena list's rule (`toggleDuelArtifact`): it takes off an artifact a side holds, and puts any other at level 1 on the first side that shows none, the ally's first. Its popup then opens by the inspect gesture alone. A place's own picker sets the level, and can give both sides the same artifact.
 
 A badge by each artifact place reports the side's faction bonus (`teamFactionBonus` in `src/lib/factionBonus.ts`, beside the numbers the Faction Bonus guide page shows). Every unit of the side counts, a copy as much as the first. A Celestial or Hypogean hero stands in for any faction, so the side takes the highest step its stand-ins can complete, and each of them adds one point on top. The creatures share a faction of their own, which counts as any other does.
 

@@ -22,6 +22,7 @@ const {
   text?: DuelEquipmentText | DuelArtifactText
   // The artifact level whose effect shows.
   level?: number
+  hint?: string
 }>()
 
 const i18n = useI18nStore()
@@ -36,7 +37,7 @@ const effect = computed(
 <template>
   <TooltipPopup :target-element>
     <template #content>
-      <TooltipCard :name>
+      <TooltipCard :name :hint>
         <DuelEffectText v-if="effect" :source="effect" />
       </TooltipCard>
     </template>

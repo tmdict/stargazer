@@ -110,6 +110,10 @@ Artifacts sit in host cells beside the grid (`artifactHostHex`), which hold no t
 
 A target that `canDropArtifact` rejects gets `stopPropagation()` without `preventDefault()`, so the native not-allowed cursor shows and the provider's page-wide `dragover` cannot accept it. The drop goes through `routeArtifactDrop`, which shares `resolveArtifactDrop` with the hover check: an empty cell moves, a filled one swaps, and uniqueness is re-checked only on a team change. Artifact drag exists only on wide layouts. Touch can add and remove artifacts but not move them.
 
+## Honor Duel equipment
+
+A piece dragged from the Honor Duel list onto a unit also uses element-level native drag, under `application/duel-equipment` (`useDuelPieceDrag`). The drop target is the unit's portrait in `GridCharacters` and not a tile, because the piece goes to a unit, so the drag needs no hex detection and the hero pipeline never reads it. Whether a piece is in flight is kept for the board: a portrait's highlight ends with the drag, and while it lasts everything on the layer but the portraits lets the pointer through, so a portrait is the only drop target. Touch has no drag, so the row over a lifted unit opens the equipment picker instead ([Honor Duel](./HONOR_DUEL.md#what-a-unit-carries)).
+
 ## Board swap
 
 Swapping two Teams boards (`useGridSwap`, committed by `grids.swapBoards`) uses pointer events instead of HTML5 drag, with module-level state for the same listener-identity reason. A press on a board's swap button that travels becomes a drag, and the release picks the board under the pointer through `[data-grid-board-id]`. Otherwise the button arms the swap and a click on another board completes it. On tap layouts a release counts as a tap only under a small travel limit, so swiping the board row neither selects nor cancels.

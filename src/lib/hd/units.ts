@@ -73,6 +73,9 @@ export function duelTiersOf(unitId: number): readonly number[] {
   return name === undefined ? [] : duelSourceTiers(name, isTrialHeroId(unitId))
 }
 
+/** Whether a unit on a board has another tier to change to. */
+export const hasDuelTierChoice = (unitId: number): boolean => duelTiersOf(unitId).length > 1
+
 const lowestTier = (unitId: number): number => duelTiersOf(unitId)[0] ?? 0
 
 /** The tier a pick from an Honor Duel list is placed at: its card's for a

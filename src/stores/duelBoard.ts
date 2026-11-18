@@ -1,7 +1,7 @@
 /* The Arena page's Honor Duel board: the board on screen read as the state its
- * link holds, a board built from one, the edit that follows the mode's own
- * rule (copies of a hero share a piece of equipment), and a side's faction
- * bonus. */
+ * link holds, a board built from one, the edits that follow the mode's own
+ * rules (copies of a hero share a piece of equipment, and a list's click
+ * places or removes an artifact), and a side's faction bonus. */
 
 import { defineStore } from 'pinia'
 
@@ -29,7 +29,7 @@ import { packDisplayFlags, type DisplayFlags } from '@/lib/teams/gridStateSerial
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from './gameData'
 import type { GridContext } from './gridContext'
-import { useGrids } from './grids'
+import { artifactSlot, useGrids } from './grids'
 
 const duelHeroUnits = (ctx: GridContext, team: Team): number[] =>
   getTilesWithCharactersByTeam(ctx.grid, team)
@@ -74,6 +74,36 @@ export function setDuelEquipment(
   for (const id of duelHeroUnits(ctx, team)) {
     if (toBaseHeroId(id) === heroId) ctx.setAttr(team, id, DUEL_ATTR_EQUIPMENT, piece)
   }
+}
+
+// The side that holds the artifact, the first of `sides` when more than one does.
+export const duelArtifactSide = (
+  ctx: GridContext,
+  id: number,
+  sides: readonly Team[],
+): Team | null => sides.find((team) => artifactSlot(ctx.duelArtifacts, team)?.id === id) ?? null
+
+/* A list's click on an artifact, by the Arena list's rule: one a side holds
+ * comes off it, and any other goes at level 1 to the first of `sides` whose
+ * place shows none. With an artifact on every side the click changes nothing.
+ * A place shows none for an id that names no artifact, and `names` tells
+ * which do: the catalog that knows stays out of this file. */
+export function toggleDuelArtifact(
+  ctx: GridContext,
+  id: number,
+  sides: readonly Team[],
+  names: (id: number) => boolean,
+): void {
+  const held = duelArtifactSide(ctx, id, sides)
+  if (held !== null) {
+    ctx.setDuelArtifact(held, null)
+    return
+  }
+  const free = sides.find((team) => {
+    const slot = artifactSlot(ctx.duelArtifacts, team)
+    return slot === null || !names(slot.id)
+  })
+  if (free !== undefined) ctx.setDuelArtifact(free, { id, level: 1 })
 }
 
 // Every unit of the side counts toward its faction, a copy as much as the

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* A hero's equipment slot in the hero card: the piece it holds as the round
-   picture its portrait carries on the board, or an empty slot. A tap asks for
-   the picker. */
+/* A hero's equipment slot: the piece it holds as a round picture, or an empty
+   slot. A tap asks for the picker. The host sets the size (--badge-size,
+   --badge-border), and may fill an empty slot that sits over a picture
+   (--slot-fill). */
 
 import { computed } from 'vue'
 
@@ -33,6 +34,7 @@ const open = (event: MouseEvent): void =>
     :is="readonly ? 'span' : 'button'"
     v-if="held || !readonly"
     :type="readonly ? undefined : 'button'"
+    :role="readonly ? 'img' : undefined"
     class="piece-slot"
     :class="{ empty: !held, readonly }"
     :title="label"
@@ -48,8 +50,6 @@ const open = (event: MouseEvent): void =>
 
 <style scoped>
 .piece-slot {
-  --badge-size: 24px;
-  --badge-border: 1.5px;
   position: relative;
   display: grid;
   place-items: center;
@@ -65,6 +65,7 @@ const open = (event: MouseEvent): void =>
 
 .piece-slot.empty {
   border: 1.5px dashed var(--color-border-primary);
+  background: var(--slot-fill, none);
 }
 
 .piece-slot.readonly {

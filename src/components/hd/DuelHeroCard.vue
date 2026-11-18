@@ -6,6 +6,7 @@
 
 import { ref } from 'vue'
 
+import DuelPiecePicker, { type DuelPiecePick } from './DuelPiecePicker.vue'
 import DuelPieceSlot from './DuelPieceSlot.vue'
 import DuelTierPill from './DuelTierPill.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
@@ -13,33 +14,18 @@ import UnitBadge from '@/components/grid/UnitBadge.vue'
 import { below } from '@/components/guide/shop/popupLayout'
 import { isTrialHeroId } from '@/lib/characters/trial'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
-import type { Point } from '@/lib/layout'
-import type { Team } from '@/lib/types/team'
-import { setDuelEquipment } from '@/stores/duelBoard'
 import type { GridContext } from '@/stores/gridContext'
 import { useI18nStore } from '@/stores/i18n'
-import { defineLazyComponent } from '@/utils/lazyComponent'
 import { initialOf } from '@/utils/nameFormatting'
 
-const props = defineProps<{
+defineProps<{
   context: GridContext
   readonly?: boolean
 }>()
 
 const i18n = useI18nStore()
 
-const DuelEquipmentPopup = defineLazyComponent(() => import('./DuelEquipmentPopup.vue'))
-
-const picking = ref<{ team: Team; unitId: number; position: Point } | null>(null)
-
-const pieceOf = (team: Team, unitId: number): number =>
-  props.context.getAttr(team, unitId, DUEL_ATTR_EQUIPMENT)
-
-const pick = (piece: number): void => {
-  const hero = picking.value
-  if (hero) setDuelEquipment(props.context, hero.team, hero.unitId, piece)
-  picking.value = null
-}
+const picking = ref<DuelPiecePick | null>(null)
 </script>
 
 <template>
@@ -56,6 +42,7 @@ const pick = (piece: number): void => {
     </template>
     <template #pill="{ team, hero }">
       <DuelTierPill
+        class="tier"
         :unit-id="hero.characterId"
         :tier="context.getAttr(team, hero.characterId, DUEL_ATTR_TIER)"
         :readonly
@@ -64,19 +51,14 @@ const pick = (piece: number): void => {
     </template>
     <template #controls="{ team, hero }">
       <DuelPieceSlot
-        :piece="pieceOf(team, hero.characterId)"
+        class="piece"
+        :piece="context.getAttr(team, hero.characterId, DUEL_ATTR_EQUIPMENT)"
         :readonly
         @open="picking = { team, unitId: hero.characterId, position: below($event) }"
       />
     </template>
   </TeamPowerPanel>
-  <DuelEquipmentPopup
-    v-if="picking"
-    :position="picking.position"
-    :clearable="pieceOf(picking.team, picking.unitId) !== 0"
-    @pick="pick"
-    @close="picking = null"
-  />
+  <DuelPiecePicker v-model="picking" :context />
 </template>
 
 <style scoped>
@@ -86,5 +68,14 @@ const pick = (piece: number): void => {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.tier {
+  margin-top: -7px;
+}
+
+.piece {
+  --badge-size: 24px;
+  --badge-border: 1.5px;
 }
 </style>

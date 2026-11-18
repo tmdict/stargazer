@@ -1,13 +1,13 @@
 <script setup lang="ts">
-/* A unit's tier in the hero card: the tier's first character on the backdrop
-   that fills its portrait on the board. A tap moves to the next tier the unit
-   can hold and wraps to the first. A unit with one tier shows it without a
-   choice. */
+/* A unit's tier: the tier's first character on the backdrop that fills its
+   portrait on the board. A tap moves to the next tier the unit can hold and
+   wraps to the first. A unit with one tier shows it without a choice. The host
+   may widen the click area past what is drawn (--hit-reach). */
 
 import { computed } from 'vue'
 
 import { DUEL_TIERS } from '@/lib/hd/board'
-import { duelTiersOf } from '@/lib/hd/units'
+import { duelTiersOf, hasDuelTierChoice } from '@/lib/hd/units'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
@@ -27,7 +27,7 @@ const i18n = useI18nStore()
 const key = computed(() => DUEL_TIERS[tier] ?? DUEL_TIERS[0])
 const label = computed(() => gameLabel(key.value, i18n.currentLocale))
 const choices = computed(() => duelTiersOf(unitId))
-const fixed = computed(() => readonly || choices.value.length < 2)
+const fixed = computed(() => readonly || !hasDuelTierChoice(unitId))
 const next = (): void => {
   const tiers = choices.value
   emit('pick', tiers[(tiers.indexOf(tier) + 1) % tiers.length]!)
@@ -54,7 +54,6 @@ const next = (): void => {
   position: relative;
   z-index: 1;
   min-width: 26px;
-  margin-top: -7px;
   padding: 2.5px 6px;
   border: none;
   border-radius: 999px;
@@ -78,10 +77,14 @@ const next = (): void => {
   cursor: default;
 }
 
+.duel-tier:not(.readonly)::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--hit-reach, 0px) * -1);
+}
+
 @media (pointer: coarse) {
   .duel-tier:not(.readonly)::after {
-    content: '';
-    position: absolute;
     inset: -4px -6px -8px;
   }
 }

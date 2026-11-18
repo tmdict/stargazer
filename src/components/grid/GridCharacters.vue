@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
 import PhantimalTooltip from '../PhantimalTooltip.vue'
@@ -10,9 +10,14 @@ import BuffTileText from './BuffTileText.vue'
 import BuffTileTooltip from './BuffTileTooltip.vue'
 import GridPointer from './GridPointer.vue'
 import UnitBadge from './UnitBadge.vue'
+import DuelPiecePicker, { type DuelPiecePick } from '@/components/hd/DuelPiecePicker.vue'
+import DuelPieceSlot from '@/components/hd/DuelPieceSlot.vue'
 import DuelTierChips from '@/components/hd/DuelTierChips.vue'
+import DuelTierPill from '@/components/hd/DuelTierPill.vue'
+import { below } from '@/components/guide/shop/popupLayout'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useDuelItems, type DuelItemView } from '@/composables/useDuelItems'
+import { useDuelPieceDrag } from '@/composables/useDuelPieceDrag'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -32,13 +37,15 @@ import { inPhantimalBand, isPhantimalId, phantimalOwnerId } from '@/lib/characte
 import { isTrialHeroId } from '@/lib/characters/trial'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER, DUEL_TIERS, type DuelTier } from '@/lib/hd/board'
-import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT } from '@/lib/layout'
+import { hasDuelTierChoice } from '@/lib/hd/units'
+import { PORTRAIT_RADIUS, STANDING_POINTER_HEIGHT, type Point } from '@/lib/layout'
 import { buffAt } from '@/lib/mapModeLists'
 import { SKILL_MODES, type SkillMode } from '@/lib/skills/skillModes'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import type { BadgeIcon } from '@/lib/types/unitBadge'
+import { setDuelEquipment } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -158,18 +165,24 @@ defineExpose({ liftActionsEl })
 
 // Anchored to the lifted unit's visual top edge, or below the unit when it would
 // leave the band the board draws in (drawnBounds), where team view's crop would
-// cut it off.
+// cut it off. A unit with neither a page to inspect nor Honor Duel controls
+// has none.
 const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
   const unitId = getCharacter(ctx.grid, hexId)
-  if (unitId === undefined || !unitInspectTarget(unitId)) return null
+  if (unitId === undefined) return null
+  const inspectable = unitInspectTarget(unitId) !== null
+  const duel = props.readonly ? undefined : duelMarkAt(hexId)
+  if (!inspectable && !duel) return null
   const half = characterDimensions.value.size / 2
-  const below = spriteLayerY(hexId, -half - LIFT_PILL_ROOM) < ctx.drawnBounds.y
+  const pillBelow = spriteLayerY(hexId, -half - LIFT_PILL_ROOM) < ctx.drawnBounds.y
   const pointer = ctx.perspective ? STANDING_POINTER_HEIGHT : 0
   return {
     hexId,
-    below,
+    below: pillBelow,
+    inspectable,
+    duel,
     style: { '--lift-pill-gap': `${LIFT_PILL_GAP}px`, '--lift-pill-pointer': `${pointer}px` },
   }
 })
@@ -330,7 +343,7 @@ const hoverCardAt = (hexId: number, characterId: number): HoverCard | undefined 
   const enemy = getCharacterTeam(ctx.grid, hexId) === Team.ENEMY
   const buff = props.showBuffTiles ? buffAt(ctx.buffs, hexId) : undefined
   const card = props.showHover || (props.showRules && enemy) ? cardAt(characterId) : undefined
-  const duel = duelMarks.value.find((mark) => mark.hexId === hexId)
+  const duel = duelMarkAt(hexId)
   const own = card?.kind === 'hero' && duel ? { ...card, duel } : card
   if (buff === undefined) return own
   if (own) return { ...own, buff }
@@ -398,11 +411,19 @@ const skillBadges = computed(() => {
 })
 
 // An Honor Duel board marks what each hero carries on its portrait, so the
-// board alone, and a picture of it, tells the formation.
+// board alone, and a picture of it, tells the formation. The marks are also
+// where a unit's tier and equipment are set: the hero card's own controls, on
+// the portrait under the pointer.
 interface DuelMark {
   hexId: number
+  team: Team
+  unitId: number
   trial: boolean
   tier: DuelTier
+  // The tier's place in DUEL_TIERS, and whether the unit can hold another.
+  tierAt: number
+  tierChoice: boolean
+  pieceId: number
   piece: DuelItemView | null
 }
 
@@ -411,17 +432,113 @@ const { pieceOf } = useDuelItems()
 const duelMarks = computed((): DuelMark[] =>
   ctx.kind !== 'honorDuel' || props.isMapEditorMode
     ? []
-    : visiblePlacements.value.flatMap(([hexId, characterId]) => {
+    : visiblePlacements.value.flatMap(([hexId, unitId]) => {
         const team = getCharacterTeam(ctx.grid, hexId)
-        if (!team || !isHeroUnit(characterId)) return []
-        const tier = DUEL_TIERS[ctx.getAttr(team, characterId, DUEL_ATTR_TIER)] ?? DUEL_TIERS[0]
-        const piece = pieceOf(ctx.getAttr(team, characterId, DUEL_ATTR_EQUIPMENT))
-        return [{ hexId, trial: isTrialHeroId(characterId), tier, piece }]
+        if (!team || !isHeroUnit(unitId)) return []
+        const tierAt = ctx.getAttr(team, unitId, DUEL_ATTR_TIER)
+        const pieceId = ctx.getAttr(team, unitId, DUEL_ATTR_EQUIPMENT)
+        return [
+          {
+            hexId,
+            team,
+            unitId,
+            trial: isTrialHeroId(unitId),
+            tier: DUEL_TIERS[tierAt] ?? DUEL_TIERS[0],
+            tierAt,
+            tierChoice: hasDuelTierChoice(unitId),
+            pieceId,
+            piece: pieceOf(pieceId),
+          },
+        ]
       }),
 )
 
+const duelMarkAt = (hexId: number | null): DuelMark | undefined =>
+  duelMarks.value.find((mark) => mark.hexId === hexId)
+
 const duelBackdrops = computed(
   () => new Map(duelMarks.value.map((mark) => [mark.hexId, tierBackdrop(mark.tier)])),
+)
+
+const setDuelTier = ({ team, unitId }: DuelMark, tier: number): void =>
+  ctx.setAttr(team, unitId, DUEL_ATTR_TIER, tier)
+
+const picking = ref<DuelPiecePick | null>(null)
+const pickPiece = ({ team, unitId }: DuelMark, position: Point): void => {
+  picking.value = { team, unitId, position }
+}
+
+// Past the portrait the control sits on, so the unit stays in view.
+const besideUnit = (control: DOMRect): Point => ({
+  x: control.left + characterDimensions.value.size + 12,
+  y: control.top,
+})
+
+// A piece dragged from the list goes to the unit it is let go on. A drag that
+// ends over a unit may fire no dragleave, so the highlight ends with the drag.
+const { isDraggingPiece, carriesPiece, droppedPiece } = useDuelPieceDrag()
+const pieceOverHexId = ref<number | null>(null)
+watch(isDraggingPiece, (dragging) => {
+  if (!dragging) pieceOverHexId.value = null
+})
+
+const pieceTargetAt = (event: DragEvent, hexId: number): DuelMark | undefined =>
+  props.readonly || !carriesPiece(event) ? undefined : duelMarkAt(hexId)
+
+const handlePieceDragOver = (event: DragEvent, hexId: number): void => {
+  if (!pieceTargetAt(event, hexId)) return
+  event.preventDefault()
+  pieceOverHexId.value = hexId
+}
+
+const handlePieceDrop = (event: DragEvent, hexId: number): void => {
+  const mark = pieceTargetAt(event, hexId)
+  const piece = droppedPiece(event)
+  if (!mark || piece === null) return
+  event.preventDefault()
+  // Off the document's drop listener, which routes hero drops.
+  event.stopPropagation()
+  setDuelEquipment(ctx, mark.team, mark.unitId, piece)
+}
+
+// The unit the pointer is on, by its portrait or a control on it. The controls
+// sit outside the portrait's element, so the layer follows the pointer across
+// both.
+const {
+  hovered: pointedHexId,
+  show: point,
+  hide: unpoint,
+} = useGridHoverTooltip<number>(() => ctx.placements)
+const pointAt = (event: MouseEvent, target: EventTarget | null): void => {
+  const unit = target instanceof Element ? target.closest<HTMLElement>('[data-unit-hex]') : null
+  // Tile numbers repeat on every board, so only a unit of this layer counts.
+  if (unit && (event.currentTarget as Element).contains(unit)) {
+    point(event, Number(unit.dataset.unitHex))
+  } else {
+    unpoint()
+  }
+}
+
+// On a board that can be edited, the unit under the pointer shows the controls
+// it has no mark for at rest: an empty equipment slot, and its tier.
+const pointedMark = computed(() => (props.readonly ? undefined : duelMarkAt(pointedHexId.value)))
+
+// The lift pill is centred on its unit, so by the board's side it can run past
+// the screen's edge. Its measured overhang slides it back in, and its pointer
+// stays over the unit.
+const LIFT_PILL_EDGE = 4
+const liftShift = ref(0)
+watch(
+  [liftPill, liftActionsEl],
+  () => {
+    const pill = liftActionsEl.value?.getBoundingClientRect()
+    if (!pill) return
+    const left = pill.left - liftShift.value
+    const right = pill.right - liftShift.value
+    const edge = document.documentElement.clientWidth - LIFT_PILL_EDGE
+    liftShift.value = Math.max(LIFT_PILL_EDGE - left, 0) + Math.min(edge - right, 0)
+  },
+  { flush: 'post' },
 )
 
 const badgeStyle = computed(() => {
@@ -459,7 +576,13 @@ const liftedMode = computed(() =>
 </script>
 
 <template>
-  <div class="character-layer" :style="badgeStyle">
+  <div
+    class="character-layer"
+    :class="{ 'piece-in-hand': isDraggingPiece }"
+    :style="badgeStyle"
+    @mouseover="pointAt($event, $event.target)"
+    @mouseout="pointAt($event, $event.relatedTarget)"
+  >
     <div
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
@@ -469,11 +592,16 @@ const liftedMode = computed(() =>
         readonly: readonly,
         lifted: liftedHexId === hexId && liftedGridId === ctx.id,
         'rules-faded': faded?.has(hexId),
+        'piece-target': pieceOverHexId === hexId,
       }"
       :style="getCharacterStyle(hexId)"
+      :data-unit-hex="hexId"
       :draggable="!isMapEditorMode && !readonly"
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
+      @dragover="handlePieceDragOver($event, hexId)"
+      @dragleave="pieceOverHexId = null"
+      @drop="handlePieceDrop($event, hexId)"
       @click="!readonly && handleClick($event, hexId, characterId)"
       @pointerdown="handlePointerDown($event, hexId, characterId)"
       @contextmenu="handleContextMenu($event, hexId, characterId)"
@@ -552,20 +680,36 @@ const liftedMode = computed(() =>
 
     <template v-for="mark in duelMarks" :key="`duel-${mark.hexId}`">
       <div
-        v-if="mark.piece || mark.trial"
+        v-if="mark.piece || mark.trial || mark === pointedMark"
         class="sprite-anchor"
         :style="getCharacterStyle(mark.hexId)"
+        :data-unit-hex="mark.hexId"
+        @contextmenu="handleContextMenu($event, mark.hexId, mark.unitId)"
       >
-        <UnitBadge
-          v-if="mark.piece"
-          class="badge-upper-left duel-piece"
-          :color="mark.piece.backdrop"
+        <span
+          v-if="mark.piece || mark === pointedMark"
+          class="duel-control duel-piece badge-upper-left"
+          :class="{ 'capture-exclude': !mark.piece }"
         >
-          <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
-        </UnitBadge>
+          <DuelPieceSlot
+            :piece="mark.pieceId"
+            :readonly
+            @open="pickPiece(mark, besideUnit($event))"
+          />
+        </span>
         <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
           {{ initialOf(i18n.t('app.trial')) }}
         </UnitBadge>
+        <span
+          v-if="mark === pointedMark && mark.tierChoice"
+          class="duel-control badge-lower-left capture-exclude"
+        >
+          <DuelTierPill
+            :unit-id="mark.unitId"
+            :tier="mark.tierAt"
+            @pick="setDuelTier(mark, $event)"
+          />
+        </span>
       </div>
     </template>
 
@@ -574,7 +718,7 @@ const liftedMode = computed(() =>
         ref="liftActionsEl"
         class="lift-actions capture-exclude"
         :class="{ below: liftPill.below }"
-        :style="liftPill.style"
+        :style="[liftPill.style, { '--lift-pill-shift': `${liftShift}px` }]"
       >
         <button
           v-if="liftedMode && !readonly"
@@ -585,12 +729,31 @@ const liftedMode = computed(() =>
         >
           <UnitBadge :icon="liftedMode.icon" :color="liftedMode.mode.color" :glyph="11" />
         </button>
-        <button type="button" class="lift-inspect" @click="inspectAt(liftPill.hexId)">
+        <span v-if="liftPill.duel" class="lift-duel">
+          <DuelTierPill
+            v-if="liftPill.duel.tierChoice"
+            :unit-id="liftPill.duel.unitId"
+            :tier="liftPill.duel.tierAt"
+            @pick="setDuelTier(liftPill.duel, $event)"
+          />
+          <DuelPieceSlot
+            :piece="liftPill.duel.pieceId"
+            @open="pickPiece(liftPill.duel, below($event))"
+          />
+        </span>
+        <button
+          v-if="liftPill.inspectable"
+          type="button"
+          class="lift-inspect"
+          @click="inspectAt(liftPill.hexId)"
+        >
           <IconInfo :size="16" />
           {{ i18n.t('app.skills') }}
         </button>
       </div>
     </div>
+
+    <DuelPiecePicker v-model="picking" :context="ctx" />
 
     <TooltipPopup v-if="hoveredMode && modeAnchor" :target-element="modeAnchor" variant="simple">
       <template #content>{{ i18n.t(`app.${hoveredMode.name}`) }}</template>
@@ -675,9 +838,18 @@ const liftedMode = computed(() =>
 
 /* Lift styling lives on the inner element because the wrapper's inline
    transform carries the perspective skew. */
-.character.lifted .character-content {
+.character.lifted .character-content,
+.character.piece-target .character-content {
   transform: scale(1.08);
+}
+
+.character.lifted .character-content {
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));
+}
+
+.character.piece-target .character-content {
+  filter: drop-shadow(0 0 3px var(--tile-highlight-stroke))
+    drop-shadow(0 0 8px var(--tile-highlight-stroke));
 }
 
 .sprite-anchor {
@@ -686,7 +858,8 @@ const liftedMode = computed(() =>
 }
 
 .badge-upper-right,
-.badge-upper-left {
+.badge-upper-left,
+.badge-lower-left {
   position: absolute;
   top: calc(50% - var(--badge-rim));
   transform: translate(-50%, -50%);
@@ -696,12 +869,36 @@ const liftedMode = computed(() =>
   left: calc(50% + var(--badge-rim));
 }
 
-.badge-upper-left {
+.badge-upper-left,
+.badge-lower-left {
   left: calc(50% - var(--badge-rim));
+}
+
+.badge-lower-left {
+  top: calc(50% + var(--badge-rim));
 }
 
 .duel-piece {
   --badge-size: var(--piece-size);
+}
+
+.duel-control,
+.lift-duel {
+  --slot-fill: var(--color-bg-raised);
+  display: flex;
+}
+
+.duel-control.badge-lower-left {
+  --hit-reach: 6px;
+}
+
+.duel-control > button {
+  pointer-events: auto;
+}
+
+.piece-in-hand .character-content,
+.piece-in-hand .sprite-anchor * {
+  pointer-events: none;
 }
 
 .skill-mode {
@@ -740,7 +937,8 @@ const liftedMode = computed(() =>
 }
 
 @media not all and (any-pointer: fine) {
-  .skill-mode {
+  .skill-mode,
+  .duel-control > button {
     pointer-events: none;
   }
 }
@@ -749,7 +947,7 @@ const liftedMode = computed(() =>
   position: absolute;
   left: 50%;
   top: 0;
-  transform: translate(-50%, calc(-100% - var(--lift-pill-gap)));
+  transform: translate(calc(-50% + var(--lift-pill-shift)), calc(-100% - var(--lift-pill-gap)));
   display: flex;
   align-items: center;
   border-radius: 999px;
@@ -777,16 +975,26 @@ const liftedMode = computed(() =>
   white-space: nowrap;
 }
 
-.lift-mode {
+.lift-mode,
+.lift-duel {
   --badge-size: 18px;
   --badge-border: 1.5px;
   padding: 3px 0 3px 3px;
 }
 
+.lift-duel {
+  align-items: center;
+  gap: 8px;
+}
+
+.lift-duel:last-child {
+  padding-right: 3px;
+}
+
 .lift-actions::after {
   content: '';
   position: absolute;
-  left: 50%;
+  left: calc(50% - var(--lift-pill-shift));
   bottom: -5px;
   transform: translateX(-50%);
   border: 5px solid transparent;
@@ -796,7 +1004,7 @@ const liftedMode = computed(() =>
 
 .lift-actions.below {
   top: calc(100% + var(--lift-pill-pointer));
-  transform: translate(-50%, var(--lift-pill-gap));
+  transform: translate(calc(-50% + var(--lift-pill-shift)), var(--lift-pill-gap));
 }
 
 .lift-actions.below::after {
