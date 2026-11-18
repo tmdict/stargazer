@@ -10,16 +10,19 @@ import { useI18nStore } from '@/stores/i18n'
 // records: the data file's season and export date, once the file has loaded.
 // rules: the page places heroes, so it links the rules it places them by.
 // credit, aboutLabel: the line and its link's label, in place of the records'.
+// guide: a page that explains the tool, linked after the note.
 const {
   title,
   records = null,
   rules = false,
+  guide,
 } = defineProps<{
   title: string
   records?: { season: number; date: string } | null
   rules?: boolean
   credit?: string
   aboutLabel?: string
+  guide?: { to: string; label: string }
 }>()
 
 const emit = defineEmits<{ about: [] }>()
@@ -43,6 +46,10 @@ const i18n = useI18nStore()
         <RouterLink :to="SL_RULES_PATH" class="sl-about-link">
           {{ i18n.t('app.rules-title') }}
         </RouterLink>
+      </template>
+      <template v-if="guide">
+        <span aria-hidden="true"> ·</span>
+        <RouterLink :to="guide.to" class="sl-about-link">{{ guide.label }}</RouterLink>
       </template>
     </p>
   </header>

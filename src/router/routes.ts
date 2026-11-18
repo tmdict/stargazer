@@ -9,6 +9,7 @@ import { installPopupLinkGuard } from '@/composables/usePopupLink'
 import {
   guidePath,
   HD_SHOP_PATH,
+  HD_SHOP_PROBABILITY_PATH,
   SL_GENERATOR_PATH,
   SL_LISTS_PATH,
   SL_RULES_PATH,
@@ -158,6 +159,11 @@ export const routes: RouteRecordRaw[] = [
     path: HD_SHOP_PATH,
     name: 'guide-hd-shop',
     component: () => import('@/views/GuideHdShopView.vue'),
+  },
+  {
+    path: HD_SHOP_PROBABILITY_PATH,
+    name: 'guide-hd-shop-probability',
+    component: () => import('@/views/GuideHdShopProbabilityView.vue'),
   },
   // Help exists per app locale: its content is hand-written in those.
   ...APP_LOCALES.map((locale) => ({

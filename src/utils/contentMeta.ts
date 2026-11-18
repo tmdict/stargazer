@@ -4,6 +4,7 @@ import { useHead } from '@unhead/vue'
 import {
   guidePath,
   HD_SHOP_PATH,
+  HD_SHOP_PROBABILITY_PATH,
   SL_GENERATOR_PATH,
   SL_LISTS_PATH,
   SL_RULES_PATH,
@@ -256,3 +257,6 @@ export const setupWwwContentMeta = (locale: Ref<AppLocale>): void =>
 
 export const setupShopContentMeta = (locale: Ref<AppLocale>): void =>
   setupTextMeta(locale, 'shop', HD_SHOP_PATH)
+
+export const setupShopProbabilityContentMeta = (locale: Ref<AppLocale>): void =>
+  setupTextMeta(locale, 'shop-probability', HD_SHOP_PROBABILITY_PATH)

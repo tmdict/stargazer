@@ -56,6 +56,8 @@ The page stores nothing. What a player enters lasts for the visit to the page.
 
 The odds view always shows the measured table in this repo, with its measured ranges.
 
+The probability guide at `/guide/hd/shop/probability` explains the shop's formulas. Its text is written per language in `src/content/hd/`, and every number in it, tables and examples alike, is worked out from the shop's rules and the measured table (`useShopFigures`), never typed into the text.
+
 ## Rules
 
 - The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the repo's. Nothing on the page reads the pack's table. The odds view and Random use the repo's table, and the build stops unless both tables list the same products for every source, so an example shop can come up under either.

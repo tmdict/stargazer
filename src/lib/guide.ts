@@ -27,3 +27,4 @@ export const WWW_PATH = '/guide/pvp/www'
 // The Honor Duel shop calculator, pre-rendered with its heading alone
 // (GuideHdShopView).
 export const HD_SHOP_PATH = '/guide/hd/shop'
+export const HD_SHOP_PROBABILITY_PATH = '/guide/hd/shop/probability'

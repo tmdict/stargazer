@@ -28,6 +28,7 @@ import { below, onPhone } from '@/components/guide/shop/popupLayout'
 import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
+import { HD_SHOP_PROBABILITY_PATH } from '@/lib/guide'
 import { duelEquipment } from '@/lib/hd/catalog'
 import { duelHeroes } from '@/lib/hd/heroes'
 import type { Move } from '@/lib/hd/shop/types'
@@ -140,6 +141,7 @@ watch(
       :title="i18n.t('app.shop-title')"
       :credit="i18n.t('app.shop-credit')"
       :about-label="i18n.t('app.shop-see-odds')"
+      :guide="{ to: HD_SHOP_PROBABILITY_PATH, label: i18n.t('app.shop-probability-link') }"
       @about="oddsOpen = true"
     />
     <ShopOdds :show="oddsOpen" :level="form.level.value" @close="oddsOpen = false" />

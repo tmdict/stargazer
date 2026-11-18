@@ -8,7 +8,13 @@ import { useRoute } from 'vue-router'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
 import { PVP_SEASONS } from '@/content/pvp/seasons'
-import { guidePath, HD_SHOP_PATH, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import {
+  guidePath,
+  HD_SHOP_PATH,
+  HD_SHOP_PROBABILITY_PATH,
+  SL_GENERATOR_PATH,
+  WWW_PATH,
+} from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
 import { useI18nStore } from '@/stores/i18n'
 import { interpolate } from '@/utils/interpolate'
@@ -41,6 +47,7 @@ const items = computed<DropdownItem[]>(() => [
   page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
   page('guide-factions', i18n.t('app.faction-bonus'), guidePath('factions')),
   page('guide-damage', i18n.t('app.damage-types'), guidePath('damage')),
+  page('guide-hd-shop-probability', i18n.t('app.shop-probability-title'), HD_SHOP_PROBABILITY_PATH),
 ])
 </script>
 
