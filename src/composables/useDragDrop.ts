@@ -35,6 +35,7 @@ if (!import.meta.env.SSR && typeof Image !== 'undefined') {
 const isDragging = ref(false)
 const draggedUnit = ref<DraggedUnit | null>(null)
 const draggedImageSrc = ref<string>('')
+const draggedBackdrop = ref<string>()
 const dragPreviewPosition = ref({ x: 0, y: 0 })
 const dropHandled = ref(false)
 
@@ -83,6 +84,7 @@ const endDrag = (event: DragEvent) => {
   isDragging.value = false
   draggedUnit.value = null
   draggedImageSrc.value = ''
+  draggedBackdrop.value = undefined
 
   lastDropHexId.value = hoveredHexId.value
   lastDropGridId.value = hoveredGridId.value
@@ -98,12 +100,15 @@ const endDrag = (event: DragEvent) => {
   document.removeEventListener('dragend', endDrag)
 }
 
-const startDrag = (event: DragEvent, unit: DraggedUnit, imageUrl: string) => {
+// `backdrop` is the fill the unit is drawn on where the drag starts, when that
+// is not its hero's own.
+const startDrag = (event: DragEvent, unit: DraggedUnit, imageUrl: string, backdrop?: string) => {
   if (!event.dataTransfer) return
 
   isDragging.value = true
   draggedUnit.value = unit
   draggedImageSrc.value = imageUrl || unit.hero?.name || ''
+  draggedBackdrop.value = backdrop
   dropHandled.value = false
   lastDropHexId.value = null
 
@@ -181,6 +186,7 @@ export const useDragDrop = () => {
     isDragging,
     draggedUnit,
     draggedImageSrc,
+    draggedBackdrop,
     dragPreviewPosition,
     artifactDragPayload,
     hoveredHexId,

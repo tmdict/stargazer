@@ -44,8 +44,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
 import { isTouchClick } from '@/utils/pointer'
-import { gameLabel } from '@/utils/skillLabels'
-import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
+import { tierBackdrop } from '@/utils/tierBackdrop'
 
 interface Props {
   // Gates the hover card and the mode button's label; placement interactions are unaffected.
@@ -212,6 +211,7 @@ const isRetiredPhantimal = (characterId: number): boolean =>
 const BASE_CHARACTER_SIZE = 2 * PORTRAIT_RADIUS
 const BASE_CHARACTER_OFFSET = PORTRAIT_RADIUS
 const BASE_BADGE_SIZE = 22
+const BASE_PIECE_SIZE = 32
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
@@ -228,6 +228,7 @@ const badgeDimensions = computed(() => {
   const size = Math.max(16, Math.round(BASE_BADGE_SIZE * ctx.hexScale))
   return {
     size,
+    piece: Math.round((size * BASE_PIECE_SIZE) / BASE_BADGE_SIZE),
     hit: Math.max(28, size + 12),
     glyph: Math.round(size * 0.62),
     border: size >= 20 ? 2 : 1.5,
@@ -274,7 +275,12 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
 
   const hero = gameDataStore.getCharacterById(toBaseHeroId(characterId))
   if (!hero) return
-  startDrag(event, { ...from, hero }, getUnitImage(characterId, hexId))
+  startDrag(
+    event,
+    { ...from, hero },
+    getUnitImage(characterId, hexId),
+    duelBackdrops.value.get(hexId),
+  )
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -414,11 +420,16 @@ const duelMarks = computed((): DuelMark[] =>
       }),
 )
 
+const duelBackdrops = computed(
+  () => new Map(duelMarks.value.map((mark) => [mark.hexId, tierBackdrop(mark.tier)])),
+)
+
 const badgeStyle = computed(() => {
-  const { size, hit, border } = badgeDimensions.value
+  const { size, piece, hit, border } = badgeDimensions.value
   return {
     '--badge-rim': `${(characterDimensions.value.size / 2) * Math.SQRT1_2}px`,
     '--badge-size': `${size}px`,
+    '--piece-size': `${piece}px`,
     '--badge-border': `${border}px`,
     '--mode-hit': `${hit}px`,
   }
@@ -495,6 +506,7 @@ const liftedMode = computed(() =>
           :src="getUnitImage(characterId, hexId)"
           :alt="unitName(characterId)"
           class="character-image"
+          :style="{ backgroundImage: duelBackdrops.get(hexId) }"
           draggable="false"
         />
         <GridPointer v-if="ctx.perspective" />
@@ -545,17 +557,14 @@ const liftedMode = computed(() =>
       :style="getCharacterStyle(mark.hexId)"
     >
       <UnitBadge
-        class="badge-upper-left"
-        :class="{ 'pale-badge': isPaleTier(mark.tier) }"
-        :color="tierBackdrop(mark.tier)"
+        v-if="mark.piece"
+        class="badge-upper-left duel-piece"
+        :color="mark.piece.backdrop ?? 'none'"
       >
-        {{ initialOf(gameLabel(mark.tier, i18n.currentLocale)) }}
+        <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
       </UnitBadge>
       <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
         {{ initialOf(i18n.t('app.trial')) }}
-      </UnitBadge>
-      <UnitBadge v-if="mark.piece" class="badge-lower-left" :color="mark.piece.backdrop ?? 'none'">
-        <img v-if="mark.piece.image" :src="mark.piece.image" :alt="mark.piece.label" />
       </UnitBadge>
     </div>
 
@@ -676,8 +685,7 @@ const liftedMode = computed(() =>
 }
 
 .badge-upper-right,
-.badge-upper-left,
-.badge-lower-left {
+.badge-upper-left {
   position: absolute;
   top: calc(50% - var(--badge-rim));
   transform: translate(-50%, -50%);
@@ -687,17 +695,12 @@ const liftedMode = computed(() =>
   left: calc(50% + var(--badge-rim));
 }
 
-.badge-upper-left,
-.badge-lower-left {
+.badge-upper-left {
   left: calc(50% - var(--badge-rim));
 }
 
-.badge-lower-left {
-  top: calc(50% + var(--badge-rim));
-}
-
-.pale-badge {
-  --badge-ink: var(--duel-pale-ink);
+.duel-piece {
+  --badge-size: var(--piece-size);
 }
 
 .skill-mode {

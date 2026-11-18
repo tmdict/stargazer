@@ -6,10 +6,12 @@ import { useI18nStore } from '@/stores/i18n'
 import { characterDisplayName } from '@/utils/nameFormatting'
 import { heroBackdrop } from '@/utils/tierBackdrop'
 
-const { isDragging, draggedUnit, draggedImageSrc, dragPreviewPosition } = useDragDrop()
+const { isDragging, draggedUnit, draggedImageSrc, draggedBackdrop, dragPreviewPosition } =
+  useDragDrop()
 const i18n = useI18nStore()
 
 const backdrop = computed(() => {
+  if (draggedBackdrop.value) return draggedBackdrop.value
   const level = draggedUnit.value?.hero?.level
   return level === undefined ? undefined : heroBackdrop(level)
 })

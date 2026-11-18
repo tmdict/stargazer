@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* A unit's tier in the hero card: the mark its portrait carries on the board,
-   the tier's first character on the tier's backdrop. A tap moves to the next
+/* A unit's tier in the hero card: the tier's first character on the backdrop
+   that fills its portrait on the board. A tap moves to the next
    tier the unit can hold and wraps to the first. A unit with one tier shows it
    without a choice. */
 
