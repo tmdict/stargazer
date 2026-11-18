@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Stun",
+    "zh": "眩晕",
+    "ko": "스턴"
+  },
+  "description": {
+    "en": "A control effect. A stunned unit cannot move, attack or use skills until the stun ends.",
+    "zh": "控制效果的一种。被眩晕的角色在效果结束前无法移动、攻击或使用技能。",
+    "ko": "제어 효과의 일종. 스턴 상태의 유닛은 효과가 끝날 때까지 이동, 공격, 스킬 사용을 할 수 없다."
+  }
+}

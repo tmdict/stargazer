@@ -52,9 +52,48 @@ Pre-rendered skill pages preload their language chunk. The build resolves it thr
 
 ## Text and names
 
-`src/utils/textHighlight.ts` defines the shared grammar: `[[value]]` highlights, `[[label|key]]` opens a tooltip with the key's glossary text, its picture from the data pack's keyword pictures, or both, and `{atk}`-style tags render stat pills. Search, import validation and description extraction share its token parser. `SkillKeywordTooltip` delegates events from the reader's article because keyword spans come from `v-html`.
+`src/utils/textHighlight.ts` defines the shared grammar: `[[value]]` highlights, `[[label|key]]` opens a tooltip with the key's [glossary](#glossary) description, its picture from the data pack's keyword pictures, or both, and `{atk}`-style tags render stat pills. Search, import validation and description extraction share its token parser. `SkillKeywordTooltip` delegates events from the reader's article because keyword spans come from `v-html`.
 
 `heroDisplayName` falls back from `_hero.name` in the text locale to the curated English name, then the slug. Chrome names also serve as search aliases.
+
+## Glossary
+
+The game defines its stats and most of the keywords in its skill text, in every language. Those words come with the data pack, so nothing on the site restates them. Each language folder holds a `_glossary.json`:
+
+```json
+{
+  "stats": [
+    {
+      "key": "crit-resist",
+      "n": "Crit Resist",
+      "d": "When receiving damage, the crit rate is calculated based on the difference between the attacker's Crit and the unit's Crit Resist."
+    }
+  ],
+  "keywords": [
+    { "key": "weakest", "d": "Living unit that currently has the lowest HP ratio." },
+    {
+      "key": "silence",
+      "n": "Silenced",
+      "d": "An abnormal status. Silenced units can only use normal attacks."
+    },
+    { "key": "symmetrical" }
+  ]
+}
+```
+
+| Field      | Meaning                                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| `stats`    | One entry for each stat the game describes, in the game's order.                                                   |
+| `keywords` | One entry for each general keyword of the game, in the game's order, whether or not any skill text uses it yet.    |
+| `key`      | The term's fixed name. A keyword's is the key its tokens in skill text carry and the file name of its picture.     |
+| `n`        | The game's name for the term in that language. Every stat has one; a keyword has one only where the game names it. |
+| `d`        | The game's description in that language. A keyword the game explains with a picture alone has none.                |
+
+The game leaves gaps: most keywords have no name of their own, a few have only a picture, and some words its skill text uses are defined nowhere. The site's own words fill these, one file per term in `src/locales/glossary/`, with a `name`, a `description` or both in each site language.
+
+`src/lib/glossary.ts` lists every term once, under its group and in page order. `glossaryTerm` reads one term for a language: the pack's words first, the site's words for what the pack lacks, and the keyword picture of the same key. The Glossary page and `SkillKeywordTooltip` both read terms through it, so a pop-up and the page never disagree. The site's words exist only in the site languages, so a pop-up in another text language shows what the game gives.
+
+`npm run data` stops the build when a listed term has no name, or neither a description nor a picture, in any site language. It prints a note for a pack term the list lacks, since that term shows in pop-ups but not on the page.
 
 ## Cooldowns and range
 

@@ -1,7 +1,7 @@
 // The site's dictionaries under src/locales/, one per namespace and each built
 // once, keyed by file name.
 
-import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
+import type { GlossaryWords, LocaleData, LocaleDictionary } from '@/lib/types/i18n'
 import { fileStem } from './fileStem'
 
 let appLocales: Record<string, LocaleData> | null = null
@@ -11,11 +11,12 @@ let artifactLocales: Record<string, LocaleData> | null = null
 let phantimalLocales: Record<string, LocaleData> | null = null
 let gameLocales: Record<string, LocaleData> | null = null
 let buffLocales: Record<string, LocaleData> | null = null
+let glossaryLocales: Record<string, GlossaryWords> | null = null
 
 // import.meta.glob needs a literal pattern, so each loader globs its own directory
 // and passes the modules in rather than this helper globbing them.
-function buildLocaleDict(modules: Record<string, LocaleData>): Record<string, LocaleData> {
-  const result: Record<string, LocaleData> = {}
+function buildLocaleDict<T = LocaleData>(modules: Record<string, T>): Record<string, T> {
+  const result: Record<string, T> = {}
   for (const [path, content] of Object.entries(modules)) {
     const key = fileStem(path)
     if (key in result) {
@@ -95,6 +96,16 @@ function loadBuffLocales(): Record<string, LocaleData> {
     import.meta.glob<LocaleData>('@/locales/buff/*.json', { eager: true, import: 'default' }),
   )
   return buffLocales
+}
+
+export function loadGlossaryLocales(): Record<string, GlossaryWords> {
+  glossaryLocales ??= buildLocaleDict(
+    import.meta.glob<GlossaryWords>('@/locales/glossary/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+  return glossaryLocales
 }
 
 export function loadAllLocales(): LocaleDictionary {

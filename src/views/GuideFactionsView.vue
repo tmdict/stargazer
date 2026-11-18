@@ -126,13 +126,6 @@ const bonusBlocks = computed(() => [
     ],
   },
 ])
-
-const mirror = computed(() =>
-  interpolate(label('tactics-mirror'), {
-    a: faction(TACTICS_WHEEL[0]),
-    b: faction(TACTICS_WHEEL[1]),
-  }),
-)
 </script>
 
 <template>
@@ -168,9 +161,9 @@ const mirror = computed(() =>
                 </tr>
               </tbody>
             </table>
-            <ul>
-              <li v-for="note in block.notes" :key="note">{{ note }}</li>
-            </ul>
+            <div class="notes">
+              <p v-for="note in block.notes" :key="note">{{ note }}</p>
+            </div>
           </template>
         </div>
 
@@ -225,10 +218,7 @@ const mirror = computed(() =>
 
           <div>
             <p>{{ label('tactics-intro') }}</p>
-            <ul>
-              <li>{{ label('tactics-cycle') }}</li>
-              <li>{{ mirror }}</li>
-            </ul>
+            <p>{{ label('tactics-cycle') }}</p>
           </div>
         </div>
       </div>
@@ -245,6 +235,9 @@ const mirror = computed(() =>
   align-items: start;
   gap: 0 48px;
   margin: 16px 0 8px;
+}
+.bonus .notes {
+  margin-top: 12px;
 }
 .bonus .team {
   width: 1%;

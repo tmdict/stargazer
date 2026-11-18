@@ -102,7 +102,6 @@ const renderedRefinements = computed(() =>
 <style scoped>
 .skill-section {
   margin: var(--spacing-lg) 0;
-  scroll-margin-top: 80px;
 }
 
 .skill-meta {

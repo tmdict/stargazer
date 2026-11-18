@@ -44,10 +44,11 @@ const items = computed<DropdownItem[]>(() => [
     href: pvpReportHref(season, i18n.currentLocale),
   })),
   page('guide-upgrades', i18n.t('app.upgrades'), guidePath('upgrades')),
-  page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
   page('guide-factions', i18n.t('app.faction-bonus'), guidePath('factions')),
   page('guide-damage', i18n.t('app.damage-types'), guidePath('damage')),
+  page('guide-glossary', i18n.t('app.glossary'), guidePath('glossary')),
   page('guide-hd-shop-probability', i18n.t('app.shop-probability-title'), HD_SHOP_PROBABILITY_PATH),
+  page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
 ])
 </script>
 

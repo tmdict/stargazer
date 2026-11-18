@@ -1,29 +1,32 @@
 <script setup lang="ts">
-/* The hero search box of the Formation engine rules page and the Hero lists page. */
+/* The search box of the guide's pages: heroes on the Formation engine rules
+   page and the Hero lists page, terms on the Glossary page. */
 
 import IconSearch from '@/components/ui/IconSearch.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 const query = defineModel<string>({ required: true })
 
+defineProps<{ label: string }>()
+
 const i18n = useI18nStore()
 </script>
 
 <template>
-  <label class="rules-search">
+  <label class="guide-search">
     <IconSearch :size="15" />
     <input
       v-model="query"
       type="search"
       autocomplete="off"
-      :placeholder="i18n.t('app.rules-find')"
-      :aria-label="i18n.t('app.rules-find')"
+      :placeholder="i18n.t(label)"
+      :aria-label="i18n.t(label)"
     />
   </label>
 </template>
 
 <style scoped>
-.rules-search {
+.guide-search {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -35,11 +38,11 @@ const i18n = useI18nStore()
   cursor: text;
 }
 
-.rules-search:focus-within {
+.guide-search:focus-within {
   border-color: var(--color-accent);
 }
 
-.rules-search input {
+.guide-search input {
   flex: 1;
   min-width: 0;
   padding: 7px 0;

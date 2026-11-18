@@ -9,7 +9,7 @@ import type {
   SkillArtifacts,
   SkillCharms,
   SkillCharmTypes,
-  SkillKeywords,
+  SkillGlossary,
   SkillLanguage,
   SkillLocaleFile,
   SkillNumbers,
@@ -26,7 +26,7 @@ import { fileStem } from './fileStem'
 function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
   const reserved = dict as unknown as {
     _terms: SkillTerms
-    _keywords?: SkillKeywords
+    _glossary?: SkillGlossary
     _charms?: SkillCharms
     '_charm-types'?: SkillCharmTypes
     _artifacts?: SkillArtifacts
@@ -35,7 +35,7 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): SkillLanguage {
   return {
     heroes: Object.fromEntries(Object.entries(dict).filter(([key]) => !key.startsWith('_'))),
     terms: reserved._terms,
-    keywords: reserved._keywords ?? {},
+    glossary: reserved._glossary ?? { stats: [], keywords: [] },
     charms: reserved._charms ?? null,
     charmTypes: reserved['_charm-types'] ?? {},
     artifacts: reserved._artifacts ?? {},

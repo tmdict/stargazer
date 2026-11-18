@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Devour",
+    "zh": "吞噬",
+    "ko": "삼키기"
+  },
+  "description": {
+    "en": "A control effect. A devoured unit is swallowed whole and cannot move or act until it is let out.",
+    "zh": "控制效果的一种。被吞噬的角色会被整个吞下，被吐出前无法移动或行动。",
+    "ko": "제어 효과의 일종. 삼켜진 유닛은 뱉어질 때까지 이동하거나 행동할 수 없다."
+  }
+}

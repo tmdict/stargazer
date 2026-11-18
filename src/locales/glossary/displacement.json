@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Displacement",
+    "zh": "强制位移",
+    "ko": "강제 이동"
+  },
+  "description": {
+    "en": "Any effect that moves a unit against its will, such as knocking it back, knocking it into the air or pulling it. A Steadfast unit cannot be moved this way.",
+    "zh": "强制改变角色位置的效果的统称，例如击退、击飞或拉拽。处于稳定状态的角色不受这类效果影响。",
+    "ko": "유닛의 위치를 강제로 바꾸는 효과의 통칭. 넉백, 에어본, 끌어당기기 등이 있다. 안정 상태의 유닛에게는 적용되지 않는다."
+  }
+}

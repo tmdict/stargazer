@@ -4,7 +4,7 @@
 
 import { computed } from 'vue'
 
-import RulesSearch from './RulesSearch.vue'
+import GuideSearch from '../GuideSearch.vue'
 import GuideDisc from '@/components/guide/GuideDisc.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconGem from '@/components/ui/IconGem.vue'
@@ -96,7 +96,7 @@ function go(event: MouseEvent, id: string): void {
 
 <template>
   <div class="rules-index">
-    <RulesSearch v-model="query" class="search" />
+    <GuideSearch v-model="query" class="search" label="app.rules-find" />
     <p class="legend" data-theme="dark">
       <span><i class="dot ally" />{{ t('rules-on-ours') }}</span>
       <span><i class="dot enemy" />{{ t('rules-on-theirs') }}</span>

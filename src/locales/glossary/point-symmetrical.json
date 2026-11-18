@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Point Symmetrical Position",
+    "zh": "点对称位置",
+    "ko": "점대칭 위치"
+  },
+  "description": {
+    "en": "The tile opposite a unit's own through the center of the battlefield: the same distance from the center, in the opposite direction.",
+    "zh": "以战场中心点为对称中心，与角色所在格相对的格子：到中心的距离相同，方向相反。",
+    "ko": "필드의 중심점을 기준으로 유닛이 있는 타일의 정반대에 있는 타일. 중심에서의 거리는 같고 방향은 반대이다."
+  }
+}

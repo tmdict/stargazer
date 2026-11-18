@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Confuse",
+    "zh": "迷惑",
+    "ko": "혼란"
+  },
+  "description": {
+    "en": "A control effect. A confused unit cannot move or act until the effect ends.",
+    "zh": "控制效果的一种。陷入迷惑的角色在效果结束前无法移动或行动。",
+    "ko": "제어 효과의 일종. 혼란 상태의 유닛은 효과가 끝날 때까지 이동하거나 행동할 수 없다."
+  }
+}

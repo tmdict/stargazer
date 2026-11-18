@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Center of the Battlefield",
+    "zh": "战场中轴线",
+    "ko": "필드 중앙선"
+  },
+  "description": {
+    "en": "The line of tiles running down the middle of the battlefield, from one side to the other.",
+    "zh": "从一方阵营贯穿到另一方阵营、位于战场正中的一列格子。",
+    "ko": "한쪽 진영에서 반대쪽 진영까지 필드 한가운데를 가로지르는 타일 줄."
+  }
+}

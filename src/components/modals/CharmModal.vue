@@ -55,7 +55,7 @@ const tiers = computed(() =>
           <SkillKeywordTooltip
             v-if="applied && language"
             :lang="applied"
-            :keywords="language.keywords"
+            :glossary="language.glossary"
             :container="tiersEl"
           />
         </div>

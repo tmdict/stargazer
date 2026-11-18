@@ -79,17 +79,35 @@ export interface SlotNumbers extends SlotValues {
 
 export type SkillNumbers = Record<string, Partial<Record<SlotKey, SlotNumbers>>>
 
-// On-disk shape of src/pack/text/skill/<lang>/_keywords.json: glossary key →
-// tooltip text in that language, resolving the `[[label|key]]` tokens in slot
-// text. Lives beside the hero files so each language chunk carries its own
+// On-disk shape of src/pack/text/skill/<lang>/_glossary.json (written by a
+// pack update): the game's own words for its stats and for the keywords in
+// slot text (the `[[label|key]]` tokens), each list in the game's order. `n`
+// is the name and `d` the description in that language. A keyword has `n`
+// only where the game names it, and no `d` when the game shows a picture
+// alone. Lives beside the hero files so each language chunk carries its own
 // glossary; the underscore keeps it out of the hero-slug namespace.
-export type SkillKeywords = Record<string, string>
+export interface GlossaryStat {
+  key: string
+  n: string
+  d: string
+}
+
+export interface GlossaryKeyword {
+  key: string
+  n?: string
+  d?: string
+}
+
+export interface SkillGlossary {
+  stats: GlossaryStat[]
+  keywords: GlossaryKeyword[]
+}
 
 // On-disk shape of src/pack/text/skill/<lang>/_charms.json (written by the data
 // export): the current season's charm text, stored once per charm because one
 // charm is shared by several heroes. `tiers` carries the localized tier labels
 // in Elite → Mythic order; each charm id maps to its four tier descriptions in
-// the same order. Rides the locale chunks like `_keywords.json`.
+// the same order. Rides the locale chunks like `_glossary.json`.
 export interface SkillCharms {
   tiers: string[]
   charms: Record<string, string[]>
@@ -119,7 +137,7 @@ export type SkillPhantimals = Record<
 export interface SkillLanguage {
   heroes: Record<string, SkillLocaleFile>
   terms: SkillTerms
-  keywords: SkillKeywords
+  glossary: SkillGlossary
   charms: SkillCharms | null
   charmTypes: SkillCharmTypes
   artifacts: SkillArtifacts

@@ -42,14 +42,14 @@ interface TypeCard {
   type: DamageType
   info: string
   quote?: string
-  playersTerm?: boolean
+  unofficial?: boolean
 }
 
 const CARDS: readonly TypeCard[] = [
   { type: 'regular', info: 'damage-regular-info', quote: 'damage-quote-regular' },
   { type: 'true-damage', info: 'damage-true-info', quote: 'damage-quote-true' },
   { type: 'hp-loss', info: 'damage-hp-loss-info', quote: 'damage-quote-hp-loss' },
-  { type: 'absolute-hp-loss', info: 'damage-absolute-info', playersTerm: true },
+  { type: 'absolute-hp-loss', info: 'damage-absolute-info', unofficial: true },
 ]
 </script>
 
@@ -65,7 +65,7 @@ const CARDS: readonly TypeCard[] = [
           <section v-for="card in CARDS" :key="card.type" class="type">
             <h3>
               {{ typeName(card.type) }}
-              <span v-if="card.playersTerm" class="tag">{{ label('players-term') }}</span>
+              <span v-if="card.unofficial" class="tag">{{ label('unofficial-name') }}</span>
             </h3>
             <p>{{ label(card.info) }}</p>
             <p v-if="card.quote" class="quote">{{ label(card.quote) }}</p>
