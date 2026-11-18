@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Same Row",
+    "zh": "同一行",
+    "ko": "같은 열"
+  },
+  "description": {
+    "en": "Tiles on one line that runs across the battlefield from side to side.",
+    "zh": "位于同一条横贯战场的直线上的格子。",
+    "ko": "전장을 가로지르는 하나의 직선 위에 있는 타일들."
+  }
+}

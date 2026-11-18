@@ -22,8 +22,10 @@ import { env, loadEnvFile } from 'node:process'
 import { createServer } from 'vite'
 
 import { outfitOf } from '../../src/lib/characters/outfit.ts'
+import { GLOSSARY } from '../../src/lib/glossary.ts'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
-import { SKILL_LOCALES } from '../../src/lib/types/i18n.ts'
+import { APP_LOCALES, SKILL_LOCALES, type GlossaryWords } from '../../src/lib/types/i18n.ts'
+import type { SkillGlossary } from '../../src/lib/types/skill.ts'
 
 const SKILL = 'text/skill'
 // The pinned version a download holds; a copy from a local folder has none.
@@ -220,6 +222,50 @@ export async function boardPictures(root: string): Promise<string[]> {
  * season, so a missing one is what a season shipped without a new pin looks
  * like, and stops the build. A board picture the pack lacks is a note, since
  * the unit is still drawn, without a picture. */
+// The Glossary page shows every listed term in each site language, named and
+// with a description or a picture, from the pack's words or the site's own.
+function glossaryProblems(pack: string, root: string): { problems: string[]; notes: string[] } {
+  const problems: string[] = []
+  const notes: string[] = []
+  const listed = Object.values(GLOSSARY).flat()
+  const repeated = listed.filter((key, i) => listed.indexOf(key) !== i)
+  if (repeated.length > 0) problems.push(`the glossary lists ${repeated.join(', ')} twice`)
+  const wordsDir = join(root, 'src/locales/glossary')
+  const words = new Map(
+    jsonNames(wordsDir).map((key) => [
+      key,
+      JSON.parse(readFileSync(join(wordsDir, `${key}.json`), 'utf8')) as GlossaryWords,
+    ]),
+  )
+  for (const key of words.keys()) {
+    if (!listed.includes(key))
+      problems.push(`the glossary has words for ${key}, which it never lists`)
+  }
+  for (const lang of APP_LOCALES) {
+    const path = join(pack, SKILL, lang, '_glossary.json')
+    if (!existsSync(path)) {
+      problems.push(`the pack has no ${lang} glossary`)
+      continue
+    }
+    const { stats, keywords } = JSON.parse(readFileSync(path, 'utf8')) as SkillGlossary
+    const game = new Map([...stats, ...keywords].map((entry) => [entry.key, entry]))
+    for (const key of listed) {
+      const entry: { n?: string; d?: string } = game.get(key) ?? {}
+      const site = words.get(key)
+      const pictured = existsSync(join(pack, 'images/keyword', `${key}.png`))
+      if (!(entry.n ?? site?.name?.[lang]))
+        problems.push(`the ${lang} glossary has no name for ${key}`)
+      if (!(entry.d ?? site?.description?.[lang]) && !pictured)
+        problems.push(`the ${lang} glossary has no description or picture for ${key}`)
+    }
+    if (lang !== APP_LOCALES[0]) continue
+    for (const key of game.keys()) {
+      if (!listed.includes(key)) notes.push(`the Glossary page does not list the pack's ${key}`)
+    }
+  }
+  return { problems, notes }
+}
+
 export function packProblems(
   pack: string,
   root: string,
@@ -315,6 +361,10 @@ export function packProblems(
     if (!portraits.has(slug)) notes.push(`${slug} has no portrait yet`)
     if (!withText.has(slug)) notes.push(`${slug} has no skill text yet`)
   }
+  const glossary = glossaryProblems(pack, root)
+  problems.push(...glossary.problems)
+  notes.push(...glossary.notes)
+
   const pictures = ['images/character', 'images/seasonal/phantimal']
   for (const name of board) {
     if (!pictures.some((folder) => existsSync(join(pack, folder, `${name}.png`))))

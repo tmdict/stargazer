@@ -14,6 +14,7 @@ const label = (key: string): string => appLabel(key, props.lang)
 const PAGES: readonly { page: GuidePage; title: string; blurb: string }[] = [
   { page: 'factions', title: 'faction-bonus', blurb: 'guide-factions-blurb' },
   { page: 'damage', title: 'damage-types', blurb: 'guide-damage-blurb' },
+  { page: 'glossary', title: 'glossary', blurb: 'guide-glossary-blurb' },
 ]
 </script>
 

@@ -3,28 +3,32 @@
    rendered by highlightSkillText as `[data-kw]` spans). The spans live in
    v-html output, so per-span bindings are impossible: one host per
    SkillSections delegates on the article container and feeds useInfoTip the
-   resolved span. A keyword has glossary text, a picture, or both. */
+   resolved span. A keyword has a description, a picture, or both, read as the
+   Glossary page reads it. */
 
 import { computed, onUnmounted, watch } from 'vue'
 
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { SkillLocale } from '@/lib/types/i18n'
-import type { SkillKeywords } from '@/lib/types/skill'
-import { loadKeywordImages } from '@/utils/imageLoader'
+import type { SkillGlossary } from '@/lib/types/skill'
+import { glossaryTerm } from '@/utils/glossary'
 
 const props = defineProps<{
   // Language of the surrounding skill text, and its glossary.
   lang: SkillLocale
-  keywords: SkillKeywords
+  glossary: SkillGlossary
   // The rendered skill content root the [data-kw] spans live under.
   container: HTMLElement | null
 }>()
 
 const { anchor, payload: kwKey, hoverOpen, hoverClose, toggle, close } = useInfoTip<string>()
 
-const tip = computed(() => (kwKey.value ? (props.keywords[kwKey.value] ?? null) : null))
-const picture = computed(() => (kwKey.value ? (loadKeywordImages()[kwKey.value] ?? null) : null))
+const term = computed(() =>
+  kwKey.value ? glossaryTerm(props.glossary, kwKey.value, props.lang) : null,
+)
+const tip = computed(() => term.value?.description ?? null)
+const picture = computed(() => term.value?.picture ?? null)
 
 const keywordAt = (e: Event): HTMLElement | null => {
   const target = e.target

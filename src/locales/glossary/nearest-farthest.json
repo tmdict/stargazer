@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Nearest / Farthest",
+    "zh": "最近 / 最远",
+    "ko": "가장 가까운 / 가장 먼"
+  },
+  "description": {
+    "en": "Measured in tiles from the unit choosing a target: the nearest is the fewest tiles away, the farthest the most.",
+    "zh": "以选择目标的角色为起点按格数计算：最近即相隔格数最少，最远即相隔格数最多。",
+    "ko": "목표를 고르는 유닛으로부터의 칸 수로 따진다. 가장 가까운 대상은 칸 수가 가장 적고, 가장 먼 대상은 칸 수가 가장 많다."
+  }
+}

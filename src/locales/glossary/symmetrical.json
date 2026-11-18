@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Symmetrical",
+    "zh": "对称",
+    "ko": "대칭"
+  },
+  "description": {
+    "en": "The tile that mirrors a unit's own across the line dividing the two sides of the battlefield.",
+    "zh": "以双方半场的分界线为轴，与角色所在格相对称的格子。",
+    "ko": "양 진영을 나누는 경계선을 기준으로 유닛이 있는 타일과 대칭을 이루는 타일."
+  }
+}

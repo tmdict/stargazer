@@ -12,8 +12,9 @@ import {
   pinProblem,
   writeGenerated,
 } from '../../scripts/lib/dataPack'
+import { GLOSSARY } from '../../src/lib/glossary'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames'
-import { SKILL_LOCALES } from '../../src/lib/types/i18n'
+import { APP_LOCALES, SKILL_LOCALES } from '../../src/lib/types/i18n'
 
 let dir: string
 
@@ -61,7 +62,11 @@ describe('mirror', () => {
 })
 
 describe('build checks', () => {
-  // One hero, one permanent artifact and a season whose text is not out yet.
+  const TERMS = Object.values(GLOSSARY).flat()
+  const glossary = (keywords: object[]): string => JSON.stringify({ stats: [], keywords })
+
+  // One hero, one permanent artifact, a season whose text is not out yet, and
+  // a glossary in which the game names and describes every listed term.
   beforeEach(() => {
     for (const path of [
       'src/data/character/odie',
@@ -85,6 +90,34 @@ describe('build checks', () => {
     put('pack/pvp/pvp.bin', 'x')
     put('pack/pvp/pvp.key', 'x')
     put('pack/text/skill/en/_artifacts.json', '{ "starshard": { "name": "", "levels": [] } }')
+    for (const lang of APP_LOCALES) {
+      put(
+        `pack/text/skill/${lang}/_glossary.json`,
+        glossary(TERMS.map((key) => ({ key, n: 'name', d: 'text' }))),
+      )
+    }
+  })
+
+  it('stop on a glossary term left unnamed or with neither description nor picture', () => {
+    // The game gives stun nothing and blind a name alone.
+    const entries = TERMS.filter((key) => key !== 'stun').map((key) =>
+      key === 'blind' ? { key, n: 'name' } : { key, n: 'name', d: 'text' },
+    )
+    put('pack/text/skill/ko/_glossary.json', glossary([...entries, { key: 'new-term', d: 'text' }]))
+    put('pack/text/skill/en/_glossary.json', glossary([...entries, { key: 'new-term', d: 'text' }]))
+    put(
+      'repo/src/locales/glossary/stun.json',
+      '{ "name": { "en": "Stun" }, "description": { "en": "text", "ko": "text" } }',
+    )
+    put('pack/images/keyword/blind.png', 'png')
+    expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), [])).toEqual({
+      problems: ['the ko glossary has no name for stun'],
+      notes: [
+        'frosthelm has no text in the pack',
+        'beetle has no text in the pack',
+        "the Glossary page does not list the pack's new-term",
+      ],
+    })
   })
 
   it('note seasonal text that is not out yet', () => {

@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Airborne",
+    "zh": "击飞",
+    "ko": "에어본"
+  },
+  "description": {
+    "en": "A control effect. The unit is knocked into the air and cannot move or act until it lands.",
+    "zh": "控制效果的一种。角色被击飞到空中，落地前无法移动或行动。",
+    "ko": "제어 효과의 일종. 유닛이 공중으로 띄워지며, 착지할 때까지 이동하거나 행동할 수 없다."
+  }
+}

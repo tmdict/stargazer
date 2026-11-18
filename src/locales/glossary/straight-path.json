@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Straight Path",
+    "zh": "直线路径",
+    "ko": "직선 경로"
+  },
+  "description": {
+    "en": "A straight line of tiles through a unit's tile. Three such lines cross every tile.",
+    "zh": "穿过角色所在格的一条直线上的格子。每个格子都有三条这样的直线穿过。",
+    "ko": "유닛이 있는 타일을 지나는 직선상의 타일들. 모든 타일에는 이러한 직선이 세 개 지난다."
+  }
+}

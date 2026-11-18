@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Entangle",
+    "zh": "缠绕",
+    "ko": "속박"
+  },
+  "description": {
+    "en": "A control effect. An entangled unit is held where it stands and cannot move or act until the effect ends.",
+    "zh": "控制效果的一种。被缠绕的角色被困在原地，效果结束前无法移动或行动。",
+    "ko": "제어 효과의 일종. 속박된 유닛은 제자리에 묶여 효과가 끝날 때까지 이동하거나 행동할 수 없다."
+  }
+}

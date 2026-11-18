@@ -159,6 +159,23 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
         'AFK: 새로운 여정 대미지 유형. 물리·마법·고정 대미지와 HP 유실의 차이, 스킬 설명으로 구분하는 법, 유형별로 영향을 주는 효과를 정리했습니다.',
     },
   },
+  glossary: {
+    en: {
+      title: 'Glossary',
+      description:
+        "AFK Journey glossary: what every stat, status, control effect, targeting word and damage term in skill text means, in the game's own words where it gives them.",
+    },
+    zh: {
+      title: '术语表',
+      description:
+        '剑与远征启程术语表：技能描述中各项属性、状态、控制效果、索敌与伤害用语的含义，游戏有解释的均采用原文。',
+    },
+    ko: {
+      title: '용어집',
+      description:
+        'AFK: 새로운 여정 용어집. 스킬 설명에 나오는 속성, 상태, 제어 효과, 타겟팅, 대미지 용어의 뜻을 게임의 설명 그대로 정리했습니다.',
+    },
+  },
 }
 
 const HELP_META: Record<AppLocale, { title: string; description: string }> = {

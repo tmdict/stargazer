@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Immediately Defeated",
+    "zh": "立即击败",
+    "ko": "즉시 처치"
+  },
+  "description": {
+    "en": "The unit is defeated at once, however much HP it has left.",
+    "zh": "无论剩余多少生命值，角色都会立刻被击败。",
+    "ko": "남은 HP와 관계없이 유닛이 즉시 처치된다."
+  }
+}

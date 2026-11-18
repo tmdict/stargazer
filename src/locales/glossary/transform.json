@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Transform",
+    "zh": "变形",
+    "ko": "변신"
+  },
+  "description": {
+    "en": "A control effect. The unit is turned into something else and cannot move or attack until it turns back.",
+    "zh": "控制效果的一种。角色被变成其他形态，恢复原状前无法移动或攻击。",
+    "ko": "제어 효과의 일종. 유닛이 다른 모습으로 변하며, 원래대로 돌아올 때까지 이동하거나 공격할 수 없다."
+  }
+}

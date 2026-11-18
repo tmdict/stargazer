@@ -1,10 +1,13 @@
 <script setup lang="ts">
-/* The hero search box of the Formation engine rules page and the Hero lists page. */
+/* The search box of the guide's pages: heroes on the Formation engine rules
+   page and the Hero lists page, terms on the Glossary page. */
 
 import IconSearch from '@/components/ui/IconSearch.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 const query = defineModel<string>({ required: true })
+
+const { label = 'app.rules-find' } = defineProps<{ label?: string }>()
 
 const i18n = useI18nStore()
 </script>
@@ -16,8 +19,8 @@ const i18n = useI18nStore()
       v-model="query"
       type="search"
       autocomplete="off"
-      :placeholder="i18n.t('app.rules-find')"
-      :aria-label="i18n.t('app.rules-find')"
+      :placeholder="i18n.t(label)"
+      :aria-label="i18n.t(label)"
     />
   </label>
 </template>

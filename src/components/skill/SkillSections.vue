@@ -233,7 +233,7 @@ provide(
 
     <component :is="snippetComp" v-if="snippetComp" />
 
-    <SkillKeywordTooltip :lang :keywords="language.keywords" :container="rootEl" />
+    <SkillKeywordTooltip :lang :glossary="language.glossary" :container="rootEl" />
   </article>
 </template>
 

@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Knockback",
+    "zh": "击退",
+    "ko": "넉백"
+  },
+  "description": {
+    "en": "A control effect. The unit is pushed away from where it stood and cannot act while it is being pushed.",
+    "zh": "控制效果的一种。角色被推离原来的位置，被击退期间无法行动。",
+    "ko": "제어 효과의 일종. 유닛이 원래 위치에서 밀려나며, 밀려나는 동안 행동할 수 없다."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "1 Tile Behind",
+    "zh": "身后一格",
+    "ko": "1칸 뒤"
+  },
+  "description": {
+    "en": "The tile next to a unit that points straight at its own side, not the two beside it.",
+    "zh": "与角色相邻、正对己方阵营方向的那一格，不包括其两侧的格子。",
+    "ko": "유닛과 인접한 타일 중 아군 진영을 정면으로 향하는 타일. 그 양옆의 타일은 포함하지 않는다."
+  }
+}

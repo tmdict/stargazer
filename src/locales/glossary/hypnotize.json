@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Hypnotize",
+    "zh": "催眠",
+    "ko": "최면"
+  },
+  "description": {
+    "en": "A control effect. A hypnotized or sleeping unit cannot move or act until the effect ends.",
+    "zh": "控制效果的一种。被催眠或陷入睡眠的角色在效果结束前无法移动或行动。",
+    "ko": "제어 효과의 일종. 최면 또는 수면 상태의 유닛은 효과가 끝날 때까지 이동하거나 행동할 수 없다."
+  }
+}

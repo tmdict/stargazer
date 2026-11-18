@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Knockdown",
+    "zh": "击倒",
+    "ko": "넘어뜨리기"
+  },
+  "description": {
+    "en": "A control effect. The unit falls to the ground and cannot move or act until it gets up.",
+    "zh": "控制效果的一种。角色倒地，起身前无法移动或行动。",
+    "ko": "제어 효과의 일종. 유닛이 쓰러지며, 일어날 때까지 이동하거나 행동할 수 없다."
+  }
+}

@@ -14,6 +14,14 @@ export type AppLocale = (typeof APP_LOCALES)[number]
 
 export type LocaleData = Record<AppLocale, string>
 
+// The site's own words for a glossary term (src/locales/glossary/<key>.json):
+// what the game's text in the data pack leaves out, a name, a description or
+// both.
+export interface GlossaryWords {
+  name?: LocaleData
+  description?: LocaleData
+}
+
 export interface LocaleDictionary {
   [category: string]: {
     [key: string]: LocaleData

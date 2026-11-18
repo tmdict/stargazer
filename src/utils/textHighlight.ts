@@ -13,7 +13,7 @@ export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
 export const STAT_TAG_RE = /\{([a-z]+)\}/g
 
 // Inside a [[...]] token, a trailing `|key` marks a glossary keyword: the key
-// resolves against the language's `_keywords` glossary for its tooltip text
+// resolves against the language's `_glossary` file for its tooltip text
 // and names its picture (SkillKeywordTooltip). A pipeless token is a plain
 // value highlight.
 const KEYWORD_KEY_RE = /^(.*)\|([a-z][a-z0-9-]*)$/s

@@ -1,0 +1,12 @@
+{
+  "name": {
+    "en": "Imprison",
+    "zh": "禁锢",
+    "ko": "감금"
+  },
+  "description": {
+    "en": "A control effect. An imprisoned unit is locked away and cannot move or act until the effect ends.",
+    "zh": "控制效果的一种。被禁锢的角色在效果结束前无法移动或行动。",
+    "ko": "제어 효과의 일종. 감금된 유닛은 효과가 끝날 때까지 이동하거나 행동할 수 없다."
+  }
+}
