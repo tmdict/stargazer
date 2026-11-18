@@ -7,13 +7,13 @@ import { useI18nStore } from '@/stores/i18n'
 
 const query = defineModel<string>({ required: true })
 
-const { label = 'app.rules-find' } = defineProps<{ label?: string }>()
+defineProps<{ label: string }>()
 
 const i18n = useI18nStore()
 </script>
 
 <template>
-  <label class="rules-search">
+  <label class="guide-search">
     <IconSearch :size="15" />
     <input
       v-model="query"
@@ -26,7 +26,7 @@ const i18n = useI18nStore()
 </template>
 
 <style scoped>
-.rules-search {
+.guide-search {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -38,11 +38,11 @@ const i18n = useI18nStore()
   cursor: text;
 }
 
-.rules-search:focus-within {
+.guide-search:focus-within {
   border-color: var(--color-accent);
 }
 
-.rules-search input {
+.guide-search input {
   flex: 1;
   min-width: 0;
   padding: 7px 0;

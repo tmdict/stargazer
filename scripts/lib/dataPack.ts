@@ -22,10 +22,10 @@ import { env, loadEnvFile } from 'node:process'
 import { createServer } from 'vite'
 
 import { outfitOf } from '../../src/lib/characters/outfit.ts'
-import { GLOSSARY } from '../../src/lib/glossary.ts'
+import { GLOSSARY, glossaryWords } from '../../src/lib/glossary.ts'
 import { FRAME_NAMES } from '../../src/lib/import/card/frames.ts'
 import { APP_LOCALES, SKILL_LOCALES, type GlossaryWords } from '../../src/lib/types/i18n.ts'
-import type { SkillGlossary } from '../../src/lib/types/skill.ts'
+import type { GlossaryKeyword, SkillGlossary } from '../../src/lib/types/skill.ts'
 
 const SKILL = 'text/skill'
 // The pinned version a download holds; a copy from a local folder has none.
@@ -215,13 +215,6 @@ export async function boardPictures(root: string): Promise<string[]> {
   }
 }
 
-/** What stops a build: the pack lacking what the app reads, or out of step
- * with this repo's own files. New content whose text or portrait lags behind
- * the pack is only a note: a hero with no portrait or skill text yet, and a
- * seasonal unit with no text yet. A seasonal unit's pictures come with its
- * season, so a missing one is what a season shipped without a new pin looks
- * like, and stops the build. A board picture the pack lacks is a note, since
- * the unit is still drawn, without a picture. */
 // The Glossary page shows every listed term in each site language, named and
 // with a description or a picture, from the pack's words or the site's own.
 function glossaryProblems(pack: string, root: string): { problems: string[]; notes: string[] } {
@@ -248,14 +241,14 @@ function glossaryProblems(pack: string, root: string): { problems: string[]; not
       continue
     }
     const { stats, keywords } = JSON.parse(readFileSync(path, 'utf8')) as SkillGlossary
-    const game = new Map([...stats, ...keywords].map((entry) => [entry.key, entry]))
+    const game = new Map<string, GlossaryKeyword>(
+      [...stats, ...keywords].map((entry) => [entry.key, entry]),
+    )
     for (const key of listed) {
-      const entry: { n?: string; d?: string } = game.get(key) ?? {}
-      const site = words.get(key)
+      const { name, description } = glossaryWords(game.get(key), words.get(key), lang)
       const pictured = existsSync(join(pack, 'images/keyword', `${key}.png`))
-      if (!(entry.n ?? site?.name?.[lang]))
-        problems.push(`the ${lang} glossary has no name for ${key}`)
-      if (!(entry.d ?? site?.description?.[lang]) && !pictured)
+      if (!name) problems.push(`the ${lang} glossary has no name for ${key}`)
+      if (!description && !pictured)
         problems.push(`the ${lang} glossary has no description or picture for ${key}`)
     }
     if (lang !== APP_LOCALES[0]) continue
@@ -266,6 +259,13 @@ function glossaryProblems(pack: string, root: string): { problems: string[]; not
   return { problems, notes }
 }
 
+/** What stops a build: the pack lacking what the app reads, or out of step
+ * with this repo's own files. New content whose text or portrait lags behind
+ * the pack is only a note: a hero with no portrait or skill text yet, and a
+ * seasonal unit with no text yet. A seasonal unit's pictures come with its
+ * season, so a missing one is what a season shipped without a new pin looks
+ * like, and stops the build. A board picture the pack lacks is a note, since
+ * the unit is still drawn, without a picture. */
 export function packProblems(
   pack: string,
   root: string,

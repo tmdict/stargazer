@@ -5,6 +5,9 @@
  * term ends up named and described. Relative imports only: the data step
  * reads this file without the `@` alias. */
 
+import { isAppLocale, type GlossaryWords, type LocaleData, type SkillLocale } from './types/i18n'
+import type { GlossaryKeyword } from './types/skill'
+
 export const GLOSSARY_GROUPS = ['stats', 'status', 'control', 'targeting', 'damage'] as const
 
 export type GlossaryGroup = (typeof GLOSSARY_GROUPS)[number]
@@ -99,4 +102,20 @@ export const GLOSSARY: Record<GlossaryGroup, readonly string[]> = {
     'immediately-defeated',
     'assist-or-defeat',
   ],
+}
+
+/** A term's name and description in `lang`: the game's words in the data pack
+ * first, the site's own where the game has none. The site's words exist in
+ * the app languages alone, and a blank string counts as no words. */
+export function glossaryWords(
+  game: GlossaryKeyword | undefined,
+  site: GlossaryWords | undefined,
+  lang: SkillLocale,
+): { name: string | undefined; description: string | undefined } {
+  const own = (text?: LocaleData): string | undefined =>
+    isAppLocale(lang) ? text?.[lang] : undefined
+  return {
+    name: game?.n || own(site?.name) || undefined,
+    description: game?.d || own(site?.description) || undefined,
+  }
 }

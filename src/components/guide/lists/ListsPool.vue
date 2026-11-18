@@ -5,7 +5,7 @@
 
 import { computed, ref } from 'vue'
 
-import RulesSearch from '../rules/RulesSearch.vue'
+import GuideSearch from '../GuideSearch.vue'
 import ListsChips from './ListsChips.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
@@ -100,7 +100,7 @@ const listItems = computed<DropdownItem[]>(() =>
   <div class="lists-pool" :class="{ removing: drag.removing.value }">
     <p v-if="drag.removing.value" class="drop">{{ t('lists-drop-remove') }}</p>
     <h2>{{ t('lists-add-heroes') }}</h2>
-    <RulesSearch v-model="query" />
+    <GuideSearch v-model="query" label="app.rules-find" />
     <div class="lists-bar">
       <ListsChips v-model="filters" :groups="['range', 'damage', 'class']" />
     </div>

@@ -99,10 +99,13 @@ describe('build checks', () => {
   })
 
   it('stop on a glossary term left unnamed or with neither description nor picture', () => {
-    // The game gives stun nothing and blind a name alone.
-    const entries = TERMS.filter((key) => key !== 'stun').map((key) =>
-      key === 'blind' ? { key, n: 'name' } : { key, n: 'name', d: 'text' },
-    )
+    // The game gives stun nothing, blind a name alone and freeze a blank
+    // description; blind has a picture.
+    const entries = TERMS.filter((key) => key !== 'stun').map((key) => ({
+      key,
+      n: 'name',
+      ...(key === 'blind' ? {} : { d: key === 'freeze' ? '' : 'text' }),
+    }))
     put('pack/text/skill/ko/_glossary.json', glossary([...entries, { key: 'new-term', d: 'text' }]))
     put('pack/text/skill/en/_glossary.json', glossary([...entries, { key: 'new-term', d: 'text' }]))
     put(
@@ -111,7 +114,11 @@ describe('build checks', () => {
     )
     put('pack/images/keyword/blind.png', 'png')
     expect(packProblems(join(dir, 'pack'), join(dir, 'repo'), [])).toEqual({
-      problems: ['the ko glossary has no name for stun'],
+      problems: [
+        'the en glossary has no description or picture for freeze',
+        'the ko glossary has no name for stun',
+        'the ko glossary has no description or picture for freeze',
+      ],
       notes: [
         'frosthelm has no text in the pack',
         'beetle has no text in the pack',

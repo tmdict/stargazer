@@ -5,9 +5,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import RulesSearch from '@/components/guide/rules/RulesSearch.vue'
+import GuideSearch from '@/components/guide/GuideSearch.vue'
 import type { GlossaryGroup } from '@/lib/glossary'
+import type { AppLocale } from '@/lib/types/i18n'
 import type { SkillGlossary } from '@/lib/types/skill'
+import en from '@/pack/text/skill/en/_glossary.json'
+import ko from '@/pack/text/skill/ko/_glossary.json'
+import zh from '@/pack/text/skill/zh/_glossary.json'
 import { useI18nStore } from '@/stores/i18n'
 import { setupGuideContentMeta } from '@/utils/contentMeta'
 import { glossaryGroups } from '@/utils/glossary'
@@ -16,12 +20,9 @@ import { appLabel } from '@/utils/skillLabels'
 import '@/styles/content.css'
 import '@/styles/guide.css'
 
-// Eager, so the page pre-renders with its text. The same files ride the skill
-// text's language chunks; the bundler keeps one copy of each.
-const packs = import.meta.glob<SkillGlossary>('@/pack/text/skill/{en,ko,zh}/_glossary.json', {
-  eager: true,
-  import: 'default',
-})
+// In the page's own bundle, so it pre-renders with its text. The same files
+// ride the skill text's language chunks; the bundler keeps one copy of each.
+const PACKS: Record<AppLocale, SkillGlossary> = { en, ko, zh }
 
 const i18n = useI18nStore()
 const lang = computed(() => i18n.currentLocale)
@@ -37,9 +38,7 @@ const GROUP_LABEL: Record<GlossaryGroup, string> = {
   damage: 'damage',
 }
 
-const groups = computed(() =>
-  glossaryGroups(packs[`/src/pack/text/skill/${lang.value}/_glossary.json`]!, lang.value),
-)
+const groups = computed(() => glossaryGroups(PACKS[lang.value], lang.value))
 
 const query = ref('')
 
@@ -75,7 +74,7 @@ const linked = computed(() => (mounted.value ? route.hash.slice(1) : ''))
         <h1>{{ label('glossary') }}</h1>
 
         <div class="tools">
-          <RulesSearch v-model="query" class="find" label="app.find-a-term" />
+          <GuideSearch v-model="query" class="find" label="app.find-a-term" />
           <nav class="jump" :aria-label="label('glossary')">
             <a v-for="{ group } in shown" :key="group" :href="`#${group}`">
               {{ label(GROUP_LABEL[group]) }}
@@ -102,7 +101,7 @@ const linked = computed(() => (mounted.value ? route.hash.slice(1) : ''))
                 <a :href="`#${term.key}`">{{ term.name }}</a>
               </dt>
               <dd>
-                <p v-if="term.description">{{ term.description }}</p>
+                <p v-if="term.description" class="reading-secondary">{{ term.description }}</p>
                 <img
                   v-if="term.picture"
                   :src="term.picture"
@@ -199,7 +198,6 @@ dd {
 }
 .content dd p {
   margin: 0;
-  font-size: var(--reading-secondary-size);
   white-space: pre-line;
 }
 dd img {
