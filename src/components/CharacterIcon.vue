@@ -48,6 +48,9 @@ const props = defineProps<{
   // holding only the portrait is read out and indexed by it.
   alt?: string
   altLang?: string
+  // Takes the place of the hero's own rarity fill, in the icon and in the
+  // picture a drag of it carries.
+  backdrop?: string
 }>()
 
 const emit = defineEmits<{
@@ -131,7 +134,12 @@ const handleContextMenu = (event: MouseEvent) => {
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
-  startDrag(event, { characterId: props.character.id, hero: props.character }, portraitUrl.value)
+  startDrag(
+    event,
+    { characterId: props.character.id, hero: props.character },
+    portraitUrl.value,
+    props.backdrop,
+  )
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -156,7 +164,7 @@ const handleDragEnd = (event: DragEvent) => {
           ticked: tickable && ticked,
           inspectable: inspectTarget,
         }"
-        :style="{ background: heroBackdrop(character.level) }"
+        :style="{ background: backdrop ?? heroBackdrop(character.level) }"
         :draggable="isDraggable"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"

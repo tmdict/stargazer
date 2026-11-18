@@ -12,7 +12,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
-import { duelHeroes, duelTrialPool } from '@/lib/hd/heroes'
+import { duelHeroes, duelPickBackdrop, duelTrialPool } from '@/lib/hd/heroes'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
@@ -99,6 +99,7 @@ function handleSelect(character: CharacterType): void {
     <CharacterSelectionPalette
       :characters="sortedCharacters"
       :enter-hint="i18n.t('app.place-hero')"
+      :backdrop-of="duel ? duelPickBackdrop : undefined"
       touch-focus
       @pick="handleSelect"
     >

@@ -4,11 +4,16 @@
 import { toTrialPick } from '@/lib/characters/trial'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
+import { tierBackdrop } from '@/utils/tierBackdrop'
 import { DUEL_TIERS } from './board'
-import { isShopHero, TRIAL_CARDS, trialCardBrings } from './units'
+import { duelPickTier, isShopHero, TRIAL_CARDS, trialCardBrings } from './units'
 
 export const duelHeroes = (characters: readonly CharacterType[]): CharacterType[] =>
   characters.filter((character) => isShopHero(character.name)).sort(compareCharacters)
+
+/** The fill a list draws a pick on: its tier's, as the board fills the unit
+ * once placed, in place of the hero's own rarity. */
+export const duelPickBackdrop = (pick: CharacterType): string => tierBackdrop(duelPickTier(pick.id))
 
 export interface TrialGroup {
   // The card's name in the shop's product list.

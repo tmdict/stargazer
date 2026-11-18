@@ -17,6 +17,7 @@ const {
   characters,
   pinned = [],
   locked,
+  backdropOf,
 } = defineProps<{
   // The pickable pool, in display order.
   characters: readonly CharacterType[]
@@ -27,6 +28,8 @@ const {
   locked?: LockedHeroes
   // Starts in the search box on touch screens too.
   touchFocus?: boolean
+  // The fill behind a unit, where it is not the hero's own rarity.
+  backdropOf?: (character: CharacterType) => string
 }>()
 
 const emit = defineEmits<{
@@ -112,6 +115,7 @@ function handleEnter() {
     >
       <CharacterIcon
         :character
+        :backdrop="backdropOf?.(character)"
         :is-draggable="false"
         :show-simple-tooltip="true"
         :locked-note="lockedNote(character)"
@@ -132,6 +136,7 @@ function handleEnter() {
     >
       <CharacterIcon
         :character
+        :backdrop="backdropOf?.(character)"
         :is-draggable="false"
         :show-simple-tooltip="true"
         :locked-note="lockedNote(character)"

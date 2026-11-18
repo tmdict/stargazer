@@ -4,7 +4,7 @@
 
 import trialList from '@/data/hd/trial.json'
 import type { AttrRules } from '@/lib/characters/attributes'
-import { isTrialHeroId } from '@/lib/characters/trial'
+import { isTrialHeroId, trialPickOf } from '@/lib/characters/trial'
 import { unitData } from '@/lib/characters/unitData'
 import {
   DUEL_ATTR_EQUIPMENT,
@@ -74,6 +74,12 @@ export function duelTiersOf(unitId: number): readonly number[] {
 }
 
 const lowestTier = (unitId: number): number => duelTiersOf(unitId)[0] ?? 0
+
+/** The tier a pick from an Honor Duel list is placed at: its card's for a
+ * Trial pick, else the lowest the hero's source allows. */
+export function duelPickTier(pickId: number): DuelTier {
+  return DUEL_TIERS[trialPickOf(pickId)?.tier ?? lowestTier(pickId)] ?? DUEL_TIERS[0]
+}
 
 // The allowed tier closest to `tier`, the lower of two equally close.
 const nearestTier = (unitId: number, tier: number): number =>

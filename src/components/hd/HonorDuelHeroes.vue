@@ -16,7 +16,7 @@ import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelList } from '@/composables/useDuelList'
 import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
-import { duelHeroes } from '@/lib/hd/heroes'
+import { duelHeroes, duelPickBackdrop } from '@/lib/hd/heroes'
 import { DUEL_MAP_NAMES } from '@/lib/hd/maps'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -121,6 +121,7 @@ const handleClick = (character: CharacterType) => {
             v-for="character in group.units"
             :key="character.id"
             :character
+            :backdrop="duelPickBackdrop(character)"
             is-draggable
             :dimmed="isDimmed(character)"
             inspectable
@@ -135,6 +136,7 @@ const handleClick = (character: CharacterType) => {
         v-for="character in filteredCharacters"
         :key="character.id"
         :character
+        :backdrop="duelPickBackdrop(character)"
         is-draggable
         :dimmed="isDimmed(character)"
         inspectable
