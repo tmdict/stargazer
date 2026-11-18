@@ -38,10 +38,10 @@ npm run fits          # make the data pack's fit table in the DATA_PACK_DIR fold
 ### Adding a character
 
 1. Add `src/data/character/<name>.json`.
-2. Add the English and Chinese display names in `src/locales/character/<name>.json`. The Korean name, the game's own, is filled in by a pack update.
-3. Once the data pack holds the hero's portrait and skill text, run `npm run data:pin` so the build takes that version.
+2. Add the display names in `src/locales/character/<name>.json`, with a string for each of `en`, `zh` and `ko`.
+3. When the data pack includes the hero's portrait or skill text, run `npm run data:pin` to record its version in `data.lock`.
 
-The hero list, skill pages and search pick the character up from those files.
+The hero list finds the character automatically. A missing hero portrait or skill text produces a build notice without stopping the build. The picker shows the hero's name without a portrait. Skill pages require the hero's skill text in the data pack.
 
 ### Adding an arena map
 
