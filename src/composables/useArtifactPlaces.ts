@@ -1,8 +1,7 @@
 /* Where a board's two artifact places sit and how they stack: the host cell
  * beside each side, its outline for the cell layer, and the box of the icon
  * that stands on it. The Arena's artifact layer and the Honor Duel board's
- * draw on the same places, and an Honor Duel board's off-field spots stand
- * icons of the same size on cells of their own. */
+ * draw on the same places. */
 
 import { computed } from 'vue'
 
@@ -54,7 +53,6 @@ export function useArtifactPlaces(ctx: GridContext) {
 
   return {
     gridPixelSize,
-    iconStyle,
     ally: place(Team.ALLY),
     enemy: place(Team.ENEMY),
     // "Front" is the slot that renders at the screen-bottom (near) edge, which

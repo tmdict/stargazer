@@ -2,7 +2,7 @@
 
 Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts and then equipment by tier, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. Nothing in the two lists goes on a board.
 
-On the Arena page the tab also swaps the Arena board for an Honor Duel board, where a formation of the mode is laid out with its tiers, equipment, artifacts and off-field spots ([The board](#the-board)).
+On the Arena page the tab also swaps the Arena board for an Honor Duel board, where a formation of the mode is laid out with its tiers, equipment and artifacts ([The board](#the-board)).
 
 ## Where the content comes from
 
@@ -36,7 +36,7 @@ A link opens the tab directly with `?tab=honorDuel` on the Arena page.
 
 ## The board
 
-The Arena page shows one of two boards: the Arena's own, and an Honor Duel board while the Honor Duel tab is open. They are two boards and not one board in two looks, because the mode's rules differ. A hero may stand twice, a hero carries a tier, a piece of equipment and an off-field spot in place of its upgrades, and a side holds an Honor Duel artifact with a level. A board carries its kind (`BoardKind` on the board object), and each rule that differs asks the kind in one place.
+The Arena page shows one of two boards: the Arena's own, and an Honor Duel board while the Honor Duel tab is open. They are two boards and not one board in two looks, because the mode's rules differ. A hero may stand twice, a hero carries a tier and a piece of equipment in place of its upgrades, and a side holds an Honor Duel artifact with a level. A board carries its kind (`BoardKind` on the board object), and each rule that differs asks the kind in one place.
 
 `useArenaBoards` runs the change between the two. Each board is stored under a key of its own, and each key's writer encodes a board of its own kind only, so editing one board never changes the other's stored value. The Format menu, Generate and the roster menu belong to the Arena and are hidden with the Honor Duel board, and Grid Info hides the choices that mean nothing there. `/share` shows an Honor Duel link as a read-only board with its hero card.
 
@@ -46,11 +46,9 @@ A unit of the mode comes from one of two sources, and its source sets its tiers 
 
 The picker shows the two sources as two lists, Shop and Trial, and the popup on an empty tile follows the list on show. That choice is one value for both (`useDuelList`), which lasts while the page is open and is never stored. The Trial list has a group for each card. A pick from a group carries the card's tier in its id (`toTrialPick`), so a click, a tap and a drag place a copy at that tier through the one placing path. The popup lists each Trial unit once, at the cheapest card that brings it.
 
-A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment and takes an off-field spot as a hero does, and it has no skill page.
+A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment as a hero does, and it has no skill page.
 
-A placed unit's tier, equipment and off-field spot are per-hero values under ids of their own (101, 102 and 103), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that changes sides leaves its piece behind, as it leaves its off-field spot, and a hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there. The same piece may sit on several heroes.
-
-An off-field spot is a note that a hero leaves the field. The hero keeps its tile and counts once, and its skill draws from its tile, so the spot shows only a faded second portrait. A side has six spots with one hero to a spot, and a hero that changes sides leaves its spot. The spots are off-grid cells like the artifact places (`src/lib/hd/spots.ts`), so placement, pathfinding and targeting never see them. They draw only while a hero holds one or picks one, and none lies wider than the board's widest row, so a board drawn as wide as a phone's screen shows them whole. Team view's crop takes in the ally's spots that draw.
+A placed unit's tier and equipment are per-hero values under ids of their own (101 and 102), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that changes sides leaves its piece behind, and a hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there. The same piece may sit on several heroes.
 
 ### The team artifact and the faction bonus
 
@@ -80,23 +78,22 @@ An Honor Duel board travels as `?hd=<text>` on `/` and `/share`, and the same te
 |           | Trial           | 1    | 1 for a Trial unit                                                         |
 |           | tier            | 2    | 0 Epic, 1 Legendary, 2 Mythic, 3 Supreme (a Trial unit's alone)            |
 |           | equipment       | 8    | the piece's id, 0 for none                                                 |
-|           | off-field spot  | 3    | 1 to 6, 0 for none                                                         |
 | Artifacts | artifact, level | 8, 2 | the ally side's and then the enemy side's: id and level 1 to 3, or 0 and 0 |
 
 The units part is present with bit 0 and the artifacts part with bit 1. A board has exactly one text, and decoding is all or nothing: a spare bit set, a value outside its range, a map outside the mode's list, units out of tile order, a part marked present but empty or anything after the last field refuses the whole text. The format has no version field, for the Arena link's reasons.
 
 The text holds heroes and creatures only. A companion is left out because its hero's skill spawns it again, and a Trial copy's number is left out because a reader hands the numbers out in tile order. Whether an id still names a unit, a piece or an artifact is the reader's question. A unit the game data lacks is dropped, and so is one its source does not bring: without the Trial mark, a hero the shop does not sell or a creature, and with it, a unit no Trial Card brings. Placing refuses the same units, so a board never holds one a restore would drop. A tier the unit's source does not allow moves to the nearest it does. A piece or an artifact id that names none is kept and shown as none.
 
-`AMHAEBQAHSChAPRA6KwtACgQAA` is a board on map I with a Legendary hero and a Mythic Trial copy of it on the ally side, sharing piece 7, the copy on off-field spot 2, a creature on the enemy side and the ally's artifact 5 at level 2. Decoded, with team 1 the ally and 2 the enemy:
+`AMHAEBQAHSQUgB6gs7YAFAgA` is a board on map I with a Legendary hero and a Mythic Trial copy of it on the ally side, sharing piece 7, a creature on the enemy side and the ally's artifact 5 at level 2. Decoded, with team 1 the ally and 2 the enemy:
 
 ```json
 {
   "d": 0,
   "map": "arena1",
   "units": [
-    { "hexId": 4, "team": 1, "heroId": 10, "trial": false, "tier": 1, "equipment": 7, "spot": 0 },
-    { "hexId": 9, "team": 1, "heroId": 10, "trial": true, "tier": 2, "equipment": 7, "spot": 2 },
-    { "hexId": 40, "team": 2, "heroId": 7001, "trial": true, "tier": 0, "equipment": 0, "spot": 0 }
+    { "hexId": 4, "team": 1, "heroId": 10, "trial": false, "tier": 1, "equipment": 7 },
+    { "hexId": 9, "team": 1, "heroId": 10, "trial": true, "tier": 2, "equipment": 7 },
+    { "hexId": 40, "team": 2, "heroId": 7001, "trial": true, "tier": 0, "equipment": 0 }
   ],
   "artifacts": { "ally": { "id": 5, "level": 2 }, "enemy": null }
 }

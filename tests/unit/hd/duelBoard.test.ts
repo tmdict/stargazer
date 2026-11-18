@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { findCharacterHex, getTilesWithCharacters } from '@/lib/characters/character'
 import { toTrialId, toTrialPick } from '@/lib/characters/trial'
-import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
+import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import {
   decodeDuelBoard,
   encodeDuelBoard,
@@ -12,7 +12,7 @@ import {
 } from '@/lib/hd/boardLink'
 import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
-import { duelFactionBonus, setDuelEquipment, setDuelSpot, useDuelBoard } from '@/stores/duelBoard'
+import { duelFactionBonus, setDuelEquipment, useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { DUEL_HEROES, KULU } from '../fixtures/characters'
@@ -32,7 +32,7 @@ const unit = (
   team: Team,
   heroId: number,
   rest: Partial<DuelUnitState> = {},
-): DuelUnitState => ({ hexId, team, heroId, trial: false, tier: 0, equipment: 0, spot: 0, ...rest })
+): DuelUnitState => ({ hexId, team, heroId, trial: false, tier: 0, equipment: 0, ...rest })
 
 const board = (units: DuelUnitState[], rest: Partial<DuelBoardState> = {}): DuelBoardState => ({
   d: 0,
@@ -61,12 +61,12 @@ describe('an Honor Duel board from its link text', () => {
   it('reads back the text it was built from', () => {
     const state = board(
       [
-        unit(1, Team.ALLY, ALLY_A, { tier: 1, equipment: 7, spot: 2 }),
+        unit(1, Team.ALLY, ALLY_A, { tier: 1, equipment: 7 }),
         unit(2, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 7 }),
-        unit(3, Team.ALLY, ALLY_B, { trial: true, tier: 1, equipment: 255, spot: 6 }),
+        unit(3, Team.ALLY, ALLY_B, { trial: true, tier: 1, equipment: 255 }),
         unit(4, Team.ALLY, SUPREME_HERO, { trial: true, tier: 3 }),
         unit(5, Team.ALLY, CREATURE, { trial: true, equipment: 12 }),
-        unit(40, Team.ENEMY, ALLY_A, { equipment: 12, spot: 2 }),
+        unit(40, Team.ENEMY, ALLY_A, { equipment: 12 }),
       ],
       { d: 6, artifacts: { ally: { id: 5, level: 2 }, enemy: null } },
     )
@@ -153,18 +153,6 @@ describe('an Honor Duel board from its link text', () => {
     expect(onScreen().units.map((u) => u.tier)).toEqual([2, 1, 3, 0, 2])
   })
 
-  it('keeps one hero on an off-field spot a side: the first in tile order', () => {
-    openBoard(
-      board([
-        unit(1, Team.ALLY, ALLY_A, { spot: 4 }),
-        unit(2, Team.ALLY, ALLY_B, { spot: 4 }),
-        unit(40, Team.ENEMY, ALLY_C, { spot: 4 }),
-      ]),
-    )
-
-    expect(onScreen().units.map((u) => u.spot)).toEqual([4, 0, 4])
-  })
-
   it('opens an empty board on the first map for a text that is no board', () => {
     const duel = useDuelBoard()
 
@@ -182,7 +170,7 @@ describe('moving an Honor Duel board to another map', () => {
       board(
         [
           unit(1, Team.ALLY, ALLY_B, { tier: 1 }),
-          unit(9, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9, spot: 4 }),
+          unit(9, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9 }),
         ],
         { artifacts: { ally: { id: 3, level: 2 }, enemy: null } },
       ),
@@ -198,12 +186,12 @@ describe('moving an Honor Duel board to another map', () => {
     const moved = state.units.find((u) => u.trial)!
     expect([1, 9]).not.toContain(moved.hexId)
     expect(moved).toEqual(
-      unit(moved.hexId, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9, spot: 4 }),
+      unit(moved.hexId, Team.ALLY, ALLY_A, { trial: true, tier: 2, equipment: 9 }),
     )
   })
 })
 
-describe('Honor Duel equipment and off-field spots', () => {
+describe('Honor Duel equipment', () => {
   const setup = () => {
     const { ctx } = openBoard(
       board([
@@ -230,36 +218,15 @@ describe('Honor Duel equipment and off-field spots', () => {
     expect(ctx.getAttr(Team.ALLY, later, DUEL_ATTR_EQUIPMENT)).toBe(9)
   })
 
-  it('moves an off-field spot to the hero that takes it, on that side alone', () => {
-    const { ctx } = setup()
-    setDuelSpot(ctx, Team.ALLY, ALLY_A, 3)
-    setDuelSpot(ctx, Team.ENEMY, ALLY_A, 3)
-
-    setDuelSpot(ctx, Team.ALLY, ALLY_B, 3)
-
-    expect(ctx.getAttr(Team.ALLY, ALLY_A, DUEL_ATTR_SPOT)).toBe(0)
-    expect(ctx.getAttr(Team.ALLY, ALLY_B, DUEL_ATTR_SPOT)).toBe(3)
-    expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_SPOT)).toBe(3)
-  })
-
-  it('a hero that changes sides leaves its off-field spot and keeps its tier', () => {
-    const { ctx } = setup()
-    ctx.setAttr(Team.ALLY, ALLY_B, DUEL_ATTR_TIER, 2)
-    setDuelSpot(ctx, Team.ALLY, ALLY_B, 5)
-
-    expect(ctx.move(3, 41, ALLY_B)).toBe(true)
-
-    expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_SPOT)).toBe(0)
-    expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_TIER)).toBe(2)
-  })
-
-  it('a hero that changes sides leaves its piece and takes the one its copies hold there', () => {
+  it('a hero that changes sides keeps its tier, leaves its piece and takes the one its copies hold there', () => {
     const { ctx, copy } = setup()
     setDuelEquipment(ctx, Team.ALLY, ALLY_A, 9)
     setDuelEquipment(ctx, Team.ALLY, ALLY_B, 4)
+    ctx.setAttr(Team.ALLY, copy, DUEL_ATTR_TIER, 2)
 
     // Its copy there holds none.
     expect(ctx.move(2, 41, copy)).toBe(true)
+    expect(ctx.getAttr(Team.ENEMY, copy, DUEL_ATTR_TIER)).toBe(2)
     expect(ctx.getAttr(Team.ENEMY, copy, DUEL_ATTR_EQUIPMENT)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_EQUIPMENT)).toBe(0)
 

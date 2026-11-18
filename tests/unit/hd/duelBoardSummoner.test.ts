@@ -32,7 +32,6 @@ const unit = (hexId: number, heroId: number, rest: Partial<DuelUnitState> = {}):
   trial: false,
   tier: 0,
   equipment: 0,
-  spot: 0,
   ...rest,
 })
 

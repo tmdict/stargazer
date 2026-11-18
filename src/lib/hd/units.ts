@@ -8,10 +8,8 @@ import { isTrialHeroId } from '@/lib/characters/trial'
 import { unitData } from '@/lib/characters/unitData'
 import {
   DUEL_ATTR_EQUIPMENT,
-  DUEL_ATTR_SPOT,
   DUEL_ATTR_TIER,
   DUEL_ITEM_ID_MAX,
-  DUEL_SPOT_COUNT,
   DUEL_TIERS,
   type DuelTier,
 } from './board'
@@ -84,25 +82,17 @@ const nearestTier = (unitId: number, tier: number): number =>
     lowestTier(unitId),
   )
 
-const itemMax = (attrId: number): number | undefined => {
-  if (attrId === DUEL_ATTR_EQUIPMENT) return DUEL_ITEM_ID_MAX
-  if (attrId === DUEL_ATTR_SPOT) return DUEL_SPOT_COUNT
-  return undefined
-}
-
 export const DUEL_ATTR_RULES: AttrRules = {
   clamp: (attrId, value, unitId) => {
     if (attrId === DUEL_ATTR_TIER) {
       return Number.isFinite(value) ? nearestTier(unitId, Math.round(value)) : lowestTier(unitId)
     }
-    const max = itemMax(attrId)
-    if (max === undefined || !Number.isFinite(value)) return 0
-    return Math.min(Math.max(Math.round(value), 0), max)
+    if (attrId !== DUEL_ATTR_EQUIPMENT || !Number.isFinite(value)) return 0
+    return Math.min(Math.max(Math.round(value), 0), DUEL_ITEM_ID_MAX)
   },
   // A unit starts at the lowest tier its source allows, so a unit with one
   // tier stores none.
   defaultOf: (attrId, unitId) => (attrId === DUEL_ATTR_TIER ? lowestTier(unitId) : 0),
-  // A side's spot holds one hero, and the other side's may be taken. A piece
-  // is its side's too: the other side's copies of the hero hold their own.
-  sideBound: [DUEL_ATTR_SPOT, DUEL_ATTR_EQUIPMENT],
+  // A piece is its side's: the other side's copies of the hero hold their own.
+  sideBound: [DUEL_ATTR_EQUIPMENT],
 }

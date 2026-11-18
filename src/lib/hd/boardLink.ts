@@ -5,7 +5,7 @@
  *   header      view switches 8 (bits 5-7 spare) · map 6 · parts 8 (bit 0
  *               units, bit 1 artifacts, bits 2-7 spare)
  *   units       count 4, then for each unit in tile order: tile 6 · team 1 ·
- *               hero 14 · Trial 1 · tier 2 · equipment 8 · off-field spot 3
+ *               hero 14 · Trial 1 · tier 2 · equipment 8
  *   artifacts   for the ally side, then the enemy side: artifact 8 · level 2
  *
  * A board has exactly one text. Decoding is all or nothing: a spare bit set, a
@@ -17,13 +17,7 @@
 import { BitReader, BitWriter, bytesToUrlSafe, inRange, urlSafeToBytes } from '@/lib/teams/bitCodec'
 import { mapKeyByWireId, mapWireIdByKey } from '@/lib/teams/wire'
 import { Team } from '@/lib/types/team'
-import {
-  DUEL_ARTIFACT_LEVELS,
-  DUEL_ITEM_ID_MAX,
-  DUEL_SPOT_COUNT,
-  DUEL_TIERS,
-  type DuelArtifactSlot,
-} from './board'
+import { DUEL_ARTIFACT_LEVELS, DUEL_ITEM_ID_MAX, DUEL_TIERS, type DuelArtifactSlot } from './board'
 import { isDuelMap } from './maps'
 
 export interface DuelUnitState {
@@ -35,8 +29,6 @@ export interface DuelUnitState {
   tier: number
   // 0 for none.
   equipment: number
-  // 0 for none, else 1 to DUEL_SPOT_COUNT.
-  spot: number
 }
 
 export interface DuelBoardState {
@@ -63,8 +55,7 @@ const validUnit = (unit: DuelUnitState): boolean =>
   (unit.team === Team.ALLY || unit.team === Team.ENEMY) &&
   inRange(unit.heroId, 1, MAX_HERO_ID) &&
   inRange(unit.tier, 0, unit.trial ? SUPREME : SUPREME - 1) &&
-  inRange(unit.equipment, 0, DUEL_ITEM_ID_MAX) &&
-  inRange(unit.spot, 0, DUEL_SPOT_COUNT)
+  inRange(unit.equipment, 0, DUEL_ITEM_ID_MAX)
 
 const validArtifact = (slot: DuelArtifactSlot | null): boolean =>
   slot === null ||
@@ -105,7 +96,6 @@ export function encodeDuelBoard(state: DuelBoardState): string {
       writer.writeBits(unit.trial ? 1 : 0, 1)
       writer.writeBits(unit.tier, 2)
       writer.writeBits(unit.equipment, 8)
-      writer.writeBits(unit.spot, 3)
     }
   }
   if (hasArtifacts) {
@@ -150,7 +140,6 @@ export function decodeDuelBoard(text: string): DuelBoardState | null {
           trial: reader.readBits(1) === 1,
           tier: reader.readBits(2),
           equipment: reader.readBits(8),
-          spot: reader.readBits(3),
         })
       }
       if (!units.every(validUnit) || !inTileOrder(units)) return null

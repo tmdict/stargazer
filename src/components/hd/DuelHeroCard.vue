@@ -1,19 +1,18 @@
 <script setup lang="ts">
 /* The hero card of an Honor Duel board: the Arena's panel of portraits and
-   names, with each unit's tier in place of its upgrades, its equipment slot,
-   its off-field control and a mark on a Trial unit. What a unit carries is set
-   here and shows on the board. */
+   names, with each unit's tier in place of its upgrades, its equipment slot
+   and a mark on a Trial unit. What a unit carries is set here and shows on
+   the board. */
 
 import { ref } from 'vue'
 
 import DuelPieceSlot from './DuelPieceSlot.vue'
-import DuelSpotToggle from './DuelSpotToggle.vue'
 import DuelTierPill from './DuelTierPill.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import UnitBadge from '@/components/grid/UnitBadge.vue'
 import { below } from '@/components/guide/shop/popupLayout'
 import { isTrialHeroId } from '@/lib/characters/trial'
-import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
+import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import type { Point } from '@/lib/layout'
 import type { Team } from '@/lib/types/team'
 import { setDuelEquipment } from '@/stores/duelBoard'
@@ -41,13 +40,6 @@ const pick = (piece: number): void => {
   if (hero) setDuelEquipment(props.context, hero.team, hero.unitId, piece)
   picking.value = null
 }
-
-const pickingSpot = (team: Team, unitId: number): boolean =>
-  props.context.duelSpotPick?.team === team && props.context.duelSpotPick.unitId === unitId
-
-const toggleSpotPick = (team: Team, unitId: number): void => {
-  props.context.setDuelSpotPick(pickingSpot(team, unitId) ? null : { team, unitId })
-}
 </script>
 
 <template>
@@ -71,19 +63,11 @@ const toggleSpotPick = (team: Team, unitId: number): void => {
       />
     </template>
     <template #controls="{ team, hero }">
-      <span class="controls">
-        <DuelPieceSlot
-          :piece="pieceOf(team, hero.characterId)"
-          :readonly
-          @open="picking = { team, unitId: hero.characterId, position: below($event) }"
-        />
-        <DuelSpotToggle
-          v-if="!readonly"
-          :held="context.getAttr(team, hero.characterId, DUEL_ATTR_SPOT) !== 0"
-          :picking="pickingSpot(team, hero.characterId)"
-          @toggle="toggleSpotPick(team, hero.characterId)"
-        />
-      </span>
+      <DuelPieceSlot
+        :piece="pieceOf(team, hero.characterId)"
+        :readonly
+        @open="picking = { team, unitId: hero.characterId, position: below($event) }"
+      />
     </template>
   </TeamPowerPanel>
   <DuelEquipmentPopup
@@ -96,13 +80,6 @@ const toggleSpotPick = (team: Team, unitId: number): void => {
 </template>
 
 <style scoped>
-.controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
 .trial-mark {
   --badge-size: 16px;
   --badge-border: 1.5px;

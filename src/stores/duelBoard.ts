@@ -1,7 +1,7 @@
 /* The Arena page's Honor Duel board: the board on screen read as the state its
- * link holds, a board built from one, the edits that follow the mode's own
- * rules (copies of a hero share a piece of equipment, an off-field spot holds
- * one hero), and a side's faction bonus. */
+ * link holds, a board built from one, the edit that follows the mode's own
+ * rule (copies of a hero share a piece of equipment), and a side's faction
+ * bonus. */
 
 import { defineStore } from 'pinia'
 
@@ -15,7 +15,7 @@ import {
 } from '@/lib/characters/character'
 import { isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
 import { teamFactionBonus, type TeamFactionBonus } from '@/lib/factionBonus'
-import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_SPOT, DUEL_ATTR_TIER } from '@/lib/hd/board'
+import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import {
   decodeDuelBoard,
   encodeDuelBoard,
@@ -51,7 +51,6 @@ function duelBoardState(ctx: GridContext, d: number): DuelBoardState {
         trial: isTrialHeroId(unitId),
         tier: ctx.getAttr(team, unitId, DUEL_ATTR_TIER),
         equipment: ctx.getAttr(team, unitId, DUEL_ATTR_EQUIPMENT),
-        spot: ctx.getAttr(team, unitId, DUEL_ATTR_SPOT),
       }
     })
     .sort((a, b) => a.hexId - b.hexId)
@@ -75,21 +74,6 @@ export function setDuelEquipment(
   for (const id of duelHeroUnits(ctx, team)) {
     if (toBaseHeroId(id) === heroId) ctx.setAttr(team, id, DUEL_ATTR_EQUIPMENT, piece)
   }
-}
-
-// A side's off-field spot holds one hero: giving it to another takes it from
-// the first. 0 takes the hero off its spot.
-export function setDuelSpot(ctx: GridContext, team: Team, unitId: number, spot: number): void {
-  const heroes = duelHeroUnits(ctx, team)
-  if (!heroes.includes(unitId)) return
-  if (spot !== 0) {
-    for (const id of heroes) {
-      if (id !== unitId && ctx.getAttr(team, id, DUEL_ATTR_SPOT) === spot) {
-        ctx.setAttr(team, id, DUEL_ATTR_SPOT, 0)
-      }
-    }
-  }
-  ctx.setAttr(team, unitId, DUEL_ATTR_SPOT, spot)
 }
 
 // Every unit of the side counts toward its faction, a copy as much as the
@@ -130,8 +114,7 @@ export const useDuelBoard = defineStore('duelBoard', () => {
     units.sort((a, b) => Number(hasCompanionSkill(a.unitId)) - Number(hasCompanionSkill(b.unitId)))
 
     const kept = new Set(units.map((unit) => unit.hexId))
-    const spots = new Set<string>()
-    for (const { hexId, team, unitId, tier, equipment, spot } of units) {
+    for (const { hexId, team, unitId, tier, equipment } of units) {
       // Only a companion can stand on an empty board's tile, and placing over
       // one would take its summoner off with it.
       const own = canPlaceCharacterOnTile(ctx.grid, hexId, team) && !hasCharacter(ctx.grid, hexId)
@@ -139,13 +122,10 @@ export const useDuelBoard = defineStore('duelBoard', () => {
         ? ctx.place(hexId, unitId, team)
         : relocate && ctx.autoPlace(unitId, team, kept)
       if (!placed) continue
-      const spotKey = `${team}:${spot}`
       ctx.setAttrs(team, unitId, {
         [DUEL_ATTR_TIER]: tier,
         [DUEL_ATTR_EQUIPMENT]: equipment,
-        [DUEL_ATTR_SPOT]: spots.has(spotKey) ? 0 : spot,
       })
-      spots.add(spotKey)
     }
     ctx.setDuelArtifact(Team.ALLY, state.artifacts.ally)
     ctx.setDuelArtifact(Team.ENEMY, state.artifacts.enemy)

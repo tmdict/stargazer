@@ -13,16 +13,16 @@ const EMPTY: DuelBoardState = {
 }
 
 // Map III; a Legendary hero with a piece, two Trial copies sharing a piece (one
-// Supreme, on off-field spot 2), a Mythic enemy; an ally artifact at level 3;
-// skills shown on a tilted board.
+// Supreme), a Mythic enemy; an ally artifact at level 3; skills shown on a
+// tilted board.
 const EXAMPLE: DuelBoardState = {
   d: 6,
   map: 'arena3',
   units: [
-    { hexId: 4, team: Team.ALLY, heroId: 10, trial: false, tier: 1, equipment: 63, spot: 0 },
-    { hexId: 7, team: Team.ALLY, heroId: 39, trial: true, tier: 3, equipment: 12, spot: 2 },
-    { hexId: 9, team: Team.ALLY, heroId: 39, trial: true, tier: 0, equipment: 12, spot: 0 },
-    { hexId: 39, team: Team.ENEMY, heroId: 84, trial: false, tier: 2, equipment: 0, spot: 0 },
+    { hexId: 4, team: Team.ALLY, heroId: 10, trial: false, tier: 1, equipment: 63 },
+    { hexId: 7, team: Team.ALLY, heroId: 39, trial: true, tier: 3, equipment: 12 },
+    { hexId: 9, team: Team.ALLY, heroId: 39, trial: true, tier: 0, equipment: 12 },
+    { hexId: 39, team: Team.ENEMY, heroId: 84, trial: false, tier: 2, equipment: 0 },
   ],
   artifacts: { ally: { id: 31, level: 3 }, enemy: null },
 }
@@ -30,14 +30,13 @@ const EXAMPLE: DuelBoardState = {
 const FULL: DuelBoardState = {
   d: 31,
   map: 'arena5',
-  units: [1, 2, 3, 4, 5, 41, 42, 43, 44, 45].map((hexId, i) => ({
+  units: [1, 2, 3, 4, 5, 41, 42, 43, 44, 45].map((hexId) => ({
     hexId,
     team: hexId < 20 ? Team.ALLY : Team.ENEMY,
     heroId: 132,
     trial: true,
     tier: 3,
     equipment: 113,
-    spot: (i % 6) + 1,
   })),
   artifacts: { ally: { id: 53, level: 3 }, enemy: { id: 52, level: 1 } },
 }
@@ -56,7 +55,7 @@ const HEADER = (parts: number, d = 0, map = 1): [number, number][] => [
 ]
 
 const UNIT = (
-  over: Partial<Record<'hex' | 'team' | 'hero' | 'trial' | 'tier' | 'piece' | 'spot', number>> = {},
+  over: Partial<Record<'hex' | 'team' | 'hero' | 'trial' | 'tier' | 'piece', number>> = {},
 ): [number, number][] => [
   [over.hex ?? 4, 6],
   [over.team ?? 0, 1],
@@ -64,17 +63,16 @@ const UNIT = (
   [over.trial ?? 0, 1],
   [over.tier ?? 0, 2],
   [over.piece ?? 0, 8],
-  [over.spot ?? 0, 3],
 ]
 
-// 61 bits in 11 characters, so the last character ends in spare bits.
+// 58 bits in 11 characters, so the last character ends in spare bits.
 const ONE_UNIT = handWritten([...HEADER(1), [1, 4], ...UNIT()])
 
 describe('Honor Duel board link', () => {
   it('writes the fixed example texts', () => {
     expect(encodeDuelBoard(EMPTY)).toBe('AAEA')
-    expect(encodeDuelBoard(EXAMPLE)).toBe('BsMAERQA_eBwApxBiRMgDDhTAQTAxwAA')
-    expect(encodeDuelBoard(FULL)).toHaveLength(67)
+    expect(encodeDuelBoard(EXAMPLE)).toBe('BsMAERQA_RxOgDMkToAwnKkAAnwMAA')
+    expect(encodeDuelBoard(FULL)).toHaveLength(62)
   })
 
   it.each([
@@ -90,16 +88,14 @@ describe('Honor Duel board link', () => {
     expect(ONE_UNIT.endsWith('A')).toBe(true)
     expect(decodeDuelBoard(ONE_UNIT)).toEqual({
       ...EMPTY,
-      units: [
-        { hexId: 4, team: Team.ALLY, heroId: 10, trial: false, tier: 0, equipment: 0, spot: 0 },
-      ],
+      units: [{ hexId: 4, team: Team.ALLY, heroId: 10, trial: false, tier: 0, equipment: 0 }],
     })
   })
 
   it.each([
     ['empty text', ''],
     ['a character outside the alphabet', 'AAQ!'],
-    ['a text cut short', 'BsMAERQA_eBwApxBiRMgDDhT'],
+    ['a text cut short', 'BsMAERQA_RxOgDMkToAwnK'],
     ['an extra character', 'AAEAA'],
     ['spare bits set in the last character', ONE_UNIT.slice(0, -1) + 'B'],
     ['a spare view switch', handWritten(HEADER(0, 32))],
@@ -113,7 +109,6 @@ describe('Honor Duel board link', () => {
     ['hero zero', handWritten([...HEADER(1), [1, 4], ...UNIT({ hero: 0 })])],
     ['a placeholder for a hero', handWritten([...HEADER(1), [1, 4], ...UNIT({ hero: 9001 })])],
     ['Supreme on a normal hero', handWritten([...HEADER(1), [1, 4], ...UNIT({ tier: 3 })])],
-    ['off-field spot 7', handWritten([...HEADER(1), [1, 4], ...UNIT({ spot: 7 })])],
     [
       'units out of tile order',
       handWritten([...HEADER(1), [2, 4], ...UNIT({ hex: 9 }), ...UNIT({ hex: 4, hero: 11 })]),
@@ -130,18 +125,15 @@ describe('Honor Duel board link', () => {
     expect(decodeDuelBoard(text)).toBeNull()
   })
 
-  it('accepts Supreme on a Trial hero and every off-field spot', () => {
-    for (let spot = 0; spot <= 6; spot++) {
-      const text = handWritten([...HEADER(1), [1, 4], ...UNIT({ trial: 1, tier: 3, spot })])
-      expect(decodeDuelBoard(text)?.units[0]).toMatchObject({ trial: true, tier: 3, spot })
-    }
+  it('accepts Supreme on a Trial hero', () => {
+    const text = handWritten([...HEADER(1), [1, 4], ...UNIT({ trial: 1, tier: 3 })])
+    expect(decodeDuelBoard(text)?.units[0]).toMatchObject({ trial: true, tier: 3 })
   })
 
   it('refuses to write a board its layout cannot hold', () => {
     const unit = EXAMPLE.units[0]!
     expect(() => encodeDuelBoard({ ...EMPTY, map: 'preset-sr2' })).toThrow()
     expect(() => encodeDuelBoard({ ...EMPTY, units: [{ ...unit, tier: 3 }] })).toThrow()
-    expect(() => encodeDuelBoard({ ...EMPTY, units: [{ ...unit, spot: 7 }] })).toThrow()
     expect(() =>
       encodeDuelBoard({ ...EMPTY, artifacts: { ally: { id: 31, level: 4 }, enemy: null } }),
     ).toThrow()
