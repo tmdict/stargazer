@@ -9,7 +9,7 @@ import BaseModal from '@/components/modals/BaseModal.vue'
 import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import { useI18nStore } from '@/stores/i18n'
-import { goodName } from './shopGoods'
+import { goodName } from '@/utils/shopGoodNames'
 
 const { show, level } = defineProps<{
   show: boolean

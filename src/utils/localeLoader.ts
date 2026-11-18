@@ -48,7 +48,7 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
 
 // Honor Duel's creatures. They read as character names (`character.<name>`)
 // but stay out of the heroes' own dictionary, which hero searches list from.
-function loadCreatureLocales(): Record<string, LocaleData> {
+export function loadCreatureLocales(): Record<string, LocaleData> {
   creatureLocales ??= buildLocaleDict(
     import.meta.glob<LocaleData>('@/locales/hd/creature/*.json', {
       eager: true,

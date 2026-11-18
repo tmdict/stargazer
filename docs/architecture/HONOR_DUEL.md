@@ -6,7 +6,7 @@ On the Arena page the tab also swaps the Arena board for an Honor Duel board, wh
 
 ## Where the content comes from
 
-A pack update writes all of it but the mode's map list, which is kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
+A pack update writes all of it but the mode's map list, the Trial list, the creatures and the shop's `rounds`, which are kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
 | Content                 | Files                                                      |
 | ----------------------- | ---------------------------------------------------------- |
@@ -26,7 +26,7 @@ An entry's `id` is Stargazer's own number, counted from 1 in the game's listing 
 
 ## Loading
 
-`src/lib/hd/catalog.ts` holds every glob of the content: the data files, the names, the pictures and the text. The tab's list, its popup, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/lib/hd/catalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text. The tab's list, its popup, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
 
 The text loads one language at a time, in the reader's skill-text language, when a popup opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 
@@ -60,7 +60,7 @@ A badge by each artifact place reports the side's faction bonus (`teamFactionBon
 
 ### What the board loads
 
-The board's rules need none of the catalog, so the Arena page loads none of it for a visitor who never opens an Honor Duel board. The Trial list and the creature files are a few small files and load with the rules. The pictures on a portrait and in the hero card ask for the catalog on first use (`useDuelItems`), and the artifact layer and the two pickers are fetched with it.
+The board's rules need none of the catalog, so the Arena page loads none of it for a visitor who never opens an Honor Duel board. The Trial list, the creature files and the names of the shop's products, which head the Trial list's groups (`src/utils/shopGoodNames.ts`), are a few small files and load with the rules. The pictures on a portrait and in the hero card ask for the catalog on first use (`useDuelItems`), and the artifact layer and the two pickers are fetched with it.
 
 ## Formats
 
@@ -85,7 +85,7 @@ An Honor Duel board travels as `?hd=<text>` on `/` and `/share`, and the same te
 
 The units part is present with bit 0 and the artifacts part with bit 1. A board has exactly one text, and decoding is all or nothing: a spare bit set, a value outside its range, a map outside the mode's list, units out of tile order, a part marked present but empty or anything after the last field refuses the whole text. The format has no version field, for the Arena link's reasons.
 
-The text holds heroes only. A companion is left out because its hero's skill spawns it again, and a Trial copy's number is left out because a reader hands the numbers out in tile order. Whether an id still names a unit, a piece or an artifact is the reader's question. A unit the game data lacks is dropped, and so is one its source does not bring: a hero the shop does not sell or a creature without the Trial mark, and a unit no card shows with it. A tier the unit's source does not allow moves to the nearest it does. A piece or an artifact id that names none is kept and shown as none.
+The text holds heroes and creatures only. A companion is left out because its hero's skill spawns it again, and a Trial copy's number is left out because a reader hands the numbers out in tile order. Whether an id still names a unit, a piece or an artifact is the reader's question. A unit the game data lacks is dropped, and so is one its source does not bring: without the Trial mark, a hero the shop does not sell or a creature, and with it, a unit no Trial Card brings. Placing refuses the same units, so a board never holds one a restore would drop. A tier the unit's source does not allow moves to the nearest it does. A piece or an artifact id that names none is kept and shown as none.
 
 `AMHAEBQAHSChAPRA6KwtACgQAA` is a board on map I with a Legendary hero and a Mythic Trial copy of it on the ally side, sharing piece 7, the copy on off-field spot 2, a creature on the enemy side and the ally's artifact 5 at level 2. Decoded, with team 1 the ally and 2 the enemy:
 
@@ -153,7 +153,7 @@ The pack's text, one pair of files for each skill-text language, each keyed by e
 
 ### Trial units
 
-The Trial list, `src/data/hd/trial.json`, shortened here to two units a card. `cards` lists the Trial Cards, cheapest first. `card` is the card's name among the shop's goods, and `tier` the tier of a unit it brings: `epic`, `legendary`, `mythic` or `supreme`. `units` names the heroes and creatures the card can show, by file name, and `shop` is true where the card can show any of the shop's heroes. A card has `units`, `shop` or both. A name with no hero or creature file is skipped until it has one.
+The Trial list, `src/data/hd/trial.json`, shortened here to two units a card. `cards` lists the Trial Cards, cheapest first. `card` is the card's name among the shop's goods, and `tier` the tier of a unit it brings: `epic`, `legendary`, `mythic` or `supreme`. `units` names the heroes and creatures the card can show, by file name, and `shop` is true where the card can show any of the shop's heroes. A card has `units`, `shop` or both. A name with no hero or creature file is skipped until it has one, and the build prints a note naming it. A `tier` outside the four, or a `card` the shop does not sell as a Trial Card, stops the list from loading.
 
 ```json
 {

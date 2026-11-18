@@ -10,6 +10,11 @@ describe('name search', () => {
   it('finds a hero by name before any skill text has loaded', () => {
     expect(matchCharacterNames('rowan')).toEqual(new Set(['rowan']))
   })
+
+  it("finds an Honor Duel creature, which has no skill page, by any site language's name", () => {
+    expect(matchCharacterNames('sandbeast')).toEqual(new Set(['sandbeast-king']))
+    expect(matchCharacterNames('尖刺猪')).toEqual(new Set(['sandbeast-king']))
+  })
 })
 
 // Runs over the real locale corpora. pt is loaded explicitly because it holds

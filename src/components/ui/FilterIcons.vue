@@ -35,8 +35,7 @@ const getIconPath = (iconPrefix: string, option: string): string => {
   return gameDataStore.getIcon(iconKey)
 }
 
-// An option is drawn as its icon alone, so one with no icon (a faction whose
-// icon the data pack does not hold yet) is left out.
+// An option is drawn as its icon alone, so one with no icon is left out.
 const orderedOptions = computed(() => {
   const drawn = options.filter((option) => getIconPath(iconPrefix, option) !== '')
   const order = PREFIX_ORDERS[iconPrefix]

@@ -47,9 +47,12 @@ export function isTrialHeroId(id: number): boolean {
 }
 
 // A pick of a Trial unit names the unit and the tier of the card it comes
-// from, in a band above every copy's. It is a picker's id and never stands on
-// a board: the board places a free copy of the unit at that tier.
+// from, in bands above every copy's, one per tier. It is a picker's id and
+// never stands on a board: the board places a free copy of the unit at that
+// tier.
 const TRIAL_PICK_OFFSET = TRIAL_ID_OFFSET + TRIAL_COPIES * TRIAL_BAND_SIZE
+// More bands than the mode has tiers.
+const TRIAL_PICK_TIERS = 10
 
 // `tier` is a position in the mode's tier list.
 export function toTrialPick(baseId: number, tier: number): number {
@@ -57,7 +60,10 @@ export function toTrialPick(baseId: number, tier: number): number {
 }
 
 export function trialPickOf(id: number): { baseId: number; tier: number } | null {
-  if (id < TRIAL_PICK_OFFSET) return null
   const local = id - TRIAL_PICK_OFFSET
-  return { baseId: local % TRIAL_BAND_SIZE, tier: Math.floor(local / TRIAL_BAND_SIZE) }
+  if (local < 0 || local >= TRIAL_PICK_TIERS * TRIAL_BAND_SIZE) return null
+  const baseId = local % TRIAL_BAND_SIZE
+  // A pick names a unit, never a companion.
+  if (baseId >= COMPANION_ID_OFFSET) return null
+  return { baseId, tier: Math.floor(local / TRIAL_BAND_SIZE) }
 }

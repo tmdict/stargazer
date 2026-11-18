@@ -1,7 +1,7 @@
-// The game data files under src/data/: heroes, artifacts, phantimals and
-// charms, each list built once. It imports no Vue, and of the data pack only
-// the list of each hero's charms, so a worker, a build script or lib/ code that
-// reads game data loads nothing else.
+// The game data files under src/data/: heroes, Honor Duel's creatures,
+// artifacts, phantimals and charms, each list built once. It imports no Vue,
+// and of the data pack only the list of each hero's charms, so a worker, a
+// build script or lib/ code that reads game data loads nothing else.
 
 import { PLACEHOLDER_NONE, PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'

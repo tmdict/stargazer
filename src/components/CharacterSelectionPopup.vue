@@ -75,8 +75,9 @@ const manageRosters = (): void => {
 /* Multi-add palette: the first pick fills the tapped tile, later picks
  * auto-place onto a free tile of the same team, and the popup stays open
  * (dismissal is mouse-leave, Esc, or an outside tap) so several heroes can be
- * placed in a row. Placed heroes drop out of the list, and a full team closes
- * the popup since every further pick would be a silent no-op. */
+ * placed in a row. A placed hero drops out of the list, while a Trial unit
+ * stays for another copy, and a full team closes the popup since every further
+ * pick would be a silent no-op. */
 function handleSelect(character: CharacterType): void {
   const t = team.value
   if (!t) return

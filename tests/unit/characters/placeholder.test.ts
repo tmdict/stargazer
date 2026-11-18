@@ -5,7 +5,7 @@ import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/
 import { performPlace } from '@/lib/characters/place'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { loadCharacters } from '@/lib/dataLoader'
+import { loadCharacters, loadCreatures } from '@/lib/dataLoader'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/lib/teams/codec'
@@ -40,8 +40,13 @@ describe('placeholder definitions', () => {
       expect(characters).toContain(p)
       expect(real.some((c) => c.id === p.id)).toBe(false)
     }
-    // Real ids stay far below the band, so the reservation holds long-term.
-    expect(Math.max(...real.map((c) => c.id))).toBeLessThan(9000)
+    // Heroes stay below 7000 and Honor Duel's creatures run from there up to
+    // the band, so no id is read as another kind of unit.
+    expect(Math.max(...real.map((c) => c.id))).toBeLessThan(7000)
+    for (const creature of loadCreatures()) {
+      expect(creature.id).toBeGreaterThanOrEqual(7000)
+      expect(creature.id).toBeLessThan(9000)
+    }
   })
 })
 

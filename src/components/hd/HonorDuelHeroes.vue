@@ -15,7 +15,7 @@ import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
-import { duelHeroes, trialCardName } from '@/lib/hd/heroes'
+import { duelHeroes } from '@/lib/hd/heroes'
 import { DUEL_MAP_NAMES } from '@/lib/hd/maps'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -23,6 +23,7 @@ import { useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { goodName } from '@/utils/shopGoodNames'
 
 const grids = useGrids()
 const gameData = useGameDataStore()
@@ -112,7 +113,7 @@ const handleClick = (character: CharacterType) => {
 
     <div v-if="grids.trial" class="icon-groups">
       <section v-for="group in shownGroups" :key="group.card" class="icon-group">
-        <h3 class="seasonal-title">{{ trialCardName(group.card, i18n.currentLocale) }}</h3>
+        <h3 class="seasonal-title">{{ goodName(group.card, i18n.currentLocale) }}</h3>
         <CharacterGrid>
           <CharacterIcon
             v-for="character in group.units"

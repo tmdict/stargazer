@@ -15,18 +15,13 @@ import { Team } from '@/lib/types/team'
 import { duelFactionBonus, setDuelEquipment, setDuelSpot, useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
-import { KULU } from '../fixtures/characters'
+import { DUEL_HEROES, KULU } from '../fixtures/characters'
 
 /* The Honor Duel board built from its link text and read back, with the real
  * stores and game data. Map arena1 has ally tiles 1-10/12/13/16 and enemy tiles
  * 30/33/34/36-45; arena2 keeps ally tile 1 and has no ally tile 9. */
 
-// Heroes of the shop with no registered skill, so placing one has no side
-// effects.
-const ALLY_A = 11
-const ALLY_B = 3
-const ALLY_C = 72
-const ENEMY_A = 47
+const [ALLY_A, ALLY_B, ALLY_C, ENEMY_A] = DUEL_HEROES
 // A Supreme Trial Card's hero and a creature, with no skill either. KULU is a
 // hero neither the shop nor a card brings.
 const SUPREME_HERO = 6
@@ -343,11 +338,34 @@ describe('a Trial pick', () => {
     expect(findCharacterHex(ctx.grid, toTrialId(CREATURE, 1), Team.ALLY)).toBe(3)
   })
 
+  it('takes the tile of the unit it is dropped on', () => {
+    const grids = useGrids()
+    useDuelBoard().open(null)
+    const ctx = grids.active!
+    expect(grids.placePick(ctx, ALLY_A, Team.ALLY, 1)).toBe(true)
+    setDuelEquipment(ctx, Team.ALLY, ALLY_A, 7)
+
+    expect(grids.routeDrop({ characterId: toTrialPick(ALLY_B, 2) }, ctx.id, 1)).toBe(true)
+    expect(onScreen().units).toEqual([unit(1, Team.ALLY, ALLY_B, { trial: true, tier: 2 })])
+  })
+
   it('is refused on an Arena board', () => {
     const grids = useGrids()
     grids.setGridCount(1)
 
     expect(grids.placePick(grids.active!, toTrialPick(ALLY_A, 1), Team.ALLY, 1)).toBe(false)
     expect(getTilesWithCharacters(grids.active!.grid)).toEqual([])
+  })
+
+  it('places no unit its source does not bring, as a restore would drop it', () => {
+    const grids = useGrids()
+    useDuelBoard().open(null)
+    const ctx = grids.active!
+
+    expect(grids.placePick(ctx, KULU, Team.ALLY, 1)).toBe(false)
+    expect(grids.placePick(ctx, SUPREME_HERO, Team.ALLY, 1)).toBe(false)
+    expect(grids.routeDrop({ characterId: CREATURE }, ctx.id, 1)).toBe(false)
+    expect(grids.routeDrop({ characterId: toTrialPick(KULU, 3) }, ctx.id, 1)).toBe(false)
+    expect(getTilesWithCharacters(ctx.grid)).toEqual([])
   })
 })

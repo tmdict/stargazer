@@ -40,6 +40,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { freeTrialCopy, toTrialId, trialPickOf } from '@/lib/characters/trial'
 import { rotatedHexId } from '@/lib/grid'
 import { DUEL_ATTR_TIER } from '@/lib/hd/board'
+import { duelTiersOf } from '@/lib/hd/units'
 import { BASE_HEX_RADIUS, type Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import { isPermanentArtifactId } from '@/lib/seasonal'
@@ -363,14 +364,19 @@ export const useGrids = defineStore('grids', () => {
 
   // The unit a pick stands for before any placing rule is asked: the hero
   // itself, or for a Trial pick a new copy of its unit under the board's lowest
-  // free copy number. Null when the board holds every copy number, or is no
-  // Honor Duel board.
+  // free copy number. Null where the board takes no such unit: a Trial pick on
+  // an Arena board or with every copy number held, and on an Honor Duel board a
+  // unit its source does not bring, which a restore of the board would drop.
   const pickUnitId = (ctx: GridContext, pickId: number): number | null => {
     const pick = trialPickOf(pickId)
-    if (!pick) return pickId
-    if (ctx.kind !== 'honorDuel') return null
-    const copy = freeTrialCopy(getTilesWithCharacters(ctx.grid).map((tile) => tile.characterId!))
-    return copy === null ? null : toTrialId(pick.baseId, copy)
+    if (ctx.kind !== 'honorDuel') return pick ? null : pickId
+    let unitId = pickId
+    if (pick) {
+      const copy = freeTrialCopy(getTilesWithCharacters(ctx.grid).map((tile) => tile.characterId!))
+      if (copy === null) return null
+      unitId = toTrialId(pick.baseId, copy)
+    }
+    return duelTiersOf(unitId).length > 0 ? unitId : null
   }
 
   // The id a pick from the hero picker lands as on a board, or null: the engine
@@ -385,12 +391,12 @@ export const useGrids = defineStore('grids', () => {
     team: Team,
     targetHexId?: number,
   ): number | null => {
-    const pickId = pickUnitId(ctx, characterId)
-    if (pickId === null) return null
+    const unitId = pickUnitId(ctx, characterId)
+    if (unitId === null) return null
     const resolved =
       targetHexId === undefined
-        ? resolvePlacement(ctx.grid, pickId, team, synergy.value)
-        : resolveReplacement(ctx.grid, pickId, team, targetHexId, synergy.value)
+        ? resolvePlacement(ctx.grid, unitId, team, synergy.value)
+        : resolveReplacement(ctx.grid, unitId, team, targetHexId, synergy.value)
     if (resolved === characterId && isUsed(characterId, team)) return null
     return resolved
   }
@@ -990,12 +996,17 @@ export const useGrids = defineStore('grids', () => {
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
       // A picker's payload names the pick; the board places the unit it stands
       // for.
-      const pickId = sourceHexId === undefined ? pickUnitId(targetCtx, payload.characterId) : null
-      const dropped = pickId === null ? payload : { ...payload, characterId: pickId }
+      let dropped = payload
+      if (sourceHexId === undefined) {
+        const unitId = pickUnitId(targetCtx, payload.characterId)
+        if (unitId === null) return false
+        dropped = { ...payload, characterId: unitId }
+      }
       const ok = targetCtx.handleDrop(dropped, targetHexId)
       if (!ok) return false
       activeId.value = targetCtxId
-      // A picker drop lands as the base hero or its synergy copy; the tile says which.
+      // A picker drop lands as the unit its pick stands for or as that hero's
+      // synergy copy; the tile says which.
       const placedId = getCharacter(targetCtx.grid, targetHexId)
       const placedTeam = getCharacterTeam(targetCtx.grid, targetHexId)
       if (sourceHexId === undefined && placedId !== undefined && placedTeam !== undefined) {

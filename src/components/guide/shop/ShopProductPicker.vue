@@ -22,10 +22,10 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import type { Good, GoodKind, ShopCard } from '@/lib/hd/shop/types'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
+import { goodName } from '@/utils/shopGoodNames'
 import { gameLabel } from '@/utils/skillLabels'
 import {
   cardLabel,
-  goodName,
   goodTier,
   matchesGood,
   matchesPiece,

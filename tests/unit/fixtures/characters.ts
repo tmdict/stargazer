@@ -13,6 +13,10 @@ export const ALLY_C = 13
 export const ENEMY_A = 21
 export const ENEMY_B = 22
 
+// Heroes the Honor Duel shop sells, with no registered skill, so an Honor Duel
+// board takes them and placing one has no side effects.
+export const DUEL_HEROES = [11, 3, 72, 47] as const
+
 export const PHRAESTO = 50 // companion spawn: raises capacity, throws with no free tile
 export const PHRAESTO_COMPANION = COMPANION_ID_OFFSET + PHRAESTO
 export const KULU = 80 // cosmetic demolition zone: ally 18-24, enemy 22-28

@@ -6,18 +6,16 @@ import { duelEquipment, duelItemName, matchesDuelItem } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
+import { TRIAL_CARDS } from '@/lib/hd/units'
 import type { DuelEquipment } from '@/lib/types/honorDuel'
-import { APP_LOCALES, type AppLocale, type LocaleData } from '@/lib/types/i18n'
+import { APP_LOCALES, type AppLocale } from '@/lib/types/i18n'
 import { fileStem } from '@/utils/fileStem'
 import { formatDisplayName } from '@/utils/nameFormatting'
+import { goodName } from '@/utils/shopGoodNames'
 import { curatedHeroName } from '@/utils/skillLabels'
 
 const byStem = <T>(modules: Record<string, T>): Record<string, T> =>
   Object.fromEntries(Object.entries(modules).map(([path, value]) => [fileStem(path), value]))
-
-const names = byStem(
-  import.meta.glob<LocaleData>('@/locales/hd/shop/*.json', { eager: true, import: 'default' }),
-)
 
 const images = byStem(
   import.meta.glob<string>('@/pack/images/hd/shop/*.png', {
@@ -30,9 +28,6 @@ const images = byStem(
 export const SHOP_GOODS: ReadonlyMap<string, Good> = new Map(
   SHOP_FACTS.goods.map((good) => [good.name, good]),
 )
-
-export const goodName = (name: string, locale: AppLocale): string =>
-  names[name]?.[locale] || formatDisplayName(name)
 
 export const pieceName = (name: string, locale: AppLocale): string => {
   const item = duelEquipment.find((piece) => piece.name === name)
@@ -92,15 +87,9 @@ export const shopPicture = (name: ShopPicture): string | undefined => images[nam
 
 type ShopTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
 
-// A trial card's price follows the tier of the hero it lends.
-const TRIAL_TIERS: Record<string, ShopTier> = {
-  'trial-card-6': 'epic',
-  'trial-card-12': 'legendary',
-  'trial-card-22': 'mythic',
-  'trial-card-45': 'supreme',
-}
-
-export const goodTier = (good: Good): ShopTier | undefined => good.tier ?? TRIAL_TIERS[good.name]
+// A trial card's price follows the tier of the unit it lends.
+export const goodTier = (good: Good): ShopTier | undefined =>
+  good.tier ?? TRIAL_CARDS.find((card) => card.card === good.name)?.tier
 
 export interface ShopStep {
   kind: 'buy' | 'lock' | 'unlock' | 'keep' | 'reroll' | 'wait'

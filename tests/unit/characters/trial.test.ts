@@ -102,6 +102,9 @@ describe('Trial picks', () => {
     expect(inTrialBand(toTrialPick(1, 0))).toBe(false)
     // The highest id of the last copy's band.
     expect(trialPickOf(toTrialId(99999, TRIAL_COPIES))).toBeNull()
+    // A companion's number names no pick, and the band ends after its tiers.
+    expect(trialPickOf(toTrialPick(10001, 0))).toBeNull()
+    expect(trialPickOf(toTrialPick(1, 10))).toBeNull()
   })
 })
 

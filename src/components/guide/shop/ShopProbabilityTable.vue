@@ -4,7 +4,7 @@
    shows, what a pack gives, and the records behind each shop level. */
 
 import { useI18nStore } from '@/stores/i18n'
-import { goodName } from './shopGoods'
+import { goodName } from '@/utils/shopGoodNames'
 import { percent, useShopFigures } from './useShopFigures'
 
 defineProps<{ table: 'rounds' | 'levels' | 'products' | 'hero' | 'packs' }>()

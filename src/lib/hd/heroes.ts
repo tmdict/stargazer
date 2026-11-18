@@ -4,17 +4,11 @@
 import { toTrialPick } from '@/lib/characters/trial'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
-import type { AppLocale, LocaleData } from '@/lib/types/i18n'
-import { fileStem } from '@/utils/fileStem'
-import { formatDisplayName } from '@/utils/nameFormatting'
 import { DUEL_TIERS } from './board'
-import { SHOP_FACTS } from './shop/goods'
-import { TRIAL_CARDS } from './units'
-
-const DUEL_HERO_NAMES = new Set(SHOP_FACTS.heroes)
+import { isShopHero, TRIAL_CARDS, trialCardBrings } from './units'
 
 export const duelHeroes = (characters: readonly CharacterType[]): CharacterType[] =>
-  characters.filter((character) => DUEL_HERO_NAMES.has(character.name)).sort(compareCharacters)
+  characters.filter((character) => isShopHero(character.name)).sort(compareCharacters)
 
 export interface TrialGroup {
   // The card's name in the shop's product list.
@@ -27,19 +21,14 @@ export interface TrialGroup {
  * card first. A unit the list lacks is left out, and so is a card left with
  * none. */
 export function duelTrialGroups(units: readonly CharacterType[]): TrialGroup[] {
-  const byName = new Map(units.map((unit) => [unit.name, unit]))
-  const shop = duelHeroes(units)
-  return TRIAL_CARDS.map(({ card, tier, units: names = [], shop: sold }) => {
-    const brought = new Set([
-      ...names.flatMap((name) => byName.get(name) ?? []),
-      ...(sold ? shop : []),
-    ])
-    const position = DUEL_TIERS.indexOf(tier)
+  return TRIAL_CARDS.map((card) => {
+    const tier = DUEL_TIERS.indexOf(card.tier)
     return {
-      card,
-      units: [...brought]
+      card: card.card,
+      units: units
+        .filter((unit) => trialCardBrings(card, unit.name))
         .sort(compareCharacters)
-        .map((unit) => ({ ...unit, id: toTrialPick(unit.id, position) })),
+        .map((unit) => ({ ...unit, id: toTrialPick(unit.id, tier) })),
     }
   }).filter((group) => group.units.length > 0)
 }
@@ -53,15 +42,3 @@ export function duelTrialPool(groups: readonly TrialGroup[]): CharacterType[] {
   }
   return [...first.values()]
 }
-
-const cardNames = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<LocaleData>('@/locales/hd/shop/trial-card-*.json', {
-      eager: true,
-      import: 'default',
-    }),
-  ).map(([path, names]) => [fileStem(path), names]),
-)
-
-export const trialCardName = (card: string, locale: AppLocale): string =>
-  cardNames[card]?.[locale] || formatDisplayName(card)

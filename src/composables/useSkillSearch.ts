@@ -3,7 +3,7 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { getCharmForHero } from '@/lib/dataLoader'
 import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
-import { loadCharacterLocales } from '@/utils/localeLoader'
+import { loadCharacterLocales, loadCreatureLocales } from '@/utils/localeLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'
 import {
@@ -166,7 +166,9 @@ function localesInPriority(textLang: SkillLocale, appLang: AppLocale): SkillLoca
 }
 
 /** Slugs whose name matches the query in any language: the same names the
- * picker search uses, for name-only consumers (the on-grid picker popup).
+ * picker search uses, for name-only consumers (the on-grid picker popup), and
+ * Honor Duel's creatures by their site-language names, since such a consumer
+ * can list them and the skill search, which has no page for one, cannot.
  * Matches whatever is warm; never triggers corpus loads. */
 export function matchCharacterNames(query: string): Set<string> {
   const lc = query.toLowerCase()
@@ -175,6 +177,9 @@ export function matchCharacterNames(query: string): Set<string> {
     for (const e of nameEntries(code)) {
       if (e.text.toLowerCase().includes(lc)) slugs.add(e.slug)
     }
+  }
+  for (const [slug, names] of Object.entries(loadCreatureLocales())) {
+    if (Object.values(names).some((name) => name.toLowerCase().includes(lc))) slugs.add(slug)
   }
   return slugs
 }

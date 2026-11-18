@@ -234,6 +234,39 @@ function shopOddsProblem(pack: string, root: string): string | null {
   }
 }
 
+/** What the Trial list's units lack: a creature's picture or its faction's
+ * icon in the pack, and a hero or creature file in this repo. */
+function trialUnitNotes(pack: string, root: string): string[] {
+  const read = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T
+  const notes: string[] = []
+  const creatureDir = join(root, 'src/data/hd/creature')
+  const creatures = jsonNames(creatureDir)
+  const bare = creatures.filter(
+    (name) => !existsSync(join(pack, 'images/hd/creature', `${name}.png`)),
+  )
+  if (bare.length > 0) {
+    notes.push(`${bare.length} Honor Duel creatures have no picture in the pack`)
+  }
+  const factions = new Set(
+    creatures.map((name) => read<{ faction: string }>(join(creatureDir, `${name}.json`)).faction),
+  )
+  for (const faction of factions) {
+    if (!existsSync(join(pack, 'images/hd/icon', `faction-${faction}.png`))) {
+      notes.push(`the Honor Duel faction "${faction}" has no icon in the pack`)
+    }
+  }
+  const list = join(root, 'src/data/hd/trial.json')
+  if (!existsSync(list)) return notes
+  const filed = new Set([...creatures, ...jsonNames(join(root, 'src/data/character'))])
+  const unfiled = read<{ cards: { units?: string[] }[] }>(list)
+    .cards.flatMap((card) => card.units ?? [])
+    .filter((name) => !filed.has(name))
+  if (unfiled.length > 0) {
+    notes.push(`Trial Card units with no hero or creature file: ${unfiled.join(', ')}`)
+  }
+  return notes
+}
+
 /** What stops a build: the pack lacking what the app reads, or out of step
  * with this repo's own files. New content whose text or portrait lags behind
  * the pack is only a note: a hero with no portrait or skill text yet, and a
@@ -334,12 +367,7 @@ export function packProblems(
     }
   }
 
-  const bareCreatures = jsonNames(join(root, 'src/data/hd/creature')).filter(
-    (name) => !existsSync(join(pack, 'images/hd/creature', `${name}.png`)),
-  )
-  if (bareCreatures.length > 0) {
-    notes.push(`${bareCreatures.length} Honor Duel creatures have no picture in the pack`)
-  }
+  notes.push(...trialUnitNotes(pack, root))
 
   const oddsProblem = shopOddsProblem(pack, root)
   if (oddsProblem) problems.push(oddsProblem)

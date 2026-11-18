@@ -28,25 +28,42 @@ export interface TrialCard {
   shop?: boolean
 }
 
+// Returns the list unchanged, or throws. A tier outside the mode's list would
+// read as a position before the first tier, and a pick at it as another unit's
+// id.
+function checkTrialCards(cards: readonly TrialCard[]): readonly TrialCard[] {
+  for (const { card, tier } of cards) {
+    if (!DUEL_TIERS.includes(tier)) throw new Error(`trial: ${card} has no tier "${tier}"`)
+    if (!SHOP_FACTS.goods.some((good) => good.kind === 'trial' && good.name === card)) {
+      throw new Error(`trial: the shop sells no Trial Card "${card}"`)
+    }
+  }
+  return cards
+}
+
 // Cheapest first.
-export const TRIAL_CARDS: readonly TrialCard[] = (trialList as { cards: TrialCard[] }).cards
+export const TRIAL_CARDS: readonly TrialCard[] = checkTrialCards(
+  (trialList as { cards: TrialCard[] }).cards,
+)
 
 const SHOP_HEROES = new Set(SHOP_FACTS.heroes)
+
+export const isShopHero = (name: string): boolean => SHOP_HEROES.has(name)
 
 // A hero of the shop is bought at Epic and merges up to Mythic.
 const SHOP_TIERS: readonly number[] = (['epic', 'legendary', 'mythic'] as const).map((tier) =>
   DUEL_TIERS.indexOf(tier),
 )
 
-const cardBrings = (card: TrialCard, name: string): boolean =>
-  (card.units?.includes(name) ?? false) || (card.shop === true && SHOP_HEROES.has(name))
+export const trialCardBrings = (card: TrialCard, name: string): boolean =>
+  (card.units?.includes(name) ?? false) || (card.shop === true && isShopHero(name))
 
 /** The tiers a hero or creature may hold as a unit of the shop, or with
  * `trial` of the Trial Cards: positions in DUEL_TIERS, lowest first. Empty
  * when that source does not bring it. */
 export function duelSourceTiers(name: string, trial: boolean): readonly number[] {
-  if (!trial) return SHOP_HEROES.has(name) ? SHOP_TIERS : []
-  const tiers = TRIAL_CARDS.filter((card) => cardBrings(card, name)).map((card) =>
+  if (!trial) return isShopHero(name) ? SHOP_TIERS : []
+  const tiers = TRIAL_CARDS.filter((card) => trialCardBrings(card, name)).map((card) =>
     DUEL_TIERS.indexOf(card.tier),
   )
   return [...new Set(tiers)].sort((a, b) => a - b)
