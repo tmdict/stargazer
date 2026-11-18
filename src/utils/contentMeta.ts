@@ -173,7 +173,7 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
     ko: {
       title: '용어집',
       description:
-        'AFK: 새로운 여정 용어집. 스킬 설명에 나오는 속성, 상태, 제어 효과, 타겟팅, 대미지 용어의 뜻을 게임의 설명 그대로 정리했습니다.',
+        'AFK: 새로운 여정 용어집. 스킬 설명에 나오는 속성, 상태, 제어 효과, 타겟팅, 대미지 용어의 뜻을 정리했습니다. 게임에 설명이 있는 항목은 게임의 설명을 그대로 실었습니다.',
     },
   },
 }

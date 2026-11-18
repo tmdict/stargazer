@@ -79,8 +79,16 @@ export function installRouterGuards(router: Router): void {
 // Shared by both entries like the routes and the warm-up guard.
 export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
   if (savedPosition) return savedPosition
-  if (to.hash) return { el: to.hash }
+  if (to.hash) return anchorPosition(to.hash)
   return false
+}
+
+// The router sets an anchor's top edge on the window's and ignores its
+// scroll-margin-top, the gap a page leaves above its anchors to clear a pinned
+// bar, so the gap is passed as the offset.
+function anchorPosition(hash: string): { el: Element; top: number } | false {
+  const el = document.getElementById(hash.slice(1))
+  return el ? { el, top: parseFloat(getComputedStyle(el).scrollMarginTop) } : false
 }
 
 export const routes: RouteRecordRaw[] = [

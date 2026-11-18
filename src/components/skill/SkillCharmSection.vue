@@ -54,7 +54,6 @@ const rows = computed(() =>
 <style scoped>
 .charm-section {
   margin: var(--spacing-lg) 0;
-  scroll-margin-top: 80px;
 }
 
 .charm-tier {

@@ -2,7 +2,8 @@
 /* Guide page for the glossary: every stat and skill keyword with what it
    means, grouped by kind, with a search box and a link to each term. */
 
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import RulesSearch from '@/components/guide/rules/RulesSearch.vue'
 import type { GlossaryGroup } from '@/lib/glossary'
@@ -56,6 +57,15 @@ const shown = computed(() => {
     }))
     .filter(({ terms }) => terms.length > 0)
 })
+
+// The term the address links to. `:target` holds only for a row that was on
+// the page when the browser went to the fragment, so a row built later (the
+// first client render, a search cleared) is marked from the route. The hash
+// is read after mount, as the baked page has none.
+const route = useRoute()
+const mounted = ref(false)
+onMounted(() => (mounted.value = true))
+const linked = computed(() => (mounted.value ? route.hash.slice(1) : ''))
 </script>
 
 <template>
@@ -63,7 +73,6 @@ const shown = computed(() => {
     <article class="container page-panel guide-panel">
       <div class="content">
         <h1>{{ label('glossary') }}</h1>
-        <p>{{ label('glossary-intro') }}</p>
 
         <div class="tools">
           <RulesSearch v-model="query" class="find" label="app.find-a-term" />
@@ -82,7 +91,13 @@ const shown = computed(() => {
             <small>{{ terms.length }}</small>
           </h2>
           <dl>
-            <div v-for="term in terms" :id="term.key" :key="term.key" class="term">
+            <div
+              v-for="term in terms"
+              :id="term.key"
+              :key="term.key"
+              class="term"
+              :class="{ linked: term.key === linked }"
+            >
               <dt>
                 <a :href="`#${term.key}`">{{ term.name }}</a>
               </dt>
@@ -111,7 +126,6 @@ const shown = computed(() => {
   top: 0;
   z-index: 5;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 10px 16px;
   margin: 18px -12px 4px;
@@ -125,10 +139,11 @@ const shown = computed(() => {
 }
 .jump {
   display: flex;
-  flex-wrap: wrap;
+  flex: none;
   gap: 6px;
 }
 .jump a {
+  flex: none;
   padding: 5px 11px;
   border: 1px solid var(--chip-dark-border-color);
   border-radius: 999px;
@@ -164,7 +179,8 @@ dl {
 .term:first-child {
   border-top: none;
 }
-.term:target {
+.term:target,
+.term.linked {
   margin: 0 -12px;
   padding: 12px;
   border-radius: var(--radius-medium);
@@ -202,25 +218,28 @@ dd p + img {
   opacity: 1;
 }
 
-@container (max-width: 640px) {
-  .term {
-    grid-template-columns: minmax(0, 1fr);
+@container (max-width: 820px) {
+  .tools {
+    flex-wrap: wrap;
+  }
+  .jump {
+    flex-basis: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
   .group,
   .term {
     scroll-margin-top: 116px;
   }
+}
+
+@container (max-width: 640px) {
+  .term {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .find {
     flex-basis: 100%;
     max-width: none;
-  }
-  .jump {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .jump a {
-    flex: none;
   }
 }
 </style>
