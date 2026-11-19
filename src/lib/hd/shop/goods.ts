@@ -16,7 +16,7 @@ function highestRefund(good: Good, sell: number): number {
  * fewest badges up, which is only sound while every move leaves fewer badges
  * than before.
  */
-export function checkShopFacts(facts: ShopFacts): ShopFacts {
+function checkShopFacts(facts: ShopFacts): ShopFacts {
   if (facts.reroll <= 0) throw new Error('shop: a reroll has to cost badges')
   for (const good of facts.goods) {
     if (highestRefund(good, facts.sell) >= good.price) {

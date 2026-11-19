@@ -4,25 +4,35 @@
 
 import { onMounted, ref, shallowRef, watch, type Ref, type ShallowRef } from 'vue'
 
-import { loadHonorDuelText } from '@/lib/hd/catalog'
 import type { HonorDuelText } from '@/lib/types/honorDuel'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
+import { loadHonorDuelText } from '@/utils/duelCatalog'
 
 /** The text in the reader's skill-text language. Read after mount, so a
  * pre-rendered page carries none; null until it arrives and where the data
- * pack holds none for the language. */
-export function useDuelText(): ShallowRef<HonorDuelText | null> {
+ * pack holds none for the language. `looking` says whether a hover card is
+ * open: text whose download failed is asked for again each time one opens or
+ * closes. A caller mounted only while it shows asks on each mount instead. */
+export function useDuelText(looking: () => boolean = () => true): ShallowRef<HonorDuelText | null> {
   const i18n = useI18nStore()
   const text = shallowRef<HonorDuelText | null>(null)
+  // The language `text` holds, once its download has come through.
+  let held: SkillLocale | null = null
   onMounted(() =>
     watch(
-      () => i18n.effectiveSkillLocale,
-      (lang) => {
-        const settle = (loaded: HonorDuelText | null) => {
-          if (i18n.effectiveSkillLocale === lang) text.value = loaded
+      [() => i18n.effectiveSkillLocale, looking],
+      ([lang]) => {
+        if (held === lang) return
+        const settle = (loaded: HonorDuelText | null, came: boolean) => {
+          if (i18n.effectiveSkillLocale !== lang) return
+          text.value = loaded
+          held = came ? lang : null
         }
-        loadHonorDuelText(lang).then(settle, () => settle(null))
+        loadHonorDuelText(lang).then(
+          (loaded) => settle(loaded, true),
+          () => settle(null, false),
+        )
       },
       { immediate: true },
     ),

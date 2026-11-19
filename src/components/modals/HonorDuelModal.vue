@@ -6,9 +6,9 @@ import SkillSection from '@/components/skill/SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalDuelText } from '@/composables/useDuelText'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
-import { duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
 import type { HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
+import { duelItemName, equipmentTierLabel } from '@/utils/duelCatalog'
 import { gameLabel } from '@/utils/skillLabels'
 
 const props = defineProps<{

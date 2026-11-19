@@ -131,7 +131,11 @@ let chunkManifest: Record<string, string[]> | null = null
 function localeChunkHref(code: string): string | null {
   if (!chunkManifest) {
     const path = fileURLToPath(new URL('./dist/.vite/ssr-manifest.json', import.meta.url))
-    chunkManifest = existsSync(path)
+    const found = existsSync(path)
+    if (!found) {
+      console.warn('[ssg] no SSR manifest; skill pages get no preload tag for their text.')
+    }
+    chunkManifest = found
       ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, string[]>)
       : {}
   }

@@ -1,6 +1,9 @@
 /* The backdrop behind a picture of a rarity tier, a top-to-bottom gradient.
    The stops are data, so a style and an SVG gradient draw the same one. */
 
+import { duelPickTier } from '@/lib/hd/units'
+import type { CharacterType } from '@/lib/types/character'
+
 type BackdropTier = 'rare' | 'elite' | 'epic' | 'legendary' | 'mythic' | 'supreme'
 
 // A colour and where it sits, in percent from the top.
@@ -55,3 +58,7 @@ export const heroBackdrop = (level: string): string | undefined => {
   const tier = heroTier(level)
   return tier && tierBackdrop(tier)
 }
+
+/** The fill an Honor Duel list draws a pick on: its tier's, as the board fills
+ * the unit once placed, in place of the hero's own rarity. */
+export const duelPickBackdrop = (pick: CharacterType): string => tierBackdrop(duelPickTier(pick.id))

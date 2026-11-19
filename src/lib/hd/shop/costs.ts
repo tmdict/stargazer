@@ -14,8 +14,6 @@ import type { Layout, ShownCard } from './tables'
 /** Tables indexed `[targets still needed]`, each one value per code. */
 export interface Costs {
   layout: Layout
-  /** Whether a reroll can ever show something that helps the goal. */
-  reachable: boolean
   floor: Float64Array[]
   ceiling: Float64Array[]
   /** Fills the tables still missing for up to `need` targets. */
@@ -35,6 +33,9 @@ const SETTLED = 1e-10
 // values either blow up, or climb by the same step every pass: one more reroll.
 const RUNAWAY = 1e9
 const STALLED_PASSES = 1000
+// A step counts as the same when it shrinks by less than this share: rounding
+// alone makes one pass's step a hair smaller than the last.
+const SAME_STEP = 1e-9
 // How many times the plan is picked again from its own cost.
 const PLAN_ROUNDS = 8
 // Passes shrink the distance to the answer by a steady share once they settle
@@ -58,7 +59,7 @@ function settle(values: Float64Array, pass: () => number): boolean {
     const change = pass()
     if (change < SETTLED) return true
     if (!(change < RUNAWAY)) return false
-    stalled = change < last ? 0 : stalled + 1
+    stalled = change < last * (1 - SAME_STEP) ? 0 : stalled + 1
     if (stalled > STALLED_PASSES) return false
     const share = change / last
     if (share < 1 - STEADY && Math.abs(share - lastShare) < STEADY) {
@@ -247,7 +248,6 @@ export function createCosts(model: GoalModel, layout: Layout): Costs {
 
   return {
     layout,
-    reachable,
     floor,
     ceiling,
     cover,

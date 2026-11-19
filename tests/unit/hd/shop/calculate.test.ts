@@ -58,7 +58,7 @@ const request = (asked: Asked): ShopRequest => ({
 })
 
 // Every step of a calculation: its results, and a null for each pause.
-const steps = (asked: Asked, searchMs?: number, sliceMs?: number): (ShopResult | null)[] => [
+const steps = (asked: Asked, searchMs = 5000, sliceMs = 50): (ShopResult | null)[] => [
   ...calculateShop(
     request(asked),
     asked.odds ? everyLevel(asked.odds) : ODDS,

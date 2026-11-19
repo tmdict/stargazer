@@ -49,12 +49,6 @@ import type {
 /** The most a request may ask for. The solvers' time and memory grow with both. */
 export const SHOP_LIMITS = { badges: 500, copies: 4 }
 
-/** How long the search may run for one request, in milliseconds. */
-const SEARCH_MS = 5000
-
-/** How long the search runs between two pauses, in milliseconds. */
-const SLICE_MS = 50
-
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
 
@@ -118,6 +112,8 @@ function checkRequest(request: ShopRequest): void {
     throw new Error('shop: copies out of range')
   }
   if (!heroes.length && !equipment.length) throw new Error('shop: nothing is wanted')
+  const names = [...heroes, ...equipment].map((item) => item.name)
+  if (new Set(names).size !== names.length) throw new Error('shop: an item is wanted twice')
   if (startFrom?.kind === 'buy' && !shop.cards[startFrom.card]?.good) {
     throw new Error('shop: no card to start from')
   }
@@ -366,8 +362,8 @@ export function* calculateShop(
   table: OddsTable,
   facts: ShopFacts,
   cache: SolverCache,
-  searchMs = SEARCH_MS,
-  sliceMs = SLICE_MS,
+  searchMs: number,
+  sliceMs: number,
 ): Generator<ShopResult | null, void> {
   checkRequest(request)
   const { shop, level } = request

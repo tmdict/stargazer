@@ -3,7 +3,7 @@
 // demand.
 
 import { outfitOf } from '@/lib/characters/outfit'
-import { fileStem } from './fileStem'
+import { byStem, fileStem } from './fileStem'
 import {
   artifactImages,
   characterImages,
@@ -13,9 +13,6 @@ import {
 } from './imageAssets'
 
 let icons: Record<string, string> | null = null
-
-const byStem = <T>(modules: Record<string, T>): Record<string, T> =>
-  Object.fromEntries(Object.entries(modules).map(([path, module]) => [fileStem(path), module]))
 
 export function loadCharacterImages(): Record<string, string> {
   return characterImages

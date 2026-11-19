@@ -20,7 +20,6 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import type { DuelArtifactSlot } from '@/lib/hd/board'
-import { duelArtifactById, duelItemImage, duelItemName } from '@/lib/hd/catalog'
 import type { Point } from '@/lib/layout'
 import type { HonorDuelItem } from '@/lib/types/honorDuel'
 import { Team } from '@/lib/types/team'
@@ -28,6 +27,7 @@ import { duelFactionBonus } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { artifactSlot } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { duelArtifactById, duelItemImage, duelItemName } from '@/utils/duelCatalog'
 import { gameLabel } from '@/utils/skillLabels'
 
 import '@/styles/grid-artifact.css'
@@ -41,7 +41,6 @@ const props = defineProps<{
 const ctx = useGridContext()
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
-const text = useDuelText()
 const places = useArtifactPlaces(ctx)
 
 interface Held {
@@ -88,6 +87,7 @@ const {
   hide: hideCard,
 } = useGridHoverTooltip<Held>(() => [ctx.duelArtifacts.ally, ctx.duelArtifacts.enemy])
 
+const text = useDuelText(() => !!hovered.value)
 const hoveredText = computed(() => {
   const item = hovered.value?.item
   return item && text.value?.artifacts[item.item.name]

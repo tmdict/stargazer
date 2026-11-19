@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkShopFacts } from '@/lib/hd/shop/goods'
 import { goalModel } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { sampleShop } from '@/lib/hd/shop/sample'
@@ -93,6 +92,11 @@ describe('reading the shop', () => {
 
     const open = cards(card('rare-equipment'), card('hero'))
     expect(readShop(levelOdds(4), open, lower)).toBeNull()
+
+    // Bought, the card was still locked until then.
+    const bought = cards(card('rare-equipment', { bought: true }), card('hero'))
+    const after = readShop(levelOdds(4), bought, lower)!
+    expect(new Set(after.worlds.map((world) => world.origins[0]))).toEqual(new Set([0, 4]))
   })
 
   it('reads a locked card against the level it names, though its own level makes the product', () => {
@@ -103,6 +107,7 @@ describe('reading the shop', () => {
     // The first six sources make Hero cards at level 4, the third to the seventh at level 3.
     expect(origins(card('hero', { locked: true }))).toEqual(new Set([0, 1, 2, 3, 4, 5]))
     expect(origins(card('hero', { locked: true, lockedAt: 3 }))).toEqual(new Set([2, 3, 4, 5, 6]))
+    expect(origins(card('hero', { bought: true, lockedAt: 3 }))).toEqual(new Set([2, 3, 4, 5, 6]))
 
     const kept = cards(card('hero', { locked: true, lockedAt: 3 }))
     const reading = readShop(levelOdds(4), kept, lower)!
@@ -185,13 +190,5 @@ describe('checking the data', () => {
     const levels = structuredClone(ODDS.levels)
     levels[0]![0]![0]!.good = 'mystery-box'
     expect(() => checkOdds({ levels } as OddsTable, FACTS)).toThrow(/mystery-box/)
-  })
-
-  // The solvers work from the fewest badges up, so no purchase may pay for itself.
-  it('refuses a product that can hand back its own price', () => {
-    const goods = FACTS.goods.map((good) =>
-      good.name === 'random-pack' ? { ...good, price: 3 * FACTS.sell } : good,
-    )
-    expect(() => checkShopFacts({ ...FACTS, goods })).toThrow(/random-pack/)
   })
 })

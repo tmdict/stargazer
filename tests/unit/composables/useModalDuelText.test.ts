@@ -2,13 +2,13 @@ import { effectScope, nextTick, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useModalDuelText } from '@/composables/useDuelText'
-import { loadHonorDuelText } from '@/lib/hd/catalog'
 import type { HonorDuelText } from '@/lib/types/honorDuel'
 import type { SkillLocale } from '@/lib/types/i18n'
+import { loadHonorDuelText } from '@/utils/duelCatalog'
 
 // The real loader fails only when a download does, which a test cannot bring
 // about, so its answers are given here.
-vi.mock('@/lib/hd/catalog', () => ({ loadHonorDuelText: vi.fn() }))
+vi.mock('@/utils/duelCatalog', () => ({ loadHonorDuelText: vi.fn() }))
 const load = vi.mocked(loadHonorDuelText)
 
 const text: HonorDuelText = { equipment: {}, artifacts: {}, creatures: {} }

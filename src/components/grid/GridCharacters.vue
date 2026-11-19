@@ -14,7 +14,6 @@ import DuelPiecePicker, { type DuelPiecePick } from '@/components/hd/DuelPiecePi
 import DuelPieceSlot from '@/components/hd/DuelPieceSlot.vue'
 import DuelTierChips from '@/components/hd/DuelTierChips.vue'
 import DuelTierPill from '@/components/hd/DuelTierPill.vue'
-import { below } from '@/components/guide/shop/popupLayout'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useDuelItems, type DuelItemView } from '@/composables/useDuelItems'
 import { useDuelPieceDrag } from '@/composables/useDuelPieceDrag'
@@ -51,6 +50,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
 import { isTouchClick } from '@/utils/pointer'
+import { below } from '@/utils/popupLayout'
 import { tierBackdrop } from '@/utils/tierBackdrop'
 
 interface Props {

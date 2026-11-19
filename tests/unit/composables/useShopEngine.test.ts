@@ -116,4 +116,45 @@ describe('the shop engine', () => {
     worker.answer(id, stage(true))
     expect(engine.result.value).toEqual(stage(false))
   })
+
+  it('reports a calculation the worker could not finish, and keeps the worker', () => {
+    const engine = open()
+    engine.calculate(request)
+    const worker = newest()
+    const id = worker.asked[0]!
+    worker.onmessage?.({ data: { type: 'error', id } } as MessageEvent<ShopWorkerResponse>)
+    expect(engine.failed.value).toBe(true)
+    expect(engine.working.value).toBe(false)
+
+    engine.calculate(request)
+    expect(newest()).toBe(worker)
+    expect(engine.failed.value).toBe(false)
+    expect(engine.working.value).toBe(true)
+  })
+
+  it('reports a worker that broke down, and starts another for the next request', () => {
+    const engine = open()
+    engine.calculate(request)
+    const broken = newest()
+    broken.onerror?.()
+    expect(engine.failed.value).toBe(true)
+    expect(engine.working.value).toBe(false)
+    expect(broken.ended).toBe(true)
+
+    engine.calculate(request)
+    expect(newest()).not.toBe(broken)
+    newest().answer(newest().asked[0]!, stage(true))
+    expect(engine.result.value).toEqual(stage(true))
+  })
+
+  it('reports a request that could not be sent', () => {
+    const engine = open()
+    engine.calculate(request)
+    newest().postMessage = () => {
+      throw new Error('cannot be copied')
+    }
+    engine.calculate(request)
+    expect(engine.failed.value).toBe(true)
+    expect(engine.working.value).toBe(false)
+  })
 })

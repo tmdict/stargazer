@@ -7,7 +7,7 @@ import { computed } from 'vue'
 
 import GuideDisc from '@/components/guide/GuideDisc.vue'
 import DuelItemDisc from '@/components/hd/DuelItemDisc.vue'
-import { duelEquipment } from '@/lib/hd/catalog'
+import { duelEquipment } from '@/utils/duelCatalog'
 
 const { name } = defineProps<{ name: string; size?: number }>()
 

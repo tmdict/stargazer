@@ -42,8 +42,16 @@ function solve(asked: Asked) {
   const moves = firstMoves({ ...shop, badges: Infinity }, wanted, FACTS)
   const pool = asked.pools ?? pools()
   const reading = read(asked.odds, shop.cards)
-  const min = solveMinBadges(shop, asked.goal, reading, pool, FACTS)
-  const stop = solveNextRound(shop, asked.goal, reading, asked.next ?? null, pool, FACTS)
+  const min = solveMinBadges(shop, asked.goal, reading, pool, FACTS, createSolverCache())
+  const stop = solveNextRound(
+    shop,
+    asked.goal,
+    reading,
+    asked.next ?? null,
+    pool,
+    FACTS,
+    createSolverCache(),
+  )
   const best = min.best(moves)
   const plan = stop.best(moves)
   return {
@@ -53,7 +61,7 @@ function solve(asked: Asked) {
     best,
     plan,
     get reason() {
-      const chance = solveMaxChance(shop, asked.goal, reading, pool, FACTS)
+      const chance = solveMaxChance(shop, asked.goal, reading, pool, FACTS, createSolverCache())
       const wait = asked.next ? plan : null
       return best && stopReason(best, shop, FACTS, (move) => chance.chance(move), wait)
     },
@@ -170,8 +178,7 @@ describe('a table where one source always makes a hero card', () => {
 
   it('has no answer for a goal no source can help', () => {
     const none: LevelOdds = Array(8).fill(exp)
-    const { min, best, plan } = solve({ odds: none, goal: hero('L1'), pools: two })
-    expect(min.reachable).toBe(false)
+    const { best, plan } = solve({ odds: none, goal: hero('L1'), pools: two })
     expect(best).toBeNull()
     expect(plan).toBeNull()
   })
@@ -383,7 +390,7 @@ describe('rules that always hold', () => {
       const goal = hero('L1', copies)
       const reading = read(levelOdds(5), busy)
       const visit = solveMinBadges(shop, goal, reading, pools(), FACTS, kept)
-      const fresh = solveMinBadges(shop, goal, reading, pools(), FACTS)
+      const fresh = solveMinBadges(shop, goal, reading, pools(), FACTS, createSolverCache())
       for (const move of [REROLL, lock(0), buy(2), buy(3)]) {
         expect(visit.cost(move)).toEqual(fresh.cost(move))
       }

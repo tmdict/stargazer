@@ -6,7 +6,6 @@
 
 import { computed, ref, watch } from 'vue'
 
-import { duelEquipment } from '@/lib/hd/catalog'
 import { SHOP_LIMITS, type ShopRequest, type WantedHero } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
@@ -15,6 +14,7 @@ import { shopPools } from '@/lib/hd/shop/pools'
 import { sampleShop } from '@/lib/hd/shop/sample'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
+import { duelEquipment } from '@/utils/duelCatalog'
 import { lockLevels } from './shopGoods'
 
 const blank = (): ShopCard => ({ good: null, locked: false, bought: false })
@@ -50,12 +50,14 @@ export function useShopForm(changed: () => void) {
     badges.value = Math.min(SHOP_LIMITS.badges, Math.max(0, Math.round(value)))
   }
 
-  // The level a card was locked at lasts as long as its lock and its product.
+  // The level a card was locked at lasts as long as its product, while the card
+  // stays locked or is bought: a bought card is still read at that level.
   const setCard = (index: number, card: ShopCard): void => {
     const was = cards.value[index]
     const next = { ...card }
     delete next.lockedAt
-    if (card.locked && card.good === was?.good && was?.lockedAt !== undefined) {
+    const held = card.locked || card.bought
+    if (held && card.good === was?.good && was?.lockedAt !== undefined) {
       next.lockedAt = was.lockedAt
     }
     cards.value[index] = next

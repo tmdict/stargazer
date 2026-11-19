@@ -4,7 +4,7 @@
 import ShopBadges from './ShopBadges.vue'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
-import { cardLabel, type ShopStep } from './shopGoods'
+import { cardName, type ShopStep } from './shopGoods'
 
 const { cards } = defineProps<{ steps: readonly ShopStep[]; cards: readonly ShopCard[] }>()
 
@@ -14,9 +14,7 @@ const text = (step: ShopStep): string => {
   if (step.kind === 'reroll') return i18n.t('app.shop-reroll')
   if (step.kind === 'wait') return i18n.t('app.shop-step-wait')
   const card = cards[step.card ?? -1]
-  return i18n.t(`app.shop-step-${step.kind}`, {
-    item: card ? cardLabel(card, i18n.currentLocale) : '',
-  })
+  return i18n.t(`app.shop-step-${step.kind}`, { item: card ? cardName(card, i18n) : '' })
 }
 </script>
 

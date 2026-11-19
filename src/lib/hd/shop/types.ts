@@ -76,7 +76,10 @@ export interface ShopCard {
   hero?: string
   equipment?: string
   locked: boolean
-  /** The shop level a locked card was locked at, when the player says it was a lower one. */
+  /**
+   * The shop level a locked card was locked at, when the player says it was a
+   * lower one. A card bought while it names one keeps it.
+   */
   lockedAt?: number
   bought: boolean
 }

@@ -24,18 +24,18 @@ import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import { below } from '@/components/guide/shop/popupLayout'
 import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { HD_SHOP_PROBABILITY_PATH } from '@/lib/guide'
-import { duelEquipment } from '@/lib/hd/catalog'
 import { duelHeroes } from '@/lib/hd/heroes'
 import type { Move } from '@/lib/hd/shop/types'
 import type { Point } from '@/lib/layout'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { setupShopContentMeta } from '@/utils/contentMeta'
+import { duelEquipment } from '@/utils/duelCatalog'
+import { below } from '@/utils/popupLayout'
 
 import '@/components/guide/sl/sl.css'
 import '@/components/guide/shop/shop.css'
@@ -71,6 +71,13 @@ type Popup =
   | { kind: 'locked-at'; card: number; position: Point }
   | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
+// One popup per card and step: a press on another card's opener reaches the
+// popup still open as a press outside it, and must close that one alone.
+const popupKey = computed(() => {
+  const open = popup.value
+  if (!open) return ''
+  return [open.kind, 'card' in open ? open.card : '', open.kind === 'card' ? open.step : ''].join()
+})
 
 // The card whose locked-at level the open popup sets.
 const lockCard = computed(() =>
@@ -110,9 +117,18 @@ const calculate = (): void => {
 }
 // Runs the calculation again from a recommended move. A reroll's locks are set
 // on the shop itself; a purchase leaves the shop and the badges as entered, and
-// the comparison starts from buying it first.
+// the comparison starts from buying it first. So does a reroll that lets go of
+// a card kept from a lower level: the shop cannot be read with that card
+// unlocked.
 const recalculate = async (move: Move): Promise<void> => {
-  if (move.kind === 'reroll') {
+  const level = form.level.value
+  const releasesKept =
+    move.kind === 'reroll' &&
+    form.cards.value.some(
+      (card, index) =>
+        card.locked && !move.locks.includes(index) && lockedLevel(card, level) < level,
+    )
+  if (move.kind === 'reroll' && !releasesKept) {
     form.setLocks(move.locks)
     // The form's watcher clears the answers on the next tick.
     await nextTick()
@@ -210,15 +226,9 @@ watch(
       @close="listsOpen = false"
     />
 
-    <ShopPickerPopup
-      v-if="popup"
-      :key="popup.kind === 'card' ? popup.step : popup.kind"
-      :position="popup.position"
-      @close="popup = null"
-    >
+    <ShopPickerPopup v-if="popup" :key="popupKey" :position="popup.position" @close="popup = null">
       <ShopProductPicker
         v-if="popup.kind === 'card'"
-        :key="popup.card"
         v-model:step="popup.step"
         :card="form.cards.value[popup.card]!"
         :heroes="drawn"

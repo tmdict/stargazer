@@ -10,10 +10,10 @@
 
 import { computed } from 'vue'
 
-import { duelEquipment, duelItemImage } from '@/lib/hd/catalog'
 import type { Good } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { duelEquipment, duelItemImage } from '@/utils/duelCatalog'
 import { goodTier, shopPicture } from './shopGoods'
 
 const { good, hero, equipment, icon } = defineProps<{
@@ -48,7 +48,7 @@ const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain'
 const pair = computed(() => good.kind === 'hero' && good.copies === 2)
 
 const chip = computed(() => {
-  if (icon || pair.value) return null
+  if (icon || (pair.value && picture.value)) return null
   if (good.kind === 'trial') return i18n.t('app.trial')
   return (good.copies ?? 1) > 1 ? `×${good.copies}` : null
 })

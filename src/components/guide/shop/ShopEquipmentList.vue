@@ -7,9 +7,9 @@ import { computed, ref } from 'vue'
 
 import ShopPieceDisc from './ShopPieceDisc.vue'
 import PaletteSearch from '@/components/ui/PaletteSearch.vue'
-import { duelEquipment, duelItemName, equipmentTierLabel } from '@/lib/hd/catalog'
 import { EQUIPMENT_TIERS, type EquipmentTier } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
+import { duelEquipment, duelItemName, equipmentTierLabel } from '@/utils/duelCatalog'
 import { matchesPiece } from './shopGoods'
 
 const {

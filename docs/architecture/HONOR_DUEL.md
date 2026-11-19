@@ -18,7 +18,9 @@ A pack update writes all of it but the mode's map list, the Trial list, the crea
 | Creature id and faction | `src/data/hd/creature/<name>.json`                         |
 | Maps and their buffs    | `src/data/hd/maps.json`                                    |
 | Names, site languages   | `src/locales/hd/{equipment,artifact,creature}/<name>.json` |
+| Shop products' names    | `src/locales/hd/shop/<good>.json`                          |
 | Pictures                | data pack, `images/hd/{equipment,artifact,creature}/`      |
+| Shop pictures           | data pack, `images/hd/shop/`                               |
 | Creatures' faction icon | data pack, `images/hd/icon/`                               |
 | Effect text             | data pack, `text/hd/<language>/`, two files for each       |
 | Creatures' skill text   | data pack, `text/hd/<language>/creatures.json`             |
@@ -27,9 +29,9 @@ An entry's `id` is Stargazer's own number, counted from 1 in the game's listing 
 
 ## Loading
 
-`src/lib/hd/catalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/utils/duelCatalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
 
-The text loads one language at a time, in the reader's skill-text language, when a popup opens. `loadHonorDuelText` gives none for a language the pack holds no text for and fails only when the download does, so a popup says the text could not be loaded and asks for it again the next time it opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
+The text loads one language at a time: the reader's skill-text language when the list or an Honor Duel board first shows, for their hover cards, and a popup's own language when it opens. `loadHonorDuelText` gives none for a language the pack holds no text for and fails only when the download does, so a popup says the text could not be loaded and asks for it again the next time it opens. A hover card left without text asks again when the next one opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 
 The pack is pinned separately from this repo, so a build can meet a pack from before a pack update. `npm run build` then prints one note for each list with entries the pack lacks and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and `?tab=honorDuel` then opens the default tab. Where the pack lacks only some entries, the tab lists those by name and their popup says the details are pending. A creature is listed only once the pack holds its picture, and the faction filter shows a faction only once its icon is there. A pack without the creatures' skill text leaves a creature with nothing to open (`DUEL_CREATURE_TEXT_IN_PACK`).
 
@@ -221,7 +223,7 @@ A glossary word opens the same popup it opens in a hero's skill text. A creature
 
 The calculator that reads these two files is described in [Honor Duel Shop Calculator](./HONOR_DUEL_SHOP.md).
 
-The shop's facts, `src/data/hd/shop/shop.json`, shortened here to two of its nine rounds, three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. `rounds` lists the rounds from round 1, and its last entry holds for every later round: `badges` is what the round brings, with both amounts where a round can bring either of two, and `event` names the round's event by the file its words are kept in (`shop-event-<event>`). A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
+The shop's facts, `src/data/hd/shop/shop.json`, shortened here to two of its nine rounds, three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `startingBadges` what the calculator's badge box starts at, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. `rounds` lists the rounds from round 1, and its last entry holds for every later round: `badges` is what the round brings, with both amounts where a round can bring either of two, and `event` names the round's event by the file its words are kept in (`shop-event-<event>`). A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
 
 ```json
 {

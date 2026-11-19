@@ -16,7 +16,7 @@ import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelList } from '@/composables/useDuelList'
 import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
-import { duelHeroes, duelPickBackdrop } from '@/lib/hd/heroes'
+import { duelHeroes } from '@/lib/hd/heroes'
 import { DUEL_MAP_NAMES } from '@/lib/hd/maps'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -25,6 +25,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { goodName } from '@/utils/shopGoodNames'
+import { duelPickBackdrop } from '@/utils/tierBackdrop'
 
 const grids = useGrids()
 const gameData = useGameDataStore()

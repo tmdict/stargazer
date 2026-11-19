@@ -2,20 +2,18 @@
  * languages, the data pack's pictures, the tier that colours its frame, and
  * the steps a move reads as. */
 
-import { duelEquipment, duelItemName, matchesDuelItem } from '@/lib/hd/catalog'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
 import { TRIAL_CARDS } from '@/lib/hd/units'
 import type { DuelEquipment } from '@/lib/types/honorDuel'
-import { APP_LOCALES, type AppLocale } from '@/lib/types/i18n'
-import { fileStem } from '@/utils/fileStem'
+import type { AppLocale } from '@/lib/types/i18n'
+import type { useI18nStore } from '@/stores/i18n'
+import { duelEquipment, duelItemName, matchesDuelItem, matchesName } from '@/utils/duelCatalog'
+import { byStem } from '@/utils/fileStem'
 import { formatDisplayName } from '@/utils/nameFormatting'
 import { goodName } from '@/utils/shopGoodNames'
 import { curatedHeroName } from '@/utils/skillLabels'
-
-const byStem = <T>(modules: Record<string, T>): Record<string, T> =>
-  Object.fromEntries(Object.entries(modules).map(([path, value]) => [fileStem(path), value]))
 
 const images = byStem(
   import.meta.glob<string>('@/pack/images/hd/shop/*.png', {
@@ -34,14 +32,9 @@ export const pieceName = (name: string, locale: AppLocale): string => {
   return item ? duelItemName({ kind: 'equipment', item }, locale) : formatDisplayName(name)
 }
 
-const within = (query: string, name: (locale: AppLocale) => string): boolean => {
-  const text = query.trim().toLowerCase()
-  return !text || APP_LOCALES.some((locale) => name(locale).toLowerCase().includes(text))
-}
-
 /** Whether a search matches a product's name in any of the site's languages. */
 export const matchesGood = (good: Good, query: string): boolean =>
-  within(query, (locale) => goodName(good.name, locale))
+  matchesName(query, (locale) => goodName(good.name, locale))
 
 /** Whether a search matches a piece's name in any of the site's languages. */
 export const matchesPiece = (item: DuelEquipment, query: string): boolean =>
@@ -58,6 +51,10 @@ export function cardLabel(card: ShopCard, locale: AppLocale): string {
   if (good.kind === 'equipment' && card.equipment) return pieceName(card.equipment, locale)
   return goodName(good.name, locale)
 }
+
+/** A card's label where one has to show: a card with no product reads as empty. */
+export const cardName = (card: ShopCard, i18n: ReturnType<typeof useI18nStore>): string =>
+  cardLabel(card, i18n.currentLocale) || i18n.t('app.shop-picker-empty')
 
 const SOLD_AT = new Map<string, number[]>()
 MEASURED_ODDS.levels.forEach((sources, index) => {

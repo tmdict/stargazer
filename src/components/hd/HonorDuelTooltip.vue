@@ -8,9 +8,9 @@ import { computed } from 'vue'
 import DuelEffectText from './DuelEffectText.vue'
 import TooltipCard from '@/components/ui/TooltipCard.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { duelItemName, duelLevelText } from '@/lib/hd/catalog'
 import type { DuelArtifactText, DuelEquipmentText, HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
+import { duelItemName, duelLevelText } from '@/utils/duelCatalog'
 
 const {
   item,

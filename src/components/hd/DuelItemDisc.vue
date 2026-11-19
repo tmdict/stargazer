@@ -6,8 +6,8 @@
 import { computed } from 'vue'
 
 import GuideDisc from '@/components/guide/GuideDisc.vue'
-import { duelItemImage } from '@/lib/hd/catalog'
 import type { HonorDuelItem } from '@/lib/types/honorDuel'
+import { duelItemImage } from '@/utils/duelCatalog'
 import { tierBackdrop } from '@/utils/tierBackdrop'
 
 const { item } = defineProps<{ item: HonorDuelItem; size?: number }>()

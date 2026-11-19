@@ -39,6 +39,11 @@ const packed = Object.values(
 const table = packed ? checkOdds(packed, SHOP_FACTS) : MEASURED_ODDS
 const cache = createSolverCache()
 
+// How long the search may run for one request, and between two pauses, in
+// milliseconds.
+const SEARCH_MS = 5000
+const SLICE_MS = 50
+
 // A turn of the event loop, in which a message from the page is taken in. A
 // timer would do, but a browser holds a timer set from a timer back by four
 // milliseconds. A dropped request and the one that replaced it can both be
@@ -56,7 +61,7 @@ let wanted = -1
 
 async function answer(id: number, request: ShopRequest): Promise<void> {
   try {
-    for (const result of calculateShop(request, table, SHOP_FACTS, cache)) {
+    for (const result of calculateShop(request, table, SHOP_FACTS, cache, SEARCH_MS, SLICE_MS)) {
       if (result) scope.postMessage({ type: 'answer', id, result })
       await heard()
       if (wanted !== id) return

@@ -5,8 +5,8 @@
 import ShopEquipmentList from '@/components/guide/shop/ShopEquipmentList.vue'
 import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
 import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
-import { duelEquipment } from '@/lib/hd/catalog'
 import type { Point } from '@/lib/layout'
+import { duelEquipment } from '@/utils/duelCatalog'
 
 import '@/components/guide/shop/shop.css'
 

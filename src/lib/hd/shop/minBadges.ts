@@ -4,7 +4,7 @@
 
 import type { Costs } from './costs'
 import { goalModel, subsets, type GoalModel } from './moves'
-import { createSolverCache, type SolverCache } from './solverCache'
+import type { SolverCache } from './solverCache'
 import { sourcesOf, type ShopReading } from './sources'
 import type { CostRange, EnteredShop, Goal, Move, Pools, ShopFacts } from './types'
 
@@ -117,8 +117,6 @@ export interface CostRow {
 }
 
 export interface MinBadges {
-  /** Whether a reroll can ever show something that helps the goal. */
-  reachable: boolean
   /**
    * The first moves compared, in groups of moves that differ only in locks of
    * no use to this goal. Buying each different card that can help is a group
@@ -147,7 +145,7 @@ export function solveMinBadges(
   reading: ShopReading,
   pools: Pools,
   facts: ShopFacts,
-  kept: SolverCache = createSolverCache(),
+  kept: SolverCache,
 ): MinBadges {
   const model = goalModel(goal, reading.odds, pools, facts)
   const costs = kept.costs(model)
@@ -206,7 +204,6 @@ export function solveMinBadges(
   }
 
   return {
-    reachable: costs.reachable,
     options,
     cost,
     best(moves) {

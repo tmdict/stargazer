@@ -16,6 +16,10 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { EQUIPMENT_TIERS, type HonorDuelItem } from '@/lib/types/honorDuel'
+import { duelArtifactSide, toggleDuelArtifact } from '@/stores/duelBoard'
+import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 import {
   duelArtifactById,
   duelArtifacts,
@@ -23,11 +27,7 @@ import {
   duelItemImage,
   duelItemName,
   equipmentTierLabel,
-} from '@/lib/hd/catalog'
-import { EQUIPMENT_TIERS, type HonorDuelItem } from '@/lib/types/honorDuel'
-import { duelArtifactSide, toggleDuelArtifact } from '@/stores/duelBoard'
-import { useGrids } from '@/stores/grids'
-import { useI18nStore } from '@/stores/i18n'
+} from '@/utils/duelCatalog'
 import { gameLabel } from '@/utils/skillLabels'
 import { tierBackdrop } from '@/utils/tierBackdrop'
 
@@ -78,7 +78,7 @@ const handleDragStart = (event: DragEvent, item: HonorDuelItem): void => {
   pieceDrag.start(event, item.item.id)
 }
 
-const text = useDuelText()
+const text = useDuelText(() => !!hovered.value)
 
 const hoveredText = computed(() => {
   const item = hovered.value

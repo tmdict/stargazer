@@ -4,7 +4,7 @@
 
 import { cheaper, costView, NEAR_TIE, type CostRow } from './minBadges'
 import { goalModel } from './moves'
-import { createSolverCache, type SolverCache } from './solverCache'
+import type { SolverCache } from './solverCache'
 import type { ShopReading } from './sources'
 import type {
   CostRange,
@@ -73,7 +73,7 @@ export function solveNextRound(
   nextOdds: LevelOdds | null,
   pools: Pools,
   facts: ShopFacts,
-  kept: SolverCache = createSolverCache(),
+  kept: SolverCache,
 ): NextRound {
   const then = nextOdds ? carriedOdds(nextOdds, shop.cards, reading) : reading.odds
   const model = goalModel(goal, then, pools, facts)

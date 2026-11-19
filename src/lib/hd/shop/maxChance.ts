@@ -3,7 +3,7 @@
 
 import { goalModel } from './moves'
 import type { Outlook } from './search'
-import { createSolverCache, type SolverCache } from './solverCache'
+import type { SolverCache } from './solverCache'
 import { sourcesOf, type ShopReading } from './sources'
 import type { ChanceRange, EnteredShop, Goal, Move, Pools, ShopFacts } from './types'
 
@@ -18,8 +18,8 @@ export interface MaxChance {
 }
 
 /**
- * `reading` is the shop's cards as read at its level. A cache passed in `kept`
- * carries the tables and the searched shops from one call to the next.
+ * `reading` is the shop's cards as read at its level. `kept` carries the tables
+ * and the searched shops from one call to the next.
  */
 export function solveMaxChance(
   shop: EnteredShop,
@@ -27,7 +27,7 @@ export function solveMaxChance(
   reading: ShopReading,
   pools: Pools,
   facts: ShopFacts,
-  kept: SolverCache = createSolverCache(),
+  kept: SolverCache,
 ): MaxChance {
   const model = goalModel(goal, reading.odds, pools, facts)
   const badges = Math.max(0, shop.badges)

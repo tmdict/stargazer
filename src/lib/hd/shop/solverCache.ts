@@ -24,16 +24,14 @@ export interface SolverCache {
   solver: (model: GoalModel, badges: number) => Solver
   /** The cost tables for a model, filled for `model.need` targets. */
   costs: (model: GoalModel) => Costs
-  /** An estimate of the size in memory of everything kept. */
-  readonly bytes: number
 }
 
-export interface SolverCacheOptions {
-  /** How close to the true chance a searched answer has to be. */
-  tolerance?: number
-  maxSolvers?: number
-  maxBytes?: number
-}
+/** How close to the true chance a searched answer has to be. */
+const TOLERANCE = 1e-6
+
+/** The most a visit keeps: so many solvers, and an estimate of their size in memory. */
+const MAX_SOLVERS = 32
+const MAX_BYTES = 100e6
 
 /** Everything of a model the tables and the search read. */
 const modelKey = (model: GoalModel): string =>
@@ -43,11 +41,7 @@ const modelKey = (model: GoalModel): string =>
     model.sources,
   ])
 
-export function createSolverCache({
-  tolerance = 1e-6,
-  maxSolvers = 32,
-  maxBytes = 100e6,
-}: SolverCacheOptions = {}): SolverCache {
+export function createSolverCache(): SolverCache {
   // In order of last use, the least recent first.
   const solvers = new Map<string, Solver>()
 
@@ -66,16 +60,18 @@ export function createSolverCache({
       solvers.delete(key)
     } else {
       const tables = createTables(model)
-      solver = { tables, search: createSearch(model, tables, tolerance) }
+      solver = { tables, search: createSearch(model, tables, TOLERANCE) }
     }
     solvers.set(key, solver)
     return solver
   }
 
-  // A solver dropped here still serves the press that holds it.
+  // A solver dropped here still serves the press that holds it. The one just
+  // used stays whatever its size: the same press asks for it again, and would
+  // otherwise build its tables twice.
   const trim = () => {
     for (const oldest of solvers.keys()) {
-      if (solvers.size <= maxSolvers && bytes() <= maxBytes) break
+      if (solvers.size <= 1 || (solvers.size <= MAX_SOLVERS && bytes() <= MAX_BYTES)) break
       solvers.delete(oldest)
     }
   }
@@ -93,9 +89,6 @@ export function createSolverCache({
       costs.cover(model.need)
       trim()
       return costs
-    },
-    get bytes() {
-      return bytes()
     },
   }
 }

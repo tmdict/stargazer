@@ -11,12 +11,12 @@ import DuelPieceSlot from './DuelPieceSlot.vue'
 import DuelTierPill from './DuelTierPill.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import UnitBadge from '@/components/grid/UnitBadge.vue'
-import { below } from '@/components/guide/shop/popupLayout'
 import { isTrialHeroId } from '@/lib/characters/trial'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import type { GridContext } from '@/stores/gridContext'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
+import { below } from '@/utils/popupLayout'
 
 defineProps<{
   context: GridContext

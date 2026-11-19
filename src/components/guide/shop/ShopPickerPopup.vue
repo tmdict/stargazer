@@ -5,7 +5,7 @@
 
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { Point } from '@/lib/layout'
-import { onPhone } from './popupLayout'
+import { onPhone } from '@/utils/popupLayout'
 
 defineProps<{ position: Point }>()
 

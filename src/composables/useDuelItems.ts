@@ -9,7 +9,7 @@ import type { HonorDuelItem } from '@/lib/types/honorDuel'
 import { useI18nStore } from '@/stores/i18n'
 import { tierBackdrop } from '@/utils/tierBackdrop'
 
-type DuelCatalog = typeof import('@/lib/hd/catalog')
+type DuelCatalog = typeof import('@/utils/duelCatalog')
 
 const catalog = shallowRef<DuelCatalog | null>(null)
 let requested = false
@@ -18,7 +18,7 @@ const loaded = (): DuelCatalog | null => {
   if (!requested && !import.meta.env.SSR) {
     requested = true
     // A download that failed is asked for again by the next piece drawn.
-    import('@/lib/hd/catalog').then(
+    import('@/utils/duelCatalog').then(
       (module) => {
         catalog.value = module
       },

@@ -309,10 +309,14 @@ export function createTables(model: GoalModel): Tables {
       list = classes
         .map((group) => {
           const live = group.codes.flatMap((code, slot) => (reach[code] === code ? [slot] : []))
+          // Codes with no chance of showing in a fresh shop hold cards carried
+          // in from another level. Where a class has only those they count
+          // alike, or every plan would score the same and the first be kept.
+          const weights = Float64Array.from(live, (slot) => weight[group.codes[slot]])
           return {
             group,
             live,
-            weights: Float64Array.from(live, (slot) => weight[group.codes[slot]]),
+            weights: weights.some((value) => value > 0) ? weights : weights.fill(1),
           }
         })
         .filter(({ live }) => live.length)

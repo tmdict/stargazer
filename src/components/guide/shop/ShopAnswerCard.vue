@@ -10,13 +10,13 @@ import { computed } from 'vue'
 import ShopPieceDisc from './ShopPieceDisc.vue'
 import ShopSteps from './ShopSteps.vue'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
-import { duelEquipment, equipmentTierLabel } from '@/lib/hd/catalog'
 import { sameMove } from '@/lib/hd/shop/advice'
 import { SHOWN_RANGE, type ShopAnswer } from '@/lib/hd/shop/calculate'
 import type { ChanceRange, CostRange, Move, ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
+import { duelEquipment, equipmentTierLabel } from '@/utils/duelCatalog'
 import { curatedHeroName } from '@/utils/skillLabels'
-import { cardLabel, moveSteps, pieceName, stopSteps } from './shopGoods'
+import { cardName, moveSteps, pieceName, stopSteps } from './shopGoods'
 
 const { answer, cards, copies, basis } = defineProps<{
   answer: ShopAnswer
@@ -89,9 +89,9 @@ const chanceRows = computed(() => {
       retry: untried(keepLocks.move),
     },
     current && {
-      label: i18n.t(current.move.kind === 'buy' ? 'app.shop-alt-basis' : 'app.shop-alt-current'),
+      label: i18n.t(basis ? 'app.shop-alt-basis' : 'app.shop-alt-current'),
       figure: chanceText(current.chance),
-      steps: current.move.kind === 'buy' ? moveSteps(current.move, cards) : [],
+      steps: basis ? moveSteps(current.move, cards) : [],
       retry: null,
     },
     offers &&
@@ -126,12 +126,15 @@ const STOP_TEXT = {
   'next-level': 'app.shop-stop-next-level',
 }
 
-const idle = computed(() =>
-  answer.idleLocks.flatMap((index) => {
-    const card = cards[index]
-    return card ? [cardLabel(card, i18n.currentLocale)] : []
-  }),
-)
+// Two locked cards of one name share a line.
+const idle = computed(() => [
+  ...new Set(
+    answer.idleLocks.flatMap((index) => {
+      const card = cards[index]
+      return card ? [cardName(card, i18n)] : []
+    }),
+  ),
+])
 </script>
 
 <template>

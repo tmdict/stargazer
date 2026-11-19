@@ -39,7 +39,8 @@ const shares = (odds: LevelOdds, good: string): number[] =>
  * cannot happen at this level. `lower` holds the odds of the levels below, the
  * nearest first. A locked card is read against the level it was locked at, when
  * the card names one, and a locked card of a product this level never makes
- * against the nearest level that makes it.
+ * against the nearest level that makes it. So is a bought card of such a
+ * product: it was locked until it was bought.
  */
 export function readShop(
   odds: LevelOdds,
@@ -52,9 +53,9 @@ export function readShop(
 
   const carried: SourceEntry[][] = odds.map(() => [])
   const likelihood = named.map((index) => {
-    const { good, locked, lockedAt } = cards[index]
+    const { good, locked, bought, lockedAt } = cards[index]
     const now = shares(odds, good!)
-    if (!locked) return now
+    if (!locked && !bought) return now
     const said = lockedAt === undefined ? undefined : lower[lower.length - lockedAt]
     if (!said && now.some(Boolean)) return now
     const before = said

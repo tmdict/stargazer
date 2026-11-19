@@ -94,7 +94,14 @@ describe('a table where one source always makes a pack', () => {
   const shop = [card('random-pack'), ...Array.from({ length: 7 }, () => card('artifact-exp'))]
   const two = HEROES.slice(0, 2)
   const solve = (badges: number) =>
-    solveMaxChance({ badges, cards: shop }, hero('L1', 2), read(odds, shop), pools([], two), FACTS)
+    solveMaxChance(
+      { badges, cards: shop },
+      hero('L1', 2),
+      read(odds, shop),
+      pools([], two),
+      FACTS,
+      createSolverCache(),
+    )
 
   it('gives one pack to 18 badges and to 36, and a second pack to 39', () => {
     expect(solve(18).chance(buy(0))).toBeCloseTo(1 / 2, 9)
@@ -113,6 +120,7 @@ describe('a table where one source always makes a pack', () => {
       read(checked, shop),
       pools([], two),
       FACTS,
+      createSolverCache(),
     )
     expect(solved.chance(buy(0))).toBeCloseTo(57 / 64, 9)
     // The pack can only have come from the one source that makes it.
@@ -251,6 +259,7 @@ describe('against a counter that follows every outcome', () => {
       read(odds, shop),
       pools(sell, three),
       FACTS,
+      createSolverCache(),
     )
     return Math.max(
       ...moves.map((move) => Math.abs(solved.chance(move) - counter(need, badges, shown, move))),
@@ -344,6 +353,7 @@ describe('rules that always hold', () => {
       read(levelOdds(3), shop),
       pools(),
       FACTS,
+      createSolverCache(),
     )
     const wanted = { heroes: new Set(['L1']), equipment: new Set<string>() }
     const moves = firstMoves({ badges: 48, cards: shop }, wanted, FACTS)
@@ -354,6 +364,23 @@ describe('rules that always hold', () => {
       expect(answer).toBeGreaterThanOrEqual(floor - 1e-9)
       expect(answer).toBeLessThanOrEqual(ceiling + 1e-9)
     }
+  })
+
+  // A pack locked at level 1 sits behind a source that makes none at level 5,
+  // so no fresh shop shows it: the tables have to plan for it all the same.
+  it('plans for a card carried in from another level', () => {
+    const kept = cards(card('mauler-pack', { locked: true, lockedAt: 1 }))
+    const lower = [4, 3, 2, 1].map(levelOdds)
+    const solved = solveMaxChance(
+      { badges: 51, cards: kept },
+      hero('M1'),
+      readShop(levelOdds(5), kept, lower)!,
+      pools(),
+      FACTS,
+      createSolverCache(),
+    )
+    const { floor, ceiling } = solved.range(lock(0))
+    expect(ceiling - floor).toBeLessThan(0.01)
   })
 })
 
@@ -375,6 +402,7 @@ describe('heavier requests', () => {
       read(ODDS.levels[4]!, cards()),
       pools(),
       FACTS,
+      createSolverCache(),
     )
     expect(() => solved.chance(REROLL, 0)).toThrow(OutOfTime)
     const { floor, ceiling } = solved.range(REROLL)
@@ -420,33 +448,31 @@ describe('a cache kept through a shop visit', () => {
     }
   })
 
-  it('adds nothing for a second wanted item that the shop treats the same', () => {
+  it("answers a second wanted item that shares the first one's tables as a fresh solve does", () => {
     const kept = createSolverCache()
     const first = pressed({ level: 4, badges: 60, goal: hero('L1', 2) }, kept)
-    const held = kept.bytes
     const second = pressed({ level: 4, badges: 60, goal: hero('M1', 2) }, kept)
-    expect(kept.bytes).toBe(held)
     expect(furthestApart(second, first)).toBeLessThan(1e-9)
     expect(
       furthestApart(second, pressed({ level: 4, badges: 60, goal: hero('M1', 2) })),
     ).toBeLessThan(1e-9)
-    pressed(
-      { level: 4, badges: 60, goal: { heroes: ['L1', 'M1'], equipment: [], copies: 1 } },
-      kept,
-    )
-    expect(kept.bytes).toBeGreaterThan(held)
   })
 
-  it('drops what was used longest ago once over its limit, and still answers', () => {
-    const one: Asked = { level: 3, badges: 60, goal: hero('L1', 2), cards: shop }
-    const other: Asked = { level: 5, badges: 60, goal: hero('L1', 2) }
-    const both = createSolverCache()
-    const kept = createSolverCache({ maxSolvers: 1 })
-    const first = pressed(one, kept)
-    const alone = kept.bytes
-    for (const cache of [both, kept]) for (const asked of [one, other]) pressed(asked, cache)
-    expect(kept.bytes).toBe(both.bytes - alone)
-    expect(furthestApart(pressed(one, kept), first)).toBeLessThan(1e-9)
-    expect(kept.bytes).toBe(alone)
+  // Any hero of the first few has tables of its own for each count and level:
+  // more of them than a visit keeps.
+  it('still answers for what it dropped as used longest ago', () => {
+    const any = (count: number): Goal => ({
+      heroes: HEROES.slice(0, count).map((one) => one.name),
+      equipment: [],
+      copies: 1,
+    })
+    const visit: Asked[] = [3, 4, 5].flatMap((level) =>
+      Array.from({ length: 12 }, (_, i) => ({ level, badges: 12, goal: any(i + 1) })),
+    )
+    const kept = createSolverCache()
+    const first = pressed(visit[0]!, kept)
+    for (const asked of visit) pressed(asked, kept)
+    expect(furthestApart(pressed(visit[0]!, kept), first)).toBeLessThan(1e-9)
+    expect(furthestApart(first, pressed(visit[0]!))).toBeLessThan(1e-9)
   })
 })

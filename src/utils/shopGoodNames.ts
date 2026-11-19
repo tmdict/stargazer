@@ -3,13 +3,11 @@
  * use, because the Trial list's card headings show with the page. */
 
 import type { AppLocale, LocaleData } from '@/lib/types/i18n'
-import { fileStem } from './fileStem'
+import { byStem } from './fileStem'
 import { formatDisplayName } from './nameFormatting'
 
-const names: Record<string, LocaleData> = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<LocaleData>('@/locales/hd/shop/*.json', { eager: true, import: 'default' }),
-  ).map(([path, value]) => [fileStem(path), value]),
+const names = byStem(
+  import.meta.glob<LocaleData>('@/locales/hd/shop/*.json', { eager: true, import: 'default' }),
 )
 
 export const goodName = (name: string, locale: AppLocale): string =>

@@ -12,7 +12,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
-import { duelHeroes, duelPickBackdrop, duelTrialPool } from '@/lib/hd/heroes'
+import { duelHeroes, duelTrialPool } from '@/lib/hd/heroes'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
@@ -20,6 +20,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
+import { duelPickBackdrop } from '@/utils/tierBackdrop'
 
 interface Props {
   // The tapped tile: determines the team and where the chosen hero is placed.

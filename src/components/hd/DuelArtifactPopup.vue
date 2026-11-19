@@ -13,16 +13,16 @@ import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import PaletteSearch from '@/components/ui/PaletteSearch.vue'
 import { useDuelText } from '@/composables/useDuelText'
 import { DUEL_ARTIFACT_LEVELS, type DuelArtifactSlot } from '@/lib/hd/board'
+import type { Point } from '@/lib/layout'
+import type { DuelArtifact, HonorDuelItem } from '@/lib/types/honorDuel'
+import { useI18nStore } from '@/stores/i18n'
 import {
   duelArtifactById,
   duelArtifacts,
   duelItemName,
   duelLevelText,
   matchesDuelItem,
-} from '@/lib/hd/catalog'
-import type { Point } from '@/lib/layout'
-import type { DuelArtifact, HonorDuelItem } from '@/lib/types/honorDuel'
-import { useI18nStore } from '@/stores/i18n'
+} from '@/utils/duelCatalog'
 
 import '@/components/guide/shop/shop.css'
 

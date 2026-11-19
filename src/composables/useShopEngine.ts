@@ -80,7 +80,13 @@ export function useShopEngine() {
         }
       },
     }
-    start().postMessage({ type: 'calculate', id, request } satisfies ShopWorkerRequest)
+    // A worker that cannot start, or a request it cannot be sent, ends as a
+    // failure the page shows.
+    try {
+      start().postMessage({ type: 'calculate', id, request } satisfies ShopWorkerRequest)
+    } catch {
+      active.take(null)
+    }
   }
 
   onMounted(start)

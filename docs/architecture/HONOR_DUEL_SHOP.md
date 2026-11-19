@@ -24,7 +24,7 @@ The form asks for the shop level and whether it goes up next round, since a play
 
 Random fills the shop window with an example shop of the level (`sampleShop`): one card from each source at the repo table's odds, in a random order. Clear empties the window. Each takes a second press once anything is entered.
 
-An answer can be recalculated from a move it recommends. For a reroll, the page sets the recommended locks on the shop and calculates again. For a purchase, the shop stays as entered and the request names the purchase in `startFrom`, so the best-chance comparison starts from buying it first.
+An answer can be recalculated from a move it recommends. For a reroll, the page sets the recommended locks on the shop and calculates again. For a purchase, the shop stays as entered and the request names the purchase in `startFrom`, so the best-chance comparison starts from buying it first. A reroll that would unlock a card kept from a lower level is handled as a purchase is, since the shop cannot be read with that card unlocked.
 
 ### Best chance
 
@@ -38,7 +38,7 @@ The same codes carry two cost tables: the average badges to reach the goal for a
 
 ### Stopping
 
-Each round's first shop is a free redraw of the unlocked cards. A way to stop is a set of locks to leave, after a purchase or none, and it is costed by what the goal takes from the next round on. Fewest badges says to stop when its cheapest move cannot be paid for, when that move leaves no chance this round, or when the shop level rises next round and waiting is cheaper by more than a reroll. The answer then names the cheapest way to stop.
+Each round's first shop is a free redraw of the unlocked cards. A way to stop is a set of locks to leave, after a purchase or none, and it is costed by what the goal takes from the next round on. Fewest badges says to stop when its cheapest move cannot be paid for, when that move leaves no chance this round, or when the shop level rises next round and waiting is cheaper by more than a reroll. The answer then names the cheapest way to stop among those it compares: each reroll's set of locks with no purchase, and each purchase with the locks already set all kept or all dropped. A purchase followed by a new lock is not compared.
 
 ### Advice
 
@@ -46,11 +46,11 @@ Every first move has a number; the advice rules pick the one shown. A move repla
 
 ## Decisions
 
-Answers arrive in stages. The first stage has every number at once, with a range where the tables alone do not settle a chance. The search then narrows only the ranges that could change what a card shows, and stops after `SEARCH_MS`. A range it does not reach stays a range. This keeps a first answer fast for every request and puts a limit on the slowest one.
+Answers arrive in stages. The first stage has every number at once, with a range where the tables alone do not settle a chance. The search then narrows only the ranges that could change what a card shows, and stops after the worker's `SEARCH_MS`. A range it does not reach stays a range. This keeps a first answer fast for every request and puts a limit on the slowest one.
 
-The work runs in one worker. The tables depend on the goal's useful kinds, their prices and what each source makes of them, and not on the cards entered or the badges held. The worker keeps them between requests, so a later press on the same shop visit mostly reads what an earlier one filled. The cache holds the tables of at most 32 goals and about 100 MB, and drops the least recently used past either.
+The work runs in one worker. The tables depend on the goal's useful kinds, their prices and what each source makes of them, and not on the cards entered or the badges held. The worker keeps them between requests, so a later press on the same shop visit mostly reads what an earlier one filled. The cache holds at most 32 sets of tables and about 100 MB, and drops the least recently used past either, never the set just used. Goals whose useful kinds, prices and sources are the same share one set.
 
-A worker at work hears no messages, so the calculation pauses: after each goal is prepared, after each goal's first answer, after each stage, and every `SLICE_MS` of search. At a pause the worker takes in what the page has sent and drops a request the page no longer wants. A slice of search that runs out of time starts again from its first move and finds every shop it had finished already answered, so slicing changes no answer. Cancel keeps the answers already shown; an edit to the form clears them, because they no longer belong to what is entered. Neither loses the kept tables. The worker ends when the page is left.
+A worker at work hears no messages, so the calculation pauses: after each goal is prepared, after each goal's first answer, after each stage, and after every `SLICE_MS` a move's search has run. At a pause the worker takes in what the page has sent and drops a request the page no longer wants. A slice of search that runs out of time starts again from its first move and finds every shop it had finished already answered, so slicing changes no answer. Cancel keeps the answers already shown; an edit to the form clears them, because they no longer belong to what is entered. Neither loses the kept tables. The worker ends when the page is left.
 
 The page stores nothing. What a player enters lasts for the visit to the page.
 
@@ -60,15 +60,15 @@ The probability guide at `/guide/hd/shop/probability` explains the shop's formul
 
 ## Rules
 
-- The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the repo's. Nothing on the page reads the pack's table. The odds view and Random use the repo's table, and the build stops unless both tables list the same products for every source, so an example shop can come up under either.
+- The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the repo's. Nothing on the page reads the pack's table. The odds view, Random, the levels a locked card may name and the guide's figures use the repo's table, and the build stops unless both tables list the same products for every source, so an example shop can come up under either.
 - Each answer carries its request's number, and the page drops an answer whose number is not the newest. An answer to earlier inputs is never shown.
 - Every set of answers a stage sends is whole and replaces the last.
 - `SHOP_LIMITS` bounds a request (badges and copies). The tables' time and memory grow with both, so a higher limit needs the speed of the heaviest request measured again.
-- A chance shows one decimal, two under 1%, and "100%" from 99.95% up. A range shows only when it is wider than 0.1 of a point.
+- A chance shows one decimal, two under 1%, and "100%" from 99.95% up. A range shows only when it is 0.1 of a point wide or more.
 
 ## Gotchas
 
-- A locked card keeps its source number when the shop level rises. The stopping answer depends on it: a lock kept across the level change blocks that source in the next level's table. The reading of a later round depends on it too: `ShopReading.odds` lists a carried card's product at 0% for each source that may hold it, so the card can be bought or kept without changing any draw. Only a locked card is read this way, so the same card with its lock taken off is refused.
+- A locked card keeps its source number when the shop level rises. The stopping answer depends on it: a lock kept across the level change blocks that source in the next level's table. The reading of a later round depends on it too: `ShopReading.odds` lists a carried card's product at 0% for each source that may hold it, so the card can be bought or kept without changing any draw. Only a locked card is read this way, and a card bought while it was locked: the same card with its lock taken off is refused.
 - Locked cards with no product named are interchangeable. A reading lists the set of sources they hold once, in place of every way to hand those sources out, and `sourcesOf` spreads a move that keeps only some of them over every subset of that size.
 - The search treats cards of one kind as alike. A player knows which one was kept through a reroll, and choosing between it and a new one on purpose can beat the chance shown, which stays a chance the player can reach. The shortfall is at most 0.02 of a point with all 32 heroes in the pool and grows as the pool shrinks: the largest seen is 0.27 of a point, with 4 heroes left.
 - Copies of different heroes are never added together. The goals that span heroes exist only when every wanted hero needs one copy.

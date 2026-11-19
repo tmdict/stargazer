@@ -13,7 +13,7 @@ import IconLock from '@/components/ui/IconLock.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
-import { cardLabel, lockedLevel, lockLevels, SHOP_GOODS } from './shopGoods'
+import { cardName, lockedLevel, lockLevels, SHOP_GOODS } from './shopGoods'
 
 const { card, level } = defineProps<{ card: ShopCard; level: number }>()
 
@@ -22,11 +22,11 @@ const emit = defineEmits<{ pick: [under: DOMRect]; lock: []; lockedAt: [under: D
 const i18n = useI18nStore()
 
 const good = computed(() => SHOP_GOODS.get(card.good ?? ''))
-const label = computed(() => cardLabel(card, i18n.currentLocale) || i18n.t('app.shop-picker-empty'))
+const label = computed(() => cardName(card, i18n))
 
 const levels = computed(() => lockLevels(card, level))
 const lockedAt = computed(() => lockedLevel(card, level))
-const lower = computed(() => levels.value.length > 1 || lockedAt.value < level)
+const lower = computed(() => card.locked && (levels.value.length > 1 || lockedAt.value < level))
 
 const under = (event: MouseEvent): DOMRect =>
   (event.currentTarget as HTMLElement).getBoundingClientRect()

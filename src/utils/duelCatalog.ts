@@ -15,12 +15,9 @@ import type {
   HonorDuelText,
 } from '@/lib/types/honorDuel'
 import { APP_LOCALES, type AppLocale, type LocaleData, type SkillLocale } from '@/lib/types/i18n'
-import { fileStem } from '@/utils/fileStem'
-import { formatDisplayName } from '@/utils/nameFormatting'
-import { gameLabel } from '@/utils/skillLabels'
-
-const byStem = <T>(modules: Record<string, T>): Record<string, T> =>
-  Object.fromEntries(Object.entries(modules).map(([path, value]) => [fileStem(path), value]))
+import { byStem } from './fileStem'
+import { formatDisplayName } from './nameFormatting'
+import { gameLabel } from './skillLabels'
 
 const byId = <T extends { id: number }>(modules: Record<string, T>): T[] =>
   Object.values(modules).sort((a, b) => a.id - b.id)
@@ -84,13 +81,14 @@ const images = {
 export const duelItemName = ({ kind, item }: HonorDuelItem, locale: AppLocale): string =>
   names[kind][item.name]?.[locale] || formatDisplayName(item.name)
 
-/** Whether a search matches an item's name in any of the site's languages. */
-export const matchesDuelItem = (item: HonorDuelItem, query: string): boolean => {
+/** Whether a search matches a name in any of the site's languages. */
+export const matchesName = (query: string, name: (locale: AppLocale) => string): boolean => {
   const text = query.trim().toLowerCase()
-  return (
-    !text || APP_LOCALES.some((locale) => duelItemName(item, locale).toLowerCase().includes(text))
-  )
+  return !text || APP_LOCALES.some((locale) => name(locale).toLowerCase().includes(text))
 }
+
+export const matchesDuelItem = (item: HonorDuelItem, query: string): boolean =>
+  matchesName(query, (locale) => duelItemName(item, locale))
 
 /** An artifact's effect at a level, from 1. A level past the last the text
  * holds reads as the last. */

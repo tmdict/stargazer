@@ -7,6 +7,7 @@
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { solveMaxChance } from '@/lib/hd/shop/maxChance'
 import { checkOdds } from '@/lib/hd/shop/odds'
+import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import { readShop, type ShopReading } from '@/lib/hd/shop/sources'
 import type {
   Goal,
@@ -96,5 +97,6 @@ export function chance(asked: Asked, move: Move = REROLL): number {
     read(levelOdds(asked.level), shop.cards),
     pools(asked.sell),
     FACTS,
+    createSolverCache(),
   ).chance(move)
 }
