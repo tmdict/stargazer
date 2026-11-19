@@ -8,6 +8,7 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import type { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 
 interface Props {
   // The team whose artifact slot the chosen artifact is placed into.
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 
 const gameDataStore = useGameDataStore()
 const grids = useGrids()
+const i18n = useI18nStore()
 // The board that opened the popup (injected through GridArtifacts). Picks must
 // land on this board, not the page-wide active board, which any interaction on
 // another board can move while the popup is open.
@@ -47,7 +49,7 @@ const handleSelect = (artifact: ArtifactType) => {
 </script>
 
 <template>
-  <SelectionPopup :position @close="emit('close')">
+  <SelectionPopup :label="i18n.t('app.pick-artifact')" :position @close="emit('close')">
     <ArtifactSelectionPalette :artifacts="availableArtifacts" @pick="handleSelect" />
   </SelectionPopup>
 </template>

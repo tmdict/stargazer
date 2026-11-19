@@ -6,7 +6,9 @@ import ShopEquipmentList from '@/components/guide/shop/ShopEquipmentList.vue'
 import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
 import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import type { Point } from '@/lib/layout'
+import { useI18nStore } from '@/stores/i18n'
 import { duelEquipment } from '@/utils/duelCatalog'
+import { gameLabel } from '@/utils/skillLabels'
 
 import '@/components/guide/shop/shop.css'
 
@@ -19,6 +21,8 @@ defineProps<{
 // The id of the piece picked, or 0 for none.
 const emit = defineEmits<{ pick: [id: number]; close: [] }>()
 
+const i18n = useI18nStore()
+
 const pick = (name: string): void => {
   const piece = duelEquipment.find((one) => one.name === name)
   if (piece) emit('pick', piece.id)
@@ -26,7 +30,11 @@ const pick = (name: string): void => {
 </script>
 
 <template>
-  <ShopPickerPopup :position @close="emit('close')">
+  <ShopPickerPopup
+    :label="gameLabel('equipment', i18n.currentLocale)"
+    :position
+    @close="emit('close')"
+  >
     <div class="shop-popup">
       <ShopPopupClose @close="emit('close')" />
       <ShopEquipmentList all :clearable @pick="pick" @clear="emit('pick', 0)" />

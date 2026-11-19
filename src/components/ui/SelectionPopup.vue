@@ -11,6 +11,8 @@ import { clampX, clampY, VIEWPORT_MARGIN, viewportHeight, viewportWidth } from '
 // (usePanelFit): a dropdown list inside stays within it, and picking an item
 // never leaves the cursor outside the popup.
 const props = defineProps<{
+  // What a screen reader calls the popup.
+  label: string
   position: { x: number; y: number }
   // Layer above an open modal (the match import's review picker); the default
   // layer sits under the modal overlay.
@@ -101,6 +103,7 @@ watch(() => [props.position, props.centered], reposition)
     :class="{ 'over-modal': overModal }"
     :style="{ left: `${coords.x}px`, top: `${coords.y}px`, minHeight: `${minHeight}px` }"
     role="dialog"
+    :aria-label="label"
     tabindex="-1"
     data-dropdown-boundary
     @mouseleave="keepOnLeave || emit('close')"

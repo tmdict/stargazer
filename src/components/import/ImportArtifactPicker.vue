@@ -23,6 +23,7 @@ const i18n = useI18nStore()
        here rather than reaching the modal's own close listeners on document. -->
   <Teleport to="body">
     <SelectionPopup
+      :label="i18n.t('app.pick-artifact')"
       :position
       over-modal
       keep-on-leave

@@ -7,7 +7,7 @@ import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import type { Point } from '@/lib/layout'
 import { onPhone } from '@/utils/popupLayout'
 
-defineProps<{ position: Point }>()
+defineProps<{ label: string; position: Point }>()
 
 const emit = defineEmits<{ close: [] }>()
 </script>
@@ -16,6 +16,7 @@ const emit = defineEmits<{ close: [] }>()
   <Teleport to="body">
     <SelectionPopup
       class="shop-picker-popup"
+      :label
       :position
       :centered="onPhone()"
       keep-on-leave

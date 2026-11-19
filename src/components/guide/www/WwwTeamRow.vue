@@ -78,7 +78,7 @@ const heroName = (id: number): string =>
           :aria-label="
             artifact
               ? localizedDisplayName(i18n.t, 'artifact', artifact.name)
-              : i18n.t('app.www-pick-artifact')
+              : i18n.t('app.pick-artifact')
           "
           @click="emit('artifact', underCell($event))"
         >
@@ -103,7 +103,7 @@ const heroName = (id: number): string =>
           type="button"
           class="www-round www-slot"
           :class="{ empty: !hero, target: target === index }"
-          :aria-label="hero ? heroName(hero.id) : i18n.t('app.www-pick-hero')"
+          :aria-label="hero ? heroName(hero.id) : i18n.t('app.pick-hero')"
           :aria-pressed="target === index"
           @click="emit('slot', index, underCell($event))"
         >

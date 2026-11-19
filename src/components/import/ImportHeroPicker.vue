@@ -42,6 +42,7 @@ const pinned = computed(() =>
        here rather than reaching the modal's own close listeners on document. -->
   <Teleport to="body">
     <SelectionPopup
+      :label="i18n.t('app.pick-hero')"
       :position
       over-modal
       keep-on-leave

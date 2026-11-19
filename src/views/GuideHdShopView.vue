@@ -71,6 +71,13 @@ type Popup =
   | { kind: 'locked-at'; card: number; position: Point }
   | { kind: 'hero' | 'equipment'; position: Point }
 const popup = ref<Popup | null>(null)
+
+const POPUP_LABELS: Record<Popup['kind'], string> = {
+  card: 'app.shop-pick-card',
+  'locked-at': 'app.shop-locked-at-title',
+  hero: 'app.shop-add-hero',
+  equipment: 'app.shop-add-equipment',
+}
 // One popup per card and step: a press on another card's opener reaches the
 // popup still open as a press outside it, and must close that one alone.
 const popupKey = computed(() => {
@@ -227,7 +234,13 @@ watch(
       @close="listsOpen = false"
     />
 
-    <ShopPickerPopup v-if="popup" :key="popupKey" :position="popup.position" @close="popup = null">
+    <ShopPickerPopup
+      v-if="popup"
+      :key="popupKey"
+      :label="i18n.t(POPUP_LABELS[popup.kind])"
+      :position="popup.position"
+      @close="popup = null"
+    >
       <ShopProductPicker
         v-if="popup.kind === 'card'"
         v-model:step="popup.step"

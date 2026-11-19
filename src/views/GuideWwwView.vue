@@ -274,7 +274,12 @@ const predictWinner = async (): Promise<void> => {
     </BottomSheet>
 
     <Teleport to="body">
-      <SelectionPopup v-if="heroPicker" :position="heroPicker.position" @close="heroPicker = null">
+      <SelectionPopup
+        v-if="heroPicker"
+        :label="i18n.t('app.pick-hero')"
+        :position="heroPicker.position"
+        @close="heroPicker = null"
+      >
         <CharacterSelectionPalette
           :characters="pickerHeroes"
           :enter-hint="i18n.t('app.place-hero')"
@@ -285,6 +290,7 @@ const predictWinner = async (): Promise<void> => {
       </SelectionPopup>
       <SelectionPopup
         v-if="artifactPicker"
+        :label="i18n.t('app.pick-artifact')"
         :position="artifactPicker.position"
         @close="artifactPicker = null"
       >

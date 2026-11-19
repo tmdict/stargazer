@@ -23,6 +23,7 @@ import {
   duelLevelText,
   matchesDuelItem,
 } from '@/utils/duelCatalog'
+import { gameLabel } from '@/utils/skillLabels'
 
 import '@/components/guide/shop/shop.css'
 
@@ -75,7 +76,11 @@ const takeOnly = (): void => {
 </script>
 
 <template>
-  <ShopPickerPopup :position @close="emit('close')">
+  <ShopPickerPopup
+    :label="gameLabel('duel-artifact', i18n.currentLocale)"
+    :position
+    @close="emit('close')"
+  >
     <div class="shop-popup">
       <ShopPopupClose @close="emit('close')" />
       <section v-if="current" class="held">

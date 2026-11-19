@@ -95,7 +95,7 @@ function handleSelect(character: CharacterType): void {
 </script>
 
 <template>
-  <SelectionPopup :position @close="emit('close')">
+  <SelectionPopup :label="i18n.t('app.pick-hero')" :position @close="emit('close')">
     <RosterMenu v-if="!duel" dark manage class="popup-roster-menu" @manage="manageRosters" />
     <CharacterSelectionPalette
       :characters="sortedCharacters"
