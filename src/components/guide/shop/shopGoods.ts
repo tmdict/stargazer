@@ -2,6 +2,7 @@
  * languages, the data pack's pictures, the tier that colours its frame, and
  * the steps a move reads as. */
 
+import type { AnswerGoal } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
@@ -30,6 +31,13 @@ export const SHOP_GOODS: ReadonlyMap<string, Good> = new Map(
 export const pieceName = (name: string, locale: AppLocale): string => {
   const item = duelEquipment.find((piece) => piece.name === name)
   return item ? duelItemName({ kind: 'equipment', item }, locale) : formatDisplayName(name)
+}
+
+/** What a goal reads as: its hero or piece, or the name of a goal that spans targets. */
+export const goalName = (goal: AnswerGoal, i18n: ReturnType<typeof useI18nStore>): string => {
+  if (goal.kind === 'hero') return curatedHeroName(goal.name, i18n.currentLocale)
+  if (goal.kind === 'equipment') return pieceName(goal.name, i18n.currentLocale)
+  return i18n.t(`app.shop-goal-${goal.kind}`)
 }
 
 /** Whether a search matches a product's name in any of the site's languages. */

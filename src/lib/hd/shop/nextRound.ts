@@ -3,7 +3,7 @@
 // it costs a reroll, and when fewest badges says to stop at all.
 
 import { cheaper, costView, NEAR_TIE, type CostRow } from './minBadges'
-import { goalModel } from './moves'
+import { goalModel, subsets } from './moves'
 import type { SolverCache } from './solverCache'
 import type { ShopReading } from './sources'
 import type {
@@ -31,9 +31,11 @@ export interface StopPlan {
 export interface NextRound {
   cost: (locks: readonly number[], buy: number | null) => CostRange
   /**
-   * The ways to stop: with the locks of each reroll in `moves`, and after each
-   * purchase in `moves` that helps the goal and the badges allow, with the
-   * locks already set either all kept or all let go.
+   * The ways to stop: with no purchase, and after each purchase in `moves`
+   * that helps the goal and the badges allow. Each leaves any of the other
+   * cards that help the goal locked, with the locks already set on the rest
+   * either all kept or all let go. The locks of each reroll in `moves` are
+   * compared with no purchase as well.
    */
   plans: (moves: readonly Move[]) => StopPlan[]
   /**
@@ -84,30 +86,54 @@ export function solveNextRound(
   const view = costView(shop, reading, model, kept.costs(model), facts)
   const prices = new Map(facts.goods.map((good) => [good.name, good.price]))
 
+  // The locks left cost the same after the redraw whichever purchase came
+  // before, and many ways to stop leave the same ones.
+  const rolled = new Map<string, CostRange>()
+  const afterRoll = (locks: readonly number[], need: number): CostRange => {
+    const key = `${need}:${locks.join()}`
+    let range = rolled.get(key)
+    if (!range) rolled.set(key, (range = view.afterRoll(locks, need)))
+    return range
+  }
+
   const cost = (locks: readonly number[], buy: number | null): CostRange => {
-    if (buy === null) return view.afterRoll(locks, model.need)
+    if (buy === null) return afterRoll(locks, model.need)
     const rest = locks.filter((card) => card !== buy)
-    return view.buy(buy, (need) => view.afterRoll(rest, need))
+    return view.buy(buy, (need) => afterRoll(rest, need))
   }
 
   const existing = shop.cards.flatMap((card, i) => (card.locked && !card.bought ? [i] : []))
+  const useful = shop.cards.flatMap((_, i) => (view.kindOf(i) >= 0 ? [i] : []))
+  const idle = existing.filter((card) => view.kindOf(card) < 0)
   const released = (plan: StopPlan) => existing.filter((card) => !plan.locks.includes(card)).length
   const added = (plan: StopPlan) => plan.locks.filter((card) => !existing.includes(card)).length
 
+  const lockSets = (bought: number | null): number[][] =>
+    (idle.length ? [idle, []] : [idle]).flatMap((rest) =>
+      subsets(useful.filter((card) => card !== bought)).map((more) =>
+        [...rest, ...more].sort((a, b) => a - b),
+      ),
+    )
+
   const plans = (moves: readonly Move[]): StopPlan[] => {
     const list: StopPlan[] = []
+    const listed = new Set<string>()
+    const add = (locks: number[], buy: number | null) => {
+      const key = `${buy}:${locks.join()}`
+      if (listed.has(key)) return
+      listed.add(key)
+      list.push({ locks, buy, cost: cost(locks, buy) })
+    }
     for (const move of moves) {
       if (move.kind === 'reroll') {
-        list.push({ locks: move.locks, buy: null, cost: cost(move.locks, null) })
+        add(move.locks, null)
         continue
       }
       const price = prices.get(shop.cards[move.card].good ?? '') ?? Infinity
       if (view.kindOf(move.card) < 0 || price > shop.badges) continue
-      const held = existing.filter((card) => card !== move.card)
-      for (const locks of held.length ? [held, []] : [held]) {
-        list.push({ locks, buy: move.card, cost: cost(locks, move.card) })
-      }
+      for (const locks of lockSets(move.card)) add(locks, move.card)
     }
+    for (const locks of lockSets(null)) add(locks, null)
     return list
   }
 

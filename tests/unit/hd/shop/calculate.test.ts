@@ -130,7 +130,7 @@ describe('the goals of a request', () => {
     const items = ['L1', 'M1', 'W1', 'G1', 'r1', 'e1', 'p1']
     expect(stages(asked).at(-1)).toMatchObject({ skipped: [] })
     expect(kinds(asked)).toEqual([...items, 'any-hero', 'any-equipment', 'any'])
-    expect(stages({ ...asked, cards: kept }).at(-1)).toMatchObject({ skipped: ['any'] })
+    expect(stages({ ...asked, cards: kept }).at(-1)).toMatchObject({ skipped: [{ kind: 'any' }] })
     expect(kinds({ ...asked, cards: kept })).toEqual([...items, 'any-hero', 'any-equipment'])
   })
 
@@ -157,7 +157,32 @@ describe('the goals of a request', () => {
       ),
     }
     expect(stages(asked).at(-1)).toMatchObject({ skipped: [] })
-    expect(stages({ ...asked, rises: true }).at(-1)).toMatchObject({ skipped: ['any'] })
+    expect(stages({ ...asked, rises: true }).at(-1)).toMatchObject({ skipped: [{ kind: 'any' }] })
+  })
+
+  it('leaves out a wanted item whose own tables kept cards, copies and badges make too large', () => {
+    const asked: Asked = {
+      level: 5,
+      rises: false,
+      badges: 500,
+      heroes: [['L1', 4], ['G1'], ['G2'], ['M1'], ['W1']],
+      pools: pools(),
+      cards: cards(
+        card('legendary-hero', { locked: true, lockedAt: 4 }),
+        card('hero-pair', { hero: 'M2', locked: true, lockedAt: 4 }),
+        card('random-pack', { locked: true, lockedAt: 1 }),
+        card('lightbearer-pack', { locked: true, lockedAt: 2 }),
+        card('lightbearer-pack', { locked: true, lockedAt: 1 }),
+        card('hero', { hero: 'M1', locked: true, lockedAt: 3 }),
+      ),
+    }
+    // The four single copies fit only because they share one set of tables.
+    const singles = ['G1', 'G2', 'M1', 'W1']
+    expect(stages(asked).at(-1)).toMatchObject({
+      skipped: [{ kind: 'hero', name: 'L1' }],
+      answers: singles.map((name) => ({ goal: { kind: 'hero', name } })),
+    })
+    expect(kinds({ ...asked, badges: 10 })).toEqual(['L1', ...singles])
   })
 
   it('has no answer for a shop that cannot happen at its level', () => {

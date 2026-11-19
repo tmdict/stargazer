@@ -11,8 +11,7 @@ import IconMinus from '@/components/ui/IconMinus.vue'
 import IconPlus from '@/components/ui/IconPlus.vue'
 import { SHOP_LIMITS } from '@/lib/hd/shop/calculate'
 import { useI18nStore } from '@/stores/i18n'
-import { curatedHeroName } from '@/utils/skillLabels'
-import { pieceName } from './shopGoods'
+import { goalName } from './shopGoods'
 
 const { kind, name } = defineProps<{ kind: 'hero' | 'equipment'; name: string }>()
 
@@ -23,9 +22,7 @@ const copies = defineModel<number>('copies')
 
 const i18n = useI18nStore()
 
-const label = computed(() =>
-  kind === 'hero' ? curatedHeroName(name, i18n.currentLocale) : pieceName(name, i18n.currentLocale),
-)
+const label = computed(() => goalName({ kind, name }, i18n))
 
 const step = (by: 1 | -1): void => {
   const next = (copies.value ?? 1) + by

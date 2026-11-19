@@ -41,7 +41,7 @@ const MAX_SOLVERS = 32
 const MAX_BYTES = 100e6
 
 /** Everything of a model the tables and the search read. */
-const modelKey = (model: GoalModel): string =>
+export const modelKey = (model: GoalModel): string =>
   JSON.stringify([
     model.reroll,
     model.kinds.map((kind) => [kind.good.price, kind.certain, kind.outcomes]),

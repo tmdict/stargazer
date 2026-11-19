@@ -15,9 +15,8 @@ import { SHOWN_RANGE, type ShopAnswer } from '@/lib/hd/shop/calculate'
 import type { ChanceRange, CostRange, Move, ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 import { duelEquipment, equipmentTierLabel } from '@/utils/duelCatalog'
-import { curatedHeroName } from '@/utils/skillLabels'
 import { amount, percentText } from './shopFormat'
-import { cardName, moveSteps, pieceName, stopSteps } from './shopGoods'
+import { cardName, goalName, moveSteps, stopSteps } from './shopGoods'
 
 const { answer, cards, copies, basis } = defineProps<{
   answer: ShopAnswer
@@ -53,20 +52,10 @@ const piece = computed(() => {
 
 const head = computed(() => {
   const { goal } = answer
-  const locale = i18n.currentLocale
-  if (goal.kind === 'hero') {
-    return {
-      title: curatedHeroName(goal.name, locale),
-      sub: i18n.t('app.shop-copies-wanted', { copies: copies ?? 1 }),
-    }
-  }
-  if (goal.kind === 'equipment') {
-    return {
-      title: pieceName(goal.name, locale),
-      sub: piece.value ? equipmentTierLabel(piece.value.tier, locale) : '',
-    }
-  }
-  return { title: i18n.t(`app.shop-goal-${goal.kind}`), sub: '' }
+  let sub = ''
+  if (goal.kind === 'hero') sub = i18n.t('app.shop-copies-wanted', { copies: copies ?? 1 })
+  else if (piece.value) sub = equipmentTierLabel(piece.value.tier, i18n.currentLocale)
+  return { title: goalName(goal, i18n), sub }
 })
 
 const chanceText = ({ floor, ceiling }: ChanceRange): string =>

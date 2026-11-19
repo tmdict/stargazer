@@ -34,7 +34,7 @@ import {
 import { SOURCES } from './odds'
 import { solveOffers, type Offers } from './offers'
 import { OutOfTime } from './search'
-import type { SolverCache } from './solverCache'
+import { modelKey, type SolverCache } from './solverCache'
 import { readShop, type ShopReading } from './sources'
 import type {
   EnteredShop,
@@ -71,6 +71,15 @@ const MAX_SPAN_SIZE = 1_500_000
  */
 const MAX_NEXT_SPAN_SIZE = 4_500_000
 
+/**
+ * The most table rows a press fills for the wanted items' own goals, each row
+ * counted at its goal's size (`goalSize`). A goal's chance tables hold a row
+ * for every count of copies still needed at every count of badges, so their
+ * time and memory follow the three together, and cards kept from a lower
+ * level multiply the size. A shop with nothing kept stays far under it.
+ */
+const MAX_OWN_ROWS = 500_000_000
+
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
 
@@ -95,9 +104,14 @@ export interface ShopRequest {
 }
 
 /** A goal met by any one of several targets. */
-export type SpanGoal = 'any-hero' | 'any-equipment' | 'any'
+type SpanGoal = 'any-hero' | 'any-equipment' | 'any'
 
 export type AnswerGoal = { kind: 'hero' | 'equipment'; name: string } | { kind: SpanGoal }
+
+interface NamedGoal {
+  name: AnswerGoal
+  goal: Goal
+}
 
 export interface ChanceAnswer extends ChanceAdvice {
   /** Buying only what is on show, when that shows another chance than the best move. */
@@ -124,7 +138,7 @@ export type ShopResult =
    * `skipped`: the goals left out as too large. `settled`: whether these
    * answers are the last for the request.
    */
-  { answers: ShopAnswer[]; skipped: SpanGoal[]; settled: boolean } | { error: 'impossible-shop' }
+  { answers: ShopAnswer[]; skipped: AnswerGoal[]; settled: boolean } | { error: 'impossible-shop' }
 
 function checkRequest(request: ShopRequest): void {
   const { shop, heroes, equipment, startFrom } = request
@@ -155,10 +169,10 @@ function checkRequest(request: ShopRequest): void {
  * goals that span heroes are left out unless every hero needs one copy. A goal
  * with the same targets as an earlier one is left out.
  */
-function goalsOf(request: ShopRequest): { name: AnswerGoal; goal: Goal }[] {
+function goalsOf(request: ShopRequest): NamedGoal[] {
   const { heroes, equipment } = request
   const names = heroes.map((hero) => hero.name)
-  const goals: { name: AnswerGoal; goal: Goal }[] = [
+  const goals: NamedGoal[] = [
     ...heroes.map(({ name, copies }) => ({
       name: { kind: 'hero' as const, name },
       goal: { heroes: [name], equipment: [], copies },
@@ -189,6 +203,25 @@ function goalsOf(request: ShopRequest): { name: AnswerGoal; goal: Goal }[] {
   })
 }
 
+/**
+ * Whether a wanted item's own goal fits in what is left of `MAX_OWN_ROWS`,
+ * taking its rows from it when it does. Goals with the same model share
+ * their tables, so only the copies no earlier goal asked for are counted.
+ */
+function ownRows(badges: number): (model: GoalModel) => boolean {
+  const counted = new Map<string, number>()
+  let left = MAX_OWN_ROWS
+  return (model) => {
+    const key = modelKey(model)
+    const had = counted.get(key) ?? 0
+    const rows = goalSize(model) * Math.max(0, model.need - had) * (badges + 1)
+    if (rows > left) return false
+    left -= rows
+    counted.set(key, Math.max(had, model.need))
+    return true
+  }
+}
+
 /** One goal's solvers, and the rows the search narrows. */
 interface Work {
   name: AnswerGoal
@@ -210,7 +243,7 @@ interface Work {
 
 function prepare(
   request: ShopRequest,
-  { name, goal }: { name: AnswerGoal; goal: Goal },
+  { name, goal }: NamedGoal,
   reading: ShopReading,
   nextOdds: LevelOdds | null,
   facts: ShopFacts,
@@ -424,21 +457,21 @@ function* stagesOf(
   }
 
   const nextOdds = rises ? carriedOdds(table.levels[level], shop.cards, reading) : null
-  const sizeAt = (goal: Goal, odds: LevelOdds) =>
-    goalSize(goalModel(goal, odds, request.pools, facts))
+  const modelAt = (goal: Goal, odds: LevelOdds) => goalModel(goal, odds, request.pools, facts)
+  const fits = ownRows(shop.badges)
 
   const works: Work[] = []
-  const skipped: SpanGoal[] = []
+  const skipped: AnswerGoal[] = []
   for (const goal of goalsOf(request)) {
-    const { name } = goal
-    if (name.kind !== 'hero' && name.kind !== 'equipment') {
-      const tooLarge =
-        sizeAt(goal.goal, reading.odds) > MAX_SPAN_SIZE ||
-        (nextOdds !== null && sizeAt(goal.goal, nextOdds) > MAX_NEXT_SPAN_SIZE)
-      if (tooLarge) {
-        skipped.push(name.kind)
-        continue
-      }
+    const { kind } = goal.name
+    const tooLarge =
+      kind === 'hero' || kind === 'equipment'
+        ? !fits(modelAt(goal.goal, reading.odds))
+        : goalSize(modelAt(goal.goal, reading.odds)) > MAX_SPAN_SIZE ||
+          (nextOdds !== null && goalSize(modelAt(goal.goal, nextOdds)) > MAX_NEXT_SPAN_SIZE)
+    if (tooLarge) {
+      skipped.push(goal.name)
+      continue
     }
     works.push(prepare(request, goal, reading, nextOdds, facts, cache))
     yield null

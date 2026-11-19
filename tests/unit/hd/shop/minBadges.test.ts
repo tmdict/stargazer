@@ -210,6 +210,29 @@ describe('a table where one source always makes a hero card', () => {
     expect(solve({ ...asked, badges: 10 }).plan).toMatchObject({ locks: [0], buy: null })
   })
 
+  // Two sources always make a hero card, L1 half the time. Buying a card
+  // frees its source for the next round's free redraw, which locking both
+  // cards gives up, and the second card is worth more locked than let go.
+  it('buys one card and locks another when the badges pay for one', () => {
+    const pair: LevelOdds = [odds[0]!, odds[0]!, ...Array(6).fill(exp)]
+    const shop = cards(
+      card('hero', { hero: 'L1' }),
+      card('hero', { hero: 'L1' }),
+      ...Array(6).fill(card('artifact-exp')),
+    )
+    const { stop, plan } = solve({
+      odds: pair,
+      goal: hero('L1', 3),
+      pools: two,
+      cards: shop,
+      badges: 15,
+    })
+    expect(stop.cost([0, 1], null).ceiling).toBeCloseTo(30 + 4 + 15, 8)
+    expect(stop.cost([], 0).ceiling).toBeGreaterThan(48)
+    expect(plan).toMatchObject({ locks: [1], buy: 0 })
+    expect(plan!.cost.ceiling).toBeCloseTo(30 + (15 + 19) / 2, 8)
+  })
+
   it('locks a piece it cannot pay for, unless the piece is sure to show again', () => {
     const gear: LevelOdds = [[{ good: 'elite-equipment', percent: 100 }], ...Array(7).fill(exp)]
     const goal: Goal = { heroes: [], equipment: [{ name: 'blade', tier: 'elite' }], copies: 1 }
