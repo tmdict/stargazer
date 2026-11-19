@@ -62,7 +62,7 @@ const lists = computed(() => {
 <template>
   <div v-scroll-chain class="duel-pane panel-min-height" :class="{ 'panel-fill': scrollable }">
     <template v-if="opened">
-      <div class="duel-controls picker-top-row">
+      <div class="duel-controls picker-top-row picker-strip-row">
         <SegmentedPicker
           small
           :segments="lists"

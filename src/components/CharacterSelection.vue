@@ -119,7 +119,7 @@ const handleResultSelect = (slug: string) => {
     class="character-selection panel-min-height"
     :class="{ 'panel-fill': scrollable }"
   >
-    <div v-if="$slots.top" class="picker-top-row">
+    <div v-if="$slots.top" class="picker-top-row picker-strip-row">
       <slot name="top" />
     </div>
 

@@ -339,6 +339,12 @@ main {
   }
 }
 
+@media (min-width: 769px) {
+  .picker-strip-row {
+    margin-left: var(--spacing-sm);
+  }
+}
+
 @media (max-width: 768px) {
   .picker-top-row {
     padding: var(--spacing-sm) var(--spacing-md) 0;
