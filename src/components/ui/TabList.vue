@@ -10,7 +10,7 @@ export interface TabItem {
 </script>
 
 <script setup lang="ts" generic="T extends string">
-import { computed } from 'vue'
+import { computed, onMounted, useTemplateRef, watch } from 'vue'
 
 const { tabs, ariaId } = defineProps<{
   tabs: TabItem[]
@@ -26,26 +26,41 @@ const showStrip = computed(() => tabs.length > 1)
 const select = (tab: TabItem) => {
   active.value = tab.key as T
 }
+
+// A wide-screen strip too narrow for its tabs scrolls sideways, and the open tab
+// can start outside it: a tab opened by a link may be the last in the strip.
+const strip = useTemplateRef<HTMLElement>('strip')
+const revealActive = () => {
+  const tab = strip.value?.querySelector('.tab-btn.active')
+  if (!strip.value || !tab) return
+  const box = strip.value.getBoundingClientRect()
+  const at = tab.getBoundingClientRect()
+  if (at.left < box.left) strip.value.scrollLeft += at.left - box.left
+  else if (at.right > box.right) strip.value.scrollLeft += at.right - box.right
+}
+onMounted(revealActive)
+watch([active, () => tabs.length], revealActive, { flush: 'post' })
 </script>
 
 <template>
   <div v-if="showStrip" class="tab-bar">
-    <div class="tab-buttons" role="tablist">
-      <button
-        v-for="tab in tabs"
-        :id="ariaId ? `${ariaId}-tab-${tab.key}` : undefined"
-        :key="tab.key"
-        type="button"
-        role="tab"
-        :aria-selected="active === tab.key"
-        :aria-controls="ariaId ? `${ariaId}-panel-${tab.key}` : undefined"
-        :class="['tab-btn', { active: active === tab.key }]"
-        @click="select(tab)"
-      >
-        <span :class="{ 'tab-label-long': tab.shortLabel }">{{ tab.label }}</span>
-        <span v-if="tab.shortLabel" class="tab-label-short">{{ tab.shortLabel }}</span>
-        <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
-      </button>
+    <div ref="strip" class="tab-buttons" role="tablist">
+      <template v-for="(tab, index) in tabs" :key="tab.key">
+        <span v-if="index" class="tab-gap" role="presentation" />
+        <button
+          :id="ariaId ? `${ariaId}-tab-${tab.key}` : undefined"
+          type="button"
+          role="tab"
+          :aria-selected="active === tab.key"
+          :aria-controls="ariaId ? `${ariaId}-panel-${tab.key}` : undefined"
+          :class="['tab-btn', { active: active === tab.key }]"
+          @click="select(tab)"
+        >
+          <span :class="{ 'tab-label-long': tab.shortLabel }">{{ tab.label }}</span>
+          <span v-if="tab.shortLabel" class="tab-label-short">{{ tab.shortLabel }}</span>
+          <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
+        </button>
+      </template>
     </div>
     <div v-if="$slots.actions" class="tab-actions">
       <slot name="actions" />
@@ -68,7 +83,6 @@ const select = (tab: TabItem) => {
 .tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
   background: transparent;
   color: var(--color-text-secondary);
   border: none;
@@ -93,6 +107,7 @@ const select = (tab: TabItem) => {
   justify-content: center;
   min-width: 18px;
   height: 18px;
+  margin-left: var(--spacing-xs);
   padding: 0 4px;
   border-radius: 9px;
   background: var(--color-primary);
@@ -103,18 +118,46 @@ const select = (tab: TabItem) => {
 
 @media (min-width: 769px) {
   .tab-bar {
+    flex-wrap: nowrap;
+    column-gap: var(--spacing-md);
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
+    container-type: inline-size;
   }
 
   .tab-buttons {
-    gap: var(--spacing-lg);
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-bottom: -1px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab-gap {
+    flex: 0 1000 auto;
+    width: var(--spacing-lg);
   }
 
   .tab-btn {
+    flex: 0 1 auto;
+    display: inline-grid;
+    grid-template-columns: minmax(9px, var(--spacing-lg)) auto auto minmax(9px, var(--spacing-lg));
     border-bottom: 2.5px solid transparent;
-    margin-bottom: -1px;
-    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-lg) 0 var(--spacing-md);
+    white-space: nowrap;
+  }
+
+  .tab-btn > span {
+    grid-area: 1 / 2;
+  }
+
+  .tab-btn > .tab-badge {
+    grid-column: 3;
+  }
+
+  .tab-btn:focus-visible {
+    outline-offset: -2px;
   }
 
   .tab-btn:hover:not(.active) {
@@ -128,14 +171,29 @@ const select = (tab: TabItem) => {
   }
 
   .tab-actions {
+    flex: none;
     margin-left: auto;
     align-self: center;
+  }
+
+  @container (max-width: 676px) {
+    .tab-label-long {
+      display: none;
+    }
+
+    .tab-label-short {
+      display: inline;
+    }
   }
 }
 
 @media (max-width: 768px) {
   .tab-bar {
     overflow-x: clip;
+  }
+
+  .tab-gap {
+    display: none;
   }
 
   .tab-label-long {
