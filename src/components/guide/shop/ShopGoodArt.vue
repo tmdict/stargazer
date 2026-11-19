@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /* A product's picture as a square: the hero or piece a card names, else the
    game's question-mark card, with a chip for what it gives, a faction pack's
-   faction in the corner, and a frame in its tier's colour. Without the data
-   pack's pictures a plain mark stands in. As a list's icon it is told apart
-   by the picture alone: a faction pack is its faction, an equipment card a
-   piece of its tier, and the chip is left out. */
+   faction in the corner, and a frame in its tier's colour. A hero card of
+   two copies shows its picture twice, overlapped, as the game's card does.
+   Without the data pack's pictures a plain mark stands in. As a list's
+   icon it is told apart by the picture alone: a faction pack is its faction,
+   an equipment card a piece of its tier, and the chip is left out. */
 
 import { computed } from 'vue'
 
@@ -43,8 +44,10 @@ const picture = computed((): { src: string; fit: 'portrait' | 'raised' | 'plain'
   return { src, fit: good.kind === 'pack' || good.kind === 'legendary' ? 'raised' : 'plain' }
 })
 
+const pair = computed(() => good.kind === 'hero' && good.copies === 2)
+
 const chip = computed(() => {
-  if (icon) return null
+  if (icon || pair.value) return null
   if (good.kind === 'trial') return i18n.t('app.trial')
   return (good.copies ?? 1) > 1 ? `×${good.copies}` : null
 })
@@ -54,15 +57,18 @@ const faction = computed(() => !icon && good.faction && gameData.getIcon(`factio
 </script>
 
 <template>
-  <span class="shop-art" :class="tier && `shop-tier-${tier}`">
-    <img
-      v-if="picture"
-      class="picture"
-      :class="picture.fit"
-      :src="picture.src"
-      alt=""
-      draggable="false"
-    />
+  <span class="shop-art" :class="[tier && `shop-tier-${tier}`, { pair }]">
+    <template v-if="picture">
+      <img
+        v-for="copy in pair ? 2 : 1"
+        :key="copy"
+        class="picture"
+        :class="picture.fit"
+        :src="picture.src"
+        alt=""
+        draggable="false"
+      />
+    </template>
     <span v-else class="mark">{{ good.kind === 'exp' ? 'XP' : '?' }}</span>
     <span v-if="chip" class="chip">{{ chip }}</span>
     <img v-if="faction" class="faction" :src="faction" alt="" draggable="false" />
@@ -109,6 +115,26 @@ const faction = computed(() => !icon && good.faction && gameData.getIcon(`factio
   height: 100%;
   object-fit: cover;
   object-position: 50% 28%;
+}
+
+.pair .picture {
+  position: absolute;
+  inset: 8% auto auto 9%;
+  width: 56%;
+  height: 68%;
+  max-width: none;
+  max-height: none;
+}
+
+.pair .picture + .picture {
+  inset: auto 9% 8% auto;
+}
+
+.pair .picture.portrait {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12%;
+  background: #2f3540;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 .mark {
