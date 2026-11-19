@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
@@ -212,6 +212,18 @@ export default defineConfig({
     // Each skill-text language is one lazy chunk of text, and the largest is
     // over 1 MB before compression.
     chunkSizeWarningLimit: 1500,
+    rolldownOptions: {
+      output: {
+        // The entry's static imports load on every page, so one file holds
+        // them. Split automatically they are dozens of small files, each a
+        // request and a preload tag on every page, and pre-render time grows
+        // with the square of a page's preload tags. The group includes the
+        // entry itself, hence the entry's name.
+        codeSplitting: {
+          groups: [{ name: 'app', tags: ['$initial'] }],
+        },
+      },
+    },
   },
   // @ts-expect-error - vite-ssg extends config at runtime
   ssgOptions: {
@@ -231,6 +243,13 @@ export default defineConfig({
         exclude: ['/share', SL_LISTS_PATH],
         // @ts-expect-error - vite-ssg-sitemap types do not allow disabling lastmod
         lastmod: '',
+      })
+      // The SSR manifest is input to the page rendering only. Left in dist/
+      // the host publishes it, and it names every asset of a chunk once per
+      // module of that chunk, which comes to tens of megabytes.
+      rmSync(fileURLToPath(new URL('./dist/.vite', import.meta.url)), {
+        recursive: true,
+        force: true,
       })
     },
   },

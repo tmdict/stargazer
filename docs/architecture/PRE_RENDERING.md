@@ -17,10 +17,15 @@ The hard rule is that the client's first render must equal the baked HTML, or th
   │    then processRenderedPage (reads dist/assets/)
   │
   └──▶ onFinished: sitemap and robots.txt
-       from every .html in dist/
+       from every .html in dist/,
+       then dist/.vite is removed
 ```
 
 `npm run build` runs the data step, the type check and the pre-rendered build; `build:ssg` is the same without the type check. `build:spa` skips pre-rendering, and the dev server is SPA only.
+
+The client build puts the entry and everything it imports statically into one script file and one style file (`codeSplitting` in `vite.config.ts`). Every page loads all of that code, and split automatically it becomes dozens of small files, each a request and a preload tag on every page. The count matters to the build as well: vite-ssg searches a page's head before it adds each preload tag, so the time to render the pages grows with the square of the files a page preloads. Code imported on demand is split automatically.
+
+The client build also writes `dist/.vite/ssr-manifest.json`, which the page rendering reads. The build removes that folder when it finishes, because the host would publish it and the manifest names every asset of a chunk once for each module in that chunk.
 
 `getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the skill text: each hero with skill text in a language gets a page in that language. A `SKILL_LOCALES` row with no hero text fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `GUIDE_PAGES`, and the Help page from `APP_LOCALES`.
 
