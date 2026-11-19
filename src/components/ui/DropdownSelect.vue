@@ -1,19 +1,19 @@
 <script setup lang="ts">
 /* A dropdown: a trigger naming the current choice and a list that opens on
    hover (mouse) or click (useDropdown). The list is the `items`, several of
-   which may show as selected,
-   plus an optional trailing action item (e.g. Manage). A `deletable` item
-   carries a delete button, which arms on a first click and emits `delete` on
-   the second, and a `renamable` one a pencil that turns its row into a name
-   field, which emits `rename`. A `default` slot replaces the list with the
-   owner's own DropdownRows.
+   which may show as selected, plus an optional trailing action item (e.g.
+   Manage). A `deletable` item carries a delete button, which arms on a first
+   click and emits `delete` on the second, and a `renamable` one a pencil that
+   turns its row into a name field, which emits `rename`. A `default` slot
+   replaces the list with the owner's own DropdownRows.
 
    Variants: `pill` (bordered, on light panels), `dark` (translucent, inside
-   the dark on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
-   accessible name, list dark and centred under the icon), `nav` (the
-   owner's own `trigger` slot on dark chrome, such as a top bar link, list
-   dark). The owner can fix the trigger width with `--dropdown-trigger-width`
-   or give it a floor with `--dropdown-trigger-min-width`.
+   the dark on-grid popup), `icon` (the `icon` slot alone on dark chrome,
+   `label` its accessible name, list dark and centred under the icon), `nav`
+   (the owner's own `trigger` slot on dark chrome, such as a top bar link,
+   list dark). The owner can fix the trigger width with
+   `--dropdown-trigger-width` or give it a floor with
+   `--dropdown-trigger-min-width`.
 
    `floating` moves the list to <body>, for a dropdown inside a scrolling
    panel that would otherwise cut the list off. `clickOnly` and the `open`

@@ -411,7 +411,7 @@ const skillBadges = computed(() => {
 
 // An Honor Duel board marks what each hero carries on its portrait, so the
 // board alone, and a picture of it, tells the formation. The hero card's own
-// controls set both from the portrait.
+// controls set them from the portrait.
 interface DuelMark {
   hexId: number
   team: Team
@@ -421,7 +421,6 @@ interface DuelMark {
   // The tier's place in DUEL_TIERS.
   tierAt: number
   tierChoice: boolean
-  // Whether the hero can change to its other copy, normal or Trial.
   copyChoice: boolean
   pieceId: number
   piece: DuelItemView | null

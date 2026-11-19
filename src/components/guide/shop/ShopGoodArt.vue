@@ -3,10 +3,9 @@
    game's question-mark card, with a chip for what it gives, a faction pack's
    faction in the corner, and a frame in its tier's colour. A hero card of
    two copies shows its picture twice, overlapped and tilted, as the game's
-   card does.
-   Without the data pack's pictures a plain mark stands in. As a list's
-   icon it is told apart by the picture alone: a faction pack is its faction,
-   an equipment card a piece of its tier, and the chip is left out. */
+   card does. Without the data pack's pictures a plain mark stands in. As a
+   list's icon it is told apart by the picture alone: a faction pack is its
+   faction, an equipment card a piece of its tier, and the chip is left out. */
 
 import { computed } from 'vue'
 

@@ -21,7 +21,7 @@ const {
   board = false,
 } = defineProps<{
   active: boolean
-  // See CharacterSelection: off when the picker flows in normal page height.
+  // Off when the picker flows in normal page height.
   scrollable?: boolean
   board?: boolean
 }>()
