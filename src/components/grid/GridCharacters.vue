@@ -165,8 +165,7 @@ defineExpose({ liftActionsEl })
 
 // Anchored to the lifted unit's visual top edge, or below the unit when it would
 // leave the band the board draws in (drawnBounds), where team view's crop would
-// cut it off. A unit with neither a page to inspect nor Honor Duel controls
-// has none.
+// cut it off.
 const liftPill = computed(() => {
   const hexId = liftedHexId.value
   if (hexId === null || liftedGridId.value !== ctx.id) return null
@@ -411,16 +410,15 @@ const skillBadges = computed(() => {
 })
 
 // An Honor Duel board marks what each hero carries on its portrait, so the
-// board alone, and a picture of it, tells the formation. The marks are also
-// where a unit's tier and equipment are set: the hero card's own controls, on
-// the portrait under the pointer.
+// board alone, and a picture of it, tells the formation. The hero card's own
+// controls set both from the portrait.
 interface DuelMark {
   hexId: number
   team: Team
   unitId: number
   trial: boolean
   tier: DuelTier
-  // The tier's place in DUEL_TIERS, and whether the unit can hold another.
+  // The tier's place in DUEL_TIERS.
   tierAt: number
   tierChoice: boolean
   pieceId: number
