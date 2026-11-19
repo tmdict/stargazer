@@ -46,6 +46,8 @@ export interface DropdownItem {
   meta?: string | number
   metaColor?: string
   selected: boolean
+  // Opens a section of the list under this label.
+  section?: string
   // Makes the row a link; `select` still fires when it is followed here.
   to?: RouteLocationRaw
   href?: string
@@ -335,6 +337,7 @@ const pressSegment = (): void => {
       >
         <slot :close="hide">
           <template v-for="item in items" :key="item.key">
+            <div v-if="item.section" class="section-label">{{ item.section }}</div>
             <!-- Beside the row, not in it: a button cannot hold another button.
                  Other rows stay unwrapped, so neighbouring selected rows join. -->
             <div
@@ -559,6 +562,21 @@ const pressSegment = (): void => {
   min-width: 0;
 }
 
+.section-label {
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.section-label:not(:first-child) {
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
 .list.custom {
   max-width: calc(100vw - 2 * var(--spacing-sm));
 }
@@ -717,6 +735,13 @@ const pressSegment = (): void => {
 .nav .item,
 .nav .item-action {
   color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .section-label,
+.icon .section-label,
+.nav .section-label {
+  border-top-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .dark .item-rename,

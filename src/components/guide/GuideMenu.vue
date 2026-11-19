@@ -32,23 +32,36 @@ const page = (key: string, label: string, to: string, tag?: typeof BETA): Dropdo
   to,
 })
 
+const section = (label: string, rows: DropdownItem[]): DropdownItem[] =>
+  rows.map((row, at) => (at === 0 ? { ...row, section: label } : row))
+
 const items = computed<DropdownItem[]>(() => [
-  page('guide-sl', i18n.t('app.sl-title'), SL_GENERATOR_PATH, BETA),
-  page('guide-www', i18n.t('app.www-title'), WWW_PATH, BETA),
-  page('guide-hd-shop', i18n.t('app.shop-title'), HD_SHOP_PATH, BETA),
-  ...PVP_SEASONS.map(({ season, live }) => ({
-    key: `report-${season}`,
-    label: `${interpolate(i18n.t('app.season'), { n: season })} ${i18n.t('app.pvp-report')}`,
-    ...(live && { meta: i18n.t('app.current-season'), metaColor: 'var(--color-accent)' }),
-    selected: false,
-    href: pvpReportHref(season, i18n.currentLocale),
-  })),
-  page('guide-upgrades', i18n.t('app.upgrades'), guidePath('upgrades')),
-  page('guide-factions', i18n.t('app.faction-bonus'), guidePath('factions')),
-  page('guide-damage', i18n.t('app.damage-types'), guidePath('damage')),
-  page('guide-glossary', i18n.t('app.glossary'), guidePath('glossary')),
-  page('guide-hd-shop-probability', i18n.t('app.shop-probability-title'), HD_SHOP_PROBABILITY_PATH),
-  page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
+  ...section(i18n.t('app.pvp'), [
+    page('guide-sl', i18n.t('app.sl-title'), SL_GENERATOR_PATH, BETA),
+    page('guide-www', i18n.t('app.www-title'), WWW_PATH, BETA),
+    ...PVP_SEASONS.map(({ season, live }) => ({
+      key: `report-${season}`,
+      label: `${interpolate(i18n.t('app.season'), { n: season })} ${i18n.t('app.pvp-report')}`,
+      ...(live && { meta: i18n.t('app.current-season'), metaColor: 'var(--color-accent)' }),
+      selected: false,
+      href: pvpReportHref(season, i18n.currentLocale),
+    })),
+  ]),
+  ...section(i18n.t('app.honor-duel'), [
+    page('guide-hd-shop', i18n.t('app.shop-title'), HD_SHOP_PATH, BETA),
+    page(
+      'guide-hd-shop-probability',
+      i18n.t('app.shop-probability-title'),
+      HD_SHOP_PROBABILITY_PATH,
+    ),
+  ]),
+  ...section(i18n.t('app.general'), [
+    page('guide-upgrades', i18n.t('app.upgrades'), guidePath('upgrades')),
+    page('guide-factions', i18n.t('app.faction-bonus'), guidePath('factions')),
+    page('guide-damage', i18n.t('app.damage-types'), guidePath('damage')),
+    page('guide-glossary', i18n.t('app.glossary'), guidePath('glossary')),
+    page('guide-mechanics', i18n.t('app.mechanics'), guidePath('mechanics')),
+  ]),
 ])
 </script>
 
