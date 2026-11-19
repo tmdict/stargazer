@@ -48,7 +48,11 @@ export interface NextRound {
  * The next level's odds with a place for every card that may be carried into
  * it, as `ShopReading.odds` has for the cards carried into this one.
  */
-function carriedOdds(next: LevelOdds, cards: readonly ShopCard[], reading: ShopReading): LevelOdds {
+export function carriedOdds(
+  next: LevelOdds,
+  cards: readonly ShopCard[],
+  reading: ShopReading,
+): LevelOdds {
   const extra: SourceEntry[][] = next.map(() => [])
   reading.cards.forEach((card, i) => {
     const { good, bought } = cards[card]
@@ -64,7 +68,8 @@ function carriedOdds(next: LevelOdds, cards: readonly ShopCard[], reading: ShopR
 
 /**
  * `reading` is the shop's cards as read at its level. `nextOdds` is the next
- * level's table when the shop level rises next round, else null.
+ * level's odds with the shop's cards carried into it (`carriedOdds`) when the
+ * shop level rises next round, else null.
  */
 export function solveNextRound(
   shop: EnteredShop,
@@ -75,8 +80,7 @@ export function solveNextRound(
   facts: ShopFacts,
   kept: SolverCache,
 ): NextRound {
-  const then = nextOdds ? carriedOdds(nextOdds, shop.cards, reading) : reading.odds
-  const model = goalModel(goal, then, pools, facts)
+  const model = goalModel(goal, nextOdds ?? reading.odds, pools, facts)
   const view = costView(shop, reading, model, kept.costs(model), facts)
   const prices = new Map(facts.goods.map((good) => [good.name, good.price]))
 

@@ -2,7 +2,8 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent } from '@/components/guide/shop/shopFormat'
+import { useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -338,11 +339,13 @@ const f = useShopFigures()
     hold.
   </p>
   <p>
-    Take shop level 4, 60 badges, all {{ f.poolSize }} heroes in the pool, three copies needed and a
-    two-copy card on show. Buying cannot overshoot, and it gives a 46.8% chance of finishing this
-    round. Locking gives 47.6% when the card came from a source that cannot make a Random Legendary
-    Hero, since the badges kept can still pay for one, and 46.0% when it came from the source that
-    can, since that source makes nothing new while the card is locked. With 75 badges buying leads
+    Take shop level {{ f.quoted.pair.level }}, {{ f.quoted.pair.badges }} badges, all
+    {{ f.poolSize }} heroes in the pool, three copies needed and a two-copy card on show. Buying
+    cannot overshoot, and it gives a {{ percent(f.quoted.pair.buy) }} chance of finishing this
+    round. Locking gives {{ percent(f.quoted.pair.lockApart) }} when the card came from a source
+    that cannot make a Random Legendary Hero, since the badges kept can still pay for one, and
+    {{ percent(f.quoted.pair.lockShared) }} when it came from the source that can, since that source
+    makes nothing new while the card is locked. With {{ f.quoted.pair.plenty }} badges buying leads
     either way.
   </p>
 
@@ -366,11 +369,12 @@ const f = useShopFigures()
     more.
   </p>
   <p>
-    Toto's calculator puts the boundary at about 60 badges at shop level {{ f.levels.length }} with
-    all {{ f.poolSize }} heroes in the pool: locking is better below it and buying above, and near
-    it the two differ by less than 1 percentage point. At the levels below, where two-copy cards are
-    rare, buying is better even with few badges. This compares the chance of finishing this round.
-    It does not count the worth of holding the bought card when the round ends short.
+    Toto's calculator puts the boundary at about {{ f.quoted.boundary }} badges at shop level
+    {{ f.levels.length }} with all {{ f.poolSize }} heroes in the pool: locking is better below it
+    and buying above, and near it the two differ by less than 1 percentage point. At the levels
+    below, where two-copy cards are rare, buying is better even with few badges. This compares the
+    chance of finishing this round. It does not count the worth of holding the bought card when the
+    round ends short.
   </p>
   <p>
     With two copies needed, a one-copy card on show and all {{ f.poolSize }} heroes in the pool,

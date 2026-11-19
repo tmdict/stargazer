@@ -16,8 +16,8 @@ import type { ChanceRange, CostRange, Move, ShopCard } from '@/lib/hd/shop/types
 import { useI18nStore } from '@/stores/i18n'
 import { duelEquipment, equipmentTierLabel } from '@/utils/duelCatalog'
 import { curatedHeroName } from '@/utils/skillLabels'
+import { amount, percentText } from './shopFormat'
 import { cardName, moveSteps, pieceName, stopSteps } from './shopGoods'
-import { percentText } from './useShopFigures'
 
 const { answer, cards, copies, basis } = defineProps<{
   answer: ShopAnswer
@@ -74,7 +74,7 @@ const chanceText = ({ floor, ceiling }: ChanceRange): string =>
     ? `${percentText(floor)} – ${percentText(ceiling)}`
     : percentText(floor)
 
-const badgeText = (cost: CostRange): string => String(Number(cost.ceiling.toFixed(1)))
+const badgeText = (cost: CostRange): string => amount(cost.ceiling)
 
 const chanceRows = computed(() => {
   const { keepLocks, current, offers } = answer.chance

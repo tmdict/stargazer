@@ -2,7 +2,8 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent } from '@/components/guide/shop/shopFormat'
+import { useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -266,12 +267,15 @@ const f = useShopFigures()
     张的随机传说英雄，每张的价格就不再相同，这条观察不成立。
   </p>
   <p>
-    例如：商店等级 4，持有 60 枚徽章，英雄池为全部
+    例如：商店等级 {{ f.quoted.pair.level }}，持有 {{ f.quoted.pair.badges }} 枚徽章，英雄池为全部
     {{ f.poolSize }}
     位，还需要三张，商店里有一张双张英雄卡。买下不会造成多买，本回合达成目标的概率是
-    46.8%。如果这张卡片来自不会产出随机传说英雄的来源，锁定的概率是
-    47.6%，因为留下的徽章还买得起随机传说英雄；如果它来自会产出随机传说英雄的来源，锁定的概率是
-    46.0%，因为卡片锁定期间这个来源不会产出新的商品。持有 75 枚徽章时，两种情况都是买下更好。
+    {{ percent(f.quoted.pair.buy) }}。如果这张卡片来自不会产出随机传说英雄的来源，锁定的概率是
+    {{
+      percent(f.quoted.pair.lockApart)
+    }}，因为留下的徽章还买得起随机传说英雄；如果它来自会产出随机传说英雄的来源，锁定的概率是
+    {{ percent(f.quoted.pair.lockShared) }}，因为卡片锁定期间这个来源不会产出新的商品。持有
+    {{ f.quoted.pair.plenty }} 枚徽章时，两种情况都是买下更好。
   </p>
 
   <h3>观察 2：需要两张时，徽章紧张就锁定单张英雄卡，徽章充足就买下</h3>
@@ -291,7 +295,7 @@ const f = useShopFigures()
   </p>
   <p>
     按 Toto 的计算器，在商店等级 {{ f.levels.length }}、英雄池为全部
-    {{ f.poolSize }} 位时，分界点约为 60
+    {{ f.poolSize }} 位时，分界点约为 {{ f.quoted.boundary }}
     枚徽章：低于它锁定更好，高于它买下更好，分界点附近两者相差不到 1
     个百分点。在更低的等级，双张英雄卡很少见，即使徽章少也是买下更好。这里比较的是本回合达成目标的概率，没有计入本回合未达成时手里留着这张卡片的价值。
   </p>

@@ -6,23 +6,14 @@
 
 import { useI18nStore } from '@/stores/i18n'
 import { goodName } from '@/utils/shopGoodNames'
-import { percent, useShopFigures } from './useShopFigures'
+import { percent } from './shopFormat'
+import { useShopFigures } from './useShopFigures'
 
 defineProps<{ table: 'rounds' | 'levels' | 'products' | 'hero' | 'packs' | 'lock-or-buy' }>()
 
 const i18n = useI18nStore()
 const figures = useShopFigures()
 const level = (n: number): string => i18n.t('app.shop-level-short', { level: n })
-
-// The chance of finishing the round with two copies needed and a one-copy
-// card on show. Quoted from Toto's calculator: each takes a full calculation,
-// which the page does not run.
-const LOCK_OR_BUY = [
-  { level: 5, badges: 45, lock: 0.464, buy: 0.369 },
-  { level: 5, badges: 60, lock: 0.712, buy: 0.71 },
-  { level: 5, badges: 75, lock: 0.863, buy: 0.867 },
-  { level: 4, badges: 45, lock: 0.461, buy: 0.468 },
-]
 </script>
 
 <template>
@@ -117,7 +108,7 @@ const LOCK_OR_BUY = [
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in LOCK_OR_BUY" :key="`${row.level}-${row.badges}`">
+        <tr v-for="row in figures.quoted.single" :key="`${row.level}-${row.badges}`">
           <th scope="row">{{ row.level }}</th>
           <td>{{ row.badges }}</td>
           <td>{{ percent(row.lock) }}</td>

@@ -33,9 +33,9 @@ const TOLERANCE = 1e-6
 
 /**
  * The most a visit keeps from one press to the next: so many solvers, and an
- * estimate of their size in memory. Nothing is dropped during a press, which
- * holds every solver it asked for until it ends: dropping one there frees no
- * memory, and a later goal with the same model would build its tables again.
+ * estimate of their size in memory. Nothing is dropped during a press: a
+ * later goal with the same model would build its tables again, and the press
+ * still holds most of the solvers it asked for, so little memory would be freed.
  */
 const MAX_SOLVERS = 32
 const MAX_BYTES = 100e6

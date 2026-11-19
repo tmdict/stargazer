@@ -74,18 +74,28 @@ const isPair = (entry: Good | undefined): boolean => entry === PAIR_CARD
 const range = (values: number[]): { low: number; high: number } =>
   values.length ? { low: Math.min(...values), high: Math.max(...values) } : { low: 0, high: 0 }
 
-/** A chance as a percent: two decimals under 1%, one above, and none once it rounds to 100%. */
-export const percentText = (chance: number): string => {
-  const value = chance * 100
-  if (value >= 99.95) return '100%'
-  return `${value.toFixed(value < 1 ? 2 : 1)}%`
+/**
+ * Chances of finishing the round that take a full calculation, which the page
+ * does not run. They are typed in, and hold for the measured table and the
+ * whole hero pool.
+ */
+const QUOTED = {
+  /** The badges at which locking a one-copy card and buying it change places, at the last level. */
+  boundary: 60,
+  /**
+   * Three copies needed and a two-copy card on show. `lockApart` is for a card
+   * from a source that cannot make a Random Legendary Hero, `lockShared` for
+   * one from the source that can. Buying leads either way at `plenty` badges.
+   */
+  pair: { level: 4, badges: 60, buy: 0.468, lockApart: 0.476, lockShared: 0.46, plenty: 75 },
+  /** Two copies needed and a one-copy card on show, from Toto's calculator. */
+  single: [
+    { level: 5, badges: 45, lock: 0.464, buy: 0.369 },
+    { level: 5, badges: 60, lock: 0.712, buy: 0.71 },
+    { level: 5, badges: 75, lock: 0.863, buy: 0.867 },
+    { level: 4, badges: 45, lock: 0.461, buy: 0.468 },
+  ],
 }
-
-/** A chance as the calculator writes one, or a dash for none. */
-export const percent = (chance: number): string => (chance > 0 ? percentText(chance) : '–')
-
-/** A worked-out number to at most one decimal. */
-export const amount = (value: number): string => String(Number(value.toFixed(1)))
 
 export function useShopFigures() {
   const gameData = useGameDataStore()
@@ -224,5 +234,6 @@ export function useShopFigures() {
     factions: SHOP_FACTS.goods.filter((entry) => entry.kind === 'pack' && entry.faction).length,
     pairSingle,
     pairPool,
+    quoted: QUOTED,
   })
 }

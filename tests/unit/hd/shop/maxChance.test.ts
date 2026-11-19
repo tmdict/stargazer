@@ -471,7 +471,10 @@ describe('a cache kept through a shop visit', () => {
     )
     const kept = createSolverCache()
     const first = pressed(visit[0]!, kept)
-    for (const asked of visit) pressed(asked, kept)
+    for (const asked of visit) {
+      pressed(asked, kept)
+      kept.trim()
+    }
     expect(furthestApart(pressed(visit[0]!, kept), first)).toBeLessThan(1e-9)
     expect(furthestApart(first, pressed(visit[0]!))).toBeLessThan(1e-9)
   })

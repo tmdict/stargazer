@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { solveMaxChance } from '@/lib/hd/shop/maxChance'
 import { solveMinBadges } from '@/lib/hd/shop/minBadges'
 import { firstMoves } from '@/lib/hd/shop/moves'
-import { solveNextRound, stopReason } from '@/lib/hd/shop/nextRound'
+import { carriedOdds, solveNextRound, stopReason } from '@/lib/hd/shop/nextRound'
 import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import type { Goal, LevelOdds, Pools, ShopCard } from '@/lib/hd/shop/types'
 import {
@@ -47,7 +47,7 @@ function solve(asked: Asked) {
     shop,
     asked.goal,
     reading,
-    asked.next ?? null,
+    asked.next ? carriedOdds(asked.next, shop.cards, reading) : null,
     pool,
     FACTS,
     createSolverCache(),

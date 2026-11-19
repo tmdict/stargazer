@@ -2,7 +2,8 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent } from '@/components/guide/shop/shopFormat'
+import { useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -317,12 +318,14 @@ const f = useShopFigures()
     레전드 영웅이 있다면, 한 장당 가격이 같지 않으므로 이 관찰은 성립하지 않습니다.
   </p>
   <p>
-    예를 들어 상점 레벨 4, 휘장 60개, 풀이 영웅 {{ f.poolSize }}명 전체이고, 세 장이 필요한데 두
-    장짜리 영웅 카드가 보인다고 합시다. 사도 초과하지 않으며, 사면 이번 라운드에 목표를 이룰 확률은
-    46.8%입니다. 그 카드가 무작위 레전드 영웅을 내지 않는 출처에서 나왔다면 잠글 때의 확률은
-    47.6%입니다. 남겨 둔 휘장으로 무작위 레전드 영웅을 살 수 있기 때문입니다. 무작위 레전드 영웅을
-    내는 출처에서 나왔다면 46.0%입니다. 카드가 잠겨 있는 동안 그 출처는 새 상품을 내지 않기
-    때문입니다. 휘장이 75개면 어느 경우든 구매가 낫습니다.
+    예를 들어 상점 레벨 {{ f.quoted.pair.level }}, 휘장 {{ f.quoted.pair.badges }}개, 풀이 영웅
+    {{ f.poolSize }}명 전체이고, 세 장이 필요한데 두 장짜리 영웅 카드가 보인다고 합시다. 사도
+    초과하지 않으며, 사면 이번 라운드에 목표를 이룰 확률은 {{ percent(f.quoted.pair.buy) }}입니다.
+    그 카드가 무작위 레전드 영웅을 내지 않는 출처에서 나왔다면 잠글 때의 확률은
+    {{ percent(f.quoted.pair.lockApart) }}입니다. 남겨 둔 휘장으로 무작위 레전드 영웅을 살 수 있기
+    때문입니다. 무작위 레전드 영웅을 내는 출처에서 나왔다면
+    {{ percent(f.quoted.pair.lockShared) }}입니다. 카드가 잠겨 있는 동안 그 출처는 새 상품을 내지
+    않기 때문입니다. 휘장이 {{ f.quoted.pair.plenty }}개면 어느 경우든 구매가 낫습니다.
   </p>
 
   <h3>관찰 2. 두 장이 필요할 때 휘장이 빠듯하면 한 장짜리 영웅 카드를 잠그고, 넉넉하면 산다</h3>
@@ -341,10 +344,10 @@ const f = useShopFigures()
   </p>
   <p>
     Toto의 계산기에 따르면 상점 레벨 {{ f.levels.length }}, 풀이 영웅 {{ f.poolSize }}명 전체일 때
-    경계는 휘장 약 60개입니다. 그보다 적으면 잠금이, 많으면 구매가 낫고, 경계 근처에서는 둘의 차이가
-    1%p 미만입니다. 그보다 낮은 레벨에서는 두 장짜리 영웅 카드가 드물어 휘장이 적어도 구매가
-    낫습니다. 이것은 이번 라운드에 목표를 이룰 확률을 비교한 것이며, 이번 라운드에 완성하지 못했을
-    때 산 카드를 가지고 있는 가치는 넣지 않았습니다.
+    경계는 휘장 약 {{ f.quoted.boundary }}개입니다. 그보다 적으면 잠금이, 많으면 구매가 낫고, 경계
+    근처에서는 둘의 차이가 1%p 미만입니다. 그보다 낮은 레벨에서는 두 장짜리 영웅 카드가 드물어
+    휘장이 적어도 구매가 낫습니다. 이것은 이번 라운드에 목표를 이룰 확률을 비교한 것이며, 이번
+    라운드에 완성하지 못했을 때 산 카드를 가지고 있는 가치는 넣지 않았습니다.
   </p>
   <p>
     두 장이 필요하고 한 장짜리 영웅 카드가 보이며 풀이 영웅 {{ f.poolSize }}명 전체일 때, Toto의

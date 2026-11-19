@@ -24,6 +24,7 @@ import { solveMaxChance, type MaxChance } from './maxChance'
 import { solveMinBadges } from './minBadges'
 import { firstMoves, goalModel, goalSize, type GoalModel } from './moves'
 import {
+  carriedOdds,
   SHOWS_AS_ZERO,
   solveNextRound,
   stopReason,
@@ -61,6 +62,14 @@ export const SHOP_LIMITS = { badges: 500, copies: 4, wanted: 12 }
  * multiply. A larger one is left out of the answers.
  */
 const MAX_SPAN_SIZE = 1_500_000
+
+/**
+ * The same limit at the level the shop rises to, where every card on show
+ * adds a kind as a kept one does here. A goal has cost tables alone there,
+ * about a third of the work for its size, and a shop with nothing kept from
+ * a lower level stays under it.
+ */
+const MAX_NEXT_SPAN_SIZE = 4_500_000
 
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
@@ -414,18 +423,24 @@ function* stagesOf(
     return
   }
 
+  const nextOdds = rises ? carriedOdds(table.levels[level], shop.cards, reading) : null
+  const sizeAt = (goal: Goal, odds: LevelOdds) =>
+    goalSize(goalModel(goal, odds, request.pools, facts))
+
   const works: Work[] = []
   const skipped: SpanGoal[] = []
   for (const goal of goalsOf(request)) {
     const { name } = goal
     if (name.kind !== 'hero' && name.kind !== 'equipment') {
-      const model = goalModel(goal.goal, reading.odds, request.pools, facts)
-      if (goalSize(model) > MAX_SPAN_SIZE) {
+      const tooLarge =
+        sizeAt(goal.goal, reading.odds) > MAX_SPAN_SIZE ||
+        (nextOdds !== null && sizeAt(goal.goal, nextOdds) > MAX_NEXT_SPAN_SIZE)
+      if (tooLarge) {
         skipped.push(name.kind)
         continue
       }
     }
-    works.push(prepare(request, goal, reading, rises ? table.levels[level] : null, facts, cache))
+    works.push(prepare(request, goal, reading, nextOdds, facts, cache))
     yield null
   }
   // A goal's way to stop into a higher level fills that level's cost tables,
