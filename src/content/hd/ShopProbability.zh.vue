@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -276,9 +276,9 @@ const f = useShopFigures()
   <p>
     立即买下时，如果最后一张来自单张英雄卡，可刷新次数相同；如果来自双张英雄卡，就只有 (B −
     {{ f.heroPrice + f.pairPrice }}) ÷ {{ f.reroll }} 次，少了
-    {{ f.heroPrice / f.reroll }}
+    {{ amount(f.heroPrice / f.reroll) }}
     次。作为交换，买下后的空位每次刷新都会重新抽取。徽章少时，这
-    {{ f.heroPrice / f.reroll }}
+    {{ amount(f.heroPrice / f.reroll) }}
     次刷新占比很大，锁定更好；徽章多时，通常在用到它们之前就已达成，多出来的抽取更有价值。
   </p>
   <p>
@@ -318,8 +318,8 @@ const f = useShopFigures()
     c × n ÷ ({{ f.draws }} × k) ≥ {{ f.heroPrice }}，即 k ÷ n ≤ c ÷ {{ f.draws * f.heroPrice }}
   </p>
   <p>
-    只想要一位英雄时，通过随机卡包每张要花 {{ f.randomPrice / f.draws }} × n 枚徽章，通过有 m
-    位英雄的阵营的卡包每张要花 {{ f.factionPrice / f.draws }} × m 枚。英雄池有
+    只想要一位英雄时，通过随机卡包每张要花 {{ amount(f.randomPrice / f.draws) }} × n 枚徽章，通过有
+    m 位英雄的阵营的卡包每张要花 {{ amount(f.factionPrice / f.draws) }} × m 枚。英雄池有
     {{ f.poolSize }} 位、阵营有 {{ f.factionPoolSize }} 位时，分别是
     {{ Math.round(f.copyCost.random) }} 枚和
     {{ Math.round(f.copyCost.faction) }} 枚，远高于单张英雄卡的
@@ -345,12 +345,14 @@ const f = useShopFigures()
     阵营有 {{ f.factionPoolSize }} 位、英雄池有 {{ f.poolSize }} 位时，阵营卡包约需
     {{ Math.round(f.packCost.faction) }} 枚徽章，随机卡包约需
     {{ Math.round(f.packCost.random) }} 枚。概率很小时，这个概率接近 {{ f.draws }} ÷
-    x，所以比较大致是 {{ f.factionPrice / f.draws }} × m 对 {{ f.randomPrice / f.draws }} ×
-    n。两者在整个英雄池约为该阵营两倍时持平：阵营有 {{ f.factionPoolSize }} 位时，约为
+    x，所以比较大致是 {{ amount(f.factionPrice / f.draws) }} × m 对
+    {{ amount(f.randomPrice / f.draws) }} × n。两者在整个英雄池约为该阵营
+    {{ amount(f.packRatio) }} 倍时持平：阵营有 {{ f.factionPoolSize }} 位时，约为
     {{ Math.round(f.packPool) }} 位。
   </p>
   <p>
-    四个阵营剩下的英雄数相近时，阵营卡包总是更好。如果其他阵营的许多英雄已离开英雄池（例如达到神话），使英雄池小于这个数，随机卡包更好。想要的几位英雄分属不同阵营、得到任意一位即可时，随机卡包抽中的概率更高，这时应直接比较两种卡包。
+    {{ f.factions }}
+    个阵营剩下的英雄数相近时，阵营卡包总是更好。如果其他阵营的许多英雄已离开英雄池（例如达到神话），使英雄池小于这个数，随机卡包更好。想要的几位英雄分属不同阵营、得到任意一位即可时，随机卡包抽中的概率更高，这时应直接比较两种卡包。
   </p>
   <p class="reading-secondary">
     规则在任何情况下都成立，随时可用。观察只在其推理的条件成立时使用：英雄池的大小、想要的英雄数、是否可能出现一次给出多张的商品。否则需要通过计算来决定。
@@ -399,7 +401,7 @@ const f = useShopFigures()
   <ul>
     <li>实测的 100% 并不证明游戏保证如此。</li>
     <li>不同的清单组合可能同样符合同一批记录，来源的编号也可以互换而不影响结果。</li>
-    <li>记录没有区分四种阵营卡包，因此视四者的概率相等。</li>
+    <li>记录没有区分 {{ f.factions }} 种阵营卡包，因此视它们的概率相等。</li>
     <li>同一池中的英雄、同一品质的装备，也视为概率相等。</li>
   </ul>
 </template>

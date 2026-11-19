@@ -38,7 +38,12 @@ const step = (by: 1 | -1): void => {
     <GuidePortrait v-if="kind === 'hero'" :slug="name" :lang="i18n.currentLocale" :size="40" />
     <ShopPieceDisc v-else :name :size="40" />
     <span>{{ label }}</span>
-    <span v-if="copies !== undefined" class="copies" role="group">
+    <span
+      v-if="copies !== undefined"
+      class="copies"
+      role="group"
+      :aria-label="i18n.t('app.shop-copies-wanted', { copies })"
+    >
       <button
         type="button"
         :aria-label="i18n.t('app.shop-copies-lower')"

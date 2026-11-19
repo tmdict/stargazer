@@ -86,7 +86,7 @@ const takeOnly = (): void => {
             {{ i18n.t('app.none') }}
           </button>
         </div>
-        <div class="levels" role="group">
+        <div class="levels" role="group" :aria-label="current.label">
           <button
             v-for="level in LEVELS"
             :key="level"

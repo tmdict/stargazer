@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -327,9 +327,9 @@ const f = useShopFigures()
   <p>
     바로 사면 마지막 한 장이 한 장짜리 영웅 카드로 올 때는 남는 새로고침이 같지만, 두 장짜리 영웅
     카드로 올 때는 (B − {{ f.heroPrice + f.pairPrice }}) ÷ {{ f.reroll }}회로
-    {{ f.heroPrice / f.reroll }}회 적습니다. 대신 산 카드의 자리가 새로고침마다 다시 뽑힙니다.
-    휘장이 적으면 이 {{ f.heroPrice / f.reroll }}회가 전체에서 큰 몫이므로 잠그는 편이 낫습니다.
-    휘장이 많으면 대개 그 전에 목표를 이루므로 한 자리를 더 뽑는 가치가 더 큽니다.
+    {{ amount(f.heroPrice / f.reroll) }}회 적습니다. 대신 산 카드의 자리가 새로고침마다 다시
+    뽑힙니다. 휘장이 적으면 이 {{ amount(f.heroPrice / f.reroll) }}회가 전체에서 큰 몫이므로 잠그는
+    편이 낫습니다. 휘장이 많으면 대개 그 전에 목표를 이루므로 한 자리를 더 뽑는 가치가 더 큽니다.
   </p>
   <p>
     Toto의 계산기에 따르면 상점 레벨 {{ f.levels.length }}, 풀이 영웅 {{ f.poolSize }}명 전체일 때
@@ -373,8 +373,8 @@ const f = useShopFigures()
   </p>
   <p>
     원하는 영웅이 한 명일 때 한 장의 비용은 무작위 팩으로는 휘장
-    {{ f.randomPrice / f.draws }} × n개, 영웅이 m명인 진영의 팩으로는
-    {{ f.factionPrice / f.draws }} × m개입니다. 풀이 {{ f.poolSize }}명, 진영이
+    {{ amount(f.randomPrice / f.draws) }} × n개, 영웅이 m명인 진영의 팩으로는
+    {{ amount(f.factionPrice / f.draws) }} × m개입니다. 풀이 {{ f.poolSize }}명, 진영이
     {{ f.factionPoolSize }}명이면 각각 {{ Math.round(f.copyCost.random) }}개와
     {{ Math.round(f.copyCost.faction) }}개로, 카드의 {{ f.heroPrice }}개보다 훨씬 많습니다. 팩이 한
     장짜리 영웅 카드보다 나은 것은 원하는 영웅이 풀에서 큰 비중을 차지할 때뿐입니다. 무작위 팩은
@@ -398,14 +398,15 @@ const f = useShopFigures()
     진영이 {{ f.factionPoolSize }}명, 풀이 {{ f.poolSize }}명이면 진영 팩은 휘장 약
     {{ Math.round(f.packCost.faction) }}개, 무작위 팩은 약 {{ Math.round(f.packCost.random) }}개가
     듭니다. 확률이 작을 때 이 확률은 {{ f.draws }} ÷ x에 가까우므로, 비교는 대략
-    {{ f.factionPrice / f.draws }} × m 대 {{ f.randomPrice / f.draws }} × n입니다. 둘은 전체 풀이 그
-    영웅 진영의 약 두 배일 때 같아집니다. 진영이 {{ f.factionPoolSize }}명이면 약
-    {{ Math.round(f.packPool) }}명입니다.
+    {{ amount(f.factionPrice / f.draws) }} × m 대 {{ amount(f.randomPrice / f.draws) }} × n입니다.
+    둘은 전체 풀이 그 영웅 진영의 약 {{ amount(f.packRatio) }}배일 때 같아집니다. 진영이
+    {{ f.factionPoolSize }}명이면 약 {{ Math.round(f.packPool) }}명입니다.
   </p>
   <p>
-    네 진영에 남은 영웅 수가 비슷한 동안에는 진영 팩이 항상 낫습니다. 다른 진영의 영웅이 많이 풀에서
-    빠져(예: 신화 등급) 풀이 그 크기보다 작아지면 무작위 팩이 낫습니다. 서로 다른 진영의 여러 영웅
-    중 아무나 나와도 된다면 무작위 팩이 더 자주 맞으므로, 이때는 두 팩을 직접 비교해야 합니다.
+    {{ f.factions }}개 진영에 남은 영웅 수가 비슷한 동안에는 진영 팩이 항상 낫습니다. 다른 진영의
+    영웅이 많이 풀에서 빠져(예: 신화 등급) 풀이 그 크기보다 작아지면 무작위 팩이 낫습니다. 서로 다른
+    진영의 여러 영웅 중 아무나 나와도 된다면 무작위 팩이 더 자주 맞으므로, 이때는 두 팩을 직접
+    비교해야 합니다.
   </p>
   <p class="reading-secondary">
     규칙은 모든 경우에 성립하므로 언제나 쓸 수 있습니다. 관찰은 그 근거의 조건이 맞을 때만 씁니다.
@@ -467,7 +468,7 @@ const f = useShopFigures()
       서로 다른 목록 조합이 같은 기록에 비슷하게 잘 맞을 수 있고, 출처 번호는 서로 바꿔도 결과가
       같습니다.
     </li>
-    <li>기록에서는 네 가지 진영 팩을 구분하지 않으므로 넷의 확률이 같다고 봅니다.</li>
+    <li>기록에서는 {{ f.factions }}가지 진영 팩을 구분하지 않으므로 모두 확률이 같다고 봅니다.</li>
     <li>같은 풀의 영웅, 같은 등급의 장비도 확률이 같다고 봅니다.</li>
   </ul>
 </template>

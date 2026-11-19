@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
 import { clampX, clampY, VIEWPORT_MARGIN, viewportHeight, viewportWidth } from '@/utils/viewport'
@@ -28,6 +28,10 @@ const emit = defineEmits<{
 }>()
 
 const popupRef = ref<HTMLElement>()
+
+// What held the keyboard when the popup opened. Read here and not once
+// mounted, by when a child's search box may have taken the focus.
+const opener = typeof document === 'undefined' ? null : document.activeElement
 
 // Keep the panel fully on screen: render at the caller's anchor, then shift it back
 // inside the viewport (minus a margin) if it would overflow an edge.
@@ -77,6 +81,12 @@ onMounted(() => {
   if (el) contentObserver?.observe(el)
   if (el && !el.contains(document.activeElement)) el.focus({ preventScroll: true })
 })
+// The keyboard goes back to what opened the popup, unless a press outside
+// has already put it somewhere else.
+onBeforeUnmount(() => {
+  if (!popupRef.value?.contains(document.activeElement)) return
+  if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
+})
 onUnmounted(() => {
   window.removeEventListener('resize', reposition)
   contentObserver?.disconnect()
@@ -90,6 +100,7 @@ watch(() => [props.position, props.centered], reposition)
     class="selection-popup"
     :class="{ 'over-modal': overModal }"
     :style="{ left: `${coords.x}px`, top: `${coords.y}px`, minHeight: `${minHeight}px` }"
+    role="dialog"
     tabindex="-1"
     data-dropdown-boundary
     @mouseleave="keepOnLeave || emit('close')"

@@ -23,6 +23,15 @@ const i18n = useI18nStore()
 
 const good = computed(() => SHOP_GOODS.get(card.good ?? ''))
 const label = computed(() => cardName(card, i18n))
+const spoken = computed(() =>
+  [
+    label.value,
+    good.value && `${good.value.price} ${i18n.t('app.shop-badges')}`,
+    card.bought && i18n.t('app.shop-picker-bought'),
+  ]
+    .filter(Boolean)
+    .join(', '),
+)
 
 const levels = computed(() => lockLevels(card, level))
 const lockedAt = computed(() => lockedLevel(card, level))
@@ -34,7 +43,7 @@ const under = (event: MouseEvent): DOMRect =>
 
 <template>
   <div class="shop-card" :class="{ bought: card.bought, locked: card.locked }">
-    <button type="button" class="face" :aria-label="label" @click="emit('pick', under($event))">
+    <button type="button" class="face" :aria-label="spoken" @click="emit('pick', under($event))">
       <span class="art">
         <ShopGoodArt v-if="good" :good :hero="card.hero" :equipment="card.equipment" />
         <span v-else class="empty"><IconPlus /></span>

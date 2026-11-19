@@ -74,9 +74,18 @@ const isPair = (entry: Good | undefined): boolean => entry === PAIR_CARD
 const range = (values: number[]): { low: number; high: number } =>
   values.length ? { low: Math.min(...values), high: Math.max(...values) } : { low: 0, high: 0 }
 
-/** A chance as a percent to one decimal, or a dash for none. */
-export const percent = (chance: number): string =>
-  chance > 0 ? `${(chance * 100).toFixed(1)}%` : '–'
+/** A chance as a percent: two decimals under 1%, one above, and none once it rounds to 100%. */
+export const percentText = (chance: number): string => {
+  const value = chance * 100
+  if (value >= 99.95) return '100%'
+  return `${value.toFixed(value < 1 ? 2 : 1)}%`
+}
+
+/** A chance as the calculator writes one, or a dash for none. */
+export const percent = (chance: number): string => (chance > 0 ? percentText(chance) : '–')
+
+/** A worked-out number to at most one decimal. */
+export const amount = (value: number): string => String(Number(value.toFixed(1)))
 
 export function useShopFigures() {
   const gameData = useGameDataStore()
@@ -210,6 +219,9 @@ export function useShopFigures() {
     packCost,
     copyCost,
     packPool,
+    // How many times the faction's size that pool is.
+    packRatio: computed(() => (factionPool.value ? packPool.value / factionPool.value : 0)),
+    factions: SHOP_FACTS.goods.filter((entry) => entry.kind === 'pack' && entry.faction).length,
     pairSingle,
     pairPool,
   })

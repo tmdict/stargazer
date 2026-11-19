@@ -17,6 +17,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { duelEquipment, equipmentTierLabel } from '@/utils/duelCatalog'
 import { curatedHeroName } from '@/utils/skillLabels'
 import { cardName, moveSteps, pieceName, stopSteps } from './shopGoods'
+import { percentText } from './useShopFigures'
 
 const { answer, cards, copies, basis } = defineProps<{
   answer: ShopAnswer
@@ -68,14 +69,10 @@ const head = computed(() => {
   return { title: i18n.t(`app.shop-goal-${goal.kind}`), sub: '' }
 })
 
-const percent = (chance: number): string => {
-  const value = chance * 100
-  if (value >= 99.95) return '100%'
-  return `${value.toFixed(value < 1 ? 2 : 1)}%`
-}
-
 const chanceText = ({ floor, ceiling }: ChanceRange): string =>
-  ceiling - floor >= SHOWN_RANGE ? `${percent(floor)} – ${percent(ceiling)}` : percent(floor)
+  ceiling - floor >= SHOWN_RANGE
+    ? `${percentText(floor)} – ${percentText(ceiling)}`
+    : percentText(floor)
 
 const badgeText = (cost: CostRange): string => String(Number(cost.ceiling.toFixed(1)))
 
@@ -97,7 +94,7 @@ const chanceRows = computed(() => {
     offers &&
       offers.first !== null && {
         label: i18n.t('app.shop-alt-offers'),
-        figure: percent(offers.chance),
+        figure: percentText(offers.chance),
         steps: moveSteps({ kind: 'buy', card: offers.first }, cards),
         retry: null,
       },

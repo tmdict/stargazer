@@ -4,7 +4,8 @@
    is. The products are rows under a heading for each kind, and a row drops the
    words its heading already says. Naming the hero or piece is optional, since
    a card that is not one looked for needs no name. A product is set as soon as
-   it is picked, so the popup can be left at any step. A search over the
+   it is picked, so the popup can be left at any step, and a card keeps its
+   name while the product picked takes the same one. A search over the
    products lists every product, hero card and piece whose name it matches, and
    picking a hero or a piece there sets the card in one step. */
 
@@ -133,7 +134,16 @@ const found = computed((): Found[] => {
 })
 
 const choose = (picked: Good): void => {
-  emit('set', { good: picked.name, locked: card.locked, bought: false })
+  if (picked.name !== card.good) {
+    const named = good.value?.kind === picked.kind && good.value.tier === picked.tier
+    emit('set', {
+      good: picked.name,
+      locked: card.locked,
+      bought: false,
+      ...(named && card.hero && { hero: card.hero }),
+      ...(named && card.equipment && { equipment: card.equipment }),
+    })
+  }
   if (picked.kind === 'hero') step.value = 'hero'
   else if (picked.kind === 'equipment') step.value = 'piece'
   else emit('close')

@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 
 import ShopProbabilityTable from '@/components/guide/shop/ShopProbabilityTable.vue'
-import { percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
+import { amount, percent, useShopFigures } from '@/components/guide/shop/useShopFigures'
 import { HD_SHOP_PATH } from '@/lib/guide'
 
 const f = useShopFigures()
@@ -351,10 +351,11 @@ const f = useShopFigures()
   <p>
     With the card bought at once, the same number of rerolls is left when the last copy comes on a
     one-copy card, but (B − {{ f.heroPrice + f.pairPrice }}) ÷ {{ f.reroll }}, which is
-    {{ f.heroPrice / f.reroll }} fewer, when it comes on a two-copy card. In return the bought
-    card's place is drawn again on every reroll. With few badges those
-    {{ f.heroPrice / f.reroll }} rerolls are a large share of all you have and locking is better.
-    With many, the goal is usually reached before they matter and the extra draw is worth more.
+    {{ amount(f.heroPrice / f.reroll) }} fewer, when it comes on a two-copy card. In return the
+    bought card's place is drawn again on every reroll. With few badges those
+    {{ amount(f.heroPrice / f.reroll) }} rerolls are a large share of all you have and locking is
+    better. With many, the goal is usually reached before they matter and the extra draw is worth
+    more.
   </p>
   <p>
     Toto's calculator puts the boundary at about 60 badges at shop level {{ f.levels.length }} with
@@ -397,12 +398,12 @@ const f = useShopFigures()
     {{ f.draws * f.heroPrice }}
   </p>
   <p>
-    With one wanted hero, a copy costs {{ f.randomPrice / f.draws }} × n badges through Random Packs
-    and {{ f.factionPrice / f.draws }} × m through packs of a faction with m heroes. With
-    {{ f.poolSize }} heroes in the pool and {{ f.factionPoolSize }} in the faction that is
-    {{ Math.round(f.copyCost.random) }} and {{ Math.round(f.copyCost.faction) }} badges, far above
-    the card's {{ f.heroPrice }}. A pack beats one-copy cards only when wanted heroes make up a
-    large share of its pool: more than {{ percent(f.packShare.random) }} of the pool for a Random
+    With one wanted hero, a copy costs {{ amount(f.randomPrice / f.draws) }} × n badges through
+    Random Packs and {{ amount(f.factionPrice / f.draws) }} × m through packs of a faction with m
+    heroes. With {{ f.poolSize }} heroes in the pool and {{ f.factionPoolSize }} in the faction that
+    is {{ Math.round(f.copyCost.random) }} and {{ Math.round(f.copyCost.faction) }} badges, far
+    above the card's {{ f.heroPrice }}. A pack beats one-copy cards only when wanted heroes make up
+    a large share of its pool: more than {{ percent(f.packShare.random) }} of the pool for a Random
     Pack and more than {{ percent(f.packShare.faction) }} of the faction for a faction pack. Selling
     everything a pack gives returns at most {{ f.packRefund }} badges, so with one wanted hero the
     answer stays the same.
@@ -423,15 +424,16 @@ const f = useShopFigures()
     With {{ f.factionPoolSize }} heroes in the faction and {{ f.poolSize }} in the pool, the faction
     pack costs about {{ Math.round(f.packCost.faction) }} badges and the Random Pack about
     {{ Math.round(f.packCost.random) }}. For small chances the chance is close to {{ f.draws }} ÷ x,
-    so the comparison is roughly {{ f.factionPrice / f.draws }} × m against
-    {{ f.randomPrice / f.draws }} × n. The two meet where the whole pool is about twice the hero's
-    faction: about {{ Math.round(f.packPool) }} heroes for a faction of {{ f.factionPoolSize }}.
+    so the comparison is roughly {{ amount(f.factionPrice / f.draws) }} × m against
+    {{ amount(f.randomPrice / f.draws) }} × n. The two meet where the whole pool is about
+    {{ amount(f.packRatio) }} times the size of the hero's faction: about
+    {{ Math.round(f.packPool) }} heroes for a faction of {{ f.factionPoolSize }}.
   </p>
   <p>
-    While the four factions keep similar numbers, the faction pack is always better. If many heroes
-    of the other factions have left the pool, for example at Mythic, and it falls under that size,
-    the Random Pack is better. When any of several wanted heroes of different factions will do, the
-    Random Pack hits more often, so compare the two packs directly.
+    While the {{ f.factions }} factions keep similar numbers, the faction pack is always better. If
+    many heroes of the other factions have left the pool, for example at Mythic, and it falls under
+    that size, the Random Pack is better. When any of several wanted heroes of different factions
+    will do, the Random Pack hits more often, so compare the two packs directly.
   </p>
   <p class="reading-secondary">
     A rule holds in every case and can always be used. Use an observation only when the conditions
@@ -495,7 +497,8 @@ const f = useShopFigures()
       can be swapped around without changing anything.
     </li>
     <li>
-      The records do not tell the four faction packs apart, so they are taken as equally likely.
+      The records do not tell the {{ f.factions }} faction packs apart, so they are taken as equally
+      likely.
     </li>
     <li>Heroes in a pool, and pieces of one equipment tier, are taken as equally likely too.</li>
   </ul>
