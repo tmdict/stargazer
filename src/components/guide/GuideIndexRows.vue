@@ -1,31 +1,39 @@
 <script setup lang="ts">
-/* Combat Basics entry on the guide index: a row per short rules page. */
+/* A guide index card that lists a group of pages, a row for each. */
 
 import { RouterLink } from 'vue-router'
 
-import { guidePath, type GuidePage } from '@/lib/guide'
+import SlBeta from '@/components/guide/sl/SlBeta.vue'
 import type { AppLocale } from '@/lib/types/i18n'
 import { appLabel } from '@/utils/skillLabels'
 
-const props = defineProps<{ lang: AppLocale }>()
+export interface GuideIndexRow {
+  to: string
+  // The text keys of the row's name and of the line beside it.
+  title: string
+  blurb: string
+  beta?: boolean
+}
+
+const props = defineProps<{
+  lang: AppLocale
+  // The text keys of the card's heading and of the line under it.
+  heading: string
+  blurb: string
+  pages: readonly GuideIndexRow[]
+}>()
 
 const label = (key: string): string => appLabel(key, props.lang)
-
-const PAGES: readonly { page: GuidePage; title: string; blurb: string }[] = [
-  { page: 'factions', title: 'faction-bonus', blurb: 'guide-factions-blurb' },
-  { page: 'damage', title: 'damage-types', blurb: 'guide-damage-blurb' },
-  { page: 'glossary', title: 'glossary', blurb: 'guide-glossary-blurb' },
-]
 </script>
 
 <template>
   <article class="container page-panel guide-panel">
     <div class="content">
-      <h2>{{ label('combat-basics') }}</h2>
-      <p class="guide-blurb">{{ label('guide-combat-blurb') }}</p>
+      <h2>{{ label(heading) }}</h2>
+      <p class="guide-blurb">{{ label(blurb) }}</p>
       <div class="rows">
-        <RouterLink v-for="entry in PAGES" :key="entry.page" :to="guidePath(entry.page)">
-          <span>{{ label(entry.title) }}</span>
+        <RouterLink v-for="entry in pages" :key="entry.to" :to="entry.to">
+          <span>{{ label(entry.title) }}<SlBeta v-if="entry.beta" in-link /></span>
           <small>{{ label(entry.blurb) }}</small>
         </RouterLink>
       </div>
