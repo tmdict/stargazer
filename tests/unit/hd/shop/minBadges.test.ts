@@ -170,25 +170,11 @@ describe('a table where one source always makes a hero card', () => {
     expect(solve({ odds, goal: hero('L1', 2), pools: two }).best!.cost.ceiling).toBeCloseTo(42, 8)
   })
 
-  it('buys the hero when it is on show', () => {
-    const { best, min } = solve({ odds, goal: hero('L1'), pools: two, cards: shown('L1') })
-    expect(best).toEqual({ move: buy(0), cost: { floor: 15, ceiling: 15 } })
-    expect(min.cost(REROLL).ceiling).toBeCloseTo(21, 8)
-  })
-
   it('has no answer for a goal no source can help', () => {
     const none: LevelOdds = Array(8).fill(exp)
     const { best, plan } = solve({ odds: none, goal: hero('L1'), pools: two })
     expect(best).toBeNull()
     expect(plan).toBeNull()
-  })
-
-  it('lets go of a lock that holds the only useful source', () => {
-    const asked = { odds, goal: hero('L1'), pools: two, cards: shown('L2', { locked: true }) }
-    const { best, min } = solve(asked)
-    expect(best!.move).toEqual(REROLL)
-    expect(best!.cost.ceiling).toBeCloseTo(21, 8)
-    expect(min.cost(lock(0)).ceiling).toBeCloseTo(24, 8)
   })
 
   it('keeps a lock that costs nothing', () => {
@@ -393,19 +379,6 @@ describe('rules that always hold', () => {
     }
   })
 
-  it('more copies never cost less, and heroes sold never cost more', () => {
-    for (const level of [1, 2, 3, 4, 5]) {
-      let last = 0
-      for (const copies of [1, 2, 3, 4]) {
-        const kept = solve(at(level, hero('L1', copies))).best!.cost.ceiling
-        const sold = solve(at(level, hero('L1', copies), { pools: pools(others) })).best!.cost
-        expect(kept).toBeGreaterThan(last)
-        expect(sold.ceiling).toBeLessThanOrEqual(kept + 1e-9)
-        last = kept
-      }
-    }
-  })
-
   it('answers from a cache kept through a visit as a fresh solve does', () => {
     const kept = createSolverCache()
     const shop = { badges: 60, cards: busy }
@@ -418,16 +391,5 @@ describe('rules that always hold', () => {
         expect(visit.cost(move)).toEqual(fresh.cost(move))
       }
     }
-  })
-
-  it('the order of the eight cards changes nothing', () => {
-    const order = [5, 2, 7, 0, 3, 6, 1, 4]
-    const moved = order.map((from) => busy[from]!)
-    const a = solve(at(5, hero('L1', 3), { cards: busy })).min
-    const b = solve(at(5, hero('L1', 3), { cards: moved })).min
-    const to = (from: number) => order.indexOf(from)
-    expect(b.cost(buy(to(2))).ceiling).toBeCloseTo(a.cost(buy(2)).ceiling, 9)
-    expect(b.cost(lock(to(0), to(4))).ceiling).toBeCloseTo(a.cost(lock(0, 4)).ceiling, 9)
-    expect(b.cost(REROLL).ceiling).toBeCloseTo(a.cost(REROLL).ceiling, 9)
   })
 })

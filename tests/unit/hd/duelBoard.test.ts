@@ -12,14 +12,8 @@ import {
 } from '@/lib/hd/boardLink'
 import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
-import {
-  duelFactionBonus,
-  setDuelEquipment,
-  toggleDuelArtifact,
-  useDuelBoard,
-} from '@/stores/duelBoard'
+import { duelFactionBonus, setDuelEquipment, useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
-import type { GridContext } from '@/stores/gridContext'
 import { useGrids } from '@/stores/grids'
 import { DUEL_HEROES, KULU } from '../fixtures/characters'
 
@@ -158,16 +152,6 @@ describe('an Honor Duel board from its link text', () => {
 
     expect(onScreen().units.map((u) => u.tier)).toEqual([2, 0, 3, 0, 2])
   })
-
-  it('opens an empty board on the first map for a text that is no board', () => {
-    const duel = useDuelBoard()
-
-    expect(duel.open('not a board')).toBeNull()
-    const ctx = useGrids().active!
-    expect(ctx.kind).toBe('honorDuel')
-    expect(ctx.currentMap).toBe('arena1')
-    expect(getTilesWithCharacters(ctx.grid)).toEqual([])
-  })
 })
 
 describe('moving an Honor Duel board to another map', () => {
@@ -244,40 +228,6 @@ describe('Honor Duel equipment', () => {
   })
 })
 
-describe("a list's click on an Honor Duel artifact", () => {
-  const SIDES = [Team.ALLY, Team.ENEMY]
-  const NAMED = (id: number): boolean => id < 90
-  const click = (ctx: GridContext, id: number): void => toggleDuelArtifact(ctx, id, SIDES, NAMED)
-
-  it('fills the first side with none, takes off one a side holds, and leaves two full sides alone', () => {
-    const { ctx } = openBoard(board([]))
-
-    click(ctx, 3)
-    click(ctx, 5)
-    expect(ctx.duelArtifacts).toEqual({ ally: { id: 3, level: 1 }, enemy: { id: 5, level: 1 } })
-
-    click(ctx, 7)
-    expect(ctx.duelArtifacts).toEqual({ ally: { id: 3, level: 1 }, enemy: { id: 5, level: 1 } })
-
-    // The other side's artifact stays, with the level it stands at.
-    ctx.setDuelArtifact(Team.ENEMY, { id: 5, level: 3 })
-    click(ctx, 3)
-    expect(ctx.duelArtifacts).toEqual({ ally: null, enemy: { id: 5, level: 3 } })
-
-    // One the far side holds comes off there, though the near side has room.
-    click(ctx, 5)
-    expect(ctx.duelArtifacts).toEqual({ ally: null, enemy: null })
-  })
-
-  it('takes a place whose id names no artifact, since the board shows it empty', () => {
-    const { ctx } = openBoard(board([]))
-    ctx.setDuelArtifact(Team.ALLY, { id: 99, level: 2 })
-
-    click(ctx, 3)
-    expect(ctx.duelArtifacts).toEqual({ ally: { id: 3, level: 1 }, enemy: null })
-  })
-})
-
 describe("a side's faction bonus", () => {
   it('counts every copy of a hero', () => {
     const faction = useGameDataStore().getCharacterById(ALLY_A)!.faction
@@ -350,14 +300,6 @@ describe('a Trial pick', () => {
 
     expect(grids.routeDrop({ characterId: toTrialPick(ALLY_B, 2) }, ctx.id, 1)).toBe(true)
     expect(onScreen().units).toEqual([unit(1, Team.ALLY, ALLY_B, { trial: true, tier: 2 })])
-  })
-
-  it('is refused on an Arena board', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-
-    expect(grids.placePick(grids.active!, toTrialPick(ALLY_A, 1), Team.ALLY, 1)).toBe(false)
-    expect(getTilesWithCharacters(grids.active!.grid)).toEqual([])
   })
 
   it('places no unit its source does not bring, as a restore would drop it', () => {

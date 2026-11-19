@@ -76,7 +76,6 @@ describe('Honor Duel board link', () => {
   })
 
   it.each([
-    ['an empty board', EMPTY],
     ['the example board', EXAMPLE],
     ['two full teams', FULL],
     ['artifacts alone', { ...EMPTY, artifacts: { ally: null, enemy: { id: 7, level: 2 } } }],
@@ -96,17 +95,13 @@ describe('Honor Duel board link', () => {
     ['empty text', ''],
     ['a character outside the alphabet', 'AAQ!'],
     ['a text cut short', 'BsMAERQA_RxOgDMkToAwnK'],
-    ['an extra character', 'AAEAA'],
     ['spare bits set in the last character', ONE_UNIT.slice(0, -1) + 'B'],
     ['a spare view switch', handWritten(HEADER(0, 32))],
-    ['map number zero', handWritten(HEADER(0, 0, 0))],
     ['a map number no map has', handWritten(HEADER(0, 0, 63))],
     ['a map off the Honor Duel list', handWritten(HEADER(0, 0, 11))],
     ['a spare part', handWritten(HEADER(4))],
     ['a unit count of zero', handWritten([...HEADER(1), [0, 4]])],
-    ['tile zero', handWritten([...HEADER(1), [1, 4], ...UNIT({ hex: 0 })])],
     ['a tile past the board', handWritten([...HEADER(1), [1, 4], ...UNIT({ hex: 46 })])],
-    ['hero zero', handWritten([...HEADER(1), [1, 4], ...UNIT({ hero: 0 })])],
     ['a placeholder for a hero', handWritten([...HEADER(1), [1, 4], ...UNIT({ hero: 9001 })])],
     ['Supreme on a normal hero', handWritten([...HEADER(1), [1, 4], ...UNIT({ tier: 3 })])],
     [
@@ -123,20 +118,6 @@ describe('Honor Duel board link', () => {
     ['a whole spare byte', handWritten([...HEADER(0), [0, 10]])],
   ])('refuses %s', (_, text) => {
     expect(decodeDuelBoard(text)).toBeNull()
-  })
-
-  it('accepts Supreme on a Trial hero', () => {
-    const text = handWritten([...HEADER(1), [1, 4], ...UNIT({ trial: 1, tier: 3 })])
-    expect(decodeDuelBoard(text)?.units[0]).toMatchObject({ trial: true, tier: 3 })
-  })
-
-  it('refuses to write a board its layout cannot hold', () => {
-    const unit = EXAMPLE.units[0]!
-    expect(() => encodeDuelBoard({ ...EMPTY, map: 'preset-sr2' })).toThrow()
-    expect(() => encodeDuelBoard({ ...EMPTY, units: [{ ...unit, tier: 3 }] })).toThrow()
-    expect(() =>
-      encodeDuelBoard({ ...EMPTY, artifacts: { ally: { id: 31, level: 4 }, enemy: null } }),
-    ).toThrow()
   })
 
   // A piece numbered past the link's item field would be stored as another

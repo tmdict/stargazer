@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 
 import {
   decodeDuelBoard,
@@ -35,33 +35,30 @@ const unit = (hexId: number, heroId: number, rest: Partial<DuelUnitState> = {}):
   ...rest,
 })
 
-beforeEach(() => {
-  setActivePinia(createPinia())
-  useGameDataStore().initializeContentData()
-})
-
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
-// The companion's tile is drawn at random: one case per tenth of the draw, so
-// the result does not depend on which tile comes up.
-it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])(
-  'a summoner never costs another hero its tile (random pick %i of 10)',
-  (pick) => {
+it('a summoner never costs another hero its tile, whichever tile its companion draws', () => {
+  const state: DuelBoardState = {
+    d: 0,
+    map: 'arena1',
+    units: [
+      unit(1, PHRAESTO, { trial: true, tier: 3 }),
+      ...DUEL_HEROES.map((heroId, i) => unit(i + 2, heroId)),
+    ],
+    artifacts: { ally: null, enemy: null },
+  }
+  // The companion's tile is drawn at random: one board per tenth of the draw.
+  for (let pick = 0; pick < 10; pick++) {
     vi.spyOn(Math, 'random').mockReturnValue(pick / 10)
-    const state: DuelBoardState = {
-      d: 0,
-      map: 'arena1',
-      units: [
-        unit(1, PHRAESTO, { trial: true, tier: 3 }),
-        ...DUEL_HEROES.map((heroId, i) => unit(i + 2, heroId)),
-      ],
-      artifacts: { ally: null, enemy: null },
-    }
+    setActivePinia(createPinia())
+    useGameDataStore().initializeContentData()
     const duel = useDuelBoard()
     duel.open(encodeDuelBoard(state))
 
-    expect(decodeDuelBoard(duel.snapshot(unpackDisplayFlags(0)))!.units).toEqual(state.units)
-  },
-)
+    expect(decodeDuelBoard(duel.snapshot(unpackDisplayFlags(0)))!.units, `pick ${pick}`).toEqual(
+      state.units,
+    )
+  }
+})

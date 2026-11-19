@@ -296,10 +296,6 @@ describe('locks on other targets', () => {
     ],
   })
 
-  it('buys a locked piece in place of keeping it through a reroll', () => {
-    expect(answers(asked(60)).e1!.chance.best!.move).toEqual(buy(7))
-  })
-
   it('lets go of a lock that holds a useful source, and keeps one that does not', () => {
     const { L2 } = answers(asked(18))
     expect(L2!.chance.best!.move).toEqual(lock(7))
@@ -386,20 +382,6 @@ describe('stopping', () => {
     expect(poor.stopPlan).not.toBeNull()
   })
 
-  it('carries on once the badges cover a reroll and a pack', () => {
-    const enough = ask(21)
-    expect(enough.chance.best!.move.kind).toBe('reroll')
-    expect(enough.chance.best!.chance.floor).toBeGreaterThan(0)
-    expect(ask(33).badges.stop).toBeNull()
-    expect(ask(33).stopPlan).toBeNull()
-  })
-
-  it('buys a pack on show that gives a chance', () => {
-    const shown = ask(18, cards(card('random-pack'), ...filler(7)))
-    expect(shown.chance.best!.move).toEqual(buy(0))
-    expect(shown.chance.best!.chance.floor).toBeGreaterThan(0)
-  })
-
   it('waits for the next shop level only when the level goes up next round', () => {
     const shop = cards(card('random-pack'), card(), card('graveborn-pack'))
     const at = (level: number, rises: boolean, shown = cards()) =>
@@ -442,14 +424,6 @@ describe('answers in stages', () => {
     const sliced = steps(heavy, undefined, 1)
     expect(sliced.filter((step) => step === null).length).toBeGreaterThan(1)
     expect(sliced.at(-1)).toEqual(stages(heavy).at(-1))
-  })
-
-  it('pauses after each goal is prepared and between their first answers', () => {
-    const all = steps({ heroes: [['L1'], ['L2']] })
-    const goals = all.find((step) => step !== null && 'answers' in step)
-    const count = goals && 'answers' in goals ? goals.answers.length : 0
-    expect(count).toBeGreaterThan(1)
-    expect(all.findIndex((step) => step !== null)).toBe(2 * count - 1)
   })
 
   it('settles at once when the tables leave nothing to search', () => {

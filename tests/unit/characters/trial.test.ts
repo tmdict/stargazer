@@ -26,16 +26,13 @@ import {
 } from '@/lib/characters/trial'
 import { decomposeUnitId } from '@/lib/characters/unitBand'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
-import { getRegisteredSkills, hasCompanionSkill } from '@/lib/skills/registry'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
+import { GUNNAR, PHRAESTO } from '../fixtures/characters'
 import { ID_LOOKUPS, skillSnapshot } from '../fixtures/skills'
 
 const ENEMY_SEEDS = [9001, 9002, 9004]
 const COPIES = [1, 2, 3, 4, 5]
-
-const sorted = <T>(rows: T[]): T[] =>
-  [...rows].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1))
 
 const makeBoard = () => {
   const grid = new Grid()
@@ -48,10 +45,6 @@ const makeBoard = () => {
   const freeTile = (team: Team) => getAllAvailableTilesForTeam(grid, team)[0]!.hex.getId()
   return { grid, sm, freeTile }
 }
-
-const heroSkills = getRegisteredSkills().filter((skill) => skill.characterId < 10000)
-const soloSkills = heroSkills.filter((skill) => !hasCompanionSkill(skill.characterId))
-const companionSkills = heroSkills.filter((skill) => hasCompanionSkill(skill.characterId))
 
 describe('Trial id band', () => {
   it('gives each copy a band of its own, laid out like the base ids', () => {
@@ -95,111 +88,80 @@ describe('Trial picks', () => {
   })
 })
 
+// That every skill keeps its state per unit id is checked skill by skill in
+// skills/instanceIsolation.test.ts. These run the Trial band through a board.
 describe('Trial copies of one hero on a board', () => {
-  it.each(soloSkills.map((skill) => [skill.id, skill.characterId] as const))(
-    '%s: five copies fill a team, each with a skill of its own, and clean up',
-    (_, hero) => {
-      const { grid, sm, freeTile } = makeBoard()
-      const ids = COPIES.map((copy) => toTrialId(hero, copy))
-      const hexes = ids.map((id) => {
-        const hex = freeTile(Team.ALLY)
-        expect(executePlaceCharacter(grid, sm, hex, id, Team.ALLY)).toBe(true)
-        expect(sm.hasActiveSkill(id, Team.ALLY)).toBe(true)
-        return hex
-      })
-      expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(0)
-      expect(
-        executePlaceCharacter(grid, sm, freeTile(Team.ALLY), toTrialId(hero, 6), Team.ALLY),
-      ).toBe(false)
+  it('five copies fill a team, each with a skill of its own, change sides and clean up', () => {
+    const { grid, sm, freeTile } = makeBoard()
+    const ids = COPIES.map((copy) => toTrialId(GUNNAR, copy))
+    const hexes = ids.map((id) => {
+      const hex = freeTile(Team.ALLY)
+      expect(executePlaceCharacter(grid, sm, hex, id, Team.ALLY)).toBe(true)
+      expect(sm.hasActiveSkill(id, Team.ALLY)).toBe(true)
+      return hex
+    })
+    expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(0)
+    expect(
+      executePlaceCharacter(grid, sm, freeTile(Team.ALLY), toTrialId(GUNNAR, 6), Team.ALLY),
+    ).toBe(false)
 
-      const during = skillSnapshot(sm)
-      for (const [key] of [...during.targets, ...during.images]) {
-        expect(ids).toContain(parseInt(key, 10))
-      }
+    const during = skillSnapshot(sm)
+    for (const [key] of [...during.targets, ...during.images]) {
+      expect(ids).toContain(parseInt(key, 10))
+    }
 
-      const enemyHex = freeTile(Team.ENEMY)
-      expect(executeMoveCharacter(grid, sm, hexes[2]!, enemyHex, ids[2]!)).toBe(true)
-      expect(sm.hasActiveSkill(ids[2]!, Team.ENEMY)).toBe(true)
-      expect(sm.hasActiveSkill(ids[2]!, Team.ALLY)).toBe(false)
-      expect(executeSwapCharacters(grid, sm, hexes[0]!, enemyHex)).toBe(true)
-      expect(sm.hasActiveSkill(ids[0]!, Team.ENEMY)).toBe(true)
-      expect(sm.hasActiveSkill(ids[2]!, Team.ALLY)).toBe(true)
+    const enemyHex = freeTile(Team.ENEMY)
+    expect(executeMoveCharacter(grid, sm, hexes[2]!, enemyHex, ids[2]!)).toBe(true)
+    expect(sm.hasActiveSkill(ids[2]!, Team.ENEMY)).toBe(true)
+    expect(sm.hasActiveSkill(ids[2]!, Team.ALLY)).toBe(false)
+    expect(executeSwapCharacters(grid, sm, hexes[0]!, enemyHex)).toBe(true)
+    expect(sm.hasActiveSkill(ids[0]!, Team.ENEMY)).toBe(true)
+    expect(sm.hasActiveSkill(ids[2]!, Team.ALLY)).toBe(true)
 
-      for (const tile of getTilesWithCharacters(grid)) {
-        if (inTrialBand(tile.characterId!)) executeRemoveCharacter(grid, sm, tile.hex.getId())
-      }
-      expect(skillSnapshot(sm)).toEqual({
-        targets: [],
-        images: [],
-        tileColors: [],
-        tileFills: [],
-        lineCount: 0,
-        badges: [],
-      })
-      expect(
-        getTilesWithCharacters(grid)
-          .map((tile) => tile.characterId)
-          .sort(),
-      ).toEqual([...ENEMY_SEEDS].sort())
-    },
-  )
+    for (const tile of getTilesWithCharacters(grid)) {
+      if (inTrialBand(tile.characterId!)) executeRemoveCharacter(grid, sm, tile.hex.getId())
+    }
+    expect(skillSnapshot(sm)).toEqual({
+      targets: [],
+      images: [],
+      tileColors: [],
+      tileFills: [],
+      lineCount: 0,
+      badges: [],
+    })
+    expect(
+      getTilesWithCharacters(grid)
+        .map((tile) => tile.characterId)
+        .sort(),
+    ).toEqual([...ENEMY_SEEDS].sort())
+  })
 
-  it.each(soloSkills.map((skill) => [skill.id, skill.characterId] as const))(
-    '%s: removing the middle copy leaves what a board without it draws',
-    (_, hero) => {
-      const left = makeBoard()
-      const fresh = makeBoard()
-      const ids = COPIES.map((copy) => toTrialId(hero, copy))
-      const hexes = ids.map((id) => {
-        const hex = left.freeTile(Team.ALLY)
-        executePlaceCharacter(left.grid, left.sm, hex, id, Team.ALLY)
-        return hex
-      })
-      executeRemoveCharacter(left.grid, left.sm, hexes[2]!)
-      ids.forEach((id, i) => {
-        if (i !== 2) executePlaceCharacter(fresh.grid, fresh.sm, hexes[i]!, id, Team.ALLY)
-      })
-      const a = skillSnapshot(left.sm)
-      const b = skillSnapshot(fresh.sm)
-      expect(sorted(a.targets)).toEqual(sorted(b.targets))
-      expect(sorted(a.tileColors)).toEqual(sorted(b.tileColors))
-      expect(sorted(a.tileFills)).toEqual(sorted(b.tileFills))
-      expect(a.lineCount).toBe(b.lineCount)
-      expect(sorted(a.badges)).toEqual(sorted(b.badges))
-    },
-  )
+  it('two copies of a summoner each keep companions of their own', () => {
+    const { grid, sm, freeTile } = makeBoard()
+    const [first, second] = [toTrialId(PHRAESTO, 1), toTrialId(PHRAESTO, 2)]
+    const firstHex = freeTile(Team.ALLY)
+    expect(executePlaceCharacter(grid, sm, firstHex, first, Team.ALLY)).toBe(true)
+    expect(executePlaceCharacter(grid, sm, freeTile(Team.ALLY), second, Team.ALLY)).toBe(true)
 
-  it.each(companionSkills.map((skill) => [skill.id, skill.characterId] as const))(
-    '%s: two copies each keep companions of their own',
-    (_, hero) => {
-      const { grid, sm, freeTile } = makeBoard()
-      const [first, second] = [toTrialId(hero, 1), toTrialId(hero, 2)]
-      const firstHex = freeTile(Team.ALLY)
-      expect(executePlaceCharacter(grid, sm, firstHex, first, Team.ALLY)).toBe(true)
-      expect(executePlaceCharacter(grid, sm, freeTile(Team.ALLY), second, Team.ALLY)).toBe(true)
+    const owners = getTilesWithCharacters(grid)
+      .map((tile) => tile.characterId!)
+      .filter((id) => inTrialBand(id) && isCompanionId(id))
+      .map(getMainCharacterId)
+    expect(owners).toContain(first)
+    expect(owners).toContain(second)
 
-      const owners = getTilesWithCharacters(grid)
-        .map((tile) => tile.characterId!)
-        .filter((id) => inTrialBand(id) && isCompanionId(id))
-        .map(getMainCharacterId)
-      expect(owners).toContain(first)
-      expect(owners).toContain(second)
+    expect(executeRemoveCharacter(grid, sm, firstHex)).toBe(true)
+    const left = getTilesWithCharacters(grid)
+      .map((tile) => tile.characterId!)
+      .filter(inTrialBand)
+    expect(left.length).toBeGreaterThan(1)
+    for (const id of left) expect(getMainCharacterId(id)).toBe(second)
 
-      expect(executeRemoveCharacter(grid, sm, firstHex)).toBe(true)
-      const left = getTilesWithCharacters(grid)
-        .map((tile) => tile.characterId!)
-        .filter(inTrialBand)
-      expect(left.length).toBeGreaterThan(1)
-      for (const id of left) expect(getMainCharacterId(id)).toBe(second)
-
-      for (const tile of getTilesWithCharacters(grid)) {
-        if (tile.characterId === second) executeRemoveCharacter(grid, sm, tile.hex.getId())
-      }
-      expect(grid.companionLinks.size).toBe(0)
-      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
-      expect(getTilesWithCharacters(grid).some((tile) => inTrialBand(tile.characterId!))).toBe(
-        false,
-      )
-    },
-  )
+    for (const tile of getTilesWithCharacters(grid)) {
+      if (tile.characterId === second) executeRemoveCharacter(grid, sm, tile.hex.getId())
+    }
+    expect(grid.companionLinks.size).toBe(0)
+    expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
+    expect(getTilesWithCharacters(grid).some((tile) => inTrialBand(tile.characterId!))).toBe(false)
+  })
 })

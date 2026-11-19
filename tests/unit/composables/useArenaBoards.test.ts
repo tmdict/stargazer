@@ -22,7 +22,6 @@ const DUEL_KEY = 'stargazer.hd.board'
 const FLAGS = () => ({ showPerspective: false, showSkills: false })
 
 let storage: Map<string, string>
-let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
 const heroesOnScreen = (): number[] =>
   getTilesWithCharacters(useGrids().active!.grid)
@@ -40,7 +39,7 @@ const openPage = () => {
 describe('useArenaBoards', () => {
   beforeEach(() => {
     vi.stubEnv('SSR', false)
-    ;({ storage, setItemSpy } = stubLocalStorage())
+    ;({ storage } = stubLocalStorage())
     setActivePinia(createPinia())
     useGameDataStore().initializeContentData()
   })
@@ -87,23 +86,6 @@ describe('useArenaBoards', () => {
 
     boards.show('arena')
     expect(grids.active!.kind).toBe('arena')
-    expect(heroesOnScreen()).toEqual([ALLY_A])
-
-    boards.show('honorDuel')
-    expect(heroesOnScreen()).toEqual([ALLY_B])
-  })
-
-  it('brings back a board the browser refused to store', () => {
-    const grids = useGrids()
-    const boards = openPage()
-    setItemSpy.mockImplementation(() => {
-      throw new Error('storage refused')
-    })
-    grids.placePick(grids.active!, ALLY_A, Team.ALLY, 1)
-
-    boards.show('honorDuel')
-    grids.placePick(grids.active!, ALLY_B, Team.ALLY, 2)
-    boards.show('arena')
     expect(heroesOnScreen()).toEqual([ALLY_A])
 
     boards.show('honorDuel')

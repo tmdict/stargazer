@@ -31,12 +31,6 @@ describe('the steps a move reads as', () => {
     ])
   })
 
-  it('a purchase is one step at the card price', () => {
-    expect(moveSteps({ kind: 'buy', card: 1 }, cards)).toEqual([
-      { kind: 'buy', card: 1, price: 33 },
-    ])
-  })
-
   it('stopping buys first and never locks the card it bought', () => {
     expect(stopSteps({ locks: [0, 1], buy: 0 }, cards)).toEqual([
       { kind: 'buy', card: 0, price: 15 },

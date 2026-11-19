@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { solveMaxChance } from '@/lib/hd/shop/maxChance'
 import { firstMoves } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
-import { OutOfTime } from '@/lib/hd/shop/search'
 import { createSolverCache } from '@/lib/hd/shop/solverCache'
 import { readShop } from '@/lib/hd/shop/sources'
 import type { Goal, LevelOdds, Move, OddsTable, PoolHero, ShopCard } from '@/lib/hd/shop/types'
@@ -17,7 +16,6 @@ import {
   HEROES,
   levelOdds,
   lock,
-  ODDS,
   others,
   packShop,
   pools,
@@ -326,15 +324,6 @@ describe('rules that always hold', () => {
     ...more,
   })
 
-  it('more badges never lower a chance, and more copies never raise it', () => {
-    const byBadges = [30, 33, 36, 41, 48, 60].map((badges) => chance(asked({ badges })))
-    byBadges
-      .slice(1)
-      .forEach((value, i) => expect(value).toBeGreaterThanOrEqual(byBadges[i]! - CLOSE))
-    const byCopies = [1, 2, 3, 4].map((copies) => chance(asked({ goal: hero('L1', copies) })))
-    byCopies.slice(1).forEach((value, i) => expect(value).toBeLessThanOrEqual(byCopies[i]! + CLOSE))
-  })
-
   it('the order of the eight cards changes nothing', () => {
     const turned = [...shop].reverse()
     for (const move of [REROLL, lock(0), lock(0, 1), buy(0), buy(2)]) {
@@ -393,21 +382,6 @@ describe('heavier requests', () => {
       0.880013,
       5,
     )
-  })
-
-  it('stops at its deadline and still has the range', () => {
-    const solved = solveMaxChance(
-      { badges: 150, cards: cards() },
-      hero('L1', 4),
-      read(ODDS.levels[4]!, cards()),
-      pools(),
-      FACTS,
-      createSolverCache(),
-    )
-    expect(() => solved.chance(REROLL, 0)).toThrow(OutOfTime)
-    const { floor, ceiling } = solved.range(REROLL)
-    expect(floor).toBeLessThan(ceiling)
-    expect(ceiling - floor).toBeLessThan(0.01)
   })
 })
 

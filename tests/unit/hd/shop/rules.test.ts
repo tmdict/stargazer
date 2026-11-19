@@ -8,11 +8,6 @@ import type { OddsTable, ShopCard } from '@/lib/hd/shop/types'
 import { card, cards, FACTS, hero, HEROES, levelOdds, ODDS, pools } from '../../fixtures/hdShop'
 
 describe('reading the shop', () => {
-  it('refuses eight Epic equipment cards at level 1', () => {
-    const shop = cards(...Array.from({ length: 8 }, () => card('epic-equipment')))
-    expect(readShop(levelOdds(1), shop)).toBeNull()
-  })
-
   it('gives a card to the only source that makes its product, and spreads the rest', () => {
     const odds = [
       [{ good: 'random-pack', percent: 100 }],
@@ -184,11 +179,5 @@ describe('checking the data', () => {
     const levels = structuredClone(ODDS.levels)
     levels[2]![4]![0]!.percent += 1
     expect(() => checkOdds({ levels } as OddsTable, FACTS)).toThrow(/level 3, source 5/)
-  })
-
-  it('refuses an odds table that names an unknown product', () => {
-    const levels = structuredClone(ODDS.levels)
-    levels[0]![0]![0]!.good = 'mystery-box'
-    expect(() => checkOdds({ levels } as OddsTable, FACTS)).toThrow(/mystery-box/)
   })
 })

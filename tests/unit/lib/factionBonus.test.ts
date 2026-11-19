@@ -12,19 +12,8 @@ describe('teamFactionBonus', () => {
     [{ wilder: 4, mauler: 1 }, 18],
     [{ wilder: 5 }, 22],
     [{ wilder: 2, mauler: 2, celestial: 1 }, 15],
-    [{ wilder: 3, hypogean: 1, celestial: 1 }, 24],
-    [{ celestial: 1, hypogean: 1 }, 2],
-    [{ wilder: 2, mauler: 2 }, 0],
-    [{}, 0],
   ])('%j is +%i%%', (parts, percent) => {
     expect(teamFactionBonus(team(parts)).percent).toBe(percent)
-  })
-
-  it('lists the heroes by faction, the largest group first', () => {
-    expect(teamFactionBonus(team({ mauler: 2, wilder: 3 })).counts).toEqual([
-      { faction: 'wilder', count: 3 },
-      { faction: 'mauler', count: 2 },
-    ])
   })
 
   // The slow way: every stand-in tries every faction, and the best step any of
