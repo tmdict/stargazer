@@ -74,7 +74,7 @@ For a drop that stays on one board the gate also asks the engine's own rules, `c
 
 ## Taps and clicks
 
-A board is in tap mode when its page passes `tap-mode`, which the Arena and the Teams page do at the widths where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero: tapping it targets it, and the next picker tap places there. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight.
+A board is in tap mode when its page passes `tap-mode`, which the Arena and the Teams page do at the widths where the side panel is a pull-up sheet. Tap mode decides how an empty tile adds a hero: tapping it targets it, and the next picker tap places there. The pointer type decides what a tap on a placed hero does, since a touch tap on a wide layout still lifts. Targets carry a board id as well as a hex id, because every board shares the same hex ids and only the tapped board should highlight. Whatever changes a board under a target (a map pick, a format switch, a load, a clear) clears the target itself, since the tile may then be another side's or hold a unit.
 
 Moving and removing work through a lift. A tap on a placed hero lifts it, and a mouse click on a wide layout removes it instead, as in the game. A tap elsewhere then swaps, moves or removes the lifted hero. The move and the swap go through `routeLiftDrop`, which builds a normal payload so the tap passes every drag gate.
 

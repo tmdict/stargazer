@@ -209,6 +209,8 @@ const arenaPick = useArenaPick()
 const handleMapChange = (mapKey: string) => {
   gridStore.moveToMap(mapKey)
   arenaPick.drop()
+  // A tile tapped before may be another side's on the new map, or hold a unit.
+  clearTargetHex()
 }
 
 // A board moved off the map picked, by a saved team loaded on another map, is

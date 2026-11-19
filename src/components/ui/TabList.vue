@@ -126,7 +126,6 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
 @media (min-width: 769px) {
   .tab-bar {
     flex-wrap: nowrap;
-    column-gap: var(--spacing-md);
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
   }

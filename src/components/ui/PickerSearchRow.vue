@@ -4,7 +4,7 @@
 </script>
 
 <template>
-  <div class="picker-search-row">
+  <div class="picker-search-row picker-top-row">
     <slot />
   </div>
 </template>
@@ -12,21 +12,17 @@
 <style scoped>
 .picker-search-row {
   display: flex;
-  padding-right: var(--picker-scrollbar-inset);
+}
+
+@media (min-width: 769px) {
+  .picker-search-row {
+    padding-right: var(--picker-scrollbar-inset);
+  }
 }
 
 @media (max-width: 768px) {
-  .picker-search-row {
-    padding: var(--spacing-sm) var(--spacing-md) 0;
-  }
   .picker-search-row :deep(.search-trigger) {
     max-width: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .picker-search-row {
-    padding: var(--spacing-sm) var(--spacing-sm) 0;
   }
 }
 </style>

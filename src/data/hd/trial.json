@@ -3,7 +3,8 @@
     {
       "card": "trial-card-6",
       "tier": "epic",
-      "units": ["sandbeast-king", "icesoul", "mad-creature", "charming-creature", "dark-creature"]
+      "units": ["sandbeast-king", "icesoul", "mad-creature", "charming-creature", "dark-creature"],
+      "shop": true
     },
     {
       "card": "trial-card-12",

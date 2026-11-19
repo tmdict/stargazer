@@ -338,3 +338,19 @@ main {
     gap: var(--spacing-md);
   }
 }
+
+@media (max-width: 768px) {
+  .picker-top-row {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+  }
+
+  .picker-top-row + .picker-top-row {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .picker-top-row {
+    padding: var(--spacing-sm) var(--spacing-sm) 0;
+  }
+}

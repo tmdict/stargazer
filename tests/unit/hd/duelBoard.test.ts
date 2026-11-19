@@ -156,7 +156,7 @@ describe('an Honor Duel board from its link text', () => {
     )
     ctx.setAttr(Team.ALLY, ALLY_B, DUEL_ATTR_TIER, 3)
 
-    expect(onScreen().units.map((u) => u.tier)).toEqual([2, 1, 3, 0, 2])
+    expect(onScreen().units.map((u) => u.tier)).toEqual([2, 0, 3, 0, 2])
   })
 
   it('opens an empty board on the first map for a text that is no board', () => {

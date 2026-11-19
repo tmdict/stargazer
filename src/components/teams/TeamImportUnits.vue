@@ -320,7 +320,7 @@ const tileBoxes = (): HTMLInputElement[] => [
 
 <template>
   <div v-if="unitViews.length || missingRows.length" ref="sectionEl" class="side">
-    <ImportSideHead :label="i18n.t('app.import-units')">
+    <ImportSideHead :label="i18n.t('app.units')">
       <TeamImportPlaceCount v-if="missingRows.length" v-bind="placeCount" />
     </ImportSideHead>
     <div class="boards">

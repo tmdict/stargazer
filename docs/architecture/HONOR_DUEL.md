@@ -1,6 +1,6 @@
 # Honor Duel
 
-Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts and then equipment by tier, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. On the Teams page nothing in the two lists goes on a board.
+Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts in one list and the equipment by tier in another, one list on show at a time, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. On the Teams page nothing in the two lists goes on a board.
 
 On the Arena page the tab also swaps the Arena board for an Honor Duel board, where a formation of the mode is laid out with its tiers, equipment and artifacts ([The board](#the-board)).
 
@@ -29,7 +29,7 @@ An entry's `id` is Stargazer's own number, counted from 1 in the game's listing 
 
 ## Loading
 
-`src/utils/duelCatalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts the list only once its tab is first shown.
+`src/utils/duelCatalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts a list only once its tab is first shown.
 
 The text loads one language at a time: the reader's skill-text language when the list or an Honor Duel board first shows, for their hover cards, and a popup's own language when it opens. `loadHonorDuelText` gives none for a language the pack holds no text for and fails only when the download does, so a popup says the text could not be loaded and asks for it again the next time it opens. A hover card left without text asks again when the next one opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
 
@@ -45,9 +45,9 @@ The Arena page shows one of two boards: the Arena's own, and an Honor Duel board
 
 ### What a unit carries
 
-A unit of the mode comes from one of two sources, and its source sets its tiers (`src/lib/hd/units.ts`). The shop sells its heroes, the list the shop calculator uses, and a hero from it holds Epic, Legendary or Mythic. A Trial Card brings the units `src/data/hd/trial.json` lists for it: any of the shop's heroes, heroes the shop does not sell, or creatures. A Trial unit holds the tiers of the cards that bring it, so a Trial copy of a shop hero holds Legendary or Mythic, and a unit one card brings holds that card's tier and shows it without a choice. A Trial unit may stand beside the hero and beside other copies ([Grid](./GRID.md#unit-ids)).
+A unit of the mode comes from one of two sources, and its source sets its tiers (`src/lib/hd/units.ts`). The shop sells its heroes, the list the shop calculator uses, and a hero from it holds Epic, Legendary or Mythic. A Trial Card brings the units `src/data/hd/trial.json` lists for it: any of the shop's heroes, heroes the shop does not sell, or creatures. A Trial unit holds the tiers of the cards that bring it, so a Trial copy of a shop hero holds Epic, Legendary or Mythic, and a unit one card brings holds that card's tier and shows it without a choice. A Trial unit may stand beside the hero and beside other copies ([Grid](./GRID.md#unit-ids)).
 
-The picker shows the two sources as two lists, Shop and Trial, and the popup on an empty tile follows the list on show. That choice is one value for both (`useDuelList`), which lasts while the page is open and is never stored. The Trial list has a group for each card. A pick from a group carries the card's tier in its id (`toTrialPick`), so a click, a tap and a drag place a copy at that tier through the one placing path. The popup lists each Trial unit once, at the cheapest card that brings it.
+On the Arena page the tab has a third list, Units, which comes first. It holds the shop's heroes under a Shop or Trial switch, then a group for each card that names units of its own: the creatures, and the heroes the shop does not sell. The switch says whether a shop hero is picked as a shop copy or as a Trial copy, at the lowest tier a card brings it at, and a Trial copy's tier is raised on the board. The popup on an empty tile lists the same units in the same order. The switch is one value for both (`useDuelUnits`), which lasts while the page is open and is never stored, as the list on show is. A tile tapped on the board brings the Units list forward, since that tap raises the sheet to take a unit. A Trial pick carries its tier in its id (`toTrialPick`), so a click, a tap and a drag place a copy at that tier through the one placing path.
 
 A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment as a hero does, and it has no skill page: the gestures that open a hero's skills open a popup with the creature's own, from the pack's creature text (`heroInspectTarget`, `CreatureModal`).
 
@@ -65,7 +65,7 @@ A badge by each artifact place reports the side's faction bonus (`teamFactionBon
 
 ### What the board loads
 
-The board's rules need none of the catalog, so the Arena page loads none of it for a visitor who never opens an Honor Duel board. The Trial list, the creature files and the names of the shop's products, which head the Trial list's groups (`src/utils/shopGoodNames.ts`), are a few small files and load with the rules. The pictures on a portrait and in the hero card ask for the catalog on first use (`useDuelItems`), and the artifact layer and the two pickers are fetched with it.
+The board's rules need none of the catalog, so the Arena page loads none of it for a visitor who never opens an Honor Duel board. The Trial list, the creature files and the names of the shop's products, which head the Units list's card groups (`src/utils/shopGoodNames.ts`), are a few small files and load with the rules. The pictures on a portrait and in the hero card ask for the catalog on first use (`useDuelItems`), and the artifact layer and the two pickers are fetched with it.
 
 ## Formats
 
@@ -162,7 +162,12 @@ The Trial list, `src/data/hd/trial.json`, shortened here to two units a card. `c
 ```json
 {
   "cards": [
-    { "card": "trial-card-6", "tier": "epic", "units": ["sandbeast-king", "icesoul"] },
+    {
+      "card": "trial-card-6",
+      "tier": "epic",
+      "units": ["sandbeast-king", "icesoul"],
+      "shop": true
+    },
     { "card": "trial-card-12", "tier": "legendary", "shop": true },
     { "card": "trial-card-22", "tier": "mythic", "shop": true },
     { "card": "trial-card-45", "tier": "supreme", "units": ["berial", "scarlita"] }

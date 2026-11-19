@@ -4,6 +4,7 @@
  * apart from them and a link opens as a plain map. The board carries the
  * mode's buffs while it stays on the map picked (useGrids' buffMode). */
 
+import { useSelectionState } from '@/composables/useSelectionState'
 import { TEAM_VARIANTS, type TeamVariantKey } from '@/lib/teams/modes'
 import { useGrids } from '@/stores/grids'
 import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
@@ -15,11 +16,14 @@ const isVariantKey = (value: string | null): value is TeamVariantKey =>
 
 export function useArenaPick() {
   const grids = useGrids()
+  const { clearTargetHex } = useSelectionState()
 
-  // A dropdown row: the board moves onto its map with everything on it.
+  // A map button: the board moves onto its map with everything on it. A tile
+  // tapped before may be another side's on the new map, or hold a unit.
   const pick = (mode: TeamVariantKey, map: string): void => {
     const board = grids.active
     if (!board || !grids.moveToMap(board, map)) return
+    clearTargetHex()
     grids.arenaPick = { mode, map }
     writeStorage(PICK_KEY, mode)
   }

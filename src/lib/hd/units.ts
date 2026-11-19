@@ -53,7 +53,7 @@ const SHOP_TIERS: readonly number[] = (['epic', 'legendary', 'mythic'] as const)
   DUEL_TIERS.indexOf(tier),
 )
 
-export const trialCardBrings = (card: TrialCard, name: string): boolean =>
+const trialCardBrings = (card: TrialCard, name: string): boolean =>
   (card.units?.includes(name) ?? false) || (card.shop === true && isShopHero(name))
 
 /** The tiers a hero or creature may hold as a unit of the shop, or with

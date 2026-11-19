@@ -5,14 +5,12 @@ import CharacterSelectionPalette from './CharacterSelectionPalette.vue'
 import RosterMenu from './RosterMenu.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import UpgradeBars from './ui/UpgradeBars.vue'
-import { useDuelList } from '@/composables/useDuelList'
-import { useDuelTrialGroups } from '@/composables/useDuelTrialGroups'
+import { useDuelUnits } from '@/composables/useDuelUnits'
 import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
-import { duelHeroes, duelTrialPool } from '@/lib/hd/heroes'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { getTeamFromTileState } from '@/lib/types/state'
@@ -48,15 +46,13 @@ const { requestTab } = useSelectionState()
 const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
 // An Honor Duel board draws on the mode's units, the same for every player,
-// and holds no roster levels. Its pool follows the list its picker shows: the
-// shop's heroes, or each Trial unit once, at the cheapest card that brings it.
+// and holds no roster levels. Its pool is the Honor Duel tab's list, in the
+// tab's order.
 const duel = computed(() => ctx.kind === 'honorDuel')
-const trialGroups = useDuelTrialGroups()
-const trialList = useDuelList()
-const pool = computed(() => {
-  if (!duel.value) return gameData.characters.filter(rosters.isPickable)
-  return trialList.value ? duelTrialPool(trialGroups.value) : duelHeroes(gameData.characters)
-})
+const duelUnits = useDuelUnits()
+const pool = computed(() =>
+  duel.value ? duelUnits.units.value : gameData.characters.filter(rosters.isPickable),
+)
 
 // Heroes of the pool with a legal placement on this team. While Syn is on, an
 // already-placed hero stays listed as its synergy copy, matching the picker's
@@ -67,7 +63,9 @@ const availableCharacters = computed(() => {
   return pool.value.filter((char) => grids.resolvePick(ctx, char.id, t) !== null)
 })
 
-const sortedCharacters = computed(() => [...availableCharacters.value].sort(compareCharacters))
+const sortedCharacters = computed(() =>
+  duel.value ? availableCharacters.value : [...availableCharacters.value].sort(compareCharacters),
+)
 
 // The Rosters tab lives in the side panel, so the popup gives way to it.
 const manageRosters = (): void => {

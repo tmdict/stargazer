@@ -41,7 +41,7 @@ const emit = defineEmits<{ loadTeam: [team: SavedTeam] }>()
 const i18n = useI18nStore()
 const gridStore = useGridStore()
 const library = useTeamLibrary()
-const { targetHexId, tabRequest, liftedHexId, clearTargets } = useSelectionState()
+const { targetHexId, tabRequest, liftedHexId, clearTargetHex, clearTargets } = useSelectionState()
 
 const activeTab = ref('saved')
 const tabs = computed(() => [
@@ -90,6 +90,8 @@ watch(liftedHexId, (id) => {
 // Preset selection retargets the active board's map.
 const handleArenaSelected = (mapKey: string) => {
   gridStore.moveToMap(mapKey)
+  // A tile tapped before may be another side's on the new map, or hold a unit.
+  clearTargetHex()
 }
 </script>
 

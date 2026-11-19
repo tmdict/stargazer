@@ -119,7 +119,7 @@ const handleResultSelect = (slug: string) => {
     class="character-selection panel-min-height"
     :class="{ 'panel-fill': scrollable }"
   >
-    <div v-if="$slots.top" class="picker-top">
+    <div v-if="$slots.top" class="picker-top-row">
       <slot name="top" />
     </div>
 
@@ -175,14 +175,6 @@ const handleResultSelect = (slug: string) => {
 @media (max-width: 768px) {
   .character-selection {
     --filter-inset: var(--spacing-md);
-  }
-
-  .picker-top {
-    padding: var(--spacing-sm) var(--filter-inset) 0;
-  }
-
-  .picker-top + .picker-search-row {
-    padding-top: 0;
   }
 }
 

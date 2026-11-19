@@ -24,7 +24,7 @@ const BUFF_TEXTS = new Set(
   Object.keys(import.meta.glob('@/locales/buff/*.json', { eager: true })).map(fileStem),
 )
 
-/* A board is found by its mode and map alone (the Arena's dropdown pick keeps
+/* A board is found by its mode and map alone (the Arena's map pick keeps
  * no board number), so a map is on a mode's list at most once. A buff sits on
  * deployment tiles, where a hero can stand, and a tile holds one buff. */
 export function checkModeBoards(mode: string, boards: readonly ModeBoard[]): readonly ModeBoard[] {

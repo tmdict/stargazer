@@ -1,7 +1,8 @@
 <script lang="ts">
 /* A row of pill segments: the Teams mode and type pickers and the Saved Teams
    sort and filters (`small`). The default slot replaces a segment's label,
-   e.g. with a ConfirmLabel for a two-step confirm. */
+   e.g. with a ConfirmLabel for a two-step confirm. The owner can narrow a
+   `small` segment's side padding with `--segment-inline-padding`. */
 
 export interface Segment {
   key: string

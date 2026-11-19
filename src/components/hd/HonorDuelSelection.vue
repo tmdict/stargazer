@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* The Honor Duel list: the mode's artifacts, then its equipment by tier, each
-   piece on its tier's backdrop. Hovering shows an item's effect, and the
-   inspect gesture (right-click, hold) opens its details. So does a click,
-   except beside an Honor Duel board, where an artifact's click places it or
-   takes it off as on the Arena's list, and a piece can be dragged onto a
-   unit. */
+/* One of the Honor Duel tab's lists: the mode's artifacts, or its equipment
+   by tier, each piece on its tier's backdrop. Hovering shows an item's
+   effect, and the inspect gesture (right-click, hold) opens its details. So
+   does a click, except beside an Honor Duel board, where an artifact's click
+   places it or takes it off as on the Arena's list, and a piece can be dragged
+   onto a unit. */
 
 import { computed } from 'vue'
 
@@ -28,13 +28,9 @@ import {
   duelItemName,
   equipmentTierLabel,
 } from '@/utils/duelCatalog'
-import { gameLabel } from '@/utils/skillLabels'
 import { tierBackdrop } from '@/utils/tierBackdrop'
 
-const { scrollable = true } = defineProps<{
-  // See CharacterSelection: off when the picker flows in normal page height.
-  scrollable?: boolean
-}>()
+const { kind } = defineProps<{ kind: HonorDuelItem['kind'] }>()
 
 const i18n = useI18nStore()
 const grids = useGrids()
@@ -88,22 +84,26 @@ const hoveredText = computed(() => {
     : text.value.artifacts[item.item.name]
 })
 
+// The artifacts are one group, which the tab's control already names.
 const groups = computed(() => {
   const locale = i18n.currentLocale
-  return [
-    {
-      key: 'artifact',
-      title: gameLabel('duel-artifact', locale),
-      items: duelArtifacts.map((item): HonorDuelItem => ({ kind: 'artifact', item })),
-    },
-    ...EQUIPMENT_TIERS.map((tier) => ({
-      key: tier,
-      title: equipmentTierLabel(tier, locale),
-      items: duelEquipment
-        .filter((item) => item.tier === tier)
-        .map((item): HonorDuelItem => ({ kind: 'equipment', item })),
-    })),
-  ]
+  const listed =
+    kind === 'artifact'
+      ? [
+          {
+            key: 'artifact',
+            title: undefined,
+            items: duelArtifacts.map((item): HonorDuelItem => ({ kind: 'artifact', item })),
+          },
+        ]
+      : EQUIPMENT_TIERS.map((tier) => ({
+          key: tier,
+          title: equipmentTierLabel(tier, locale),
+          items: duelEquipment
+            .filter((item) => item.tier === tier)
+            .map((item): HonorDuelItem => ({ kind: 'equipment', item })),
+        }))
+  return listed
     .filter((group) => group.items.length > 0)
     .map((group) => ({
       ...group,
@@ -118,13 +118,9 @@ const groups = computed(() => {
 </script>
 
 <template>
-  <div
-    v-scroll-chain
-    class="honor-duel-selection icon-groups panel-min-height"
-    :class="{ 'panel-fill': scrollable }"
-  >
+  <div class="honor-duel-selection icon-groups">
     <section v-for="group in groups" :key="group.key" class="icon-group">
-      <h3 class="seasonal-title">{{ group.title }}</h3>
+      <h3 v-if="group.title" class="seasonal-title">{{ group.title }}</h3>
       <div class="seasonal-cells">
         <!-- Not a button: Firefox starts no drag from inside one. -->
         <div
