@@ -35,12 +35,12 @@ describe("the pickers' Trial units", () => {
     expect(picks(heroes)).toEqual([{ baseId: SHOP_HERO, tier: 0 }])
   })
 
-  it("groups the units a card names under picks that carry its tier, without the shop's heroes", () => {
+  it("groups the units a card names under picks that carry its tier, heroes before creatures, without the shop's heroes", () => {
     const groups = duelTrialGroups([unitOf(SHOP_HERO), unitOf(SUPREME_HERO), unitOf(CREATURE)])
 
     expect(groups.map((group) => picks(group.units))).toEqual([
-      [{ baseId: CREATURE, tier: 0 }],
       [{ baseId: SUPREME_HERO, tier: 3 }],
+      [{ baseId: CREATURE, tier: 0 }],
     ])
   })
 })

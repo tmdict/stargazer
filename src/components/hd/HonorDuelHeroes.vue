@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /* The Honor Duel board's units, the same for every player, so no roster
    narrows them: the shop's heroes, then what only a Trial Card brings, a group
-   per card. The switch beside "Heroes" says what a hero's click places: a shop
-   copy, which a second click takes off as on the Heroes tab, or a Trial copy.
-   Every click on a Trial pick adds one more copy while a side has room. */
+   per card under a heading that says what its units are. The switch beside
+   "Heroes" says what a hero's click places: a shop copy, which a second click
+   takes off as on the Heroes tab, or a Trial copy. Every click on a Trial pick
+   adds one more copy while a side has room. */
 
 import { computed } from 'vue'
 
@@ -19,7 +20,6 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { goodName } from '@/utils/shopGoodNames'
 import { duelPickBackdrop } from '@/utils/tierBackdrop'
 
 const grids = useGrids()
@@ -31,6 +31,12 @@ const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(l
 
 const HEROES = 'heroes'
 
+// The factions of a group's heroes, in the order the group lists them.
+const factionNames = (units: readonly CharacterType[]): string =>
+  [...new Set(units.map((unit) => unit.faction))]
+    .map((faction) => i18n.t(`game.${faction}`))
+    .join(' / ')
+
 interface UnitSection {
   key: string
   title: string
@@ -41,12 +47,11 @@ const sections = computed(() => {
   const shown = new Set(filteredCharacters.value)
   const all: UnitSection[] = [
     { key: HEROES, title: i18n.t('app.heroes'), units: heroes.value },
-    ...groups.value.map(({ card, units }) => {
-      const name = goodName(card, i18n.currentLocale)
-      // A card's name says nothing of what it brings, and these are no heroes.
-      const creatures = units.every((unit) => unit.creature)
-      return { key: card, title: creatures ? `${name} ${i18n.t('app.creatures')}` : name, units }
-    }),
+    ...groups.value.map(({ card, creatures, units }) => ({
+      key: card,
+      title: creatures ? i18n.t('app.creatures') : factionNames(units),
+      units,
+    })),
   ]
   // The heroes' heading stays under a filter that leaves it no hero, since it
   // carries the switch.

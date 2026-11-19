@@ -22,23 +22,26 @@ export const duelTrialHeroes = (characters: readonly CharacterType[]): Character
 interface TrialGroup {
   // The card's name in the shop's product list.
   card: string
+  // Whether the card names creatures alone.
+  creatures: boolean
   // Each unit under its pick id (toTrialPick), which carries the card's tier.
   units: CharacterType[]
 }
 
 /** The units a Trial Card names of the given heroes and creatures, a group
- * per card, cheapest card first. A unit the list lacks is left out, and so is
- * a card left with none. The shop's heroes, which a card brings without
- * naming them, are duelTrialHeroes. */
+ * per card: the cards that name heroes, then the creatures'. A unit the list
+ * lacks is left out, and so is a card left with none. The shop's heroes,
+ * which a card brings without naming them, are duelTrialHeroes. */
 export function duelTrialGroups(units: readonly CharacterType[]): TrialGroup[] {
   return TRIAL_CARDS.map((card) => {
     const tier = DUEL_TIERS.indexOf(card.tier)
+    const named = units.filter((unit) => card.units?.includes(unit.name)).sort(compareCharacters)
     return {
       card: card.card,
-      units: units
-        .filter((unit) => card.units?.includes(unit.name))
-        .sort(compareCharacters)
-        .map((unit) => ({ ...unit, id: toTrialPick(unit.id, tier) })),
+      creatures: named.every((unit) => unit.creature),
+      units: named.map((unit) => ({ ...unit, id: toTrialPick(unit.id, tier) })),
     }
-  }).filter((group) => group.units.length > 0)
+  })
+    .filter((group) => group.units.length > 0)
+    .sort((a, b) => Number(a.creatures) - Number(b.creatures))
 }

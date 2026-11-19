@@ -1,6 +1,4 @@
-/* The names of the Honor Duel shop's products in the site's languages. They
- * load apart from the mode's catalog, which the Arena page fetches on first
- * use, because the Units list's card headings show with the page. */
+// The names of the Honor Duel shop's products in the site's languages.
 
 import type { AppLocale, LocaleData } from '@/lib/types/i18n'
 import { byStem } from './fileStem'
