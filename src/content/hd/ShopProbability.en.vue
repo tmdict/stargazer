@@ -337,6 +337,14 @@ const f = useShopFigures()
     its {{ f.legendaryCopies }}, copies no longer cost the same each and this observation does not
     hold.
   </p>
+  <p>
+    Take shop level 4, 60 badges, all {{ f.poolSize }} heroes in the pool, three copies needed and a
+    two-copy card on show. Buying cannot overshoot, and it gives a 46.8% chance of finishing this
+    round. Locking gives 47.6% when the card came from a source that cannot make a Random Legendary
+    Hero, since the badges kept can still pay for one, and 46.0% when it came from the source that
+    can, since that source makes nothing new while the card is locked. With 75 badges buying leads
+    either way.
+  </p>
 
   <h3>
     Observation 2. Needing two copies, lock a one-copy card when badges are tight and buy it when
@@ -364,6 +372,12 @@ const f = useShopFigures()
     rare, buying is better even with few badges. This compares the chance of finishing this round.
     It does not count the worth of holding the bought card when the round ends short.
   </p>
+  <p>
+    With two copies needed, a one-copy card on show and all {{ f.poolSize }} heroes in the pool,
+    Toto's calculator gives these chances of finishing this round:
+  </p>
+  <ShopProbabilityTable table="lock-or-buy" />
+  <p>The other cards on show move these a little.</p>
 
   <h3>Observation 3. If one copy is needed and the hero's two-copy card shows, buy it</h3>
   <p>

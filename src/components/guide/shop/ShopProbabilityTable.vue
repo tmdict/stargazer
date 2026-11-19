@@ -1,17 +1,28 @@
 <script setup lang="ts">
 /* One of the shop probability guide's tables, the same in every language:
    what each round brings, how often each product shows, how often one hero
-   shows, what a pack gives, and the records behind each shop level. */
+   shows, what a pack gives, locking a card against buying it, and the
+   records behind each shop level. */
 
 import { useI18nStore } from '@/stores/i18n'
 import { goodName } from '@/utils/shopGoodNames'
 import { percent, useShopFigures } from './useShopFigures'
 
-defineProps<{ table: 'rounds' | 'levels' | 'products' | 'hero' | 'packs' }>()
+defineProps<{ table: 'rounds' | 'levels' | 'products' | 'hero' | 'packs' | 'lock-or-buy' }>()
 
 const i18n = useI18nStore()
 const figures = useShopFigures()
 const level = (n: number): string => i18n.t('app.shop-level-short', { level: n })
+
+// The chance of finishing the round with two copies needed and a one-copy
+// card on show. Quoted from Toto's calculator: each takes a full calculation,
+// which the page does not run.
+const LOCK_OR_BUY = [
+  { level: 5, badges: 45, lock: 0.464, buy: 0.369 },
+  { level: 5, badges: 60, lock: 0.712, buy: 0.71 },
+  { level: 5, badges: 75, lock: 0.863, buy: 0.867 },
+  { level: 4, badges: 45, lock: 0.461, buy: 0.468 },
+]
 </script>
 
 <template>
@@ -92,6 +103,25 @@ const level = (n: number): string => i18n.t('app.shop-level-short', { level: n }
           <td :class="{ none: !row.rerolls }">
             {{ row.rerolls ? Math.round(row.rerolls * figures.reroll) : '–' }}
           </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table v-else-if="table === 'lock-or-buy'" class="guide-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ i18n.t('app.shop-level-label') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-badges') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-lock') }}</th>
+          <th scope="col">{{ i18n.t('app.shop-math-buy') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in LOCK_OR_BUY" :key="`${row.level}-${row.badges}`">
+          <th scope="row">{{ row.level }}</th>
+          <td>{{ row.badges }}</td>
+          <td>{{ percent(row.lock) }}</td>
+          <td>{{ percent(row.buy) }}</td>
         </tr>
       </tbody>
     </table>
