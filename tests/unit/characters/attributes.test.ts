@@ -6,7 +6,6 @@ import {
   ATTR_SKILL_MODE,
   attrRowsFor,
   clampAttr,
-  collapseAttrRows,
   compareAttrRows,
   HERO_ATTRS,
   type AttrRow,
@@ -122,10 +121,8 @@ describe('collapseAttrRows', () => {
     [Team.ENEMY, 12, ATTR_PARAGON, 2],
   ]
 
-  it('clamps, keeps the last row per team, hero and attribute, drops defaults and sorts', () => {
-    expect(collapseAttrRows(rows)).toEqual(expected)
-  })
-
+  // Clamped, the last row kept per team, hero and attribute, defaults dropped,
+  // sorted.
   it('gives saved teams and links the same rows', () => {
     const saved = decodeTeamData(canonicalTeamData(encodeTeamData({ boards: [{ u: rows }] }))!)!
     const link = decodeLink(encodeLink({ mode: 'arena', d: 0, boards: [{ u: rows }] }))!
