@@ -72,9 +72,6 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
         </button>
       </template>
     </div>
-    <div v-if="$slots.actions" class="tab-actions">
-      <slot name="actions" />
-    </div>
   </div>
 </template>
 
@@ -182,11 +179,6 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
   .tab-btn.active {
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
-  }
-
-  .tab-actions {
-    flex: none;
-    align-self: center;
   }
 
   @container (max-width: 558px) {

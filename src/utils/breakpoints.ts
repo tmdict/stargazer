@@ -10,7 +10,7 @@
 //   1600        the board's wide size
 //   1600 / 1920 reader-column width steps (SkillsBrowser)
 //
-// Other widths (374, 420, 520, 640, 700, 720, 920, 1100, 1320) are local to the
+// Other widths (374, 420, 520, 640, 700, 720, 920, 1100) are local to the
 // layouts that use them and are written there. GuideSlRulesView's 1101 query
 // pairs with the 1100 rule of its own layout.
 export const MOBILE_MAX_WIDTH = 480

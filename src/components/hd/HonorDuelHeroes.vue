@@ -10,6 +10,7 @@ import { computed, watch } from 'vue'
 import CharacterFilterStrip from '@/components/CharacterFilterStrip.vue'
 import CharacterGrid from '@/components/CharacterGrid.vue'
 import CharacterIcon from '@/components/CharacterIcon.vue'
+import MapButtons from '@/components/grid/MapButtons.vue'
 import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelList } from '@/composables/useDuelList'
@@ -103,15 +104,7 @@ const handleClick = (character: CharacterType) => {
           :aria-label="i18n.t('app.heroes')"
           @select="trialList = $event === 'trial'"
         />
-        <div class="duel-maps">
-          <span class="duel-maps-label" aria-hidden="true">{{ i18n.t('app.map') }}</span>
-          <SegmentedPicker
-            small
-            :segments="maps"
-            :aria-label="i18n.t('app.map')"
-            @select="duelBoard.moveToMap($event)"
-          />
-        </div>
+        <MapButtons :maps @select="duelBoard.moveToMap($event)" />
       </template>
     </CharacterFilterStrip>
 
@@ -154,18 +147,6 @@ const handleClick = (character: CharacterType) => {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
-}
-
-.duel-maps {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.duel-maps-label {
-  color: var(--color-text-secondary);
-  font-size: var(--control-font-size);
-  font-weight: var(--control-font-weight);
 }
 
 @media (max-width: 768px) {

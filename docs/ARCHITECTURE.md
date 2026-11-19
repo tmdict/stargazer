@@ -82,7 +82,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | Key                                                                     | Holds                                                                   | Shape in                                                  |
 | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
 | `stargazer.arena`                                                       | the Arena board, as a binary link payload                               | [URL Serialization](./architecture/URL_SERIALIZATION.md)  |
-| `stargazer.arena.variant`                                               | the mode of the Arena's map dropdown pick, `sl` or `gd`                 | [Grid](./architecture/GRID.md#map-editor)                 |
+| `stargazer.arena.variant`                                               | the mode of the Arena's map button pick, `sl` or `gd`                   | [Grid](./architecture/GRID.md#map-editor)                 |
 | `stargazer.hd.board`                                                    | the Arena page's Honor Duel board, as its link text                     | [Honor Duel](./architecture/HONOR_DUEL.md#the-board-link) |
 | `stargazer.season`                                                      | the season the Arena board was last cleaned for                         | [Seasonal Content](./architecture/SEASONAL.md)            |
 | `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort` | Teams modes, working boards, toggles, library, sort                     | [Teams](./architecture/TEAMS.md)                          |

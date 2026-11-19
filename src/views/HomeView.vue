@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
-import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
+import ArenaMapButtons from '@/components/grid/ArenaMapButtons.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import SeasonNotice from '@/components/grid/SeasonNotice.vue'
@@ -374,7 +374,11 @@ const handleResetMap = () => {
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargets">
           <TabView :tabs :model-value="activeTab" fill eager @update:model-value="handleTabChange">
             <template #characters>
-              <CharacterSelection :characters="gameDataStore.characters" :is-draggable="true" />
+              <CharacterSelection :characters="gameDataStore.characters" :is-draggable="true">
+                <template #top>
+                  <ArenaMapButtons />
+                </template>
+              </CharacterSelection>
             </template>
             <template #seasonal>
               <SeasonalSelection
@@ -400,9 +404,6 @@ const handleResetMap = () => {
             </template>
             <template #debug>
               <DebugPanel />
-            </template>
-            <template #actions>
-              <ArenaDropdown />
             </template>
           </TabView>
         </BottomSheet>

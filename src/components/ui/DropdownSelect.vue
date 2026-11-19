@@ -1,16 +1,15 @@
 <script setup lang="ts">
 /* A dropdown: a trigger naming the current choice and a list that opens on
    hover (mouse) or click (useDropdown). The list is the `items`, several of
-   which may show as selected (the Arena quick maps share maps across slots),
+   which may show as selected,
    plus an optional trailing action item (e.g. Manage). A `deletable` item
    carries a delete button, which arms on a first click and emits `delete` on
    the second, and a `renamable` one a pencil that turns its row into a name
    field, which emits `rename`. A `default` slot replaces the list with the
    owner's own DropdownRows.
 
-   Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
-   the tab strip, list right-aligned), `dark` (translucent, inside the dark
-   on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
+   Variants: `pill` (bordered, on light panels), `dark` (translucent, inside
+   the dark on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
    accessible name, list dark and centred under the icon), `nav` (the
    owner's own `trigger` slot on dark chrome, such as a top bar link, list
    dark). The owner can fix the trigger width with `--dropdown-trigger-width`
@@ -65,7 +64,7 @@ const {
 } = defineProps<{
   label: string
   items?: readonly DropdownItem[]
-  variant?: 'pill' | 'tab' | 'dark' | 'icon' | 'nav'
+  variant?: 'pill' | 'dark' | 'icon' | 'nav'
   large?: boolean
   floating?: boolean
   // Accent the trigger, e.g. while a non-default choice is active.
@@ -427,7 +426,6 @@ const pressSegment = (): void => {
 }
 
 .pill .trigger,
-.tab .trigger,
 .dark .trigger {
   width: var(--dropdown-trigger-width, auto);
   min-width: var(--dropdown-trigger-min-width, auto);
@@ -669,32 +667,6 @@ const pressSegment = (): void => {
 
 .split .clear {
   right: calc(var(--dropdown-segment-reach) + 8px);
-}
-
-.tab {
-  font-size: var(--tab-font-size);
-  letter-spacing: 0.05em;
-}
-
-.tab .trigger {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-weight: 700;
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-.tab .trigger:hover {
-  color: var(--color-primary);
-}
-
-.tab .list {
-  left: auto;
-  right: 0;
-}
-
-.tab .item {
-  padding-block: var(--spacing-md);
 }
 
 .dark {

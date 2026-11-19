@@ -82,7 +82,7 @@ const { anchor, payload: tip, onMouseEnter, onMouseLeave } = useHoverTooltip<str
 }
 
 .small .segment {
-  padding: 3px 12px;
+  padding: 3px var(--segment-inline-padding, 12px);
   font-size: 0.78rem;
 }
 

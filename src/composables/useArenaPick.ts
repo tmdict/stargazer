@@ -1,5 +1,5 @@
-/* The Arena's map dropdown pick, kept on the device under
- * `stargazer.arena.variant` as the mode of the row picked, `sl` or `gd`. The
+/* The Arena's map button pick, kept on the device under
+ * `stargazer.arena.variant` as the mode of the button picked, `sl` or `gd`. The
  * Arena's saved board and its links carry no map key, so the pick is kept
  * apart from them and a link opens as a plain map. The board carries the
  * mode's buffs while it stays on the map picked (useGrids' buffMode). */
