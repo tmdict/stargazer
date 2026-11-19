@@ -48,10 +48,10 @@ const items = computed<DropdownItem[]>(() => [
     })),
   ]),
   ...section(i18n.t('app.honor-duel'), [
-    page('guide-hd-shop', i18n.t('app.shop-title'), HD_SHOP_PATH, BETA),
+    page('guide-hd-shop', i18n.t('app.shop-title-short'), HD_SHOP_PATH, BETA),
     page(
       'guide-hd-shop-probability',
-      i18n.t('app.shop-probability-title'),
+      i18n.t('app.shop-probability-title-short'),
       HD_SHOP_PROBABILITY_PATH,
     ),
   ]),
