@@ -186,6 +186,14 @@ const groups = computed(() => {
   transition: transform var(--transition-fast);
 }
 
+.duel-icon[draggable='true'] {
+  cursor: grab;
+}
+
+.duel-icon[draggable='true']:active {
+  cursor: grabbing;
+}
+
 .duel-icon img {
   width: 100%;
   height: 100%;

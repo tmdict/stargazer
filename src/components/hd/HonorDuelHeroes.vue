@@ -103,13 +103,18 @@ const handleClick = (character: CharacterType) => {
           :aria-label="i18n.t('app.heroes')"
           @select="trialList = $event === 'trial'"
         />
-        <SegmentedPicker
-          small
-          class="duel-maps"
-          :segments="maps"
-          :aria-label="i18n.t('app.maps')"
-          @select="duelBoard.moveToMap($event)"
-        />
+        <!-- Hidden through a wrapper of this component's own: a rule on the
+             picker's root would tie with the picker's own display rule, and
+             stylesheet order, which differs in a build, would settle it. -->
+        <div class="duel-maps">
+          <span class="duel-maps-label" aria-hidden="true">{{ i18n.t('app.maps') }}</span>
+          <SegmentedPicker
+            small
+            :segments="maps"
+            :aria-label="i18n.t('app.maps')"
+            @select="duelBoard.moveToMap($event)"
+          />
+        </div>
       </template>
     </CharacterFilterStrip>
 
@@ -152,6 +157,18 @@ const handleClick = (character: CharacterType) => {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
+}
+
+.duel-maps {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.duel-maps-label {
+  color: var(--color-text-secondary);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
 }
 
 @media (min-width: 1320px) {
