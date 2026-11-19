@@ -10,7 +10,7 @@ import { computed } from 'vue'
 import CharacterFilterStrip from '@/components/CharacterFilterStrip.vue'
 import CharacterGrid from '@/components/CharacterGrid.vue'
 import CharacterIcon from '@/components/CharacterIcon.vue'
-import SegmentedPicker from '@/components/ui/SegmentedPicker.vue'
+import DuelHeroSource from '@/components/hd/DuelHeroSource.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelUnits } from '@/composables/useDuelUnits'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
@@ -26,7 +26,7 @@ const grids = useGrids()
 const i18n = useI18nStore()
 const { targetTile, placedTeam, placeOnTarget, placeOnFirstSide } = usePickerPlacement()
 
-const { trial, heroes, groups, units: listed } = useDuelUnits()
+const { heroes, groups, units: listed } = useDuelUnits()
 const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(listed)
 
 const HEROES = 'heroes'
@@ -34,7 +34,6 @@ const HEROES = 'heroes'
 interface UnitSection {
   key: string
   title: string
-  note?: string
   units: CharacterType[]
 }
 
@@ -42,23 +41,19 @@ const sections = computed(() => {
   const shown = new Set(filteredCharacters.value)
   const all: UnitSection[] = [
     { key: HEROES, title: i18n.t('app.heroes'), units: heroes.value },
-    ...groups.value.map(({ card, units }) => ({
-      key: card,
-      title: goodName(card, i18n.currentLocale),
+    ...groups.value.map(({ card, units }) => {
+      const name = goodName(card, i18n.currentLocale)
       // A card's name says nothing of what it brings, and these are no heroes.
-      note: units.every((unit) => unit.creature) ? i18n.t('app.creatures') : undefined,
-      units,
-    })),
+      const creatures = units.every((unit) => unit.creature)
+      return { key: card, title: creatures ? `${name} ${i18n.t('app.creatures')}` : name, units }
+    }),
   ]
+  // The heroes' heading stays under a filter that leaves it no hero, since it
+  // carries the switch.
   return all
     .map((section) => ({ ...section, units: section.units.filter((unit) => shown.has(unit)) }))
-    .filter((section) => section.units.length > 0)
+    .filter((section) => section.key === HEROES || section.units.length > 0)
 })
-
-const sources = computed(() => [
-  { key: 'shop', label: i18n.t('app.shop'), selected: !trial.value },
-  { key: 'trial', label: i18n.t('app.trial'), selected: trial.value },
-])
 
 const isTrialPick = (character: CharacterType): boolean => trialPickOf(character.id) !== null
 
@@ -95,19 +90,10 @@ const handleClick = (character: CharacterType) => {
     <div class="icon-groups">
       <section v-for="section in sections" :key="section.key" class="icon-group">
         <div class="group-head">
-          <h3 class="seasonal-title">
-            {{ section.title }}
-            <span v-if="section.note" class="group-note">{{ section.note }}</span>
-          </h3>
-          <SegmentedPicker
-            v-if="section.key === HEROES"
-            small
-            :segments="sources"
-            :aria-label="i18n.t('app.heroes')"
-            @select="trial = $event === 'trial'"
-          />
+          <h3 class="seasonal-title">{{ section.title }}</h3>
+          <DuelHeroSource v-if="section.key === HEROES" />
         </div>
-        <CharacterGrid>
+        <CharacterGrid v-if="section.units.length">
           <CharacterIcon
             v-for="character in section.units"
             :key="character.id"
@@ -136,11 +122,5 @@ const handleClick = (character: CharacterType) => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-}
-
-.group-note {
-  margin-left: var(--spacing-sm);
-  font-size: 0.85rem;
-  font-weight: 400;
 }
 </style>

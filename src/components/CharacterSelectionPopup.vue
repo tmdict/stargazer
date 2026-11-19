@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import CharacterSelectionPalette from './CharacterSelectionPalette.vue'
+import DuelHeroSource from './hd/DuelHeroSource.vue'
 import RosterMenu from './RosterMenu.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import UpgradeBars from './ui/UpgradeBars.vue'
@@ -94,7 +95,13 @@ function handleSelect(character: CharacterType): void {
 
 <template>
   <SelectionPopup :label="i18n.t('app.pick-hero')" :position @close="emit('close')">
-    <RosterMenu v-if="!duel" dark manage class="popup-roster-menu" @manage="manageRosters" />
+    <!-- The popup is dark in both looks, so the switch takes its dark colours.
+         A press on it leaves the keyboard in the search box. -->
+    <div v-if="duel" class="popup-source" data-theme="dark" @mousedown.prevent>
+      <span class="popup-source-label">{{ i18n.t('app.heroes') }}</span>
+      <DuelHeroSource />
+    </div>
+    <RosterMenu v-else dark manage class="popup-roster-menu" @manage="manageRosters" />
     <CharacterSelectionPalette
       :characters="sortedCharacters"
       :enter-hint="i18n.t('app.place-hero')"
@@ -114,7 +121,20 @@ function handleSelect(character: CharacterType): void {
 </template>
 
 <style scoped>
-.popup-roster-menu {
+.popup-roster-menu,
+.popup-source {
   margin: 0 var(--palette-inset) 8px;
+}
+
+.popup-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-source-label {
+  font-size: var(--field-dark-font-size);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
 }
 </style>
