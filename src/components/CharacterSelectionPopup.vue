@@ -47,8 +47,8 @@ const { requestTab } = useSelectionState()
 const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
 // An Honor Duel board draws on the mode's units, the same for every player,
-// and holds no roster levels. Its pool is the Honor Duel tab's list, in the
-// tab's order, with a shop hero as the popup's switch says.
+// and holds no roster levels. Its pool is the units of the source the popup's
+// switch names, in the Honor Duel tab's order.
 const duel = computed(() => ctx.kind === 'honorDuel')
 const duelUnits = useDuelUnits()
 const pool = computed(() =>

@@ -3,9 +3,10 @@
  * the data pack holds its picture.
  *
  * The tab lists a shop hero as its normal copy. The popup on an empty tile
- * lists it as `trial` says, a normal copy or a Trial one. No board holds that
- * value, so it outlives a rebuild of the boards and lasts while the page is
- * open; nothing stores it. */
+ * lists one source's units, as `trial` says: the shop's heroes, or everything
+ * a Trial Card brings, the shop's heroes as Trial copies first. No board holds
+ * that value, so it outlives a rebuild of the boards and lasts while the page
+ * is open; nothing stores it. */
 
 import { computed, ref } from 'vue'
 
@@ -24,11 +25,9 @@ export function useDuelUnits() {
     ]),
   )
   const grouped = computed(() => groups.value.flatMap((group) => group.units))
-  // Every unit in the order the lists show them.
   const units = computed(() => [...heroes.value, ...grouped.value])
-  const popupUnits = computed(() => [
-    ...(trial.value ? duelTrialHeroes(gameData.characters) : heroes.value),
-    ...grouped.value,
-  ])
+  const popupUnits = computed(() =>
+    trial.value ? [...duelTrialHeroes(gameData.characters), ...grouped.value] : heroes.value,
+  )
   return { trial, heroes, groups, units, popupUnits }
 }

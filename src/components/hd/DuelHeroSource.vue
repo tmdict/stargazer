@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* Says what a pick of a shop hero places from the popup on an Honor Duel
-   board's empty tile: a shop copy or a Trial copy. */
+/* Says which source's units the popup on an Honor Duel board's empty tile
+   lists: the shop's, or a Trial Card's. */
 
 import { computed } from 'vue'
 
