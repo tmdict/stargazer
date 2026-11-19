@@ -151,6 +151,9 @@ const bonusRows = computed(() =>
       :class="{ front: side.front }"
       :style="side.style"
     >
+      <!-- Before the artifact, whose level marks hang over its lower edge and
+           draw on top of the pointer. -->
+      <GridPointer v-if="ctx.perspective && side.held" />
       <div
         v-if="side.held"
         class="duel-artifact inspectable"
@@ -169,7 +172,6 @@ const bonusRows = computed(() =>
         </span>
         <HoldRing v-if="holdingTeam === side.team" />
       </div>
-      <GridPointer v-if="ctx.perspective && side.held" />
       <button
         v-if="side.bonus.percent > 0"
         type="button"
