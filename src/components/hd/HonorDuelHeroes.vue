@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/* The Honor Duel board's pickers: its map on screens too narrow for the map
-   menu, and the mode's units in two lists, the same for every player, so no
-   roster narrows them. In the Shop list a click places a hero and a second
+/* The Honor Duel board's pickers: its map, and the mode's units in two lists,
+   the same for every player, so no roster narrows them. In the Shop list a click places a hero and a second
    takes it off, as on the Heroes tab. The Trial list holds what each Trial
    Card brings, a group per card, and there every click adds one more copy at
    the card's tier while a side has room. */
@@ -104,15 +103,12 @@ const handleClick = (character: CharacterType) => {
           :aria-label="i18n.t('app.heroes')"
           @select="trialList = $event === 'trial'"
         />
-        <!-- Hidden through a wrapper of this component's own: a rule on the
-             picker's root would tie with the picker's own display rule, and
-             stylesheet order, which differs in a build, would settle it. -->
         <div class="duel-maps">
-          <span class="duel-maps-label" aria-hidden="true">{{ i18n.t('app.maps') }}</span>
+          <span class="duel-maps-label" aria-hidden="true">{{ i18n.t('app.map') }}</span>
           <SegmentedPicker
             small
             :segments="maps"
-            :aria-label="i18n.t('app.maps')"
+            :aria-label="i18n.t('app.map')"
             @select="duelBoard.moveToMap($event)"
           />
         </div>
@@ -170,12 +166,6 @@ const handleClick = (character: CharacterType) => {
   color: var(--color-text-secondary);
   font-size: var(--control-font-size);
   font-weight: var(--control-font-weight);
-}
-
-@media (min-width: 1320px) {
-  .duel-maps {
-    display: none;
-  }
 }
 
 @media (max-width: 768px) {
