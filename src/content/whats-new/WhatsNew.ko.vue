@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
-import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
-import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
+import { RouterLink } from 'vue-router'
+
+import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
+import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import LinkHeading from '@/components/ui/LinkHeading.vue'
-import UpgradeIcon from '@/components/ui/UpgradeIcon.vue'
 import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
-import WhatsNewPlacementPicture from '@/components/whats-new/WhatsNewPlacementPicture.vue'
-import WhatsNewSkillsPicture from '@/components/whats-new/WhatsNewSkillsPicture.vue'
-import WhatsNewThemePicture from '@/components/whats-new/WhatsNewThemePicture.vue'
 import { whatsNewEditionDate } from '@/composables/useWhatsNew'
-import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import { guidePath, HD_SHOP_PATH, HD_SHOP_PROBABILITY_PATH } from '@/lib/guide'
 import { pvpReportHref } from '@/lib/pvp/summary'
+import { SITE_HOST } from '@/lib/site'
 
 const editionDate = whatsNewEditionDate('ko')
 </script>
@@ -19,61 +17,59 @@ const editionDate = whatsNewEditionDate('ko')
   <article>
     <h1>새 기능 · {{ editionDate }}</h1>
 
-    <section class="whats-new-entry link-area">
-      <LinkHeading :to="SL_GENERATOR_PATH">PvP 조합 생성기</LinkHeading>
-      <WhatsNewPicture><HelpGeneratorPicture /></WhatsNewPicture>
-      <p>
-        내 영웅으로 1v1, 3v3, 5v5 매치(최강자 리그와 길드 격돌 포함)의 각 맵에 팀을 하나씩 짜
-        줍니다. 팀은 플레이어들이 기록한 전투에서 골라냅니다. 아레나와 진형 페이지의
-        <HelpGenerateButton />
-        버튼은 로스터로 아군 보드를 한 번에 채웁니다.
-      </p>
-    </section>
-
     <section class="whats-new-entry">
-      <h2>배치 팁</h2>
-      <WhatsNewPicture><WhatsNewPlacementPicture /></WhatsNewPicture>
+      <h2>Honor Duel Lab과 함께합니다</h2>
       <p>
-        아레나나 진형 페이지에서 <span class="help-mouse">내 영웅 위에 마우스를 올리면</span
-        ><span class="help-touch">내 영웅을 누르면</span> 그 자리가 왜 좋은지 알려 줍니다. 스킬이
-        누구에게 무엇을 주는지, 앞과 뒤 중 어느 쪽에 서려 하는지, 더 잘 맞는 타일이 있다면 초록색
-        테두리로 보여 줍니다. <b>맵 정보</b>를 켜면 볼 수 있으며, 메뉴에는 <b>배치 팁</b>이 처음부터
-        체크되어 있습니다.
-      </p>
-    </section>
-
-    <section class="whats-new-entry">
-      <h2>영웅별 스킬 표시</h2>
-      <WhatsNewPicture><WhatsNewSkillsPicture /></WhatsNewPicture>
-      <p>
-        <b>스킬</b> 메뉴에서 영웅이나 메아리별로, 또는 아군이나 적군 전체의 화살표와 스킬 범위를 끌
-        수 있습니다. 선택은 페이지를 새로 고칠 때까지 유지됩니다.
+        Stargazer가 Toto, 그리고 Honor Duel Lab과 함께하게 되었습니다. 앞으로 몇 달에 걸쳐 명예의
+        결투 기능을 Stargazer에 차례로 추가할 예정이며, 아래가 그 첫 번째입니다.
       </p>
     </section>
 
     <section class="whats-new-entry link-area">
-      <LinkHeading :to="WWW_PATH">누가 이길까?</LinkHeading>
-      <WhatsNewPicture><HelpWwwPicture /></WhatsNewPicture>
+      <LinkHeading :to="HD_SHOP_PATH">명예의 결투 상점 계산기</LinkHeading>
+      <WhatsNewPicture><HelpShopPicture /></WhatsNewPicture>
       <p>
-        최강자 리그 팀 두 개를 구성하면 어느 쪽이 이길지, 그 이유와 함께 알려 줍니다.
-        <b>매치</b>는 최강자 리그 매치의 다섯 경기를 모두 다룹니다.
-      </p>
-    </section>
-
-    <section class="whats-new-entry link-area">
-      <LinkHeading :href="pvpReportHref(8, 'ko')">시즌 8 PvP 리포트</LinkHeading>
-      <p>
-        최강자 리그의 진형, 상성, 맵 데이터를 모은 리포트에 이제 두 번째 최강자 리그의 전투도
-        들어갑니다.
+        지금 보이는 명예의 결투 상점과 찾는 영웅이나 장비를 입력하세요. 이번 라운드에 완성할 확률이
+        가장 높은 수와 휘장이 가장 적게 드는 수를 보여 주고, 이번 라운드를 멈추는 편이 나을 때는
+        그렇게 알려 줍니다.
       </p>
     </section>
 
     <section class="whats-new-entry">
-      <h2>다크 모드</h2>
-      <WhatsNewPicture><WhatsNewThemePicture /></WhatsNewPicture>
+      <h2>명예의 결투 맵</h2>
+      <WhatsNewPicture><HelpDuelPicture /></WhatsNewPicture>
       <p>
-        Stargazer는 기기의 라이트 또는 다크 설정을 따릅니다. 위쪽의 해 또는 달 버튼을 누르면 직접
-        고를 수 있고, 사이트가 그 선택을 기억합니다.
+        아레나에 전용 맵이 있는 <b>명예의 결투</b> 탭이 생겼습니다. 영웅과 체험 유닛을 배치하고
+        등급과 장비를 정한 뒤, 양 진영에 아티팩트를 하나씩 장착하세요. 아티팩트 옆에는 그 진영의
+        동일 진영 버프가 표시됩니다.
+      </p>
+    </section>
+
+    <section class="whats-new-entry link-area">
+      <LinkHeading :to="HD_SHOP_PROBABILITY_PATH">명예의 결투 상점 확률</LinkHeading>
+      <p>
+        상점의 확률을 설명하는 가이드입니다. 카드나 영웅이 나올 확률, 평균적으로 필요한 새로고침
+        횟수와 휘장, 팩이나 잠금이 유리한 때를 다룹니다.
+      </p>
+    </section>
+
+    <section class="whats-new-entry">
+      <h2>새 가이드 페이지</h2>
+      <p>
+        <RouterLink :to="guidePath('factions')">동일 진영 버프</RouterLink>에서는 같은 진영 영웅으로
+        얻는 공격력·HP 증가와 진영 상성에 따른 대미지 증감을 볼 수 있습니다.
+        <RouterLink :to="guidePath('damage')">대미지 유형</RouterLink>은 물리·마법·고정 대미지와 HP
+        유실의 차이, 유형별로 영향을 주는 효과를 정리했습니다.
+        <RouterLink :to="guidePath('glossary')">용어집</RouterLink>은 스킬 설명에 나오는 속성, 상태
+        등 용어의 뜻을 설명합니다.
+      </p>
+    </section>
+
+    <section class="whats-new-entry">
+      <h2>새 주소</h2>
+      <p>
+        Stargazer가 <b>{{ SITE_HOST }}</b
+        >으로 이사했습니다. 예전 주소의 링크도 이곳으로 연결됩니다.
       </p>
     </section>
 
@@ -81,24 +77,18 @@ const editionDate = whatsNewEditionDate('ko')
       <h2>그 밖의 새 기능</h2>
       <ul>
         <li>
-          <b>영웅 로스터</b> 탭의 <b>스크린샷</b>은 <b>영웅의 전당</b>에서 찍은 영웅 스크린샷으로
-          로스터를 만듭니다.
+          <b>시즌</b> 탭에서 이번 시즌의 주문석과 신화 주문석 룬, 그리고 각각을 쓸 수 있는 영웅을 볼
+          수 있습니다.
         </li>
         <li>
-          파라곤과 제련 레벨을 P와 R 대신 왕관 <UpgradeIcon kind="paragon" />과 별
-          <UpgradeIcon kind="refinement" />로 표시합니다.
-        </li>
-        <li>저장한 진형을 영웅뿐 아니라 메아리로도 검색할 수 있습니다.</li>
-        <li>
-          영웅 목록에서 영웅 위에 마우스를 올리면 의상이 보이고, <b>맵 정보</b>의 <b>영웅 스킨</b>을
-          켜면 맵의 영웅도 의상으로 표시됩니다.
+          <b>맵 정보</b>를 켜면 최강자 리그와 길드 격돌 맵에 버프 타일이 표시됩니다<span
+            class="help-mouse"
+            >. 버프 타일에 마우스를 올리면 버프 효과를 볼 수 있습니다</span
+          >.
         </li>
         <li>
-          <b>메커니즘</b>에 <b>급속</b>과 <b>에어본</b>이 추가되어, 아군에게 급속을 주거나 적을
-          띄우는 영웅을 찾을 수 있습니다.
-        </li>
-        <li>
-          메아리와 팬텀 설명을 모든 스킬 언어로 읽을 수 있습니다. 스킬 창의 언어 메뉴에서 고르세요.
+          <a :href="pvpReportHref(8, 'ko')">시즌 8 PvP 리포트</a>에 이제 두 번째 최강자 리그의
+          데이터가 들어갑니다.
         </li>
       </ul>
     </section>

@@ -8,7 +8,7 @@ import { onMounted, readonly, ref } from 'vue'
 import type { AppLocale } from '@/lib/types/i18n'
 import { readFlag, writeFlag } from '@/utils/flags'
 
-const WHATS_NEW_EDITION = '2026-11-06'
+const WHATS_NEW_EDITION = '2026-11-19'
 
 /** The edition's date as the popup's title shows it. */
 export function whatsNewEditionDate(locale: AppLocale): string {

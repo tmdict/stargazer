@@ -48,7 +48,7 @@ export interface GridInfoView {
   buffTiles: boolean
 }
 
-export const GRID_INFO_DEFAULTS: Readonly<GridInfoPrefs> = {
+const GRID_INFO_DEFAULTS: Readonly<GridInfoPrefs> = {
   master: false,
   tileIds: true,
   hover: false,
