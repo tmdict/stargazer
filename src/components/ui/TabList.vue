@@ -3,14 +3,15 @@
 export interface TabItem {
   key: string
   label: string
-  // Replaces `label` on mobile, where a full strip must fit the sheet's width.
+  // Replaces `label` where the strip is tight: on mobile, where a full strip must
+  // fit the sheet's width, and in a wide-screen strip too narrow for the labels.
   shortLabel?: string
   badge?: number | string
 }
 </script>
 
 <script setup lang="ts" generic="T extends string">
-import { computed, onMounted, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 
 const { tabs, ariaId } = defineProps<{
   tabs: TabItem[]
@@ -27,8 +28,10 @@ const select = (tab: TabItem) => {
   active.value = tab.key as T
 }
 
-// A wide-screen strip too narrow for its tabs scrolls sideways, and the open tab
-// can start outside it: a tab opened by a link may be the last in the strip.
+// A wide-screen strip too narrow for its tabs scrolls sideways and shows no
+// scrollbar, so the open tab is brought back into sight whenever it may have
+// left: a tab opened by a link may be the last in the strip, and a narrowing
+// window cuts the strip short.
 const strip = useTemplateRef<HTMLElement>('strip')
 const revealActive = () => {
   const tab = strip.value?.querySelector('.tab-btn.active')
@@ -38,7 +41,14 @@ const revealActive = () => {
   if (at.left < box.left) strip.value.scrollLeft += at.left - box.left
   else if (at.right > box.right) strip.value.scrollLeft += at.right - box.right
 }
-onMounted(revealActive)
+let observer: ResizeObserver | undefined
+onMounted(() => {
+  revealActive()
+  if (typeof ResizeObserver === 'undefined' || !strip.value) return
+  observer = new ResizeObserver(revealActive)
+  observer.observe(strip.value)
+})
+onUnmounted(() => observer?.disconnect())
 watch([active, () => tabs.length], revealActive, { flush: 'post' })
 </script>
 
@@ -122,16 +132,20 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
     column-gap: var(--spacing-md);
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
-    container-type: inline-size;
   }
 
   .tab-buttons {
-    flex: 0 1 auto;
+    flex: 1 1 0;
     flex-wrap: nowrap;
     min-width: 0;
     margin-bottom: -1px;
     overflow-x: auto;
     scrollbar-width: none;
+    container-type: inline-size;
+  }
+
+  .tab-buttons::-webkit-scrollbar {
+    display: none;
   }
 
   .tab-gap {
@@ -172,11 +186,10 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
 
   .tab-actions {
     flex: none;
-    margin-left: auto;
     align-self: center;
   }
 
-  @container (max-width: 676px) {
+  @container (max-width: 558px) {
     .tab-label-long {
       display: none;
     }
