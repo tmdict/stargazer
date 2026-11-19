@@ -24,12 +24,19 @@ export interface SolverCache {
   solver: (model: GoalModel, badges: number) => Solver
   /** The cost tables for a model, filled for `model.need` targets. */
   costs: (model: GoalModel) => Costs
+  /** Drops the least recently used solvers past what a visit keeps. */
+  trim: () => void
 }
 
 /** How close to the true chance a searched answer has to be. */
 const TOLERANCE = 1e-6
 
-/** The most a visit keeps: so many solvers, and an estimate of their size in memory. */
+/**
+ * The most a visit keeps from one press to the next: so many solvers, and an
+ * estimate of their size in memory. Nothing is dropped during a press, which
+ * holds every solver it asked for until it ends: dropping one there frees no
+ * memory, and a later goal with the same model would build its tables again.
+ */
 const MAX_SOLVERS = 32
 const MAX_BYTES = 100e6
 
@@ -66,9 +73,7 @@ export function createSolverCache(): SolverCache {
     return solver
   }
 
-  // A solver dropped here still serves the press that holds it. The one just
-  // used stays whatever its size: the same press asks for it again, and would
-  // otherwise build its tables twice.
+  // The one last used stays whatever its size, for a press on the same shop.
   const trim = () => {
     for (const oldest of solvers.keys()) {
       if (solvers.size <= 1 || (solvers.size <= MAX_SOLVERS && bytes() <= MAX_BYTES)) break
@@ -80,15 +85,14 @@ export function createSolverCache(): SolverCache {
     solver(model, badges) {
       const solver = recent(model)
       solver.tables.cover(model.need, badges)
-      trim()
       return solver
     },
     costs(model) {
       const solver = recent(model)
       const costs = (solver.costs ??= createCosts(model, solver.tables.layout))
       costs.cover(model.need)
-      trim()
       return costs
     },
+    trim,
   }
 }

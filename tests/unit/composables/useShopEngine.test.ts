@@ -38,7 +38,7 @@ class FakeWorker {
 
 const newest = (): FakeWorker => FakeWorker.started.at(-1)!
 const request = {} as ShopRequest
-const stage = (settled: boolean): ShopResult => ({ answers: [], settled })
+const stage = (settled: boolean): ShopResult => ({ answers: [], skipped: [], settled })
 
 // The engine keeps its worker for the visit, so each test loads it anew.
 let open: typeof useShopEngine

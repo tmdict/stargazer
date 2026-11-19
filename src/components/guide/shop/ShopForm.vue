@@ -21,7 +21,8 @@ const props = defineProps<{
   badges: number
   heroes: readonly WantedHero[]
   equipment: readonly string[]
-  // Whether a hero or a piece can still be added.
+  // Whether a hero or a piece can still be added: one is left to add, and the
+  // list is not full.
   moreHeroes: boolean
   moreEquipment: boolean
   // How many heroes are set to be sold or left out.
@@ -113,7 +114,12 @@ const under = (event: MouseEvent): DOMRect =>
       </label>
     </div>
 
-    <h2 class="shop-heading">{{ i18n.t('app.shop-looking-for') }}</h2>
+    <h2 class="shop-heading">
+      {{ i18n.t('app.shop-looking-for') }}
+      <span class="shop-dim">
+        {{ i18n.t('app.shop-wanted-hint', { count: SHOP_LIMITS.wanted }) }}
+      </span>
+    </h2>
     <p class="shop-label">
       {{ i18n.t('app.heroes') }}
       <span class="shop-dim">

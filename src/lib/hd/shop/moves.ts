@@ -161,6 +161,14 @@ export function goalModel(goal: Goal, odds: LevelOdds, pools: Pools, facts: Shop
   }
 }
 
+/**
+ * How many shops the goal can see, each counted once for every set of its
+ * useful cards a reroll can keep. The time and memory of the goal's tables
+ * follow it.
+ */
+export const goalSize = (model: GoalModel): number =>
+  model.sources.reduce((size, source) => size * (2 * source.kinds.length + 1), 1)
+
 export interface Wanted {
   heroes: ReadonlySet<string>
   equipment: ReadonlySet<string>

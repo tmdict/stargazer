@@ -103,8 +103,10 @@ export function useShopForm(changed: () => void) {
 
   const without = (list: string[], name: string): string[] => list.filter((one) => one !== name)
 
+  const full = computed(() => heroes.value.length + equipment.value.length >= SHOP_LIMITS.wanted)
+
   const addHero = (name: string): void => {
-    if (heroes.value.some((hero) => hero.name === name)) return
+    if (full.value || heroes.value.some((hero) => hero.name === name)) return
     heroes.value.push({ name, copies: 1 })
     sell.value = without(sell.value, name)
   }
@@ -119,7 +121,7 @@ export function useShopForm(changed: () => void) {
   }
 
   const addEquipment = (name: string): void => {
-    if (!equipment.value.includes(name)) equipment.value.push(name)
+    if (!full.value && !equipment.value.includes(name)) equipment.value.push(name)
   }
 
   const removeEquipment = (name: string): void => {
@@ -182,6 +184,7 @@ export function useShopForm(changed: () => void) {
     level,
     rises,
     wanted,
+    full,
     setBadges,
     setCard,
     toggleLock,

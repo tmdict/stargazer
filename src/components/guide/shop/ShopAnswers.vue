@@ -1,13 +1,17 @@
 <script setup lang="ts">
-/* "What to do first": one card for each goal the wanted items make. */
+/* "What to do first": one card for each goal the wanted items make, and a
+   line naming the goals the calculation left out as too large. */
+
+import { computed } from 'vue'
 
 import ShopAnswerCard from './ShopAnswerCard.vue'
-import type { ShopAnswer, WantedHero } from '@/lib/hd/shop/calculate'
+import type { ShopAnswer, SpanGoal, WantedHero } from '@/lib/hd/shop/calculate'
 import type { Move, ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 
-const { heroes } = defineProps<{
+const { heroes, skipped } = defineProps<{
   answers: readonly ShopAnswer[]
+  skipped: readonly SpanGoal[]
   cards: readonly ShopCard[]
   basis: Move | null
   heroes: readonly WantedHero[]
@@ -25,6 +29,12 @@ const copiesOf = ({ goal }: ShopAnswer): number | undefined =>
 
 const keyOf = ({ goal }: ShopAnswer): string =>
   'name' in goal ? `${goal.kind}:${goal.name}` : goal.kind
+
+const leftOut = computed(() =>
+  new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' }).format(
+    skipped.map((kind) => i18n.t(`app.shop-goal-${kind}`)),
+  ),
+)
 </script>
 
 <template>
@@ -46,6 +56,9 @@ const keyOf = ({ goal }: ShopAnswer): string =>
       />
     </div>
     <p class="shop-note">{{ i18n.t('app.shop-answers-note') }}</p>
+    <p v-if="skipped.length" class="shop-note">
+      {{ i18n.t('app.shop-skipped', { goals: leftOut }) }}
+    </p>
   </section>
 </template>
 

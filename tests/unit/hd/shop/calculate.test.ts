@@ -107,6 +107,33 @@ describe('the goals of a request', () => {
     expect(kinds(asked)).toEqual(['L1', 'M1'])
   })
 
+  it('leaves out a goal that spans targets once kept cards make it too large', () => {
+    const asked: Asked = {
+      level: 4,
+      rises: false,
+      badges: 10,
+      heroes: [['L1'], ['M1'], ['W1'], ['G1']],
+      equipment: [
+        { name: 'r1', tier: 'rare' },
+        { name: 'e1', tier: 'elite' },
+        { name: 'p1', tier: 'epic' },
+      ],
+      pools: pools(),
+    }
+    const kept = cards(
+      card('random-pack', { locked: true, lockedAt: 1 }),
+      card('lightbearer-pack', { locked: true, lockedAt: 1 }),
+      card('mauler-pack', { locked: true, lockedAt: 1 }),
+      card('hero', { hero: 'W1', locked: true, lockedAt: 3 }),
+      card('rare-equipment', { equipment: 'r1', locked: true, lockedAt: 3 }),
+    )
+    const items = ['L1', 'M1', 'W1', 'G1', 'r1', 'e1', 'p1']
+    expect(stages(asked).at(-1)).toMatchObject({ skipped: [] })
+    expect(kinds(asked)).toEqual([...items, 'any-hero', 'any-equipment', 'any'])
+    expect(stages({ ...asked, cards: kept }).at(-1)).toMatchObject({ skipped: ['any'] })
+    expect(kinds({ ...asked, cards: kept })).toEqual([...items, 'any-hero', 'any-equipment'])
+  })
+
   it('has no answer for a shop that cannot happen at its level', () => {
     const shop = cards(...Array(8).fill(card('epic-equipment')))
     expect(stages({ level: 1, cards: shop, pools: pools() })).toEqual([

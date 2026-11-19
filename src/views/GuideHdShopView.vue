@@ -100,9 +100,9 @@ const addEquipment = (name: string): void => {
 const oddsOpen = ref(false)
 const listsOpen = ref(false)
 
-const answers = computed(() => {
+const answered = computed(() => {
   const result = engine.result.value
-  return result && 'answers' in result ? result.answers : null
+  return result && 'answers' in result ? result : null
 })
 const impossible = computed(() => {
   const result = engine.result.value
@@ -180,8 +180,8 @@ watch(
         :badges="form.badges.value"
         :heroes="form.heroes.value"
         :equipment="form.equipment.value"
-        :more-heroes="addable.length > 0"
-        :more-equipment
+        :more-heroes="!form.full.value && addable.length > 0"
+        :more-equipment="!form.full.value && moreEquipment"
         :set="form.sell.value.length + form.mythic.value.length"
         :working="engine.working.value"
         :ready="form.wanted.value"
@@ -203,8 +203,9 @@ watch(
           {{ i18n.t('app.shop-failed') }}
         </p>
         <ShopAnswers
-          v-else-if="answers"
-          :answers
+          v-else-if="answered"
+          :answers="answered.answers"
+          :skipped="answered.skipped"
           :cards="form.cards.value"
           :basis
           :heroes="form.heroes.value"

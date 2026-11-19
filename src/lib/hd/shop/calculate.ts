@@ -22,7 +22,7 @@ import {
 } from './advice'
 import { solveMaxChance, type MaxChance } from './maxChance'
 import { solveMinBadges } from './minBadges'
-import { firstMoves, goalModel, type GoalModel } from './moves'
+import { firstMoves, goalModel, goalSize, type GoalModel } from './moves'
 import {
   SHOWS_AS_ZERO,
   solveNextRound,
@@ -46,8 +46,21 @@ import type {
   WantedEquipment,
 } from './types'
 
-/** The most a request may ask for. The solvers' time and memory grow with both. */
-export const SHOP_LIMITS = { badges: 500, copies: 4 }
+/**
+ * The most a request may ask for. The solvers' time and memory grow with the
+ * badges and the copies. `wanted` counts heroes and pieces together: each is
+ * a goal, and a goal takes longest where many of the cards on show are
+ * wanted ones.
+ */
+export const SHOP_LIMITS = { badges: 500, copies: 4, wanted: 12 }
+
+/**
+ * The largest goal that spans targets (`goalSize`). Every product that helps
+ * any target is a useful kind to such a goal, and each card kept from a lower
+ * level adds a kind to the sources that may hold it, so the shops it can see
+ * multiply. A larger one is left out of the answers.
+ */
+const MAX_SPAN_SIZE = 1_500_000
 
 // A range narrower than this is taken as one number.
 const SETTLED = 1e-9
@@ -72,8 +85,10 @@ export interface ShopRequest {
   startFrom?: Move
 }
 
-export type AnswerGoal =
-  { kind: 'hero' | 'equipment'; name: string } | { kind: 'any-hero' | 'any-equipment' | 'any' }
+/** A goal met by any one of several targets. */
+export type SpanGoal = 'any-hero' | 'any-equipment' | 'any'
+
+export type AnswerGoal = { kind: 'hero' | 'equipment'; name: string } | { kind: SpanGoal }
 
 export interface ChanceAnswer extends ChanceAdvice {
   /** Buying only what is on show, when that shows another chance than the best move. */
@@ -96,8 +111,11 @@ export interface ShopAnswer {
 }
 
 export type ShopResult =
-  /** `settled`: whether these answers are the last for the request. */
-  { answers: ShopAnswer[]; settled: boolean } | { error: 'impossible-shop' }
+  /**
+   * `skipped`: the goals left out as too large. `settled`: whether these
+   * answers are the last for the request.
+   */
+  { answers: ShopAnswer[]; skipped: SpanGoal[]; settled: boolean } | { error: 'impossible-shop' }
 
 function checkRequest(request: ShopRequest): void {
   const { shop, heroes, equipment, startFrom } = request
@@ -112,6 +130,9 @@ function checkRequest(request: ShopRequest): void {
     throw new Error('shop: copies out of range')
   }
   if (!heroes.length && !equipment.length) throw new Error('shop: nothing is wanted')
+  if (heroes.length + equipment.length > SHOP_LIMITS.wanted) {
+    throw new Error('shop: too much is wanted')
+  }
   const names = [...heroes, ...equipment].map((item) => item.name)
   if (new Set(names).size !== names.length) throw new Error('shop: an item is wanted twice')
   if (startFrom?.kind === 'buy' && !shop.cards[startFrom.card]?.good) {
@@ -365,6 +386,23 @@ export function* calculateShop(
   searchMs: number,
   sliceMs: number,
 ): Generator<ShopResult | null, void> {
+  // The cache is trimmed however the press ends, at its last answer or at a
+  // pause where whoever runs it lets it go.
+  try {
+    yield* stagesOf(request, table, facts, cache, searchMs, sliceMs)
+  } finally {
+    cache.trim()
+  }
+}
+
+function* stagesOf(
+  request: ShopRequest,
+  table: OddsTable,
+  facts: ShopFacts,
+  cache: SolverCache,
+  searchMs: number,
+  sliceMs: number,
+): Generator<ShopResult | null, void> {
   checkRequest(request)
   const { shop, level } = request
   if (!table.levels[level - 1]) throw new Error('shop: no such level')
@@ -377,7 +415,16 @@ export function* calculateShop(
   }
 
   const works: Work[] = []
+  const skipped: SpanGoal[] = []
   for (const goal of goalsOf(request)) {
+    const { name } = goal
+    if (name.kind !== 'hero' && name.kind !== 'equipment') {
+      const model = goalModel(goal.goal, reading.odds, request.pools, facts)
+      if (goalSize(model) > MAX_SPAN_SIZE) {
+        skipped.push(name.kind)
+        continue
+      }
+    }
     works.push(prepare(request, goal, reading, rises ? table.levels[level] : null, facts, cache))
     yield null
   }
@@ -390,10 +437,10 @@ export function* calculateShop(
   }
   const waiting = works.map((work) => unsettled(work, shop) !== null)
   if (!waiting.includes(true)) {
-    yield { answers, settled: true }
+    yield { answers, skipped, settled: true }
     return
   }
-  yield { answers: [...answers], settled: false }
+  yield { answers: [...answers], skipped, settled: false }
 
   const deadline = performance.now() + searchMs
   try {
@@ -404,11 +451,13 @@ export function* calculateShop(
         row.chance = { floor: chance, ceiling: chance }
       }
       answers[index] = answer(work, shop, facts)
-      if (waiting.includes(true, index + 1)) yield { answers: [...answers], settled: false }
+      if (waiting.includes(true, index + 1)) {
+        yield { answers: [...answers], skipped, settled: false }
+      }
     }
   } catch (error) {
     if (!(error instanceof OutOfTime)) throw error
     works.forEach((work, index) => (answers[index] = answer(work, shop, facts)))
   }
-  yield { answers, settled: true }
+  yield { answers, skipped, settled: true }
 }
