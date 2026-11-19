@@ -2,7 +2,8 @@
 /* A product's picture as a square: the hero or piece a card names, else the
    game's question-mark card, with a chip for what it gives, a faction pack's
    faction in the corner, and a frame in its tier's colour. A hero card of
-   two copies shows its picture twice, overlapped, as the game's card does.
+   two copies shows its picture twice, overlapped and tilted, as the game's
+   card does.
    Without the data pack's pictures a plain mark stands in. As a list's
    icon it is told apart by the picture alone: a faction pack is its faction,
    an equipment card a piece of its tier, and the chip is left out. */
@@ -119,15 +120,17 @@ const faction = computed(() => !icon && good.faction && gameData.getIcon(`factio
 
 .pair .picture {
   position: absolute;
-  inset: 8% auto auto 9%;
+  inset: 8% auto auto 8%;
   width: 56%;
   height: 68%;
   max-width: none;
   max-height: none;
+  rotate: -6deg;
 }
 
 .pair .picture + .picture {
-  inset: auto 9% 8% auto;
+  inset: auto 10.5% 9.5% auto;
+  rotate: 14deg;
 }
 
 .pair .picture.portrait {
