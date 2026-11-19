@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
+import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
@@ -29,7 +31,7 @@ import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
-import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import { HD_SHOP_PATH, HD_SHOP_PROBABILITY_PATH, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const { open: openContact } = useContactForm()
 
@@ -510,6 +512,153 @@ const SKILL = {
     </div>
   </section>
 
+  <section id="hd-board" class="help-sec">
+    <h2>Honor Duel grid</h2>
+    <div class="help-grid">
+      <HelpDuelPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          Plan an Honor Duel formation: heroes and Trial units at their tiers, with equipment and
+          each side's artifact.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              In the Arena, open the <b>Honor Duel</b> tab. The grid changes to an Honor Duel grid
+              of its own, and your Arena grid is kept. Pick the map next to <b>Map</b>.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              Click a unit in <b>Units</b> to place it, or click an empty tile and pick from the
+              list that pops up, where <b>Shop</b> and <b>Trial</b> choose what it lists.
+            </span>
+            <span class="help-touch">Tap an empty tile, then tap a unit in <b>Units</b>.</span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              Hover over a placed hero to see its three controls. Click the <b>+</b> at the upper
+              left to give it equipment, the <b>T</b> at the upper right to change it between a
+              normal and a Trial copy, and the tier letter at the lower left to step through its
+              tiers.
+            </span>
+            <span class="help-touch">
+              Tap a placed hero. The row above it has its three controls: the tier letter steps
+              through its tiers, <b>+</b> gives it equipment, and <b>T</b> changes it between a
+              normal and a Trial copy.
+            </span>
+          </li>
+          <li>
+            <span>
+              In <b>Artifacts</b>, <span class="help-mouse">click</span
+              ><span class="help-touch">tap</span> an artifact to give it to your side, and a second
+              one for the enemy. <span class="help-mouse">Click</span
+              ><span class="help-touch">Tap</span> an artifact on the grid to change it or set its
+              level.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          A side can hold one normal copy of a hero and several Trial copies. Celestial and Hypogean
+          heroes and creatures come from Trial Cards only, so their <b>T</b> stays on.
+        </li>
+        <li>
+          Copies of a hero on one side share a piece of equipment.
+          <span class="help-mouse">
+            A piece can also be dragged from <b>Equipment</b> onto a hero.
+          </span>
+        </li>
+        <li>The badge next to each artifact shows that side's faction bonus.</li>
+        <li>
+          <span class="help-mouse">
+            Hover over a piece of equipment or an artifact to read its effect. Right-click any unit
+            to see its skills, creatures included.
+          </span>
+          <span class="help-touch">
+            Press and hold any unit to see its skills, creatures included.
+          </span>
+        </li>
+        <li>
+          With hero cards on under <b>Grid Info</b>, the cards below the grid have the same three
+          controls.
+        </li>
+        <li><b>Link</b>, <b>Copy</b> and <b>Download</b> work as they do for the Arena grid.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="hd-shop" class="help-sec">
+    <h2>Honor Duel shop calculator</h2>
+    <div class="help-grid">
+      <HelpShopPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          Enter the Honor Duel shop in front of you and what you are looking for, and see what to do
+          first.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              In the <b>Guide</b>, open the
+              <RouterLink :to="HD_SHOP_PATH">Shop Calculator</RouterLink>.
+            </span>
+          </li>
+          <li>
+            <span>
+              Set <b>Shop level</b> and your <b>Badges</b>. Turn on <b>Levels up next round</b> if
+              the shop's level rises next round.
+            </span>
+          </li>
+          <li>
+            <span>
+              <span class="help-mouse">Click</span><span class="help-touch">Tap</span> each of the
+              eight cards and pick what it shows. Press a card's lock if you locked it, and pick
+              <b>Bought</b> for a card you already bought. <b>Random</b> fills in an example shop.
+            </span>
+          </li>
+          <li>
+            <span>
+              Under <b>Looking for</b>, add the heroes and equipment you are after. For a hero, set
+              how many more copies you need.
+            </span>
+          </li>
+          <li>
+            <span>
+              Press <b>Calculate</b>. Each target gets the move with the <b>Best chance</b> of
+              finishing it this round and the move that costs the <b>Fewest badges</b> on average,
+              and says when it is better to stop for the round.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          The answers show at once. A chance given as a range narrows over the next few seconds.
+        </li>
+        <li>
+          <b>Recalculate with best</b> works the answers out again as if you had made the
+          recommended move.
+        </li>
+        <li>
+          <b>Heroes you would sell, Mythic heroes</b> lists the heroes you would sell when a pack
+          gives them, and the heroes you already have at Mythic.
+        </li>
+        <li>
+          A card kept locked from a lower shop level shows that level.
+          <span class="help-mouse">Click</span><span class="help-touch">Tap</span> the level to
+          change it.
+        </li>
+        <li>
+          <b>See the odds</b> lists what the shop can show at each shop level, and
+          <RouterLink :to="HD_SHOP_PROBABILITY_PATH">How the odds work</RouterLink> explains the
+          sums.
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <section id="reference" class="help-sec">
     <h2>Quick reference</h2>
     <div class="help-grid">
@@ -570,6 +719,8 @@ const SKILL = {
           <p>All heroes, with filters for faction, class and mechanics</p>
           <span class="help-tab">Seasonal</span>
           <p>This season's phantimals, artifacts and charms</p>
+          <span class="help-tab">Honor Duel</span>
+          <p>Honor Duel's units, artifacts and equipment, with a grid of its own</p>
           <span class="help-tab">Maps</span>
           <p>Pick another arena, or draw your own</p>
           <span class="help-tab">Rosters</span>
@@ -626,6 +777,13 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>The pop-up hero list has its own roster menu at the top.</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          In the Arena, the <b>Map</b> buttons above the hero list load the Supreme League and Guild
+          Duel maps, with their buff tiles.
+        </span>
       </li>
       <li>
         <IconFilter :size="18" />

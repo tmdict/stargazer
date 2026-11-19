@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
+import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
@@ -29,7 +31,7 @@ import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
-import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import { HD_SHOP_PATH, HD_SHOP_PROBABILITY_PATH, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const { open: openContact } = useContactForm()
 
@@ -432,6 +434,122 @@ const SKILL = {
     </div>
   </section>
 
+  <section id="hd-board" class="help-sec">
+    <h2>荣誉对决棋盘</h2>
+    <div class="help-grid">
+      <HelpDuelPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          规划荣誉对决的站位：摆上英雄和体验英雄，设置他们的品质和装备，再配上双方的灵器。
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              在竞技场打开<b>荣誉对决</b>标签页。棋盘会换成荣誉对决专用的棋盘，竞技场的棋盘会原样保留。在<b>地图</b>旁边选地图。
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              点击<b>单位</b>里的单位就能放上去，也可以点击空格子，从弹出的列表里选。列表顶部的<b>商店</b>和<b>体验</b>决定列出哪些单位。
+            </span>
+            <span class="help-touch">先点空格子，再点<b>单位</b>里的单位。</span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              把鼠标停在棋盘上的英雄上，会出现三个按钮。点左上角的 <b>+</b>
+              给它配装备，点右上角的<b>体</b>在普通英雄和体验英雄之间切换，点左下角的品质字（比如<b>史</b>）依次切换品质。
+            </span>
+            <span class="help-touch">
+              点一下棋盘上的英雄，它上方会出现三个按钮：品质字（比如<b>史</b>）依次切换品质，<b
+                >+</b
+              >
+              给它配装备，<b>体</b>在普通英雄和体验英雄之间切换。
+            </span>
+          </li>
+          <li>
+            <span>
+              在<b>灵器</b>里<span class="help-mouse">点击</span
+              ><span class="help-touch">点</span>一件灵器，它会配给友方，再选一件则配给敌方。<span
+                class="help-mouse"
+                >点击</span
+              ><span class="help-touch">点</span>棋盘上的灵器可以更换，或设置等级。
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          同一方只能上阵一位普通的同名英雄，但可以有多位体验英雄。半神和恶魔英雄以及怪物只能通过体验卡获得，所以它们的<b>体</b>始终亮着。
+        </li>
+        <li>
+          同一方的同名英雄共用一件装备。<span class="help-mouse"
+            >也可以把<b>装备</b>里的装备直接拖到英雄身上。</span
+          >
+        </li>
+        <li>灵器旁的标记显示该方的同阵营增益。</li>
+        <li>
+          <span class="help-mouse"
+            >鼠标停在装备或灵器上可以看到效果。右键点击任意单位可以查看技能，怪物也一样。</span
+          >
+          <span class="help-touch">长按任意单位可以查看技能，怪物也一样。</span>
+        </li>
+        <li>打开<b>地图信息</b>里的英雄卡片后，棋盘下方的卡片上也有这三个按钮。</li>
+        <li><b>链接</b>、<b>复制</b>和<b>下载</b>的用法和竞技场棋盘一样。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="hd-shop" class="help-sec">
+    <h2>荣誉对决商店计算器</h2>
+    <div class="help-grid">
+      <HelpShopPicture />
+      <div class="help-side">
+        <p class="help-lead">把眼前的荣誉对决商店和想要的目标填进去，看看第一步该怎么做。</p>
+        <ol class="help-steps">
+          <li>
+            <span>在<b>攻略</b>里打开<RouterLink :to="HD_SHOP_PATH">商店计算器</RouterLink>。</span>
+          </li>
+          <li>
+            <span>
+              设置<b>商店等级</b>和手上的<b>徽章</b>。如果下一回合商店会升级，打开<b>下一回合升级</b>。
+            </span>
+          </li>
+          <li>
+            <span>
+              <span class="help-mouse">点击</span
+              ><span class="help-touch">点</span
+              >八张卡片，逐张选它显示的商品。锁定了的卡片点它的锁，已经买下的卡片选<b>已购买</b>。<b>随机</b>会填入一家示例商店。
+            </span>
+          </li>
+          <li>
+            <span>在<b>想要的目标</b>下添加想要的英雄和装备。英雄还要设置还需要几张。</span>
+          </li>
+          <li>
+            <span>
+              点<b>计算</b>。每个目标都会给出本回合达成概率最高的一步（<b>最高概率</b>）和平均花费徽章最少的一步（<b>最少徽章</b>），并在本回合该停手时提示你。
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>结果会马上显示。以范围给出的概率会在接下来几秒内收窄。</li>
+        <li><b>按最佳方案重新计算</b>会假设你已经走了推荐的那一步，再算一遍。</li>
+        <li>
+          <b>要出售的英雄、神话英雄</b>里列出卡包开出时你会卖掉的英雄，以及你已达到神话的英雄。
+        </li>
+        <li>
+          从较低商店等级锁定保留下来的卡片会标出当时的等级，<span class="help-mouse">点击</span
+          ><span class="help-touch">点</span>等级可以修改。
+        </li>
+        <li>
+          <b>查看概率</b>列出每个商店等级可能出现的商品，<RouterLink :to="HD_SHOP_PROBABILITY_PATH"
+            >概率说明</RouterLink
+          >解释这些数字是怎么算出来的。
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <section id="reference" class="help-sec">
     <h2>速查</h2>
     <div class="help-grid">
@@ -485,6 +603,8 @@ const SKILL = {
           <p>所有英雄，可按阵营、职业和机制筛选</p>
           <span class="help-tab">赛季</span>
           <p>本赛季的幻灵、神器和魔法配饰</p>
+          <span class="help-tab">荣誉对决</span>
+          <p>荣誉对决的单位、灵器和装备，配有专用棋盘</p>
           <span class="help-tab">地图</span>
           <p>换一张竞技场地图，或自己画一张</p>
           <span class="help-tab">英雄池</span>
@@ -532,6 +652,12 @@ const SKILL = {
       </li>
       <li>
         <IconChevronRight :size="18" /><span>棋盘上弹出的英雄列表顶部，也可以切换英雄池。</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          在竞技场，英雄列表上方的<b>地图</b>按钮可以载入巅峰联赛和公会征锋的地图，增益格也会一并标出。
+        </span>
       </li>
       <li>
         <IconFilter :size="18" /><span

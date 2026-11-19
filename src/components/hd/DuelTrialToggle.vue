@@ -8,19 +8,23 @@ import { computed } from 'vue'
 
 import DuelSlot from './DuelSlot.vue'
 import UnitBadge from '@/components/grid/UnitBadge.vue'
+import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
+import { appLabel } from '@/utils/skillLabels'
 
-defineProps<{
+const { lang } = defineProps<{
   trial: boolean
   fixed?: boolean
+  // A picture of the mark names it in the picture's language.
+  lang?: AppLocale
 }>()
 
 const emit = defineEmits<{ toggle: [] }>()
 
 const i18n = useI18nStore()
 
-const label = computed(() => i18n.t('app.trial'))
+const label = computed(() => (lang ? appLabel('trial', lang) : i18n.t('app.trial')))
 </script>
 
 <template>

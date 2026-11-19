@@ -8,16 +8,19 @@ import { computed } from 'vue'
 
 import { DUEL_TIERS } from '@/lib/hd/board'
 import { duelTiersOf, hasDuelTierChoice } from '@/lib/hd/units'
+import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { initialOf } from '@/utils/nameFormatting'
 import { gameLabel } from '@/utils/skillLabels'
 import { isPaleTier, tierBackdrop } from '@/utils/tierBackdrop'
 
-const { unitId, tier, readonly } = defineProps<{
+const { unitId, tier, readonly, lang } = defineProps<{
   unitId: number
   // The tier's place in DUEL_TIERS.
   tier: number
   readonly?: boolean
+  // A picture of the pill names its tier in the picture's language.
+  lang?: AppLocale
 }>()
 
 const emit = defineEmits<{ pick: [tier: number] }>()
@@ -25,7 +28,7 @@ const emit = defineEmits<{ pick: [tier: number] }>()
 const i18n = useI18nStore()
 
 const key = computed(() => DUEL_TIERS[tier] ?? DUEL_TIERS[0])
-const label = computed(() => gameLabel(key.value, i18n.currentLocale))
+const label = computed(() => gameLabel(key.value, lang ?? i18n.currentLocale))
 const choices = computed(() => duelTiersOf(unitId))
 const fixed = computed(() => readonly || !hasDuelTierChoice(unitId))
 const next = (): void => {

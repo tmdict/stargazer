@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import SlIcon from '@/components/guide/sl/SlIcon.vue'
 import HelpBasicsPicture from '@/components/help/HelpBasicsPicture.vue'
+import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
 import HelpGenerateButton from '@/components/help/HelpGenerateButton.vue'
 import HelpGeneratorPicture from '@/components/help/HelpGeneratorPicture.vue'
 import HelpImportPicture from '@/components/help/HelpImportPicture.vue'
 import HelpMapsPicture from '@/components/help/HelpMapsPicture.vue'
 import HelpModeSwitch from '@/components/help/HelpModeSwitch.vue'
 import HelpRostersPicture from '@/components/help/HelpRostersPicture.vue'
+import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import HelpWwwPicture from '@/components/help/HelpWwwPicture.vue'
@@ -29,7 +31,7 @@ import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useContactForm } from '@/composables/useContactForm'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
-import { SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
+import { HD_SHOP_PATH, HD_SHOP_PROBABILITY_PATH, SL_GENERATOR_PATH, WWW_PATH } from '@/lib/guide'
 
 const { open: openContact } = useContactForm()
 
@@ -513,6 +515,141 @@ const SKILL = {
     </div>
   </section>
 
+  <section id="hd-board" class="help-sec">
+    <h2>명예의 결투 맵</h2>
+    <div class="help-grid">
+      <HelpDuelPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          명예의 결투 진형을 짜 보세요. 영웅과 체험 영웅을 배치하고 등급과 장비, 양 진영의
+          아티팩트를 정할 수 있습니다.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              아레나에서 <b>명예의 결투</b> 탭을 여세요. 맵이 명예의 결투 전용 맵으로 바뀌며, 아레나
+              맵은 그대로 남아 있습니다. <b>맵</b> 옆의 버튼으로 사용할 맵을 고르세요.
+            </span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              <b>유닛</b>에서 유닛을 클릭하면 배치됩니다. 빈 타일을 클릭하고 그 자리에 나타나는
+              목록에서 골라도 됩니다. 목록 위의 <b>상점</b>과 <b>체험</b>으로 어떤 유닛을 볼지
+              정합니다.
+            </span>
+            <span class="help-touch">빈 타일을 누른 뒤 <b>유닛</b>에서 유닛을 누르세요.</span>
+          </li>
+          <li>
+            <span class="help-mouse">
+              배치한 영웅에 마우스를 올리면 버튼 세 개가 나타납니다. 왼쪽 위의 <b>+</b>로 장비를
+              달고, 오른쪽 위의 <b>체</b>로 일반 영웅과 체험 영웅을 서로 바꾸고, 왼쪽 아래의 등급
+              글자(예: <b>에</b>)로 등급을 차례로 바꿉니다.
+            </span>
+            <span class="help-touch">
+              배치한 영웅을 누르면 그 위에 버튼 세 개가 나타납니다. 등급 글자(예: <b>에</b>)로
+              등급을 차례로 바꾸고, <b>+</b>로 장비를 달고, <b>체</b>로 일반 영웅과 체험 영웅을 서로
+              바꿉니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>아티팩트</b>에서 아티팩트를 <span class="help-mouse">클릭하면</span
+              ><span class="help-touch">누르면</span> 아군에 장착되고, 하나를 더 고르면 적군에
+              장착됩니다. 맵 위의 아티팩트를 <span class="help-mouse">클릭하면</span
+              ><span class="help-touch">누르면</span> 다른 것으로 바꾸거나 레벨을 정할 수 있습니다.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>
+          한 진영에는 같은 영웅을 일반 영웅으로 한 명, 체험 영웅으로 여러 명 둘 수 있습니다. 반신과
+          악마 영웅, 몬스터는 체험 카드로만 얻을 수 있어서 <b>체</b>가 항상 켜져 있습니다.
+        </li>
+        <li>
+          한 진영의 같은 영웅끼리는 장비 하나를 함께 씁니다.
+          <span class="help-mouse"><b>장비</b>의 장비를 영웅에게 드래그해도 됩니다.</span>
+        </li>
+        <li>아티팩트 옆의 표시는 그 진영의 동일 진영 버프를 보여 줍니다.</li>
+        <li>
+          <span class="help-mouse">
+            장비나 아티팩트에 마우스를 올리면 효과가 표시됩니다. 유닛을 우클릭하면 스킬을 볼 수
+            있으며, 몬스터도 마찬가지입니다.
+          </span>
+          <span class="help-touch">
+            유닛을 길게 누르면 스킬을 볼 수 있으며, 몬스터도 마찬가지입니다.
+          </span>
+        </li>
+        <li><b>맵 정보</b>에서 영웅 카드를 켜면 맵 아래의 카드에도 같은 버튼 세 개가 있습니다.</li>
+        <li><b>링크</b>, <b>복사</b>, <b>다운로드</b>는 아레나 맵에서와 똑같이 쓸 수 있습니다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="hd-shop" class="help-sec">
+    <h2>명예의 결투 상점 계산기</h2>
+    <div class="help-grid">
+      <HelpShopPicture />
+      <div class="help-side">
+        <p class="help-lead">
+          지금 보이는 명예의 결투 상점과 찾는 목표를 입력하면 먼저 무엇을 할지 알려 줍니다.
+        </p>
+        <ol class="help-steps">
+          <li>
+            <span>
+              <b>가이드</b>에서 <RouterLink :to="HD_SHOP_PATH">상점 계산기</RouterLink>를 여세요.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>상점 레벨</b>과 가진 <b>휘장</b>을 입력하세요. 다음 라운드에 상점 레벨이 오르면
+              <b>다음 라운드에 레벨 상승</b>을 켜세요.
+            </span>
+          </li>
+          <li>
+            <span>
+              카드 여덟 장을 하나씩 <span class="help-mouse">클릭해</span
+              ><span class="help-touch">눌러</span> 상품을 정하세요. 잠근 카드는 자물쇠를 누르고,
+              이미 산 카드는 <b>구매함</b>을 고르세요. <b>무작위</b>는 예시 상점을 채워 줍니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>찾는 목표</b>에 원하는 영웅과 장비를 추가하세요. 영웅은 몇 장이 더 필요한지도
+              정합니다.
+            </span>
+          </li>
+          <li>
+            <span>
+              <b>계산</b>을 누르세요. 목표마다 이번 라운드에 완성할 확률이 가장 높은 수(<b
+                >최고 확률</b
+              >)와 평균 휘장이 가장 적게 드는 수(<b>최소 휘장</b>)를 보여 주고, 이번 라운드를 멈추는
+              편이 나을 때는 그렇게 알려 줍니다.
+            </span>
+          </li>
+        </ol>
+      </div>
+      <ul class="help-notes reading-secondary">
+        <li>결과는 바로 나옵니다. 범위로 표시된 확률은 몇 초에 걸쳐 좁혀집니다.</li>
+        <li><b>최선의 수로 다시 계산</b>은 추천한 수를 둔 것으로 보고 다시 계산합니다.</li>
+        <li>
+          <b>판매할 영웅, 신화 영웅</b>에는 팩에서 나오면 판매할 영웅과 이미 신화 등급인 영웅을
+          넣습니다.
+        </li>
+        <li>
+          낮은 상점 레벨에서 잠가 둔 카드에는 그 레벨이 표시됩니다. 레벨을
+          <span class="help-mouse">클릭하면</span><span class="help-touch">누르면</span> 바꿀 수
+          있습니다.
+        </li>
+        <li>
+          <b>확률 보기</b>는 상점 레벨별로 나올 수 있는 상품을 보여 주고,
+          <RouterLink :to="HD_SHOP_PROBABILITY_PATH">확률 설명</RouterLink>은 계산 방법을
+          설명합니다.
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <section id="reference" class="help-sec">
     <h2>빠른 참조</h2>
     <div class="help-grid">
@@ -576,6 +713,8 @@ const SKILL = {
           <p>모든 영웅과 진영, 직업, 메커니즘 필터</p>
           <span class="help-tab">시즌</span>
           <p>이번 시즌의 팬텀, 메아리, 주문석</p>
+          <span class="help-tab">명예의 결투</span>
+          <p>명예의 결투의 유닛, 아티팩트, 장비와 전용 맵</p>
           <span class="help-tab">맵</span>
           <p>다른 아레나를 선택하거나 직접 그립니다</p>
           <span class="help-tab">영웅 로스터</span>
@@ -633,6 +772,13 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>팝업 영웅 목록 맨 위에도 로스터 메뉴가 있습니다.</span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          아레나에서 영웅 목록 위의 <b>맵</b> 버튼을 누르면 최강자 리그와 길드 격돌의 맵을 버프
+          타일과 함께 불러옵니다.
+        </span>
       </li>
       <li>
         <IconFilter :size="18" />
