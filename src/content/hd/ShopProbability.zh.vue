@@ -11,7 +11,7 @@ const f = useShopFigures()
 
 <template>
   <h1>荣誉对决商店概率</h1>
-  <p class="reading-meta">概率由 Toto 实测</p>
+  <p class="reading-meta">作者：Toto</p>
   <p>
     关于商店的每个问题，从“我要的英雄会不会出现”到“这要花多少徽章”，都可以用几条简短的公式回答。本页用
     Toto 在 {{ f.records.toLocaleString('en') }} 次刷新记录中实测的概率逐一说明。<RouterLink

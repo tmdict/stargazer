@@ -162,7 +162,6 @@ watch(
   <main class="sl-page shop-page" data-theme="dark">
     <SlHead
       :title="i18n.t('app.shop-title')"
-      :credit="i18n.t('app.shop-credit')"
       :about-label="i18n.t('app.shop-see-odds')"
       :guide="{ to: HD_SHOP_PROBABILITY_PATH, label: i18n.t('app.shop-probability-link') }"
       @about="oddsOpen = true"

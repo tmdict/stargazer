@@ -11,7 +11,7 @@ const f = useShopFigures()
 
 <template>
   <h1>Honor Duel Shop Probability</h1>
-  <p class="reading-meta">Odds measured by Toto</p>
+  <p class="reading-meta">By Toto</p>
   <p>
     Every question about the shop, from "will my hero show up?" to "how many badges will this cost
     me?", comes down to a few short formulas. This page walks through them with the odds Toto

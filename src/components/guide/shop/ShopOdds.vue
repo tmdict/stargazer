@@ -43,6 +43,7 @@ const sources = computed(() => MEASURED_ODDS.levels[shown.value - 1] ?? [])
 <template>
   <BaseModal :show :label="i18n.t('app.shop-odds-title')" @close="emit('close')">
     <h1>{{ i18n.t('app.shop-odds-title') }}</h1>
+    <p class="reading-meta">{{ i18n.t('app.shop-credit') }}</p>
     <p>{{ i18n.t('app.shop-odds-lead') }}</p>
     <p class="reading-secondary">{{ i18n.t('app.shop-odds-range') }}</p>
     <!-- A popup is dark in both looks, so what follows the look takes its dark colours. -->

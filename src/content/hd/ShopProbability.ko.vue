@@ -11,7 +11,7 @@ const f = useShopFigures()
 
 <template>
   <h1>명예의 결투 상점 확률</h1>
-  <p class="reading-meta">확률 측정: Toto</p>
+  <p class="reading-meta">작성: Toto</p>
   <p>
     "원하는 영웅이 나올까?"부터 "휘장이 얼마나 들까?"까지, 상점에 관한 질문은 모두 짧은 공식 몇 개로
     답할 수 있습니다. 이 페이지는 Toto가 새로고침 {{ f.records.toLocaleString('en') }}회를 기록해
