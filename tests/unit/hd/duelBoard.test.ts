@@ -12,7 +12,7 @@ import {
 } from '@/lib/hd/boardLink'
 import { unpackDisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
-import { duelFactionBonus, setDuelEquipment, useDuelBoard } from '@/stores/duelBoard'
+import { duelFactionBonus, setDuelEquipment, swapDuelCopy, useDuelBoard } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { DUEL_HEROES, KULU } from '../fixtures/characters'
@@ -225,6 +225,38 @@ describe('Honor Duel equipment', () => {
     expect(ctx.getAttr(Team.ALLY, copy, DUEL_ATTR_EQUIPMENT)).toBe(9)
     expect(ctx.getAttr(Team.ENEMY, ALLY_B, DUEL_ATTR_EQUIPMENT)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, ALLY_A, DUEL_ATTR_EQUIPMENT)).toBe(5)
+  })
+})
+
+describe('a hero changed between its normal and its Trial copy', () => {
+  it('keeps its tile, tier and equipment both ways', () => {
+    const hero = unit(1, Team.ALLY, ALLY_A, { tier: 1, equipment: 7 })
+    const { ctx } = openBoard(board([hero]))
+
+    const copy = swapDuelCopy(ctx, Team.ALLY, ALLY_A)!
+    expect(onScreen().units).toEqual([{ ...hero, trial: true }])
+
+    expect(swapDuelCopy(ctx, Team.ALLY, copy)).toBe(ALLY_A)
+    expect(onScreen().units).toEqual([hero])
+  })
+
+  it('stays a Trial copy with no normal copy to become: its side holds it, or the shop sells none', () => {
+    const { ctx } = openBoard(
+      board([
+        unit(1, Team.ALLY, ALLY_A, { trial: true }),
+        unit(2, Team.ALLY, ALLY_A),
+        unit(4, Team.ALLY, SUPREME_HERO, { trial: true, tier: 3 }),
+        unit(40, Team.ENEMY, ALLY_A, { trial: true }),
+      ]),
+    )
+    const before = onScreen().units
+
+    expect(swapDuelCopy(ctx, Team.ALLY, toTrialId(ALLY_A, 1))).toBeNull()
+    expect(swapDuelCopy(ctx, Team.ALLY, toTrialId(SUPREME_HERO, 2))).toBeNull()
+    expect(onScreen().units).toEqual(before)
+
+    // The other side holds no normal copy, so its Trial copy may change.
+    expect(swapDuelCopy(ctx, Team.ENEMY, toTrialId(ALLY_A, 3))).toBe(ALLY_A)
   })
 })
 

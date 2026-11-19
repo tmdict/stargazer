@@ -48,11 +48,11 @@ const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.
 
 // An Honor Duel board draws on the mode's units, the same for every player,
 // and holds no roster levels. Its pool is the Honor Duel tab's list, in the
-// tab's order.
+// tab's order, with a shop hero as the popup's switch says.
 const duel = computed(() => ctx.kind === 'honorDuel')
 const duelUnits = useDuelUnits()
 const pool = computed(() =>
-  duel.value ? duelUnits.units.value : gameData.characters.filter(rosters.isPickable),
+  duel.value ? duelUnits.popupUnits.value : gameData.characters.filter(rosters.isPickable),
 )
 
 // Heroes of the pool with a legal placement on this team. While Syn is on, an

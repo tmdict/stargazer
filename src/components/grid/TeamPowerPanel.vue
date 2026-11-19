@@ -31,7 +31,7 @@ const props = defineProps<{
 // With either of the first two a hero is a group of its own controls instead
 // of one button.
 const slots = defineSlots<{
-  mark?(props: { hero: PanelHero }): unknown
+  mark?(props: { team: Team; hero: PanelHero }): unknown
   pill?(props: { team: Team; hero: PanelHero }): unknown
   controls?(props: { team: Team; hero: PanelHero }): unknown
 }>()
@@ -227,7 +227,7 @@ const hoveredStat = computed(
                 draggable="false"
               />
             </span>
-            <slot name="mark" :hero />
+            <slot name="mark" :team="side.team" :hero />
             <HoldRing v-if="pressing === hero" />
           </span>
           <slot name="pill" :team="side.team" :hero>

@@ -2,7 +2,8 @@
 /* A unit badge: an icon in a colored disc on a portrait's rim, or what the
    default slot holds in its place (a letter, a picture). The board sets the
    disc's size and border (--badge-size, --badge-border) and its host places
-   it. */
+   it. `plain` leaves the disc out and keeps the content's size and place, for
+   a host that draws a ring of its own. */
 
 import type { Component } from 'vue'
 
@@ -16,8 +17,9 @@ import type { BadgeIcon } from '@/lib/types/unitBadge'
 defineProps<{
   icon?: BadgeIcon
   // Any CSS background: a colour or a gradient.
-  color: string
+  color?: string
   glyph?: number
+  plain?: boolean
 }>()
 
 const ICONS: Record<BadgeIcon, Component> = {
@@ -30,7 +32,7 @@ const ICONS: Record<BadgeIcon, Component> = {
 </script>
 
 <template>
-  <span class="unit-badge" :style="{ background: color }">
+  <span class="unit-badge" :class="{ plain }" :style="{ background: color }">
     <slot><component :is="ICONS[icon]" v-if="icon" :size="glyph" /></slot>
   </span>
 </template>
@@ -54,6 +56,12 @@ const ICONS: Record<BadgeIcon, Component> = {
   transition:
     transform 0.12s ease-out,
     box-shadow 0.12s ease-out;
+}
+
+.unit-badge.plain {
+  border: none;
+  box-shadow: none;
+  color: inherit;
 }
 
 .unit-badge :slotted(img) {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/* Says what a pick of a shop hero places on an Honor Duel board: a shop copy
-   or a Trial copy. The tab's list and the popup on an empty tile both show it,
-   over the one value they share. */
+/* Says what a pick of a shop hero places from the popup on an Honor Duel
+   board's empty tile: a shop copy or a Trial copy. */
 
 import { computed } from 'vue'
 

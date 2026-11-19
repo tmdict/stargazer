@@ -1,21 +1,20 @@
 <script setup lang="ts">
 /* The hero card of an Honor Duel board: the Arena's panel of portraits and
    names, with each unit's tier in place of its upgrades, its equipment slot
-   and a mark on a Trial unit. What a unit carries is set here and shows on
-   the board. */
+   and its Trial mark. What a unit carries, and whether a hero is its normal
+   or its Trial copy, is set here and shows on the board. */
 
 import { ref } from 'vue'
 
 import DuelPiecePicker, { type DuelPiecePick } from './DuelPiecePicker.vue'
 import DuelPieceSlot from './DuelPieceSlot.vue'
 import DuelTierPill from './DuelTierPill.vue'
+import DuelTrialToggle from './DuelTrialToggle.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
-import UnitBadge from '@/components/grid/UnitBadge.vue'
 import { isTrialHeroId } from '@/lib/characters/trial'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
+import { duelOtherCopy, swapDuelCopy } from '@/stores/duelBoard'
 import type { GridContext } from '@/stores/gridContext'
-import { useI18nStore } from '@/stores/i18n'
-import { initialOf } from '@/utils/nameFormatting'
 import { below } from '@/utils/popupLayout'
 
 defineProps<{
@@ -23,22 +22,18 @@ defineProps<{
   readonly?: boolean
 }>()
 
-const i18n = useI18nStore()
-
 const picking = ref<DuelPiecePick | null>(null)
 </script>
 
 <template>
   <TeamPowerPanel :context :show-upgrades="false" :readonly>
-    <template #mark="{ hero }">
-      <UnitBadge
-        v-if="isTrialHeroId(hero.characterId)"
+    <template #mark="{ team, hero }">
+      <DuelTrialToggle
         class="trial-mark"
-        color="var(--duel-trial-mark)"
-        :title="i18n.t('app.trial')"
-      >
-        {{ initialOf(i18n.t('app.trial')) }}
-      </UnitBadge>
+        :trial="isTrialHeroId(hero.characterId)"
+        :fixed="readonly || duelOtherCopy(context, team, hero.characterId) === null"
+        @toggle="swapDuelCopy(context, team, hero.characterId)"
+      />
     </template>
     <template #pill="{ team, hero }">
       <DuelTierPill
@@ -65,6 +60,7 @@ const picking = ref<DuelPiecePick | null>(null)
 .trial-mark {
   --badge-size: 16px;
   --badge-border: 1.5px;
+  --slot-fill: var(--color-bg-raised);
   position: absolute;
   top: 0;
   right: 0;

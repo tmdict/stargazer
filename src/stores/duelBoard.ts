@@ -1,19 +1,22 @@
 /* The Arena page's Honor Duel board: the board on screen read as the state its
  * link holds, a board built from one, the edits that follow the mode's own
- * rules (copies of a hero share a piece of equipment, and a list's click
- * places or removes an artifact), and a side's faction bonus. */
+ * rules (copies of a hero share a piece of equipment, a hero changes between
+ * its normal and its Trial copy, and a list's click places or removes an
+ * artifact), and a side's faction bonus. */
 
 import { defineStore } from 'pinia'
 
 import {
   canPlaceCharacterOnTile,
+  findCharacterHex,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
+  isCharacterOnTeam,
   isHeroUnit,
   toBaseHeroId,
 } from '@/lib/characters/character'
-import { isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
+import { freeTrialCopy, isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
 import { teamFactionBonus, type TeamFactionBonus } from '@/lib/factionBonus'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
 import {
@@ -23,7 +26,7 @@ import {
   type DuelUnitState,
 } from '@/lib/hd/boardLink'
 import { DEFAULT_DUEL_MAP, isDuelMap } from '@/lib/hd/maps'
-import { duelSourceTiers } from '@/lib/hd/units'
+import { duelSourceTiers, duelTiersOf } from '@/lib/hd/units'
 import { hasCompanionSkill } from '@/lib/skills/registry'
 import { packDisplayFlags, type DisplayFlags } from '@/lib/teams/gridStateSerializer'
 import { Team } from '@/lib/types/team'
@@ -74,6 +77,37 @@ export function setDuelEquipment(
   for (const id of duelHeroUnits(ctx, team)) {
     if (toBaseHeroId(id) === heroId) ctx.setAttr(team, id, DUEL_ATTR_EQUIPMENT, piece)
   }
+}
+
+/* The id a hero on the board would hold as its other copy: a Trial copy of a
+ * normal hero under the board's lowest free copy number, or the normal copy of
+ * a Trial one. Null where there is none: a unit only one source brings, and a
+ * Trial copy whose side holds the hero's normal copy, since a side takes one. */
+export function duelOtherCopy(ctx: GridContext, team: Team, unitId: number): number | null {
+  const heroId = toBaseHeroId(unitId)
+  let other = heroId
+  if (isTrialHeroId(unitId)) {
+    if (isCharacterOnTeam(ctx.grid, heroId, team)) return null
+  } else {
+    const copy = freeTrialCopy(getTilesWithCharacters(ctx.grid).map((tile) => tile.characterId!))
+    if (copy === null) return null
+    other = toTrialId(heroId, copy)
+  }
+  return duelTiersOf(other).length > 0 ? other : null
+}
+
+/* Changes a hero on the board between its normal and its Trial copy, and
+ * returns the copy's id, or null when nothing changed. The copy is a unit with
+ * an id of its own, placed over the first: it takes the tile, and the tier and
+ * equipment are handed to it, the tier moved to the nearest its source allows. */
+export function swapDuelCopy(ctx: GridContext, team: Team, unitId: number): number | null {
+  const hexId = findCharacterHex(ctx.grid, unitId, team)
+  const other = duelOtherCopy(ctx, team, unitId)
+  if (hexId === null || other === null) return null
+  const values = ctx.getAttrs(team, unitId)
+  if (!ctx.place(hexId, other, team)) return null
+  ctx.setAttrs(team, other, values)
+  return other
 }
 
 // The side that holds the artifact, the first of `sides` when more than one does.

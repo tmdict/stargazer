@@ -14,6 +14,7 @@ import DuelPiecePicker, { type DuelPiecePick } from '@/components/hd/DuelPiecePi
 import DuelPieceSlot from '@/components/hd/DuelPieceSlot.vue'
 import DuelTierChips from '@/components/hd/DuelTierChips.vue'
 import DuelTierPill from '@/components/hd/DuelTierPill.vue'
+import DuelTrialToggle from '@/components/hd/DuelTrialToggle.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useDuelItems, type DuelItemView } from '@/composables/useDuelItems'
 import { useDuelPieceDrag } from '@/composables/useDuelPieceDrag'
@@ -44,11 +45,10 @@ import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import type { BadgeIcon } from '@/lib/types/unitBadge'
-import { setDuelEquipment } from '@/stores/duelBoard'
+import { duelOtherCopy, setDuelEquipment, swapDuelCopy } from '@/stores/duelBoard'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { initialOf } from '@/utils/nameFormatting'
 import { isTouchClick } from '@/utils/pointer'
 import { below } from '@/utils/popupLayout'
 import { tierBackdrop } from '@/utils/tierBackdrop'
@@ -421,6 +421,8 @@ interface DuelMark {
   // The tier's place in DUEL_TIERS.
   tierAt: number
   tierChoice: boolean
+  // Whether the hero can change to its other copy, normal or Trial.
+  copyChoice: boolean
   pieceId: number
   piece: DuelItemView | null
 }
@@ -444,6 +446,7 @@ const duelMarks = computed((): DuelMark[] =>
             tier: DUEL_TIERS[tierAt] ?? DUEL_TIERS[0],
             tierAt,
             tierChoice: hasDuelTierChoice(unitId),
+            copyChoice: duelOtherCopy(ctx, team, unitId) !== null,
             pieceId,
             piece: pieceOf(pieceId),
           },
@@ -460,6 +463,13 @@ const duelBackdrops = computed(
 
 const setDuelTier = ({ team, unitId }: DuelMark, tier: number): void =>
   ctx.setAttr(team, unitId, DUEL_ATTR_TIER, tier)
+
+// A lift names its unit, and the copy is another unit on the same tile, so the
+// lift moves to it and the controls over the unit stay open.
+const swapLiftedCopy = ({ hexId, team, unitId }: DuelMark): void => {
+  const copy = swapDuelCopy(ctx, team, unitId)
+  if (copy !== null) setLiftedHex(hexId, ctx.id, copy)
+}
 
 const picking = ref<DuelPiecePick | null>(null)
 const pickPiece = ({ team, unitId }: DuelMark, position: Point): void => {
@@ -518,7 +528,8 @@ const pointAt = (event: MouseEvent, target: EventTarget | null): void => {
 }
 
 // On a board that can be edited, the unit under the pointer shows the controls
-// it has no mark for at rest: an empty equipment slot, and its tier.
+// it has no mark for at rest: an empty equipment slot, its tier, and the empty
+// Trial slot of a hero that can change to a Trial copy.
 const pointedMark = computed(() => (props.readonly ? undefined : duelMarkAt(pointedHexId.value)))
 
 // The lift pill is centred on its unit, so by the board's side it can run past
@@ -695,9 +706,17 @@ const liftedMode = computed(() =>
             @open="pickPiece(mark, besideUnit($event))"
           />
         </span>
-        <UnitBadge v-if="mark.trial" class="badge-upper-right" color="var(--duel-trial-mark)">
-          {{ initialOf(i18n.t('app.trial')) }}
-        </UnitBadge>
+        <span
+          v-if="mark.trial || (mark === pointedMark && mark.copyChoice)"
+          class="duel-control badge-upper-right"
+          :class="{ 'capture-exclude': !mark.trial }"
+        >
+          <DuelTrialToggle
+            :trial="mark.trial"
+            :fixed="readonly || !mark.copyChoice"
+            @toggle="swapDuelCopy(ctx, mark.team, mark.unitId)"
+          />
+        </span>
         <span
           v-if="mark === pointedMark && mark.tierChoice"
           class="duel-control badge-lower-left capture-exclude"
@@ -737,6 +756,11 @@ const liftedMode = computed(() =>
           <DuelPieceSlot
             :piece="liftPill.duel.pieceId"
             @open="pickPiece(liftPill.duel, below($event))"
+          />
+          <DuelTrialToggle
+            v-if="liftPill.duel.copyChoice"
+            :trial="liftPill.duel.trial"
+            @toggle="swapLiftedCopy(liftPill.duel)"
           />
         </span>
         <button

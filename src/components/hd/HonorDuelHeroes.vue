@@ -1,17 +1,16 @@
 <script setup lang="ts">
 /* The Honor Duel board's units, the same for every player, so no roster
    narrows them: the shop's heroes, then what only a Trial Card brings, a group
-   per card under a heading that says what its units are. The switch beside
-   "Heroes" says what a hero's click places: a shop copy, which a second click
-   takes off as on the Heroes tab, or a Trial copy. Every click on a Trial pick
-   adds one more copy while a side has room. */
+   per card under a heading that says what its units are and names the card. A
+   hero's click places its normal copy, which a second click takes off as on
+   the Heroes tab; the board changes a placed hero to a Trial copy. Every click
+   on a Trial pick adds one more copy while a side has room. */
 
 import { computed } from 'vue'
 
 import CharacterFilterStrip from '@/components/CharacterFilterStrip.vue'
 import CharacterGrid from '@/components/CharacterGrid.vue'
 import CharacterIcon from '@/components/CharacterIcon.vue'
-import DuelHeroSource from '@/components/hd/DuelHeroSource.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useDuelUnits } from '@/composables/useDuelUnits'
 import { usePickerPlacement } from '@/composables/usePickerPlacement'
@@ -20,6 +19,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { goodName } from '@/utils/shopGoodNames'
 import { duelPickBackdrop } from '@/utils/tierBackdrop'
 
 const grids = useGrids()
@@ -28,8 +28,6 @@ const { targetTile, placedTeam, placeOnTarget, placeOnFirstSide } = usePickerPla
 
 const { heroes, groups, units: listed } = useDuelUnits()
 const { factionFilter, classFilter, filteredCharacters } = useCharacterFilters(listed)
-
-const HEROES = 'heroes'
 
 // The factions of a group's heroes, in the order the group lists them.
 const factionNames = (units: readonly CharacterType[]): string =>
@@ -46,18 +44,19 @@ interface UnitSection {
 const sections = computed(() => {
   const shown = new Set(filteredCharacters.value)
   const all: UnitSection[] = [
-    { key: HEROES, title: i18n.t('app.heroes'), units: heroes.value },
+    { key: 'heroes', title: i18n.t('app.heroes'), units: heroes.value },
     ...groups.value.map(({ card, creatures, units }) => ({
       key: card,
-      title: creatures ? i18n.t('app.creatures') : factionNames(units),
+      title: i18n.t('app.trial-card-units', {
+        units: creatures ? i18n.t('app.creatures') : factionNames(units),
+        card: goodName(card, i18n.currentLocale),
+      }),
       units,
     })),
   ]
-  // The heroes' heading stays under a filter that leaves it no hero, since it
-  // carries the switch.
   return all
     .map((section) => ({ ...section, units: section.units.filter((unit) => shown.has(unit)) }))
-    .filter((section) => section.key === HEROES || section.units.length > 0)
+    .filter((section) => section.units.length > 0)
 })
 
 const isTrialPick = (character: CharacterType): boolean => trialPickOf(character.id) !== null
@@ -94,11 +93,8 @@ const handleClick = (character: CharacterType) => {
 
     <div class="icon-groups">
       <section v-for="section in sections" :key="section.key" class="icon-group">
-        <div class="group-head">
-          <h3 class="seasonal-title">{{ section.title }}</h3>
-          <DuelHeroSource v-if="section.key === HEROES" />
-        </div>
-        <CharacterGrid v-if="section.units.length">
+        <h3 class="seasonal-title">{{ section.title }}</h3>
+        <CharacterGrid>
           <CharacterIcon
             v-for="character in section.units"
             :key="character.id"
@@ -121,11 +117,5 @@ const handleClick = (character: CharacterType) => {
   display: flex;
   flex-direction: column;
   gap: var(--picker-row-gap);
-}
-
-.group-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
 }
 </style>
