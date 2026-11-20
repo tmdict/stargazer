@@ -18,6 +18,11 @@ export const FACTION_BONUS_STEPS: readonly { groups: readonly number[]; percent:
   { groups: [5], percent: 22 },
 ]
 
+/** One faction per hero of a step's same-faction groups, each group a faction
+ * of its own. */
+export const stepTeam = (groups: readonly number[]): string[] =>
+  groups.flatMap((size, g) => Array<string>(size).fill(TACTICS_WHEEL[g]!))
+
 // Added per Celestial or Hypogean hero on the team, on top of the step.
 export const WILD_FACTION_PERCENT = 1
 export const WILD_FACTIONS = ['celestial', 'hypogean'] as const

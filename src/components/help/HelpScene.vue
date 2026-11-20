@@ -7,8 +7,10 @@ import '@/styles/help.css'
 <template>
   <div class="help-scene" inert>
     <slot name="from" />
-    <IconArrowRight :size="20" class="help-scene-arrow" />
-    <slot name="to" />
+    <template v-if="$slots.to">
+      <IconArrowRight :size="20" class="help-scene-arrow" />
+      <slot name="to" />
+    </template>
   </div>
 </template>
 

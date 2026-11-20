@@ -29,3 +29,6 @@ export const WWW_PATH = '/guide/pvp/www'
 // (GuideHdShopView).
 export const HD_SHOP_PATH = '/guide/hd/shop'
 export const HD_SHOP_PROBABILITY_PATH = '/guide/hd/shop/probability'
+
+export const TOTO_SITE_URL = 'https://honorduel.afkj.workers.dev/'
+export const TOTO_DISCORD_URL = 'https://discord.gg/nj6g2Gdfj'

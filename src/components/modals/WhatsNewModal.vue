@@ -71,7 +71,40 @@ watch(
   margin: 14px 0 0;
 }
 
-.whats-new :deep(.whats-new-also) {
-  margin-top: 44px;
+.whats-new :deep(.whats-new-guides) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 22px;
+}
+
+.whats-new :deep(.whats-new-guides > *) {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 12px;
+}
+
+.whats-new :deep(.whats-new-guides .link-heading) {
+  justify-content: flex-start;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.whats-new :deep(.whats-new-guides .whats-new-picture) {
+  display: grid;
+}
+
+.whats-new :deep(.whats-new-guides p) {
+  margin: 0;
+}
+
+@container help (max-width: 640px) {
+  .whats-new :deep(.whats-new-guides) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .whats-new :deep(.whats-new-guides > * + *) {
+    margin-top: 28px;
+  }
 }
 </style>

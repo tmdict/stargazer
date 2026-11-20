@@ -10,16 +10,20 @@ import IconChevronRight from './IconChevronRight.vue'
 
 import '@/styles/link-area.css'
 
-defineProps<{ to?: string; href?: string }>()
+defineProps<{
+  to?: string
+  href?: string
+  sub?: boolean
+}>()
 </script>
 
 <template>
   <RouterLink v-if="to" class="link-heading" :to>
-    <h2><slot /></h2>
+    <component :is="sub ? 'h3' : 'h2'"><slot /></component>
     <IconChevronRight :size="18" />
   </RouterLink>
   <a v-else class="link-heading" :href>
-    <h2><slot /></h2>
+    <component :is="sub ? 'h3' : 'h2'"><slot /></component>
     <IconChevronRight :size="18" />
   </a>
 </template>

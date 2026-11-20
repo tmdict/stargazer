@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ caption: string; glass?: boolean }>()
+defineProps<{ caption?: string; glass?: boolean }>()
 </script>
 
 <template>
   <div class="help-mock" :class="{ 'glass-panel': glass }">
-    <div class="help-mock-cap">{{ caption }}</div>
+    <div v-if="caption" class="help-mock-cap">{{ caption }}</div>
     <slot />
   </div>
 </template>

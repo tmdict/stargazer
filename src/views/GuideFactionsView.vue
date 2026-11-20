@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import {
   FACTION_BONUS_STEPS,
+  stepTeam,
   TACTICS_PERCENT,
   TACTICS_WHEEL,
   TEAM_SIZE,
@@ -70,7 +71,7 @@ const wildRow = (same: number, wild: number): BonusRow => {
 
 const STEP_ROWS: readonly BonusRow[] = FACTION_BONUS_STEPS.map(({ groups, percent }) => ({
   key: groups.join('-'),
-  team: fill(groups.flatMap((size, g) => Array<string>(size).fill(TACTICS_WHEEL[g]!))),
+  team: fill(stepTeam(groups)),
   count: groups.join(' + '),
   percent,
 }))

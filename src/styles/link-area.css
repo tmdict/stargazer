@@ -9,7 +9,7 @@
   text-decoration: none;
 }
 
-.content .link-heading h2 {
+.content .link-heading :is(h2, h3) {
   margin: 0;
   padding: 0;
   border: none;
@@ -38,8 +38,8 @@
   z-index: 1;
 }
 
-.link-area:hover .link-heading h2,
-.content .link-heading:hover h2 {
+.link-area:hover .link-heading :is(h2, h3),
+.content .link-heading:hover :is(h2, h3) {
   color: var(--color-accent);
 }
 
