@@ -534,7 +534,7 @@ const SKILL = {
       <ul class="help-notes reading-secondary">
         <li>结果会马上显示。以范围给出的概率会在接下来几秒内收窄。</li>
         <li><b>按最佳方案重新计算</b>会假设你已经走了推荐的那一步，再算一遍。</li>
-        <li><b>要出售的英雄、神话英雄</b>里列出卡包开出时你会卖掉的英雄，以及已达到神话的英雄。</li>
+        <li><b>你的英雄</b>里列出卡包开出时你会卖掉的英雄，以及已达到神话的英雄。</li>
         <li>
           从较低商店等级锁定保留下来的卡片会标出当时的等级，<span class="help-mouse">点击</span
           ><span class="help-touch">点</span>等级可以修改。

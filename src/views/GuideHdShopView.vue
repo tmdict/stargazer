@@ -180,7 +180,8 @@ watch(
         :equipment="form.equipment.value"
         :more-heroes="!form.full.value && addable.length > 0"
         :more-equipment="!form.full.value && moreEquipment"
-        :set="form.sell.value.length + form.mythic.value.length"
+        :sell="form.sell.value.length"
+        :mythic="form.mythic.value.length"
         :working="engine.working.value"
         :possible="form.problems.value.length === 0"
         @badges="form.setBadges"
@@ -189,7 +190,7 @@ watch(
         @remove-equipment="form.removeEquipment"
         @add-hero="(under) => (popup = { kind: 'hero', position: below(under) })"
         @add-equipment="(under) => (popup = { kind: 'equipment', position: below(under) })"
-        @more="listsOpen = true"
+        @lists="listsOpen = true"
         @calculate="calculate"
         @cancel="engine.cancel"
       />

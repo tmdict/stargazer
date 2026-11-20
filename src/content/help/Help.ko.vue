@@ -632,10 +632,7 @@ const SKILL = {
       <ul class="help-notes reading-secondary">
         <li>결과는 바로 나옵니다. 범위로 표시된 확률은 몇 초에 걸쳐 좁혀집니다.</li>
         <li><b>최선의 수로 다시 계산</b>은 추천한 수를 둔 것으로 보고 다시 계산합니다.</li>
-        <li>
-          <b>판매할 영웅, 신화 영웅</b>에는 팩에서 나오면 판매할 영웅과 이미 신화 등급인 영웅을
-          넣습니다.
-        </li>
+        <li><b>내 영웅</b>에는 팩에서 나오면 판매할 영웅과 이미 신화 등급인 영웅을 넣습니다.</li>
         <li>
           낮은 상점 레벨에서 잠가 둔 카드에는 그 레벨이 표시됩니다. 레벨을
           <span class="help-mouse">클릭하면</span><span class="help-touch">누르면</span> 바꿀 수

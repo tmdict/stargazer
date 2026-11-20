@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* The calculator's form beside the shop window: the shop level, whether it
-   goes up next round, the badges in hand, the heroes and equipment looked for,
-   the link to the heroes to sell and the Mythic heroes, and Calculate. While a
-   calculation runs, Calculate gives way to Cancel. It waits for something to
+   goes up next round, the badges in hand, how many heroes are on the lists of
+   heroes to sell and heroes at Mythic, the heroes and equipment looked for, and
+   Calculate. While a calculation runs, Calculate gives way to Cancel. It waits for something to
    look for, which a line under it asks for, and for cards the level can show.
    Whether the level goes up is the player's to say only where the game leaves
    it open: a level that lasts one round always does, and the last level never
@@ -27,8 +27,9 @@ const props = defineProps<{
   // list is not full.
   moreHeroes: boolean
   moreEquipment: boolean
-  // How many heroes are set to be sold or left out.
-  set: number
+  // How many heroes are on the list to sell and on the list at Mythic.
+  sell: number
+  mythic: number
   working: boolean
   // Whether the shop window's cards can come up at its level.
   possible: boolean
@@ -41,7 +42,7 @@ const emit = defineEmits<{
   removeEquipment: [piece: string]
   addHero: [under: DOMRect]
   addEquipment: [under: DOMRect]
-  more: []
+  lists: []
   calculate: []
   cancel: []
 }>()
@@ -55,6 +56,14 @@ const i18n = useI18nStore()
 const wanted = computed(() => props.heroes.length > 0 || props.equipment.length > 0)
 
 const levels = SHOP_FACTS.levelRounds.map((_, index) => index + 1)
+
+const listed = computed(() => {
+  const parts = [
+    ...(props.sell ? [i18n.t('app.shop-heroes-sell', { count: props.sell })] : []),
+    ...(props.mythic ? [i18n.t('app.shop-heroes-mythic', { count: props.mythic })] : []),
+  ]
+  return parts.length ? parts.join(' · ') : i18n.t('app.shop-heroes-none')
+})
 
 // Whether the player's word changes anything at this level.
 const open = computed(
@@ -117,6 +126,12 @@ const under = (event: MouseEvent): DOMRect =>
           />
         </span>
       </label>
+      <div class="set" role="group" :aria-label="i18n.t('app.shop-your-heroes')">
+        <span class="shop-label">{{ i18n.t('app.shop-your-heroes') }}</span>
+        <button type="button" class="field lists" aria-haspopup="dialog" @click="emit('lists')">
+          {{ listed }}
+        </button>
+      </div>
     </div>
 
     <h2 class="shop-heading">
@@ -168,9 +183,6 @@ const under = (event: MouseEvent): DOMRect =>
       {{ i18n.t('app.shop-level-notice', { level: level + 1 }) }}
     </p>
     <div class="foot">
-      <button type="button" class="more" @click="emit('more')">
-        {{ i18n.t('app.shop-more') }}<template v-if="set"> ({{ set }})</template>
-      </button>
       <span class="actions">
         <button
           v-if="working"
@@ -285,6 +297,18 @@ const under = (event: MouseEvent): DOMRect =>
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+.lists {
+  color: var(--import-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lists:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 .field input {
   width: 3.6em;
   padding: 0;
@@ -340,19 +364,6 @@ const under = (event: MouseEvent): DOMRect =>
   justify-content: space-between;
   gap: 10px;
   margin-top: auto;
-}
-
-.more {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-accent);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
 }
 
 .actions {

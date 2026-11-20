@@ -1,7 +1,7 @@
 <script setup lang="ts">
-/* The two hero lists behind the form's link: the heroes sold as soon as a
-   pack gives them, and the heroes already at Mythic, which the shop no longer
-   gives. A press on a hero puts it on a list or takes it off. */
+/* The two hero lists behind the form's Your heroes button: the heroes sold as
+   soon as a pack gives them, and the heroes already at Mythic, which the shop
+   no longer gives. A press on a hero puts it on a list or takes it off. */
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import BaseModal from '@/components/modals/BaseModal.vue'
@@ -34,7 +34,7 @@ const toggle = (list: 'sell' | 'mythic', hero: string): void =>
 </script>
 
 <template>
-  <BaseModal :show :label="i18n.t('app.shop-more')" @close="emit('close')">
+  <BaseModal :show :label="i18n.t('app.shop-your-heroes')" @close="emit('close')">
     <template v-for="(list, index) in LISTS" :key="list.key">
       <component :is="index ? 'h2' : 'h1'">{{ i18n.t(list.head) }}</component>
       <p>{{ i18n.t(list.note, { sell: SHOP_FACTS.sell }) }}</p>

@@ -642,8 +642,8 @@ const SKILL = {
           recommended move.
         </li>
         <li>
-          <b>Heroes you would sell, Mythic heroes</b> lists the heroes you would sell when a pack
-          gives them, and the heroes you already have at Mythic.
+          <b>Your heroes</b> lists the heroes you would sell when a pack gives them, and the heroes
+          you already have at Mythic.
         </li>
         <li>
           A card kept locked from a lower shop level shows that level.
