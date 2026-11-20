@@ -76,7 +76,6 @@ const stages = (asked: Asked, searchMs?: number): ShopResult[] =>
 /** The settled answers, by the wanted item's name or the kind of an "any" goal. */
 function answers(asked: Asked): Record<string, ShopAnswer> {
   const last = stages(asked).at(-1)!
-  if (!('answers' in last)) throw new Error('the shop cannot happen at this level')
   return Object.fromEntries(
     last.answers.map((answer) => [
       'name' in answer.goal ? answer.goal.name : answer.goal.kind,
@@ -184,13 +183,6 @@ describe('the goals of a request', () => {
       answers: singles.map((name) => ({ goal: { kind: 'hero', name } })),
     })
     expect(kinds({ ...asked, badges: 10 })).toEqual(['L1', ...singles])
-  })
-
-  it('has no answer for a shop that cannot happen at its level', () => {
-    const shop = cards(...Array(8).fill(card('epic-equipment')))
-    expect(stages({ level: 1, cards: shop, pools: pools() })).toEqual([
-      { error: 'impossible-shop', problems: [{ kind: 'unsold', goods: ['epic-equipment'] }] },
-    ])
   })
 
   it('buys a wanted piece kept locked into a level that no longer sells its rarity', () => {
@@ -419,10 +411,7 @@ describe('stopping', () => {
 
 describe('answers in stages', () => {
   const heavy: Asked = { level: 5, badges: 150, heroes: [['L1', 4]], pools: pools() }
-  const best = (result: ShopResult) => {
-    if (!('answers' in result)) throw new Error('the shop cannot happen at this level')
-    return result.answers[0]!.chance.best!
-  }
+  const best = (result: ShopResult) => result.answers[0]!.chance.best!
 
   it('gives every row as a range first, then the searched answer inside it', () => {
     const [first, ...later] = stages(heavy)

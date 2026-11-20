@@ -2,7 +2,8 @@
 /* The calculator's form beside the shop window: the shop level, whether it
    goes up next round, the badges in hand, the heroes and equipment looked for,
    the link to the heroes to sell and the Mythic heroes, and Calculate. While a
-   calculation runs, Calculate gives way to Cancel. Whether the level goes up is
+   calculation runs, Calculate gives way to Cancel, and while it cannot run, the
+   lines under it say what it waits for. Whether the level goes up is
    the player's to say only where the game leaves it open: a level that lasts
    one round always does, and the last level never does. */
 
@@ -28,7 +29,8 @@ const props = defineProps<{
   // How many heroes are set to be sold or left out.
   set: number
   working: boolean
-  ready: boolean
+  // Whether the shop window's cards can come up at its level.
+  possible: boolean
 }>()
 
 const emit = defineEmits<{
@@ -48,6 +50,12 @@ const level = defineModel<number>('level', { required: true })
 const rises = defineModel<boolean>('rises', { required: true })
 
 const i18n = useI18nStore()
+
+// What Calculate waits for, said under it while it is greyed out.
+const waits = computed(() => [
+  ...(props.heroes.length || props.equipment.length ? [] : ['app.shop-need-wanted']),
+  ...(props.possible ? [] : ['app.shop-fix-cards']),
+])
 
 const levels = SHOP_FACTS.levelRounds.map((_, index) => index + 1)
 
@@ -178,13 +186,14 @@ const under = (event: MouseEvent): DOMRect =>
         <button
           type="button"
           class="solid-btn sl-action"
-          :disabled="!ready || working"
+          :disabled="waits.length > 0 || working"
           :aria-busy="working"
           @click="emit('calculate')"
         >
           {{ i18n.t(working ? 'app.shop-calculating' : 'app.shop-calculate') }}
         </button>
       </span>
+      <p v-for="key in waits" :key class="shop-note wait">{{ i18n.t(key) }}</p>
     </div>
   </section>
 </template>
@@ -355,9 +364,18 @@ const under = (event: MouseEvent): DOMRect =>
   margin-left: auto;
 }
 
+.wait {
+  flex-basis: 100%;
+  text-align: right;
+}
+
 @media (max-width: 520px) {
   .actions {
     width: 100%;
+  }
+
+  .wait {
+    text-align: center;
   }
 
   .actions .solid-btn {

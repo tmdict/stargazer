@@ -12,6 +12,7 @@ import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
 import { risesNext, SOURCES } from '@/lib/hd/shop/odds'
 import { shopPools } from '@/lib/hd/shop/pools'
 import { sampleShop } from '@/lib/hd/shop/sample'
+import { levelsBelow, shopProblems } from '@/lib/hd/shop/sources'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useGameDataStore } from '@/stores/gameData'
 import { duelEquipment } from '@/utils/duelCatalog'
@@ -150,6 +151,17 @@ export function useShopForm(changed: () => void) {
   }
 
   const wanted = computed(() => heroes.value.length > 0 || equipment.value.length > 0)
+  // Read against the measured table, as the example is: a data pack's table
+  // lists the same products for every source, and which products a source
+  // lists is all that decides whether a shop can come up.
+  const problems = computed(() =>
+    shopProblems(
+      MEASURED_ODDS.levels[level.value - 1]!,
+      cards.value,
+      levelsBelow(MEASURED_ODDS, level.value),
+    ),
+  )
+  const ready = computed(() => wanted.value && problems.value.length === 0)
 
   // Plain copies throughout: a worker cannot be sent Vue's reactive objects.
   const request = (): ShopRequest => {
@@ -183,7 +195,8 @@ export function useShopForm(changed: () => void) {
     mythic,
     level,
     rises,
-    wanted,
+    problems,
+    ready,
     full,
     setBadges,
     setCard,

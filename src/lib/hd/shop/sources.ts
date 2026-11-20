@@ -1,6 +1,6 @@
 // Reading the shop: which source could have made each card on show.
 
-import type { LevelOdds, ShopCard, SourceEntry } from './types'
+import type { LevelOdds, OddsTable, ShopCard, SourceEntry } from './types'
 
 /** One way the cards could have come from the sources, with its chance. */
 export interface SourceWorld {
@@ -117,17 +117,22 @@ export function readShop(
   }
 }
 
+/** The odds of the levels below `level`, the nearest first: the `lower` the readings take. */
+export const levelsBelow = (table: OddsTable, level: number): LevelOdds[] =>
+  table.levels.slice(0, level - 1).reverse()
+
 /**
- * Why the cards on show cannot have come from the sources. `unsold`: products
- * the level never sells, on cards neither locked nor bought, and
- * `unsold-lower` the same for products a lower level sells, which a locked
- * card could have kept. `unsold-held`: products of locked or bought cards that
- * no level they can be read at sells. `crowded`: products more cards show than
- * the sources, by index, that make them, when each source makes one card.
+ * Why the cards on show cannot have come from the sources, with the cards, by
+ * index, each reason concerns. `unsold`: products the level never sells, on
+ * cards neither locked nor bought, and `unsold-lower` the same for products a
+ * lower level sells, which a locked card could have kept. `unsold-held`:
+ * products of locked or bought cards that no level they can be read at sells.
+ * `crowded`: products more cards show than the sources, by index, that make
+ * them, when each source makes one card.
  */
 export type ShopProblem =
-  | { kind: UnsoldKind; goods: string[] }
-  | { kind: 'crowded'; goods: string[]; cards: number; sources: number[] }
+  | { kind: UnsoldKind; goods: string[]; cards: number[] }
+  | { kind: 'crowded'; goods: string[]; cards: number[]; sources: number[] }
 
 type UnsoldKind = 'unsold' | 'unsold-lower' | 'unsold-held'
 const UNSOLD_KINDS: readonly UnsoldKind[] = ['unsold', 'unsold-lower', 'unsold-held']
@@ -138,59 +143,60 @@ export function shopProblems(
   cards: readonly ShopCard[],
   lower: readonly LevelOdds[] = [],
 ): ShopProblem[] {
-  const unsold = new Map(UNSOLD_KINDS.map((kind) => [kind, new Set<string>()]))
+  const unsold = new Map(UNSOLD_KINDS.map((kind) => [kind, [] as number[]]))
   // Cards that only the same sources make compete as one group.
-  const groups = new Map<number, { goods: Set<string>; cards: number }>()
-  for (const card of cards) {
+  const groups = new Map<number, number[]>()
+  cards.forEach((card, index) => {
     const good = card.good
-    if (!good) continue
+    if (!good) return
     const mask = shares(readAt(odds, card, lower), good).reduce(
       (bits, share, source) => (share ? bits | (1 << source) : bits),
       0,
     )
-    if (!mask) {
-      const lowerSells = lower.some((level) => shares(level, good).some(Boolean))
-      const kind =
-        card.locked || card.bought ? 'unsold-held' : lowerSells ? 'unsold-lower' : 'unsold'
-      unsold.get(kind)!.add(good)
-      continue
+    if (mask) {
+      groups.set(mask, [...(groups.get(mask) ?? []), index])
+      return
     }
-    const group = groups.get(mask) ?? { goods: new Set<string>(), cards: 0 }
-    group.goods.add(good)
-    group.cards++
-    groups.set(mask, group)
-  }
+    const lowerSells = lower.some((level) => shares(level, good).some(Boolean))
+    const kind = card.locked || card.bought ? 'unsold-held' : lowerSells ? 'unsold-lower' : 'unsold'
+    unsold.get(kind)!.push(index)
+  })
 
+  const goodsOf = (shown: number[]): string[] => [
+    ...new Set(shown.map((index) => cards[index].good!)),
+  ]
   const problems: ShopProblem[] = UNSOLD_KINDS.flatMap((kind) => {
-    const goods = [...unsold.get(kind)!]
-    return goods.length ? [{ kind, goods }] : []
+    const shown = unsold.get(kind)!
+    return shown.length ? [{ kind, goods: goodsOf(shown), cards: shown }] : []
   })
 
   // The fewest groups with more cards between them than sources. The cards
   // with a product have sources one each exactly when no such set exists.
   const list = [...groups]
-  let crowded: { picked: number; mask: number; cards: number } | null = null
+  let crowded: { picked: number; mask: number; cards: number[] } | null = null
   for (let picked = 1; picked < 1 << list.length; picked++) {
     let mask = 0
-    let count = 0
+    const shown: number[] = []
     list.forEach(([bits, group], i) => {
       if (picked & (1 << i)) {
         mask |= bits
-        count += group.cards
+        shown.push(...group)
       }
     })
-    if (count > bitCount(mask) && (!crowded || bitCount(picked) < bitCount(crowded.picked))) {
-      crowded = { picked, mask, cards: count }
+    if (
+      shown.length > bitCount(mask) &&
+      (!crowded || bitCount(picked) < bitCount(crowded.picked))
+    ) {
+      crowded = { picked, mask, cards: shown }
     }
   }
   if (crowded) {
-    const { picked, mask } = crowded
+    const { mask } = crowded
+    const shown = crowded.cards.sort((a, b) => a - b)
     problems.push({
       kind: 'crowded',
-      goods: [
-        ...new Set(list.flatMap(([, group], i) => (picked & (1 << i) ? [...group.goods] : []))),
-      ],
-      cards: crowded.cards,
+      goods: goodsOf(shown),
+      cards: shown,
       sources: odds.flatMap((_, source) => (mask & (1 << source) ? [source] : [])),
     })
   }

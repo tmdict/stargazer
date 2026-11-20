@@ -11,12 +11,16 @@ import ShopWindowCard from './ShopWindowCard.vue'
 import ConfirmLabel from '@/components/ui/ConfirmLabel.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
+import type { ShopProblem } from '@/lib/hd/shop/sources'
 import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
+import { problemText } from './shopGoods'
 
-const { cards, level } = defineProps<{
+const { cards, level, problems } = defineProps<{
   cards: readonly ShopCard[]
   level: number
+  // Why the cards cannot come up at the level, if they cannot.
+  problems: readonly ShopProblem[]
 }>()
 
 const emit = defineEmits<{
@@ -30,6 +34,16 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 const blank = computed(() => cards.every((card) => !card.good && !card.locked))
+
+const wrong = computed(() => new Set(problems.flatMap((problem) => problem.cards)))
+const why = computed(() =>
+  problems.length
+    ? [
+        i18n.t('app.shop-impossible', { level }),
+        ...problems.map((problem) => problemText(problem, level, i18n)),
+      ]
+    : [],
+)
 
 const { armed, confirm } = useArmedConfirm()
 const random = (): void => {
@@ -79,10 +93,14 @@ const clear = (): void => {
         :key="index"
         :card
         :level
+        :wrong="wrong.has(index)"
         @pick="(under) => emit('pick', index, under)"
         @locked-at="(under) => emit('lockedAt', index, under)"
         @lock="emit('lock', index)"
       />
+    </div>
+    <div v-if="why.length" class="why">
+      <p v-for="line in why" :key="line" class="shop-note bad">{{ line }}</p>
     </div>
     <p class="shop-note">{{ i18n.t('app.shop-window-hint') }}</p>
   </section>

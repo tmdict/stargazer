@@ -35,7 +35,7 @@ import { SOURCES } from './odds'
 import { solveOffers, type Offers } from './offers'
 import { OutOfTime } from './search'
 import { modelKey, type SolverCache } from './solverCache'
-import { readShop, shopProblems, type ShopProblem, type ShopReading } from './sources'
+import { levelsBelow, readShop, type ShopReading } from './sources'
 import type {
   EnteredShop,
   Goal,
@@ -133,13 +133,15 @@ export interface ShopAnswer {
   idleLocks: number[]
 }
 
-export type ShopResult =
-  /**
-   * `skipped`: the goals left out as too large. `settled`: whether these
-   * answers are the last for the request.
-   */
-  | { answers: ShopAnswer[]; skipped: AnswerGoal[]; settled: boolean }
-  | { error: 'impossible-shop'; problems: ShopProblem[] }
+/**
+ * `skipped`: the goals left out as too large. `settled`: whether these answers
+ * are the last for the request.
+ */
+export interface ShopResult {
+  answers: ShopAnswer[]
+  skipped: AnswerGoal[]
+  settled: boolean
+}
 
 function checkRequest(request: ShopRequest): void {
   const { shop, heroes, equipment, startFrom } = request
@@ -453,13 +455,9 @@ function* stagesOf(
   const { shop, level } = request
   if (!table.levels[level - 1]) throw new Error('shop: no such level')
   const rises = request.rises && level < table.levels.length
-  const lower = table.levels.slice(0, level - 1).reverse()
-  const reading = readShop(table.levels[level - 1], shop.cards, lower)
-  if (!reading) {
-    const problems = shopProblems(table.levels[level - 1], shop.cards, lower)
-    yield { error: 'impossible-shop', problems }
-    return
-  }
+  const reading = readShop(table.levels[level - 1], shop.cards, levelsBelow(table, level))
+  // The page sends only a shop its level can show (`shopProblems`).
+  if (!reading) throw new Error('shop: the cards cannot come up at this level')
 
   const nextOdds = rises ? carriedOdds(table.levels[level], shop.cards, reading) : null
   const modelAt = (goal: Goal, odds: LevelOdds) => goalModel(goal, odds, request.pools, facts)

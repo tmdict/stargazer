@@ -69,7 +69,7 @@ export function useShopEngine() {
       take: (response) => {
         if (response?.type === 'answer') {
           result.value = response.result
-          if (!('answers' in response.result) || response.result.settled) {
+          if (response.result.settled) {
             working.value = false
             active = null
           }

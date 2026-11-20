@@ -82,7 +82,7 @@ export function problemText(
     })
   }
   return i18n.t('app.shop-impossible-crowded', {
-    cards: problem.cards,
+    cards: problem.cards.length,
     goods: list(goods, 'disjunction'),
     sources: list(
       problem.sources.map((source) => i18n.t('app.shop-odds-source', { n: source + 1 })),

@@ -15,7 +15,12 @@ import type { ShopCard } from '@/lib/hd/shop/types'
 import { useI18nStore } from '@/stores/i18n'
 import { cardName, lockedLevel, lockLevels, SHOP_GOODS } from './shopGoods'
 
-const { card, level } = defineProps<{ card: ShopCard; level: number }>()
+const { card, level, wrong } = defineProps<{
+  card: ShopCard
+  level: number
+  // Whether the card is one the shop cannot show as it stands.
+  wrong: boolean
+}>()
 
 const emit = defineEmits<{ pick: [under: DOMRect]; lock: []; lockedAt: [under: DOMRect] }>()
 
@@ -42,7 +47,7 @@ const under = (event: MouseEvent): DOMRect =>
 </script>
 
 <template>
-  <div class="shop-card" :class="{ bought: card.bought, locked: card.locked }">
+  <div class="shop-card" :class="{ bought: card.bought, locked: card.locked, wrong }">
     <button type="button" class="face" :aria-label="spoken" @click="emit('pick', under($event))">
       <span class="art">
         <ShopGoodArt v-if="good" :good :hero="card.hero" :equipment="card.equipment" />
@@ -111,6 +116,11 @@ const under = (event: MouseEvent): DOMRect =>
 
 .locked .face {
   border-color: var(--color-header-gold);
+}
+
+.wrong .face {
+  border-color: var(--import-bad);
+  background: var(--import-bad-tint);
 }
 
 .art {

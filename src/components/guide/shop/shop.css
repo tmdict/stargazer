@@ -70,6 +70,10 @@
   color: var(--import-warn);
 }
 
+.shop-page .shop-note.bad {
+  color: var(--import-bad);
+}
+
 .shop-page .shop-label {
   margin: 0;
   font-size: 11px;

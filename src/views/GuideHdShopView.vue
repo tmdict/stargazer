@@ -24,12 +24,7 @@ import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import {
-  lockedLevel,
-  lockLevels,
-  problemText,
-  type ShopPickerStep,
-} from '@/components/guide/shop/shopGoods'
+import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { HD_SHOP_PROBABILITY_PATH } from '@/lib/guide'
@@ -112,23 +107,11 @@ const addEquipment = (name: string): void => {
 const oddsOpen = ref(false)
 const listsOpen = ref(false)
 
-const answered = computed(() => {
-  const result = engine.result.value
-  return result && 'answers' in result ? result : null
-})
-const impossible = computed(() => {
-  const result = engine.result.value
-  if (!result || !('error' in result)) return null
-  const level = form.level.value
-  return [
-    i18n.t('app.shop-impossible', { level }),
-    ...result.problems.map((problem) => problemText(problem, level, i18n)),
-  ]
-})
+const answered = engine.result
 
 const answersEl = useTemplateRef<HTMLElement>('answers')
 const calculate = (): void => {
-  if (!form.wanted.value) return
+  if (!form.ready.value) return
   basis.value = null
   engine.calculate(form.request())
 }
@@ -182,6 +165,7 @@ watch(
       <ShopWindow
         :cards="form.cards.value"
         :level="form.level.value"
+        :problems="form.problems.value"
         @pick="
           (card, under) => (popup = { kind: 'card', card, step: 'product', position: below(under) })
         "
@@ -200,7 +184,7 @@ watch(
         :more-equipment="!form.full.value && moreEquipment"
         :set="form.sell.value.length + form.mythic.value.length"
         :working="engine.working.value"
-        :ready="form.wanted.value"
+        :possible="form.problems.value.length === 0"
         @badges="form.setBadges"
         @copies="form.setCopies"
         @remove-hero="form.removeHero"
@@ -212,10 +196,7 @@ watch(
         @cancel="engine.cancel"
       />
       <div ref="answers" class="shop-answers-slot">
-        <template v-if="impossible">
-          <p v-for="line in impossible" :key="line" class="shop-note warn">{{ line }}</p>
-        </template>
-        <p v-else-if="engine.failed.value" class="shop-note warn">
+        <p v-if="engine.failed.value" class="shop-note warn">
           {{ i18n.t('app.shop-failed') }}
         </p>
         <ShopAnswers
