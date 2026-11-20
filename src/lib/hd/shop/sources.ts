@@ -33,11 +33,13 @@ const shares = (odds: LevelOdds, good: string): number[] =>
     entries.reduce((sum, entry) => sum + (entry.good === good ? entry.percent / 100 : 0), 0),
   )
 
-/* The odds a card with a product is read against. `lower` holds the odds of
- * the levels below, the nearest first. A locked card is read against the
- * level it was locked at, when the card names one, and a locked card of a
- * product this level never makes against the nearest level that makes it. So
- * is a bought card of such a product: it was locked until it was bought. */
+/**
+ * The odds a card with a product is read against. `lower` holds the odds of the
+ * levels below, the nearest first. A locked card is read against the level it
+ * was locked at, when the card names one, and a locked card of a product this
+ * level never makes against the nearest level that makes it. So is a bought
+ * card of such a product: it was locked until it was bought.
+ */
 function readAt(odds: LevelOdds, card: ShopCard, lower: readonly LevelOdds[]): LevelOdds {
   const { good, locked, bought, lockedAt } = card
   if (!locked && !bought) return odds
@@ -134,14 +136,14 @@ export type ShopProblem =
   | { kind: UnsoldKind; goods: string[]; cards: number[] }
   | { kind: 'crowded'; goods: string[]; cards: number[]; sources: number }
 
-type UnsoldKind = 'unsold' | 'unsold-lower' | 'unsold-held'
-const UNSOLD_KINDS: readonly UnsoldKind[] = ['unsold', 'unsold-lower', 'unsold-held']
+const UNSOLD_KINDS = ['unsold', 'unsold-lower', 'unsold-held'] as const
+type UnsoldKind = (typeof UNSOLD_KINDS)[number]
 
 /** What keeps `readShop` from reading the shop, or nothing when it can. */
 export function shopProblems(
   odds: LevelOdds,
   cards: readonly ShopCard[],
-  lower: readonly LevelOdds[] = [],
+  lower: readonly LevelOdds[],
 ): ShopProblem[] {
   const unsold = new Map(UNSOLD_KINDS.map((kind) => [kind, [] as number[]]))
   // Cards that only the same sources make compete as one group.
@@ -173,7 +175,7 @@ export function shopProblems(
   // The fewest groups with more cards between them than sources. The cards
   // with a product have sources one each exactly when no such set exists.
   const list = [...groups]
-  let crowded: { picked: number; mask: number; cards: number[] } | null = null
+  let crowded: { groups: number; sources: number; cards: number[] } | null = null
   for (let picked = 1; picked < 1 << list.length; picked++) {
     let mask = 0
     const shown: number[] = []
@@ -183,21 +185,15 @@ export function shopProblems(
         shown.push(...group)
       }
     })
-    if (
-      shown.length > bitCount(mask) &&
-      (!crowded || bitCount(picked) < bitCount(crowded.picked))
-    ) {
-      crowded = { picked, mask, cards: shown }
+    const groups = bitCount(picked)
+    const sources = bitCount(mask)
+    if (shown.length > sources && (!crowded || groups < crowded.groups)) {
+      crowded = { groups, sources, cards: shown.sort((a, b) => a - b) }
     }
   }
   if (crowded) {
-    const shown = crowded.cards.sort((a, b) => a - b)
-    problems.push({
-      kind: 'crowded',
-      goods: goodsOf(shown),
-      cards: shown,
-      sources: bitCount(crowded.mask),
-    })
+    const { sources, cards: shown } = crowded
+    problems.push({ kind: 'crowded', goods: goodsOf(shown), cards: shown, sources })
   }
   return problems
 }

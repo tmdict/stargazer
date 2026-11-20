@@ -4,9 +4,9 @@
    the link to the heroes to sell and the Mythic heroes, and Calculate. While a
    calculation runs, Calculate gives way to Cancel. It waits for something to
    look for, which a line under it asks for, and for cards the level can show.
-   Whether the level goes up is
-   the player's to say only where the game leaves it open: a level that lasts
-   one round always does, and the last level never does. */
+   Whether the level goes up is the player's to say only where the game leaves
+   it open: a level that lasts one round always does, and the last level never
+   does. */
 
 import { computed, nextTick } from 'vue'
 

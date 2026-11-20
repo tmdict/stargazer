@@ -107,8 +107,6 @@ const addEquipment = (name: string): void => {
 const oddsOpen = ref(false)
 const listsOpen = ref(false)
 
-const answered = engine.result
-
 const answersEl = useTemplateRef<HTMLElement>('answers')
 const calculate = (): void => {
   if (!form.ready.value) return
@@ -200,9 +198,9 @@ watch(
           {{ i18n.t('app.shop-failed') }}
         </p>
         <ShopAnswers
-          v-else-if="answered"
-          :answers="answered.answers"
-          :skipped="answered.skipped"
+          v-else-if="engine.result.value"
+          :answers="engine.result.value.answers"
+          :skipped="engine.result.value.skipped"
           :cards="form.cards.value"
           :basis
           :heroes="form.heroes.value"

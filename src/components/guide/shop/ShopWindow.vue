@@ -99,7 +99,7 @@ const clear = (): void => {
         @lock="emit('lock', index)"
       />
     </div>
-    <div v-if="why.length" class="why">
+    <div v-if="why.length">
       <p v-for="line in why" :key="line" class="shop-note bad">{{ line }}</p>
     </div>
   </section>

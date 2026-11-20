@@ -152,8 +152,8 @@ export function useShopForm(changed: () => void) {
 
   const wanted = computed(() => heroes.value.length > 0 || equipment.value.length > 0)
   // Read against the measured table, as the example is: a data pack's table
-  // lists the same products for every source, and which products a source
-  // lists is all that decides whether a shop can come up.
+  // gives each source the same products as the measured one, and which
+  // products a source has is all that decides whether a shop can come up.
   const problems = computed(() =>
     shopProblems(
       MEASURED_ODDS.levels[level.value - 1]!,
