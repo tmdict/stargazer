@@ -270,7 +270,10 @@ function prepare(
   })
   const idleLocks = kept.filter((card) => {
     const at = reading.cards.indexOf(card)
-    return reading.worlds.every((world) => !model.sources[world.origins[at]].kinds.length)
+    // A card carried in from a lower level lists its product at 0% here.
+    return reading.worlds.every(
+      (world) => !model.sources[world.origins[at]].chances.some((chance) => chance > 0),
+    )
   })
 
   const badges = adviseBadges(min, kept)

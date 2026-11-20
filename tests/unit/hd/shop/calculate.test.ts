@@ -37,6 +37,7 @@ const everyLevel = (odds: LevelOdds): OddsTable => ({ levels: Array(5).fill(odds
 
 interface Asked {
   odds?: LevelOdds
+  table?: OddsTable
   level?: number
   rises?: boolean
   badges?: number
@@ -61,7 +62,7 @@ const request = (asked: Asked): ShopRequest => ({
 const steps = (asked: Asked, searchMs = 5000, sliceMs = 50): (ShopResult | null)[] => [
   ...calculateShop(
     request(asked),
-    asked.odds ? everyLevel(asked.odds) : ODDS,
+    asked.table ?? (asked.odds ? everyLevel(asked.odds) : ODDS),
     FACTS,
     createSolverCache(),
     searchMs,
@@ -309,6 +310,28 @@ describe('locks on other targets', () => {
     expect(found.L2!.idleLocks).toEqual([7])
     expect(found.L1!.idleLocks).toEqual([7])
     expect(found.e2!.idleLocks).toEqual([0])
+  })
+
+  it('names a lock whose source made the card only at the level it was locked at', () => {
+    const lockedLow = cards(
+      card('hero', { hero: 'L1', locked: true, lockedAt: 1 }),
+      card('hero'),
+      ...filler(6),
+    )
+    const table = {
+      levels: [
+        [sure('hero'), ...Array(7).fill(exp)],
+        [exp, sure('hero'), ...Array(6).fill(exp)],
+      ],
+    }
+    const found = answers({
+      table,
+      level: 2,
+      rises: false,
+      cards: lockedLow,
+      heroes: [['L1'], ['L2']],
+    })
+    expect(found.L2!.idleLocks).toEqual([0])
   })
 })
 
