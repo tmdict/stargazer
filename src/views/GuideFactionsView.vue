@@ -170,6 +170,7 @@ const bonusBlocks = computed(() => [
 
         <h2>{{ label('tactics') }}</h2>
         <div class="tactics">
+          <!-- The guide panel is dark in both looks, so the wheel takes the dark colours. -->
           <div data-theme="dark">
             <svg
               class="wheel"
