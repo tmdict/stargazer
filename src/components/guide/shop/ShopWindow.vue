@@ -102,7 +102,6 @@ const clear = (): void => {
     <div v-if="why.length" class="why">
       <p v-for="line in why" :key="line" class="shop-note bad">{{ line }}</p>
     </div>
-    <p class="shop-note">{{ i18n.t('app.shop-window-hint') }}</p>
   </section>
 </template>
 

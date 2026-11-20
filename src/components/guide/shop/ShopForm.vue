@@ -2,8 +2,9 @@
 /* The calculator's form beside the shop window: the shop level, whether it
    goes up next round, the badges in hand, the heroes and equipment looked for,
    the link to the heroes to sell and the Mythic heroes, and Calculate. While a
-   calculation runs, Calculate gives way to Cancel, and while it cannot run, the
-   lines under it say what it waits for. Whether the level goes up is
+   calculation runs, Calculate gives way to Cancel. It waits for something to
+   look for, which a line under it asks for, and for cards the level can show.
+   Whether the level goes up is
    the player's to say only where the game leaves it open: a level that lasts
    one round always does, and the last level never does. */
 
@@ -51,11 +52,7 @@ const rises = defineModel<boolean>('rises', { required: true })
 
 const i18n = useI18nStore()
 
-// What Calculate waits for, said under it while it is greyed out.
-const waits = computed(() => [
-  ...(props.heroes.length || props.equipment.length ? [] : ['app.shop-need-wanted']),
-  ...(props.possible ? [] : ['app.shop-fix-cards']),
-])
+const wanted = computed(() => props.heroes.length > 0 || props.equipment.length > 0)
 
 const levels = SHOP_FACTS.levelRounds.map((_, index) => index + 1)
 
@@ -186,14 +183,14 @@ const under = (event: MouseEvent): DOMRect =>
         <button
           type="button"
           class="solid-btn sl-action"
-          :disabled="waits.length > 0 || working"
+          :disabled="!wanted || !possible || working"
           :aria-busy="working"
           @click="emit('calculate')"
         >
           {{ i18n.t(working ? 'app.shop-calculating' : 'app.shop-calculate') }}
         </button>
       </span>
-      <p v-for="key in waits" :key class="shop-note wait">{{ i18n.t(key) }}</p>
+      <p v-if="!wanted" class="shop-note wait">{{ i18n.t('app.shop-need-wanted') }}</p>
     </div>
   </section>
 </template>
