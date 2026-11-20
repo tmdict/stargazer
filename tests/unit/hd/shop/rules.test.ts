@@ -140,7 +140,7 @@ describe('why a shop cannot come up', () => {
     // the seventh Rare equipment.
     const heroes = (count: number) => Array.from({ length: count }, () => card('hero'))
     expect(problems(2, heroes(5))).toEqual([
-      { kind: 'crowded', goods: ['hero'], cards: [0, 1, 2, 3, 4], sources: [2, 3, 4, 5] },
+      { kind: 'crowded', goods: ['hero'], cards: [0, 1, 2, 3, 4], sources: 4 },
     ])
     const rare = [card('rare-equipment'), card('rare-equipment')]
     expect(problems(2, [...heroes(4), ...rare])).toEqual([
@@ -148,11 +148,11 @@ describe('why a shop cannot come up', () => {
         kind: 'crowded',
         goods: ['hero', 'rare-equipment'],
         cards: [0, 1, 2, 3, 4, 5],
-        sources: [2, 3, 4, 5, 6],
+        sources: 5,
       },
     ])
     expect(problems(2, [...rare, ...heroes(5)])).toEqual([
-      { kind: 'crowded', goods: ['hero'], cards: [2, 3, 4, 5, 6], sources: [2, 3, 4, 5] },
+      { kind: 'crowded', goods: ['hero'], cards: [2, 3, 4, 5, 6], sources: 4 },
     ])
   })
 

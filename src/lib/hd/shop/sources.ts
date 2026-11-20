@@ -127,12 +127,12 @@ export const levelsBelow = (table: OddsTable, level: number): LevelOdds[] =>
  * cards neither locked nor bought, and `unsold-lower` the same for products a
  * lower level sells, which a locked card could have kept. `unsold-held`:
  * products of locked or bought cards that no level they can be read at sells.
- * `crowded`: products more cards show than the sources, by index, that make
+ * `crowded`: products more cards show than the number of `sources` that make
  * them, when each source makes one card.
  */
 export type ShopProblem =
   | { kind: UnsoldKind; goods: string[]; cards: number[] }
-  | { kind: 'crowded'; goods: string[]; cards: number[]; sources: number[] }
+  | { kind: 'crowded'; goods: string[]; cards: number[]; sources: number }
 
 type UnsoldKind = 'unsold' | 'unsold-lower' | 'unsold-held'
 const UNSOLD_KINDS: readonly UnsoldKind[] = ['unsold', 'unsold-lower', 'unsold-held']
@@ -191,13 +191,12 @@ export function shopProblems(
     }
   }
   if (crowded) {
-    const { mask } = crowded
     const shown = crowded.cards.sort((a, b) => a - b)
     problems.push({
       kind: 'crowded',
       goods: goodsOf(shown),
       cards: shown,
-      sources: odds.flatMap((_, source) => (mask & (1 << source) ? [source] : [])),
+      sources: bitCount(crowded.mask),
     })
   }
   return problems

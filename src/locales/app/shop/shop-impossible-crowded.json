@@ -1,5 +1,5 @@
 {
-  "en": "{cards} cards show {goods}, but only {sources} make them, and each source makes one card.",
-  "zh": "有 {cards} 张卡片是{goods}，但只有{sources}产出它们，而每个来源只产出一张卡片。",
-  "ko": "{goods} 카드가 {cards}장인데, 이를 만드는 곳은 {sources}뿐이며 출처 하나는 카드 한 장만 만듭니다."
+  "en": "At most {most} of the 8 cards can show {goods}, but this shop has {cards}.",
+  "zh": "8 张卡片中最多只有 {most} 张可以是{goods}，但这个商店有 {cards} 张。",
+  "ko": "{goods} 카드는 8장 중 {most}장까지만 나올 수 있는데, 이 상점에는 {cards}장이 있습니다."
 }
