@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
+import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import ArenaMapButtons from '@/components/grid/ArenaMapButtons.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
@@ -406,6 +407,9 @@ const handleResetMap = () => {
             </template>
             <template #debug>
               <DebugPanel />
+            </template>
+            <template #actions>
+              <ArenaDropdown />
             </template>
           </TabView>
         </BottomSheet>

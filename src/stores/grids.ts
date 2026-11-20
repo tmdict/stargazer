@@ -169,7 +169,7 @@ export const useGrids = defineStore('grids', () => {
   // a reload or a share link shows every drawing, and every rebuild of the
   // boards clears it.
   const hiddenSkills = shallowRef<ReadonlySet<string>>(new Set())
-  // The Arena's map button pick: the mode of the button picked and its map
+  // The Arena's map pick: the mode of the slot picked and its map
   // (useArenaPick keeps it on the device). Every rebuild of the boards clears it.
   const arenaPick = shallowRef<{ mode: TeamVariantKey; map: string } | null>(null)
 

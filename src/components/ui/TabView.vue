@@ -38,7 +38,9 @@ if (import.meta.env.DEV) {
 
 <template>
   <div class="tab-view" :class="{ fill }">
-    <TabList v-model="active" :tabs :aria-id="uid" />
+    <TabList v-model="active" :tabs :aria-id="uid">
+      <template v-if="$slots.actions" #actions><slot name="actions" /></template>
+    </TabList>
     <div class="tab-content" :class="{ fill }">
       <template v-if="eager">
         <div

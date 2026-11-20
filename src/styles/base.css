@@ -345,6 +345,20 @@ main {
   }
 }
 
+.arena-map-menu {
+  display: none;
+}
+
+@media (min-width: 1320px) {
+  .arena-map-menu {
+    display: block;
+  }
+
+  .picker-strip-row:has(> .arena-map-strip) {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .picker-top-row {
     padding: var(--spacing-sm) var(--spacing-md) 0;

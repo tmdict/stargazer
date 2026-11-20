@@ -28,7 +28,7 @@ const LAYOUTS = Object.entries(MAPS)
 // only, as the serializer emits them) reproduce exactly, if any. Presets that
 // share a layout (a season's preset reusing a permanent arena) are the same
 // board, and the one on a team type's map list stands for both, since the
-// Arena's slot and links carry no map key and its map buttons name that one.
+// Arena's slot and links carry no map key and its map controls name that one.
 export const findMapByTiles = (tiles: readonly number[][]): string | undefined => {
   const layout = layoutKey(
     tiles.flatMap(([hexId, state]) =>
