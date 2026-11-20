@@ -1,0 +1,5 @@
+{
+  "en": "{cards} cards show {goods}, but only {sources} make them, and each source makes one card.",
+  "zh": "有 {cards} 张卡片是{goods}，但只有{sources}产出它们，而每个来源只产出一张卡片。",
+  "ko": "{goods} 카드가 {cards}장인데, 이를 만드는 곳은 {sources}뿐이며 출처 하나는 카드 한 장만 만듭니다."
+}

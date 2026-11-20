@@ -5,6 +5,7 @@
 import type { AnswerGoal } from '@/lib/hd/shop/calculate'
 import { SHOP_FACTS } from '@/lib/hd/shop/goods'
 import { MEASURED_ODDS } from '@/lib/hd/shop/measured'
+import type { ShopProblem } from '@/lib/hd/shop/sources'
 import type { Good, Move, ShopCard } from '@/lib/hd/shop/types'
 import { TRIAL_CARDS } from '@/lib/hd/units'
 import type { DuelEquipment } from '@/lib/types/honorDuel'
@@ -63,6 +64,32 @@ export function cardLabel(card: ShopCard, locale: AppLocale): string {
 /** A card's label where one has to show: a card with no product reads as empty. */
 export const cardName = (card: ShopCard, i18n: ReturnType<typeof useI18nStore>): string =>
   cardLabel(card, i18n.currentLocale) || i18n.t('app.shop-picker-empty')
+
+/** A sentence on why the shop cannot come up at `level`. */
+export function problemText(
+  problem: ShopProblem,
+  level: number,
+  i18n: ReturnType<typeof useI18nStore>,
+): string {
+  const locale = i18n.currentLocale
+  const list = (items: string[], type: 'conjunction' | 'disjunction'): string =>
+    new Intl.ListFormat(locale, { type }).format(items)
+  const goods = problem.goods.map((name) => goodName(name, locale))
+  if (problem.kind !== 'crowded') {
+    return i18n.t(`app.shop-impossible-${problem.kind}`, {
+      level,
+      goods: list(goods, 'conjunction'),
+    })
+  }
+  return i18n.t('app.shop-impossible-crowded', {
+    cards: problem.cards,
+    goods: list(goods, 'disjunction'),
+    sources: list(
+      problem.sources.map((source) => i18n.t('app.shop-odds-source', { n: source + 1 })),
+      'conjunction',
+    ),
+  })
+}
 
 const SOLD_AT = new Map<string, number[]>()
 MEASURED_ODDS.levels.forEach((sources, index) => {

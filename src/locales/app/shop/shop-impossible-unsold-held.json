@@ -1,0 +1,5 @@
+{
+  "en": "No shop level up to {level} sells {goods}.",
+  "zh": "商店等级 {level} 及以下都不出售{goods}。",
+  "ko": "상점 레벨 {level} 이하 어느 레벨에서도 팔지 않는 상품: {goods}."
+}

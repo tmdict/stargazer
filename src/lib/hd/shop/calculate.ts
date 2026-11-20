@@ -35,7 +35,7 @@ import { SOURCES } from './odds'
 import { solveOffers, type Offers } from './offers'
 import { OutOfTime } from './search'
 import { modelKey, type SolverCache } from './solverCache'
-import { readShop, type ShopReading } from './sources'
+import { readShop, shopProblems, type ShopProblem, type ShopReading } from './sources'
 import type {
   EnteredShop,
   Goal,
@@ -138,7 +138,8 @@ export type ShopResult =
    * `skipped`: the goals left out as too large. `settled`: whether these
    * answers are the last for the request.
    */
-  { answers: ShopAnswer[]; skipped: AnswerGoal[]; settled: boolean } | { error: 'impossible-shop' }
+  | { answers: ShopAnswer[]; skipped: AnswerGoal[]; settled: boolean }
+  | { error: 'impossible-shop'; problems: ShopProblem[] }
 
 function checkRequest(request: ShopRequest): void {
   const { shop, heroes, equipment, startFrom } = request
@@ -455,7 +456,8 @@ function* stagesOf(
   const lower = table.levels.slice(0, level - 1).reverse()
   const reading = readShop(table.levels[level - 1], shop.cards, lower)
   if (!reading) {
-    yield { error: 'impossible-shop' }
+    const problems = shopProblems(table.levels[level - 1], shop.cards, lower)
+    yield { error: 'impossible-shop', problems }
     return
   }
 

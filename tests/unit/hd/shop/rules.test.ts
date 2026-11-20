@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { goalModel } from '@/lib/hd/shop/moves'
 import { checkOdds } from '@/lib/hd/shop/odds'
 import { sampleShop } from '@/lib/hd/shop/sample'
-import { readShop, sourcesOf } from '@/lib/hd/shop/sources'
+import { readShop, shopProblems, sourcesOf } from '@/lib/hd/shop/sources'
 import type { OddsTable, ShopCard } from '@/lib/hd/shop/types'
 import { card, cards, FACTS, hero, HEROES, levelOdds, ODDS, pools } from '../../fixtures/hdShop'
 
@@ -113,6 +113,71 @@ describe('reading the shop', () => {
     expect(
       readShop(levelOdds(4), cards(card('hero', { locked: true, lockedAt: 1 })), lower),
     ).toBeNull()
+  })
+})
+
+describe('why a shop cannot come up', () => {
+  const lowerOf = (level: number) => ODDS.levels.slice(0, level - 1).reverse()
+  const problems = (level: number, shown: ShopCard[]) =>
+    shopProblems(levelOdds(level), cards(...shown), lowerOf(level))
+
+  it('names products the level never sells, and says when a lock would explain one', () => {
+    expect(problems(1, [card('hero'), card('epic-equipment')])).toEqual([
+      { kind: 'unsold', goods: ['hero', 'epic-equipment'] },
+    ])
+    // Faction packs sell up to level 4.
+    expect(problems(5, [card('mauler-pack')])).toEqual([
+      { kind: 'unsold-lower', goods: ['mauler-pack'] },
+    ])
+    expect(problems(5, [card('mauler-pack', { locked: true })])).toEqual([])
+    // Legendary heroes sell from level 4.
+    expect(problems(3, [card('legendary-hero', { locked: true })])).toEqual([
+      { kind: 'unsold-held', goods: ['legendary-hero'] },
+    ])
+  })
+
+  it('names the fewest products more cards show than the sources that make them', () => {
+    // At level 2 the third to the sixth source make Hero cards, and the fifth to
+    // the seventh Rare equipment.
+    const heroes = (count: number) => Array.from({ length: count }, () => card('hero'))
+    expect(problems(2, heroes(5))).toEqual([
+      { kind: 'crowded', goods: ['hero'], cards: 5, sources: [2, 3, 4, 5] },
+    ])
+    const rare = [card('rare-equipment'), card('rare-equipment')]
+    expect(problems(2, [...heroes(4), ...rare])).toEqual([
+      { kind: 'crowded', goods: ['hero', 'rare-equipment'], cards: 6, sources: [2, 3, 4, 5, 6] },
+    ])
+    expect(problems(2, [...heroes(5), ...rare])).toEqual([
+      { kind: 'crowded', goods: ['hero'], cards: 5, sources: [2, 3, 4, 5] },
+    ])
+  })
+
+  it('has a reason for every shop the reading refuses, and none for one it reads', () => {
+    // A fixed pseudo-random sequence, so a failure repeats.
+    let seed = 7
+    const next = (): number => {
+      seed = (seed * 48271) % 2147483647
+      return seed / 2147483647
+    }
+    const pick = <T>(list: readonly T[]): T => list[Math.floor(next() * list.length)]!
+    const goods = [...FACTS.goods.map((good) => good.name), null]
+    const disagree: unknown[] = []
+    for (let i = 0; i < 1000; i++) {
+      const level = 1 + Math.floor(next() * ODDS.levels.length)
+      // Mostly what a source of the level makes, so shops fall on both sides.
+      const shown = Array.from({ length: 8 }, (): ShopCard => {
+        const good = next() < 0.15 ? pick(goods) : pick(pick(levelOdds(level))).good
+        const roll = next()
+        if (roll < 0.25) return card(good, { locked: true })
+        if (roll < 0.35 && good) return card(good, { bought: true })
+        return card(good)
+      })
+      const lower = lowerOf(level)
+      const read = readShop(levelOdds(level), shown, lower)
+      const why = shopProblems(levelOdds(level), shown, lower)
+      if (why.length > 0 !== (read === null)) disagree.push({ level, shown, why })
+    }
+    expect(disagree).toEqual([])
   })
 })
 

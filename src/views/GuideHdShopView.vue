@@ -24,7 +24,12 @@ import ShopPopupClose from '@/components/guide/shop/ShopPopupClose.vue'
 import ShopProductPicker from '@/components/guide/shop/ShopProductPicker.vue'
 import ShopWindow from '@/components/guide/shop/ShopWindow.vue'
 import SlHead from '@/components/guide/sl/SlHead.vue'
-import { lockedLevel, lockLevels, type ShopPickerStep } from '@/components/guide/shop/shopGoods'
+import {
+  lockedLevel,
+  lockLevels,
+  problemText,
+  type ShopPickerStep,
+} from '@/components/guide/shop/shopGoods'
 import { useShopForm } from '@/components/guide/shop/useShopForm'
 import { useShopEngine } from '@/composables/useShopEngine'
 import { HD_SHOP_PROBABILITY_PATH } from '@/lib/guide'
@@ -113,7 +118,12 @@ const answered = computed(() => {
 })
 const impossible = computed(() => {
   const result = engine.result.value
-  return !!result && 'error' in result
+  if (!result || !('error' in result)) return null
+  const level = form.level.value
+  return [
+    i18n.t('app.shop-impossible', { level }),
+    ...result.problems.map((problem) => problemText(problem, level, i18n)),
+  ]
 })
 
 const answersEl = useTemplateRef<HTMLElement>('answers')
@@ -202,9 +212,9 @@ watch(
         @cancel="engine.cancel"
       />
       <div ref="answers" class="shop-answers-slot">
-        <p v-if="impossible" class="shop-note warn">
-          {{ i18n.t('app.shop-impossible', { level: form.level.value }) }}
-        </p>
+        <template v-if="impossible">
+          <p v-for="line in impossible" :key="line" class="shop-note warn">{{ line }}</p>
+        </template>
         <p v-else-if="engine.failed.value" class="shop-note warn">
           {{ i18n.t('app.shop-failed') }}
         </p>

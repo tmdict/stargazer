@@ -189,7 +189,7 @@ describe('the goals of a request', () => {
   it('has no answer for a shop that cannot happen at its level', () => {
     const shop = cards(...Array(8).fill(card('epic-equipment')))
     expect(stages({ level: 1, cards: shop, pools: pools() })).toEqual([
-      { error: 'impossible-shop' },
+      { error: 'impossible-shop', problems: [{ kind: 'unsold', goods: ['epic-equipment'] }] },
     ])
   })
 

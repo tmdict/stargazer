@@ -1,0 +1,5 @@
+{
+  "en": "Shop level {level} never sells {goods}. Lock a card that was kept from a lower level.",
+  "zh": "商店等级 {level} 不出售{goods}。从较低等级保留下来的卡片请设为锁定。",
+  "ko": "상점 레벨 {level}에서 팔지 않는 상품: {goods}. 낮은 레벨에서 가져온 카드라면 잠그세요."
+}
