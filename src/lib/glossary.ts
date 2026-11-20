@@ -105,17 +105,19 @@ export const GLOSSARY: Record<GlossaryGroup, readonly string[]> = {
 }
 
 /** A term's name and description in `lang`: the game's words in the data pack
- * first, the site's own where the game has none. The site's words exist in
- * the app languages alone, and a blank string counts as no words. */
+ * first, the site's own where the game has none. The note is the site's own
+ * either way. The site's words exist in the app languages alone, and a blank
+ * string counts as no words. */
 export function glossaryWords(
   game: GlossaryKeyword | undefined,
   site: GlossaryWords | undefined,
   lang: SkillLocale,
-): { name: string | undefined; description: string | undefined } {
-  const own = (text?: LocaleData): string | undefined =>
+): { name: string | undefined; description: string | undefined; note: string | undefined } {
+  const own = (text?: Partial<LocaleData>): string | undefined =>
     isAppLocale(lang) ? text?.[lang] : undefined
   return {
     name: game?.n || own(site?.name) || undefined,
     description: game?.d || own(site?.description) || undefined,
+    note: own(site?.note) || undefined,
   }
 }

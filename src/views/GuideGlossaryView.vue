@@ -51,7 +51,8 @@ const shown = computed(() => {
       terms: terms.filter(
         (term) =>
           term.name.toLowerCase().includes(wanted) ||
-          term.description?.toLowerCase().includes(wanted),
+          term.description?.toLowerCase().includes(wanted) ||
+          term.note?.toLowerCase().includes(wanted),
       ),
     }))
     .filter(({ terms }) => terms.length > 0)
@@ -102,6 +103,7 @@ const linked = computed(() => (mounted.value ? route.hash.slice(1) : ''))
               </dt>
               <dd>
                 <p v-if="term.description" class="reading-secondary">{{ term.description }}</p>
+                <p v-if="term.note" class="reading-meta">{{ term.note }}</p>
                 <img
                   v-if="term.picture"
                   :src="term.picture"
@@ -209,6 +211,9 @@ dd img {
 }
 dd p + img {
   margin-top: 10px;
+}
+.content dd p + .reading-meta {
+  margin-top: 6px;
 }
 .content .none {
   margin: 24px 0 0;

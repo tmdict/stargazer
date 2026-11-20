@@ -16,10 +16,12 @@ export type LocaleData = Record<AppLocale, string>
 
 // The site's own words for a glossary term (src/locales/glossary/<key>.json):
 // what the game's text in the data pack leaves out, a name, a description or
-// both.
+// both, and a note for the Glossary page to show beside the game's words, in
+// the languages that need one.
 export interface GlossaryWords {
   name?: LocaleData
   description?: LocaleData
+  note?: Partial<LocaleData>
 }
 
 export interface LocaleDictionary {

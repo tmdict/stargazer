@@ -89,7 +89,7 @@ The game defines its stats and most of the keywords in its skill text, in every 
 | `n`        | The game's name for the term in that language. Every stat has one; a keyword has one only where the game names it. |
 | `d`        | The game's description in that language. A keyword the game explains with a picture alone has none.                |
 
-The game leaves gaps: most keywords have no name of their own, a few have only a picture, and some words its skill text uses are defined nowhere. The site's own words fill these, one file per term in `src/locales/glossary/`, with a `name`, a `description` or both in each site language.
+The game leaves gaps: most keywords have no name of their own, a few have only a picture, and some words its skill text uses are defined nowhere. The site's own words fill these, one file per term in `src/locales/glossary/`, with a `name`, a `description` or both in each site language. A term's file may also hold a `note`, a line of the site's own for the languages that need one: the Glossary page shows it under the game's description, which stays as the game wrote it.
 
 `src/lib/glossary.ts` lists every term once, under its group and in page order. `glossaryTerm` reads one term for a language: the pack's words first, the site's words for what the pack lacks, and the keyword picture of the same key. The Glossary page and `SkillKeywordTooltip` both read terms through it, so a pop-up and the page never disagree. The site's words exist only in the site languages, so a pop-up in another text language shows what the game gives.
 

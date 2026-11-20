@@ -12,6 +12,7 @@ export interface GlossaryTerm {
   key: string
   name: string
   description: string | null
+  note: string | null
   picture: string | null
 }
 
@@ -30,7 +31,7 @@ function packEntry(pack: SkillGlossary, key: string): GlossaryKeyword | undefine
  * app languages a term the game leaves unnamed reads as its key, and one it
  * leaves undescribed has a picture at most. */
 export function glossaryTerm(pack: SkillGlossary, key: string, lang: SkillLocale): GlossaryTerm {
-  const { name, description } = glossaryWords(
+  const { name, description, note } = glossaryWords(
     packEntry(pack, key),
     loadGlossaryLocales()[key],
     lang,
@@ -39,6 +40,7 @@ export function glossaryTerm(pack: SkillGlossary, key: string, lang: SkillLocale
     key,
     name: name ?? key,
     description: description ?? null,
+    note: note ?? null,
     picture: loadKeywordImages()[key] ?? null,
   }
 }
