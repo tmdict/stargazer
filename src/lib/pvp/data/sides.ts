@@ -16,9 +16,11 @@ export interface Side {
 export const lineupKey = (heroes: readonly number[]): string =>
   [...heroes].sort((a, b) => a - b).join('/')
 
-// The heroes the generator, Generate on the Arena and Teams, and Who Would Win?
-// keep off teams whatever their records, by hero file name.
-const WITHHELD = new Set<string>()
+// A new hero's first records are too few to judge, so the generator, Generate
+// on the Arena and Teams, and Who Would Win? keep every hero released after
+// this one off teams, whatever the data file holds. Hero ids follow release
+// order.
+const NEWEST_HERO_ID = 132
 
-export const withheldHeroes = (heroes: readonly { id: number; name: string }[]): Set<number> =>
-  new Set(heroes.filter((h) => WITHHELD.has(h.name)).map((h) => h.id))
+export const withheldHeroes = (heroes: readonly { id: number }[]): Set<number> =>
+  new Set(heroes.filter((h) => h.id > NEWEST_HERO_ID).map((h) => h.id))

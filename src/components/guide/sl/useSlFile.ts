@@ -69,12 +69,11 @@ export function useSlFile() {
     }
   })
 
+  const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
   const locked = computed<LockedHeroes>(() => ({
-    ids: withheldHeroes(gameData.characters),
+    ids: withheldHeroes(heroes.value),
     note: i18n.t('app.sl-withheld'),
   }))
-
-  const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
   const ready = computed(() => !!heading.value && engine.status.value === 'ready')
   const waiting = computed(() => !failed.value && engine.status.value === 'loading')
   const loadFailed = computed(() => failed.value || engine.status.value === 'failed')
