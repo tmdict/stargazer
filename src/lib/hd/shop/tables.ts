@@ -230,9 +230,8 @@ export interface Tables {
   layout: Layout
   ceiling: Float64Array[][]
   floor: Float64Array[][]
-  /** The same two tables for the cards kept through a reroll, before the new cards show. */
+  /** `ceiling` for the cards kept through a reroll, before the new cards show. */
   rolledCeiling: Float64Array[][]
-  rolledFloor: Float64Array[][]
   /** For each code, the code left once cards the badges cannot buy are ignored. */
   affordable: (badges: number) => Int32Array
   /** Fills the rows still missing for up to `need` targets and `badges` badges. */
@@ -434,7 +433,6 @@ export function createTables(model: GoalModel): Tables {
     ceiling,
     floor,
     rolledCeiling,
-    rolledFloor,
     affordable,
     cover,
     get bytes() {

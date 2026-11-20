@@ -27,7 +27,6 @@ export class BitWriter {
   }
 
   getBytes(): Uint8Array {
-    // Push any remaining bits
     if (this.bitPosition > 0) {
       this.buffer.push(this.currentByte)
     }
@@ -45,11 +44,6 @@ export class BitReader {
     for (let i = 0; i < bitCount; i++) {
       const byteIndex = Math.floor((this.position + i) / 8)
       const bitIndex = (this.position + i) % 8
-
-      if (byteIndex >= this.bytes.length) {
-        throw new Error('Unexpected end of data')
-      }
-
       const byte = this.bytes[byteIndex]
       if (byte === undefined) {
         throw new Error('Unexpected end of data')
@@ -71,9 +65,8 @@ export class BitReader {
   }
 }
 
-// Base64-like encoding optimized for URL use
-// Uses URL-safe characters and avoids padding to minimize URL length
-// This gives us 6 bits per character, making URLs ~33% longer than raw binary
+// Unpadded base64url: six bits a character, so the text is a third longer
+// than the bytes.
 const URL_SAFE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
 export function bytesToUrlSafe(bytes: Uint8Array): string {
@@ -92,7 +85,6 @@ export function bytesToUrlSafe(bytes: Uint8Array): string {
     }
   }
 
-  // Handle remaining bits
   if (bitCount > 0) {
     const index = (bits << (6 - bitCount)) & 0x3f
     result += URL_SAFE_CHARS[index]
@@ -102,8 +94,7 @@ export function bytesToUrlSafe(bytes: Uint8Array): string {
 }
 
 export function urlSafeToBytes(str: string): Uint8Array | null {
-  // Handle empty string as valid (empty state)
-  if (!str || str.length === 0) {
+  if (!str) {
     return new Uint8Array([])
   }
 

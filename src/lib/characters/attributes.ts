@@ -1,8 +1,11 @@
 /* Per-hero attribute registry: the single source of truth for every value a
- * placed hero carries beyond its position: the levelled upgrades (paragon, EX
- * refinement) and the skill mode. Serialized as the GridState `u` section
- * (uniform rows [team, characterId, attrId, value]) and held in memory as
- * per-hero records keyed by attrId (useGridContext's attrs map).
+ * hero placed on a board other than Honor Duel's carries beyond its position:
+ * the levelled upgrades (paragon, EX refinement) and the skill mode.
+ * Serialized as the GridState `u` section (uniform rows [team, characterId,
+ * attrId, value]) and held in memory as per-hero records keyed by attrId
+ * (useGridContext's attrs map). An Honor Duel board keeps its hero values in
+ * the same records under ids of their own (lib/hd/board.ts), which no id here
+ * may take.
  *
  * APPEND-ONLY: attrIds are never reused or renumbered; retiring an attribute
  * reserves its id forever. characterId 0 is reserved for future team-scoped

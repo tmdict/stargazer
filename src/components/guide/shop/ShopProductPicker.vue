@@ -170,8 +170,7 @@ const empty = (): void => {
 }
 
 // A bought card keeps no lock.
-const toggleBought = (): void =>
-  emit('set', { ...card, bought: !card.bought, locked: card.bought && card.locked })
+const toggleBought = (): void => emit('set', { ...card, bought: !card.bought, locked: false })
 
 const name = (named: Pick<ShopCard, 'hero' | 'equipment'>): void => {
   emit('set', { good: card.good, locked: card.locked, bought: card.bought, ...named })

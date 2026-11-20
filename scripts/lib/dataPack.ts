@@ -289,10 +289,7 @@ function glossaryProblems(pack: string, root: string): { problems: string[]; not
   if (repeated.length > 0) problems.push(`the glossary lists ${repeated.join(', ')} twice`)
   const wordsDir = join(root, 'src/locales/glossary')
   const words = new Map(
-    jsonNames(wordsDir).map((key) => [
-      key,
-      JSON.parse(readFileSync(join(wordsDir, `${key}.json`), 'utf8')) as GlossaryWords,
-    ]),
+    jsonNames(wordsDir).map((key) => [key, readJson<GlossaryWords>(join(wordsDir, `${key}.json`))]),
   )
   for (const key of words.keys()) {
     if (!listed.includes(key))
@@ -304,7 +301,7 @@ function glossaryProblems(pack: string, root: string): { problems: string[]; not
       problems.push(`the pack has no ${lang} glossary`)
       continue
     }
-    const { stats, keywords } = JSON.parse(readFileSync(path, 'utf8')) as SkillGlossary
+    const { stats, keywords } = readJson<SkillGlossary>(path)
     const game = new Map<string, GlossaryKeyword>(
       [...stats, ...keywords].map((entry) => [entry.key, entry]),
     )
@@ -356,9 +353,7 @@ export function packProblems(
     if (!hasFile(pack, `pvp/s${folder}/index.template.html`)) {
       problems.push(`the s${folder} summary has no report in the pack`)
     }
-    const { season } = JSON.parse(readFileSync(join(pack, 'pvp', file), 'utf8')) as {
-      season?: unknown
-    }
+    const { season } = readJson<{ season?: unknown }>(join(pack, 'pvp', file))
     if (season !== Number(folder)) {
       problems.push(`the s${folder} summary says season ${String(season)}`)
     }
@@ -384,9 +379,7 @@ export function packProblems(
   // alike, so English answers for all.
   const textIn = (file: string): Record<string, unknown> => {
     const path = join(pack, SKILL, 'en', file)
-    return existsSync(path)
-      ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
-      : {}
+    return existsSync(path) ? readJson<Record<string, unknown>>(path) : {}
   }
   // A charm type's picture comes with its season, as a seasonal unit's does.
   for (const type of Object.keys(textIn('_charm-types.json'))) {
@@ -412,9 +405,7 @@ export function packProblems(
     ['artifact', 'artifacts.json'],
   ] as const) {
     const path = join(pack, 'text/hd/en', file)
-    const text = existsSync(path)
-      ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
-      : {}
+    const text = existsSync(path) ? readJson<Record<string, unknown>>(path) : {}
     const bare = jsonNames(join(root, 'src/data/hd', kind)).filter(
       (name) => !(name in text) || !existsSync(join(pack, 'images/hd', kind, `${name}.png`)),
     )

@@ -106,7 +106,8 @@ export async function buildFitCode(
 
 // A file as a digest takes it: a script without its comments, types and
 // layout, and a JSON file's values, so an edit to those alone leaves a table
-// and its kept rows in use.
+// and its kept rows in use. The transpiler keeps one piece of layout: whether
+// an object or array literal spans several lines, so reflowing one counts.
 function content(file: string, text: string): string {
   if (file.endsWith('.json')) return JSON.stringify(JSON.parse(text))
   if (!file.endsWith('.ts')) return text

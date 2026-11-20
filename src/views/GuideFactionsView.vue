@@ -364,8 +364,6 @@ const bonusBlocks = computed(() => [
   }
   .tactics {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .tactics {
     gap: 16px;
   }
   .guide-table th,

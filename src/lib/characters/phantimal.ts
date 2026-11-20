@@ -65,7 +65,7 @@ export function joinPhantimalBandLocal(ownerLocal: number, index: number): numbe
 }
 
 // The id with its band offset stripped, so N * 10000 + base classifies the
-// same way in the base, phantimal and synergy bands. Companion predicates
+// same way in the base, phantimal, synergy and Trial bands. Companion predicates
 // read this; the skill registry must not (it keys phantimal skills by their
 // namespaced id, and stripping would resolve phantimal 100005 to hero 5).
 export function companionLocalId(id: number): number {
