@@ -440,7 +440,7 @@ const SKILL = {
       <HelpDuelPicture />
       <div class="help-side">
         <p class="help-lead">
-          规划荣誉对决的站位：摆上英雄和体验英雄，设置他们的品质和装备，再配上双方的灵器。
+          规划荣誉对决的站位：摆上英雄和体验单位，设置他们的品质和装备，再配上双方的灵器。
         </p>
         <ol class="help-steps">
           <li>

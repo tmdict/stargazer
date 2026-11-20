@@ -30,8 +30,8 @@ const editionDate = whatsNewEditionDate('ko')
       <WhatsNewPicture><HelpShopPicture /></WhatsNewPicture>
       <p>
         지금 보이는 명예의 결투 상점과 찾는 영웅이나 장비를 입력하세요. 이번 라운드에 완성할 확률이
-        가장 높은 수와 휘장이 가장 적게 드는 수를 보여 주고, 이번 라운드를 멈추는 편이 나을 때는
-        그렇게 알려 줍니다.
+        가장 높은 수와 휘장이 가장 적게 드는 수를 보여 주고, 이번 라운드는 멈추는 편이 나으면 그렇게
+        알려 줍니다.
       </p>
     </section>
 
