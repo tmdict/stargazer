@@ -9,6 +9,7 @@ import { defineStore } from 'pinia'
 import {
   canPlaceCharacterOnTile,
   findCharacterHex,
+  getAllAvailableTilesForTeam,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
@@ -16,6 +17,7 @@ import {
   isHeroUnit,
   toBaseHeroId,
 } from '@/lib/characters/character'
+import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
 import { freeTrialCopy, isTrialHeroId, toTrialId, TRIAL_COPIES } from '@/lib/characters/trial'
 import { teamFactionBonus, type TeamFactionBonus } from '@/lib/factionBonus'
 import { DUEL_ATTR_EQUIPMENT, DUEL_ATTR_TIER } from '@/lib/hd/board'
@@ -178,6 +180,24 @@ export const useDuelBoard = defineStore('duelBoard', () => {
     units.sort((a, b) => Number(hasCompanionSkill(a.unitId)) - Number(hasCompanionSkill(b.unitId)))
 
     const kept = new Set(units.map((unit) => unit.hexId))
+    // The free tiles a companion spawns on include those of summoners still to
+    // come, so one that lands there steps aside onto a tile the state leaves
+    // free.
+    const settleCompanions = (team: Team, unitId: number): void => {
+      const stray = [...getCompanions(ctx.grid, unitId, team)].filter((companionId) => {
+        const at = findCharacterHex(ctx.grid, companionId, team)
+        return at !== null && kept.has(at)
+      })
+      if (stray.length === 0) return
+      const spare = getAllAvailableTilesForTeam(ctx.grid, team)
+        .map((tile) => tile.hex.getId())
+        .filter((hexId) => !kept.has(hexId))
+      const moves = stray.flatMap((companionId) => {
+        const [hexId] = spare.splice(Math.floor(Math.random() * spare.length), 1)
+        return hexId === undefined ? [] : [{ companionId, hexId }]
+      })
+      if (moves.length > 0) repositionCompanions(ctx.grid, team, moves)
+    }
     for (const { hexId, team, unitId, tier, equipment } of units) {
       // Only a companion can stand on an empty board's tile, and placing over
       // one would take its summoner off with it.
@@ -186,6 +206,7 @@ export const useDuelBoard = defineStore('duelBoard', () => {
         ? ctx.place(hexId, unitId, team)
         : relocate && ctx.autoPlace(unitId, team, kept)
       if (!placed) continue
+      settleCompanions(team, unitId)
       ctx.setAttrs(team, unitId, {
         [DUEL_ATTR_TIER]: tier,
         [DUEL_ATTR_EQUIPMENT]: equipment,
