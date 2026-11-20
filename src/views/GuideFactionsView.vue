@@ -170,7 +170,7 @@ const bonusBlocks = computed(() => [
 
         <h2>{{ label('tactics') }}</h2>
         <div class="tactics">
-          <div>
+          <div data-theme="dark">
             <svg
               class="wheel"
               :viewBox="`0 0 ${WHEEL.size} ${WHEEL.size}`"
