@@ -43,7 +43,8 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
     </p>
     <p>
       <b>Random</b> fills in an example shop if you just want to try it out, and <b>Clear</b>
-      empties all eight cards. Both need a second press.
+      empties all eight cards. Once you've entered anything, both need a second press, so you don't
+      lose it by accident.
     </p>
 
     <h2>Your heroes</h2>
@@ -92,18 +93,22 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
         </li>
         <li>
           <b>Recalculate with best</b> works the answers out again starting from that move. For a
-          reroll, it sets those locks on your shop first.
+          reroll, it sets those locks on your shop first, unless that would unlock a card you kept
+          from a lower level. Then your shop stays as you entered it.
         </li>
         <li>
-          <b>Fewest badges</b> is how many badges the target costs on average if you keep at it,
-          round after round, until you get it. It shows which move gives you the most for your
-          badges. It's an average, so with bad luck you'll spend more.
+          <b>Fewest badges</b> is how many badges the target costs on average if you keep buying and
+          rerolling at this shop level until you get it, as if your badges never ran out. It shows
+          which move gives you the most for your badges. It's an average, so with bad luck you'll
+          spend more.
         </li>
       </ol>
     </ShopHowToFigure>
     <p>
-      A chance shown as a range, such as 30.1% – 31.4%, is still being worked out. It narrows over
-      the next few seconds.
+      A chance shown as a range, such as 30.1% – 31.4%, means the exact chance is somewhere inside
+      it. While the page says <b>Still narrowing the figures…</b>, a range can still shrink. Some
+      stay, because the calculator only narrows a range when that could change its advice, and only
+      for a few seconds.
     </p>
 
     <h2>When it says to stop</h2>
@@ -118,7 +123,10 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
           <ul>
             <li>you can't afford its cheapest move,</li>
             <li>that move leaves you no chance of finishing this round, or</li>
-            <li>the shop levels up next round and waiting for the new shop costs less.</li>
+            <li>
+              the shop levels up next round and waiting for the new shop costs less, by more than a
+              reroll.
+            </li>
           </ul>
         </li>
         <li>
@@ -126,13 +134,14 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
           ends with <b>Wait for the next round</b>.
         </li>
         <li>
-          What the target should cost on average from the next round on, if you follow the plan.
+          What the target should cost on average if you follow the plan, including anything it buys
+          before you wait.
         </li>
       </ol>
     </ShopHowToFigure>
     <p>
-      If <b>Best chance</b> says to stop, your badges can't get the target this round however you
-      spend them.
+      If <b>Best chance</b> says to stop, your badges give almost no chance of getting the target
+      this round, too little to show as more than 0%.
     </p>
 
     <h2>Which answer to follow</h2>

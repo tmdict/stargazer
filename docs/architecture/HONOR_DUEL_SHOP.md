@@ -38,7 +38,7 @@ The same codes carry two cost tables: the average badges to reach the goal for a
 
 ### Stopping
 
-Each round's first shop is a free redraw of the unlocked cards. A way to stop is a set of locks to leave, after a purchase or none, and it is costed by what the goal takes from the next round on. Fewest badges says to stop when its cheapest move cannot be paid for, when that move leaves no chance this round, or when the shop level rises next round and waiting is cheaper by more than a reroll. The answer then names the cheapest way to stop among those it compares: no purchase or any one purchase the badges allow, with any of the other cards that can help the goal left locked and the locks already set on the rest all kept or all dropped, and each reroll's set of locks with no purchase.
+Each round's first shop is a free redraw of the unlocked cards. A way to stop is a set of locks to leave, after a purchase or none, and it is costed by what the goal takes from then on, the purchase included. Fewest badges says to stop when its cheapest move cannot be paid for, when that move leaves no chance this round, or when the shop level rises next round and waiting is cheaper by more than a reroll. The answer then names the cheapest way to stop among those it compares: no purchase or any one purchase the badges allow, with any of the other cards that can help the goal left locked and the locks already set on the rest all kept or all dropped, and each reroll's set of locks with no purchase.
 
 ### Advice
 

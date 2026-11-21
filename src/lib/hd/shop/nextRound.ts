@@ -1,4 +1,4 @@
-// Stopping for the round: what each way to stop costs from the next round on,
+// Stopping for the round: what each way to stop costs, its purchase included,
 // when the next shop is a free redraw of the unlocked cards and every shop after
 // it costs a reroll, and when fewest badges says to stop at all.
 
