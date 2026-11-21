@@ -1,5 +1,6 @@
 <script setup lang="ts">
-/* A Help-style picture in What's New, its words drawn as rune shapes. */
+/* A picture of the app with its words drawn as rune shapes, so it shows a
+   layout without being read as real text. */
 
 import { useTemplateRef } from 'vue'
 
@@ -9,17 +10,17 @@ useRuneText(useTemplateRef<HTMLElement>('root'))
 </script>
 
 <template>
-  <div ref="root" class="whats-new-picture">
+  <div ref="root" class="rune-picture">
     <slot />
   </div>
 </template>
 
 <style scoped>
-.whats-new-picture :deep(.rune-word) {
+.rune-picture :deep(.rune-word) {
   white-space: nowrap;
 }
 
-.whats-new-picture :deep(.rune-word svg) {
+.rune-picture :deep(.rune-word svg) {
   display: inline-block;
   vertical-align: 0;
   margin-right: 0.12em;

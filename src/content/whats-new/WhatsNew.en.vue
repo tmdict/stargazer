@@ -2,12 +2,12 @@
 import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
 import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import LinkHeading from '@/components/ui/LinkHeading.vue'
+import RunePicture from '@/components/ui/RunePicture.vue'
 import WhatsNewBuffTilesPicture from '@/components/whats-new/WhatsNewBuffTilesPicture.vue'
 import WhatsNewCharmsPicture from '@/components/whats-new/WhatsNewCharmsPicture.vue'
 import WhatsNewDamagePicture from '@/components/whats-new/WhatsNewDamagePicture.vue'
 import WhatsNewFactionsPicture from '@/components/whats-new/WhatsNewFactionsPicture.vue'
 import WhatsNewGlossaryPicture from '@/components/whats-new/WhatsNewGlossaryPicture.vue'
-import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import {
   guidePath,
@@ -41,7 +41,7 @@ const editionDate = whatsNewEditionDate('en')
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="HD_SHOP_PATH">Honor Duel Shop Calculator</LinkHeading>
-      <WhatsNewPicture><HelpShopPicture /></WhatsNewPicture>
+      <RunePicture><HelpShopPicture /></RunePicture>
       <p>
         Enter the Honor Duel shop in front of you and the heroes or equipment you are looking for.
         It shows the move with the best chance of finishing this round, the move that costs the
@@ -51,7 +51,7 @@ const editionDate = whatsNewEditionDate('en')
 
     <section class="whats-new-entry">
       <h2>Honor Duel grid</h2>
-      <WhatsNewPicture><HelpDuelPicture /></WhatsNewPicture>
+      <RunePicture><HelpDuelPicture /></RunePicture>
       <p>
         The Arena has an <b>Honor Duel</b> tab with a grid of its own. Place heroes and Trial units,
         set their tiers and equipment, and give each side an artifact. Each side's faction bonus
@@ -72,7 +72,7 @@ const editionDate = whatsNewEditionDate('en')
       <div class="whats-new-guides">
         <div class="link-area">
           <LinkHeading sub :to="guidePath('factions')">Faction Bonus</LinkHeading>
-          <WhatsNewPicture><WhatsNewFactionsPicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewFactionsPicture /></RunePicture>
           <p>
             The ATK and HP a team gains from heroes of one faction, and how much more or less damage
             factions deal to the ones they counter.
@@ -80,7 +80,7 @@ const editionDate = whatsNewEditionDate('en')
         </div>
         <div class="link-area">
           <LinkHeading sub :to="guidePath('damage')">Damage Types</LinkHeading>
-          <WhatsNewPicture><WhatsNewDamagePicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewDamagePicture /></RunePicture>
           <p>
             Physical, magic and true damage and HP loss, told apart: how to spot each in skill text,
             and which effects raise or stop it.
@@ -88,7 +88,7 @@ const editionDate = whatsNewEditionDate('en')
         </div>
         <div class="link-area">
           <LinkHeading sub :to="guidePath('glossary')">Glossary</LinkHeading>
-          <WhatsNewPicture><WhatsNewGlossaryPicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewGlossaryPicture /></RunePicture>
           <p>
             The stats, statuses and other terms in skill text, each explained. Search for a term or
             jump to its group.
@@ -99,7 +99,7 @@ const editionDate = whatsNewEditionDate('en')
 
     <section class="whats-new-entry">
       <h2>Charms</h2>
-      <WhatsNewPicture><WhatsNewCharmsPicture /></WhatsNewPicture>
+      <RunePicture><WhatsNewCharmsPicture /></RunePicture>
       <p>
         The <b>Seasonal</b> tab lists the season's charms and the Mythic charm types, each with the
         heroes who can use it.
@@ -108,7 +108,7 @@ const editionDate = whatsNewEditionDate('en')
 
     <section class="whats-new-entry">
       <h2>Buff tiles</h2>
-      <WhatsNewPicture><WhatsNewBuffTilesPicture /></WhatsNewPicture>
+      <RunePicture><WhatsNewBuffTilesPicture /></RunePicture>
       <p>
         Buff tiles are marked on the Supreme League and Guild Duel maps when <b>Grid Info</b> is
         on<span class="help-mouse">. Rest the mouse on one to read its buff</span>.

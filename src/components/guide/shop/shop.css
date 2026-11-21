@@ -22,13 +22,16 @@
   --shop-tier: #f0d98a;
 }
 
+.shop-page :is(.shop-layout, .shop-text) {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--import-text);
+}
+
 .shop-page .shop-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--import-text);
 }
 
 .shop-page .shop-box {

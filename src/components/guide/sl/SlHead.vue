@@ -9,6 +9,7 @@ import { useI18nStore } from '@/stores/i18n'
 
 // records: the data file's season and export date, once the file has loaded.
 // rules: the page places heroes, so it links the rules it places them by.
+// helpLabel: the label of a link to the page's own how-to, first on the line.
 // aboutLabel: the note link's label, on a page whose line names no records.
 // guide: a page that explains the tool, linked after the note.
 const {
@@ -20,11 +21,12 @@ const {
   title: string
   records?: { season: number; date: string } | null
   rules?: boolean
+  helpLabel?: string
   aboutLabel?: string
   guide?: { to: string; label: string }
 }>()
 
-const emit = defineEmits<{ about: [] }>()
+const emit = defineEmits<{ help: []; about: [] }>()
 
 const i18n = useI18nStore()
 </script>
@@ -36,6 +38,10 @@ const i18n = useI18nStore()
       <template v-if="records">
         {{ i18n.t('app.sl-records', { season: records.season, date: records.date }) }}
         <span aria-hidden="true">·</span>
+      </template>
+      <template v-if="helpLabel">
+        <button type="button" class="sl-about-link" @click="emit('help')">{{ helpLabel }}</button>
+        <span aria-hidden="true"> ·</span>
       </template>
       <button type="button" class="sl-about-link" @click="emit('about')">
         {{ aboutLabel ?? i18n.t('app.sl-about') }}

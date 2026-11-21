@@ -1,4 +1,4 @@
-/* Rune shapes for the What's New pictures: one solid shape per letter, so a
+/* Rune shapes for pictures of the app: one solid shape per letter, so a
    picture reads the same in every site language. Each shape sits in a box 10
    units high and is inset 0.4 units, so the stroke that softens its corners
    stays inside the box. */

@@ -2,12 +2,12 @@
 import HelpDuelPicture from '@/components/help/HelpDuelPicture.vue'
 import HelpShopPicture from '@/components/help/HelpShopPicture.vue'
 import LinkHeading from '@/components/ui/LinkHeading.vue'
+import RunePicture from '@/components/ui/RunePicture.vue'
 import WhatsNewBuffTilesPicture from '@/components/whats-new/WhatsNewBuffTilesPicture.vue'
 import WhatsNewCharmsPicture from '@/components/whats-new/WhatsNewCharmsPicture.vue'
 import WhatsNewDamagePicture from '@/components/whats-new/WhatsNewDamagePicture.vue'
 import WhatsNewFactionsPicture from '@/components/whats-new/WhatsNewFactionsPicture.vue'
 import WhatsNewGlossaryPicture from '@/components/whats-new/WhatsNewGlossaryPicture.vue'
-import WhatsNewPicture from '@/components/whats-new/WhatsNewPicture.vue'
 import { whatsNewEditionDate } from '@/composables/useWhatsNew'
 import {
   guidePath,
@@ -42,7 +42,7 @@ const editionDate = whatsNewEditionDate('ko')
 
     <section class="whats-new-entry link-area">
       <LinkHeading :to="HD_SHOP_PATH">명예의 결투 상점 계산기</LinkHeading>
-      <WhatsNewPicture><HelpShopPicture /></WhatsNewPicture>
+      <RunePicture><HelpShopPicture /></RunePicture>
       <p>
         지금 보이는 명예의 결투 상점과 찾는 영웅이나 장비를 입력하세요. 이번 라운드에 완성할 확률이
         가장 높은 수와 휘장이 가장 적게 드는 수를 보여 주고, 이번 라운드는 멈추는 편이 나으면 그렇게
@@ -52,7 +52,7 @@ const editionDate = whatsNewEditionDate('ko')
 
     <section class="whats-new-entry">
       <h2>명예의 결투 맵</h2>
-      <WhatsNewPicture><HelpDuelPicture /></WhatsNewPicture>
+      <RunePicture><HelpDuelPicture /></RunePicture>
       <p>
         아레나에 전용 맵이 있는 <b>명예의 결투</b> 탭이 생겼습니다. 영웅과 체험 유닛을 배치하고
         등급과 장비를 정한 뒤, 양 진영에 아티팩트를 하나씩 장착하세요. 아티팩트 옆에는 그 진영의
@@ -73,14 +73,14 @@ const editionDate = whatsNewEditionDate('ko')
       <div class="whats-new-guides">
         <div class="link-area">
           <LinkHeading sub :to="guidePath('factions')">동일 진영 버프</LinkHeading>
-          <WhatsNewPicture><WhatsNewFactionsPicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewFactionsPicture /></RunePicture>
           <p>
             같은 진영 영웅으로 얻는 공격력·HP 증가와 진영 상성에 따른 대미지 증감을 정리했습니다.
           </p>
         </div>
         <div class="link-area">
           <LinkHeading sub :to="guidePath('damage')">대미지 유형</LinkHeading>
-          <WhatsNewPicture><WhatsNewDamagePicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewDamagePicture /></RunePicture>
           <p>
             물리·마법·고정 대미지와 HP 유실의 차이를 설명합니다. 스킬 설명에서 유형을 구분하는
             방법과 유형별로 영향을 주는 효과를 볼 수 있습니다.
@@ -88,7 +88,7 @@ const editionDate = whatsNewEditionDate('ko')
         </div>
         <div class="link-area">
           <LinkHeading sub :to="guidePath('glossary')">용어집</LinkHeading>
-          <WhatsNewPicture><WhatsNewGlossaryPicture /></WhatsNewPicture>
+          <RunePicture><WhatsNewGlossaryPicture /></RunePicture>
           <p>
             스킬 설명에 나오는 속성, 상태 등 용어의 뜻을 하나씩 설명합니다. 용어를 검색하거나 분류로
             바로 이동할 수 있습니다.
@@ -99,7 +99,7 @@ const editionDate = whatsNewEditionDate('ko')
 
     <section class="whats-new-entry">
       <h2>주문석</h2>
-      <WhatsNewPicture><WhatsNewCharmsPicture /></WhatsNewPicture>
+      <RunePicture><WhatsNewCharmsPicture /></RunePicture>
       <p>
         <b>시즌</b> 탭에서 이번 시즌의 주문석과 신화 주문석 룬, 그리고 각각을 쓸 수 있는 영웅을 볼
         수 있습니다.
@@ -108,7 +108,7 @@ const editionDate = whatsNewEditionDate('ko')
 
     <section class="whats-new-entry">
       <h2>버프 타일</h2>
-      <WhatsNewPicture><WhatsNewBuffTilesPicture /></WhatsNewPicture>
+      <RunePicture><WhatsNewBuffTilesPicture /></RunePicture>
       <p>
         <b>맵 정보</b>를 켜면 최강자 리그와 길드 격돌 맵에 버프 타일이 표시됩니다<span
           class="help-mouse"

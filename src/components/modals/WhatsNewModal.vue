@@ -90,7 +90,7 @@ watch(
   border-bottom: none;
 }
 
-.whats-new :deep(.whats-new-guides .whats-new-picture) {
+.whats-new :deep(.whats-new-guides .rune-picture) {
   display: grid;
 }
 

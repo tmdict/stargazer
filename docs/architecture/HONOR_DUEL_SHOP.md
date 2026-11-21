@@ -56,6 +56,8 @@ The page stores nothing. What a player enters lasts for the visit to the page.
 
 The odds view always shows the measured table in this repo, with its measured ranges.
 
+How to use opens the page's how-to, written per language in `src/content/hd/`. Its two pictures are the page's own answer card with example answers from one calculation on the measured table, drawn with its words as rune shapes and numbered marks on its parts. They show what each part of a card means, so they are not redone when the table changes.
+
 The probability guide at `/guide/hd/shop/probability` explains the shop's formulas. Its text is written per language in `src/content/hd/`, and every number in it, tables and examples alike, is worked out from the shop's rules and the measured table (`useShopFigures`), never typed into the text. The exceptions are under Observations 1 and 2: the badge count at which locking a one-copy card and buying it change places, and the example chances of locking and of buying, are results of full calculations on the measured table, most of them quoted from Toto's calculator. The page runs no such calculation, so they are typed in, in one list beside the worked-out figures, and are checked again when the measured table or the hero pool changes.
 
 ## Rules

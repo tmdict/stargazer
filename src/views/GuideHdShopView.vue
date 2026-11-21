@@ -17,6 +17,7 @@ import ShopAnswers from '@/components/guide/shop/ShopAnswers.vue'
 import ShopEquipmentList from '@/components/guide/shop/ShopEquipmentList.vue'
 import ShopForm from '@/components/guide/shop/ShopForm.vue'
 import ShopHeroLists from '@/components/guide/shop/ShopHeroLists.vue'
+import ShopHowTo from '@/components/guide/shop/ShopHowTo.vue'
 import ShopLockedAt from '@/components/guide/shop/ShopLockedAt.vue'
 import ShopOdds from '@/components/guide/shop/ShopOdds.vue'
 import ShopPickerPopup from '@/components/guide/shop/ShopPickerPopup.vue'
@@ -104,6 +105,7 @@ const addEquipment = (name: string): void => {
   popup.value = null
 }
 
+const howToOpen = ref(false)
 const oddsOpen = ref(false)
 const listsOpen = ref(false)
 
@@ -153,10 +155,13 @@ watch(
   <main class="sl-page shop-page" data-theme="dark">
     <SlHead
       :title="i18n.t('app.shop-title')"
+      :help-label="i18n.t('app.shop-how-to')"
       :about-label="i18n.t('app.shop-see-odds')"
       :guide="{ to: HD_SHOP_PROBABILITY_PATH, label: i18n.t('app.shop-probability-link') }"
+      @help="howToOpen = true"
       @about="oddsOpen = true"
     />
+    <ShopHowTo :show="howToOpen" @close="howToOpen = false" />
     <ShopOdds :show="oddsOpen" :level="form.level.value" @close="oddsOpen = false" />
 
     <div v-if="mounted" class="shop-layout">
