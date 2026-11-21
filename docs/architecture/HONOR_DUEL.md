@@ -36,17 +36,17 @@ Arrows run from a part to what it reads. The tab's lists place their picks on th
 
 This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
-| Content                                      | Files                                                                | Written by                    |
-| -------------------------------------------- | -------------------------------------------------------------------- | ----------------------------- |
-| Equipment and artifacts: id, tier, names     | `equipment/` and `artifact/` in `src/data/hd/` and `src/locales/hd/` | pack update                   |
-| Creatures: id, faction, names                | `src/data/hd/creature/`, `src/locales/hd/creature/`                  | hand                          |
-| Trial Cards' units                           | `src/data/hd/trial.json`                                             | hand                          |
-| Maps and their buffs                         | `src/data/hd/maps.json`                                              | hand                          |
-| Shop prices, products and heroes             | `src/data/hd/shop/shop.json`                                         | pack update, `rounds` by hand |
-| Shop products' names, the measured odds      | `src/locales/hd/shop/`, `src/data/hd/shop/odds.json`                 | hand                          |
-| Pictures, effect text, creatures' skill text | data pack                                                            | pack update                   |
+| Content                                      | Files                                                                |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| Equipment and artifacts: id, tier, names     | `equipment/` and `artifact/` in `src/data/hd/` and `src/locales/hd/` |
+| Creatures: id, faction, names                | `src/data/hd/creature/`, `src/locales/hd/creature/`                  |
+| Trial Cards' units                           | `src/data/hd/trial.json`                                             |
+| Maps and their buffs                         | `src/data/hd/maps.json`                                              |
+| Shop prices, products and heroes             | `src/data/hd/shop/shop.json`                                         |
+| Shop products' names, the measured odds      | `src/locales/hd/shop/`, `src/data/hd/shop/odds.json`                 |
+| Pictures, effect text, creatures' skill text | data pack                                                            |
 
-An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. A creature's is counted from 7000 instead, inside the hero ids, because a board holds a creature where it holds a hero ([Grid](./GRID.md#unit-ids)). Board links carry these ids, so an update never changes the id of an existing file, and a new entry takes the next number after the highest in use.
+An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. A creature's is counted from 7000 instead, inside the hero ids, because a board holds a creature where it holds a hero ([Grid](./GRID.md#unit-ids)). Board links carry these ids, so an existing file's id never changes, and a new entry takes the next number after the highest in use.
 
 ## Loading
 
@@ -54,7 +54,7 @@ An entry's `id` is Stargazer's own number, counted from 1 in the game's listing 
 
 The board's rules need none of the catalog. They read only the Trial list, the map list and the shop's facts (`src/lib/hd/`), a few small files that load with the Arena page. The board asks for the catalog when it first draws a piece of equipment (`useDuelItems`).
 
-The text loads one language at a time, and `loadHonorDuelText` fails only when a download does, so a caller can tell a failed download from text the pack lacks. The pack can lack it: a build can meet a pack from before a pack update, and `npm run build` then prints a note for each list with missing entries and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and an entry the pack lacks is listed by name without its details.
+The text loads one language at a time, and `loadHonorDuelText` fails only when a download does, so a caller can tell a failed download from text the pack lacks. The pack can lack it, since it is pinned apart from this repo, and `npm run build` then prints a note for each list with missing entries and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and an entry the pack lacks is listed by name without its details.
 
 ## The board
 
