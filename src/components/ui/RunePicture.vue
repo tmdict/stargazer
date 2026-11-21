@@ -1,12 +1,15 @@
 <script setup lang="ts">
 /* A picture of the app with its words drawn as rune shapes, so it shows a
-   layout without being read as real text. */
+   layout without being read as real text. `words` is a selector for the
+   elements whose text stays readable. */
 
 import { useTemplateRef } from 'vue'
 
 import { useRuneText } from '@/composables/useRuneText'
 
-useRuneText(useTemplateRef<HTMLElement>('root'))
+const { words } = defineProps<{ words?: string }>()
+
+useRuneText(useTemplateRef<HTMLElement>('root'), words)
 </script>
 
 <template>

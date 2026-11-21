@@ -47,7 +47,7 @@ const keys = computed(() =>
       :open-list="null"
       @open="emit('open', $event)"
     />
-    <p class="legend reading-meta" data-theme="dark">
+    <p class="swatch-legend reading-meta" data-theme="dark">
       <span><i class="swatch ally" />{{ t('rules-on-ours') }}</span>
       <span><i class="swatch enemy" />{{ t('rules-on-theirs') }}</span>
     </p>
@@ -63,24 +63,8 @@ const keys = computed(() =>
 </template>
 
 <style scoped>
-.legend {
-  display: flex;
+.swatch-legend {
   margin-top: -4px;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-
-.legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.swatch {
-  display: inline-block;
-  width: 14px;
-  height: 4px;
-  border-radius: 2px;
 }
 
 .swatch.ally {

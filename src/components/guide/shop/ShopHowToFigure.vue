@@ -3,8 +3,8 @@
    card with an example answer, its words drawn as rune shapes and numbered
    marks on its parts. The key is the numbered list in the slot, one item per
    mark, and the stop example's marks go on from the move example's six. The
-   marks sit on the card's own elements, so a change to its layout needs them
-   checked. Both answers come from one calculation on the measured table.
+   marks and the labels kept readable sit on the card's own elements, so a
+   change to its layout needs them checked. Both answers come from one calculation on the measured table.
    The popup's reading styles are turned back to the page's inside the
    picture: its typeface, and paragraphs at full opacity with the line height
    base.css gives them. */
@@ -13,8 +13,15 @@ import ShopAnswerCard from './ShopAnswerCard.vue'
 import RunePicture from '@/components/ui/RunePicture.vue'
 import type { ShopAnswer } from '@/lib/hd/shop/calculate'
 import type { ShopCard } from '@/lib/hd/shop/types'
+import { useI18nStore } from '@/stores/i18n'
 
 const { example } = defineProps<{ example: 'move' | 'stop' }>()
+
+const i18n = useI18nStore()
+
+// The labels the key names stay readable: the parts' headings, the other
+// moves' names, Recalculate with best, and Wait for the next round.
+const WORDS = '.shop-label, .rows dt, .retry, .part:nth-of-type(3) .step:last-child'
 
 const at = (value: number) => ({ floor: value, ceiling: value })
 const card = (good: string, extra: Partial<ShopCard> = {}): ShopCard => ({
@@ -77,19 +84,27 @@ const shown = example === 'move' ? MOVE : STOP
 
 <template>
   <div class="shop-how-figure" :class="example">
-    <RunePicture class="picture" aria-hidden="true" inert>
-      <div class="shop-page" data-theme="dark">
-        <div class="shop-text">
-          <ShopAnswerCard
-            :answer="shown.answer"
-            :cards="shown.cards"
-            :basis="null"
-            :copies="2"
-            :working="false"
-          />
+    <div class="drawing">
+      <RunePicture class="picture" :words="WORDS" aria-hidden="true" inert>
+        <div class="shop-page" data-theme="dark">
+          <div class="shop-text">
+            <ShopAnswerCard
+              :answer="shown.answer"
+              :cards="shown.cards"
+              :basis="null"
+              :copies="2"
+              :working="false"
+            />
+          </div>
         </div>
-      </div>
-    </RunePicture>
+      </RunePicture>
+      <p class="swatch-legend reading-meta" data-theme="dark">
+        <span><i class="swatch move" />{{ i18n.t('app.shop-how-to-move') }}</span>
+        <span v-if="example === 'stop'">
+          <i class="swatch stop" />{{ i18n.t('app.shop-how-to-stop') }}
+        </span>
+      </p>
+    </div>
     <div class="key">
       <slot />
     </div>
@@ -103,6 +118,24 @@ const shown = example === 'move' ? MOVE : STOP
   align-items: start;
   gap: 8px 28px;
   margin: 16px 0 8px;
+}
+
+.drawing {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.drawing .swatch-legend {
+  margin: 0;
+}
+
+.swatch.move {
+  background: var(--color-accent);
+}
+
+.swatch.stop {
+  background: var(--import-warn);
 }
 
 .picture {

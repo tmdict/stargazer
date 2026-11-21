@@ -72,6 +72,25 @@
   color: var(--reading-muted);
 }
 
+.content .swatch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.content .swatch-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.content .swatch-legend .swatch {
+  display: inline-block;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
 .content ul ul {
   margin-top: 8px;
   margin-bottom: 8px;

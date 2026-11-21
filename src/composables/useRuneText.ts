@@ -3,7 +3,8 @@
    goes in front of it, so Vue's later updates still find their nodes. A
    MutationObserver redraws a text Vue changes and drops the shapes of one it
    removes or empties. Text inside an SVG stays as it is, since an SVG text
-   element cannot hold the shapes. */
+   element cannot hold the shapes, and so does text inside an element that
+   `words` matches. */
 
 import { onBeforeUnmount, onMounted, type Ref } from 'vue'
 
@@ -47,7 +48,10 @@ const drawRuns = (text: string): HTMLSpanElement => {
   return span
 }
 
-export function useRuneText(root: Readonly<Ref<HTMLElement | null | undefined>>): void {
+export function useRuneText(
+  root: Readonly<Ref<HTMLElement | null | undefined>>,
+  words?: string,
+): void {
   const drawn = new Map<Text, HTMLSpanElement>()
   let observer: MutationObserver | null = null
 
@@ -88,7 +92,8 @@ export function useRuneText(root: Readonly<Ref<HTMLElement | null | undefined>>)
     while (walker.nextNode()) {
       const node = walker.currentNode as Text
       if (drawn.has(node) || !LETTER.test(node.data)) continue
-      if (node.parentElement?.closest('svg, .rune-text')) continue
+      const parent = node.parentElement
+      if (parent?.closest('svg, .rune-text') || (words && parent?.closest(words))) continue
       fresh.push(node)
     }
     fresh.forEach(draw)
