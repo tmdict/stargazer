@@ -1,75 +1,76 @@
 # Honor Duel
 
-Honor Duel is a game mode with its own equipment and artifacts. The Honor Duel tab on the Arena and Teams pages lists them, the artifacts in one list and the equipment by tier in another, one list on show at a time, and each one opens a popup with its effect text. With a mouse, hovering one shows a card with its effect, an artifact's at level 1. On the Teams page nothing in the two lists goes on a board.
+Honor Duel is a game mode with rules of its own: a player builds a team from a shop over several rounds, and a team can field the same hero more than once. Stargazer has three parts for it. The Honor Duel tab on the Arena and Teams pages lists the mode's equipment and artifacts, the Arena page shows an Honor Duel board while that tab is open, and `/guide/hd/shop` is a calculator for the shop.
 
-On the Arena page the tab also swaps the Arena board for an Honor Duel board, where a formation of the mode is laid out with its tiers, equipment and artifacts ([The board](#the-board)).
+Three things make it hard:
+
+- The mode breaks rules the Arena board is built on. A hero may stand on a team more than once, a hero carries a tier and a piece of equipment in place of its upgrades, and a side holds an artifact from the mode's own list, with a level.
+- The pictures and the text come with the data pack, which is pinned apart from this repo, so a build can meet a pack that lacks what a data file lists.
+- A player does not see everything that decides the next shop. Each of the eight cards comes from its own numbered source, and a locked card keeps its source from making a new one, so two shops that look the same can behave differently after a reroll.
+
+## How it fits together
+
+```
+┌────────────────────┐   ┌────────────────────┐   ┌────────────────────┐
+│ Honor Duel board   │◀──│ Honor Duel tab     │   │ shop page          │
+│ a GridContext of   │   │ lists and popups   │   │ /guide/hd/shop     │
+│ kind honorDuel     │   │                    │   │                    │
+└───┬────────────┬───┘   └─────────┬──────────┘   └───┬───────────┬──▲─┘
+    │ rules      │ on first use    │                  │   request │  │ answers
+    │            └─────────────┐   │   ┌──────────────┘           │  │
+    ▼                          ▼   ▼   ▼                          ▼  │
+┌────────────────────┐   ┌────────────────────┐   ┌──────────────────┴─┐
+│ lib/hd             │   │ duelCatalog        │   │ shop worker        │
+│ unit sources and   │   │ items, names,      │   │ lib/hd/shop:       │
+│ tiers, maps,       │   │ pictures, text     │   │ tables and search  │
+│ the board link     │   │                    │   │                    │
+└─────────┬──────────┘   └─────────┬──────────┘   └─────────┬──────────┘
+          ▼                        ▼                        ▼
+     src/data/hd      src/data/hd, src/locales/hd   src/data/hd/shop
+                      data pack: pictures, text     data pack: odds
+```
+
+Arrows run from a part to what it reads. The tab's lists place their picks on the board, and the shop page and its worker exchange messages.
 
 ## Where the content comes from
 
-A pack update writes all of it but the mode's map list, the Trial list, the creatures' files and names and the shop's `rounds`, which are kept by hand. This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
+This repo holds what the code needs to list an entry, and the data pack holds the pictures and the text.
 
-| Content                 | Files                                                      |
-| ----------------------- | ---------------------------------------------------------- |
-| Equipment id and tier   | `src/data/hd/equipment/<name>.json`                        |
-| Shop prices and goods   | `src/data/hd/shop/shop.json`                               |
-| Shop odds               | `src/data/hd/shop/odds.json`                               |
-| Artifact id             | `src/data/hd/artifact/<name>.json`                         |
-| Trial Cards' units      | `src/data/hd/trial.json`                                   |
-| Creature id and faction | `src/data/hd/creature/<name>.json`                         |
-| Maps and their buffs    | `src/data/hd/maps.json`                                    |
-| Names, site languages   | `src/locales/hd/{equipment,artifact,creature}/<name>.json` |
-| Shop products' names    | `src/locales/hd/shop/<good>.json`                          |
-| Pictures                | data pack, `images/hd/{equipment,artifact,creature}/`      |
-| Shop pictures           | data pack, `images/hd/shop/`                               |
-| Creatures' faction icon | data pack, `images/hd/icon/`                               |
-| Effect text             | data pack, `text/hd/<language>/`, two files for each       |
-| Creatures' skill text   | data pack, `text/hd/<language>/creatures.json`             |
+| Content                                      | Files                                                                | Written by                    |
+| -------------------------------------------- | -------------------------------------------------------------------- | ----------------------------- |
+| Equipment and artifacts: id, tier, names     | `equipment/` and `artifact/` in `src/data/hd/` and `src/locales/hd/` | pack update                   |
+| Creatures: id, faction, names                | `src/data/hd/creature/`, `src/locales/hd/creature/`                  | hand                          |
+| Trial Cards' units                           | `src/data/hd/trial.json`                                             | hand                          |
+| Maps and their buffs                         | `src/data/hd/maps.json`                                              | hand                          |
+| Shop prices, products and heroes             | `src/data/hd/shop/shop.json`                                         | pack update, `rounds` by hand |
+| Shop products' names, the measured odds      | `src/locales/hd/shop/`, `src/data/hd/shop/odds.json`                 | hand                          |
+| Pictures, effect text, creatures' skill text | data pack                                                            | pack update                   |
 
-An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. A creature's is counted from 7000 instead, inside the hero ids, because a board holds a creature where it holds a hero ([Grid](./GRID.md#unit-ids)). An update never changes the id of an existing file, and a new entry takes the next number after the highest in use. An update stops, writing nothing, when a file has no entry left in its source, so a renamed entry is renamed by hand and keeps its id.
+An entry's `id` is Stargazer's own number, counted from 1 in the game's listing order. A creature's is counted from 7000 instead, inside the hero ids, because a board holds a creature where it holds a hero ([Grid](./GRID.md#unit-ids)). Board links carry these ids, so an update never changes the id of an existing file, and a new entry takes the next number after the highest in use.
 
 ## Loading
 
-`src/utils/duelCatalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. The tab's list, the mode's popups, an Honor Duel board and the shop calculator page import it, and each is fetched on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts a list only once its tab is first shown.
+`src/utils/duelCatalog.ts` holds every glob of the equipment and the artifacts: their data files, names, pictures and text, and the creatures' skill text with it. Only the tab's lists, the mode's popups, an Honor Duel board and the shop page import it, each on first use, so a visit that opens none of them downloads none of it. A tab strip keeps every pane mounted, so `HonorDuelTab` mounts a list only once its tab is first shown.
 
-The text loads one language at a time: the reader's skill-text language when the list or an Honor Duel board first shows, for their hover cards, and a popup's own language when it opens. `loadHonorDuelText` gives none for a language the pack holds no text for and fails only when the download does, so a popup says the text could not be loaded and asks for it again the next time it opens. A hover card left without text asks again when the next one opens. The popup shows a level only when its text differs from the level before it: an artifact's last level repeats the one before it where that level adds no effect of its own.
+The board's rules need none of the catalog. They read only the Trial list, the map list and the shop's facts (`src/lib/hd/`), a few small files that load with the Arena page. The board asks for the catalog when it first draws a piece of equipment (`useDuelItems`).
 
-The pack is pinned separately from this repo, so a build can meet a pack from before a pack update. `npm run build` then prints one note for each list with entries the pack lacks and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and `?tab=honorDuel` then opens the default tab. Where the pack lacks only some entries, the tab lists those by name and their popup says the details are pending. A creature is listed only once the pack holds its picture, and the faction filter shows a faction only once its icon is there. A pack without the creatures' skill text leaves a creature with nothing to open (`DUEL_CREATURE_TEXT_IN_PACK`).
-
-A link opens the tab directly with `?tab=honorDuel` on the Arena page.
+The text loads one language at a time, and `loadHonorDuelText` fails only when a download does, so a caller can tell a failed download from text the pack lacks. The pack can lack it: a build can meet a pack from before a pack update, and `npm run build` then prints a note for each list with missing entries and carries on. A pack with no Honor Duel text at all leaves the tab out of both pages (`HONOR_DUEL_IN_PACK`), and an entry the pack lacks is listed by name without its details.
 
 ## The board
 
-The Arena page shows one of two boards: the Arena's own, and an Honor Duel board while the Honor Duel tab is open. They are two boards and not one board in two looks, because the mode's rules differ. A hero may stand twice, a hero carries a tier and a piece of equipment in place of its upgrades, and a side holds an Honor Duel artifact with a level. A board carries its kind (`BoardKind` on the board object), and each rule that differs asks the kind in one place.
+The Arena page shows one of two boards: the Arena's own, or an Honor Duel board while the Honor Duel tab is open. They are two boards and not one board in two looks, because the mode's rules differ. A board carries its kind (`BoardKind` in `src/stores/gridContext.ts`), and each rule that differs asks the kind.
 
-`useArenaBoards` runs the change between the two. Each board is stored under a key of its own, and each key's writer encodes a board of its own kind only, so editing one board never changes the other's stored value. The Format menu, Generate and the roster menu belong to the Arena and are hidden with the Honor Duel board, and Grid Info hides the choices that mean nothing there. `/share` shows an Honor Duel link as a read-only board with its hero card.
+`useArenaBoards` changes between the two. Each board has a stored value of its own, and each value's writer encodes a board of its own kind only, so editing one board never changes what is stored for the other. A change of board writes the leaving board once and rebuilds from the other's stored value.
+
+Each side holds one Honor Duel artifact with a level from 1 to 3, in a slot apart from the Arena's artifact. Both lists number from 1, and the Arena reads its slot's number as one of its own artifacts, arrows included ([Skills](./SKILLS.md#artifact-targeting)), so one shared slot would draw the wrong artifact.
 
 ### What a unit carries
 
-A unit of the mode comes from one of two sources, and its source sets its tiers (`src/lib/hd/units.ts`). The shop sells its heroes, the list the shop calculator uses, and a hero from it holds Epic, Legendary or Mythic. A Trial Card brings the units `src/data/hd/trial.json` lists for it: any of the shop's heroes, heroes the shop does not sell, or creatures. A Trial unit holds the tiers of the cards that bring it, so a Trial copy of a shop hero holds Epic, Legendary or Mythic, and a unit one card brings holds that card's tier and shows it without a choice. A Trial unit may stand beside the hero and beside other copies ([Grid](./GRID.md#unit-ids)).
+A unit comes from one of two sources, and its source sets the tiers it may hold (`src/lib/hd/units.ts`). A hero the shop sells holds Epic, Legendary or Mythic. A Trial Card brings the units `src/data/hd/trial.json` lists for it, at the card's tier: any of the shop's heroes, heroes the shop does not sell, or creatures. A Trial unit may stand beside the hero and beside other copies of itself, so each copy is a unit under an id of its own ([Grid](./GRID.md#unit-ids)).
 
-On the Arena page the tab has a third list, Units, which comes first. It holds the shop's heroes, then a group for each card that names units of its own, under a heading that says what the units are and names the card in brackets: the heroes the shop does not sell, headed by their factions' names, and then the creatures. The list places a shop hero as its normal copy. The popup on an empty tile lists one source's units, in the list's order, under a Shop or Trial switch (`DuelHeroSource`): on Shop the shop's heroes as normal copies, and on Trial everything a Trial Card brings, which is the shop's heroes as Trial copies, each at the lowest tier a card brings it at, and then the units of the cards' groups; a Trial copy's tier is raised on the board. The switch's value (`useDuelUnits`) lasts while the page is open and is never stored, as the list on show is. A tile tapped on the board brings the Units list forward, since that tap raises the sheet to take a unit. A Trial pick carries its tier in its id (`toTrialPick`), so a click, a tap and a drag place a copy at that tier through the one placing path.
+A creature is a Trial unit that is no hero. `loadCreatures` keeps it out of the hero list, so no hero picker, roster, skill page or import lists one, while a lookup by id still finds it, which is how the board draws it as it draws a hero. It has no skill page, so the gestures that open a hero's skills open the creature's own from the pack's creature text (`heroInspectTarget`).
 
-A creature is a Trial unit that is no hero. It is kept out of the hero list (`loadCreatures`), so no hero picker, roster, skill page or import lists one, and a lookup by id finds it, which is how the board, the hero card and the faction bonus draw it as they draw a hero. It carries equipment as a hero does, and it has no skill page: the gestures that open a hero's skills open a popup with the creature's own, from the pack's creature text (`heroInspectTarget`, `CreatureModal`).
-
-A placed unit's tier and equipment are per-hero values under ids of their own (101 and 102), apart from the Arena's upgrade values, so a reader of either board's values finds none of the other's. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Copies of a hero on a side share one piece of equipment: a pick goes to every copy there. A hero that changes sides leaves its piece behind, and a hero that joins a side, placed there or moved from the other side, takes the piece its copies hold there. The same piece may sit on several heroes.
-
-A hero the shop sells changes between its normal and its Trial copy on the board (`swapDuelCopy`). The copy is a unit under an id of its own that takes the first one's tile, tier and equipment. A Trial copy cannot change while its side holds the hero's normal copy, since a side takes one, and a unit only a card brings has no other copy.
-
-Three controls set a unit's tier, its equipment and which copy it is, `DuelTierPill`, `DuelPieceSlot` and `DuelTrialToggle`, and they show in three places: the hero card under the board, the unit's portrait, and the row over a lifted unit, which is how a touch screen reaches them. On a portrait the piece a unit holds stays at the upper left, where a picture of the board keeps it, beside the Trial mark at the upper right, which is the copy's button on a unit that can change. The empty slots, and the tier at the lower left, show only under the pointer. `DuelPiecePicker` opens the equipment picker for all three, and opening it ends a lift, since the tap that closes it would otherwise move the lifted unit. A piece can also be dragged from the tab's list onto a unit ([Board Input](./DRAG_AND_DROP.md#honor-duel-equipment)).
-
-### The team artifact and the faction bonus
-
-Each side holds one Honor Duel artifact with a level from 1 to 3. It is kept apart from the Arena's seasonal artifact: both lists number from 1, and a seasonal artifact's number also picks a skill drawing, so one shared place would show the wrong thing. It draws on the board's two artifact places and nothing else on the board.
-
-Beside an Honor Duel board, a click on an artifact in the tab's list follows the Arena list's rule (`toggleDuelArtifact`): it takes off an artifact a side holds, and puts any other at level 1 on the first side that shows none, the ally's first. Its popup then opens by the inspect gesture alone. A place's own picker sets the level, and can give both sides the same artifact.
-
-A badge by each artifact place reports the side's faction bonus (`teamFactionBonus` in `src/lib/factionBonus.ts`, beside the numbers the Faction Bonus guide page shows). Every unit of the side counts, a copy as much as the first. A Celestial or Hypogean hero stands in for any faction, so the side takes the highest step its stand-ins can complete, and each of them adds one point on top. The creatures share a faction of their own, which counts as any other does.
-
-### What the board loads
-
-The board's rules need none of the catalog, so the Arena page loads none of it for a visitor who never opens an Honor Duel board. The Trial list, the creature files and the names of the shop's products, which the Units list's headings name a card by (`src/utils/shopGoodNames.ts`), are a few small files and load with the rules. The pictures on a portrait and in the hero card ask for the catalog on first use (`useDuelItems`), and the artifact layer and the two pickers are fetched with it.
-
-## Formats
+A placed unit's tier and equipment are per-hero attributes under ids 101 and 102, apart from the Arena's upgrade attributes ([Grid](./GRID.md#hero-upgrade-attributes)), so a reader of either board's values finds none of the other's. `DUEL_ATTR_RULES` holds how they differ from an upgrade. A unit starts at the lowest tier its source allows, and a tier outside them moves to the nearest one inside. Equipment belongs to a side: copies of a hero on one side share a piece, and a hero that changes sides leaves its piece behind and takes the one its copies hold there. The same piece may sit on several heroes.
 
 ### The board link
 
@@ -91,7 +92,7 @@ An Honor Duel board travels as `?hd=<text>` on `/` and `/share`, and the same te
 
 The units part is present with bit 0 and the artifacts part with bit 1. A board has exactly one text, and decoding is all or nothing: a spare bit set, a value outside its range, a map outside the mode's list, units out of tile order, a part marked present but empty or anything after the last field refuses the whole text. The format has no version field, for the Arena link's reasons.
 
-The text holds heroes and creatures only. A companion is left out because its hero's skill spawns it again, and a Trial copy's number is left out because a reader hands the numbers out in tile order. Whether an id still names a unit, a piece or an artifact is the reader's question. A unit the game data lacks is dropped, and so is one its source does not bring: without the Trial mark, a hero the shop does not sell or a creature, and with it, a unit no Trial Card brings. Placing refuses the same units, so a board never holds one a restore would drop. A tier the unit's source does not allow moves to the nearest it does. A piece or an artifact id that names none is kept and shown as none.
+The text holds heroes and creatures only. A companion is left out because its hero's skill spawns it again, and a Trial copy's number is left out because a reader hands the numbers out in tile order. Whether an id still names a unit, a piece or an artifact is the reader's question. A unit the game data lacks is dropped, and so is one its source does not bring. Placing refuses the same units, so a board never holds one a restore would drop. A tier the unit's source does not allow moves to the nearest it does, and a piece or an artifact id that names none is kept and shown as none.
 
 `AMHAEBQAHSQUgB6gs7YAFAgA` is a board on map I with a Legendary hero and a Mythic Trial copy of it on the ally side, sharing piece 7, a creature on the enemy side and the ally's artifact 5 at level 2. Decoded, with team 1 the ally and 2 the enemy:
 
@@ -108,153 +109,48 @@ The text holds heroes and creatures only. A companion is left out because its he
 }
 ```
 
-### The catalog
+## The shop calculator
 
-A data file, `src/data/hd/equipment/light-armor.json`. `name` equals the file name and keys the names, pictures and text. `tier` is `rare`, `elite`, `epic` or `legendary`, and `shop` says whether the shop sells the piece. An artifact file has `id` and `name` only.
+The page takes the shop in front of a player (the eight cards on show, the shop level and the badges in hand) and the heroes or equipment wanted. For each wanted item it answers twice: the first move with the best chance of getting it this round, and the first move that spends the fewest badges on average. It follows Toto's calculator and its measured odds.
 
-```json
-{
-  "id": 1,
-  "name": "light-armor",
-  "tier": "rare",
-  "shop": true
-}
-```
+The engine (`src/lib/hd/shop/`) is plain TypeScript that runs in a worker. `calculateShop` first reads the shop: it lists every way the sources could have made the cards on show, each with its chance. It then makes a goal for each wanted item, plus goals that any one of several targets meets, and gives every first move (buy a card, or reroll with a set of locks) a number for each goal.
 
-A names file, `src/locales/hd/artifact/golden-blooms.json`, with one name for each site language:
+### Best chance and fewest badges
 
-```json
-{
-  "en": "Golden Blooms",
-  "zh": "金丝莲",
-  "ko": "골든 블룸"
-}
-```
+For the best chance, a first move gets the chance of reaching the goal before the badges run out, when every later move is the best one. A later shop is reduced to a code: one digit per source, saying which useful kind of card the source shows, or none. Two tables hold a chance for every code, badge count and number of targets still needed. The ceiling table answers for a player who is told the sources, so it is never too low. The floor table answers for a player who must pick one move for every code that looks the same on screen, so it is never too high. Where the two agree the chance is known, and where they differ a search over what the player can believe about the sources narrows the range.
 
-The pack's text, one pair of files for each skill-text language, each keyed by entry name. Numbers are marked as in skill text (`[[40%]]`). `text/hd/en/equipment.json`:
+Fewest badges uses the same codes with two cost tables: the average badges to reach the goal for a player who never runs out. The floor is the cost when the sources are known. The ceiling is the cost of one plan a real player can follow from the cards on show, and it is the figure shown. A reroll can lead back to the same shop, so each table is recomputed until its numbers stop moving.
 
-```json
-{
-  "light-armor": {
-    "name": "Light Armor",
-    "description": "Gains a shield equals to [[40%]] of max HP for [[10]]s when a battle starts."
-  }
-}
-```
+Stopping for the round is a move too. Each round's first shop is a free redraw of the unlocked cards, so a way to stop is a set of locks to leave, after a purchase or none, costed by what the goal takes from the next round on, against the next level's sources when the shop level rises.
 
-`text/hd/en/artifacts.json`. `levels` holds one text for each of the artifact's three levels:
+`advice.ts` picks the move shown from every first move's number. It compares a chance range by its floor and a cost by its ceiling, the figures a player can count on.
 
-```json
-{
-  "golden-blooms": {
-    "name": "Golden Blooms",
-    "levels": [
-      "Restores [[30%]] Max HP for an allied hero when their HP ratio drops below [[50%]]. This effect can be triggered once every [[6]]s, up to a total of [[5]] times per battle.",
-      "The cooldown is reduced to [[4.5]]s.",
-      "The cooldown is reduced to [[4.5]]s."
-    ]
-  }
-}
-```
+### Decisions
 
-### Trial units
+Answers arrive in stages. The first stage has every number at once, with a range where the tables alone do not settle a chance. The search then narrows only the ranges that could change what an answer shows, and stops after `SEARCH_MS`, so a range it does not reach stays a range. A first answer is fast for every request, and the slowest request has a limit.
 
-The Trial list, `src/data/hd/trial.json`, shortened here to two units a card. `cards` lists the Trial Cards, cheapest first. `card` is the card's name among the shop's goods, and `tier` the tier of a unit it brings: `epic`, `legendary`, `mythic` or `supreme`. `units` names the heroes and creatures the card can show, by file name, and `shop` is true where the card can show any of the shop's heroes. A card has `units`, `shop` or both. A name with no hero or creature file is skipped until it has one, and the build prints a note naming it. A `tier` outside the four, or a `card` the shop does not sell as a Trial Card, stops the list from loading.
+The tables are kept between requests. They depend on a goal's useful kinds, their prices and what each source makes of them, and not on the cards entered or the badges held. So one worker lives as long as the page (`useShopEngine`), goals with the same kinds, prices and sources share one set of tables, and a later request mostly reads what an earlier one filled. When a request ends, `solverCache.ts` drops the least recently used sets past a count and a size.
 
-```json
-{
-  "cards": [
-    {
-      "card": "trial-card-6",
-      "tier": "epic",
-      "units": ["sandbeast-king", "icesoul"],
-      "shop": true
-    },
-    { "card": "trial-card-12", "tier": "legendary", "shop": true },
-    { "card": "trial-card-22", "tier": "mythic", "shop": true },
-    { "card": "trial-card-45", "tier": "supreme", "units": ["berial", "scarlita"] }
-  ]
-}
-```
+A worker at work hears no messages, so `calculateShop` pauses: after each goal is prepared, after each goal's first answer, after each stage and after every `SLICE_MS` of search. At a pause the worker takes in what the page has sent and drops a request the page no longer wants. A slice of search that runs out of time starts again from its first move and finds every shop it had finished already answered, so slicing changes no answer.
 
-A creature's file, `src/data/hd/creature/icesoul.json`. `id` is from 7000 to 8999, `name` equals the file name and keys its names file and its picture, and `faction` is the creatures' own faction, which has a name in `src/locales/game/` like the heroes' factions.
+The page stores nothing. What a player enters lasts for the visit, and the tables go with the worker when the page is left.
 
-```json
-{
-  "id": 7001,
-  "name": "icesoul",
-  "faction": "other"
-}
-```
+### Rules
 
-Its names file, `src/locales/hd/creature/icesoul.json`, has one name for each site language, as an artifact's does.
+- The worker is the one place that chooses the odds table: the data pack's when the pack has one, else the measured table in this repo. Everything on the page reads the repo's table: the odds view, an example shop, the checks on a shop as it is entered and the probability guide's figures. `npm run build` stops unless both tables list the same products for every source (`oddsMismatch`), so a shop the page accepts can come up under either.
+- Each answer carries its request's number, and the page drops an answer whose number is not the newest. Every set of answers a stage sends is whole and replaces the last.
+- `SHOP_LIMITS` bounds a request: the badges, the copies of a hero, and the wanted items. A request's time and memory grow with each, so a higher limit needs the heaviest request measured again. A goal whose tables would still be too large is left out and named with the answers (`MAX_SPAN_SIZE`, `MAX_NEXT_SPAN_SIZE`, `MAX_OWN_ROWS`).
 
-The pack's creature text, one file for each skill-text language, keyed by creature file name. `text/hd/en/creatures.json`, shortened here to one of its creatures:
+### Gotchas
 
-```json
-{
-  "icesoul": {
-    "name": "Icesoul",
-    "skills": [
-      {
-        "name": "Ice Shield",
-        "description": "Gains a shield of [[200%]]{atk} for [[10]]s, and additional [[80%]]{atk} shield value for each enemy within [[1]] surrounding tile."
-      },
-      {
-        "name": "Frozen Mist",
-        "description": "Generates frozen mist after the battle starts, covering the surrounding area till defeated or the battle ends. When attacked by targets within [[1]] tiles, reduces the Haste of the target by [[50%]] for [[2]]s."
-      },
-      {
-        "name": "Frozen",
-        "description": "When defeated, [[freezes|freeze]] targets within [[1]] tile for [[3]]s."
-      },
-      {
-        "name": "Elemental Defense",
-        "description": "Takes [[70%]] less physical damage."
-      }
-    ]
-  }
-}
-```
+- A locked card keeps its source number when the shop level rises, so a source can sit behind a product the new level never makes. `ShopReading.odds` lists that product at 0% for each source that may hold it, which gives the card a place in the tables without changing any draw. Each such card also adds a useful kind to those sources, which is what multiplies a goal's tables toward the limits above.
+- The search treats cards of one kind as alike, while a player knows which one was kept through a reroll. Choosing between the kept card and a new one on purpose can beat the chance shown by a fraction of a percentage point, more as the hero pool shrinks. The chance shown is still one the player can reach.
+- Copies of different heroes are never added together. The goals that span heroes exist only when every wanted hero needs one copy.
+- The probability guide at `/guide/hd/shop/probability` works its numbers out from the shop's rules and the measured table (`useShopFigures`). The few that take a full calculation are typed in, in one list in that file, and hold only for the measured table and the whole hero pool.
+- Vitest has no worker thread. The engine's tests call `calculateShop` directly, and the worker itself is exercised in a browser.
 
-| Field                  | Holds                                                                                                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                 | the creature's name in that language, the popup's title                                                                                     |
-| `skills`               | the creature's skills, in the order the popup lists them                                                                                    |
-| `skills[].name`        | the skill's name, its heading in the popup                                                                                                  |
-| `skills[].description` | the skill's one text, marked as a hero's skill text is: a number (`[[200%]]`), a stat (`{atk}`) and a glossary word (`[[freezes\|freeze]]`) |
+## Related documentation
 
-A glossary word opens the same popup it opens in a hero's skill text. A creature with no entry in the file opens its popup with the details pending, and `npm run build` prints a note counting the creatures the pack has no skill text for.
-
-### The shop
-
-The calculator that reads these two files is described in [Honor Duel Shop Calculator](./HONOR_DUEL_SHOP.md).
-
-The shop's facts, `src/data/hd/shop/shop.json`, shortened here to two of its nine rounds, three of its sixteen goods and two of its heroes. `reroll` is the price of a reroll, `startingBadges` what the calculator's badge box starts at, `sell` what a hero card sells for, and `levelRounds` the first round of each of the five shop levels. `rounds` lists the rounds from round 1, and its last entry holds for every later round: `badges` is what the round brings, with both amounts where a round can bring either of two, and `event` names the round's event by the file its words are kept in (`shop-event-<event>`). A good's `kind` is `hero`, `legendary`, `pack`, `equipment`, `trial` or `exp`: a `hero` or `legendary` good gives `copies` of one hero, a `pack` picks `draws` heroes, from one `faction` when it names one, and an `equipment` good gives a piece of its `tier`. `heroes` lists the heroes the shop sells, by hero file name.
-
-```json
-{
-  "reroll": 3,
-  "startingBadges": 60,
-  "sell": 2,
-  "levelRounds": [1, 2, 4, 6, 9],
-  "rounds": [{ "badges": [60, 70] }, { "badges": [60], "event": "fitz-trial" }],
-  "goods": [
-    { "name": "hero-pair", "price": 30, "kind": "hero", "copies": 2 },
-    { "name": "mauler-pack", "price": 33, "kind": "pack", "draws": 3, "faction": "mauler" },
-    { "name": "epic-equipment", "price": 40, "kind": "equipment", "tier": "epic" }
-  ],
-  "heroes": ["antandra", "cassadee"]
-}
-```
-
-The odds, `src/data/hd/shop/odds.json`, are Toto's measured table, kept by hand. Each of the shop's eight cards comes from its own source, and `levels` holds, for each shop level, what each of the eight sources makes, in source-number order: a good's name and its share in percent, with the measured range as `low` and `high` where the table has one. `rerolls` counts the recorded rerolls behind each level. Shortened here to one source of one level:
-
-```json
-{
-  "rerolls": [988],
-  "levels": [[[{ "good": "random-pack", "percent": 100 }]]]
-}
-```
-
-A data pack may carry a table of its own, `hd/shop/odds.json`, holding `levels` alone in the same shape, where a source that only ever shows Artifact EXP may be an empty list. `npm run build` stops when that file cannot be read as an odds table, or lists other goods for a source than the repo's table does (`checkOdds` and `oddsMismatch` in `src/lib/hd/shop/odds.ts`).
+- [Grid](./GRID.md): unit ids, Trial copies, hero attributes and the map controls
+- [URL Serialization](./URL_SERIALIZATION.md): the bit and text helpers the board link shares, and how a page reads `?hd=`
+- [Board Input](./DRAG_AND_DROP.md): dragging a piece of equipment onto a unit
