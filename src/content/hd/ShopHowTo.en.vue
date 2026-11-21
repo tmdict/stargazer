@@ -15,8 +15,8 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
     <ol>
       <li>Pick the <b>Shop level</b> and type in your <b>Badges</b>.</li>
       <li>
-        Turn on <b>Levels up next round</b> if the shop goes up a level next round. Some levels
-        always go up after one round and the last level never does, so there the switch is set for
+        Turn on <b>Levels up next round</b> if the shop goes up a level next round. A level that
+        lasts one round always goes up and the last level never does, so there the switch is set for
         you.
       </li>
       <li>
@@ -39,7 +39,7 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
     </p>
     <p>
       If the shop you entered can't come up at that level, the cards that don't fit get a red frame
-      and a line under them says why. Check those cards and the shop level.
+      and a line below the cards says why. Check those cards and the shop level.
     </p>
     <p>
       <b>Random</b> fills in an example shop if you just want to try it out, and <b>Clear</b>
@@ -48,7 +48,7 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
     </p>
 
     <h2>Your heroes</h2>
-    <p>The button under <b>Your heroes</b> opens two lists.</p>
+    <p>The button next to <b>Your heroes</b> opens two lists.</p>
     <ul>
       <li>
         <b>Heroes to sell</b> are the heroes you'd sell straight away if a pack gave you one. Each
@@ -93,8 +93,8 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
         </li>
         <li>
           <b>Recalculate with best</b> works the answers out again starting from that move. For a
-          reroll, it sets those locks on your shop first, unless that would unlock a card you kept
-          from a lower level. Then your shop stays as you entered it.
+          reroll, it sets those locks on your shop first. If that would unlock a card you kept from
+          a lower level, it leaves your shop as you entered it.
         </li>
         <li>
           <b>Fewest badges</b> is how many badges the target costs on average if you keep buying and
@@ -124,8 +124,8 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
             <li>you can't afford its cheapest move,</li>
             <li>that move leaves you no chance of finishing this round, or</li>
             <li>
-              the shop levels up next round and waiting for the new shop costs less, by more than a
-              reroll.
+              the shop levels up next round and waiting for the new shop saves more than a reroll
+              costs.
             </li>
           </ul>
         </li>
@@ -140,8 +140,9 @@ import { SHOP_FACTS } from '@/lib/hd/shop/goods'
       </ol>
     </ShopHowToFigure>
     <p>
-      If <b>Best chance</b> says to stop, your badges give almost no chance of getting the target
-      this round, too little to show as more than 0%.
+      If <b>Stop for this round</b> appears at the top of the card in place of <b>Best chance</b>,
+      your badges give you almost no chance of getting the target this round. The chance is too
+      small to show as anything but 0%.
     </p>
 
     <h2>Which answer to follow</h2>

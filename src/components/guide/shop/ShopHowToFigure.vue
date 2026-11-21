@@ -4,10 +4,10 @@
    marks on its parts. The key is the numbered list in the slot, one item per
    mark, and the stop example's marks go on from the move example's six. The
    marks and the labels kept readable sit on the card's own elements, so a
-   change to its layout needs them checked. Both answers come from one calculation on the measured table.
-   The popup's reading styles are turned back to the page's inside the
-   picture: its typeface, and paragraphs at full opacity with the line height
-   base.css gives them. */
+   change to its layout needs them checked. Both answers come from one
+   calculation on the measured table. The popup's reading styles are turned
+   back to the page's inside the picture: its typeface, and paragraphs at full
+   opacity with the line height base.css gives them. */
 
 import ShopAnswerCard from './ShopAnswerCard.vue'
 import RunePicture from '@/components/ui/RunePicture.vue'
