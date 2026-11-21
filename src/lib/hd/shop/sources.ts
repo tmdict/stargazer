@@ -185,10 +185,10 @@ export function shopProblems(
         shown.push(...group)
       }
     })
-    const groups = bitCount(picked)
+    const size = bitCount(picked)
     const sources = bitCount(mask)
-    if (shown.length > sources && (!crowded || groups < crowded.groups)) {
-      crowded = { groups, sources, cards: shown.sort((a, b) => a - b) }
+    if (shown.length > sources && (!crowded || size < crowded.groups)) {
+      crowded = { groups: size, sources, cards: shown.sort((a, b) => a - b) }
     }
   }
   if (crowded) {

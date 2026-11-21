@@ -2,11 +2,11 @@
 /* The calculator's form beside the shop window: the shop level, whether it
    goes up next round, the badges in hand, how many heroes are on the lists of
    heroes to sell and heroes at Mythic, the heroes and equipment looked for, and
-   Calculate. While a calculation runs, Calculate gives way to Cancel. It waits for something to
-   look for, which a line under it asks for, and for cards the level can show.
-   Whether the level goes up is the player's to say only where the game leaves
-   it open: a level that lasts one round always does, and the last level never
-   does. */
+   Calculate. While a calculation runs, Calculate gives way to Cancel. It waits
+   for something to look for, which a line under it asks for, and for cards the
+   level can show. Whether the level goes up is the player's to say only where
+   the game leaves it open: a level that lasts one round always does, and the
+   last level never does. */
 
 import { computed, nextTick } from 'vue'
 
