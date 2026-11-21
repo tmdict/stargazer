@@ -99,7 +99,7 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
   cursor: pointer;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tab-letter-spacing);
   font-size: var(--tab-font-size);
   transition:
     color var(--transition-fast),
@@ -129,6 +129,7 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
 @media (min-width: 769px) {
   .tab-bar {
     flex-wrap: nowrap;
+    align-items: baseline;
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
   }
@@ -185,7 +186,6 @@ watch([active, () => tabs.length], revealActive, { flush: 'post' })
 
   .tab-actions {
     flex: none;
-    align-self: center;
   }
 
   @container (max-width: 558px) {

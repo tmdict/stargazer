@@ -673,7 +673,6 @@ const pressSegment = (): void => {
 
 .tab {
   font-size: var(--tab-font-size);
-  letter-spacing: 0.05em;
 }
 
 .tab .trigger {
@@ -681,6 +680,7 @@ const pressSegment = (): void => {
   border: none;
   color: var(--color-text-secondary);
   font-weight: 700;
+  letter-spacing: var(--tab-letter-spacing);
   padding: var(--spacing-xs) var(--spacing-sm);
 }
 

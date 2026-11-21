@@ -5,14 +5,15 @@ import { useRoute, useRouter } from 'vue-router'
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
-import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import ArenaMapButtons from '@/components/grid/ArenaMapButtons.vue'
+import ArenaMapMenu from '@/components/grid/ArenaMapMenu.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import DuelHeroCard from '@/components/hd/DuelHeroCard.vue'
+import DuelMapMenu from '@/components/hd/DuelMapMenu.vue'
 import HonorDuelTab from '@/components/hd/HonorDuelTab.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import RosterPanel from '@/components/RosterPanel.vue'
@@ -409,7 +410,8 @@ const handleResetMap = () => {
               <DebugPanel />
             </template>
             <template #actions>
-              <ArenaDropdown />
+              <DuelMapMenu v-if="duelShown" />
+              <ArenaMapMenu v-else />
             </template>
           </TabView>
         </BottomSheet>

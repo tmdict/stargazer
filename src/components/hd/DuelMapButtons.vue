@@ -1,28 +1,17 @@
 <script setup lang="ts">
+/* The Honor Duel board's map as a strip of buttons, I to V. Windows wide
+   enough for the tab row's menu (DuelMapMenu) show that instead. */
+
 import { computed } from 'vue'
 
 import MapButtons from '@/components/grid/MapButtons.vue'
-import { useSelectionState } from '@/composables/useSelectionState'
-import { DUEL_MAP_NAMES } from '@/lib/hd/maps'
-import { useDuelBoard } from '@/stores/duelBoard'
-import { useGrids } from '@/stores/grids'
+import { useDuelMapSlots } from '@/composables/useDuelMapSlots'
 
-const grids = useGrids()
-const duelBoard = useDuelBoard()
-const { clearTargetHex } = useSelectionState()
+const { slots, held, select } = useDuelMapSlots()
 
 const maps = computed(() =>
-  DUEL_MAP_NAMES.map(({ key, name }) => ({
-    key,
-    label: name,
-    selected: grids.active?.currentMap === key,
-  })),
+  slots.map(({ key, name }) => ({ key, label: name, selected: key === held.value?.key })),
 )
-
-// A tile tapped before may be another side's on the new map, or hold a unit.
-const select = (map: string): void => {
-  if (duelBoard.moveToMap(map)) clearTargetHex()
-}
 </script>
 
 <template>

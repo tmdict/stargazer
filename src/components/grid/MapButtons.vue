@@ -1,5 +1,6 @@
 <script setup lang="ts">
-/* A board's map as one strip of buttons after the word "Map". */
+/* A board's map as one strip of buttons after the word "Map", on windows too
+   narrow for the tab row's menu (MapMenu); the switch is in base.css. */
 
 import SegmentedPicker, { type Segment } from '@/components/ui/SegmentedPicker.vue'
 import { useI18nStore } from '@/stores/i18n'
@@ -16,14 +17,18 @@ const i18n = useI18nStore()
 </script>
 
 <template>
-  <div class="map-buttons" :class="{ dense }">
-    <span class="map-label" aria-hidden="true">{{ i18n.t('app.map') }}</span>
-    <SegmentedPicker
-      small
-      :segments="maps"
-      :aria-label="i18n.t('app.map')"
-      @select="emit('select', $event)"
-    />
+  <!-- The root sets no display of its own, so base.css's rule that hides it
+       holds whichever stylesheet loads last. -->
+  <div class="map-strip">
+    <div class="map-buttons" :class="{ dense }">
+      <span class="map-label" aria-hidden="true">{{ i18n.t('app.map') }}</span>
+      <SegmentedPicker
+        small
+        :segments="maps"
+        :aria-label="i18n.t('app.map')"
+        @select="emit('select', $event)"
+      />
+    </div>
   </div>
 </template>
 

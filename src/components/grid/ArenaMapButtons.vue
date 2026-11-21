@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The Arena board's map as a strip of buttons, `SL1` to `GD3`: a pick moves
    the board onto that map with the buffs it has on that list. Windows wide
-   enough for the tab row's menu (ArenaDropdown) show that instead. */
+   enough for the tab row's menu (ArenaMapMenu) show that instead. */
 
 import { computed } from 'vue'
 
@@ -16,5 +16,5 @@ const maps = computed(() =>
 </script>
 
 <template>
-  <MapButtons class="arena-map-strip" :maps dense @select="select" />
+  <MapButtons :maps dense @select="select" />
 </template>
