@@ -293,7 +293,8 @@ const under = (event: MouseEvent): DOMRect =>
   background: rgba(0, 0, 0, 0.25);
 }
 
-.field:focus-within {
+.field:focus-within,
+.lists:hover {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -303,10 +304,6 @@ const under = (event: MouseEvent): DOMRect =>
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-}
-
-.lists:hover {
-  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .field input {
